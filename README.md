@@ -2,7 +2,7 @@
 
 There exist today state-of-the-art computational models that can provide highly accurate predictions about complex phenomena such as crop growth and weather patterns. However, certain phenomena, such as food insecurity, involve a host of factors that cannot be modeled by any single one of these models, but which instead require the integration of multiple models.
 
-To truly integrate these computational models, it is necessary to ‘lift’ them to a common representation that is (i) agnostic to the software implementation, (ii) semantically rich enough to represent the implicit domain knowledge in the models, and (iii) connected to the domain literature.
+To truly integrate these computational models, it is necessary to 'lift' them to a common representation that is (i) agnostic to the software implementation, (ii) semantically rich enough to represent the implicit domain knowledge in the models, and (iii) connected to the domain literature.
 
 The AutoMATES project aims to build technology to construct and curate semantically-rich representations of scientific models by integrating three different sources of information:
 
@@ -10,7 +10,7 @@ The AutoMATES project aims to build technology to construct and curate semantica
 - the equations contained in these documents, and
 - the software the implements these models.
 
-This work will dramatically advance the state-of-the-art in automated model curation and integration, enabling scientists and analysts to understand complex mechanisms that span multiple domains. By exposing the implicit domain knowledge baked into computational models, this e ort will enable automated model composition and reasoning in context to directly support the development of ‘third wave’ artificial intelligence.
+This work will dramatically advance the state-of-the-art in automated model curation and integration, enabling scientists and analysts to understand complex mechanisms that span multiple domains. By exposing the implicit domain knowledge baked into computational models, this effort will enable automated model composition and reasoning in context to directly support the development of ‘third wave’ artificial intelligence.
 
 ## Software
 
