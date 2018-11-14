@@ -1,37 +1,29 @@
-## Welcome to GitHub Pages
+## About
 
-You can use the [editor on GitHub](https://github.com/ml4ai/automates/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+There exist today state-of-the-art computational models that can provide highly accurate predictions about complex phenomena such as crop growth and weather patterns. However, certain phenomena, such as food insecurity, involve a host of factors that cannot be modeled by any single one of these models, but which instead require the integration of multiple models.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+To truly integrate these computational models, it is necessary to ‘lift’ them to a common representation that is (i) agnostic to the software implementation, (ii) semantically rich enough to represent the implicit domain knowledge in the models, and (iii) connected to the domain literature.
 
-### Markdown
+The AutoMATES project aims to build technology to construct and curate semantically-rich representations of scientific models by integrating three different sources of information:
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+- natural language descriptions of models in publications and other technical documentation,
+- the equations contained in these documents, and
+- the software the implements these models.
 
-```markdown
-Syntax highlighted code block
+This work will dramatically advance the state-of-the-art in automated model curation and integration, enabling scientists and analysts to understand complex mechanisms that span multiple domains. By exposing the implicit domain knowledge baked into computational models, this e ort will enable automated model composition and reasoning in context to directly support the development of ‘third wave’ artificial intelligence.
 
-# Header 1
-## Header 2
-### Header 3
+## Software
 
-- Bulleted
-- List
+The machine reading of the scientific papers is done using a tool built upon [`processors`](https://github.com/clulab/processors), 
+the parsing of equations in PDFs of scientific papers is done using the [`equations`](https://github.com/clulab/equations) module,
+and the program analysis and model assembly is performed by [Delphi](https://github.com/ml4ai/delphi).
 
-1. Numbered
-2. List
+## Team
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ml4ai/automates/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+- [Clayton Morrison](http://w3.sista.arizona.edu/~clayton/) (PI)
+- [Saumya Debray](http://www2.cs.arizona.edu/~debray/) (co-PI)
+- [Adarsh Pyarelal](http://adarsh.cc) (co-PI)
+- Rebecca Sharp (co-PI)
+- Marco Valenzuela (co-PI)
+- Paul Hein (Graduate Research Assistant)
+- Pratik Bhandari (Graduate Research Assistant)
