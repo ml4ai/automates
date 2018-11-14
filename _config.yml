@@ -1,3 +1,4 @@
 theme: jekyll-theme-cayman
 github:
+  repository: ml4ai/AutoMATES
   is_project_page: false
