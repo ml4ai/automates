@@ -1,4 +1,5 @@
 theme: jekyll-theme-cayman
 github:
-  repository: ml4ai/AutoMATES
+  project_title: AutoMATES
+  project_tagline: Automated Model Assembly from Text, Equations, and Software
   is_project_page: false
