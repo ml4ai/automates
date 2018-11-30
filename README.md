@@ -31,7 +31,7 @@ composition and reasoning in context to directly support the development of
 The machine reading of the scientific papers is done using a tool built upon
 [processors](https://github.com/clulab/processors), the parsing of equations in
 PDFs of scientific papers is done using the
-[equations](https://github.com/clulab/equations) module, and the program
+[equation parser module](https://ml4ai.github.io/automates/equation_extraction) module, and the program
 analysis and model assembly is performed by
 [Delphi](https://github.com/ml4ai/delphi).
 
@@ -43,7 +43,7 @@ analysis and model assembly is performed by
 - [Clayton Morrison](http://w3.sista.arizona.edu/~clayton/) (PI)
 - [Saumya Debray](http://www2.cs.arizona.edu/~debray/) (co-PI)
 - [Adarsh Pyarelal](http://adarsh.cc) (co-PI)
-- Rebecca Sharp (co-PI)
-- Marco Valenzuela (co-PI)
-- Paul Hein (Graduate Research Assistant)
-- Pratik Bhandari (Graduate Research Assistant)
+- [Rebecca Sharp](https://github.com/bsharpataz) (co-PI)
+- [Marco Valenzuela](https://github.com/marcovzla) (co-PI)
+- [Paul Hein](https://github.com/pauldhein) (Graduate Research Assistant)
+- [Pratik Bhandari](https://github.com/pratikbhd) (Graduate Research Assistant)
