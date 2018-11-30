@@ -63,7 +63,7 @@ in the past for the purpose of image caption generation
 We will start with an existing model previously trained for the purpose of converting
 images to markup
 (i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).
-This model was trained with the [KDD cup competition](https://mg.readthedocs.io/latexmk.html) sample
+This model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample
 of arXiv. We will compare the performance of this pretrained model with the same model trained
 using the dataset constructed in the [data acquisition](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/equations.md#data-acquisition) step. We will also improve the model (TODO how?).
 
