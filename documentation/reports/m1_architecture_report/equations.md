@@ -41,14 +41,30 @@ training and evaluation of the equation detection component described below.
 The purpose of this component is the automatic detection of equations in scientific
 papers encoded as PDF files.
 
-TODO
+TODO talk about [object detection algorithms](https://towardsdatascience.com/r-cnn-fast-r-cnn-faster-r-cnn-yolo-object-detection-algorithms-36d53571365e)
 
 ## Equation decoding
 
 The purpose of this component is the automatic conversion of rendered equations into
 (La)TeX code.
 
-TODO
+For this purpose we will use an encoder-decoder architecture capable of encoding
+an image into a dense embedding that can subsequentially be decoded into (La)TeX
+code capable of being compiled into an image. We have selected (La)TeX as the
+intermediary representation between image and executable model because of the
+availability of training data (arXiv) and because, due to the nature of (La)TeX,
+it preserves typographic information that could be useful for the succesful
+interpretation of the equation semantics.
+
+Encoder-decoder architectures like the one proposed have been successfully applied
+in the past for the purpose of image caption generation
+(e.g., [Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge](https://arxiv.org/abs/1609.06647)).
+
+We will start with an existing model previously trained for the purpose of converting
+images to markup
+(i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).
+
+TODO how to improve on this model (more data, better model, etc)
 
 ## Equation grounding
 
@@ -57,11 +73,16 @@ as well as the individual variables that form part of it. This associations of
 variable to description will be fundamental for the alignment of equations to
 the Fortran source code analysed in other parts of the system.
 
-TODO
+First, sections of the document that are likely to describe the equation.
+Particularly, we will focus on the text surrounding the equation in the document,
+and also text that references the equation.
+
+This text will then be processed using a [rule-based grammar](http://www.lrec-conf.org/proceedings/lrec2016/pdf/32_Paper.pdf)
+customized for this particular task.
 
 ## Equation to executable model
 
 The purpose of this component is to convert the (grounded) (La)TeX representation
 of the equation into a Python lambda that executes the equation.
 
-TODO
+TODO mention [latex2sympy](https://github.com/augustt198/latex2sympy)
