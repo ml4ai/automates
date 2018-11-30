@@ -19,7 +19,7 @@ and to include a variety of domains.
 
 ### Dataset construction pipeline
 
-We will use `latexmk` to compile the downloaded latex code into PDF.
+We will use [`latexmk`](https://mg.readthedocs.io/latexmk.html) to compile the downloaded latex code into PDF.
 We expect this process to be relatively simple because of the requirements
 established by arXiv for [(La)TeX submission](https://arxiv.org/help/submit_tex).
 
