@@ -31,4 +31,8 @@ that are found in the source code with the corresponding comments, for example:
 `TODO example from the fortran`
 
 The second type of linking is similar, linking the variables and equations found in the scientific papers
-with their descriptions.  For example, 
+with their descriptions.  This is seen in the following example of an equation and its description:
+![Reynolds number example](https://raw.githubusercontent.com/ml4ai/automates/master/documentation/reports/m1_architecture_report/Screen%20Shot%202018-12-01%20at%202.30.00%20PM.png)
+Here, each of the variables in the equation (e.g., `L` and `V`) will be linked the their extracted descriptions (`characteristic length` and `velocity scales`).  Additionally the entire equation will be linked to its description (`Reynolds Number`).  Any other instances of these variables or equations in the text document will also be linked.
+
+Finally, the extracted information from each of the sources (code and text) will be grounded, or linked, by generating a mapping from equation variable to code variable using their attached descriptions to inform the alignment process.
