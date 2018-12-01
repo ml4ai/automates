@@ -1,4 +1,4 @@
-theme: yous/whiteglass
+theme: jekyll-theme-cayman
 github:
   title: AutoMATES
   project_tagline: Automated Model Assembly from Text, Equations, and Software
