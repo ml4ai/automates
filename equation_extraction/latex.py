@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 from plasTeX.TeX import TeX
@@ -90,4 +92,4 @@ def tokenize(filename):
 
 if __name__ == '__main__':
     for t in tokenize(sys.argv[1]):
-        print type(t), repr(t)
+        print(type(t), repr(t))
