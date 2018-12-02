@@ -21,9 +21,8 @@ p-values, and overall context required for analysis of the
 executable models.  In order to extract this information, the papers, which are 
 typically found in pdf form, will need to be converted to text.  The team will use evaluate
 several off-the-shelf tools for this conversion and select the one that performs the best for 
-the intended purpose.  
-Potential tools include (but are not necessarily limited to): [GROBID](https://github.com/kermitt2/grobid), 
-[Science Parse](https://github.com/allenai/science-parse), and [Science Parse version 2](https://github.com/allenai/spv2).
+the intended purpose.  Potential tools include (but are not necessarily limited to): [GROBID](https://github.com/kermitt2/grobid), [Science Parse](https://github.com/allenai/science-parse), 
+and [Science Parse version 2](https://github.com/allenai/spv2).
 
 As the pdf-to-text conversion process is always noisy, the text 
 will then be filtered to remove excessively noisy text (e.g., poorly converted tables, etc.)
