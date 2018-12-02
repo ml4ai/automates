@@ -86,4 +86,8 @@ customized for this particular task.
 The purpose of this component is to convert the (grounded) (La)TeX representation
 of the equation into a Python lambda that executes the equation.
 
-TODO mention [latex2sympy](https://github.com/augustt198/latex2sympy)
+Particularly, (La)TeX representation of an equation will be converted to a [SymPy](https://www.sympy.org/en/index.html) form
+that can be used by [Delphi](https://github.com/ml4ai/delphi). The team will evaluate SymPy's own
+[experimental (La)TeX parsing](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing), which is a port
+of [latex2sympy](https://github.com/augustt198/latex2sympy). Based on this evaluation, the team may decide to use this feature
+as-is, extend it to support missing features required for the project, or develop a custom solution.
