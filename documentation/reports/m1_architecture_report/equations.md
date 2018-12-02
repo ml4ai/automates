@@ -1,4 +1,4 @@
-## 4. Reading Equations
+## 4. Equation Reading
 
 This document describes the design of the data acquisition, model training,
 and model deployment for equation detection, decoding, grounding and conversion
