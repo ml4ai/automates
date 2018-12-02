@@ -1,4 +1,4 @@
-## Machine Reading
+## 3. Machine Reading
 
 The purpose of this document is to describe the natural language processing
 (NLP) components required for the automatic extraction of scientific information

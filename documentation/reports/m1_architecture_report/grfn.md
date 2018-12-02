@@ -1,2 +1,2 @@
-## Intermediate Representation
+## 1. Intermediate Representation
 
