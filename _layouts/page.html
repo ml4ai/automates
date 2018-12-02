@@ -1,0 +1,12 @@
+---
+layout: default
+---
+
+<div class="page">
+  <h1 class="page-title">{{ page.title }}</h1>
+  {% if page.toc %}
+    <h2>Contents</h2>
+    {% include toc.html html=content h_min=2 %}
+  {% endif %}
+  {{ content }}
+</div>
