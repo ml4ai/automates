@@ -34,7 +34,7 @@ analysis and model assembly is performed by
 [Delphi](https://github.com/ml4ai/delphi).
 
 ## Reports
-[Month 1 Architecture Report](https://ml4ai.github.io/automates/documentation/reports/m1_architecture_report)
+[Month 1 Architecture Report](/documentation/reports/m1_architecture_report/)
 
 ## Team
 
