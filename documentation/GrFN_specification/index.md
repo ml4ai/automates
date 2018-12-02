@@ -118,8 +118,7 @@ attribute of a `<variable_reference>`. The index integer serves
 disambiguate the execution order of variable state references, as
 determined during program analysis.
 
-Function naming conventions
-\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^
+#### Function naming conventions
 
 Function names, like variable names, are ultimately strings, and will
 also follow a conventional structure used to capture context
