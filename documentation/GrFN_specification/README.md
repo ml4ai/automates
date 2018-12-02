@@ -223,7 +223,7 @@ FUTURE:
 A (partial) example instance of a JSON attribute-value list generated
 following the `<dbn_json_spec>`:
 
-``` {.sourceCode .javascript}
+```javascript
 {
     "name": "crop_yield.py",
     "dateCreated": "20180623",
