@@ -3,7 +3,7 @@ title: Milestone 1 Report:<br>Initial AutoMATES architecture, algorithms, and ap
 toc: true
 ---
 
-- [GrFN specification](https://ml4ai.github.io/automates/documentation/reports/m1_architecture_report/GrFN_specification_v0.1.md)
+- [GrFN specification](https://ml4ai.github.io/automates/documentation/reports/m1_architecture_report/GrFN_specification_v0.1)
 
 {% include_relative introduction.md %}
 {% include_relative for2py.md %}

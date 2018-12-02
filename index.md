@@ -1,3 +1,8 @@
+---
+title: About
+toc: true
+---
+
 There exist today state-of-the-art computational models that can provide highly
 accurate predictions about complex phenomena such as crop growth and weather
 patterns. However, certain phenomena, such as food insecurity, involve a host of
@@ -29,12 +34,12 @@ composition and reasoning in context to directly support the development of
 The machine reading of the scientific papers is done using a tool built upon
 [processors](https://github.com/clulab/processors), the parsing of equations in
 PDFs of scientific papers is done using the
-[equation parser module](https://ml4ai.github.io/automates/equation_extraction) module, and the program
+[equation parser module](https://ml4ai.github.io/automates/equation_extraction), and the program
 analysis and model assembly is performed by
 [Delphi](https://github.com/ml4ai/delphi).
 
 ## Reports
-[Month 1 Architecture Report](https://ml4ai.github.io/automates/documentation/reports/m1_architecture_report)
+[Month 1 Architecture Report]({{ site.baseurl }}/documentation/reports/m1_architecture_report/)
 
 ## Team
 
