@@ -1,4 +1,4 @@
-# Machine Reading
+## Machine Reading
 
 The purpose of this document is to describe the natural language processing
 (NLP) components required for the automatic extraction of scientific information
@@ -6,7 +6,7 @@ from academic papers, including the description of equations and the variables
 that compose them, along with the information required for the sensitivity
 analysis of the models of interest in this project.
 
-## Automatic reading of scientific discourse expressed in natural language
+### Automatic reading of scientific discourse expressed in natural language
 
 This component is required for the identification of the regions of interest in
 academic documents, as well as the extraction of entities and relations required
@@ -27,7 +27,7 @@ extraction pipeline for the acquisition of axis aligned bounding boxes (AABB)
 that will be required for the identification of the relevant sections of text,
 as well as the equations themselves and the variables that compose them.
 
-## Grounding and linking
+### Grounding and linking
 
 There are serveral aspects of grounding in this approach.  The first involves
 linking the variables that are found in the source code with the corresponding
