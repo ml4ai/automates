@@ -1,8 +1,3 @@
----
-title: Front-end Program Translation: for2py
-toc: true
----
-
 ## Introduction
 
 for2py is a front-end translator that maps Fortran source programs to a
