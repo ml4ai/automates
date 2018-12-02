@@ -307,7 +307,7 @@ Here are three examples of `<variable_spec>` objects:
 -   Example of a \"standard\" variable MAX\_RAIN within the CROP\_YIELD
     function:
 
-    ``` {.sourceCode .javascript}
+    ```javascript
     {
         "name": "CROP_YIELD__MAX_RAIN",
         "domain": "real"
@@ -317,7 +317,7 @@ Here are three examples of `<variable_spec>` objects:
 -   Example of loop index variable DAY in the context of the second
     instance of a loop in the function CROP\_YIELD
 
-    ``` {.sourceCode .javascript}
+    ```javascript
     {
         "name": "CROP_YIELD__LOOP_2__DAY"
         "domain": "integer"
@@ -327,7 +327,7 @@ Here are three examples of `<variable_spec>` objects:
 -   Example of variable introduced (inferred) when analyzing a
     conditional statement that is within the named function UPDATE\_EST:
 
-    ``` {.sourceCode .javascript}
+    ```javascript
     {
         "name": "IF_1"
         "domain": "boolean"
