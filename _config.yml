@@ -1,5 +1,18 @@
-theme: jekyll-theme-cayman
+# Dependencies
+markdown:         redcarpet
+highlighter:         true
+
+# Permalinks
+permalink:        pretty
+
+# Setup
+title:            AutoMATES
+tagline:          'Automated Model Assembly from Text, Equations, and Software'
+
+paginate:         5
+
+# Custom vars
+version:          2.0.0
+
 github:
-  title: AutoMATES
-  project_tagline: Automated Model Assembly from Text, Equations, and Software
-  is_project_page: false
+  repo:           https://github.com/ml4ai/automates

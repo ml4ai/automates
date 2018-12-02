@@ -35,8 +35,10 @@ comments, for example: `TODO example from the fortran`
 
 The second type of linking is similar, linking the variables and equations found
 in the scientific papers with their descriptions.  This is seen in the following
-example of an equation and its description: ![Reynolds number
-example](https://raw.githubusercontent.com/ml4ai/automates/master/documentation/reports/m1_architecture_report/Screen%20Shot%202018-12-01%20at%202.30.00%20PM.png)
+example of an equation and its description: 
+
+<img src="{{ site.url }}/documentation/reports/m1_architecture_report/reynolds_number_equation_screenshot.png" width="100%" />
+
 Here, each of the variables in the equation (e.g., `L` and `V`) will be linked
 the their extracted descriptions (`characteristic length` and `velocity
 scales`).  Additionally the entire equation will be linked to its description

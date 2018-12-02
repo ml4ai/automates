@@ -1,10 +1,10 @@
-# Equations
+## Equations
 
 This document describes the design of the data acquisition, model training,
 and model deployment for equation detection, decoding, grounding and conversion
 to an executable representation.
 
-## Data acquisition
+### Data acquisition
 
 This step is required for the construction of several datasets meant to be used
 for the training and evaluation of the models required for the following steps.
@@ -17,7 +17,7 @@ collected in 2003 for the [KDD cup competition](http://www.cs.cornell.edu/projec
 Our goal here is to extend this dataset to increase the number of training examples
 and to include a variety of domains.
 
-### Dataset construction pipeline
+#### Dataset construction pipeline
 
 We will use [`latexmk`](https://mg.readthedocs.io/latexmk.html) to compile the downloaded latex code into PDF.
 We expect this process to be relatively simple because of the requirements
@@ -36,14 +36,14 @@ will be identified by [template matching](https://docs.opencv.org/4.0.0/df/dfb/g
 This mapping of rendered equation to (page, AABB) tuples will be required for the
 training and evaluation of the equation detection component described below.
 
-## Equation detection
+### Equation detection
 
 The purpose of this component is the automatic detection of equations in scientific
 papers encoded as PDF files.
 
 TODO talk about [object detection algorithms](https://towardsdatascience.com/r-cnn-fast-r-cnn-faster-r-cnn-yolo-object-detection-algorithms-36d53571365e)
 
-## Equation decoding
+### Equation decoding
 
 The purpose of this component is the automatic conversion of rendered equations into
 (La)TeX code.
@@ -67,7 +67,7 @@ This model was trained with the [2003 KDD cup competition](http://www.cs.cornell
 of arXiv. We will compare the performance of this pretrained model with the same model trained
 using the dataset constructed in the [data acquisition](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/equations.md#data-acquisition) step. We will also improve the model (TODO how?).
 
-## Equation grounding
+### Equation grounding
 
 The purpose of this component is to identify text descriptions of the equation,
 as well as the individual variables that form part of it. This associations of
@@ -81,7 +81,7 @@ and also text that references the equation.
 This text will then be processed using a [rule-based grammar](http://www.lrec-conf.org/proceedings/lrec2016/pdf/32_Paper.pdf)
 customized for this particular task.
 
-## Equation to executable model
+### Equation to executable model
 
 The purpose of this component is to convert the (grounded) (La)TeX representation
 of the equation into a Python lambda that executes the equation.

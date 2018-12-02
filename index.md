@@ -1,5 +1,3 @@
-## About
-
 There exist today state-of-the-art computational models that can provide highly
 accurate predictions about complex phenomena such as crop growth and weather
 patterns. However, certain phenomena, such as food insecurity, involve a host of
