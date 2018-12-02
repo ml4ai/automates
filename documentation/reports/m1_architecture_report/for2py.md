@@ -125,7 +125,10 @@ subprograms (subroutines and functions), conditionals, loops, and case
 statements are all handled.
 
 
-Algorithms ---------- Algorithms currently being used or developed in for2py
+Algorithms 
+---------- 
+
+Algorithms currently being used or developed in for2py
 include the following:
 
 * *Regular expression construction and matching.*  Regular-expression-based
