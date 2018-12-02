@@ -47,6 +47,13 @@ and [Faster R-CNN](https://arxiv.org/abs/1506.01497) for the purpose of detectin
 equations in documents, resulting in (page, AABB) tuples that describe the location
 of an equation in a document.
 
+Since these models will be used on (scientific) text documents, we may not be able
+to use pretrained models commonly used for initializing machine vision models,
+such as [ResNet](https://arxiv.org/abs/1512.03385) trained on [ImageNet](http://www.image-net.org/),
+because they are more suitable for images of the real world. Instead we may have to
+train our models from scratch, possibly simplifying them for training efficiently
+in our constrained domain of scientific publications and single object of interest (equations).
+
 ### Equation decoding
 
 The purpose of this component is the automatic conversion of rendered equations into
