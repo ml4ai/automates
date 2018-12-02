@@ -1,8 +1,7 @@
 ---
+title: Report on initial AutoMATES architecture, algorithms, and approaches
 toc: true
 ---
-
-# Report on initial AutoMATES architecture, algorithms, and approaches
 
 Home for the ASKE Program Milestone 1 report.
 
