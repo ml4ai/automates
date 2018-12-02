@@ -37,7 +37,9 @@ The second type of linking is similar, linking the variables and equations found
 in the scientific papers with their descriptions.  This is seen in the following
 example of an equation and its description: 
 
-<img src="figs/reynolds_number_equation_screenshot.png" width="100%" />
+<p align="center">
+<img src="figs/reynolds_number_equation_screenshot.png" width="70%">
+</p>
 
 Here, each of the variables in the equation (e.g., `L` and `V`) will be linked
 the their extracted descriptions (`characteristic length` and `velocity
