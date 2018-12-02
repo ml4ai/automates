@@ -9,5 +9,5 @@ toc: true
 {% include_relative for2py.md %}
 {% include_relative machine_reading.md %}
 {% include_relative equations.md %}
-{% include_relative model_analysis %}
+{% include_relative model_analysis.md %}
 {% include_relative code_summarization.md %}
