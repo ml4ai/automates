@@ -6,8 +6,8 @@ toc: true
 Introduction
 ------------
 
-GrFN, pronounced "Griffin", is the specification format for the
-central representation that integrates the extracted Function Network
+GrFN, pronounced "Griffin", is the specification format for the central
+representation that integrates the extracted Function Network
 representation of source code (the result of program analysis) and
 associated extracted comments, links to natural language text (the
 result of natural language processing), and links to equations (the
@@ -20,9 +20,9 @@ and consumed by Delphi.
 Here we adopt a simplified [Backus-Naur Form
 (BNF)](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form)-inspired
 grammar convention combined with a convention for intuitively defining
-specific JSON attribute-value lists. The schema definitions and
-instance GrFN examples are shown in `monospaced font`, and
-interspersed with comments/discussion.
+specific JSON attribute-value lists. The schema definitions and instance
+GrFN examples are shown in `monospaced font`, and interspersed with
+comments/discussion.
 
 Following BNF convention, elements in `<...>` denote non-terminals, with
 `::=` indicating a definition of how a non-terminal is expanded. Many of
@@ -45,22 +45,23 @@ semantics of a (discretized) dynamic system model. We must take care to
 define (ongoing!) technical terms and highlight which concept domain
 (general computation versus dynamics system model) we are dealing with.
 
-We assume here that the source code is intended to describe the states of a
-dynamical system and how they evolve over time. The system is decomposed into a
-set of individual states (represented as random variables), where the values of
-the states at any given time are functions of function of the values of zero or
-more other states at a previous time point. As we are considering the evolution
-of the system over time, in general, every variable has an index. The functional
-relationships may be instantaneous (based on the variables indexed at the same
-point in time) or across time (a function of states of variables at different
-time indices).
+We assume here that the source code is intended to describe the states
+of a dynamical system and how they evolve over time. The system is
+decomposed into a set of individual states (represented as random
+variables), where the values of the states at any given time are
+functions of function of the values of zero or more other states at a
+previous time point. As we are considering the evolution of the system
+over time, in general, every variable has an index. The functional
+relationships may be instantaneous (based on the variables indexed at
+the same point in time) or across time (a function of states of
+variables at different time indices).
 
 Naming Conventions
 ------------------
 
 Both variables and functions will be uniquely named strings that do not
 rely on implicit position within the source code to be identified (one
-reason for requiring unique names is that we're moving from the
+reason for requiring unique names is that we are moving from the
 semantics of program variables as pointers to storage to a
 representation of variables as denoting the evolving state of a system).
 An important observation: the same variable name in source code could
@@ -105,16 +106,15 @@ And the second:
 
     <variable_reference>[attrval] ::= 
         "variable" : <variable_name>
-    "index" : <integer>
+        "index" : <integer>
 
-In addition to capturing source code variable environment context in
-variable declarations, we also need a mechanism to disambiguate specific
-instances of the same variable within the same context to accurately
-capture the logical order of variable value updates. In this case, we
-consider this as a repeated reference to the same variable. The
-semantics of repeated reference is captured by the variable \"index\"
-attribute of a `<variable_reference>`. The index integer serves
-disambiguate the execution order of variable state references, as
+In addition to capturing source code variable environment context in variable
+declarations, we also need a mechanism to disambiguate specific instances of the
+same variable within the same context to accurately capture the logical order of
+variable value updates. In this case, we consider this as a repeated reference
+to the same variable. The semantics of repeated reference is captured by the
+variable \"index\" attribute of a `<variable_reference>`. The index integer
+serves disambiguate the execution order of variable state references, as
 determined during program analysis.
 
 #### Function naming conventions
@@ -139,7 +139,7 @@ container functions), the `<enclosing_context>` is just the \"top
 level\" and so is empty. Assigns, conditions and loop\_plates, however,
 will often be declared within another source code function. In those
 cases, the `<enclosing_context>` capture the enclosing function name.
-For example: for an assignment within the UPDATE\_EST function, the
+For example, for an assignment within the UPDATE\_EST function, the
 `<enclosing_context>` is \"UPDATE\_EST\".
 
 Next, the `<function_type>` is the string representing which of the four
@@ -197,16 +197,15 @@ both are ultimately needed.
 Top-level GrFN specification
 ----------------------------
 
-The top-level structure of the GrFN is the `<grfn_spec>` and is
-itself a JSON attribute-value list, with the following schema
-definition::
+The top-level structure of the GrFN is the `<grfn_spec>` and is itself a
+JSON attribute-value list, with the following schema definition::
 
     <grfn_spec>[attrval] ::=
-        "start" : <string>
+        "start": <string>
         "name" : <string>
         "dateCreated" : <string>
-        "variables" : list of <variable_spec>
         "functions" : list of <function_spec>
+
 The \"start\" attribute holds the name of the entry point of the
 (Fortran) source code i.e. the PROGRAM module. In the absence of this
 module, this string will remain empty. The \"name\" attribute is used to
@@ -216,20 +215,21 @@ the current GrFN was generated (to represent versioning).
 
 FUTURE:
 
--   We may need to extend \"name\" value to accommodate multiple source
-    files. \* It may also be desirable to add an attribute to represent
-    the program analysis code version used to generate the GrFN (as
-    presumably the program analysis code could evolve and have different
-    properties) \-- although \"dateCreated\" may be sufficient.
+- We may need to extend \"name\" value to accommodate multiple source
+  files. 
+- It may also be desirable to add an attribute to represent
+  the program analysis code version used to generate the GrFN (as
+  presumably the program analysis code could evolve and have different
+  properties) \-- although \"dateCreated\" may be sufficient.
 
 A (partial) example instance of a JSON attribute-value list generated
 following the `<grfn_spec>`:
 
 ```javascript
 {
+    "start": "MAIN"
     "name": "crop_yield.py",
     "dateCreated": "20180623",
-    "variables": [... variable_specs go here...],
     "functions": [... function_specs go here...]
 }
 ```
@@ -241,15 +241,14 @@ Variable specification
         "name" : <variable_name>
         "domain" : <variable_domain_type>
 
-The purpose of the list of `<variable_spec>`\'s in the
-\<dbn\_json\_spec\> \"variables\" attribute value is to list all of the
-variables defined within the code we are analyzing, and associate each
-with their domain type. This list should include all variables whose
-values get updated by computation, and will be derived from variables
-that are explicitly asserted in source code, such as those used for
-explicit value assignment or used as loop indices, and other variables
-that program analysis may introduce (infer) as part of analyzing
-conditionals.
+The purpose of the list of `<variable_spec>`\'s in the \<grfn\_spec\>
+\"variables\" attribute value is to list all of the variables defined
+within the code we are analyzing, and associate each with their domain
+type. This list should include all variables whose values get updated by
+computation, and will be derived from variables that are explicitly
+asserted in source code, such as those used for explicit value
+assignment or used as loop indices, and other variables that program
+analysis may introduce (infer) as part of analyzing conditionals.
 
 ### Variable value domain
 
@@ -370,6 +369,7 @@ function name will include the function type, but having the explicit
 type attribute make parsing easier.
 
 ### Function Assign Specification
+-----------------------------
 
 A `<function_assign_spec>` denotes the setting of the value of a
 variable. The values are assigned to the \"target\" variable (denoted by
@@ -382,8 +382,8 @@ a lambda function (specified by `<function_assign_body_lambda_spec>`).:
         "name" : <function_name>
         "type" : "assign" | "condition" # note that either is a literal/terminal value 
                                         # of the grammar
-        "sources" : list of [ <variable_reference> | <variable_name> ]
-        "target" : <variable_reference> | <variable_name>
+        "sources" : list of [ <function_source_reference> | <variable_name> ]
+        "target" : <function_source_reference> | <variable_name>
         "body" : <function_assign_body_literal_spec> 
             | <function_assign_body_lambda_spec>
 
@@ -400,7 +400,15 @@ distinguish assignments used for conditions from other assignments.
 
 For \"sources\" and \"target\": when there is no need to refer to the
 variable by its relative index, then `<variable_name>` is sufficient,
-and index will be assumed to be 0 (if at all relevant).
+and index will be assumed to be 0 (if at all relevant). In other cases,
+the variables will be referenced using the
+`<function_source_reference>`. There may also be cases where the sources
+can be a function, either built-in or user-defined. These two will be
+referenced using `<function_source_reference>` defined as:
+
+    <function_source_reference> ::=
+       "name" : [ <variable_name> | <function_name> ]
+       "type" : "variable" | "function"
 
 #### Function assign body Literal
 
@@ -426,8 +434,8 @@ assigned to the variable in the `<function_assign_spec>`, then
 
     <function_assign_body_lambda_spec>[attrval] ::=
         "type" : "lambda"
-        "executable_name" : <function_name>
-        "source_line_number" : <source_code_reference>
+        "name" : <function_name>
+        "reference" : <source_code_reference>
 
 Eventually, we can expand this part of the grammar to accommodate a
 restricted set of arithmetic operations involved in computing the final
@@ -454,20 +462,6 @@ Handles representation of simple binary condition block::
     Else
 
 ### Function Container Specification
-
-TODO:
-
--   Handle single return value.
--   Handle multiple return values.
--   Handle conditional return value.
-    -   Simple::
-
-            If x:
-                Return <cond1>
-            Else
-                Return <cond2>
-
-    -   Complex: handling arbitrary code in the conditions
 
 A `<function_container_spec>` is the generic, \"top level\" way to
 specify how a set of variables that are related by functions are \"wired
