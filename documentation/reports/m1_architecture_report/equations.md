@@ -36,12 +36,16 @@ will be identified by [template matching](https://docs.opencv.org/4.0.0/df/dfb/g
 This mapping of rendered equation to (page, AABB) tuples will be required for the
 training and evaluation of the equation detection component described below.
 
-### Equation classification and localization
+### Equation detection
 
 The purpose of this component is the automatic detection of equations in scientific
 papers encoded as PDF files.
 
-TODO talk about [object detection algorithms](https://towardsdatascience.com/r-cnn-fast-r-cnn-faster-r-cnn-yolo-object-detection-algorithms-36d53571365e)
+For this purpose we will evaluate standard machine vision techniques such as
+[R-CNN](https://arxiv.org/abs/1311.2524), [Fast R-CNN](https://arxiv.org/abs/1504.08083),
+and [Faster R-CNN](https://arxiv.org/abs/1506.01497) for the purpose of detecting
+equations in documents, resulting in (page, AABB) tuples that describe the location
+of an equation in a document.
 
 ### Equation decoding
 
