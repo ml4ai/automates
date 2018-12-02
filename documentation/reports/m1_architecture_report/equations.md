@@ -36,7 +36,7 @@ will be identified by [template matching](https://docs.opencv.org/4.0.0/df/dfb/g
 This mapping of rendered equation to (page, AABB) tuples will be required for the
 training and evaluation of the equation detection component described below.
 
-### Equation detection
+### Equation classification and localization
 
 The purpose of this component is the automatic detection of equations in scientific
 papers encoded as PDF files.
@@ -86,8 +86,16 @@ customized for this particular task.
 The purpose of this component is to convert the (grounded) (La)TeX representation
 of the equation into a Python lambda that executes the equation.
 
-Particularly, (La)TeX representation of an equation will be converted to a [SymPy](https://www.sympy.org/en/index.html) form
-that can be used by [Delphi](https://github.com/ml4ai/delphi). The team will evaluate SymPy's own
-[experimental (La)TeX parsing](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing), which is a port
-of [latex2sympy](https://github.com/augustt198/latex2sympy). Based on this evaluation, the team may decide to use this feature
-as-is, extend it to support missing features required for the project, or develop a custom solution.
+Particularly, (La)TeX representation of an equation will be converted to a
+[SymPy](https://www.sympy.org/en/index.html) form that can be used by
+[Delphi](https://github.com/ml4ai/delphi). The team will evaluate SymPy's own
+[experimental (La)TeX parsing](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing),
+which is a port of [latex2sympy](https://github.com/augustt198/latex2sympy).
+Based on this evaluation, the team may decide to use this feature as-is,
+extend it to support missing features required for the project, or develop a custom solution.
+
+The selected approach will be adapted to preserve the descriptions attached to
+the equation and its variables by the
+[machine reading component](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/machine_reading.md).
+These descriptions will be then used for linking individual variables
+with models extracted from different sources (i.e., source code).
