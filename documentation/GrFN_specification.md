@@ -21,7 +21,7 @@ Here we adopt a simplified [Backus-Naur Form
 (BNF)](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form)-inspired
 grammar convention combined with a convention for intuitively defining
 specific JSON attribute-value lists. The schema definitions and
-instance DBN-JSON examples are shown in `monospaced font`, and
+instance GrFN examples are shown in `monospaced font`, and
 interspersed with comments/discussion.
 
 Following BNF convention, elements in `<...>` denote non-terminals, with
@@ -33,7 +33,7 @@ is the case, we will decorate the element definition by adding
     <element_name>[attrval] ::= 
 
 We will then specify the structure of the JSON attribute-value list
-attributes (quoted strings), and their value types using a mixture of
+attributes (quoted strings) and their value types using a mixture of
 JSON and BNF. In a few places, we note in the comments anticipated
 extensions that may be needed using the tag \'FUTURE\'.
 
@@ -41,20 +41,19 @@ extensions that may be needed using the tag \'FUTURE\'.
 
 The challenge of this project is to define a map from the semantics of
 program (computation) specification (as asserted in source code) to the
-semantics of (discrete) dynamic system model. We must take care to
+semantics of a (discretized) dynamic system model. We must take care to
 define (ongoing!) technical terms and highlight which concept domain
 (general computation versus dynamics system model) we are dealing with.
 
-We assume here that the source code is intended to describe the states
-of a dynamic system and how they evolve over time. The system is
-decomposed into a set of individual states (represented as random
-variables), where the values of the states at any given time are a
-function of the values zero or more other states at a previous time
-point. As we are considering the evolution of the system over time, in
-general every variable has an index. The functional relationships may be
-instantaneous (based on the variables indexed at the same point in time)
-or across time (a function of states of variables at different time
-indices).
+We assume here that the source code is intended to describe the states of a
+dynamical system and how they evolve over time. The system is decomposed into a
+set of individual states (represented as random variables), where the values of
+the states at any given time are functions of function of the values of zero or
+more other states at a previous time point. As we are considering the evolution
+of the system over time, in general, every variable has an index. The functional
+relationships may be instantaneous (based on the variables indexed at the same
+point in time) or across time (a function of states of variables at different
+time indices).
 
 Naming Conventions
 ------------------
@@ -195,34 +194,36 @@ NOTE: There is some redundancy in the above examples between the
 `<enclosing_context>` of the name of the variable, however we think that
 both are ultimately needed.
 
-Top-level DBN-JSON specification
---------------------------------
+Top-level GrFN specification
+----------------------------
 
-The top-level structure to the DBN-JSON is the `<dbn_json_spec>` and is
+The top-level structure of the GrFN is the `<grfn_spec>` and is
 itself a JSON attribute-value list, with the following schema
 definition::
 
-    <dbn_json_spec>[attrval] ::=
+    <grfn_spec>[attrval] ::=
+        "start" : <string>
         "name" : <string>
         "dateCreated" : <string>
         "variables" : list of <variable_spec>
         "functions" : list of <function_spec>
-
-The \"name\" attribute is used to denote the (Fortran) source code that
-has been analyzed. The \"dateCreated\" attribute is a string
-representing the date+time that the current DBN-JSON was generated (to
-represent versioning).
+The \"start\" attribute holds the name of the entry point of the
+(Fortran) source code i.e. the PROGRAM module. In the absence of this
+module, this string will remain empty. The \"name\" attribute is used to
+denote the (Fortran) source code that has been analyzed. The
+\"dateCreated\" attribute is a string representing the date+time that
+the current GrFN was generated (to represent versioning).
 
 FUTURE:
 
 -   We may need to extend \"name\" value to accommodate multiple source
     files. \* It may also be desirable to add an attribute to represent
-    the program analysis code version used to generate the DBN-JSON (as
+    the program analysis code version used to generate the GrFN (as
     presumably the program analysis code could evolve and have different
     properties) \-- although \"dateCreated\" may be sufficient.
 
 A (partial) example instance of a JSON attribute-value list generated
-following the `<dbn_json_spec>`:
+following the `<grfn_spec>`:
 
 ```javascript
 {
