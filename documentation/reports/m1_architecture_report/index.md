@@ -2,7 +2,6 @@
 title: "Milestone 1 Report: Initial AutoMATES architecture, algorithms, and approaches"
 toc: true
 ---
-{:toc}
 
 - [GrFN specification](GrFN_specification_v0.1)
 
