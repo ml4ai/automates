@@ -1,6 +1,6 @@
 ## 2. Program Analysis
 
-### for2py and Analyzing Fortran Source Programs 
+### Analyzing Fortran Source Programs: for2py
 
 for2py is a front-end translator that maps Fortran source programs to a
 language-independent intermediate representation (IR) that is  then used to
