@@ -1,6 +1,5 @@
 ---
 title: About
-toc: true
 ---
 
 There exist today state-of-the-art computational models that can provide highly
