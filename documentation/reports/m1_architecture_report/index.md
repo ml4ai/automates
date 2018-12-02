@@ -1,5 +1,5 @@
 ---
-title: Report on initial AutoMATES architecture, algorithms, and approaches
+title: Milestone 1 Report:<br>Initial AutoMATES architecture, algorithms, and approaches
 toc: true
 ---
 
