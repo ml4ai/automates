@@ -87,10 +87,11 @@ html {
 /* Sidebar nav */
 .sidebar-nav {
   margin-bottom: 1rem;
+  font-size: 0.875rem;
 }
 .sidebar-nav-item {
   display: block;
-  line-height: 1.75;
+  line-height: 1.2;
 }
 a.sidebar-nav-item:hover,
 a.sidebar-nav-item:focus {
