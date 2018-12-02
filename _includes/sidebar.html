@@ -13,6 +13,7 @@
       <a class="sidebar-nav-item{% if page.url == site.baseurl %} active{% endif %}" href="{{ site.baseurl }}">Home</a>
 
       {% if page.toc %}
+        {{ page.title }}
       {% include toc.html html=content h_min=2 %}
       {% endif %}
 
