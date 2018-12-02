@@ -107,8 +107,9 @@ For2py currently uses the following off-the-shelf components:
 * similar functionality.
 
 
-### Components we are building Components we are building consist of the
-following:
+### Components we are building 
+
+Components we are building consist of the following:
 1. *Comment extraction.*  We currently extract subprogram-level comments at the
 heads (i.e., immediately before the beginning of the subprogram code), necks
 (immediately after the subprogram definition but before its body), and feet
