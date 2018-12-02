@@ -19,9 +19,13 @@ There is a wide range of contextual information expressed in scientific descript
 models, including ranges and units for variables, confidence scores such as
 p-values, and overall context required for analysis of the
 executable models.  In order to extract this information, the papers, which are 
-typically found in pdf form, will need to be converted to text.  The team will use 
-an off-the-shelf tool for this conversion, ScienceParse, which is designed specifically to 
-convert scientific papers.  As the pdf-to-text conversion process is always noisy, the text 
+typically found in pdf form, will need to be converted to text.  The team will use evaluate
+several off-the-shelf tools for this conversion and select the one that performs the best for 
+the intended purpose.  
+Potential tools include (but are not necessarily limited to): [GROBID](https://github.com/kermitt2/grobid), 
+[Science Parse](https://github.com/allenai/science-parse), and [Science Parse version 2](https://github.com/allenai/spv2).
+
+As the pdf-to-text conversion process is always noisy, the text 
 will then be filtered to remove excessively noisy text (e.g., poorly converted tables, etc.)
 using common sense heuristics (e.g., sentence length and occurrence of certain special characters).
 As a final step in preprocessing, the text will be [syntactically parsed](https://github.com/clulab/processors). 
@@ -34,8 +38,22 @@ robust, and efficient for diverse reading at scale in both the Big Mechanism pro
 system) and the World Modeler's program (with the [Eidos](https://github.com/clulab/eidos/) 
 system).
 
-This component is required for the identification of the regions of interest in
-academic documents, as well as the extraction of entities and relations required
+#### Extracting equation and variable descriptions
+In addition to contextual information, the team will also focus on extracting the descriptions
+of model-relevant equations and their variables found in the scientific literature which typically
+occur in the immediate vicinity of the presentation of the equations themselves.  However, during the
+conversion from pdf to text, information about the original _location_ of a given span of text is 
+lost.  For this reason, in order to extract these descriptions, the team will first implement a 
+component which identification of the regions of interest in the academic documents. 
+
+Specifically, using the bounding box found for a given equation (Section `TODO`), the team will 
+expand it to get the text surrounding the equation.  Additionally, the pdf can be converted to
+text in layout-preserving mode (using [Poppler's pdf2text](https://poppler.freedesktop.org/)), 
+which will allow the team to locate the equation identifier and therefore the the text around it.
+
+
+
+, as well as the extraction of entities and relations required
 for the grounding the models built by other components of our system.
 
 This component is divided in two submodules: (A) in charge of the acquisition of
