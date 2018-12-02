@@ -6,6 +6,7 @@ toc: true
 - [GrFN specification](GrFN_specification_v0.1)
 
 {% include_relative introduction.md %}
+{% include_relative grfn.md %}
 {% include_relative for2py.md %}
 {% include_relative machine_reading.md %}
 {% include_relative equations.md %}
