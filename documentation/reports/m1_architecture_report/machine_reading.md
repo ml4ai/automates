@@ -27,7 +27,7 @@ information, the papers, which are typically found in PDF form, will
 need to be converted to text. The team will evaluate several
 off-the-shelf tools for this conversion and select the one that performs
 the best for the intended purpose. Potential tools include (but are not
-necessarily limited to): [GROBID](https://github.com/kermitt2/grobid),
+necessarily limited to) [GROBID](https://github.com/kermitt2/grobid),
 [Science Parse](https://github.com/allenai/science-parse), and [Science
 Parse version 2](https://github.com/allenai/spv2).
 
@@ -70,14 +70,14 @@ equation](#equation-detection), the team will expand it to get the text
 surrounding the equation.  Additionally, the PDF can be converted to
 text in layout-preserving mode (using [Poppler's
 pdf2text](https://poppler.freedesktop.org/)), which will allow the team
-to locate the equation identifier and therefore the the text around it,
+to locate the equation identifier and therefore the text around it,
 as well as extract the entities and relations required for the grounding
 the models built by other components of our system.
 
 Once the region surrounding the equation is identified, Odin rules will likewise
 be used on the text within that region to extract descriptions of the equation and
 the variables it contains, as well as any descriptions relations
-between variables.  
+between variables.
 
 
 
@@ -112,19 +112,19 @@ in the scientific papers with their descriptions.  This is seen in the following
 example of an equation and its description: 
 
 <p align="center">
-<img src="figs/reynolds_number_equation_screenshot.png" width="70%">
+<img src="figs/reynolds_number_equation_screenshot.png" width="90%">
 </p>
 
 Here, each of the variables in the equation (e.g., `L` and `V`) will be linked
 the their extracted descriptions (`characteristic length` and `velocity
-scales`).  Additionally the entire equation will be linked to its description
+scales`).  Additionally, the entire equation will be linked to its description
 (`Reynolds Number`).  Any other instances of these variables or equations in the
 text document will also be linked, under the assumption of 
 [one sense per discourse](http://aclweb.org/anthology/H92-1045).
 Likewise, variables occurring in the source code will be linked with any comments
 that describe them.
 
-Then, the variables and equations from each of these sources (code and text) will
+The variables and equations from each of these sources (code and text) will then
 be matched to each other, by generating a mapping from equation variable to code
 variable using their attached descriptions to inform the alignment process.  For this, 
 the team will initially use the grounding component of [Eidos](https://github.com/clulab/eidos) 
