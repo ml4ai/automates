@@ -79,25 +79,6 @@ be used on the text within that region to extract descriptions of the equation a
 the variables it contains, as well as any descriptions relations
 between variables.
 
-
-
-<!---This component is divided in two submodules. The first is in charge of
-acquiring information such as ranges and units for variables, confidence
-scores such as *p*-values, and overall context required for the
-automatic execution of our executable models. The second is responsible
-for identifying sections of the document that describe equations and
-variables, as well as extracting the relevant descriptions from those
-sections of text.
-
-<!---This includes the extraction of text from PDF files, optionally
-preserving the document layout information. It also involves the
-development of grammars designed for the automatic extraction of the
-information of interest. It is important for this component to
-comunicate with other steps in the equation extraction pipeline for the
-acquisition of axis aligned bounding boxes (AABB) that will be required
-for the identification of the relevant sections of text, as well as the
-equations themselves and the variables that compose them.-->
-
 ### Grounding
 
 After extraction, it will be necessary to ground the variables and equations.
