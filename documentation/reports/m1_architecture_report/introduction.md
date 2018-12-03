@@ -50,7 +50,7 @@ Program Analysis, Machine Reading and Equation Reading.
    variables in equations. 
 3. The *Equation Reading* pipeline extracts equations from PDFs, first
    identifying the LaTeX source code that could produce the equation
-   image, and then mapping the latex representation to a symbolic math
+   image, and then mapping the LaTeX representation to a symbolic math
    representation. Equation Reading interacts with the Program Analysis
    pipeline by passing along the symbolic mathematical representation to
    perform the same analysis that extracts the source code Function
@@ -77,21 +77,21 @@ analyzed according to the structural properties of the Function Network:
 shared grounded variables between two models are identified and the
 function network topology is analyzed to identify which computations
 involved in setting variable states are similar and which are different.
-Then, the Lambdas are incorporate to analyze the functional
+Then, the Lambdas are incorporated to analyze the functional
 relationships between variables in similar networks, through sensitivity
-analysis. Sensitivity analysis can be computationally expensive.
-Automatic code differentiation will be used to efficiently compute the
-derivative (relationships of rates of change) of variables with respect
-to their input, and Bayesian optimization techniques are used to make
-estimation of sensitivity functions require as few samples as possible.
-The final product of this analysis includes: (1) modular executable
+analysis. Because sensitivity analysis can be computationally expensive,
+automatic code differentiation will be used to efficiently compute the
+derivative (rates of change) of variables with respect to their inputs,
+and Bayesian optimization techniques will be used to make estimation of
+sensitivity functions require as few samples as possible. The final
+product of this analysis (1) includes modular executable
 representations of grounded models (as dynamic Bayesian networks), (2)
-provide results of model comparison to enable model choice in tasks, and
-(3) based on grounded model similarity and differences, enable model
+provides results of model comparison to enable model choice in tasks, and
+(3) based on grounded model similarity and differences, enables model
 composition.
 
 Finally, the combined, grounded information in the GrFN representation
-that is linked to the original source code is as the basis for
+that is linked to the original source code is the basis for
 generating natural language summaries of portions of the original source
 code. This can help improve human readability and debugging of the
 source code.
