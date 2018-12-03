@@ -1,5 +1,3 @@
-## 5. Model Analysis 
-
 The GrFN and Lambdas Intermediate Representation grounds computational
 scientiic models in context of their descriptions and connections to
 domain ontologies.  At this point, we can perform Model Analysis in a

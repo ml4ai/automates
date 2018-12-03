@@ -1,4 +1,3 @@
-## 4. Equation Reading
 
 The AutoMATES team will implement a module for automatically reading
 equations found in scientific papers describing models of interest.

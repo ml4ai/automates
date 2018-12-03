@@ -1,5 +1,3 @@
-## 3. Machine Reading and Grounding
-
 In addition to extracting information from source code, the AutoMATES
 team will be automatically extracting complementary scientific
 information from academic papers, including the description of
