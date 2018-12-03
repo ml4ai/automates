@@ -6,7 +6,8 @@ information from academic papers, including the description of
 model-relevant equations and the variables that comprise them, along with
 the information required for the sensitivity analysis of the models of
 interest in this project.  Once extracted, this information will be
-grounded, or linked, to the model components extracted in `TODO`.
+grounded, or linked, to the [model components extracted from the original
+source code](#2-program-analysis).
 
 ### Automatic reading of scientific discourse expressed in natural language
 
