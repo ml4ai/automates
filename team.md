@@ -11,3 +11,6 @@ The members of the AutoMATES team.
 - [Marco Valenzuela](https://github.com/marcovzla) (co-PI)
 - [Paul Hein](https://github.com/pauldhein) (Graduate Research Assistant)
 - [Pratik Bhandari](https://github.com/pratikbhd) (Graduate Research Assistant)
+- Jennifer Kadowaki (Graduate Research Assistant)
+- Maria Alexeeva (Graduate Research Assistant)
+- Andrew Zupon (Graduate Research Assistant)
