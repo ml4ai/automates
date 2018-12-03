@@ -33,7 +33,10 @@ date: 2018-12-02
 ## 6. Model Analysis 
 {% include_relative model_analysis.md %}
 
+## 7. From function networks to executable dynamic Bayes networks
+{% include_relative delphi_representation.md %}
+
 ---
 
-## 7. Code Summarization
+## 8. Code Summarization
 {% include_relative code_summarization.md %}
