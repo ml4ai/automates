@@ -1,8 +1,9 @@
 ## 4. Equation Reading
 
-This document describes the design of the data acquisition, model training,
-and model deployment for equation detection, decoding, grounding and conversion
-to an executable representation.
+The AutoMATES team will implement a module for automatically reading equations
+found in scientific papers describing models of interest.  This section details
+the data acquisition, model training, and model deployment for equation 
+detection, decoding, grounding and conversion to an executable representation.
 
 ### Data acquisition
 
@@ -47,23 +48,12 @@ and [Faster R-CNN](https://arxiv.org/abs/1506.01497) for the purpose of detectin
 equations in documents, resulting in (page, AABB) tuples that describe the location
 of an equation in a document.
 
-The Faster R-CNN model uses a base network consisting of a series of convolutional and
-pooling layers as a feature detection for subsequent steps. This network is usually a model
-pretrained for the task of image classification, such as [ResNet](https://arxiv.org/abs/1512.03385)
-trained on [ImageNet](http://www.image-net.org/). However, since our task is detecting
-equations on scientific publications, no pretrained model that we are aware of is available
-and therefore we will train this feature extraction base network from scratch using
-the data collected by us.
-
-Next, a region proposal network (RPN) uses the features found in the previous step to
-propose a predefined number of bounding boxes that may contain equations. For this purpose,
-fixed bounding boxes of different sizes are placed throughout the image. Then the RPN
-predicts two values: the probability that the bounding box contains an object of interest,
-and a correction to the bounding box for it to better fit the object.
-
-At this point the Faster R-CNN uses a second step to classify the type of object,
-using a traditional R-CNN. Since we are only interested in one type of object (equations)
-we can use the output of the RPN directly, simplifying training and speeding up inference.
+Since these models will be used on (scientific) text documents, we may not be able
+to use pretrained models commonly used for initializing machine vision models,
+such as [ResNet](https://arxiv.org/abs/1512.03385) trained on [ImageNet](http://www.image-net.org/),
+because they are more suitable for images of the real world. Instead we may have to
+train our models from scratch, possibly simplifying them for training efficiently
+in our constrained domain of scientific publications and single object of interest (equations).
 
 ### Equation decoding
 
@@ -87,7 +77,7 @@ images to markup
 (i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).
 This model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample
 of arXiv. We will compare the performance of this pretrained model with the same model trained
-using the dataset constructed in the [data acquisition](#data-acquisition) step. We will also improve the model (TODO how?).
+using the dataset constructed in the [data acquisition](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/equations.md#data-acquisition) step. We will also improve the model (TODO how?).
 
 ### Equation grounding
 
@@ -118,6 +108,6 @@ extend it to support missing features required for the project, or develop a cus
 
 The selected approach will be adapted to preserve the descriptions attached to
 the equation and its variables by the
-[machine reading component](#3-machine-reading-and-grounding).
+[machine reading component](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/machine_reading.md).
 These descriptions will be then used for linking individual variables
 with models extracted from different sources (i.e., source code).
