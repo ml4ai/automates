@@ -26,9 +26,9 @@ established by arXiv for [(La)TeX submission](https://arxiv.org/help/submit_tex)
 
 The source (La)TeX code will be [tokenized](https://github.com/tiarno/plastex) and
 scanned for detecting equation related environments. These sequences of tokens will
-be stored and will also be rendered into independend images that show the rendered
+be stored and will also be rendered into independent images that show the rendered
 equation in isolation. This pairing of (La)TeX tokens to rendered equations is the
-datased required for the training and evaluation of the equation decoding component
+dataset required for the training and evaluation of the equation decoding component
 described below.
 
 Next, each page of the rendered document will be [transformed into an image](https://github.com/Belval/pdf2image),
