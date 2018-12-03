@@ -24,7 +24,9 @@
          href="{{ site.baseurl }}/documentation/reports/">Reports</a>
 
       {% if page.toc %}
-        {{ page.title }}
+        <h4 style="color: white;">{{ page.title }}</h4>
+        <h4 style="font-weight: normal; color: white;">Contents</h4>
+
       {% include toc.html html=content h_min=2 %}
       {% endif %}
 
