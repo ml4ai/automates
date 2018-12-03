@@ -38,12 +38,3 @@ mechanisms that span multiple domains. By exposing the implicit domain knowledge
 baked into computational models, this effort will enable automated model
 composition and reasoning in context to directly support the development of
 ‘third wave’ artificial intelligence.
-
-## Software
-
-The machine reading of the scientific papers is done using a tool built upon
-[processors](https://github.com/clulab/processors), the parsing of equations in
-PDFs of scientific papers is done using the
-[equation parser module](equation_extraction/README/), and the program
-analysis and model assembly is performed by
-[Delphi](https://github.com/ml4ai/delphi).
