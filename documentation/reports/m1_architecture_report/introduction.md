@@ -11,7 +11,7 @@ program instructions and natural language comments that implement the
 aforementioned models.
 
 Along the top of the figure are four headings (in grey) that describe
-the general type of processing being done by AutoMATES:
+the general type of processing being carried out by AutoMATES in the columns below the heading:
 
 1. *Extraction* of information from the input data sources (text and
    source code).
@@ -37,7 +37,8 @@ Program Analysis, Machine Reading and Equation Reading.
    (*Lambdas*). Within the ASKE program, the AutoMATES Program Analysis
    pipeline will focus on extraction and analysis of Fortran source
    code. Additional language processing pipelines can be modularly added
-   in the future.
+   in the future, with each language pipeline providing language-agnostic 
+   output ot the intermediate representation.
 2. The *Machine Reading* pipeline processes text from papers and other
    documents (input as PDFs) describing scientific models as well as
    input comments associated with source code. This pipeline extracts
@@ -46,8 +47,7 @@ Program Analysis, Machine Reading and Equation Reading.
    ontologies, and specifics about variable ranges, units, confidence
    scores, etc. Variable mentions identified in comments can be linked
    to mentions in the documents. Machine reading also extracts the
-   context of equations, also linking and grounding mentions of
-   variables in equations. 
+   context of equations, grounding mentions of variables in equations. 
 3. The *Equation Reading* pipeline extracts equations from PDFs, first
    identifying the LaTeX source code that could produce the equation
    image, and then mapping the LaTeX representation to a symbolic math
