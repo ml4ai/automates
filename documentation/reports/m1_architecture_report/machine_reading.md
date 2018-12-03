@@ -6,15 +6,16 @@ information from academic papers, including the description of
 model-relevant equations and the variables that comprise them, along with
 the information required for the sensitivity analysis of the models of
 interest in this project.  Once extracted, this information will be
-grounded, or linked, to the model components extracted in `TODO`.
+grounded, or linked, to the [model components extracted from the original
+source code](#2-program-analysis).
 
 ### Automatic reading of scientific discourse expressed in natural language
 
 The scientific papers that describe the models of interest will be read
-to extract three different types of information: (1) contextual
-information relevant to the models of interest, (2) specific
-descriptions of equations and variables, and (3) information pertinent to
-these equations and variables.
+to extract two different types of information: (1) contextual
+information relevant to the models of interest, and (2) specific
+descriptions of equations and variables, as well as any discussion of the
+relations they have with each other.
 
 #### Extracting context
 
@@ -43,9 +44,9 @@ through the use of
 [Odin](http://www.lrec-conf.org/proceedings/lrec2016/pdf/32_Paper.pdf)
 rule grammars, which can be constructed and refined quickly.  Odin
 grammars have proven to be reliable, robust, and efficient for diverse
-reading at scale in both the Big Mechanism (with the
+reading at scale in both the Big Mechanism program (with the
 [Reach](https://academic.oup.com/database/article/2018/1/bay098/5107029)
-system) and the World Modelers programs (with the
+system) and the World Modeler's program (with the
 [Eidos](https://github.com/clulab/eidos/) system).  The flexibility of
 Odin's extraction engine allows it to easily ingest the normalized
 measurements mentioned above along with the surface form and the dependency 
@@ -73,6 +74,13 @@ to locate the equation identifier and therefore the the text around it,
 as well as extract the entities and relations required for the grounding
 the models built by other components of our system.
 
+Once the region surrounding the equation is identified, Odin rules will likewise
+be used on the text within that region to extract descriptions of the equation and
+the variables it contains, as well as any descriptions relations
+between variables.  
+
+
+
 <!---This component is divided in two submodules. The first is in charge of
 acquiring information such as ranges and units for variables, confidence
 scores such as *p*-values, and overall context required for the
@@ -90,13 +98,16 @@ acquisition of axis aligned bounding boxes (AABB) that will be required
 for the identification of the relevant sections of text, as well as the
 equations themselves and the variables that compose them.-->
 
-### Grounding and linking
+### Grounding
 
-There are serveral aspects of grounding in this approach.  The first involves
-linking the variables that are found in the source code with the corresponding
-comments, for example: `TODO example from the fortran`
+After extraction, it will be necessary to ground the variables and equations.
+There are two distinct types (or directions) of grounding that will be necessary.  The first 
+is associating a description to a variable, and the other is to associate 
+two variables (one extracted from source code and another from text) based on 
+their descriptions and other information such as model structure (e.g., if they 
+are both in a denominator, etc.).
 
-The second type of linking is similar, linking the variables and equations found
+The first type of grounding will link the variables and equations found
 in the scientific papers with their descriptions.  This is seen in the following
 example of an equation and its description: 
 
@@ -108,8 +119,16 @@ Here, each of the variables in the equation (e.g., `L` and `V`) will be linked
 the their extracted descriptions (`characteristic length` and `velocity
 scales`).  Additionally the entire equation will be linked to its description
 (`Reynolds Number`).  Any other instances of these variables or equations in the
-text document will also be linked.
+text document will also be linked, under the assumption of 
+[one sense per discourse](http://aclweb.org/anthology/H92-1045).
+Likewise, variables occurring in the source code will be linked with any comments
+that describe them.
 
-Finally, the extracted information from each of the sources (code and text) will
-be grounded, or linked, by generating a mapping from equation variable to code
-variable using their attached descriptions to inform the alignment process.
+Then, the variables and equations from each of these sources (code and text) will
+be matched to each other, by generating a mapping from equation variable to code
+variable using their attached descriptions to inform the alignment process.  For this, 
+the team will initially use the grounding component of [Eidos](https://github.com/clulab/eidos) 
+that is used to align high-level concepts (such as _rainfall_) with mid- and 
+low-level indicators and variables (such as `Average_precipitation_in_depth_(mm_per_year)`).
+This component is based on word similarity, as determined using pretrained word embeddings, 
+and will be extended as necessary to adapt it to this particular use case.
