@@ -3,7 +3,8 @@
         Version 1.0.6
           https://github.com/allejo/jekyll-toc
 
-        "...like all things liquid - where there's a will, and ~36 hours to spare, there's usually a/some way" ~jaybe
+        "...like all things liquid - where there's a will, and ~36 hours to
+        spare, there's usually a/some way" ~jaybe
 
         Usage:
             {% include toc.html html=content sanitize=true class="inline_toc" id="my_toc" h_min=2 h_max=3 %}
@@ -15,16 +16,23 @@
             * sanitize     (bool)   : false  - when set to true, the headers will be stripped of any HTML in the TOC
             * class        (string) :   ''   - a CSS class assigned to the TOC
             * id           (string) :   ''   - an ID to assigned to the TOC
-            * h_min        (int)    :   1    - the minimum TOC header level to use; any header lower than this value will be ignored
-            * h_max        (int)    :   6    - the maximum TOC header level to use; any header greater than this value will be ignored
-            * ordered      (bool)   : false  - when set to true, an ordered list will be outputted instead of an unordered list
-            * item_class   (string) :   ''   - add custom class(es) for each list item; has support for '%level%' placeholder, which is the current heading level
-            * baseurl      (string) :   ''   - add a base url to the TOC links for when your TOC is on another page than the actual content
+            * h_min        (int)    :   1    - the minimum TOC header level to
+                                               use; any header lower than this value will be ignored
+            * h_max        (int)    :   6    - the maximum TOC header level to
+                                               use; any header greater than this value will be ignored
+            * ordered      (bool)   : false  - when set to true, an ordered list
+                                               will be outputted instead of an unordered list
+            * item_class   (string) :   ''   - add custom class(es) for each
+                                               list item; has support for '%level%' placeholder, which is the
+                                               current heading level
+            * baseurl      (string) :   ''   - add a base url to the TOC links
+                                               for when your TOC is on another page than the actual content
             * anchor_class (string) :   ''   - add custom class(es) for each anchor element
 
         Output:
-            An ordered or unordered list representing the table of contents of a markdown block. This snippet will only
-            generate the table of contents and will NOT output the markdown given to it
+            An ordered or unordered list representing the table of contents of a
+            markdown block. This snippet will only generate the table of
+            contents and will NOT output the markdown given to it
     {% endcomment %}
 
     {% capture my_toc %}{% endcapture %}
@@ -64,7 +72,7 @@
 
         {% assign space = '' %}
         {% for i in (1..indentAmount) %}
-            {% assign space = space | prepend: '    ' %}
+            {% assign space = space | prepend: '  ' %}
         {% endfor %}
 
         {% unless include.item_class == blank %}

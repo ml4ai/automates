@@ -1,4 +1,4 @@
-## Equations
+## 4. Equation Reading
 
 This document describes the design of the data acquisition, model training,
 and model deployment for equation detection, decoding, grounding and conversion
@@ -41,7 +41,18 @@ training and evaluation of the equation detection component described below.
 The purpose of this component is the automatic detection of equations in scientific
 papers encoded as PDF files.
 
-TODO talk about [object detection algorithms](https://towardsdatascience.com/r-cnn-fast-r-cnn-faster-r-cnn-yolo-object-detection-algorithms-36d53571365e)
+For this purpose we will evaluate standard machine vision techniques such as
+[R-CNN](https://arxiv.org/abs/1311.2524), [Fast R-CNN](https://arxiv.org/abs/1504.08083),
+and [Faster R-CNN](https://arxiv.org/abs/1506.01497) for the purpose of detecting
+equations in documents, resulting in (page, AABB) tuples that describe the location
+of an equation in a document.
+
+Since these models will be used on (scientific) text documents, we may not be able
+to use pretrained models commonly used for initializing machine vision models,
+such as [ResNet](https://arxiv.org/abs/1512.03385) trained on [ImageNet](http://www.image-net.org/),
+because they are more suitable for images of the real world. Instead we may have to
+train our models from scratch, possibly simplifying them for training efficiently
+in our constrained domain of scientific publications and single object of interest (equations).
 
 ### Equation decoding
 
@@ -86,4 +97,16 @@ customized for this particular task.
 The purpose of this component is to convert the (grounded) (La)TeX representation
 of the equation into a Python lambda that executes the equation.
 
-TODO mention [latex2sympy](https://github.com/augustt198/latex2sympy)
+Particularly, (La)TeX representation of an equation will be converted to a
+[SymPy](https://www.sympy.org/en/index.html) form that can be used by
+[Delphi](https://github.com/ml4ai/delphi). The team will evaluate SymPy's own
+[experimental (La)TeX parsing](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing),
+which is a port of [latex2sympy](https://github.com/augustt198/latex2sympy).
+Based on this evaluation, the team may decide to use this feature as-is,
+extend it to support missing features required for the project, or develop a custom solution.
+
+The selected approach will be adapted to preserve the descriptions attached to
+the equation and its variables by the
+[machine reading component](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/machine_reading.md).
+These descriptions will be then used for linking individual variables
+with models extracted from different sources (i.e., source code).

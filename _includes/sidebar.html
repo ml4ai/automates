@@ -1,39 +1,30 @@
-<!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
-     styles, `#sidebar-checkbox` for behavior. -->
-<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+<div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+      <h1>
+        <a href="{{ site.baseurl }}">
+          {{ site.title }}
+        </a>
+      </h1>
+      <p class="lead">{{ site.tagline }}</p>
+    </div>
 
-<!-- Toggleable sidebar -->
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-item">
-    <p>{{ site.description }}</p>
-  </div>
+    <nav class="sidebar-nav">
 
-  <nav class="sidebar-nav">
-    <a class="sidebar-nav-item{% if page.title == "Home" %} active{% endif %}" href="/">Home</a>
+      <a class="sidebar-nav-item" href="{{ site.baseurl }}">About</a>
+      <a class="sidebar-nav-item" href="{{ site.baseurl }}/software">Software</a>
+      <a class="sidebar-nav-item" href="{{ site.baseurl }}/team">Team</a>
+      <a class="sidebar-nav-item" href="{{ site.baseurl }}/documentation/reports/">Reports</a>
 
-    {% comment %}
-      The code below dynamically generates a sidebar nav of pages with
-      `layout: page` in the front-matter. See readme for usage.
-    {% endcomment %}
+      {% if page.toc %}
+        <h4 style="color: white;">{{ page.title }}</h4>
+        <h4 style="font-weight: normal; color: white;">Contents</h4>
 
-    {% assign pages_list = site.pages %}
-    {% for node in pages_list %}
-      {% if node.title != null %}
-        {% if node.layout == "page" %}
-          <a class="sidebar-nav-item{% if page.url == node.url %} active{% endif %}" 
-             href="/automates/{{ node.url }}">{{ node.title }}</a>
-        {% endif %}
+      {% include toc.html html=content h_min=2 %}
       {% endif %}
-    {% endfor %}
 
-    <a class="sidebar-nav-item" href="{{ site.github.repo }}/archive/v{{ site.version }}.zip">Download</a>
-    <a class="sidebar-nav-item" href="{{ site.github.repo }}">GitHub project</a>
-    <span class="sidebar-nav-item">Currently v{{ site.version }}</span>
-  </nav>
+    </nav>
 
-  <div class="sidebar-item">
-    <p>
-      &copy; {{ site.time | date: '%Y' }}. All rights reserved.
-    </p>
+    <p>&copy; {{ site.time | date: '%Y' }}. All rights reserved.</p>
   </div>
 </div>
