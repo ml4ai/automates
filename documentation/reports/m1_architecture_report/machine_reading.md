@@ -43,9 +43,9 @@ through the use of
 [Odin](http://www.lrec-conf.org/proceedings/lrec2016/pdf/32_Paper.pdf)
 rule grammars, which can be constructed and refined quickly.  Odin
 grammars have proven to be reliable, robust, and efficient for diverse
-reading at scale in both the Big Mechanism (with the
+reading at scale in both the Big Mechanism program (with the
 [Reach](https://academic.oup.com/database/article/2018/1/bay098/5107029)
-system) and the World Modelers programs (with the
+system) and the World Modeler's program (with the
 [Eidos](https://github.com/clulab/eidos/) system).  The flexibility of
 Odin's extraction engine allows it to easily ingest the normalized
 measurements mentioned above along with the surface form and the dependency 
