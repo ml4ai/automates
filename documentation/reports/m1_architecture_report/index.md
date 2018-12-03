@@ -1,5 +1,5 @@
 ---
-title: "Milestone 1 Report: Initial AutoMATES architecture, algorithms, and approaches"
+title: "Month 1 Report: Initial AutoMATES architecture, algorithms, and approaches"
 toc: true
 ---
 
