@@ -15,12 +15,13 @@
       <a class="sidebar-nav-item" href="{{ site.baseurl }}/software">Software</a>
       <a class="sidebar-nav-item" href="{{ site.baseurl }}/team">Team</a>
       <a class="sidebar-nav-item" href="{{ site.baseurl }}/documentation/reports/">Reports</a>
+      <a class="sidebar-nav-item" href="https://github.com/ml4ai/automates">Github Repo</a>
 
       {% if page.toc %}
         <h4 style="color: white;">{{ page.title }}</h4>
         <h4 style="font-weight: normal; color: white;">Contents</h4>
 
-      {% include toc.html html=content h_min=2 %}
+      {% include toc.html html=content h_min=2 h_max=2%}
       {% endif %}
 
     </nav>
