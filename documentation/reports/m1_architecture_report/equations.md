@@ -69,7 +69,7 @@ the output of the RPN can be used directly, simplifying training and speeding up
 Once detected, the rendered equations will need to be automatically convered into
 LaTeX code.  For this purpose an encoder-decoder architecture will be used, which will encode
 the equation image into a dense embedding that can subsequentially be decoded into LaTeX
-code capable of being compiled into an image. We have selected LaTeX as the
+code capable of being compiled into an image. LaTeX was selected as the
 intermediary representation between image and executable model because of the
 availability of training data (arXiv) and because, due to the nature of LaTeX,
 it preserves typographic information that could be useful for the successful
