@@ -3,11 +3,12 @@
 In addition to extracting information from source code, the AutoMATES
 team will be automatically extracting complementary scientific
 information from academic papers, including the description of
-model-relevant equations and the variables that comprise them, along with
-the information required for the sensitivity analysis of the models of
-interest in this project.  Once extracted, this information will be
-grounded, or linked, to the [model components extracted from the original
-source code](#2-program-analysis).
+model-relevant equations and the variables that comprise them, along
+with the information required for the sensitivity analysis of the
+models of interest in this project (such as variable domain types,
+ranges, and default values, etc.).  Once extracted, this information
+will be grounded, or linked, to the [model components extracted from
+the original source code](#2-program-analysis).
 
 ### Automatic reading of scientific discourse expressed in natural language
 
@@ -19,17 +20,18 @@ relations they have with each other.
 
 #### Extracting context
 
-There is a wide range of contextual information expressed in scientific
-descriptions of models, including ranges and units for variables,
-confidence scores such as *p*-values, and overall context required for
-analysis of the executable models. In order to extract this
-information, the papers, which are typically found in PDF form, will
-need to be converted to text. The team will evaluate several
-off-the-shelf tools for this conversion and select the one that performs
-the best for the intended purpose. Potential tools include (but are not
-necessarily limited to) [GROBID](https://github.com/kermitt2/grobid),
-[Science Parse](https://github.com/allenai/science-parse), and [Science
-Parse version 2](https://github.com/allenai/spv2).
+There is a wide range of contextual information expressed in
+scientific descriptions of models, including ranges and units for
+variables, confidence scores such as *p*-values, and overall context
+required for analysis of the executable models (variable domain types,
+default values, etc.). In order to extract this information, the
+papers, which are typically found in PDF form, will be converted to
+text. The team will evaluate several off-the-shelf tools for this
+conversion and select the one that performs the best for the intended
+purpose. Potential tools include (but are not necessarily limited to)
+[GROBID](https://github.com/kermitt2/grobid), [Science
+Parse](https://github.com/allenai/science-parse), and [Science Parse
+version 2](https://github.com/allenai/spv2).
 
 As the PDF-to-text conversion process is always noisy, the text will
 then be filtered to remove excessively noisy text (e.g., poorly
@@ -57,7 +59,7 @@ extraction.
 
 In addition to contextual information, the team will also focus on
 extracting the descriptions of model-relevant equations and their
-variables found in the scientific literature which typically occur in
+variables found in the scientific literature, which typically occur in
 the immediate vicinity of the presentation of the equations themselves.
 However, during the conversion from PDF to text, information about the
 original _location_ of a given span of text is lost. For this reason, in
@@ -74,42 +76,49 @@ to locate the equation identifier and therefore the text around it,
 as well as extract the entities and relations required for the grounding
 the models built by other components of our system.
 
-Once the region surrounding the equation is identified, Odin rules will likewise
-be used on the text within that region to extract descriptions of the equation and
-the variables it contains, as well as any descriptions relations
-between variables.
+Once the region surrounding the equation is identified, Odin rules
+will likewise be used on the text within that region to extract
+descriptions of the equation and the variables it contains, as well as
+any descriptions relations between variables.
 
 ### Grounding
 
-After extraction, it will be necessary to ground the variables and equations.
-There are two distinct types (or directions) of grounding that will be necessary.  The first 
-is associating a description to a variable, and the other is to associate 
-two variables (one extracted from source code and another from text) based on 
-their descriptions and other information such as model structure (e.g., if they 
-are both in a denominator, etc.).
+After extraction, it will be necessary to ground the variables and
+equations.  There are two distinct types (or directions) of grounding
+that will be necessary.  The first is associating a description to a
+variable, and the other is to associate two variables (one extracted
+from source code and another from text) based on their descriptions
+and other information such as model structure (e.g., if they are both
+in a denominator, etc.).
 
-The first type of grounding will link the variables and equations found
-in the scientific papers with their descriptions.  This is seen in the following
-example of an equation and its description: 
+The first type of grounding will link the variables and equations
+found in the scientific papers with their descriptions.  This is seen
+in the following paper excerpt that shows an example of an equation
+and its description:
 
 <p align="center">
 <img src="figs/reynolds_number_equation_screenshot.png" width="90%">
 </p>
 
-Here, each of the variables in the equation (e.g., `L` and `V`) will be linked
-the their extracted descriptions (`characteristic length` and `velocity
-scales`).  Additionally, the entire equation will be linked to its description
-(`Reynolds Number`).  Any other instances of these variables or equations in the
-text document will also be linked, under the assumption of 
-[one sense per discourse](http://aclweb.org/anthology/H92-1045).
-Likewise, variables occurring in the source code will be linked with any comments
-that describe them.
+Here, each of the variables in the equation (e.g., `L` and `V`) will
+be linked to their extracted descriptions (`characteristic length`
+and `velocity scales`).  Additionally, the entire equation will be
+linked to its description (`Reynolds Number`).  Any other instances of
+these variables or equations in the text document will also be linked,
+under the assumption of [one sense per
+discourse](http://aclweb.org/anthology/H92-1045).  Likewise, variables
+occurring in the source code will be linked with any comments that
+describe them.
 
-The variables and equations from each of these sources (code and text) will then
-be matched to each other, by generating a mapping from equation variable to code
-variable using their attached descriptions to inform the alignment process.  For this, 
-the team will initially use the grounding component of [Eidos](https://github.com/clulab/eidos) 
-that is used to align high-level concepts (such as _rainfall_) with mid- and 
-low-level indicators and variables (such as `Average_precipitation_in_depth_(mm_per_year)`).
-This component is based on word similarity, as determined using pretrained word embeddings, 
-and will be extended as necessary to adapt it to this particular use case.
+The variables and equations from each of these sources (code and text)
+will then be matched to each other, by generating a mapping from
+equation variable to code variable using their attached descriptions
+to inform the alignment process.  For this, the team will initially
+use the domain ontology grounding component of
+[Eidos](https://github.com/clulab/eidos) that is used to align
+high-level concepts (such as _rainfall_) with mid- and low-level
+indicators and variables (such as
+`Average_precipitation_in_depth_(mm_per_year)`).  This component is
+based on word similarity, as determined using pretrained word
+embeddings, and will be extended as necessary to adapt it to this
+particular use case.
