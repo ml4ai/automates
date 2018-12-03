@@ -1,5 +1,6 @@
-Equations
-=========
+---
+title: Equation Parser
+---
 
 This package aims to allow for the extraction and parsing of equations in PDFs
 of technical and scientific documents. It utilizes techniques from both computer
@@ -13,3 +14,5 @@ tables, and charts) in PDF documents.
 This module is being developed as part of the
 [AutoMATES](https://ml4ai.github.io/automates/) project at the University of
 Arizona.
+
+- [Github code repository](https://github.com/ml4ai/automates/tree/master/equation_extraction)
