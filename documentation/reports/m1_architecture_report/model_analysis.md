@@ -1,5 +1,11 @@
 ## 5. Model Analysis
-Once we have lifted multiple scientific models from source code that compete with each other to represent the same phenomena we will enter the analysis phase. The two main goals of the analysis phase will be to compare model fitness and to augment existing models to create new models of the scientific phenomena under study that have improved upon existing models by one or more metrics. Some metrics we plan to consider are the amount of uncertainty in model output/predictions, the computational cost of the model, and the cost of data collection associated with the model.
+Once we have lifted multiple scientific models from source code that
+compete with each other to represent the same phenomena we will enter
+the analysis phase. The two main goals of this phase will be to compare
+model fitness and to augment existing models to improve them according
+to one or more metrics, such as the amount of uncertainty in model
+output/predictions, the computational cost of the model, and the cost of
+data collection associated with the model.
 
 ### Function network structural comparison
 The first step of comparative model analysis will be to compare the computational structure of the two competing models. All of our extracted models will be represented by factor networks. Below we describe the components of a factor network and then we discuss our plans to create an algorithm that can recursively compute the difference between two factor networks.
