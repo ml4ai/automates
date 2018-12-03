@@ -138,3 +138,4 @@ estimation of the sensitivity function.
 3. Finally, in conjunction with the two techniques above, we will
 explore using compiler optimization methods to compile differentiated
 lambda functions into efficiently executable code.
+
