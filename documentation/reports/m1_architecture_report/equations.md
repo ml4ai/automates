@@ -99,9 +99,3 @@ Specifically, the LaTeX representation of an equation will be converted to a
 which is a port of [latex2sympy](https://github.com/augustt198/latex2sympy).
 Based on this evaluation, the team may decide to use this feature as-is,
 extend it to support missing features required for the project, or develop a custom solution.
-
-The selected approach will be adapted to preserve the descriptions attached to
-the equation and its variables for use by the
-[machine reading component](#3-machine-reading-and-grounding).
-These descriptions will be then used for linking individual variables
-with models extracted from different sources (i.e., source code).
