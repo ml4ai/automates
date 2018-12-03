@@ -6,7 +6,7 @@
           {{ site.title }}
         </a>
       </h1>
-      <p class="lead">{{ site.description }}</p>
+      <p class="lead">{{ site.tagline }}</p>
     </div>
 
     <nav class="sidebar-nav">
@@ -16,7 +16,11 @@
         {{ page.title }}
       {% include toc.html html=content h_min=2 %}
       {% endif %}
+      <a class="sidebar-nav-item{% if page.url == site.baseurl %} active {% endif %}" 
+         href="{{ site.baseurl }}/documentation/reports/">Reports</a>
 
+      <a class="sidebar-nav-item{% if page.url == site.baseurl %} active {% endif %}" 
+         href="{{ site.baseurl }}/team">Team</a>
     </nav>
 
     <p>&copy; {{ site.time | date: '%Y' }}. All rights reserved.</p>
