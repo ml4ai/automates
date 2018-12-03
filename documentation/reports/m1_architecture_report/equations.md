@@ -47,12 +47,23 @@ and [Faster R-CNN](https://arxiv.org/abs/1506.01497) for the purpose of detectin
 equations in documents, resulting in (page, AABB) tuples that describe the location
 of an equation in a document.
 
-Since these models will be used on (scientific) text documents, we may not be able
-to use pretrained models commonly used for initializing machine vision models,
-such as [ResNet](https://arxiv.org/abs/1512.03385) trained on [ImageNet](http://www.image-net.org/),
-because they are more suitable for images of the real world. Instead we may have to
-train our models from scratch, possibly simplifying them for training efficiently
-in our constrained domain of scientific publications and single object of interest (equations).
+The Faster R-CNN model uses a base network consisting of a series of convolutional and
+pooling layers as a feature detection for subsequent steps. This network is usually a model
+pretrained for the task of image classification, such as [ResNet](https://arxiv.org/abs/1512.03385)
+trained on [ImageNet](http://www.image-net.org/). However, since our task is detecting
+equations on scientific publications, no pretrained model that we are aware of is available
+and therefore we will train this feature extraction base network from scratch using
+the data collected by us.
+
+Next, a region proposal network (RPN) uses the features found in the previous step to
+propose a predefined number of bounding boxes that may contain equations. For this purpose,
+fixed bounding boxes of different sizes are placed throughout the image. Then the RPN
+predicts two values: the probability that the bounding box contains an object of interest,
+and a correction to the bounding box for it to better fit the object.
+
+At this point the Faster R-CNN uses a second step to classify the type of object,
+using a traditional R-CNN. Since we are only interested in one type of object (equations)
+we can use the output of the RPN directly, simplifying training and speeding up inference.
 
 ### Equation decoding
 
