@@ -2,59 +2,57 @@
 
 The AutoMATES team will implement a module for automatically reading equations
 found in scientific papers describing models of interest.  This section details
-the data acquisition, model training, and model deployment for equation 
+the approach for data acquisition, model training, and model deployment for equation 
 detection, decoding, grounding and conversion to an executable representation.
 
 ### Data acquisition
 
-This step is required for the construction of several datasets meant to be used
-for the training and evaluation of the models required for the following steps.
+Several datasets need to be constructed in order to train and evaluate the models 
+required for detecting and decoding equations found in text.
 
-For this purpose we will use papers written in LaTeX downloaded in bulk from
+For this purpose, the team will use papers written in LaTeX, downloaded in bulk from
 [arXiv](https://arxiv.org/help/bulk_data_s3). Previously, similar datasets
 have been constructed but they are limited in scope. Particularly, a sample
 of source files from the `hep-th` (High Energy Physics) section of arXiv was
 collected in 2003 for the [KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html).
-Our goal here is to extend this dataset to increase the number of training examples
+The goal here is to extend this dataset to increase the number of training examples
 and to include a variety of domains.
 
 #### Dataset construction pipeline
 
-We will use [`latexmk`](https://mg.readthedocs.io/latexmk.html) to compile the downloaded LaTeX code into PDF.
-We expect this process to be relatively simple because of the requirements
-established by arXiv for [(La)TeX submission](https://arxiv.org/help/submit_tex).
+The team will use [`latexmk`](https://mg.readthedocs.io/latexmk.html) to compile the downloaded LaTeX code into PDF.
+This process is expected to be relatively simple because of the requirements
+established by arXiv for [LaTeX submission](https://arxiv.org/help/submit_tex).
 
 The source (La)TeX code will be [tokenized](https://github.com/tiarno/plastex) and
-scanned for detecting equation related environments. These sequences of tokens will
+scanned to detect equation related environments. These detected sequences of tokens will
 be stored and rendered into independent images that show the rendered
-equation in isolation. This pairing of (La)TeX tokens to rendered equations is the
-dataset required for the training and evaluation of the equation decoding component
+equation in isolation. This pairing of LaTeX tokens to rendered equations is the
+dataset required for the training and evaluation of the **equation decoding** component
 described below.
 
 Next, each page of the rendered document will be [transformed into an image](https://github.com/Belval/pdf2image),
 and an axis aligned bounding box (AABB) for the equation in one of the document pages
 will be identified by [template matching](https://docs.opencv.org/4.0.0/df/dfb/group__imgproc__object.html).
 This mapping of rendered equation to (page, AABB) tuples will be required for the
-training and evaluation of the equation detection component described below.
+training and evaluation of the **equation detection** component described below.
 
 ### Equation detection
 
-The purpose of this component is the automatic detection of equations in scientific
-papers encoded as PDF files.
-
-For this purpose we will evaluate standard machine vision techniques such as
+Before equations can be decoded, they first need to be located within the scientific
+papers encoded as PDF files.  For this, standard machine vision techniques such as
 [R-CNN](https://arxiv.org/abs/1311.2524), [Fast R-CNN](https://arxiv.org/abs/1504.08083),
-and [Faster R-CNN](https://arxiv.org/abs/1506.01497) for the purpose of detecting
-equations in documents, resulting in (page, AABB) tuples that describe the location
-of an equation in a document.
+and [Faster R-CNN](https://arxiv.org/abs/1506.01497) will be evaluated for the purpose 
+of detecting equations in documents.  The output of these models will be (page, AABB) tuples 
+that describe the location of an equation in a document.
 
 The Faster R-CNN model uses a base network consisting of a series of convolutional and
-pooling layers as a feature detection for subsequent steps. This network is usually a model
+pooling layers as feature detection for subsequent steps. This network is usually a model
 pretrained for the task of image classification, such as [ResNet](https://arxiv.org/abs/1512.03385)
 trained on [ImageNet](http://www.image-net.org/). However, since our task is detecting
-equations on scientific publications, no pretrained model that we are aware of is available
-and therefore we will train this feature extraction base network from scratch using
-the data collected by us.
+equations in scientific publications, no pretrained model that the team is aware of is available,
+and therefore this feature extraction base network will be trained from scratch using
+the data collected as above.
 
 Next, a region proposal network (RPN) uses the features found in the previous step to
 propose a predefined number of bounding boxes that may contain equations. For this purpose,
@@ -62,63 +60,48 @@ fixed bounding boxes of different sizes are placed throughout the image. Then th
 predicts two values: the probability that the bounding box contains an object of interest,
 and a correction to the bounding box for it to better fit the object.
 
-At this point the Faster R-CNN uses a second step to classify the type of object,
-using a traditional R-CNN. Since we are only interested in one type of object (equations)
-we can use the output of the RPN directly, simplifying training and speeding up inference.
+At this point, the Faster R-CNN uses a second step to classify the type of object,
+using a traditional R-CNN. Since here there is only one type of object of interest (equations),
+the output of the RPN can be used directly, simplifying training and speeding up inference.
 
 ### Equation decoding
 
-The purpose of this component is the automatic conversion of rendered equations into
-(La)TeX code.
-
-For this purpose we will use an encoder-decoder architecture capable of encoding
-an image into a dense embedding that can subsequentially be decoded into (La)TeX
-code capable of being compiled into an image. We have selected (La)TeX as the
+Once detected, the rendered equations will need to be automatically convered into
+LaTeX code.  For this purpose an encoder-decoder architecture will be used, which will encode
+the equation image into a dense embedding that can subsequentially be decoded into LaTeX
+code capable of being compiled into an image. We have selected LaTeX as the
 intermediary representation between image and executable model because of the
-availability of training data (arXiv) and because, due to the nature of (La)TeX,
-it preserves typographic information that could be useful for the succesful
-interpretation of the equation semantics.
+availability of training data (arXiv) and because, due to the nature of LaTeX,
+it preserves typographic information that could be useful for the successful
+interpretation of the equation semantics (e.g., bolding, italics, subscript, etc.).
 
 Encoder-decoder architectures like the one proposed have been successfully applied
 in the past for the purpose of image caption generation
 (e.g., [Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge](https://arxiv.org/abs/1609.06647)).
 
-We will start with an existing model previously trained for the purpose of converting
+The AutoMATES team will start with an existing model previously trained for the purpose of converting
 images to markup
 (i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).
 This model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample
-of arXiv. We will compare the performance of this pretrained model with the same model trained
-using the dataset constructed in the [data acquisition](#data-acquisition) step. We will also improve the model (TODO how?).
+of arXiv. The performance of this pretrained model will be compared with the same model trained
+using the dataset constructed in the [data acquisition](#data-acquisition) step, and the model will be augmented as necessary (e.g., likely constraints will be added which ensure the decoding of LaTeX that can be compiled).
 
-### Equation grounding
-
-The purpose of this component is to identify text descriptions of the equation,
-as well as the individual variables that form part of it. This associations of
-variable to description will be fundamental for the alignment of equations to
-the Fortran source code analysed in other parts of the system.
-
-First, sections of the document that are likely to describe the equation.
-Particularly, we will focus on the text surrounding the equation in the document,
-and also text that references the equation.
-
-This text will then be processed using a [rule-based grammar](http://www.lrec-conf.org/proceedings/lrec2016/pdf/32_Paper.pdf)
-customized for this particular task.
 
 ### Equation to executable model
 
-The purpose of this component is to convert the (grounded) (La)TeX representation
-of the equation into a Python lambda that executes the equation.
+Once decoded, the LaTeX representation of the equation will be converted into a Python lambda that 
+executes the equation.
 
-Particularly, (La)TeX representation of an equation will be converted to a
+Specifically, the LaTeX representation of an equation will be converted to a
 [SymPy](https://www.sympy.org/en/index.html) form that can be used by
 [Delphi](https://github.com/ml4ai/delphi). The team will evaluate SymPy's own
-[experimental (La)TeX parsing](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing),
+[experimental LaTeX parsing](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing),
 which is a port of [latex2sympy](https://github.com/augustt198/latex2sympy).
 Based on this evaluation, the team may decide to use this feature as-is,
 extend it to support missing features required for the project, or develop a custom solution.
 
 The selected approach will be adapted to preserve the descriptions attached to
-the equation and its variables by the
+the equation and its variables for use by the
 [machine reading component](#3-machine-reading-and-grounding).
 These descriptions will be then used for linking individual variables
 with models extracted from different sources (i.e., source code).
