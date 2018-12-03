@@ -87,7 +87,7 @@ images to markup
 (i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).
 This model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample
 of arXiv. We will compare the performance of this pretrained model with the same model trained
-using the dataset constructed in the [data acquisition](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/equations.md#data-acquisition) step. We will also improve the model (TODO how?).
+using the dataset constructed in the [data acquisition](#data-acquisition) step. We will also improve the model (TODO how?).
 
 ### Equation grounding
 
@@ -118,6 +118,6 @@ extend it to support missing features required for the project, or develop a cus
 
 The selected approach will be adapted to preserve the descriptions attached to
 the equation and its variables by the
-[machine reading component](https://github.com/ml4ai/automates/blob/master/documentation/reports/m1_architecture_report/machine_reading.md).
+[machine reading component](#3-machine-reading-and-grounding).
 These descriptions will be then used for linking individual variables
 with models extracted from different sources (i.e., source code).
