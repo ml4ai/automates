@@ -10,7 +10,7 @@ detection, decoding, grounding and conversion to an executable representation.
 This step is required for the construction of several datasets meant to be used
 for the training and evaluation of the models required for the following steps.
 
-For this purpose we will use papers written in latex downloaded in bulk from
+For this purpose we will use papers written in LaTeX downloaded in bulk from
 [arXiv](https://arxiv.org/help/bulk_data_s3). Previously, similar datasets
 have been constructed but they are limited in scope. Particularly, a sample
 of source files from the `hep-th` (High Energy Physics) section of arXiv was
@@ -20,13 +20,13 @@ and to include a variety of domains.
 
 #### Dataset construction pipeline
 
-We will use [`latexmk`](https://mg.readthedocs.io/latexmk.html) to compile the downloaded latex code into PDF.
+We will use [`latexmk`](https://mg.readthedocs.io/latexmk.html) to compile the downloaded LaTeX code into PDF.
 We expect this process to be relatively simple because of the requirements
 established by arXiv for [(La)TeX submission](https://arxiv.org/help/submit_tex).
 
 The source (La)TeX code will be [tokenized](https://github.com/tiarno/plastex) and
 scanned for detecting equation related environments. These sequences of tokens will
-be stored and will also be rendered into independent images that show the rendered
+be stored and rendered into independent images that show the rendered
 equation in isolation. This pairing of (La)TeX tokens to rendered equations is the
 dataset required for the training and evaluation of the equation decoding component
 described below.
