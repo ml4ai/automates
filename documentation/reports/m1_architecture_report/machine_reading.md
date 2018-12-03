@@ -10,6 +10,9 @@ ranges, and default values, etc.).  Once extracted, this information
 will be grounded, or linked, to the [model components extracted from
 the original source code](#2-program-analysis).
 
+Supporting code for this pipeline will be implemented in the
+[AutoMATES](https://github.com/ml4ai/automates) repostory.
+
 ### Automatic reading of scientific discourse expressed in natural language
 
 The scientific papers that describe the models of interest will be read
