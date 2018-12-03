@@ -58,32 +58,31 @@ order to extract these descriptions, the team will first implement a
 component that identifies the regions of interest in the academic
 documents.
 
-Specifically, using the [bounding box found for a given equation](#equation-detection),
-the team will expand it to get the text surrounding the
-equation.  Additionally, the pdf can be converted to text in
-layout-preserving mode (using [Poppler's
+Specifically, using the [bounding box found for a given
+equation](#equation-detection), the team will expand it to get the text
+surrounding the equation.  Additionally, the PDF can be converted to
+text in layout-preserving mode (using [Poppler's
 pdf2text](https://poppler.freedesktop.org/)), which will allow the team
-to locate the equation identifier and therefore the the text around it.
+to locate the equation identifier and therefore the the text around it,
+as well as extract the entities and relations required for the grounding
+the models built by other components of our system.
 
+This component is divided in two submodules. The first is in charge of
+acquiring information such as ranges and units for variables, confidence
+scores such as *p*-values, and overall context required for the
+automatic execution of our executable models. The second is responsible
+for identifying sections of the document that describe equations and
+variables, as well as extracting the relevant descriptions from those
+sections of text.
 
-
-, as well as the extraction of entities and relations required
-for the grounding the models built by other components of our system.
-
-This component is divided in two submodules: (A) in charge of the acquisition of
-information such as ranges and units for variables, confidence scores such as
-p-values, and overall context required for the automatic execution of our
-executable models. And (B), the identification of sections of the document that
-describe equations and variables, as well as the extraction of the relevant
-descriptions from those sections of text.
-
-This includes the extraction of text from PDF files, optionally preserving the
-document layout information. It also involves the development of grammars
-designed for the automatic extraction of the information of interest. It is
-important for this component to comunicate with other steps in the equation
-extraction pipeline for the acquisition of axis aligned bounding boxes (AABB)
-that will be required for the identification of the relevant sections of text,
-as well as the equations themselves and the variables that compose them.
+This includes the extraction of text from PDF files, optionally
+preserving the document layout information. It also involves the
+development of grammars designed for the automatic extraction of the
+information of interest. It is important for this component to
+comunicate with other steps in the equation extraction pipeline for the
+acquisition of axis aligned bounding boxes (AABB) that will be required
+for the identification of the relevant sections of text, as well as the
+equations themselves and the variables that compose them.
 
 ### Grounding and linking
 
