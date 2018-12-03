@@ -1,5 +1,6 @@
-Equations
-=========
+---
+title: Equation Parser
+---
 
 This package aims to allow for the extraction and parsing of equations in PDFs
 of technical and scientific documents. It utilizes techniques from both computer
