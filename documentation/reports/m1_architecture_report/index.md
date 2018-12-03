@@ -1,6 +1,8 @@
 ---
 title: "Month 1 Report: Initial AutoMATES architecture, algorithms, and approaches"
 toc: true
+layout: post
+date: 2018-12-02
 ---
 
 - [GrFN specification](GrFN_specification_v0.1)
