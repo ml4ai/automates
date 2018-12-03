@@ -80,8 +80,9 @@ html {
 .sidebar-about h1 {
   color: #fff;
   margin-top: 0;
-  font-family: "Cardo", serif;
+  font-family: "PT Mono", serif;
   font-size: 2.25rem;
+  font-weight: normal;
 }
 
 /* Sidebar nav */
@@ -91,7 +92,7 @@ html {
 }
 .sidebar-nav-item {
   display: block;
-  line-height: 1.2;
+  line-height: 1.5;
 }
 a.sidebar-nav-item:hover,
 a.sidebar-nav-item:focus {

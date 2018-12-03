@@ -150,7 +150,7 @@ abbr[title] {
 /* Code */
 code,
 pre {
-  font-family: Menlo, Monaco, "Courier New", monospace;
+  font-family: "PT Mono", Menlo, Monaco, "Courier New", monospace;
 }
 code {
   padding: .25em .5em;
@@ -259,7 +259,7 @@ tbody tr:nth-child(odd) th {
  */
 
 .lead {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 300;
 }
 
