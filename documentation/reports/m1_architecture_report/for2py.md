@@ -96,7 +96,7 @@ distinct steps is motivated by the following design considerations:
 
 ### Scripts 
 
-`for2py` currently uses the following scripts:
+`for2py` currently uses the following [scripts](https://github.com/ml4ai/delphi/tree/master/delphi/program_analysis/autoTranslate/scripts):
 
 1. **Input processing.**
 * `for2py_pp.py`: pre-processes input Fortran files.
