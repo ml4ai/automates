@@ -10,20 +10,23 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a class="sidebar-nav-item{% if page.url == site.baseurl %} active{% endif %}" href="{{ site.baseurl }}">Home</a>
+      <a class="sidebar-nav-item{% if page.url == site.baseurl %} active{% endif %}" 
+         href="{{ site.baseurl }}">About</a>
 
       {% if page.toc %}
         {{ page.title }}
       {% include toc.html html=content h_min=2 %}
       {% endif %}
+
       <a class="sidebar-nav-item{% if page.url == site.baseurl %} active {% endif %}" 
-         href="{{ site.baseurl }}/documentation/reports/">Reports</a>
+         href="{{ site.baseurl }}/software">Software</a>
 
       <a class="sidebar-nav-item{% if page.url == site.baseurl %} active {% endif %}" 
          href="{{ site.baseurl }}/team">Team</a>
 
       <a class="sidebar-nav-item{% if page.url == site.baseurl %} active {% endif %}" 
-         href="{{ site.baseurl }}/software">Software</a>
+         href="{{ site.baseurl }}/documentation/reports/">Reports</a>
+
     </nav>
 
     <p>&copy; {{ site.time | date: '%Y' }}. All rights reserved.</p>
