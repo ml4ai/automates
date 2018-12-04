@@ -33,7 +33,7 @@ date: 2018-12-02
 ## 6. Model Analysis 
 {% include_relative model_analysis.md %}
 
-## 7. From function networks to executable dynamic Bayes networks
+## 7. From GrFNs to DBNs
 {% include_relative delphi_representation.md %}
 
 ---
