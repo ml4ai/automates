@@ -18,7 +18,7 @@ following sections, we describe the components of a factor network and
 discuss plans to develop an algorithm that can recursively compute
 the similarity and difference between two factor networks.
 
-#### Factor graph description 
+#### Factor graph description
 
 A factor network consists of a set of variable nodes and factor nodes,
 similar to a [factor graph].  The additions that makes this structure a
@@ -75,7 +75,7 @@ follows.
    this information will be automatically associated with the GrFN model
    representation assembled as a result of Extraction and Grounding).
 2. Compute `N` sets of samples over the input domains using [Saltelli's sampling method].
-3. Evaluate the model for each of the `N` sets of samples. 
+3. Evaluate the model for each of the `N` sets of samples.
 4. Compute the global sensitivity indices $$S_i$$ using [Sobol's method].
 
 The global sensitivity indices, $$S_i$$, are split into three
@@ -121,7 +121,7 @@ architecture.
    forms of Lambdas for direct derivative function sampling.
 2. We will adapt methods from Bayesian optimization, in particular, the
    computation of the Bayesian optimal value of information of selecting
-   a particular input combination for reducing undertainty in the
+   a particular input combination for reducing uncertainty in the
    estimation of the sensitivity function.
 3. Finally, in conjunction with the two techniques above, we will
    explore using compiler optimization methods to compile differentiated
