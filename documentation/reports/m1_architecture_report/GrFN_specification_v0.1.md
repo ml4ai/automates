@@ -480,7 +480,7 @@ how it functions.):
 
 Case 1: subroutine
 
-``` {.sourceCode .Python}
+```python
 def foo1_subroutine(x,y):
     x = y
 
@@ -495,7 +495,7 @@ now z = 5 and w = 5
 
 Case 2: fortran function with simple return
 
-``` {.sourceCode .Python}
+```python
 def foo():
     x <-
     return x
@@ -506,14 +506,14 @@ def foo2():
 
 Case 3: fortran function with return expression
 
-``` {.sourceCode .Python}
+```python
 def foo():
     return x+1
 ```
 
 becomes\...
 
-``` {.sourceCode .Python}
+```python
 def foo():
   foo_return1 = x+1
 
@@ -522,7 +522,7 @@ return foo_return1
 
 Case 4: conditional return statements
 
-``` {.sourceCode .Python}
+```python
 def foo(): #fortran function
     if(x):
         return x
