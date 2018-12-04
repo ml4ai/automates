@@ -17,16 +17,17 @@ columns below the heading:
 2. *Grounding* the extracted information by linking between information
    types (text, equations and source code) and connecting identified
    terms to scientific domain ontologies.
-3. *Comparison* of models by analyzing structural and functional
-   (via sensitivity analysis) similarities and differences.
-4. *Augmentation* of models by selection of model components appropriate
-   for a task, composing model components, and model execution;
-   AutoMATES produces executable model components (as dynamic Bayesian
-   networks) and provides results of Comparison, but in the ASKE program
-   selection and composition will be done manually by humans.
+3. *Comparison* of models by analyzing structural and functional (via
+   sensitivity analysis) similarities and differences.
+4. *Augmentation* of models through selection of model components
+   appropriate for a task, composing model components, and model
+   execution; AutoMATES produces executable model components (as dynamic
+   Bayesian networks) and provides results of Comparison, but in the
+   ASKE program selection and composition will be done manually by
+   humans.
 
 Extraction and Grounding are performed by three interacting pipelines:
-Program Analysis, Machine Reading and Equation Reading. 
+Program Analysis, Text Reading and Equation Reading. 
 1. The *Program Analysis* pipeline extracts program source code and
    associated comments and performs an analysis that identifies
    variables and the functional relationships between them, as
@@ -38,8 +39,8 @@ Program Analysis, Machine Reading and Equation Reading.
    [Fortran](https://en.wikipedia.org/wiki/Fortran) source code.
    Additional language processing pipelines can be modularly added in
    the future, with each language pipeline providing language-agnostic
-   output ot the intermediate representation.
-2. The *Machine Reading* pipeline processes text from papers and other
+   output of the intermediate representation.
+2. The *Text Reading* pipeline processes text from papers and other
    documents (input as PDFs) describing scientific models as well as
    input comments associated with source code. This pipeline extracts
    contextual information about models, including identifying mentions
@@ -54,7 +55,7 @@ Program Analysis, Machine Reading and Equation Reading.
    representation. Equation Reading interacts with the Program Analysis
    pipeline by passing along the symbolic mathematical representation to
    perform the same analysis that extracts the source code Function
-   Network and Lambdas, and interacts with the Machine Reading pipeline
+   Network and [Lambdas], and interacts with the Text Reading pipeline
    to ground equation variables to their context in the source text
    discourse.
 
@@ -81,9 +82,9 @@ Then, the Lambdas are incorporated to analyze the functional
 relationships between variables in similar networks, through sensitivity
 analysis. Because sensitivity analysis can be computationally expensive,
 automatic code differentiation will be used to efficiently compute the
-derivative (rates of change) of variables with respect to their inputs,
-and Bayesian optimization techniques will be used to make estimation of
-sensitivity functions require as few samples as possible. The final
+derivatives (rates of change) of variables with respect to each other,
+and Bayesian optimization techniques will be used to estimate
+sensitivity functions with as few samples as possible. The final
 product of this analysis (1) includes modular executable
 representations of grounded models (as dynamic Bayesian networks), (2)
 provides results of model comparison to enable model choice in tasks, and
@@ -96,7 +97,9 @@ generating natural language summaries of portions of the original source
 code. This can help improve human readability and debugging of the
 source code.
 
-The following sections in the remainder of this report describe in
-detail the components of the architecture.  The numbers in the
+The following sections in the remainder of this report describe the
+components of the architecture in detail. The numbers in the
 architecture summary figure correspond to the number of the section
-providing details about the component.
+that describes the component.
+
+[Lambdas]: https://en.wikipedia.org/wiki/Anonymous_function

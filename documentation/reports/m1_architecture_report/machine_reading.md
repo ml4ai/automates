@@ -86,11 +86,11 @@ any descriptions relations between variables.
 
 After extraction, it will be necessary to ground the variables and
 equations.  There are two distinct types (or directions) of grounding
-that will be necessary.  The first is associating a description to a
+that will be necessary.  The first is to associate a description to a
 variable, and the other is to associate two variables (one extracted
-from source code and another from text) based on their descriptions
-and other information such as model structure (e.g., if they are both
-in a denominator, etc.).
+from source code and another from text) with each other based on their
+descriptions and other information such as model structure (e.g., if
+they are both in a denominator, etc.).
 
 The first type of grounding will link the variables and equations
 found in the scientific papers with their descriptions.  This is seen

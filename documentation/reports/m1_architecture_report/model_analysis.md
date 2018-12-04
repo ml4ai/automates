@@ -45,11 +45,11 @@ found to be similar, or constitute different (non-overlapping)
 components.  These modules are then the subject of study for our
 sensitivity analysis measures.
 
-There is a computability question that needs to be answered for
+The issue of computability is one that needs to be addressed when
 performing a recursive network traversal. The network comparison is
 expected to be computationally expensive as it amounts to performing a
-breadth-first search across the networks corresponding to two models.
-We are currently working on heuristics that can lower the cost
+breadth-first search across the networks corresponding to the two models.
+We are currently working on heuristics to lower the cost
 associated with network traversal for our particular purpose of model
 comparison.
 

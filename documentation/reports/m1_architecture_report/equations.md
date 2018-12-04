@@ -16,65 +16,56 @@ Several datasets need to be constructed in order to train and evaluate
 the models required for detecting and decoding equations found in
 text.
 
-For this purpose, the team will use papers written in LaTeX,
-downloaded in bulk from
-[arXiv](https://arxiv.org/help/bulk_data_s3). Previously, similar
-datasets have been constructed but they are limited in
-scope. Particularly, a sample of source files from the `hep-th` (High
-Energy Physics) section of arXiv was collected in 2003 for the [KDD
-cup
-competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html).
-The goal here is to extend this dataset to increase the number of
-training examples and to include a variety of relevant domains
-(including aggriculture, biology, and computer science).
+For this purpose, the team will use papers written in LaTeX, downloaded
+in bulk from [arXiv](https://arxiv.org/help/bulk_data_s3). Previously,
+similar datasets have been constructed but they are limited in scope.
+Particularly, a sample of source files from the `hep-th` (theoretical
+high-energy physics) section of arXiv was collected in 2003 for the [KDD
+cup competition].  The goal here is to extend this dataset to increase
+the number of training examples and to include a variety of relevant
+domains (including agriculture, biology, and computer science).
 
 #### Dataset construction pipeline
 
-The team will use [`latexmk`](https://mg.readthedocs.io/latexmk.html)
-to compile the downloaded arXiv source LaTeX code into PDF.  This
-process is expected to be relatively simple because of the
-requirements established by arXiv for [LaTeX
-submission](https://arxiv.org/help/submit_tex).
+The team will use the battle-tested
+[`latexmk`](https://mg.readthedocs.io/latexmk.html) PERL tool to compile
+the downloaded arXiv source LaTeX code into PDFs.  This process is
+expected to be relatively simple because of the requirements established
+by arXiv for [LaTeX submission](https://arxiv.org/help/submit_tex).
 
-The source (La)TeX code will be
+The source LaTeX code will be
 [tokenized](https://github.com/tiarno/plastex) and scanned to detect
 equation related environments. These detected sequences of tokens will
 be stored and rendered into independent images that show the rendered
-equation in isolation. This pairing of LaTeX tokens to rendered
+equations in isolation. This pairing of LaTeX tokens to rendered
 equations is the dataset used for the training and evaluation of the
 **equation decoding** component described below.
 
 Next, each page of the rendered document will be [transformed into an
 image](https://github.com/Belval/pdf2image), and an axis aligned
 bounding box (AABB) for the equation in one of the document pages will
-be identified by [template
-matching](https://docs.opencv.org/4.0.0/df/dfb/group__imgproc__object.html).
-This mapping of rendered equation to (page, AABB) tuples will be used
-for the training and evaluation of the **equation detection**
-component described below.
+be identified by [template matching].  This mapping of rendered equation
+to (page, AABB) tuples will be used for the training and evaluation of
+the **equation detection** component described below.
 
 ### Equation detection
 
 Before equations can be decoded, they first need to be located within
-the scientific papers encoded as PDF files.  For this, standard
-machine vision techniques such as
-[R-CNN](https://arxiv.org/abs/1311.2524), [Fast
-R-CNN](https://arxiv.org/abs/1504.08083), and [Faster
-R-CNN](https://arxiv.org/abs/1506.01497) will be evaluated for the
-purpose of detecting equations in documents.  The output of these
-models will be (page, AABB) tuples that describe the location of an
-equation in a document.
+the scientific papers encoded as PDF files.  For this, standard machine
+vision techniques such as [R-CNN], [Fast R-CNN], and [Faster R-CNN] will
+be evaluated for the purpose of detecting equations in documents.  The
+output of these models will be (page, AABB) tuples that describe the
+location of an equation in a document.
 
 The Faster R-CNN model uses a base network consisting of a series of
 convolutional and pooling layers as feature extractors for subsequent
-steps. This network is usually a model pretrained for the task of
-image classification, such as
-[ResNet](https://arxiv.org/abs/1512.03385) trained on
-[ImageNet](http://www.image-net.org/). However, since our task is
-detecting equations in scientific publications, no pretrained model
-that the team is aware of is available, and therefore this feature
-extraction base network will be trained from scratch using the (page,
-AABB) training data desribed above.
+steps. This network is usually a model pretrained for the task of image
+classification, such as [ResNet](https://arxiv.org/abs/1512.03385)
+trained on [ImageNet](http://www.image-net.org/). However, since our
+task consists of detecting equations in scientific publications, no
+pretrained model that the team is available (that the team is aware of),
+and therefore this feature extraction base network will be trained from
+scratch using the (page, AABB) training data desribed above.
 
 Next, a region proposal network (RPN) uses the features found in the
 previous step to propose a predefined number of bounding boxes that
@@ -97,11 +88,11 @@ architecture will be used, which will encode the equation image into a
 dense embedding that can subsequentially be decoded into LaTeX code
 capable of being compiled into an image. LaTeX was selected as the
 intermediary representation between image and executable model because
-of the availability of training data (arXiv) and because, due to the
-nature of LaTeX, it preserves both typographic information about how
-equations are rendered (e.g., bolding, italics, subscript, etc.)
-while also preserving the components of the notation that will be used
-for the successful interpretation of the equation semantics.
+of the availability of training data (arXiv) and because it preserves
+both typographic information about how equations are rendered (e.g.,
+bolding, italics, subscript, etc.) while also preserving the components
+of the notation that will be used for the successful interpretation of
+the equation semantics.
 
 
 Encoder-decoder architectures like the one proposed have been
@@ -124,17 +115,23 @@ ensure the decoding of LaTeX that can be compiled).
 
 ### Equation to executable model
 
-Once decoded, the LaTeX representation of the equation will be
-converted into a Python lambda expression that executes the equation.
-Specifically, the LaTeX representation of an equation will be
-converted to a [SymPy](https://www.sympy.org/en/index.html) form that
-can be used by [Delphi](https://github.com/ml4ai/delphi). The team
-will evaluate SymPy's own [experimental LaTeX
+Once decoded, the LaTeX representation of the equation will be converted
+into a Python lambda expression that executes the equation.  Specifically,
+the LaTeX representation of an equation will be converted to a
+[SymPy](https://www.sympy.org/en/index.html) form that can be used by
+[Delphi](https://github.com/ml4ai/delphi). The team will evaluate
+SymPy's own [experimental LaTeX
 parsing](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing),
 which is a port of
-[latex2sympy](https://github.com/augustt198/latex2sympy).  Based on
-this evaluation, the team may decide to use this feature as-is, extend
-it to support missing features required for the project, or develop a
-custom solution.  The lambda expression is then provided to the
-Program Analysis pipeline to map to representation in GrFN and
-Lambdas, and subsequent comparison to source code in Model Analysis.
+[latex2sympy](https://github.com/augustt198/latex2sympy).  Based on this
+evaluation, the team may decide to use this feature as-is, extend it to
+support missing features required for the project, or develop a custom
+solution.  The lambda expression is then provided to the Program
+Analysis pipeline to map to representation in GrFN and Lambdas, and
+subsequent comparison to source code in Model Analysis.
+
+[KDD cup competition]: http://www.cs.cornell.edu/projects/kddcup/datasets.html
+[template matching]: https://docs.opencv.org/4.0.0/df/dfb/group__imgproc__object.html
+[R-CNN]: https://arxiv.org/abs/1311.2524
+[Fast R-CNN]: https://arxiv.org/abs/1504.08083
+[Faster R-CNN]: https://arxiv.org/abs/1506.01497

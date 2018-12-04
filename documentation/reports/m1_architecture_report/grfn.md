@@ -10,6 +10,4 @@ function modules are referred to in the GrFN specification of a model.
 
 We use a JSON format for the GrFN specification for simple serialization,
 deserialization, and compatibility with web APIs.  The current state of the GrFN
-specification is described in the following link.
-
-- [GrFN specification](GrFN_specification_v0.1)
+specification is described here: [GrFN specification](GrFN_specification_v0.1)
