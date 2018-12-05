@@ -1,5 +1,5 @@
 ---
-title: Presentation
+title: Presentations
 ---
 
 Presentations given on the AutoMATES system.
