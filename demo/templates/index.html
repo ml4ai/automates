@@ -3,40 +3,69 @@
     <meta charset="utf-8">
     <meta name="viewport" 
           content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
     <link rel="stylesheet" 
           href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
           crossorigin="anonymous">
 
-    <script src="{{ url_for('static', filename = 'codemirror/lib/codemirror.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'codemirror/lib/codemirror.css') }}">
-    <script src="{{ url_for('static', filename = 'codemirror/mode/fortran.js') }}"></script>
+    {{ codemirror.include_codemirror() }}
+
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
-      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
-      crossorigin="anonymous"> </script>
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
+            crossorigin="anonymous"> </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
-      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
-      crossorigin="anonymous"> </script>
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
+            crossorigin="anonymous"> </script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
             integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
             crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.8/cytoscape.js"> </script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.4/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.2.2/cytoscape-dagre.min.js"></script>
+    <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.7.0/cytoscape-qtip.js"> </script>
+
   </head>
   <body>
     <div class="container"> 
-      <form action="/processCode" method="GET">
-        <div class="form-group">
-          <textarea class="form-control" id="code"
-                    name="codeToProcess" rows="3">
-          </textarea>
-        </div>
-        <button type="submit" class="btn btn-primary" role="button">Submit</button>
+      <form method="POST" action="/processCode">
+        {{ form.source_code }}
+        <input type="submit" value="Submit">
       </form>
-      <script>
-        var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
-        lineNumbers: true,
-        mode: "text/x-fortran"
-      });
-      </script>
+
     </div>
+      <div class="container border rounded" id="cy" style="height: 700px;"></div>
+      <script>
+        var cy = cytoscape({
+        container: document.getElementById('cy'),
+          elements: {{ elementsJSON | safe }},
+          style: [
+                  { selector: 'node',
+                    style: { 
+                        'label': 'data(label)',
+                        'shape': 'data(shape)',
+                        'background-color': 'white',
+                        'border-color': 'data(color)',
+                        'border-width': '3pt',
+                        'font-family': 'Menlo, monospace',
+                        'width':'label',
+                        'text-valign': 'data(textValign)',
+                        'padding': 15,
+                    } 
+                  }, { 
+                    selector: 'edge',
+                    style: { 
+                      'curve-style' : 'bezier',
+                      'target-arrow-shape': 'triangle',
+                    } 
+                  },
+              ],
+          layout: { name: 'dagre' , rankDir: 'LR'},
+          maxZoom : 10,
+          minZoom : 0.1,
+        });
+      cy.width()=500;
+      </script>
+
   </body>
 </html>
