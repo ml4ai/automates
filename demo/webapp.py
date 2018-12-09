@@ -1,4 +1,8 @@
+import os
 import ast
+import subprocess as sp
+import json
+from pprint import pprint
 from delphi.program_analysis.autoTranslate.scripts import (
     f2py_pp,
     translate,
@@ -6,30 +10,26 @@ from delphi.program_analysis.autoTranslate.scripts import (
     pyTranslate,
     genPGM,
 )
-from delphi.program_analysis.scopes import Scope
 from delphi.utils.fp import flatten
-import os
-import subprocess as sp
+from delphi.program_analysis.scopes import Scope
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, redirect
 from flask_wtf import FlaskForm
 from flask_codemirror.fields import CodeMirrorField
 from wtforms.fields import SubmitField
 from flask_codemirror import CodeMirror
-import json
-from pprint import pprint
 
 
 class MyForm(FlaskForm):
     source_code = CodeMirrorField(
-        language="fortran", config={"lineNumbers": "true"}
+        language="fortran", config={"lineNumbers": "true", "viewportMargin": 800}
     )
     submit = SubmitField("Submit")
 
 
 SECRET_KEY = "secret!"
 # mandatory
-CODEMIRROR_LANGUAGES = ["python", "html", "fortran"]
+CODEMIRROR_LANGUAGES = ["fortran"]
 # optional
 CODEMIRROR_THEME = "3024-day"
 CODEMIRROR_ADDONS = (("display", "placeholder"),)
@@ -43,29 +43,22 @@ os.environ["CLASSPATH"] = (
 )
 
 
-def get_cluster_nodes(A, parent = None):
-    cluster_nodes = [
-        {"data": {"id": A.name, "label": A.name, "shape": "rectangle", "parent"
-            : parent, "color": 'black', 'textValign': 'top'}}
-    ]
-
+def get_cluster_nodes(A):
+    cluster_nodes=[]
     for subgraph in A.subgraphs():
-        if len(subgraph.subgraphs()) == 0:
-            print(subgraph.graph_attr['color'])
-            cluster_nodes.append(
-                {
-                    "data": {
-                        "id": subgraph.name,
-                        "label": subgraph.name,
-                        "shape": "rectangle",
-                        "parent": A.name,
-                        "color": 'black',
-                        'textValign': 'top',
-                    }
+        cluster_nodes.append(
+            {
+                "data": {
+                    "id": subgraph.name,
+                    "label": subgraph.name.replace("cluster_",""),
+                    "shape": "rectangle",
+                    "parent": A.name,
+                    "color": subgraph.graph_attr['border_color'],
+                    'textValign': 'top',
                 }
-            )
-        else:
-            cluster_nodes.append(get_cluster_nodes(subgraph, A.name))
+            }
+        )
+        cluster_nodes.append(get_cluster_nodes(subgraph))
 
     return cluster_nodes
 
@@ -98,7 +91,6 @@ def to_cyjs_elements_json_str(A) -> dict:
         ],
     }
     json_str = json.dumps(elements, indent=2)
-    pprint(elements["nodes"])
     return json_str
 
 

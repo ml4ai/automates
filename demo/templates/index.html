@@ -25,16 +25,24 @@
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.2.2/cytoscape-dagre.min.js"></script>
     <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.7.0/cytoscape-qtip.js"> </script>
 
+    <style> .CodeMirror { height: 90%;} </style>
   </head>
   <body>
-    <div class="container"> 
-      <form method="POST" action="/processCode">
-        {{ form.source_code }}
-        <input type="submit" value="Submit">
-      </form>
-
+    <div class="container-fluid"> 
+      <div class="row justify-content-md-center border">
+        <h1>AutoMATES Demo</h1>
+      </div>
+      <div class="row justify-content-md-center border">
+        <div class="col-4 border">
+          Input Fortran code here:
+          <form method="POST" action="/processCode">
+            {{ form.source_code }}
+            <input type="submit" value="Submit">
+          </form>
+        </div>
+        <div class="col-8 border" id="cy" style="width: 100%;"></div>
+      </div>
     </div>
-      <div class="container border rounded" id="cy" style="height: 700px;"></div>
       <script>
         var cy = cytoscape({
         container: document.getElementById('cy'),
