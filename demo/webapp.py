@@ -132,7 +132,8 @@ def processCode():
 
     trees = [ET.fromstring(xml_string)]
     comments = get_comments.get_comments(preprocessed_fortran_file)
-    outputDict = translate.analyze(trees, comments)
+    translator = translate.XMLToJSONTranslator()
+    outputDict = translator.analyze(trees, comments)
     pySrc = pyTranslate.create_python_string(outputDict)
     asts = [ast.parse(pySrc)]
     pgm_dict = genPGM.create_pgm_dict(
