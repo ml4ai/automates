@@ -33,14 +33,17 @@
         <h1>AutoMATES Demo</h1>
       </div>
       <div class="row justify-content-md-center border">
-        <div class="col-4 border">
+        <div class="col border">
           Input Fortran code here:
           <form method="POST" action="/processCode">
             {{ form.source_code }}
             <input type="submit" value="Submit">
           </form>
         </div>
-        <div class="col-8 border" id="cy" style="width: 100%;"></div>
+        <div class="col border" id="cy"></div>
+        <div class="col">
+          <div id="sidebar"></div>
+        </div>
       </div>
     </div>
       <script>
@@ -72,8 +75,11 @@
           maxZoom : 10,
           minZoom : 0.1,
         });
-      cy.width()=500;
-      </script>
+        cy.on('select', 'node', function(evt){
+          var node = evt.target;
+          document.getElementById("sidebar").innerHTML = node.data('code');
+        });
 
+      </script>
   </body>
 </html>
