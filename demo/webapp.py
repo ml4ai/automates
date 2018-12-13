@@ -18,6 +18,10 @@ from flask_wtf import FlaskForm
 from flask_codemirror.fields import CodeMirrorField
 from wtforms.fields import SubmitField
 from flask_codemirror import CodeMirror
+import inspect
+from pygments import highlight
+from pygments.lexers import PythonLexer
+from pygments.formatters import HtmlFormatter
 
 
 class MyForm(FlaskForm):
@@ -54,7 +58,8 @@ def get_cluster_nodes(A):
                     "shape": "rectangle",
                     "parent": A.name,
                     "color": subgraph.graph_attr['border_color'],
-                    'textValign': 'top',
+                    "textValign": "top",
+                    "code": None,
                 }
             }
         )
@@ -63,7 +68,16 @@ def get_cluster_nodes(A):
     return cluster_nodes
 
 
+def get_code(x):
+    if x is None:
+        return "None"
+    else:
+        return inspect.getsource(x)
+
 def to_cyjs_elements_json_str(A) -> dict:
+    import lambdas
+    lexer = PythonLexer()
+    formatter = HtmlFormatter()
     elements = {
         "nodes": [
             {
@@ -73,7 +87,10 @@ def to_cyjs_elements_json_str(A) -> dict:
                     "parent": n.attr["parent"],
                     "shape": n.attr["shape"],
                     "color": n.attr["color"],
-                    'textValign': 'center',
+                    "textValign": "center",
+                    "code": highlight(get_code(getattr(lambdas,
+                        n.attr["lambda_fn"], None)), PythonLexer(),
+                        HtmlFormatter()),
                 }
             }
             for n in A.nodes()
@@ -99,7 +116,6 @@ def index():
     form = MyForm()
     if form.validate_on_submit():
         text = form.source_code.data
-    preprocessed_fortran_file = "preprocessed_code.f"
     return render_template("index.html", form=form)
 
 
@@ -108,7 +124,7 @@ def processCode():
     form = MyForm()
     code = form.source_code.data
     lines = [
-        line + "\n"
+        line.replace("\r","") + "\n"
         for line in [line for line in code.split("\n")]
         if line != ""
     ]
@@ -137,7 +153,7 @@ def processCode():
     pySrc = pyTranslate.create_python_string(outputDict)
     asts = [ast.parse(pySrc)]
     pgm_dict = genPGM.create_pgm_dict(
-        "crop_yield_lambdas.py", asts, "crop_yield.json"
+        "lambdas.py", asts, "pgm.json"
     )
     root = Scope.from_dict(pgm_dict)
     A = root.to_agraph()
