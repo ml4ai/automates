@@ -9,3 +9,4 @@ pygraphviz
 scipy
 tqdm
 pygments
+future
