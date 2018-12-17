@@ -42,11 +42,6 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 codemirror = CodeMirror(app)
 
-os.environ["CLASSPATH"] = (
-    os.getcwd() + "/../../delphi/delphi/program_analysis/autoTranslate/bin/*"
-)
-
-
 def get_cluster_nodes(A):
     cluster_nodes=[]
     for subgraph in A.subgraphs():
