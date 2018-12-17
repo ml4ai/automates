@@ -12,6 +12,7 @@ from delphi.program_analysis.autoTranslate.scripts import (
 )
 from delphi.utils.fp import flatten
 from delphi.program_analysis.scopes import Scope
+import delphi.paths
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, redirect
 from flask_wtf import FlaskForm
