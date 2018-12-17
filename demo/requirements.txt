@@ -1,0 +1,10 @@
+flask
+flask-sqlalchemy
+flask-codemirror
+Flask-WTF
+networkx
+numpy
+pandas
+pygraphviz
+scipy
+tqdm
