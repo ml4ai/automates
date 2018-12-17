@@ -34,15 +34,15 @@
         <h1>AutoMATES Demo</h1>
       </div>
       <div class="row justify-content-md-center border">
-        <div class="col border">
+        <div class="col-lg-4 border">
           Input Fortran code here:
           <form method="POST" action="/processCode">
             {{ form.source_code }}
             <input type="submit" value="Submit">
           </form>
         </div>
-        <div class="col border" id="cy"></div>
-        <div class="col">
+        <div class="col-lg-6 border" id="cy"></div>
+        <div class="col-lg-2">
           <div id="sidebar"></div>
         </div>
       </div>
@@ -70,15 +70,23 @@
                       'curve-style' : 'bezier',
                       'target-arrow-shape': 'triangle',
                     } 
-                  },
+                  }, { 
+                    selector: '.selectedNode',
+                    style: { 
+                      'background-color': '#d3d3d3',
+                    } 
+                  }
               ],
-          layout: { name: 'dagre' , rankDir: 'LR'},
+          layout: { name: 'dagre' , rankDir: 'TB'},
           maxZoom : 10,
           minZoom : 0.1,
+          selectionType: 'single'
         });
-        cy.on('select', 'node', function(evt){
+        cy.on('tap', 'node', function(evt){
+          cy.$(':selected').removeClass('selectedNode');
           var node = evt.target;
           document.getElementById("sidebar").innerHTML = node.data('code');
+          node.toggleClass('selectedNode');
         });
 
       </script>
