@@ -45,3 +45,7 @@ wheels/
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+
+# Generated files from program analysis
+*lambdas.py
+preprocessed*
