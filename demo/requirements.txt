@@ -8,3 +8,4 @@ pandas
 pygraphviz
 scipy
 tqdm
+pygments
