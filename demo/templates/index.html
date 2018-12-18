@@ -10,7 +10,6 @@
           crossorigin="anonymous">
 
     {{ codemirror.include_codemirror() }}
-    <link rel="stylesheet" href="static/style.css">
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
             integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
@@ -24,9 +23,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.8/cytoscape.js"> </script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.4/dagre.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.2.2/cytoscape-dagre.min.js"></script>
-    <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.7.0/cytoscape-qtip.js"> </script>
+    <script src="https://unpkg.com/popper.js"></script>
+	<script src="static/cytoscape-popper.js"></script>
+	<script src="https://unpkg.com/tippy.js@2.0.9/dist/tippy.all.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/tippy.js@2.0.9/dist/tippy.css" />
 
     <style> .CodeMirror { height: 90%;} </style>
+    <link rel="stylesheet" href="static/style.css">
   </head>
   <body>
     <div class="container-fluid"> 
@@ -41,10 +44,7 @@
             <input type="submit" value="Submit">
           </form>
         </div>
-        <div class="col-lg-6 border" id="cy"></div>
-        <div class="col-lg-2">
-          <div id="sidebar"></div>
-        </div>
+        <div class="col-lg-8 border" id="cy"></div>
       </div>
     </div>
       <script>
@@ -82,11 +82,37 @@
           minZoom : 0.1,
           selectionType: 'single'
         });
+
+        var makeTippy = function(node){
+            return tippy(node.popperRef(), {
+                html: (function(){
+                    var div = document.createElement('div');
+                    div.innerHTML = node.data('code');
+                    return div;
+                })(),
+                trigger: 'manual',
+                arrow: true,
+                placement: 'bottom',
+                hideOnClick: 'toggle',
+                multiple: true,
+                sticky: true
+            } ).tooltips[0];
+        };
+        cy.nodes().forEach(function(ele){
+          ele.scratch()._tippy = makeTippy(ele);
+        });
         cy.on('tap', 'node', function(evt){
           cy.$(':selected').removeClass('selectedNode');
           var node = evt.target;
-          document.getElementById("sidebar").innerHTML = node.data('code');
           node.toggleClass('selectedNode');
+          if (!node.selected()){
+            node.select();
+            node.scratch()._tippy.show();
+          }
+          else {
+            node.deselect();
+            node.scratch()._tippy.hide();
+          }
         });
 
       </script>
