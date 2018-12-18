@@ -104,7 +104,6 @@ def to_cyjs_elements_json_str(A) -> dict:
         ],
     }
     json_str = json.dumps(elements, indent=2)
-    os.remove("lambdas.py")
     os.remove("preprocessed_code.f")
     return json_str
 
