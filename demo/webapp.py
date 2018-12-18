@@ -1,7 +1,7 @@
 import os
 import ast
-import subprocess as sp
 import json
+import subprocess as sp
 from pprint import pprint
 from delphi.program_analysis.autoTranslate.scripts import (
     f2py_pp,
@@ -55,7 +55,7 @@ def get_cluster_nodes(A):
                     "parent": A.name,
                     "color": subgraph.graph_attr['border_color'],
                     "textValign": "top",
-                    "code": None,
+                    "tooltip": None,
                 }
             }
         )
@@ -64,11 +64,15 @@ def get_cluster_nodes(A):
     return cluster_nodes
 
 
-def get_code(x):
-    if x is None:
-        return "None"
+def get_tooltip(n, lambdas):
+    if n.attr["node_type"] == "ActionNode":
+        x = getattr(lambdas, n.attr["lambda_fn"], None)
+        if x is None:
+            return "None"
+        else:
+            return inspect.getsource(x)
     else:
-        return inspect.getsource(x)
+        return json.dumps({"index": n.attr["index"]}, indent=2)
 
 def to_cyjs_elements_json_str(A) -> dict:
     import lambdas
@@ -84,9 +88,7 @@ def to_cyjs_elements_json_str(A) -> dict:
                     "shape": n.attr["shape"],
                     "color": n.attr["color"],
                     "textValign": "center",
-                    "code": highlight(get_code(getattr(lambdas,
-                        n.attr["lambda_fn"], None)), lexer,
-                        formatter),
+                    "tooltip": highlight(get_tooltip(n, lambdas), lexer, formatter),
                 }
             }
             for n in A.nodes()

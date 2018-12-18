@@ -87,7 +87,7 @@
             return tippy(node.popperRef(), {
                 html: (function(){
                     var div = document.createElement('div');
-                    div.innerHTML = node.data('code');
+                    div.innerHTML = node.data('tooltip');
                     return div;
                 })(),
                 trigger: 'manual',
