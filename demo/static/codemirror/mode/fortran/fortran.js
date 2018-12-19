@@ -121,7 +121,7 @@ CodeMirror.defineMode("fortran", function() {
     }
 
     var ch = stream.next();
-    if (ch == "!" || ch == "*") {
+    if (ch == "!" || ch == "*" || ch == "C") {
       stream.skipToEnd();
       return "comment";
     }
