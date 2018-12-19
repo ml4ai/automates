@@ -9,3 +9,45 @@ pip install -r requirements.txt
 
 To run the webapp, invoke `source run.sh` and navigate to `localhost:5000` in
 your web browser.
+
+Setting up AWS EC2 (partial instructions)
+-----------------------------------------
+
+After setting up your instance, log in and do:
+
+```bash
+git clone https://github.com/ml4ai/automates
+cd automates/demo
+sudo source setup_aws_ec2.sh
+```
+
+Then do:
+
+```bash
+sudo vi /etc/apache2/sites-enabled/000-default.conf
+```
+
+and add the following lines under the 
+
+```
+DocumentRoot /var/www/html
+```
+
+line
+```
+WSGIDaemonProcess automates_demo threads=5
+WSGIScriptAlias / /var/www/html/automates_demo/app.wsgi
+
+<Directory automates_demo>
+	WSGIProcessGroup automates_demo
+	WSGIApplicationGroup %{GLOBAL}
+	Order deny,allow
+	Allow from all
+</Directory>
+```
+
+Then restart the server.
+
+```
+sudo apachectl restart
+```

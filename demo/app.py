@@ -106,7 +106,7 @@ def to_cyjs_elements_json_str(A) -> dict:
         ],
     }
     json_str = json.dumps(elements, indent=2)
-    os.remove("preprocessed_code.f")
+    os.remove("/tmp/preprocessed_code.f")
     return json_str
 
 
@@ -127,7 +127,7 @@ def processCode():
         for line in [line for line in code.split("\n")]
         if line != ""
     ]
-    preprocessed_fortran_file = "preprocessed_code.f"
+    preprocessed_fortran_file = "/tmp/preprocessed_code.f"
 
     with open(preprocessed_fortran_file, "w") as f:
         f.write(f2py_pp.process(lines))
@@ -152,7 +152,7 @@ def processCode():
     pySrc = pyTranslate.create_python_string(outputDict)
     asts = [ast.parse(pySrc)]
     pgm_dict = genPGM.create_pgm_dict(
-        "lambdas.py", asts, "pgm.json"
+        "/tmp/lambdas.py", asts, "pgm.json"
     )
     root = Scope.from_dict(pgm_dict)
     A = root.to_agraph()
