@@ -18,7 +18,7 @@ After setting up your instance, log in and do:
 ```bash
 git clone https://github.com/ml4ai/automates
 cd automates/demo
-sudo source setup_aws_ec2.sh
+sudo sh setup_aws_ec2.sh
 ```
 
 Then do:
