@@ -1,4 +1,5 @@
 import os
+import sys
 import ast
 import json
 import subprocess as sp
@@ -75,6 +76,7 @@ def get_tooltip(n, lambdas):
         return json.dumps({"index": n.attr["index"]}, indent=2)
 
 def to_cyjs_elements_json_str(A) -> dict:
+    sys.path.insert(0, "/tmp/")
     import lambdas
     lexer = PythonLexer()
     formatter = HtmlFormatter()
