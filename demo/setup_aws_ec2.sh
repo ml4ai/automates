@@ -11,7 +11,7 @@ sudo apt-get install \
   graphviz\
   libgraphviz-dev\
   pkg-config\
-  python3-pip\ 
+  python3-pip\
   apache2\
   libapache2-mod-wsgi-py3\
   default-jre\
