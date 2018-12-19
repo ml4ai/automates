@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-import org.clulab.quickstart.OdinEngine
+import org.clulab.aske.automates.OdinEngine
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.DisplayUtils

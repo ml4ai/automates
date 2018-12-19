@@ -2,7 +2,7 @@ package controllers
 
 import play.api.libs.json._
 import org.clulab.odin._
-import org.clulab.quickstart.PitchInfo
+import org.clulab.aske.automates.PitchInfo
 
 /** utilities to convert odin mentions into json objects
  *  that can be returned in http responses

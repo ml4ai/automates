@@ -1,5 +1,5 @@
 
-name := "odin_quick_start"
+name := "automates_text_reading"
 organization := "org.clulab"
 
 scalaVersion := "2.12.4"
