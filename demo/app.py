@@ -35,9 +35,9 @@ class MyForm(FlaskForm):
 
 SECRET_KEY = "secret!"
 # mandatory
-CODEMIRROR_LANGUAGES = ["fortran"]
+CODEMIRROR_LANGUAGES=["fortran"]
 # optional
-CODEMIRROR_THEME = "3024-day"
+CODEMIRROR_THEME = "monokai"
 CODEMIRROR_ADDONS = (("display", "placeholder"),)
 
 app = Flask(__name__)
