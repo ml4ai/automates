@@ -1,0 +1,54 @@
+Clean install of Odin on Mac OS
+
+## Prereqs
+Install these if you have not already -- they provide much more functionality than just for Scala/Odin
+
+(1) Ensure Mac command-line-tools is installed:
+http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/
+$ xcode-select --install
+
+(2) Install Homebrew: https://brew.sh/
+In particular, execute the following from the command-line:
+$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+
+## Install Java 8
+(1) Download the Java 8 JDK installer: 
+    https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+    Select Mac OS X x64  - latest (as of 2018-11-08): Java SE Development Kit 8u192
+
+(2) After installation, from the command line, verify the java location and version, which should be 1.8 .  E.g., on my mac setup:
+claytonm@shadow ~ $ which java
+/usr/bin/java
+claytonm@shadow ~ $ java -version
+java version "1.8.0_172"
+Java(TM) SE Runtime Environment (build 1.8.0_172-b11)
+Java HotSpot(TM) 64-Bit Server VM (build 25.172-b11, mixed mode)
+
+
+## Install Scala Build Tool (sbt)
+# Using Homebrew, execute the following from the command-line:
+$ brew install sbt@1
+
+
+## Install Scala/Odin
+(1) clone the musica_odin repo
+$ git clone git@github.com:ml4ai/musica_odin.git
+
+(2) cd to in to the root of the repo and run
+$ sbt webapp/run
+
+That will start the bootstrap process to download all sbt/scala dependencies
+NOTE: This will take a while and you want a good internet connection
+Background: sbt and Scala naturally sandbox themselves so that *all* associated file, include the specific version of sbt and scala that are required by your project, get placed in:
+   ~/.sbt    # stores specific version of sbt
+   ~/.ivy2   # stores specific version of scala and project dependencies
+When you run sbt for the first time on your project, it uses the project definition to determine the specific version of sbt and scala needed and downloads everything; thereafter, when you run again, it just uses the cached versions.
+
+After successfully downloading everything needed, the call to webapp/run then launches the webapp.  The webapp will stay running in the console.
+
+You can now point your browser to localhost:9000 to connect to the webapp html interface.  
+NOTE: the first time you parse a sentence there will be a delay while the language model is loaded; thereafter, any new sentence will parse very quickly.
+
+To STOP the webapp, hit control-c in the terminal (the text says that you just hit Enter, but those instructions need to be updated).
+

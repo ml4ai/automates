@@ -1,0 +1,19 @@
+taxonomy: "org/clulab/quickstart/grammars/taxonomy.yml"
+
+vars: "org/clulab/quickstart/grammars/triggers.yml"
+
+rules:
+
+  # Maybe extract the entities, if you're not using the entity finder
+#  - import: ${basepath}/entities.yml
+#    vars:
+#      rulepriority: "1"
+
+
+  # Extract the events
+  - import: "org/clulab/quickstart/grammars/template.yml"
+    vars:
+      rulepriority: "6"
+      addlabel: "Cause"
+      label: Causal
+      trigger: ${cause_triggers}
