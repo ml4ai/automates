@@ -1,4 +1,7 @@
-To run the webapp, you need to have [Delphi](https://github.com/ml4ai/delphi) on
+Running the webapp locally
+--------------------------
+
+To run the webapp locally, you need to have [Delphi](https://github.com/ml4ai/delphi) on
 your system and in your `PYTHONPATH`. Additional requirements are listed in
 `requirements.txt` and can be installed by invoking
 
@@ -6,9 +9,9 @@ your system and in your `PYTHONPATH`. Additional requirements are listed in
 pip install -r requirements.txt
 ```
 
-
 To run the webapp, invoke `source run.sh` and navigate to `localhost:5000` in
 your web browser.
+
 
 Setting up AWS EC2 (partial instructions)
 -----------------------------------------
@@ -27,13 +30,8 @@ Then do:
 sudo vi /etc/apache2/sites-enabled/000-default.conf
 ```
 
-and add the following lines under the 
+and add the following lines under line `DocumentRoot /var/www/html`
 
-```
-DocumentRoot /var/www/html
-```
-
-line
 ```
 WSGIDaemonProcess automates_demo threads=5
 WSGIScriptAlias / /var/www/html/automates_demo/app.wsgi
