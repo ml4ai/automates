@@ -1,0 +1,61 @@
+*.class
+*.log
+
+# sbt specific
+.cache
+.cache-*
+.history
+.lib/
+#.sbtopts
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+
+# IntelliJ
+.idea
+
+# Eclipse
+.classpath
+.project
+.settings/org.eclipse.core.resources.prefs
+
+# GitKraken
+\.classpath
+
+#resources/
+props/
+svmDebugFeatures/
+nullMODELS_*
+train*.dat
+xgboostOut/
+null_*
+timenorm_model.hdf5
+geonorm_model.hdf5
+vectors.txt
+embeddings_november_2016.txt
+glove.840B.300d.vectors.txt
+cache/*.serialized
+cache/english/*.serialized
+
+# Python binary files
+*.pyc
+
+# ~ files
+*~
+
+#scripts
+scripts/*
+
+#IML files
+*.iml
+/bin/
+
+# For MacOS filesystem
+.DS_Store

@@ -1,0 +1,16 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+## --------------------------------------------
+              # Events
+## --------------------------------------------
+
+    # no "type" so it's a syntax rule
+    - name: ${addlabel}-active_voice-syntax-1
+      label: ${label}
+      priority: ${rulepriority}
+      pattern: |
+        trigger = [word=/(?i)^(${trigger})/]
+        agent: Entity = >${agents}
+        theme: Entity = >${objects}

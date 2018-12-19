@@ -1,0 +1,22 @@
+#!/bin/bash
+
+JAVA_8_HOME=$(/usr/libexec/java_home -v '1.8*')
+
+if [ -d $JAVA_8_HOME ]
+then
+    echo Found: $JAVA_8_HOME
+    version=$("$JAVA_8_HOME/bin/java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    if [[ "$version" > "1.8" ]] && [[ "$version" < "1.9" ]]; then
+	echo Java version is "$version"
+
+	# execute sbt in context of java 8 home:
+	JAVA_HOME=$JAVA_8_HOME sbt webapp/run
+
+    else
+	echo Java version is "$version", need Java 1.8*
+    fi
+else
+    echo Could not find Java 1.8
+fi
+
+# 
