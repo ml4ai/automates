@@ -3,6 +3,7 @@
 # Symlink automates demo
 
 sudo ln -sfT ~/automates/demo /var/www/html/automates_demo
+
 # Update package lists
 sudo apt-get update
 
@@ -22,6 +23,7 @@ sudo pip3 install virtualenv
 
 # Clone repos
 git clone https://github.com/ml4ai/delphi
+sudo ln -sfT ~/delphi /var/www/html/delphi
 sudo virtualenv venv
 . venv/bin/activate
 sudo pip3 install -r requirements.txt
