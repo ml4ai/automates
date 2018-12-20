@@ -124,6 +124,8 @@ def index():
 def processCode():
     form = MyForm()
     code = form.source_code.data
+    if code == "":
+        return render_template("index.html", form=form)
     lines = [
         line.replace("\r","") + "\n"
         for line in [line for line in code.split("\n")]
