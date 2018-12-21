@@ -4,7 +4,7 @@ import ast
 import json
 import subprocess as sp
 from pprint import pprint
-from delphi.program_analysis.autoTranslate.scripts import (
+from delphi.translators.for2py.scripts import (
     f2py_pp,
     translate,
     get_comments,
@@ -12,7 +12,7 @@ from delphi.program_analysis.autoTranslate.scripts import (
     genPGM,
 )
 from delphi.utils.fp import flatten
-from delphi.program_analysis.scopes import Scope
+from delphi.GrFN.scopes import Scope
 import delphi.paths
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, redirect
