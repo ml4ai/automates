@@ -1,3 +1,4 @@
+sympy
 flask
 flask-sqlalchemy
 flask-codemirror
