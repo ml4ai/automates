@@ -82,6 +82,7 @@ def get_tooltip(n, lambdas):
                 src_lines[0]
                 .split("__lambda__")[1]
                 .split("(")[0]
+                .replace("_","\_")
                 + " = "
                 + latex(sympify(src_lines[1][10:].replace("math.exp", "e^"))).replace("_", "\_")
             )
