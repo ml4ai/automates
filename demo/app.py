@@ -25,17 +25,20 @@ from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
 
+from sympy import sympify, latex, symbols
+
 
 class MyForm(FlaskForm):
     source_code = CodeMirrorField(
-        language="fortran", config={"lineNumbers": "true", "viewportMargin": 800}
+        language="fortran",
+        config={"lineNumbers": "true", "viewportMargin": 800},
     )
     submit = SubmitField("Submit")
 
 
 SECRET_KEY = "secret!"
 # mandatory
-CODEMIRROR_LANGUAGES=["fortran"]
+CODEMIRROR_LANGUAGES = ["fortran"]
 # optional
 CODEMIRROR_THEME = "monokai"
 CODEMIRROR_ADDONS = (("display", "placeholder"),)
@@ -44,17 +47,18 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 codemirror = CodeMirror(app)
 
+
 def get_cluster_nodes(A):
-    cluster_nodes=[]
+    cluster_nodes = []
     for subgraph in A.subgraphs():
         cluster_nodes.append(
             {
                 "data": {
                     "id": subgraph.name,
-                    "label": subgraph.name.replace("cluster_",""),
+                    "label": subgraph.name.replace("cluster_", ""),
                     "shape": "rectangle",
                     "parent": A.name,
-                    "color": subgraph.graph_attr['border_color'],
+                    "color": subgraph.graph_attr["border_color"],
                     "textValign": "top",
                     "tooltip": None,
                 }
@@ -71,13 +75,26 @@ def get_tooltip(n, lambdas):
         if x is None:
             return "None"
         else:
-            return inspect.getsource(x)
+            src = inspect.getsource(x)
+            src_lines = src.split("\n")
+            symbs = src_lines[0].split("(")[1].split(")")[0].split(", ")
+            ltx = (
+                src_lines[0]
+                .split("__lambda__")[1]
+                .split("(")[0]
+                .replace("_","\_")
+                + " = "
+                + latex(sympify(src_lines[1][10:].replace("math.exp", "e^"))).replace("_", "\_")
+            )
+            return f"\({ltx}\)"
     else:
         return json.dumps({"index": n.attr["index"]}, indent=2)
+
 
 def to_cyjs_elements_json_str(A) -> dict:
     sys.path.insert(0, "/tmp/")
     import lambdas
+
     lexer = PythonLexer()
     formatter = HtmlFormatter()
     elements = {
@@ -90,7 +107,8 @@ def to_cyjs_elements_json_str(A) -> dict:
                     "shape": n.attr["shape"],
                     "color": n.attr["color"],
                     "textValign": "center",
-                    "tooltip": highlight(get_tooltip(n, lambdas), lexer, formatter),
+                    "tooltip": get_tooltip(n, lambdas)
+                    # "tooltip": highlight(get_tooltip(n, lambdas), lexer, formatter),
                 }
             }
             for n in A.nodes()
@@ -127,7 +145,7 @@ def processCode():
     if code == "":
         return render_template("index.html", form=form)
     lines = [
-        line.replace("\r","") + "\n"
+        line.replace("\r", "") + "\n"
         for line in [line for line in code.split("\n")]
         if line != ""
     ]
@@ -155,9 +173,7 @@ def processCode():
     outputDict = translator.analyze(trees, comments)
     pySrc = pyTranslate.create_python_string(outputDict)
     asts = [ast.parse(pySrc)]
-    pgm_dict = genPGM.create_pgm_dict(
-        "/tmp/lambdas.py", asts, "pgm.json"
-    )
+    pgm_dict = genPGM.create_pgm_dict("/tmp/lambdas.py", asts, "pgm.json")
     root = Scope.from_dict(pgm_dict)
     A = root.to_agraph()
     elements = to_cyjs_elements_json_str(A)

@@ -15,6 +15,9 @@
     <script src="static/codemirror/mode/fortran/fortran.js"></script>
     <link rel="stylesheet" href="static/codemirror/theme/monokai.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.12.0/addon/display/placeholder.js"></script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
             integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
             crossorigin="anonymous"> </script>
@@ -112,6 +115,7 @@
           if (!node.selected()){
             node.select();
             node.scratch()._tippy.show();
+            MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
           }
           else {
             node.deselect();
