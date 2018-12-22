@@ -61,7 +61,8 @@ def extract_equations(tokens):
             token = next(tokens)
             if token.data == 'begin':
                 group_name = read_group(tokens)[0]
-                if group_name in ('equation', 'equation*', 'align', 'align*'):
+                # if group_name in ('equation', 'equation*', 'align', 'align*'):
+                if group_name in ('equation', 'equation*'):
                     equation = []
                     while True:
                         t = next(tokens)
