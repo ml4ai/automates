@@ -9,8 +9,15 @@
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
           crossorigin="anonymous">
 
-    {{ codemirror.include_codemirror() }}
 
+    <script src="static/codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="static/codemirror/lib/codemirror.css" />
+    <script src="static/codemirror/mode/fortran/fortran.js"></script>
+    <link rel="stylesheet" href="static/codemirror/theme/monokai.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.12.0/addon/display/placeholder.js"></script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
             integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
             crossorigin="anonymous"> </script>
@@ -26,9 +33,9 @@
     <script src="https://unpkg.com/popper.js"></script>
 	<script src="static/cytoscape-popper.js"></script>
 	<script src="https://unpkg.com/tippy.js@2.0.9/dist/tippy.all.js"></script>
-	<link rel="stylesheet" href="https://unpkg.com/tippy.js@2.0.9/dist/tippy.css" />
+	<link rel="stylesheet" href="static/tippy.css" />
 
-    <style> .CodeMirror { height: 90%;} </style>
+    <style> .CodeMirror { height: 90%; font-family: Fira Code, Menlo, Consolas, monospace; font-size: 0.8rem} </style>
     <link rel="stylesheet" href="static/style.css">
   </head>
   <body>
@@ -37,14 +44,14 @@
         <h1>AutoMATES Demo</h1>
       </div>
       <div class="row justify-content-md-center border">
-        <div class="col-lg-4 border">
+        <div class="col-sm-4 border">
           Input Fortran code here:
           <form method="POST" action="/processCode">
             {{ form.source_code }}
             <input type="submit" value="Submit">
           </form>
         </div>
-        <div class="col-lg-8 border" id="cy"></div>
+        <div class="col-sm-8 border" id="cy"></div>
       </div>
     </div>
       <script>
@@ -108,6 +115,7 @@
           if (!node.selected()){
             node.select();
             node.scratch()._tippy.show();
+            MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
           }
           else {
             node.deselect();

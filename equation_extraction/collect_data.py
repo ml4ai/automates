@@ -11,13 +11,13 @@ import jinja2
 import numpy as np
 from skimage import img_as_ubyte
 from pdf2image import convert_from_path
-from latex import tokenize, extract_equations
+from latex import tokenize, extract_equations, find_main_tex_file
 
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('texfile')
+    parser.add_argument('dirname')
     parser.add_argument('--outdir', default='output')
     parser.add_argument('--template', default='misc/template.tex')
     args = parser.parse_args()
@@ -77,25 +77,25 @@ def match_template(pages, template):
 
 
 
-if __name__ == '__main__':
-    args = parse_args()
-    paper_id = os.path.basename(os.path.dirname(args.texfile))
-    outdir = os.path.abspath(os.path.join(args.outdir, paper_id))
+def process_paper(dirname, template, outdir):
+    texfile = find_main_tex_file(dirname)
+    paper_id = os.path.basename(os.path.normpath(dirname))
+    outdir = os.path.abspath(os.path.join(outdir, paper_id))
     # read latex tokens from document
-    tokens = tokenize(args.texfile)
+    tokens = tokenize(texfile)
     # extract equations from token stream
     equations = extract_equations(tokens)
     # compile pdf from document
-    pdf_name = render_tex(args.texfile, outdir)
+    pdf_name = render_tex(texfile, outdir)
     # retrieve pdf pages as images
     pages = get_pages(pdf_name)
     # load jinja2 template
     template_loader = jinja2.FileSystemLoader(searchpath='.')
     template_env = jinja2.Environment(loader=template_loader)
-    template = template_env.get_template(args.template)
+    template = template_env.get_template(template)
     for i, eq_toks in enumerate(equations):
         eq_tex = ''.join(repr(c) for c in eq_toks)
-        eq_name = 'equation-%03d' % i
+        eq_name = 'equation%03d' % i
         # make pdf
         fname = os.path.join(outdir, eq_name, 'equation.tex')
         equation = render_equation(eq_tex, template, fname)
@@ -123,3 +123,9 @@ if __name__ == '__main__':
             values = [p, x1, y1, x2, y2]
             tsv = '\t'.join(map(str, values))
             print(tsv, file=f)
+
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    process_paper(args.dirname, args.template, args.outdir)
