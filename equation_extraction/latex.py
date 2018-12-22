@@ -2,8 +2,31 @@ from __future__ import print_function
 
 import os
 import sys
+import glob
 from plasTeX.TeX import TeX
 from plasTeX.Tokenizer import BeginGroup, EndGroup
+
+
+
+def find_main_tex_file(dirname):
+    r"""looks in a directory for a .tex file that contain the \documentclass directive"""
+    # (from https://arxiv.org/help/faq/mistakes#wrongtex)
+    #
+    # Why does arXiv's system fail to recognize the main tex file?
+    #
+    # It is possible in writing your latex code to include your \documentclass directive
+    # in a file other than the main .tex file. While this is perfectly reasonable for a human
+    # who's compling to know which of the tex files is the main one (even when using something
+    # obvious as the filename, such as ms.tex), our AutoTeX system will attempt to process
+    # whichever file has the \documentclass directive as the main tex file.
+    #
+    # Note that the system does not process using Makefile or any other manifest-type files.
+    for filename in glob.glob(os.path.join(dirname, '*.tex')):
+        with open(filename) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith(r'\documentclass'):
+                    return filename
 
 
 
@@ -85,5 +108,5 @@ def tokenize(filename):
 
 
 if __name__ == '__main__':
-    for t in tokenize(sys.argv[1]):
+    for t in tokenize(find_main_tex_file(sys.argv[1])):
         print(type(t), repr(t))
