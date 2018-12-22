@@ -81,8 +81,8 @@ class OdinEngine(val config: Config = ConfigFactory.load("aske_automates")) {
 
 
   // MAIN PIPELINE METHOD
-  def extractFromText(text: String, keepText: Boolean = false): Seq[Mention] = {
-    val doc = annotate(text, keepText)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
+  def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
+    val doc = annotate(text, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
     val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
     //println(s"\nodinMentions() -- entities : \n\t${odinMentions.map(m => m.text).sorted.mkString("\n\t")}")
 
