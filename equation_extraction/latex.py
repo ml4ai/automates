@@ -36,9 +36,9 @@ def extract_equations(tokens):
     try:
         while True:
             token = next(tokens)
-            if token.data == 'begin': #and read_group(tokens)[0] == 'equation':
+            if token.data == 'begin':
                 group_name = read_group(tokens)[0]
-                if group_name in ('equation', 'equation*'):
+                if group_name in ('equation', 'equation*', 'align', 'align*'):
                     equation = []
                     while True:
                         t = next(tokens)
