@@ -95,7 +95,7 @@ if __name__ == '__main__':
     template = template_env.get_template(args.template)
     for i, eq_toks in enumerate(equations):
         eq_tex = ''.join(repr(c) for c in eq_toks)
-        eq_name = 'equation-%03d' % i
+        eq_name = 'equation%03d' % i
         # make pdf
         fname = os.path.join(outdir, eq_name, 'equation.tex')
         equation = render_equation(eq_tex, template, fname)
