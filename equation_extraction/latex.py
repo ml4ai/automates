@@ -73,16 +73,10 @@ def tokenize(filename):
                     yield t
             elif token.data == 'import':
                 # TODO handle \subimport, and also \import* and \subimport*
-                path = read_group(tokens)[0]
-                name = read_group(tokens)[0]
-                fname = maybe_add_extension(os.path.join(path, name))
-                for t in tokenize(fname):
-                    yield t
+                raise NotImplementedError("we don't handle \\import yet")
             elif token.data == 'include':
                 # TODO be aware of \includeonly
-                fname = maybe_add_extension(read_group(tokens)[0])
-                for t in tokenize(fname):
-                    yield t
+                raise NotImplementedError("we don't handle \\include yet")
             else:
                 yield token
     except StopIteration:
