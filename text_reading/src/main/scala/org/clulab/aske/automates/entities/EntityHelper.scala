@@ -52,9 +52,9 @@ object EntityHelper {
     * @return TextBoundMention with valid interval
     */
   def trimEntityEdges(entity: Mention): Mention = {
-         println(s"trying to trim entity: ${entity.text}")
+//         println(s"trying to trim entity: ${entity.text}")
+    
     // Check starting tag, get the location of first valid tag
-
     val tags = entity.document.sentences(entity.sentence).tags.get
     val startToken = entity.tokenInterval.start
     val startTag = tags(startToken)
