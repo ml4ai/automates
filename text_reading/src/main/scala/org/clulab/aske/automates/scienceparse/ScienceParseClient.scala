@@ -2,6 +2,16 @@ package org.clulab.aske.automates.scienceparse
 
 import java.io.File
 import java.nio.file.Path
+import com.typesafe.config.Config
+import ai.lum.common.ConfigUtils._
+
+object ScienceParseClient {
+  def fromConfig(config: Config): ScienceParseClient = {
+    val domain = config[String]("domain")
+    val port = config[String]("port")
+    new ScienceParseClient(domain, port)
+  }
+}
 
 class ScienceParseClient(
     val domain: String,
