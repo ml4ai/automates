@@ -11,15 +11,15 @@ class ScienceParseClient(
   val url = s"http://$domain:$port/v1"
   val headers = Map("Content-type" -> "application/pdf")
 
-  def parseDocument(filename: String): Document = {
-    parseDocument(new File(filename))
+  def parsePdf(filename: String): Document = {
+    parsePdf(new File(filename))
   }
 
-  def parseDocument(path: Path): Document = {
-    parseDocument(path.toFile())
+  def parsePdf(path: Path): Document = {
+    parsePdf(path.toFile())
   }
 
-  def parseDocument(file: File): Document = {
+  def parsePdf(file: File): Document = {
     val response = requests.post(url, headers = headers, data = file)
     val json = ujson.read(response.text)
     mkDocumentFromJson(json)
