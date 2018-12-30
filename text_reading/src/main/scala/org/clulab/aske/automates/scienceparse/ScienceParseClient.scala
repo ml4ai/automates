@@ -32,10 +32,10 @@ class ScienceParseClient(
   def parsePdf(file: File): Document = {
     val response = requests.post(url, headers = headers, data = file)
     val json = ujson.read(response.text)
-    mkDocumentFromJson(json)
+    mkDocument(json)
   }
 
-  def mkDocumentFromJson(json: ujson.Js): Document = {
+  def mkDocument(json: ujson.Js): Document = {
     val id = json("id").str
     val title = json("title").str
     val year = json("year").num.toInt
