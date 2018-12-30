@@ -1,0 +1,11 @@
+version: "3"
+services:
+    scienceparse:
+        image: allenai/scienceparse:2.0.3
+        ports:
+            - "8080:8080"
+    quantities:
+        build: ./quantities
+        image: clulab/quantities:latest
+        ports:
+            - "8060:8060"

@@ -10,5 +10,6 @@ RUN ./gradlew clean install
 RUN git clone https://github.com/kermitt2/grobid-quantities.git
 WORKDIR /grobid/grobid-quantities
 RUN ./gradlew clean install copyModels
+RUN ./gradlew appRun
 EXPOSE 8060
 CMD ["./gradlew", "appStart"]
