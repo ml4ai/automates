@@ -1,0 +1,28 @@
+package org.clulab.aske.automates.scienceparse
+
+case class Document(
+  id: String,
+  title: String,
+  year: Int,
+  authors: Vector[Author],
+  abstractText: String,
+  sections: Vector[Section],
+  references: Vector[Reference]
+)
+
+case class Author(
+  name: String,
+  affiliations: Vector[String]
+)
+
+case class Section(
+  heading: Option[String],
+  text: String
+)
+
+case class Reference(
+  title: String,
+  authors: Vector[String],
+  venue: String,
+  year: Int
+)

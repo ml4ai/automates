@@ -16,6 +16,8 @@ libraryDependencies ++= {
     "org.clulab"    %% "processors-modelsmain"    % procVer,
     "org.clulab"    %% "processors-modelscorenlp" % procVer,
     "ai.lum"        %% "common"                   % "0.0.8",
+    "com.lihaoyi"   %% "ujson"                    % "0.7.1",
+    "com.lihaoyi"   %% "requests"                 % "0.1.4",
     "org.scalatest" %% "scalatest"                % "3.0.4" % "test",
     "com.typesafe"  %  "config"                   % "1.3.1",
 
