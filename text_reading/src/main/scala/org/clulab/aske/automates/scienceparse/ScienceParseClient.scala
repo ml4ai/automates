@@ -53,7 +53,7 @@ class ScienceParseClient(
   }
 
   def mkSection(json: ujson.Js): Section = {
-    val heading = if (json.obj.keySet contains "heading") Some(json("heading").str) else None
+    val heading = json.obj.get("heading").map(_.str)
     val text = json("text").str
     Section(heading, text)
   }
