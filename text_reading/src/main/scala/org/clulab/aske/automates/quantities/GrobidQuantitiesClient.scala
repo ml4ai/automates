@@ -27,7 +27,7 @@ class GrobidQuantitiesClient(
   def mkMeasurement(json: ujson.Js): Measurement = json("type").str match {
     case "value" => mkValue(json)
     case "interval" => mkInterval(json)
-    case _ => ???
+    case t => throw new RuntimeException(s"unsupported measurement type '$t'")
   }
 
   def mkValue(json: ujson.Js): Value = {
