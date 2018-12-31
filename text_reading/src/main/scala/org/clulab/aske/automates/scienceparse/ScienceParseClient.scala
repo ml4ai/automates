@@ -25,12 +25,20 @@ class ScienceParseClient(
     parsePdf(new File(filename))
   }
 
-  def parsePdf(path: Path): Document = {
-    parsePdf(path.toFile())
-  }
-
   def parsePdf(file: File): Document = {
     val response = requests.post(url, headers = headers, data = file)
+    val json = ujson.read(response.text)
+    mkDocument(json)
+  }
+
+  def parsePdf(path: Path): Document = {
+    val response = requests.post(url, headers = headers, data = path)
+    val json = ujson.read(response.text)
+    mkDocument(json)
+  }
+
+  def parsePdf(bytes: Array[Byte]): Document = {
+    val response = requests.post(url, headers = headers, data = bytes)
     val json = ujson.read(response.text)
     mkDocument(json)
   }
