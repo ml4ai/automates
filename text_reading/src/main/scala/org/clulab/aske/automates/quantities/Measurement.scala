@@ -16,8 +16,8 @@ case class Quantity(
   rawValue: String,
   parsedValue: Double,
   normalizedValue: Option[Double],
-  rawUnit: Option[Unit],
-  normalizedUnit: Option[Unit],
+  rawUnit: Option[UnitOfMeasurement],
+  normalizedUnit: Option[UnitOfMeasurement],
   offset: Offset
 )
 
@@ -26,7 +26,7 @@ case class Offset(
   end: Int
 )
 
-case class Unit(
+case class UnitOfMeasurement(
   name: String,
   unitType: String,
   system: String,
