@@ -4,42 +4,21 @@ import java.io.File
 import java.nio.file.Path
 import com.typesafe.config.Config
 import ai.lum.common.ConfigUtils._
+import ai.lum.common.FileUtils._
 
 object ScienceParseClient {
+
   def fromConfig(config: Config): ScienceParseClient = {
     val domain = config[String]("domain")
     val port = config[String]("port")
     new ScienceParseClient(domain, port)
   }
-}
+  //------------------------------------------------------
+  //     Methods for creating ScienceParseDocuments
+  //------------------------------------------------------
 
-class ScienceParseClient(
-    val domain: String,
-    val port: String
-) {
-
-  val url = s"http://$domain:$port/v1"
-  val headers = Map("Content-type" -> "application/pdf")
-
-  def parsePdf(filename: String): ScienceParseDocument = {
-    parsePdf(new File(filename))
-  }
-
-  def parsePdf(file: File): ScienceParseDocument = {
-    val response = requests.post(url, headers = headers, data = file)
-    val json = ujson.read(response.text)
-    mkDocument(json)
-  }
-
-  def parsePdf(path: Path): ScienceParseDocument = {
-    val response = requests.post(url, headers = headers, data = path)
-    val json = ujson.read(response.text)
-    mkDocument(json)
-  }
-
-  def parsePdf(bytes: Array[Byte]): ScienceParseDocument = {
-    val response = requests.post(url, headers = headers, data = bytes)
-    val json = ujson.read(response.text)
+  def mkDocument(file: File): ScienceParseDocument = {
+    val json = ujson.read(file.readString())
     mkDocument(json)
   }
 
@@ -72,6 +51,65 @@ class ScienceParseClient(
     val venue = json("venue").str
     val year = json("year").num.toInt
     Reference(title, authors, venue, year)
+  }
+
+
+
+}
+
+class ScienceParseClient(
+    val domain: String,
+    val port: String
+) {
+
+  import ScienceParseClient._
+
+  val url = s"http://$domain:$port/v1"
+  val headers = Map("Content-type" -> "application/pdf")
+
+  /* Parse to ScienceParseDocument */
+
+  def parsePdf(filename: String): ScienceParseDocument = {
+    parsePdf(new File(filename))
+  }
+
+  def parsePdf(file: File): ScienceParseDocument = {
+    val response = requests.post(url, headers = headers, data = file)
+    val json = ujson.read(response.text)
+    mkDocument(json)
+  }
+
+  def parsePdf(path: Path): ScienceParseDocument = {
+    val response = requests.post(url, headers = headers, data = path)
+    val json = ujson.read(response.text)
+    mkDocument(json)
+  }
+
+  def parsePdf(bytes: Array[Byte]): ScienceParseDocument = {
+    val response = requests.post(url, headers = headers, data = bytes)
+    val json = ujson.read(response.text)
+    mkDocument(json)
+  }
+
+  /* Parse to json String */
+
+  def parsePdfToJson(filename: String): String = {
+    parsePdfToJson(new File(filename))
+  }
+
+  def parsePdfToJson(file: File): String = {
+    val response = requests.post(url, headers = headers, data = file)
+    response.text
+  }
+
+  def parsePdfToJson(path: Path): String = {
+    val response = requests.post(url, headers = headers, data = path)
+    response.text
+  }
+
+  def parsePdfToJson(bytes: Array[Byte]): String = {
+    val response = requests.post(url, headers = headers, data = bytes)
+    response.text
   }
 
 }
