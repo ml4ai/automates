@@ -21,29 +21,29 @@ class ScienceParseClient(
   val url = s"http://$domain:$port/v1"
   val headers = Map("Content-type" -> "application/pdf")
 
-  def parsePdf(filename: String): Document = {
+  def parsePdf(filename: String): ScienceParseDocument = {
     parsePdf(new File(filename))
   }
 
-  def parsePdf(file: File): Document = {
+  def parsePdf(file: File): ScienceParseDocument = {
     val response = requests.post(url, headers = headers, data = file)
     val json = ujson.read(response.text)
     mkDocument(json)
   }
 
-  def parsePdf(path: Path): Document = {
+  def parsePdf(path: Path): ScienceParseDocument = {
     val response = requests.post(url, headers = headers, data = path)
     val json = ujson.read(response.text)
     mkDocument(json)
   }
 
-  def parsePdf(bytes: Array[Byte]): Document = {
+  def parsePdf(bytes: Array[Byte]): ScienceParseDocument = {
     val response = requests.post(url, headers = headers, data = bytes)
     val json = ujson.read(response.text)
     mkDocument(json)
   }
 
-  def mkDocument(json: ujson.Js): Document = {
+  def mkDocument(json: ujson.Js): ScienceParseDocument = {
     val id = json("id").str
     val title = json("title").str
     val year = json("year").num.toInt
@@ -51,7 +51,7 @@ class ScienceParseClient(
     val abstractText = json("abstractText").str
     val sections = json("sections").arr.map(mkSection).toVector
     val references = json("references").arr.map(mkReference).toVector
-    Document(id, title, year, authors, abstractText, sections, references)
+    ScienceParseDocument(id, title, year, authors, abstractText, sections, references)
   }
 
   def mkAuthor(json: ujson.Js): Author = {
