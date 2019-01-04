@@ -96,9 +96,6 @@ object SerializedMentions {
 
 
 object ExporterUtils {
-  // def tojson(a: Any) String {
-  //   write(a)
-  // }
 
   def removeTabAndNewline(s: String) = s.replaceAll("(\\n|\\t)", " ")
 }
