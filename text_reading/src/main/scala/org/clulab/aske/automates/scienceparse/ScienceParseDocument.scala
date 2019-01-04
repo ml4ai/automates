@@ -1,6 +1,6 @@
 package org.clulab.aske.automates.scienceparse
 
-case class Document(
+case class ScienceParseDocument(
   id: String,
   title: String,
   year: Int,
