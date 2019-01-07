@@ -6,6 +6,8 @@ _site/
 .DS_Store
 
 .idea
+target
+project/target
 
 # MacOS:
 .DS_Store
