@@ -74,7 +74,6 @@ case class SerializedExporter(filename: String) extends Exporter {
 
 case class JSONExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
-    Serializer.save[SerializedMentions](new SerializedMentions(mentions), filename + ".json");
     val ast = JSONSerializer.jsonAST(mentions)
     val text = compact(render(ast))
     val file = new File(filename + ".json")
