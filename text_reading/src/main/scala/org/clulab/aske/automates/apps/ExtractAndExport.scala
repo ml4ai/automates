@@ -1,12 +1,19 @@
 package org.clulab.aske.automates.apps
 
 import java.io.File
+import java.io.FileWriter
+import java.io.BufferedWriter
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.utils.{Configured, FileUtils, Serializer}
 import org.clulab.odin.Mention
+import org.clulab.odin.TextBoundMention
+import org.clulab.odin.serialization.json.JSONSerializer
 
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
 
 /**
   * App used to extract mentions from files in a directory and produce the desired output format (i.e., serialized
@@ -19,6 +26,7 @@ object ExtractAndExport extends App with Configured {
   def getExporter(exporterString: String, filename: String): Exporter = {
     exporterString match {
       case "serialized" => SerializedExporter(filename)
+      case "json" => JSONExporter(filename)
       case _ => throw new NotImplementedError(s"Export mode $exporterString is not supported.")
     }
   }
@@ -64,11 +72,24 @@ case class SerializedExporter(filename: String) extends Exporter {
   override def close(): Unit = ()
 }
 
+case class JSONExporter(filename: String) extends Exporter {
+  override def export(mentions: Seq[Mention]): Unit = {
+    val ast = JSONSerializer.jsonAST(mentions)
+    val text = compact(render(ast))
+    val file = new File(filename + ".json")
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write(text)
+    bw.close()
+  }
+
+  override def close(): Unit = ()
+}
+
 // Helper Class to facilitate serializing the mentions
 @SerialVersionUID(1L)
 class SerializedMentions(val mentions: Seq[Mention]) extends Serializable {}
 object SerializedMentions {
-  def load(file: File): Seq[Mention] = Serializer.load[SerializedMentions](file).mentions 
+  def load(file: File): Seq[Mention] = Serializer.load[SerializedMentions](file).mentions
   def load(filename: String): Seq[Mention] = Serializer.load[SerializedMentions](filename).mentions
 }
 
