@@ -1,6 +1,6 @@
 package org.clulab.aske.automates.entities
 
-import org.clulab.aske.automates.quantities.{GrobidQuantitiesClient, Interval, Measurement, Value}
+import org.clulab.aske.automates.quantities._
 import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -32,12 +32,14 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient) extends Entit
     }
   }
 
+  def valueToMentions(value: Value, doc: Document): Seq[Mention] = {
+    quantityToMentions(value.quantity, doc)
+  }
 
   // todo: Values also have a Quantified, which we are ignoring for now...
-  def valueToMentions(value: Value, doc: Document): Seq[Mention] = {
+  def quantityToMentions(quantity: Quantity, doc: Document): Seq[Mention] = {
     val mentions = new ArrayBuffer[Mention]()
     // Get the TBM for the quantity
-    val quantity = value.quantity
     val rawValue = quantity.rawValue
     val sentence = getSentence(doc, quantity.offset.start, quantity.offset.end)
     val rawValueTokenInterval = getTokenOffsets(doc, sentence, quantity.offset.start, quantity.offset.end)
@@ -64,8 +66,43 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient) extends Entit
     mentions
   }
 
+  def getPrimaryMention(mentions: Seq[Mention]): Mention = {
+    val (relationMentions, other) = mentions.partition(_.isInstanceOf[RelationMention])
+    if (relationMentions.nonEmpty) {
+      assert(relationMentions.length == 1) // I think there should only be one!
+      relationMentions.head
+    } else {
+      assert(other.length == 1) // I think that there should only be 1, which is a RawValue
+      other.head
+    }
+  }
+
   def intervalToMentions(interval: Interval, doc: Document): Seq[Mention] = {
-    Seq.empty //fixme
+    val mentions = new ArrayBuffer[Mention]()
+    var sentence: Int = -1
+    val arguments = new scala.collection.mutable.HashMap[String, Seq[Mention]]
+    // Get the Mentions from each of the Quantities
+    val quantLeast = interval.quantityLeast.map(quantityToMentions(_, doc))
+    if (quantLeast.nonEmpty) {
+      mentions.appendAll(quantLeast.get)
+      val leastMention = getPrimaryMention(quantLeast.get)
+      arguments.put(GrobidEntityFinder.LEAST_ARG, Seq(leastMention))
+      sentence = leastMention.sentence
+    }
+    val quantMost = interval.quantityMost.map(quantityToMentions(_, doc))
+    if (quantMost.nonEmpty) {
+      mentions.appendAll(quantMost.get)
+      val mostMention = getPrimaryMention(quantMost.get)
+      arguments.put(GrobidEntityFinder.MOST_ARG, Seq(mostMention))
+      sentence = mostMention.sentence
+    }
+    // Make a RelationMention that has however many there are...
+    assert(arguments.size > 0 && sentence != -1) // We should have had one or the other at least!
+
+    val intervalMention = new RelationMention(GrobidEntityFinder.INTERVAL_LABEL, arguments.toMap, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+    mentions.append(intervalMention)
+
+    mentions
   }
 
   def getTokenOffsets(doc: Document, sent: Int, start: Int, end: Int): TokenInterval = {
@@ -103,9 +140,12 @@ object GrobidEntityFinder {
   val RAW_VALUE_LABEL: String = "Value"
   val UNIT_LABEL: String = "Unit"
   val VALUE_AND_UNIT: String = "ValueAndUnit"
+  val INTERVAL_LABEL: String = "Interval"
   // Argument names
   val VALUE_ARG: String = "value"
   val UNIT_ARG: String = "unit"
+  val LEAST_ARG: String = "least"
+  val MOST_ARG: String = "most"
   // Other
   val GROBID_FOUNDBY: String = "GrobidEntityFinder"
 
@@ -117,7 +157,7 @@ object TestStuff {
     val client = new GrobidQuantitiesClient("localhost", "8060")
     val ef = new GrobidEntityFinder(client)
     val proc = new FastNLPProcessor()
-    val text = "The height of the chair was 100 cm and it was 2700.5 mm in length."
+    val text = "The height of the chair was 100-150 cm and it was between 2700.5 and 3000 mm in length."
     val doc = proc.annotate(text, keepText = true)
     val mentions = ef.extract(doc)
     mentions.foreach(m => DisplayUtils.displayMention(m))

@@ -21,13 +21,16 @@ class GrobidQuantitiesClient(
   def getMeasurements(text: String): Vector[Measurement] = {
     val response = requests.post(url, data = Map("text" -> text))
     val json = ujson.read(response.text)
-    json("measurements").arr.map(mkMeasurement).toVector
+    json("measurements").arr.flatMap(mkMeasurement).toVector
   }
 
-  def mkMeasurement(json: ujson.Js): Measurement = json("type").str match {
-    case "value" => mkValue(json)
-    case "interval" => mkInterval(json)
-    case t => throw new RuntimeException(s"unsupported measurement type '$t'")
+  def mkMeasurement(json: ujson.Js): Option[Measurement] = json("type").str match {
+    case "value" => Some(mkValue(json))
+    case "interval" => Some(mkInterval(json))
+    //case t => throw new RuntimeException(s"unsupported measurement type '$t'")
+    case t =>
+      println(s"WARNING: there was an unsupported Measurement type ==> $t")
+      None
   }
 
   def mkValue(json: ujson.Js): Value = {
