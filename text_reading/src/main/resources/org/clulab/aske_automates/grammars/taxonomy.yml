@@ -1,4 +1,9 @@
 - Entity:
   - Concept
+  - Measurement:
+    - Value:
+      - ValueAndUnit
+    - Unit
+    - Interval
 - Event:
   - Causal

@@ -51,7 +51,7 @@ object OdinActions {
   def apply(taxonomyPath: String) =
     new OdinActions(readTaxonomy(taxonomyPath))
 
-  private def readTaxonomy(path: String): Taxonomy = {
+  def readTaxonomy(path: String): Taxonomy = {
     val input = FileUtils.getTextFromResource(path)
     val yaml = new Yaml(new Constructor(classOf[java.util.Collection[Any]]))
     val data = yaml.load(input).asInstanceOf[java.util.Collection[Any]]
