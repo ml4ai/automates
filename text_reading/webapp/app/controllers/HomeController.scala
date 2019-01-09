@@ -255,11 +255,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def getArg(r: RelationMention, name: String): TextBoundMention = r.arguments(name).head match {
     case m: TextBoundMention => m
     case m: EventMention => m.trigger
-    case m: RelationMention => prioritizedArg(r)
+    case r: RelationMention => prioritizedArg(r)//smushIntoTextBound(r) //fixme - this is likely not the right solution...!
   }
 
+  def smushIntoTextBound(r: RelationMention): TextBoundMention = new TextBoundMention(r.labels, r.tokenInterval, r.sentence, r.document, r.keep, r.foundBy + "-smushed", r.attachments)
+
   def prioritizedArg(r: RelationMention): TextBoundMention = {
-    val priorityArgs = Seq("pitch", "beat")
+    val priorityArgs = Seq("pitch", "beat", "value")
     val prioritized = r.arguments.filter(a => priorityArgs.contains(a._1)).values.flatten.headOption
     prioritized.getOrElse(r.arguments.values.flatten.head).asInstanceOf[TextBoundMention] //fixme
   }

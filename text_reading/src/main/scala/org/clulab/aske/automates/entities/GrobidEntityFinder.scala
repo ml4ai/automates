@@ -105,8 +105,8 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     }
     // Make a RelationMention that has however many there are...
     assert(arguments.size > 0 && sentence != -1) // We should have had one or the other at least!
-
-    val intervalMention = new RelationMention(GrobidEntityFinder.INTERVAL_LABEL, arguments.toMap, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+    val args = arguments.toMap
+    val intervalMention = new RelationMention(getLabels(GrobidEntityFinder.INTERVAL_LABEL), mkTokenInterval(args), args, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
     mentions.append(intervalMention)
 
     mentions
