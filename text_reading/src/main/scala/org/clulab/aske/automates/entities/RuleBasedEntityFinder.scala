@@ -1,10 +1,13 @@
 package org.clulab.aske.automates.entities
 
+import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.odin.{ExtractorEngine, Mention, State, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 import org.clulab.utils.FileUtils
+import ai.lum.common.ConfigUtils._
+
 
 import scala.annotation.tailrec
 
@@ -182,6 +185,14 @@ class RuleBasedEntityFinder(
 }
 
 object RuleBasedEntityFinder extends LazyLogging {
+
+  def fromConfig(config: Config): RuleBasedEntityFinder = {
+    val entityRulesPath = config[String]("entityRulesPath")
+    val avoidRulesPath = config[String]("avoidRulesPath")
+    val maxHops = config[Int]("maxHops")
+    RuleBasedEntityFinder(entityRulesPath, avoidRulesPath, maxHops = maxHops)
+  }
+
   val DEFAULT_MAX_LENGTH = 50 // maximum length (in tokens) for an entity
   
   def apply(entityRulesPath: String, avoidRulesPath: String, maxHops: Int, maxLength: Int = DEFAULT_MAX_LENGTH): RuleBasedEntityFinder = {

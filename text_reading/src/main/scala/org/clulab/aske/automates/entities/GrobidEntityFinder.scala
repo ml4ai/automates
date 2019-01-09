@@ -1,15 +1,22 @@
 package org.clulab.aske.automates.entities
 
+import com.typesafe.config.Config
 import org.clulab.aske.automates.quantities._
-import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
+import org.clulab.odin.{Mention, RelationMention, TextBoundMention, mkTokenInterval}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.{Interval => TokenInterval}
 import org.clulab.utils.DisplayUtils
+import ai.lum.common.ConfigUtils._
+import org.clulab.odin.impl.Taxonomy
 
-import scala.collection.mutable.ArrayBuffer // Add alias bc we have another Interval
+import org.clulab.aske.automates.OdinActions
 
-class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient) extends EntityFinder {
+import scala.collection.mutable.ArrayBuffer
+
+class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var taxonomy: Option[Taxonomy]) extends EntityFinder {
+
+  import GrobidEntityFinder._
 
   def extract(doc: Document): Seq[Mention] = {
     // Run the grobid client over document
@@ -43,7 +50,7 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient) extends Entit
     val rawValue = quantity.rawValue
     val sentence = getSentence(doc, quantity.offset.start, quantity.offset.end)
     val rawValueTokenInterval = getTokenOffsets(doc, sentence, quantity.offset.start, quantity.offset.end)
-    val rawValueMention = new TextBoundMention(GrobidEntityFinder.RAW_VALUE_LABEL, rawValueTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+    val rawValueMention = new TextBoundMention(getLabels(RAW_VALUE_LABEL), rawValueTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
     mentions.append(rawValueMention)
 
     // Get the TBM for the unit, if any
@@ -52,13 +59,13 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient) extends Entit
       val rawUnit = unit.name
       val unitTokenInterval = getTokenOffsets(doc, sentence, unit.offset.get.start, unit.offset.get.end) // if there is a raw unit, it will always have an Offset
       // todo: we're assuming the same sentence as the values above, revisit?
-      val unitMention = new TextBoundMention(GrobidEntityFinder.UNIT_LABEL, unitTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+      val unitMention = new TextBoundMention(getLabels(UNIT_LABEL), unitTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
       mentions.append(unitMention)
 
       // Make the RelationMention
       val arguments = Map(GrobidEntityFinder.VALUE_ARG -> Seq(rawValueMention), GrobidEntityFinder.UNIT_ARG -> Seq(unitMention))
       // todo: using same sentence as above and empty map for paths
-      val quantityWithUnitMention = new RelationMention(GrobidEntityFinder.VALUE_AND_UNIT, arguments, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+      val quantityWithUnitMention = new RelationMention(getLabels(VALUE_AND_UNIT), mkTokenInterval(arguments), arguments, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
       mentions.append(quantityWithUnitMention)
     }
 
@@ -98,8 +105,8 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient) extends Entit
     }
     // Make a RelationMention that has however many there are...
     assert(arguments.size > 0 && sentence != -1) // We should have had one or the other at least!
-
-    val intervalMention = new RelationMention(GrobidEntityFinder.INTERVAL_LABEL, arguments.toMap, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+    val args = arguments.toMap
+    val intervalMention = new RelationMention(getLabels(GrobidEntityFinder.INTERVAL_LABEL), mkTokenInterval(args), args, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
     mentions.append(intervalMention)
 
     mentions
@@ -133,6 +140,22 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient) extends Entit
     sys.error(s"interval [$start, $end] not contained in document")
   }
 
+  // --------------------------------------
+  //            Helper Methods
+  // --------------------------------------
+
+  /**
+    * Get the labels for the Mention based on the taxonomy.
+    * @param label
+    * @return
+    */
+  def getLabels(label: String): Seq[String] = {
+    taxonomy match {
+      case Some(t) => t.hypernymsFor(label)
+      case None => Seq(label)
+    }
+  }
+
 }
 
 object GrobidEntityFinder {
@@ -149,15 +172,23 @@ object GrobidEntityFinder {
   // Other
   val GROBID_FOUNDBY: String = "GrobidEntityFinder"
 
+  def fromConfig(config: Config): GrobidEntityFinder = {
+    val taxonomy = OdinActions.readTaxonomy(config[String]("taxonomy"))
+    val domain = config[String]("domain")
+    val port = config[String]("port")
+
+    new GrobidEntityFinder(new GrobidQuantitiesClient(domain, port), Some(taxonomy))
+  }
+
 }
 
 
 object TestStuff {
   def main(args: Array[String]): Unit = {
     val client = new GrobidQuantitiesClient("localhost", "8060")
-    val ef = new GrobidEntityFinder(client)
+    val ef = new GrobidEntityFinder(client, None)
     val proc = new FastNLPProcessor()
-    val text = "The height of the chair was 100-150 cm and it was between 2700.5 and 3000 mm in length."
+    val text = "The height of the chair was 100-150 cm."
     val doc = proc.annotate(text, keepText = true)
     val mentions = ef.extract(doc)
     mentions.foreach(m => DisplayUtils.displayMention(m))

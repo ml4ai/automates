@@ -5,14 +5,14 @@ import com.typesafe.config.ConfigFactory
 import org.clulab.odin.{ExtractorEngine, Mention, State}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.aske.automates.entities.{EntityFinder, RuleBasedEntityFinder}
+import org.clulab.aske.automates.entities.{EntityFinder, GrobidEntityFinder, RuleBasedEntityFinder}
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{FileUtils, FilterByLength, PassThroughFilter}
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
 
 
-class OdinEngine(val config: Config = ConfigFactory.load("aske_automates")) {
+class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
 
   val odinConfig = config[Config]("OdinEngine")
 
@@ -45,14 +45,16 @@ class OdinEngine(val config: Config = ConfigFactory.load("aske_automates")) {
       // Reread these values from their files/resources each time based on paths in the config file.
       val masterRules = FileUtils.getTextFromResource(masterRulesPath)
       val actions = OdinActions(taxonomyPath)
-
+      val extractorEngine = ExtractorEngine(masterRules, actions)
       // EntityFinder
       val entityFinder = if (enableEntityFinder) {
         val entityFinderConfig = config[Config]("entityFinder")
-        val entityRulesPath = entityFinderConfig[String]("entityRulesPath")
-        val avoidRulesPath = entityFinderConfig[String]("avoidRulesPath")
-        val maxHops = entityFinderConfig[Int]("maxHops")
-        Some(RuleBasedEntityFinder(entityRulesPath, avoidRulesPath, maxHops = maxHops))
+        entityFinderConfig[String]("finderType") match {
+          case "rulebased" => Some(RuleBasedEntityFinder.fromConfig(entityFinderConfig))
+          case "grobid" =>
+            Some(GrobidEntityFinder.fromConfig(entityFinderConfig))
+          case _ => throw new RuntimeException(s"Unexpected entity finder type")
+        }
       } else None
 
       // LexiconNER files
@@ -64,7 +66,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("aske_automates")) {
 
       new LoadableAttributes(
         actions,
-        ExtractorEngine(masterRules, actions), // ODIN component,
+        extractorEngine, // ODIN component,
         entityFinder,
         lexiconNER
       )
@@ -97,7 +99,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("aske_automates")) {
       case None => new State()
       case Some(ef) => State(ef.extract(doc))
     }
-    // Run the main extraction engine, populated with the initial state
+    // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initalState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
 
