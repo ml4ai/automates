@@ -6,9 +6,6 @@ import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, Text
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.DisplayUtils
 
-//import scala.collection.mutable
-//import scala.collection.mutable.ListBuffer
-//import play.api._
 import play.api.mvc._
 import play.api.libs.json._
 
@@ -62,13 +59,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println(s"Done extracting the mentions ... ")
     println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
 
-//    println(s"Grounding the gradable adjectives ... ")
-//    val groundedEntities = groundEntities(ieSystem, mentions)
-
-    println(s"Getting entity linking events ... ")
-
-    println("DONE .... ")
-//    println(s"Grounded Adjectives : ${groundedAdjectives.size}")
     // return the sentence and all the mentions extracted ... TODO: fix it to process all the sentences in the doc
     (doc, mentions.sortBy(_.start))
   }
@@ -136,6 +126,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // These print the html and it's a mess to look at...
     // println(s"Grounded Gradable Adj: ")
     // println(s"$groundedAdjObj")
+
     Json.obj(
       "syntax" -> syntaxJsonObj,
       "eidosMentions" -> eidosJsonObj,
