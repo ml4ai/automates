@@ -61,8 +61,7 @@ def extract_equations(tokens):
             token = next(tokens)
             if token.data == 'begin':
                 group_name = read_group(tokens)[0]
-                # if group_name in ('equation', 'equation*', 'align', 'align*'):
-                if group_name in ('equation', 'equation*'):
+                if group_name in ('equation', 'equation*', 'align', 'align*'):
                     equation = []
                     while True:
                         t = next(tokens)
@@ -75,7 +74,7 @@ def extract_equations(tokens):
                                 equation += ts
                         else:
                             equation.append(t)
-                    yield equation
+                    yield (group_name, equation)
             # TODO add support for other math environments
     except StopIteration:
         pass

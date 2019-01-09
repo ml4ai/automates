@@ -93,7 +93,7 @@ def process_paper(dirname, template, outdir):
     template_loader = jinja2.FileSystemLoader(searchpath='.')
     template_env = jinja2.Environment(loader=template_loader)
     template = template_env.get_template(template)
-    for i, eq_toks in enumerate(equations):
+    for (i, (group_name, eq_toks)) in enumerate(equations):
         eq_tex = ''.join(repr(c) for c in eq_toks)
         eq_name = 'equation%03d' % i
         # make pdf
