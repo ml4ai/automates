@@ -104,33 +104,35 @@ def process_paper(dirname, template, outdir):
         fname = os.path.join(outdir, eq_name, 'environment.txt')
         with open(fname, 'w') as f:
             f.write(environment_name)
-        # make pdf
-        fname = os.path.join(outdir, eq_name, 'equation.tex')
-        equation = render_equation(eq_tex, template, fname)
         # write tex tokens
         fname = os.path.join(outdir, eq_name, 'tokens.json')
         with open(fname, 'w') as f:
             tokens = [dict(type=t.__class__.__name__, value=t.source) for t in eq_toks]
             json.dump(tokens, f)
-        # find page and aabb where equation appears
-        match, p, start, end = match_template(pages, equation)
-        # write image with aabb
-        image = pages[p].copy()
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-        cv2.rectangle(image, start, end, (0, 0, 255), 2)
-        img_name = os.path.join(outdir, eq_name, 'aabb.png')
-        cv2.imwrite(img_name, image)
-        # write aabb to file (using relative coordinates)
-        fname = os.path.join(outdir, eq_name, 'aabb.tsv')
-        h, w = image.shape[:2]
-        x1 = start[0] / w
-        y1 = start[1] / h
-        x2 = end[0] / w
-        y2 = end[1] / h
-        with open(fname, 'w') as f:
-            values = [p, x1, y1, x2, y2]
-            tsv = '\t'.join(map(str, values))
-            print(tsv, file=f)
+        # render equation if possible
+        if environment_name in ('equation', 'equation*'):
+            # make pdf
+            fname = os.path.join(outdir, eq_name, 'equation.tex')
+            equation = render_equation(eq_tex, template, fname)
+            # find page and aabb where equation appears
+            match, p, start, end = match_template(pages, equation)
+            # write image with aabb
+            image = pages[p].copy()
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+            cv2.rectangle(image, start, end, (0, 0, 255), 2)
+            img_name = os.path.join(outdir, eq_name, 'aabb.png')
+            cv2.imwrite(img_name, image)
+            # write aabb to file (using relative coordinates)
+            fname = os.path.join(outdir, eq_name, 'aabb.tsv')
+            h, w = image.shape[:2]
+            x1 = start[0] / w
+            y1 = start[1] / h
+            x2 = end[0] / w
+            y2 = end[1] / h
+            with open(fname, 'w') as f:
+                values = [p, x1, y1, x2, y2]
+                tsv = '\t'.join(map(str, values))
+                print(tsv, file=f)
 
 
 
