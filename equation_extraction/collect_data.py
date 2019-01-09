@@ -53,7 +53,7 @@ def get_pages(pdf_name):
     pages = []
     for img in convert_from_path(pdf_name):
         page = np.array(img)
-        page = cv2.cvtColor(page, cv2.COLOR_RGB2GRAY)
+        page = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
         pages.append(page)
     return pages
 
@@ -93,9 +93,17 @@ def process_paper(dirname, template, outdir):
     template_loader = jinja2.FileSystemLoader(searchpath='.')
     template_env = jinja2.Environment(loader=template_loader)
     template = template_env.get_template(template)
-    for (i, (group_name, eq_toks)) in enumerate(equations):
+    for (i, (environment_name, eq_toks)) in enumerate(equations):
         eq_tex = ''.join(repr(c) for c in eq_toks)
         eq_name = 'equation%03d' % i
+        # ensure directory exists
+        dirname = os.path.join(outdir, eq_name)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        # write environment name
+        fname = os.path.join(outdir, eq_name, 'environment.txt')
+        with open(fname, 'w') as f:
+            f.write(environment_name)
         # make pdf
         fname = os.path.join(outdir, eq_name, 'equation.tex')
         equation = render_equation(eq_tex, template, fname)
