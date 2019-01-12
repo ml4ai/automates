@@ -17,9 +17,10 @@ class GrobidQuantitiesClient(
 ) {
 
   val url = s"http://$domain:$port/service/processQuantityText"
+  val timeout: Int = 150000
 
   def getMeasurements(text: String): Vector[Measurement] = {
-    val response = requests.post(url, data = Map("text" -> text))
+    val response = requests.post(url, data = Map("text" -> text), readTimeout = timeout, connectTimeout=timeout)
     val json = ujson.read(response.text)
     json("measurements").arr.flatMap(mkMeasurement).toVector
   }
