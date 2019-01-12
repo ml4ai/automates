@@ -43,18 +43,17 @@ def main(args):
 
     # Do training
     if args.epochs > 0:
-        loss_file = open("training_loss.txt", "w+")
-        loss_file.write("EPOCH\tBATCH\tLOSS")
-
+        loss_values = list()
         # Adam optimizer works, SGD fails to train the network for any batch size
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 1e-3)
+        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.1)
         for epoch in range(args.epochs):
             model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
                 # for batch in tqdm(train, desc="Epoch {}/{}".format(epoch+1, args.epochs)):
                 for b_idx, batch in enumerate(train):
                     # utils.train_on_batch(model, optimizer, batch, args.use_gpu)
-                    model.zero_grad()   # Clear current gradient
+                    model.zero_grad()
+                    optimizer.zero_grad()   # Clear current gradient
 
                     # Get the label into a tensor for loss prop
                     truth = torch.autograd.Variable(batch.label).long()
@@ -72,7 +71,7 @@ def main(args):
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
                     curr_loss = loss.item()
-                    loss_file.write("{}\t{}\t{}".format(epoch, b_idx, curr_loss))
+                    loss_values.append((epoch, b_idx, curr_loss))
                     pbar.set_postfix(batch_loss=curr_loss)
                     pbar.update()
 
@@ -81,7 +80,10 @@ def main(args):
             acc = utils.accuracy_score(scores)
             sys.stdout.write("Epoch {} -- dev acc: {}%\n".format(epoch+1, acc))
 
-        loss_file.close()
+        with open("training_loss.txt", "w+") as loss_file:
+            loss_file.write("EPOCH\tBATCH\tLOSS\n")
+            for (e, b, l) in loss_values:
+                loss_file.write("{}\t{}\t{}\n".format(e, b, l))
 
     # Save the model weights
     if args.save != "":
