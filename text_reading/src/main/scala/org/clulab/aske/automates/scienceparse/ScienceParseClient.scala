@@ -65,6 +65,7 @@ class ScienceParseClient(
   import ScienceParseClient._
 
   val url = s"http://$domain:$port/v1"
+  val timeout: Int = 150000
   val headers = Map("Content-type" -> "application/pdf")
 
   /* Parse to ScienceParseDocument */
@@ -74,7 +75,7 @@ class ScienceParseClient(
   }
 
   def parsePdf(file: File): ScienceParseDocument = {
-    val response = requests.post(url, headers = headers, data = file)
+    val response = requests.post(url, headers = headers, data = file, readTimeout = timeout, connectTimeout = timeout)
     val json = ujson.read(response.text)
     mkDocument(json)
   }
