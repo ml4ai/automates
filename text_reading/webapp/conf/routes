@@ -5,7 +5,7 @@
 
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
-GET     /parseSentence              controllers.HomeController.parseSentence(sent: String, showEverything: Boolean)
+GET     /parseText                  controllers.HomeController.parseText(text: String, showEverything: Boolean)
 GET     /getMentions                controllers.HomeController.getMentions(text: String)
 
 # Map static resources from the /public folder to the /assets URL path
