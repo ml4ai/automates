@@ -45,7 +45,7 @@ def main(args):
     if args.epochs > 0:
         loss_values = list()
         # Adam optimizer works, SGD fails to train the network for any batch size
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.1)
+        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), args.learning_rate)
         for epoch in range(args.epochs):
             model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
@@ -156,6 +156,10 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--batch_size", type=int,
                         help="size of batch",
                         default=50)
+
+    parser.add_argument("-r", "--learning-rate", type=float,
+                        help="learning rate",
+                        default=1e-3)
 
     parser.add_argument("-g", "--use_gpu", dest="use_gpu", action="store_true",
                         help="indicate whether to use CPU or GPU")
