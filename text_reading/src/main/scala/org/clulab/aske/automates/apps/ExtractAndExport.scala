@@ -5,14 +5,10 @@ import java.io.FileWriter
 import java.io.BufferedWriter
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.OdinEngine
-import org.clulab.utils.{Configured, FileUtils, Serializer}
+import org.clulab.aske.automates.{DataLoader, OdinEngine}
+import org.clulab.utils.{Configured, DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
-import org.clulab.odin.TextBoundMention
 import org.clulab.odin.serialization.json.JSONSerializer
-
-import org.json4s._
-import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
 /**
@@ -37,6 +33,7 @@ object ExtractAndExport extends App with Configured {
   val inputDir = getArgString("apps.inputDirectory", None)
   val outputDir = getArgString("apps.outputDirectory", None)
   val inputExtension = getArgString("apps.inputFileExtension", None)
+  val dataLoader = DataLoader.selectLoader(inputExtension) // txt or json are supported, and we assume json == science parse json
   val exportAs = getArgStrings("apps.exportAs", None)
   val files = FileUtils.findFiles(inputDir, inputExtension)
   val reader = new OdinEngine()
@@ -46,9 +43,11 @@ object ExtractAndExport extends App with Configured {
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
     // 2. Get the input file contents
-    val text = FileUtils.getTextFromFile(file)
-    // 3. Extract causal mentions from the text
-    val mentions = reader.extractFromText(text, filename = Some(file.getName))
+    // note: for science parse format, each text is a section
+    val texts = dataLoader.loadFile(file)
+    // 3. Extract causal mentions from the texts
+    // todo: here I am choosing to pass each text/section through separately -- this may result in a difficult coref problem
+    val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
     // 4. Export to all desired formats
     exportAs.foreach { format =>
         val exporter = getExporter(format, s"$outputDir/${file.getName}")

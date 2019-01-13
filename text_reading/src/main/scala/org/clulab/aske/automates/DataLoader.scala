@@ -17,6 +17,18 @@ abstract class DataLoader {
 //  def loadCollection(collectionDir: String, extension: String = defaultExtension): Seq[Seq[String]] = findFiles(collectionDir, extension).map(loadFile)
 }
 
+object DataLoader {
+
+  // Select the kind of data loader you want,
+  // todo: (revisit?) here we are working on scientific papers, so if it's json here we assume it's from science parse
+  def selectLoader(s: String): DataLoader = {
+    s match {
+      case "txt" => new PlainTextDataLoader
+      case "json" => new ScienceParsedDataLoader
+    }
+  }
+}
+
 
 class ScienceParsedDataLoader extends DataLoader {
   /**
@@ -46,17 +58,17 @@ class PlainTextDataLoader extends DataLoader {
 }
 
 
-object Testy {
-  def main(args: Array[String]): Unit = {
-    val dir = "output/"
 
-    val loader = new ScienceParsedDataLoader
-    val files = findFiles(dir, "json")
-    files foreach { f =>
-      val doc = loader.loadFile(f)
-      println(f.getBaseName, doc.head)
-    }
-
-  }
-
-}
+//object Testy {
+//  def main(args: Array[String]): Unit = {
+//    val dir = args(0)
+//    val loader = new ScienceParsedDataLoader
+//    val files = findFiles(dir, "json")
+//    files foreach { f =>
+//      val doc = loader.loadFile(f)
+//      println(s"Filename: ${f.getBaseName}")
+//      println(doc.head)
+//      println()
+//    }
+//  }
+//}

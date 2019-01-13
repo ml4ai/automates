@@ -23,6 +23,13 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     // Run by document for now... todo should we revisit? by sentence??
     assert(doc.text.nonEmpty)  // assume that we are keeping text
     val text = doc.text.get
+//    val mentions = for {
+//      (sentence, sentIdx) <- doc.sentences.zipWithIndex
+//      measurement <- grobidClient.getMeasurements(sentence.getSentenceText)
+//      mention <- measurementToMentions(measurement, doc, sentIdx)
+//    } yield mention
+
+
     val measurements = grobidClient.getMeasurements(text)
 
     // convert to odin (Textbound)Mentions
@@ -48,29 +55,35 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     val mentions = new ArrayBuffer[Mention]()
     // Get the TBM for the quantity
     val rawValue = quantity.rawValue
-    val sentence = getSentence(doc, quantity.offset.start, quantity.offset.end)
-    val rawValueTokenInterval = getTokenOffsets(doc, sentence, quantity.offset.start, quantity.offset.end)
-    val rawValueMention = new TextBoundMention(getLabels(RAW_VALUE_LABEL), rawValueTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
-    mentions.append(rawValueMention)
+    // This is an option because since we're passing the whole document to grobid, potentially we can have a cross-sentence quantity and
+    // we don't handle these yet.
+    val sentenceOption = getSentence(doc, quantity.offset.start, quantity.offset.end)
+    sentenceOption match {
+      case None => Seq.empty[Mention]
+      case Some(sentence) =>
+        val rawValueTokenInterval = getTokenOffsets(doc, sentence, quantity.offset.start, quantity.offset.end)
+        val rawValueMention = new TextBoundMention(getLabels(RAW_VALUE_LABEL), rawValueTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+        mentions.append(rawValueMention)
 
-    // Get the TBM for the unit, if any
-    if (quantity.rawUnit.isDefined) {
-      val unit = quantity.rawUnit.get
-      val rawUnit = unit.name
-      val unitTokenInterval = getTokenOffsets(doc, sentence, unit.offset.get.start, unit.offset.get.end) // if there is a raw unit, it will always have an Offset
-      // todo: we're assuming the same sentence as the values above, revisit?
-      val unitMention = new TextBoundMention(getLabels(UNIT_LABEL), unitTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
-      mentions.append(unitMention)
+        // Get the TBM for the unit, if any
+        if (quantity.rawUnit.isDefined) {
+          val unit = quantity.rawUnit.get
+          val rawUnit = unit.name
+          val unitTokenInterval = getTokenOffsets(doc, sentence, unit.offset.get.start, unit.offset.get.end) // if there is a raw unit, it will always have an Offset
+          // todo: we're assuming the same sentence as the values above, revisit?
+          val unitMention = new TextBoundMention(getLabels(UNIT_LABEL), unitTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+          mentions.append(unitMention)
 
-      // Make the RelationMention
-      val arguments = Map(GrobidEntityFinder.VALUE_ARG -> Seq(rawValueMention), GrobidEntityFinder.UNIT_ARG -> Seq(unitMention))
-      // todo: using same sentence as above and empty map for paths
-      val quantityWithUnitMention = new RelationMention(getLabels(VALUE_AND_UNIT), mkTokenInterval(arguments), arguments, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
-      mentions.append(quantityWithUnitMention)
+          // Make the RelationMention
+          val arguments = Map(GrobidEntityFinder.VALUE_ARG -> Seq(rawValueMention), GrobidEntityFinder.UNIT_ARG -> Seq(unitMention))
+          // todo: using same sentence as above and empty map for paths
+          val quantityWithUnitMention = new RelationMention(getLabels(VALUE_AND_UNIT), mkTokenInterval(arguments), arguments, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+          mentions.append(quantityWithUnitMention)
+        }
+
+        // return
+        mentions
     }
-
-    // return
-    mentions
   }
 
   def getPrimaryMention(mentions: Seq[Mention]): Mention = {
@@ -129,15 +142,18 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
   }
 
   // start and end are character offsets (inclusive, exclusive) ??
-  def getSentence(document: Document, start: Int, end: Int): Int = {
+  def getSentence(document: Document, start: Int, end: Int): Option[Int] = {
     for (i <- document.sentences.indices) {
       val sentenceStart = document.sentences(i).startOffsets.head
       val sentenceEnd = document.sentences(i).endOffsets.last
+//      println(s"Checking sentence $i --> sentStart: $sentenceStart, sentEnd: $sentenceEnd")
+//      println(s"sentence text: ${document.sentences(i).getSentenceText}")
       if (start >= sentenceStart && end <= sentenceEnd) {
-        return i
+        return Some(i)
       }
     }
-    sys.error(s"interval [$start, $end] not contained in document")
+    println(s"WARNING: interval [$start, $end] not contained in a single sentence in the document, IGNORING quantity!")
+    None
   }
 
   // --------------------------------------
