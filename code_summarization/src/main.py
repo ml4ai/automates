@@ -1,5 +1,6 @@
 import argparse
 import sys
+from itertools import repeat
 
 import torch
 import torch.nn as nn
@@ -17,6 +18,7 @@ def main(args):
 
     # Load train, dev, test iterators with auto-batching and pretrained vectors
     (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data("../data/input/", args.batch_size)
+
 
     # Pick a model to train
     if args.model == "both":
@@ -45,29 +47,39 @@ def main(args):
     if args.epochs > 0:
         loss_values = list()
         # Adam optimizer works, SGD fails to train the network for any batch size
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), args.learning_rate)
+        # optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), args.learning_rate)
+        optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
         for epoch in range(args.epochs):
-            model.train()           # Set the model to training mode
+            # model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
                 # for batch in tqdm(train, desc="Epoch {}/{}".format(epoch+1, args.epochs)):
+                # train = list(train)
                 for b_idx, batch in enumerate(train):
+                # for b_idx, batch in enumerate(repeat(train[0], 1000)):
                     # utils.train_on_batch(model, optimizer, batch, args.use_gpu)
-                    model.zero_grad()
                     optimizer.zero_grad()   # Clear current gradient
 
                     # Get the label into a tensor for loss prop
-                    truth = torch.autograd.Variable(batch.label).long()
+                    truth = torch.autograd.Variable(batch.label).float()
                     if args.use_gpu:
                         truth = truth.cuda()
 
                     # Transpose the input data from batch storage to network form
                     # Batch storage will store the code/docstring data as column data, we need
                     # them in row data form to be embedded.
-                    code = batch.code[0].transpose(0, 1)
-                    comm = batch.comm[0].transpose(0, 1)
+                    code = batch.code[0]#.transpose(0, 1)
+                    comm = batch.comm[0]#.transpose(0, 1)
 
-                    outputs = model((code, comm))           # Run the model using the batch
-                    loss = F.cross_entropy(outputs, truth)  # Get loss from log(softmax())
+                    code_lengths = batch.code[1]
+                    comm_lengths = batch.comm[1]
+
+#                     print(comm[:,0])
+#                     print(comm_lengths)
+
+                    outputs = model((code, code_lengths, comm, comm_lengths))           # Run the model using the batch
+                    # print(outputs)
+                    # print(truth)
+                    loss = F.binary_cross_entropy_with_logits(outputs.view(-1), truth.view(-1))  # Get loss from log(softmax())
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
                     curr_loss = loss.item()
