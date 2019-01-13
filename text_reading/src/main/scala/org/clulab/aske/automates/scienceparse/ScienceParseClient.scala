@@ -24,7 +24,7 @@ object ScienceParseClient {
 
   def mkDocument(json: ujson.Js): ScienceParseDocument = {
     val id = json("id").str
-    val title = json("title").str
+    val title = json.obj.get("title").map(_.str)
     val year = json("year").num.toInt
     val authors = json("authors").arr.map(mkAuthor).toVector
     val abstractText = json("abstractText").str
@@ -48,9 +48,10 @@ object ScienceParseClient {
   def mkReference(json: ujson.Js): Reference = {
     val title = json("title").str
     val authors = json("authors").arr.map(_.str).toVector
-    val venue = json("venue").str
+    //val venue = json("venue").str
+    val venueOption = json.obj.get("venue").map(_.str)
     val year = json("year").num.toInt
-    Reference(title, authors, venue, year)
+    Reference(title, authors, venueOption, year)
   }
 
 

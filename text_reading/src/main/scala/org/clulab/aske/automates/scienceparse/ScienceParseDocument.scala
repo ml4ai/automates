@@ -2,7 +2,7 @@ package org.clulab.aske.automates.scienceparse
 
 case class ScienceParseDocument(
   id: String,
-  title: String,
+  title: Option[String],
   year: Int,
   authors: Vector[Author],
   abstractText: String,
@@ -23,6 +23,6 @@ case class Section(
 case class Reference(
   title: String,
   authors: Vector[String],
-  venue: String,
+  venue: Option[String],
   year: Int
 )
