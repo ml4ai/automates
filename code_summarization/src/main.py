@@ -117,11 +117,11 @@ def score_dataset(model, dataset):
     with torch.no_grad():
         for i, batch in enumerate(dataset):
             # Prepare input batch data for classification
-            code = batch.code[0].transpose(0, 1)
-            comm = batch.comm[0].transpose(0, 1)
+            # code = batch.code[0].transpose(0, 1)
+            # comm = batch.comm[0].transpose(0, 1)
 
             # Run the model on the input batch
-            output = model((code, comm))
+            output = model((batch.code, batch.comm))
 
             # Get predictions for every instance in the batch
             preds = torch.argmax(F.softmax(output, dim=1), dim=1).cpu().numpy()

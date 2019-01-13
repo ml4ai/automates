@@ -40,7 +40,7 @@ class CodeCommClassifier(nn.Module):
                                  bidirectional=True)
 
         # Size of the concatenated output from the 2 LSTMs
-        self.CONCAT_SIZE = ((self.CODE_HD_SZ + self.COMM_HD_SZ) * 2) * 2
+        self.CONCAT_SIZE = ((self.CODE_HD_SZ + self.COMM_HD_SZ) * 2)
 
         # FFNN layer to transform LSTM output into class predictions
         self.hidden2label = nn.Linear(self.CONCAT_SIZE, self.NUM_CLASSES)
@@ -97,11 +97,11 @@ class CodeCommClassifier(nn.Module):
         code_vecs, self.code_hd = self.code_lstm(code_encoding, self.code_hd)
         comm_vecs, self.comm_hd = self.comm_lstm(comm_encoding, self.comm_hd)
 
-        code_avg_pool = F.adaptive_avg_pool1d(code_vecs.permute(1, 2, 0), 1).view(bs, -1)
-        code_max_pool = F.adaptive_max_pool1d(code_vecs.permute(1, 2, 0), 1).view(bs, -1)
+        code_avg_pool = F.adaptive_avg_pool1d(self.code_hd[0].permute(1, 2, 0), 1).view(bs, -1)
+        code_max_pool = F.adaptive_max_pool1d(self.code_hd[0].permute(1, 2, 0), 1).view(bs, -1)
 
-        comm_avg_pool = F.adaptive_avg_pool1d(comm_vecs.permute(1, 2, 0), 1).view(bs, -1)
-        comm_max_pool = F.adaptive_max_pool1d(comm_vecs.permute(1, 2, 0), 1).view(bs, -1)
+        comm_avg_pool = F.adaptive_avg_pool1d(self.comm_hd[0].permute(1, 2, 0), 1).view(bs, -1)
+        comm_max_pool = F.adaptive_max_pool1d(self.comm_hd[0].permute(1, 2, 0), 1).view(bs, -1)
 
         # Concatenate the final output from both LSTMs
         # recurrent_vecs = torch.cat((code_vecs[-1], comm_vecs[-1]), 1)
