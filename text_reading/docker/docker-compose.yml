@@ -4,7 +4,7 @@ services:
         image: allenai/scienceparse:2.0.3
         ports:
             - "8080:8080"
-    quantities:
+    grobid:
         build: ./quantities
         image: clulab/quantities:latest
         ports:
