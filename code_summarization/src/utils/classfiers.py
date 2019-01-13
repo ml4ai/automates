@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class CodeCommClassifier(nn.Module):
@@ -38,7 +40,7 @@ class CodeCommClassifier(nn.Module):
                                  bidirectional=True)
 
         # Size of the concatenated output from the 2 LSTMs
-        self.CONCAT_SIZE = (self.CODE_HD_SZ + self.COMM_HD_SZ) * 2
+        self.CONCAT_SIZE = ((self.CODE_HD_SZ + self.COMM_HD_SZ) * 2) * 2
 
         # FFNN layer to transform LSTM output into class predictions
         self.hidden2label = nn.Linear(self.CONCAT_SIZE, self.NUM_CLASSES)
@@ -72,13 +74,16 @@ class CodeCommClassifier(nn.Module):
         :param data: [Tuple] -- All input data to be sent through the classifier
         :returns: [Tensor] -- A matrix with a vector of output for each instance
         """
-        (code, comm) = data
+        ((code, code_lengths), (comm, comm_lengths)) = data
+        code = code.transpose(0, 1)
+        comm = comm.transpose(0, 1)
         if self.use_gpu:    # Send data to GPU if available
             code = code.cuda()
             comm = comm.cuda()
 
+        bs = code.size()[0]
         # Initialize the models hidden layers and cell states
-        self.init_hidden(batch_size=code.size()[0])
+        self.init_hidden(batch_size=bs)
 
         # Encode the batch input using word embeddings
         code_encoding = self.code_embedding(code)
@@ -92,11 +97,18 @@ class CodeCommClassifier(nn.Module):
         code_vecs, self.code_hd = self.code_lstm(code_encoding, self.code_hd)
         comm_vecs, self.comm_hd = self.comm_lstm(comm_encoding, self.comm_hd)
 
+        code_avg_pool = F.adaptive_avg_pool1d(code_vecs.permute(1, 2, 0), 1).view(bs, -1)
+        code_max_pool = F.adaptive_max_pool1d(code_vecs.permute(1, 2, 0), 1).view(bs, -1)
+
+        comm_avg_pool = F.adaptive_avg_pool1d(comm_vecs.permute(1, 2, 0), 1).view(bs, -1)
+        comm_max_pool = F.adaptive_max_pool1d(comm_vecs.permute(1, 2, 0), 1).view(bs, -1)
+
         # Concatenate the final output from both LSTMs
-        recurrent_vecs = torch.cat((code_vecs[-1], comm_vecs[-1]), 1)
+        # recurrent_vecs = torch.cat((code_vecs[-1], comm_vecs[-1]), 1)
+        pooled_vecs = torch.cat((code_avg_pool, code_max_pool, comm_avg_pool, comm_max_pool), dim=1)
 
         # Transform recurrent output vector into a class prediction vector
-        y = self.hidden2label(recurrent_vecs)
+        y = self.hidden2label(pooled_vecs)
         return y
 
 

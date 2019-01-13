@@ -63,10 +63,10 @@ def main(args):
                     # Transpose the input data from batch storage to network form
                     # Batch storage will store the code/docstring data as column data, we need
                     # them in row data form to be embedded.
-                    code = batch.code[0].transpose(0, 1)
-                    comm = batch.comm[0].transpose(0, 1)
+                    # code = batch.code[0].transpose(0, 1)
+                    # comm = batch.comm[0].transpose(0, 1)
 
-                    outputs = model((code, comm))           # Run the model using the batch
+                    outputs = model((batch.code, batch.comm))           # Run the model using the batch
                     loss = F.cross_entropy(outputs, truth)  # Get loss from log(softmax())
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
