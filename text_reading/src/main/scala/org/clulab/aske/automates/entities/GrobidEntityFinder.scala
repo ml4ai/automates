@@ -23,19 +23,9 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     // Run by document for now... todo should we revisit? by sentence??
     assert(doc.text.nonEmpty)  // assume that we are keeping text
     val text = doc.text.get
-//    val mentions = for {
-//      (sentence, sentIdx) <- doc.sentences.zipWithIndex
-//      measurement <- grobidClient.getMeasurements(sentence.getSentenceText)
-//      mention <- measurementToMentions(measurement, doc, sentIdx)
-//    } yield mention
-
-
     val measurements = grobidClient.getMeasurements(text)
-
     // convert to odin (Textbound)Mentions
     val mentions = measurements.flatMap(measurementToMentions(_, doc))
-
-    // return!
     mentions
   }
 
