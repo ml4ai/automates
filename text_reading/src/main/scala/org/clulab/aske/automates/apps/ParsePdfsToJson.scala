@@ -27,11 +27,9 @@ object ParsePdfsToJson {
 
     // connect to science-parse server
     val client = new ScienceParseClient(domain, port)
-    println("Client built...")
 
     // save json for each pdf file in input dir
     for (pdf <- inputDirectory.listFilesByWildcard("*.pdf")) {
-      println(s"Parsing ${pdf.getBaseName}")
       val json = client.parsePdfToJson(pdf)
       val basename = pdf.getBaseName()
       val outputFile = new File(outputDirectory, basename + ".json")
