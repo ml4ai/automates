@@ -133,7 +133,7 @@ class CodeCommClassifier(nn.Module):
 
         # Concatenate the final output from both LSTMs
         # recurrent_vecs = torch.cat((code_vecs[-1], comm_vecs[-1]), 1)
-        
+
         # Transform recurrent output vector into a class prediction vector
         y = F.relu(self.lstm2hidden(recurrent_vecs))
         y = self.hidden2label(y)
