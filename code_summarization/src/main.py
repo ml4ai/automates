@@ -45,18 +45,18 @@ def main(args):
     if args.epochs > 0:
         loss_values = list()
         # Adam optimizer works, SGD fails to train the network for any batch size
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.1)
+        optimizer = optim.Adam(model.parameters(), args.learning_rate)
         for epoch in range(args.epochs):
-            model.train()           # Set the model to training mode
+            # model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
                 # for batch in tqdm(train, desc="Epoch {}/{}".format(epoch+1, args.epochs)):
                 for b_idx, batch in enumerate(train):
                     # utils.train_on_batch(model, optimizer, batch, args.use_gpu)
-                    model.zero_grad()
+                    # model.zero_grad()
                     optimizer.zero_grad()   # Clear current gradient
 
                     # Get the label into a tensor for loss prop
-                    truth = torch.autograd.Variable(batch.label).long()
+                    truth = torch.autograd.Variable(batch.label).float()
                     if args.use_gpu:
                         truth = truth.cuda()
 
@@ -67,7 +67,7 @@ def main(args):
                     # comm = batch.comm[0].transpose(0, 1)
 
                     outputs = model((batch.code, batch.comm))           # Run the model using the batch
-                    loss = F.cross_entropy(outputs, truth)  # Get loss from log(softmax())
+                    loss = F.binary_cross_entropy_with_logits(outputs.view(-1), truth.view(-1))  # Get loss from log(softmax())
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
                     curr_loss = loss.item()
@@ -156,6 +156,10 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--batch_size", type=int,
                         help="size of batch",
                         default=50)
+
+    parser.add_argument("-r", "--learning-rate", type=float,
+                        help="learning rate",
+                        default=1e-3)
 
     parser.add_argument("-g", "--use_gpu", dest="use_gpu", action="store_true",
                         help="indicate whether to use CPU or GPU")
