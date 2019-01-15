@@ -10,6 +10,7 @@ from tqdm import tqdm
 import utils.classfiers as cl
 import utils.utils as utils
 import torch.nn.functional as F
+import numpy as np
 
 
 def main(args):
@@ -114,6 +115,7 @@ def score_dataset(model, dataset):
     """
     scores = list()
     model.eval()    # Set the model to evaluation mode
+    classes = [0, 1]
     with torch.no_grad():
         for i, batch in enumerate(dataset):
             # Prepare input batch data for classification
@@ -124,13 +126,14 @@ def score_dataset(model, dataset):
             output = model((batch.code, batch.comm))
 
             # Get predictions for every instance in the batch
-            preds = torch.argmax(F.softmax(output, dim=1), dim=1).cpu().numpy()
+            signum_outs = torch.sign(output).cpu().numpy()
+            preds = [0 if arr_el[0] < 0 else 1 if arr_el[0] > 0 else np.choice(classes) for arr_el in signum_outs]
 
             # Prepare truth data
             truth = batch.label.cpu().numpy()
 
             # Add new tuples to output
-            scores.extend([(int(p), int(t)) for p, t in zip(preds, truth)])
+            scores.extend([(p, int(t)) for p, t in zip(preds, truth)])
     return scores
 
 
