@@ -1,4 +1,4 @@
-from utils.code_crawler import CodeCrawler
+from code_crawler import CodeCrawler
 
 # Repo's to use as corpus data
 
@@ -10,7 +10,9 @@ import networkx
 import tensorflow, keras, theano, torch, dynet, autograd, tangent, chainer, mxnet
 
 # I/O and viz packages
-import pygame, seaborn, matplotlib, graphviz, pygraphviz, h5py
+import matplotlib
+matplotlib.use("TkAgg")
+import pygame, seaborn, graphviz, pygraphviz, h5py
 
 # Data management packages
 import dask, pandas, sqlalchemy
@@ -29,7 +31,7 @@ def main():
                dask, seaborn, tensorflow, keras, dynet, autograd, tangent, chainer,
                networkx, pandas, theano, torch, mxnet, graphviz, pygraphviz]
 
-    output_path = "../data/"
+    output_path = "../data/corpus"
     ccrawler = CodeCrawler(modules=modules)
     print("Building function dict")
     ccrawler.build_function_dict(output_path)

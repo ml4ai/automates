@@ -5,9 +5,69 @@ import inspect
 import random
 import pickle
 import sys
+import re
 
 from nltk.tokenize import word_tokenize
 from tqdm import tqdm
+
+
+def clean_identifier(identifier):
+    if "_" in identifier:
+        case_split = identifier.split("_")
+        # digit_separated_tokens = list()
+        # for token in tokens:
+        #     new_tokens = re.split("(\d+)", token)
+        #     digit_separated_tokens.extend(new_tokens)
+        # no_empty_tokens = [t for t in digit_separated_tokens if t != ""]
+        # return no_empty_tokens
+    else:
+        # Initialization sequence for first token. If the identifier is an all
+        # uppercase acronym (like `WMA`) then we need to capture that. But we
+        # also the case where the first two letters are capitals but the first
+        # letter does not belong with the second (like `AVariable`). We also
+        # need to capture the case of an acronym followed by a capital for the
+        # next word (like `AWSVars`).
+        #
+        case_split = re.split("([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", identifier)
+    char_digit_split = list()
+    for token in case_split:
+        char_digit_split.extend(re.split("(\d+)", token))
+    no_empty_tokens = [t for t in char_digit_split if t != ""]
+    return ["<BoN>"] + no_empty_tokens + ["<EoN>"]
+        # length = len(identifier)
+        # tokens = list()
+        # cur_token = ""
+        # s_idx = 0
+        # while s_idx < length:
+        #     if identifier[s_idx].isupper():
+        #         if cur_token != "":
+        #             tokens.append(cur_token)
+        #
+        #         cur_token = ""
+        #         while s_idx + 1 < length and identifier[s_idx + 1].isupper():
+        #             # Grab all capitals until the capital that proceeds a non-capital
+        #             cur_token += identifier[s_idx]
+        #             s_idx += 1
+        #
+        #         # The current token must be atleast a size of 1 because the
+        #         # check to enter this branch
+        #         if len(cur_token) == 1:
+        #             # if the next element is a digit then we want to append cur_token to the list
+        #             # if we are out of elements then append cur_token to the list
+        #             pass    # We want to keep this capital with the next word
+        #         else:
+        #             # if the next element is a capital and the following element
+        #             # is a digit, then add the next element to cur_token and
+        #             # append to the list
+        #             tokens.append()
+        #
+        #     elif identifier[s_idx].isdigit():
+        #         if cur_token != "":
+        #             tokens.append(cur_token)
+        #
+        #     else:
+        #         cur_token += identifier[s_idx]
+        #     s_idx += 1
 
 
 class CodeCrawler():
@@ -185,7 +245,8 @@ class CodeCrawler():
                 elif tok_type == tok.STRING:
                     clean_code.append("<STRING>")
                 elif tok_type == tok.NAME:
-                    clean_code.append(token)
+                    identifier_sequence = clean_identifier(token)
+                    clean_code.extend(identifier_sequence)
                 else:
                     clean_code.extend(token.split())
 

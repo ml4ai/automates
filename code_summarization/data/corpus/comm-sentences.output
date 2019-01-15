@@ -674,7 +674,6 @@
 <BoL> Decision function of the linear model <EoL>
 <BoL> Fit model with coordinate descent . <EoL>
 <BoL> Predict using the linear model <EoL>
-<BoL> Fit linear model with coordinate descent <EoL>
 <BoL> Fit the model according to the given training data . <EoL>
 <BoL> Auxiliary method to fit the model using X , y as training data <EoL>
 <BoL> Fit the model using X , y as training data . <EoL>
@@ -689,7 +688,6 @@
 <BoL> Log of probability estimates . <EoL>
 <BoL> Probability estimates . <EoL>
 <BoL> Convert coefficient matrix to sparse format . <EoL>
-<BoL> Fit the model according to the given training data . <EoL>
 <BoL> Returns the score using the ` scoring ` option on the given test data and labels . <EoL>
 <BoL> Fit MultiTaskElasticNet model with coordinate descent <EoL>
 <BoL> Fit the model using X , y as training data . <EoL>
@@ -705,7 +703,6 @@
 <BoL> Fit linear model with Passive Aggressive algorithm . <EoL>
 <BoL> Predict using the linear model <EoL>
 <BoL> Fit linear model with Stochastic Gradient Descent . <EoL>
-<BoL> Fit estimator using RANSAC algorithm . <EoL>
 <BoL> Predict using the estimated model . <EoL>
 <BoL> Returns the score of the prediction . <EoL>
 <BoL> Get the boolean mask indicating which features are selected . <EoL>
@@ -1531,7 +1528,6 @@
 <BoL> Return the cumulative sum of the elements along a given axis . <EoL>
 <BoL> Return specified diagonals . <EoL>
 <BoL> einsum ( subscripts , *operands , out=None , dtype=None , order= ' K ' , casting='safe ' , optimize=False ) <EoL>
-<BoL> einsum_path ( subscripts , *operands , optimize='greedy ' ) <EoL>
 <BoL> Checks if we can use BLAS ( np.tensordot ) call and its beneficial to do so . <EoL>
 <BoL> Computes the product of the elements in indices based on the dictionary idx_dict . <EoL>
 <BoL> Finds the contraction for a given set of input and output sets . <EoL>
@@ -1891,7 +1887,6 @@
 <BoL> Compute the future value . <EoL>
 <BoL> Find the wrapper for the array with the highest priority . <EoL>
 <BoL> Return the directory that contains the NumPy \\*.h header files . <EoL>
-<BoL> Return the gradient of an N-dimensional array . <EoL>
 <BoL> Return the Hamming window . <EoL>
 <BoL> Return the Hanning window . <EoL>
 <BoL> Compute the bi-dimensional histogram of two data samples . <EoL>
@@ -1900,7 +1895,6 @@
 <BoL> Modified Bessel function of the first kind , order 0 . <EoL>
 <BoL> Return the imaginary part of the complex argument . <EoL>
 <BoL> Test whether each element of a 1-D array is also present in a second array . <EoL>
-<BoL> Get help information for a function , class , or module . <EoL>
 <BoL> Insert values along the given axis before the given indices . <EoL>
 <BoL> One-dimensional linear interpolation . <EoL>
 <BoL> Find the intersection of two arrays . <EoL>
@@ -1969,7 +1963,6 @@
 <BoL> Prepend linear ramp along ` axis ` . <EoL>
 <BoL> Rounds arr inplace if destination dtype is integer . <EoL>
 <BoL> Private function which does some checks and reformats pad_width and stat_length using _normalize_shape . <EoL>
-<BoL> Pads an array . <EoL>
 <BoL> Find the set difference of two arrays . <EoL>
 <BoL> Find the set exclusive-or of two arrays . <EoL>
 <BoL> Find the union of two arrays . <EoL>
@@ -2028,7 +2021,6 @@
 <BoL> Standard iterator method , returns the index tuple and array value . <EoL>
 <BoL> Standard iterator method , updates the index and returns the index tuple . <EoL>
 <BoL> Increment the multi-dimensional index by one . <EoL>
-<BoL> Unpack a structured data-type , and produce re-packing info.Pack items into nested lists based on re-packing info.Chop off comments , strip , and split at delimiter.Parse each line , including the first . <EoL>
 <BoL> Load ASCII data stored in a text file and return a masked array . <EoL>
 <BoL> Return the indices to access ( n , n ) arrays , given a masking function . <EoL>
 <BoL> Return the character for the minimum-size type to which given types can be safely cast . <EoL>
@@ -3128,7 +3120,6 @@
 <BoL> Create an `` empty '' instance . <EoL>
 <BoL> Create an instance from ` PreparedConstrained ` object . <EoL>
 <BoL> Convert initial values of the constraints to the canonical format . <EoL>
-<BoL> Solve nonlinear equality-constrained problem using trust-region SQP . <EoL>
 <BoL> Approximately minimize `` 1/2*|| A x + b ||^2 `` inside trust-region . <EoL>
 <BoL> Return three linear operators related with a given matrix A . <EoL>
 <BoL> Return linear operators for matrix A - `` AugmentedSystem `` . <EoL>
@@ -4020,7 +4011,6 @@
 <BoL> Transform an expression to a list of terms . <EoL>
 <BoL> Returns the atoms that form the current object . <EoL>
 <BoL> See the cancel function in sympy.polys <EoL>
-<BoL> Returns the coefficient from the term ( s ) containing `` x**n `` . <EoL>
 <BoL> See the collect function in sympy.simplify <EoL>
 <BoL> See the combsimp function in sympy.simplify <EoL>
 <BoL> Return -1 , 0 , 1 if the object is smaller , equal , or greater than other . <EoL>
@@ -4106,7 +4096,6 @@
 <BoL> Returns a dense , mutable matrix with elements represented explicitly <EoL>
 <BoL> Nice order of classes . <EoL>
 <BoL> Test elementwise equality between matrices , potentially of different types <EoL>
-<BoL> Parse expression of matrices with explicitly summed indices into a matrix expression without indices , if possible . <EoL>
 <BoL> Construct an element of `` self `` domain from `` args `` . <EoL>
 <BoL> Check if `` a `` belongs to this domain . <EoL>
 <BoL> Returns `` True `` if two domains are equivalent . <EoL>
@@ -4721,7 +4710,6 @@
 <BoL> Sequentially allocate values to localzeros . <EoL>
 <BoL> Check if x and y are connected somehow . <EoL>
 <BoL> Generator filtering args . <EoL>
-<BoL> Try to return p % q if both are numbers or +/-p is known to be less than or equal q . <EoL>
 <BoL> Convert a monomial instance to a SymPy expression . <EoL>
 <BoL> Greatest common divisor of monomials . <EoL>
 <BoL> Least common multiple of monomials . <EoL>
@@ -4940,7 +4928,6 @@
 <BoL> Reduce `` f `` modulo a constant `` p `` . <EoL>
 <BoL> Make `` f `` and `` g `` belong to the same domain . <EoL>
 <BoL> Return True if o is contained within the boundary lines of self.altitudes <EoL>
-<BoL> Calculates the least distance between the exteriors of two convex polygons e1 and e2 . <EoL>
 <BoL> Return True/False for cw/ccw orientation . <EoL>
 <BoL> Returns SVG path element for the Polygon . <EoL>
 <BoL> A parameterized point on the polygon . <EoL>
@@ -4975,7 +4962,6 @@
 <BoL> a** ( n + m ) - > a**n*a**m <EoL>
 <BoL> A power is composite if both base and exponent are greater than 1 <EoL>
 <BoL> An integer raised to the n ( > =2 ) -th power can not be a prime . <EoL>
-<BoL> eturn the integer value ( if possible ) of e and a flag indicating whether it is bounded or not . <EoL>
 <BoL> Return True if the exponent has a literal 2 as the denominator , else None.Return `` e `` evaluated to a Number with 2 significant digits , else None . <EoL>
 <BoL> Return ( bool , pow , remainder_pow ) where , if bool is True , then the exponent of Pow ` old ` will combine with ` pow ` so the substitution is valid , otherwise bool will be False . <EoL>
 <BoL> Return base and exp of self . <EoL>
@@ -5094,7 +5080,6 @@
 <BoL> Return an Euler-Maclaurin approximation of self , where m is the number of leading terms to sum directly and n is the number of terms in the tail . <EoL>
 <BoL> Check whether the function matches with the zeta function . If it matches , then return a ` Piecewise ` expression because zeta function does not converge unless ` s > 1 ` and ` q > 0 ` <EoL>
 <BoL> Checks for the absolute convergence of an infinite series . <EoL>
-<BoL> Checks for the convergence of a Sum . <EoL>
 <BoL> Reverse the order of a limit in a Sum . <EoL>
 <BoL> Creates a TableForm . <EoL>
 <BoL> Returns the string representation of 'self ' . <EoL>
@@ -5126,7 +5111,6 @@
 <BoL> Return a boolean indicating whether `` i `` is a sequence in the SymPy sense . If anything that fails the test below should be included as being a sequence for your application , set 'include ' to that object's type ; multiple types should be passed as a tuple of types . <EoL>
 <BoL> Return product of elements of a . Start with int 1 so if only ints are included then an int result is returned . <EoL>
 <BoL> Returns the inverse of this function . <EoL>
-<BoL> Express cos ( pi/257 ) explicitly as a function of radicals Based upon the equations in http : //math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals See also http : //www.susqu.edu/brakke/constructions/257-gon.m.txt <EoL>
 <BoL> Differentiate f with respect to symbols . <EoL>
 <BoL> exp ( arg ) **e - > exp ( arg*e ) if assumptions allow it . <EoL>
 <BoL> Returns the 2-tuple ( base , exponent ) . <EoL>
@@ -5188,7 +5172,6 @@
 <BoL> Returns the term in lhs which contains the most of the func-type things e.g . log ( log ( x ) ) wins over log ( x ) if both terms appear . <EoL>
 <BoL> Return solution to `` f `` if it is a Lambert-type expression else raise NotImplementedError . <EoL>
 <BoL> Given an expression , f , 3 tests will be done to see what type of composite bivariate it might be , options for u ( x , y ) are : : <EoL>
-<BoL> Collect additive terms of an expression.Parses expression expr and outputs tuple ( sexpr , rat_expo , sym_expo , deriv ) where : - sexpr is the base expression - rat_expo is the rational exponent that sexpr is raised to - sym_expo is the symbolic exponent that sexpr is raised to - deriv contains the derivatives the the expressionParse terms searching for a pattern . terms is a list of tuples as returned by parse_terms ; pattern is an expression treated as a product of factors <EoL>
 <BoL> Wrapper around expand that only uses the log hint . See the expand docstring for more information . <EoL>
 <BoL> Compute the factorization of expression , `` f `` , into irreducibles . ( To factor an integer into primes , use `` factorint `` . ) <EoL>
 <BoL> oot ( x , n , k ) - > Returns the k-th n-th root of x , defaulting to the principal root ( k=0 ) . <EoL>
@@ -5348,7 +5331,6 @@
 <BoL> Compute the product . <EoL>
 <BoL> Remove common factors from terms in all arguments without changing the underlying structure of the expr . No expansion or simplification ( and no processing of non-commutatives ) is performed . <EoL>
 <BoL> Compute polynomial quotient of `` f `` and `` g `` . <EoL>
-<BoL> Computes symbolic roots of a univariate polynomial.Find roots using functional decomposition.Find roots using formulas and some tricks . <EoL>
 <BoL> Compute the summation of f with respect to symbols . <EoL>
 <BoL> Returns ( res , cond ) . Sums from a to oo . <EoL>
 <BoL> Solves a given inequality or equation with set as output <EoL>
@@ -5593,12 +5575,10 @@
 <BoL> Return denominator Factors of `` self / other `` . <EoL>
 <BoL> Helper function for : func : ` gcd_terms ` . <EoL>
 <BoL> Return `` eq `` with non-commutative objects replaced with Dummy symbols . <EoL>
-<BoL> Return the value closest to 0 that `` self `` may have if all symbols are signed and the result is uniformly the same sign for all values of symbols . If a symbol is only signed but not known to be an integer or the result is 0 then a symbol representative of the sign of self will be returned . Otherwise , None is returned if a ) the sign could be positive or negative or b ) self is not in one of the following forms : <EoL>
 <BoL> Return the subsequence that is a common start of sequences in `` seqs `` . <EoL>
 <BoL> Return the subsequence that is a common ending of sequences in `` seqs `` . <EoL>
 <BoL> Decompose power into symbolic base and integer exponent . <EoL>
 <BoL> Decompose power into symbolic base and rational exponent . <EoL>
-<BoL> Return the factored form of `` expr `` while handling non-commutative expressions . <EoL>
 <BoL> Compute the GCD of `` terms `` and put them together.eplace nc portions of each term with a unique Dummy symbols and return the replacements to restore them <EoL>
 <BoL> Returns a generator of the n-sized variations of `` seq `` ( size N ) . `` repetition `` controls whether items in `` seq `` can appear more than once ; <EoL>
 <BoL> Simplifies exponential / trigonometric / hyperbolic functions . <EoL>
@@ -5732,7 +5712,6 @@
 <BoL> Solve polynomial inequalities with rational coefficients . <EoL>
 <BoL> Solve a polynomial inequality with rational coefficients . <EoL>
 <BoL> Solve a system of rational inequalities with rational coefficients . <EoL>
-<BoL> Solves a real univariate inequality . <EoL>
 <BoL> Checks if the query is true given the set of clauses . <EoL>
 <BoL> Remove the sentence 's clauses from the KB <EoL>
 <BoL> Add the sentence 's clauses to the KB <EoL>
@@ -5754,7 +5733,6 @@
 <BoL> Compute an indefinite integral of `` f `` by rewriting it as a G function . <EoL>
 <BoL> Convert products and powers of sin and cos to sums . <EoL>
 <BoL> Integrate f = Mul ( trig ) over x <EoL>
-<BoL> caller for pretty , for use in IPython 0.11Return True if type o can be printed with LaTeX.A function that returns a png rendered by an external latex distribution , falling back to matplotlib renderingA function that returns a png rendered by mathtextA function to generate the latex representation of sympy expressions.IPython 's pretty-printer display hook , for use in IPython 0.10 <EoL>
 <BoL> Setup printing in Python interactive session.Python 's pretty-printer display hook . <EoL>
 <BoL> Is a shell instance an IPython shell ? <EoL>
 <BoL> Print `` *args `` if SYMPY_DEBUG is True , else do nothing . <EoL>
@@ -5838,7 +5816,6 @@
 <BoL> Return the number c such that , ( a * c ) = 1 ( mod m ) where c has the same sign as m. If no such value exists , a ValueError is raised . <EoL>
 <BoL> Returns the expression as a string . <EoL>
 <BoL> Return a condition under which the mellin transform of g exists . Any power of x has already been absorbed into the G function , so this is just int_0^\infty g dx . <EoL>
-<BoL> Check antecedents for the laplace inversion integral.Provide a convergence statement for z**a * exp ( b*z**c ) , c/f sphinx docs . <EoL>
 <BoL> Do naive simplifications on `` cond `` . <EoL>
 <BoL> Return a dummy . This will return the same dummy if the same token+name is requested more than once , and it is not already in expr . This is for being cache-friendly . <EoL>
 <BoL> Return a dummy associated to name and token . Same effect as declaring it globally . <EoL>
@@ -5868,7 +5845,6 @@
 <BoL> Absorb `` po `` == x**s into g . <EoL>
 <BoL> Rewrite the integral fac*po*g1*g2 from 0 to oo in terms of G functions with argument c*x . Return C , f1 , f2 such that integral C f1 f2 from 0 to infinity equals integral fac po g1 g2 from 0 to infinity . <EoL>
 <BoL> Rewrite the integral fac*po*g dx , from zero to infinity , as integral fac*G , where G has argument a*x . Note po=x**s. Return fac , G . <EoL>
-<BoL> Try to rewrite f as a sum of single G functions of the form C*x**s*G ( a*x**b ) , where b is a rational number and C is independent of x . <EoL>
 <BoL> Split expression `` f `` into fac , po , g , where fac is a constant factor , po = x**s for some s independent of s , and g is `` the rest '' . <EoL>
 <BoL> Compute the inverse laplace transform : math : \int_ { c+i\infty } ^ { c-i\infty } f ( x ) e^ { tx ) dx , for real c larger than the real part of all singularities of f. Note that `` t `` is always assumed real and positive . <EoL>
 <BoL> Collect exponents on powers as assumptions allow . <EoL>
@@ -6018,7 +5994,6 @@
 <BoL> Equations : <EoL>
 <BoL> Equations : <EoL>
 <BoL> Equations : <EoL>
-<BoL> Equations : <EoL>
 <BoL> .. math : : x ' = x ( c F_2 - b F_3 ) , \enspace y ' = y ( a F_3 - c F_1 ) , \enspace z ' = z ( b F_1 - a F_2 ) <EoL>
 <BoL> Matches a differential equation to the linear form : <EoL>
 <BoL> Helper function for the method of undetermined coefficients . <EoL>
@@ -6026,7 +6001,6 @@
 <BoL> Returns a trial function match if undetermined coefficients can be applied to `` expr `` , and `` None `` otherwise.Test if `` expr `` fits the proper form for undetermined coefficients.Returns a set of trial terms for undetermined coefficients.Returns the expression without a coefficient . <EoL>
 <BoL> This function is used to check if the given infinitesimals are the actual infinitesimals of the given first order differential equation . This method is specific to the Lie Group Solver of ODEs . <EoL>
 <BoL> Substitutes corresponding `` sols `` for each functions into each `` eqs `` and checks that the result of substitutions for each equation is `` 0 `` . The equations and solutions passed can be any iterable . <EoL>
-<BoL> Returns a dictionary of parameter names and values that define the system of ordinary differential equations in `` eq `` . The parameters are further used in : py : meth : ` ~sympy.solvers.ode.dsolve ` for solving that system . <EoL>
 <BoL> Renumber arbitrary constants in `` expr `` to have numbers 1 through ` N ` where ` N ` is `` endnumber - startnumber + 1 `` at most . In the process , this reorders expression terms in a standard way.We need to have an internal recursive function so that newstartnumber maintains its values throughout recursive calls . <EoL>
 <BoL> Simplifies an expression with arbitrary constants in it . <EoL>
 <BoL> Returns a list of constants that do not occur in eq already . <EoL>
@@ -6272,7 +6246,6 @@
 <BoL> Returns `` True `` if `` f `` has no factors over its domain . <EoL>
 <BoL> Isolate real and complex roots of a non-square-free polynomial `` f `` . <EoL>
 <BoL> Isolate real and complex roots of a square-free polynomial `` f `` . <EoL>
-<BoL> Isolate complex roots of a square-free polynomial using Collins-Krandick algorithm . <EoL>
 <BoL> Isolate real roots using Vincent-Akritas-Strzebonski ( VAS ) continued fractions approach . <EoL>
 <BoL> Isolate real roots of a list of square-free polynomial using Vincent-Akritas-Strzebonski ( VAS ) CF approach . <EoL>
 <BoL> Isolate real roots of a square-free polynomial using the Vincent-Akritas-Strzebonski ( VAS ) CF approach . <EoL>
@@ -6648,7 +6621,6 @@
 <BoL> Construct field isomorphism using PSLQ algorithm . <EoL>
 <BoL> Returns ` True ` if there is a chance for isomorphism . <EoL>
 <BoL> Construct a common number field for all extensions . <EoL>
-<BoL> Given a vector of real numbers ` x = [ x_0 , x_1 , ... , x_n ] ` , `` pslq ( x ) `` uses the PSLQ algorithm to find a list of integers ` [ c_0 , c_1 , ... , c_n ] ` such that <EoL>
 <BoL> Compute resultant of `` f `` and `` g `` . <EoL>
 <BoL> Construct a polynomial ring returning `` ( ring , x_1 , ... , x_n ) `` . <EoL>
 <BoL> compute the composed sum `` prod ( p2 ( x - beta ) for beta root of p1 ) `` <EoL>
@@ -6796,7 +6768,6 @@
 <BoL> Compute roots of cyclotomic polynomials . <EoL>
 <BoL> Returns a list of roots of a linear polynomial . <EoL>
 <BoL> Returns a list of roots of a quadratic polynomial . <EoL>
-<BoL> Calculate exact roots of a solvable quintic <EoL>
 <BoL> Transform an expression into a multinomial form . <EoL>
 <BoL> Reorder levels using dict representation . <EoL>
 <BoL> Multiply a list of `` ( expr , exp ) `` pairs . <EoL>
@@ -6911,7 +6882,6 @@
 <BoL> Find a rectangle of minimum area for bisection . <EoL>
 <BoL> Discard an isolating interval if outside `` ( inf , sup ) `` . <EoL>
 <BoL> Check if Mobius transforms define disjoint intervals . <EoL>
-<BoL> Horizontal bisection step in Collins-Krandick root isolation algorithm . <EoL>
 <BoL> Generate a sequence of extended quadrants from a list of critical points . <EoL>
 <BoL> Handle special case of CF algorithm when `` f `` is homogeneous . <EoL>
 <BoL> Convert an open interval to a Mobius transform . <EoL>
@@ -6920,7 +6890,6 @@
 <BoL> Return `` True `` if the given rectangle is small enough . <EoL>
 <BoL> Reverse intervals for traversal from right to left and from top to bottom . <EoL>
 <BoL> Transform sequences of quadrants to a sequence of rules . <EoL>
-<BoL> Vertical bisection step in Collins-Krandick root isolation algorithm . <EoL>
 <BoL> Compute the winding number of the input polynomial , i.e . the number of roots . <EoL>
 <BoL> Return the number of imaginary roots for irreducible univariate polynomial `` f `` . <EoL>
 <BoL> Find a solution to ` f ( x ) = 0 ` , using *x0* as starting point or interval for *x* . <EoL>
@@ -6985,12 +6954,8 @@
 <BoL> Prettyprints systems of nodes . <EoL>
 <BoL> Returns information about the `` node '' . <EoL>
 <BoL> Returns a tree representation of `` node '' as a string . <EoL>
-<BoL> Rationalize the denominator by removing square roots . <EoL>
 <BoL> Put an expression over a common denominator , cancel and reduce . <EoL>
-<BoL> Simplifies a rational expression `` expr `` modulo the prime ideal generated by `` G `` . `` G `` should be a Groebner basis of the ideal.Compute all monomials with degree less than `` n `` that are not divisible by any element of `` leading_monomials `` .Computes a rational simplification of `` a/b `` which minimizes the sum of the total degrees of the numerator and the denominator . <EoL>
 <BoL> Solve univariate recurrence with rational coefficients . <EoL>
-<BoL> Given linear recurrence operator ` \operatorname { L } ` of order ` k ` with polynomial coefficients and inhomogeneous equation ` \operatorname { L } y = f ` we seek for all hypergeometric solutions over field ` K ` of characteristic zero . <EoL>
-<BoL> Given linear recurrence operator ` \operatorname { L } ` of order ` k ` with polynomial coefficients and inhomogeneous equation ` \operatorname { L } y = f ` , where ` f ` is a polynomial , we seek for all polynomial solutions over field ` K ` of characteristic zero . <EoL>
 <BoL> Given linear recurrence operator ` \operatorname { L } ` of order ` k ` with polynomial coefficients and inhomogeneous equation ` \operatorname { L } y = f ` , where ` f ` is a polynomial , we seek for all rational solutions over field ` K ` of characteristic zero . <EoL>
 <BoL> Solve equation of a type p ( x ; a_1 , ... , a_k ) == q ( x ) where both p , q are univariate polynomials and f depends on k parameters . The result of this functions is a dictionary with symbolic values of those parameters with respect to coefficients in q . <EoL>
 <BoL> Finds the residue of `` expr `` at the point x=x0 . <EoL>
@@ -7039,7 +7004,6 @@
 <BoL> Solves the augmented matrix system using LUsolve and returns a dictionary in which solutions are keyed to the symbols of syms *as ordered* . <EoL>
 <BoL> Replace sec , csc with 1/cos , 1/sin <EoL>
 <BoL> Return True if e is a Pow or is exp . <EoL>
-<BoL> Helper for _solve that solves a transcendental equation with respect to the given symbol . Various equations containing powers and logarithms , can be solved . <EoL>
 <BoL> Return ( recursively ) set of all denominators that appear in eq that contain any symbol in `` symbols `` ; if `` symbols `` are not provided then all denominators will be returned . <EoL>
 <BoL> Return the `` det ( M ) `` computed from minors without introducing new nesting in products . <EoL>
 <BoL> Return the det ( `` M `` ) by using permutations to select factors . <EoL>
@@ -7081,10 +7045,8 @@
 <BoL> Compute a general Hankel transform <EoL>
 <BoL> The backend function for inverse Laplace transforms.Simplify a piecewise expression from hyperexpand . <EoL>
 <BoL> A helper for the real inverse_mellin_transform function , this one here assumes x to be real and positive . <EoL>
-<BoL> The backend function for Laplace transforms.Turn `` conds `` into a strip and auxiliary conditions . <EoL>
 <BoL> Backend function to compute Mellin transforms.Turn `` cond `` into a strip ( a , b ) , and auxiliary conditions . <EoL>
 <BoL> This is a decorator generator for dropping convergence conditions . <EoL>
-<BoL> Try to rewrite the product f ( s ) as a product of gamma functions , so that the inverse Mellin transform of f can be expressed as a meijer G function.Decide whether pole at c lies to the left of the fundamental strip.Test if arg is of form a*s+b , raise exception if not . <EoL>
 <BoL> Re-write the sine function `` sin ( m*s + n ) `` as gamma functions , compatible with the strip ( a , b ) . <EoL>
 <BoL> Naively simplify some conditions occurring in `` expr `` , given that ` \operatorname { Re } ( s ) > a ` .Return True only if |ex1| > |ex2| , False only if |ex1| < |ex2| . Else return None.simplify x < y <EoL>
 <BoL> Compute a general sine or cosine-type transform F ( k ) = a int_0^oo b*sin ( x*k ) f ( x ) dx . F ( k ) = a int_0^oo b*cos ( x*k ) f ( x ) dx . <EoL>
@@ -7771,7 +7733,6 @@
 <BoL> Return a list of weak references to the keys . <EoL>
 <BoL> Return the name of the current backend . <EoL>
 <BoL> Return the registered default canvas for given file format . Handles deferred import of required backend . <EoL>
-<BoL> Implement the default mpl key bindings for the canvas and toolbar described at : ref : ` key-event-handling ` <EoL>
 <BoL> Register a backend for saving to a given file format . <EoL>
 <BoL> Destroy the tool <EoL>
 <BoL> Assign a figure to the tool <EoL>
@@ -10079,7 +10040,6 @@
 <BoL> Attempt to safely cast values to integer format . <EoL>
 <BoL> This would run all unit tests , but pytest could n't be imported so the test suite can not run . <EoL>
 <BoL> Return decorator that adapts to RGB images to a gray-scale filter . <EoL>
-<BoL> Convert an image to the requested data-type.Scale an array of unsigned/positive integers from ` n ` to ` m ` bits . <EoL>
 <BoL> Return color image by applying ` image_filter ` on channels of ` image ` . <EoL>
 <BoL> Return color image by applying ` image_filter ` on HSV-value of ` image ` . <EoL>
 <BoL> Return True if the image *looks* like it 's RGB . <EoL>
@@ -10195,7 +10155,6 @@
 <BoL> Return image series in ImageJ file . <EoL>
 <BoL> Return image series in LSM file . <EoL>
 <BoL> Return image series in NIH file . <EoL>
-<BoL> Return image series in OME-TIFF file ( s ) . <EoL>
 <BoL> Return image data from multiple TIFF pages as numpy array . <EoL>
 <BoL> Close open file handle ( s ) . <EoL>
 <BoL> Return string with detailed information about file . <EoL>
@@ -10261,7 +10220,6 @@
 <BoL> Read TIFF IFD structure and its tags from file . <EoL>
 <BoL> Return if page 's image data in file can be memory-mapped . <EoL>
 <BoL> Return if ImageJ data are contiguous and adjust page attributes . <EoL>
-<BoL> Validate standard tags and initialize attributes . <EoL>
 <BoL> Return string with detailed information about page . <EoL>
 <BoL> Return specified TiffPage . <EoL>
 <BoL> Return iterator over TiffPages in series . <EoL>
@@ -10293,7 +10251,6 @@
 <BoL> Return dictionary from ImageJ metadata tag value . <EoL>
 <BoL> Return shape normalized to 6D ImageJ hyperstack TZCYXS . <EoL>
 <BoL> Return datetime from days since 1/1/4713 BC and ms since midnight . <EoL>
-<BoL> Command line usage main function . <EoL>
 <BoL> Return human sorted list of strings . <EoL>
 <BoL> Return dict with keys from keys|keyvals and values from kwargs|keyvals . <EoL>
 <BoL> Return product of sequence of numbers . <EoL>
@@ -10614,7 +10571,6 @@
 <BoL> Copy array . This is a no-op for dask.arrays , which are immutable <EoL>
 <BoL> See da.cumprod for docstring <EoL>
 <BoL> See da.cumsum for docstring <EoL>
-<BoL> Map a function across all blocks of a dask array . <EoL>
 <BoL> Map a function over blocks of the array with some overlap <EoL>
 <BoL> Persist this dask collection into memory <EoL>
 <BoL> See da.rechunk for docstring <EoL>
@@ -10624,7 +10580,6 @@
 <BoL> Save array to the zarr storage format <EoL>
 <BoL> The top k elements of an array . <EoL>
 <BoL> Get a view of the array as a new data type <EoL>
-<BoL> Apply a generalized ufunc or similar python function to arrays . <EoL>
 <BoL> Return evenly spaced values from ` start ` to ` stop ` with step size ` step ` . <EoL>
 <BoL> Extract the indices of the k largest elements from a on the given axis , and return them sorted from largest to smallest . If k is negative , extract the indices of the -k smallest elements instead , and return them sorted from smallest to largest . <EoL>
 <BoL> Decorator for `` dask.array.gufunc `` . <EoL>
@@ -10748,7 +10703,6 @@
 <BoL> Randomly sample matrix to find most active subspace <EoL>
 <BoL> Compute the inverse of a matrix with LU decomposition and forward / backward substitutions . <EoL>
 <BoL> Return the least-squares solution to a linear matrix equation using QR decomposition . <EoL>
-<BoL> Compute the lu decomposition of a matrix . <EoL>
 <BoL> Compute the qr factorization of a matrix . <EoL>
 <BoL> Direct Short-and-Fat QR <EoL>
 <BoL> Solve the equation `` a x = b `` for `` x `` . <EoL>
@@ -12041,7 +11995,6 @@
 <BoL> Reshapes a tensor to the specified shape . <EoL>
 <BoL> Resizes the volume contained in a 5D tensor . <EoL>
 <BoL> Reverse a tensor along the specified axes . <EoL>
-<BoL> RNN step function.RNN step function . <EoL>
 <BoL> Element-wise rounding to the closest integer . <EoL>
 <BoL> Sets the value of the fuzz factor used in numeric expressions . <EoL>
 <BoL> Sets the default float type . <EoL>
@@ -12310,7 +12263,6 @@
 <BoL> Solves systems of linear equations . <EoL>
 <BoL> Computes the matrix square root of one or more square matrices : <EoL>
 <BoL> Computes the singular value decompositions of one or more matrices . <EoL>
-<BoL> Tensor contraction of a and b along specified axes.Helper method to perform transpose and reshape for contraction op.Generates two sets of contraction axes for the two tensor arguments . <EoL>
 <BoL> Compute the trace of a tensor ` x ` . <EoL>
 <BoL> Transposes last two dimensions of tensor ` a ` . <EoL>
 <BoL> Solves systems of linear equations with upper or lower triangular matrices by <EoL>
@@ -12455,7 +12407,6 @@
 <BoL> Computes a 2D convolution given quantized 4D input and filter tensors . <EoL>
 <BoL> Produces the max pool of the input tensor for quantized types . <EoL>
 <BoL> Computes Quantized Rectified Linear X : ` min ( max ( features , 0 ) , max_value ) ` <EoL>
-<BoL> Copy some tensors through via array_ops.where . <EoL>
 <BoL> Computes rectified linear : ` max ( features , 0 ) ` . <EoL>
 <BoL> Computes Rectified Linear 6 : ` min ( max ( features , 0 ) , 6 ) ` . <EoL>
 <BoL> Computes Relu ( x * weight + biases ) . <EoL>
@@ -12838,7 +12789,6 @@
 <BoL> Returns the tensor value of the given variable in the checkpoint . <EoL>
 <BoL> Piecewise constant from boundaries and interval values . <EoL>
 <BoL> Computes fingerprints of the input strings . <EoL>
-<BoL> Distributed version of Stochastic Dual Coordinate Ascent ( SDCA ) optimizer for <EoL>
 <BoL> Applies L1 regularization shrink step on the parameters . <EoL>
 <BoL> Returns all variables created with ` trainable=True ` . <EoL>
 <BoL> Transposes ` a ` . Permutes the dimensions according to ` perm ` . <EoL>
@@ -13550,7 +13500,6 @@
 <BoL> Run forward through the reversible layers . <EoL>
 <BoL> Custom gradient fn for a block of reversible residual layers . <EoL>
 <BoL> Returns the summed penalty by applying ` regularizer ` to the ` weights_list ` . <EoL>
-<BoL> Internal function forces updates moving_vars if is_training.Internal function that delay updates moving_vars if is_training . <EoL>
 <BoL> Creates a _BucketizedColumn for discretizing dense input . <EoL>
 <BoL> Checks the validity of the set of FeatureColumns . <EoL>
 <BoL> Helper that prepares features config from input feature_columns . <EoL>
@@ -13820,7 +13769,6 @@
 <BoL> Create an ExportStrategy for use with Experiment , using ` FeatureColumn ` s . <EoL>
 <BoL> Put attention masks on hidden using hidden_features and query . <EoL>
 <BoL> The current decoder with a fixed feed_previous parameter . <EoL>
-<BoL> Returns SparseFeatureColumn for the input dense_tensor.Returns dictionaries for training examples and variables . <EoL>
 <BoL> Create a new sdca optimizer . <EoL>
 <BoL> Converts input list to a set of tensors . <EoL>
 <BoL> Make unshrinked internal variables ( slots ) . <EoL>
@@ -13830,7 +13778,6 @@
 <BoL> Returns predictions of the form w*x . <EoL>
 <BoL> Wraps var in a list if it is not a list or PartitionedVariable . <EoL>
 <BoL> Add operations to compute the approximate duality gap . <EoL>
-<BoL> Add operations to train a linear model by minimizing the loss function . <EoL>
 <BoL> Add operations to compute predictions by the model . <EoL>
 <BoL> Add operations to compute the loss with regularization loss included . <EoL>
 <BoL> Add operations to compute the loss ( without the regularization loss ) . <EoL>
@@ -14364,7 +14311,6 @@
 <BoL> Perform scheduled sampling.Concatenate outputs with auxiliary inputs , if they exist . <EoL>
 <BoL> Initializer . <EoL>
 <BoL> next_inputs_fn for TrainingHelper . <EoL>
-<BoL> Internal while_loop body . <EoL>
 <BoL> Calculates the full beams from the per-step ids and parent beam ids . <EoL>
 <BoL> Returns batched one-hot vectors . <EoL>
 <BoL> Compute monotonic attention distribution from choosing probabilities . <EoL>
@@ -14501,7 +14447,6 @@
 <BoL> Ops is a dict of { name : op } to run before the session is destroyed . <EoL>
 <BoL> Creates a default head based on a type of a problem . <EoL>
 <BoL> Get a combined model function given a list of other model fns.Function that returns predictions , training loss , and training op . <EoL>
-<BoL> Function that returns predictions , training loss , and training op . <EoL>
 <BoL> Return a tensor to use for input data . <EoL>
 <BoL> Return a tensor to use for input labels to tensor_forest . <EoL>
 <BoL> For object-based checkpointing . <EoL>
@@ -14585,7 +14530,6 @@
 <BoL> Default loss definition with state replicated across a batch . <EoL>
 <BoL> Computes predictions and a loss.Perform a processing step on a single window of data . <EoL>
 <BoL> Create loss_op . <EoL>
-<BoL> Computes predictions multiple steps into the future.Predict self.output_window_size values.Helper function to parse the returned TensorArrays . <EoL>
 <BoL> Compute model predictions given input data . <EoL>
 <BoL> A receiver function to be passed to export_savedmodel . <EoL>
 <BoL> Build an input_receiver_fn for export_savedmodel which accepts arrays.A receiver function to be passed to export_savedmodel . <EoL>
@@ -14637,7 +14581,6 @@
 <BoL> Sets the type of each element of the queue . <EoL>
 <BoL> Construct a TPUDistributionStrategy . <EoL>
 <BoL> Makes a ` TPUAssignment ` for the passed in ` cpu_model ` . <EoL>
-<BoL> Returns a new model_fn , which wraps the TPU support.A Estimator ` model_fn ` for TPUEstimator . <EoL>
 <BoL> Calls the input function . <EoL>
 <BoL> Wraps ` _call_model_fn ` for ` export_savedmodel ` .Compute tpu tensors used in export_outputs . <EoL>
 <BoL> Creates a global step suitable for TPUs . <EoL>
@@ -14698,7 +14641,6 @@
 <BoL> Closes the barrier and the FIFOQueue . <EoL>
 <BoL> Constructs the run hook . <EoL>
 <BoL> Add summaries to gradients . <EoL>
-<BoL> Return an op that enqueues conditionally in one of the queues . <EoL>
 <BoL> Load function that computes the byte size of a single-output ` Operation ` . <EoL>
 <BoL> Clips the gradients by the given value . <EoL>
 <BoL> Returns a ` transform_grads_fn ` function for gradient clipping . <EoL>
@@ -14864,7 +14806,6 @@
 <BoL> Retrieves the output shape ( s ) of a layer at a given node . <EoL>
 <BoL> Retrieves the weights of the model . <EoL>
 <BoL> Returns predictions for a single batch of samples . <EoL>
-<BoL> Computes output tensors for new inputs . <EoL>
 <BoL> Saves the model to a single HDF5 file . <EoL>
 <BoL> Dumps all layer weights to a HDF5 file . <EoL>
 <BoL> Sets the weights of the model . <EoL>
@@ -14999,7 +14940,6 @@
 <BoL> Reshapes a tensor to the specified shape . <EoL>
 <BoL> Resizes the volume contained in a 5D tensor . <EoL>
 <BoL> Reverses a tensor along the specified axes . <EoL>
-<BoL> RNN step function.RNN step function . <EoL>
 <BoL> Element-wise rounding to the closest integer . <EoL>
 <BoL> Sets the learning phase to a fixed value . <EoL>
 <BoL> Sets the global TensorFlow session . <EoL>
@@ -15083,7 +15023,6 @@
 <BoL> Instantiates a Keras model from its config . <EoL>
 <BoL> Parses a JSON model configuration file and returns a model instance . <EoL>
 <BoL> Parses a yaml model configuration file and returns a model instance . <EoL>
-<BoL> Converts layers nested in ` Bidirectional ` wrapper.Converts layers nested in ` TimeDistributed ` wrapper.Converts layers nested in ` Model ` or ` Sequential ` . <EoL>
 <BoL> Saves attributes ( data ) of the specified name into the HDF5 group . <EoL>
 <BoL> Save a model to a HDF5 file . <EoL>
 <BoL> Checks if batch axes are the same for numpy arrays . <EoL>
@@ -16207,7 +16146,6 @@
 <BoL> Returns a random value chosen from the Zipf distribution , guaranteed to be less than or equal to the value `` threshold `` . <EoL>
 <BoL> Return True if and only if ` communities ` is a partition of the nodes of ` G ` . <EoL>
 <BoL> Returns the coverage of a partition . <EoL>
-<BoL> Find communities in graph using Clauset-Newman-Moore greedy modularity maximization . This method currently supports the Graph class and does not consider edge weights . <EoL>
 <BoL> Find k-clique communities in graph using the percolation method . <EoL>
 <BoL> Colors the network so that neighboring nodes all have distinct colors . <EoL>
 <BoL> Determines whether or not LPA is done . <EoL>
@@ -16365,7 +16303,6 @@
 <BoL> Returns True if and only if ` G ` is Eulerian . <EoL>
 <BoL> Returns False if graphs are definitely not isomorphic . <EoL>
 <BoL> Returns False if graphs are definitely not isomorphic . <EoL>
-<BoL> Bidirectional breadth-first search for the growth stage.Augmentation stage.Adoption stage . <EoL>
 <BoL> Build a flow dictionary from a residual network . <EoL>
 <BoL> Build a flow dictionary from a residual network . <EoL>
 <BoL> Build a residual network and initialize a zero flow . <EoL>
@@ -16376,7 +16313,6 @@
 <BoL> Implementation of the Edmonds-Karp algorithm . <EoL>
 <BoL> Returns the Gomory-Hu tree of an undirected graph G . <EoL>
 <BoL> Return a maximum ( s , t ) -flow of minimum cost . <EoL>
-<BoL> Perform a reverse breadth-first search from src in the residual network.Push flow units of flow from u to v.Move a node from the inactive set to the active set of its level.Relabel a node to create an admissible edge.Discharge a node until it becomes inactive or , during phase 1 ( see below ) , its height reaches at least n. The node is known to have the largest height among active nodes.Apply the gap heuristic.Apply the global relabeling heuristic . <EoL>
 <BoL> Augment flow along a path from s to t.Relabel a node to create an admissible edge . <EoL>
 <BoL> Returns the flow hierarchy of a directed network . <EoL>
 <BoL> Returns the rooted tree corresponding to the given nested tuple.Recursively creates a tree from the given sequence of nested tuples . <EoL>
@@ -16420,7 +16356,6 @@
 <BoL> Returns True if mapping G1_node to G2_node is semantically feasible . <EoL>
 <BoL> Returns True if a subgraph of G1 is isomorphic to G2 . <EoL>
 <BoL> Generator over isomorphisms between a subgraph of G1 and G2 . <EoL>
-<BoL> Returns True if adding ( G1_node , G2_node ) is syntactically feasible . <EoL>
 <BoL> Initialize graph matcher . <EoL>
 <BoL> Iterator over candidate pairs of nodes in G1 and G2 . <EoL>
 <BoL> Reinitializes the state of the algorithm . <EoL>
@@ -16542,7 +16477,6 @@
 <BoL> Returns a random tournament graph on ` n ` nodes . <EoL>
 <BoL> Returns the score sequence for the given tournament graph . <EoL>
 <BoL> Returns the tournament matrix for the given tournament graph . <EoL>
-<BoL> Find the edge directed toward v with maximal weight.Returns True if ` u ` is a root node in G . <EoL>
 <BoL> Returns the total weight of a branching . <EoL>
 <BoL> Key is now required . <EoL>
 <BoL> Returns the edge keys of the unique path between u and v . <EoL>
@@ -16780,7 +16714,6 @@
 <BoL> Safely evaluate an expression node or a string containing a Python expression . The string or node provided may only consist of the following Python literal structures : strings , bytes , numbers , tuples , lists , dicts , sets , booleans , and None . <EoL>
 <BoL> Convert a ` value ` to a Python literal in GML representation . <EoL>
 <BoL> Parse GML graph from a string or iterable . <EoL>
-<BoL> Parse GML ` lines ` into a graph . <EoL>
 <BoL> Read graph in GML format from ` path ` . <EoL>
 <BoL> Replace XML character references with the referenced characters <EoL>
 <BoL> Write a graph ` G ` in GML format to the file or file handle ` path ` . <EoL>
@@ -17009,7 +16942,6 @@
 <BoL> Add the operations to the cls ; evaluate the doc strings again <EoL>
 <BoL> Add the series only operations to the cls ; evaluate the doc strings again . <EoL>
 <BoL> Add the series or dataframe only operations to the cls ; evaluate the doc strings again . <EoL>
-<BoL> provide an implementation for the aggregatorsaggregate a 1-dim with howaggregate a 2-dim with howrun the aggregations over the arg with func return an OrderedDict <EoL>
 <BoL> provide boxed values for a column <EoL>
 <BoL> check whether we allow in-place setting with this type of value <EoL>
 <BoL> Check if we are a view , have a cacher , and are of mixed type . If so , then force a setitem_copy check . <EoL>
@@ -17223,7 +17155,6 @@
 <BoL> Localize tz-naive DatetimeIndex to tz-aware DatetimeIndex . <EoL>
 <BoL> Specialized union for DatetimeIndex objects . If combine overlapping ranges with the same DateOffset , will be much faster than Index.union <EoL>
 <BoL> A bit of a hack to accelerate unioning a collection of indexes <EoL>
-<BoL> converts the contents of the cell into a pandas appropriate object <EoL>
 <BoL> Convert comma separated list of column names and column ranges to a list of 0-based column indexes . <EoL>
 <BoL> close io if necessary <EoL>
 <BoL> Convert numpy types to Python types for the Excel writers . <EoL>
@@ -18315,7 +18246,6 @@
 <BoL> convert the numpy values to a list <EoL>
 <BoL> Decoder for deserializing numpy data types . <EoL>
 <BoL> return my dtype mapping , whether number or name <EoL>
-<BoL> Data encoder <EoL>
 <BoL> return our implementation <EoL>
 <BoL> Write a DataFrame to the parquet format . <EoL>
 <BoL> Cast values to specified type <EoL>
@@ -18583,7 +18513,6 @@
 <BoL> Returns the params for the node , or NoParams if no params is set . <EoL>
 <BoL> Associate linker with fgraph <EoL>
 <BoL> Return a complete hashable signature of the module we compiled . <EoL>
-<BoL> Generates code for a struct that does the computation of the fgraph and stores it in the struct_code field of the instance . <EoL>
 <BoL> Returns a list of compile args that are needed by one or more Variables or Ops . <EoL>
 <BoL> This compiles the source code for this linker and returns a loaded module . <EoL>
 <BoL> Fills the inputs , outputs , variables , orphans , temps and node_order fields . <EoL>
@@ -18662,7 +18591,6 @@
 <BoL> Create a `` apply '' nodes for the inputs in that order . <EoL>
 <BoL> Required : Calculate the function on the inputs and put the variables in the output storage . Return None . <EoL>
 <BoL> Make any special modifications that the Op needs before doing make_thunk ( ) . <EoL>
-<BoL> converts self._lop_op from user supplied form to type ( self ) instance <EoL>
 <BoL> converts self._rop_op from user supplied form to type ( self ) instance <EoL>
 <BoL> Return connection pattern of subfgraph defined by inputs and outputs . <EoL>
 <BoL> getter method for self._lop_op <EoL>
@@ -18708,7 +18636,6 @@
 <BoL> Return an instance of ` _Maker ` which handles much of the debugging work . <EoL>
 <BoL> Tuple of properties of all attributes <EoL>
 <BoL> This return a dict of all `` __props__ `` key- > value . <EoL>
-<BoL> Evaluates value of a function on given arguments . <EoL>
 <BoL> Copy a function . Copied function have separate intermediate storages and output storages with original function <EoL>
 <BoL> Assert two SharedVariable follow some restirctions : 1. same type 2. same shape or dim ? <EoL>
 <BoL> When allow_gc = False , clear the Variables in storage_map <EoL>
@@ -18721,7 +18648,6 @@
 <BoL> Set the values of a shared variable to 0 . <EoL>
 <BoL> Return the variable to which v is aliased by view_maps and destroy_maps . <EoL>
 <BoL> Returns the connection pattern of a subgraph defined by given inputs and outputs . <EoL>
-<BoL> Clones a variable and its inputs recursively until all are in clone_d . Also appends all shared variables met along the way to shared inputs , and their default_update ( if applicable ) to update_d and update_expr . <EoL>
 <BoL> Upgrade a input shortcut to an In instance . <EoL>
 <BoL> Return a pretty multiline string representating the cause of the exception . <EoL>
 <BoL> Return the Op class whose c_code and perform implementations did n't match . <EoL>
@@ -18734,7 +18660,6 @@
 <BoL> Create a FunctionGraph for debugging . <EoL>
 <BoL> Converts number to string by rendering it in base 26 using capital letters as digits . <EoL>
 <BoL> Given an fgraph and a list of variables , returns the list or set of all variables which may share the same underlying data storage as any of the specified variables . Used internally by function , FunctionMaker . <EoL>
-<BoL> Re-raise an exception while annotating the exception object with debug info . <EoL>
 <BoL> Add a ` Mode ` which can be referred to by ` name ` in ` function ` . <EoL>
 <BoL> Makes an FunctionGraph corresponding to the input specs and the output specs . <EoL>
 <BoL> Reconstruct the full `` updates '' dictionary , mapping from FunctionGraph input variables to the fgraph outputs that will replace their values . <EoL>
@@ -18964,7 +18889,6 @@
 <BoL> Like zeros_like , but forces the object to have a a floating point dtype <EoL>
 <BoL> Returns 'yes ' , 'no ' , or 'maybe ' indicating whether x is always 0 . 'maybe ' means that x is an expression that is complicated enough that we ca n't tell that it simplifies to 0 . <EoL>
 <BoL> given an apply node , obtain its connection pattern this is just a wrapper around Op.connection_pattern that does type checking and supplies the default value if the method is not implemented <EoL>
-<BoL> Populates term_dict [ node ] and returns it <EoL>
 <BoL> Helper function for grad function . <EoL>
 <BoL> DEPRECATED : use zero_grad ( ) or disconnected_grad ( ) instead . <EoL>
 <BoL> Consider an expression constant when computing gradients . <EoL>
@@ -19023,9 +18947,7 @@
 <BoL> Check all internal values of the graph that compute the variable `` out `` for occurrences of values identical with `` x `` . If such occurrences are encountered then they are replaced with variable `` y `` . <EoL>
 <BoL> Internal function that constructs a new variable from x with the same type , but with a different name ( old name + tag ) . This function is used by gradient , or the R-op to construct new variables for the inputs of the inner graph such that there is no interference between the original graph and the newly constructed graph . <EoL>
 <BoL> If the alloc would be useless , this function returns val . <EoL>
-<BoL> IMPORTANT NOTE : This function uses set and dictionary data structures . <EoL>
 <BoL> Given a inner nit_sot output of scan , return True iff the outer nit_sot output has only one client and that client is a Subtensor instance that takes only the last step ( last element along the first axis ) . <EoL>
-<BoL> IMPORTANT NOTE : This function uses set and dictionary data structure . <EoL>
 <BoL> Attempts to replace a Scan node by one which computes the specified outputs inplace . <EoL>
 <BoL> This function checks if node ` node ` belongs to ` set_nodes ` , in the sense that it can be merged together with every other node in ` set_nodes ` . In order for two nodes to be mergeable , they have to go over the same number of steps , have the same condition ( if any ) , have the same value for truncate_gradient , and have the same mode . Questionable , we should also consider profile ? <EoL>
 <BoL> Checks if Theano graphs represent the same computations.Compare two nodes to determine if they perform equal computation . This is done by comparing the ops , the number of inputs , outputs and by ensuring that the inputs themselves are the result of equal computation . <EoL>
@@ -19225,7 +19147,6 @@
 <BoL> Returns the sum of diagonal elements of matrix X . <EoL>
 <BoL> Useful with the hack in profiling to print the MFlops . <EoL>
 <BoL> Computes the output dimensions of convolving an image of shape `` inshp '' with kernels of shape `` kshp '' . <EoL>
-<BoL> By default if len ( img2d.shape ) ==3 , we TODO <EoL>
 <BoL> Return True if we will generate code that use gemm . <EoL>
 <BoL> The math , where x is an input vector , and t is a target index : <EoL>
 <BoL> Basic slow Python 2D or 3D convolution for DebugMode <EoL>
@@ -19269,7 +19190,6 @@
 <BoL> Shorthand for : <EoL>
 <BoL> Find all constants and put them together into a single constant . <EoL>
 <BoL> For any Variable r which is both in num and denum , removes it from both lists . <EoL>
-<BoL> Usage : InplaceElemwiseOptimizer ( op ) .optimize ( fgraph ) <EoL>
 <BoL> Return a list of shape tuple or None for the outputs of node . <EoL>
 <BoL> Optimization can call this to get the current shape_i <EoL>
 <BoL> Register r 's shape in the shape_of dictionary . <EoL>
@@ -19290,9 +19210,7 @@
 <BoL> Fuse consecutive add or mul in one such node with more inputs . <EoL>
 <BoL> elemwise ( alloc ( x , shp ) , ... , y.TensorType ( BROADCAST CONDITION ) ) - > elemwise ( x , y.TensorType ( BROADCAST CONDITION ) ) <EoL>
 <BoL> As part of specialization , we fuse two consecutive elemwise Ops of the same shape . <EoL>
-<BoL> As part of specialization , we fuse two consecutive elemwise Ops of the same shape . <EoL>
 <BoL> Reshape ( Reshape ( shape1 ) , shape2 ) - > Reshape ( shape2 ) <EoL>
-<BoL> This function merges two slices into a single slice . The code works on the assumption that : <EoL>
 <BoL> Partition a list of variables into two kinds : scalar constants , and the rest . <EoL>
 <BoL> Sample from a normal distribution centered on avg with the specified standard deviation ( std ) . <EoL>
 <BoL> Return permutations of the integers between 0 and n-1 . <EoL>
@@ -19876,7 +19794,6 @@
 <BoL> x.__setitem__ ( i , y ) < = > x [ i ] =y <EoL>
 <BoL> x.__sub__ ( y ) < = > x-y < = > mx.nd.subtract ( x , y ) <EoL>
 <BoL> Returns a view of the array sliced at ` idx ` in the first dim . This is called through `` x [ idx ] `` . <EoL>
-<BoL> Returns an index array for use in scatter_nd and gather_nd.The definition of advanced index here includes integers as well , while integers are considered as basic index type when the key contains only slices and integers . <EoL>
 <BoL> Get item when key is a tuple of any objects of the following types : NDArray , np.ndarray , list , tuple , slice , and integer . <EoL>
 <BoL> This function is called when key is a slice , or an integer , or a tuple of slices or integers <EoL>
 <BoL> Given value and vshape , create an ` NDArray ` from value with the same context and dtype as the current one and broadcast it to vshape . <EoL>
@@ -21157,7 +21074,6 @@
 <BoL> Backward interface . Can override when creating new operators . <EoL>
 <BoL> Declare dependencies of this operator for backward pass . <EoL>
 <BoL> Forward interface . Override to create new operators . <EoL>
-<BoL> C Callback for NDArrayOp : :ForwardC Callback for NDArrayOp : :BackwardC Callback for NDArrayOpProp : :InferShapeC Callback for NDArrayOpProp : :ListOutputsC Callback for NDArrayOpProp : :ListArgumentsC Callback for NDArrayOpProp : :DeclareBacwardDependency <EoL>
 <BoL> Interface for `` infer_shape `` . Can override when creating new operators . <EoL>
 <BoL> Interface for `` list_arguments `` . Can override when creating new operators . <EoL>
 <BoL> Interface for `` list_outputs `` . Can override when creating new operators . <EoL>
@@ -21247,7 +21163,6 @@
 <BoL> Run a for loop with user-defined computation over Symbols on dimension 0 . <EoL>
 <BoL> Draw random samples from an approximately log-uniform or Zipfian distribution . <EoL>
 <BoL> Draw random samples from a uniform distribution . <EoL>
-<BoL> Run a while loop with user-defined computation and loop condition.Converts `` inputs '' , possibly typed mxnet NDArray , a numpy ndarray , other python types , to the given typeThis wrapper unifies `` func : loop_vars - > new_loop_vars '' and `` func : loop_vars - > ( step_output , new_loop_vars ) '' into `` func : loop_vars - > ( list of step_outputs , tuple of new_loop_vars ) <EoL>
 <BoL> Returns a new symbol of 2-D shpae , filled with ones on the diagonal and zeros elsewhere . <EoL>
 <BoL> Returns a new array of given shape and type , filled with the given value ` val ` . <EoL>
 <BoL> Special op to copy data cross device <EoL>
