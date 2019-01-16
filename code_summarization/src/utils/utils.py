@@ -79,7 +79,8 @@ def load_all_data(data_path, batch_size):
         sort_key=lambda x: (len(x.code), len(x.comm)),  # Allows for auto-batching by instance size
         batch_size=batch_size,                          # size of batches (for all three datasets)
         repeat=False,                                   # TODO: fill in this
-        shuffle=True                                    # Shuffle after full iteration
+        sort_within_batch=True,                         # Required for padding/unpadding
+        # shuffle=True                                    # Shuffle after full iteration
     )
 
     # We need to return the test sets and the field pretrained vectors
