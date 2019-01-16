@@ -15,4 +15,4 @@ Note: science parse is known to be memory intensive, see [this](https://github.c
 If you want to only run one of the services (either scienceparse or grobid) you can do so by giving docker-compose
 the name of the service you want to call, for example:
 
-    docker-compose up grobid
+    docker-compose up grobidquantities
