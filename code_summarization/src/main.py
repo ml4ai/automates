@@ -23,9 +23,9 @@ def main(args):
     if args.model == "both":
         model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu)
     elif args.model == "code":
-        model = cl.CodeOnlyClassifier(code_vecs, gpu=args.use_gpu)
+        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_comm=False)
     elif args.model == "comm":
-        model = cl.CommOnlyClassifier(comm_vecs, gpu=args.use_gpu)
+        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_code=False)
     else:
         raise RuntimeError("Unidentified model type selected")
 
@@ -44,15 +44,12 @@ def main(args):
 
     # Do training
     if args.epochs > 0:
-        loss_values = list()
         # Adam optimizer works, SGD fails to train the network for any batch size
         optimizer = optim.Adam(model.parameters(), args.learning_rate)
         for epoch in range(args.epochs):
-            # model.train()           # Set the model to training mode
+            model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
-                # for batch in tqdm(train, desc="Epoch {}/{}".format(epoch+1, args.epochs)):
                 for b_idx, batch in enumerate(train):
-                    # utils.train_on_batch(model, optimizer, batch, args.use_gpu)
                     # model.zero_grad()
                     optimizer.zero_grad()   # Clear current gradient
 
@@ -61,18 +58,17 @@ def main(args):
                     if args.use_gpu:
                         truth = truth.cuda()
 
-                    # Transpose the input data from batch storage to network form
-                    # Batch storage will store the code/docstring data as column data, we need
-                    # them in row data form to be embedded.
-                    # code = batch.code[0].transpose(0, 1)
-                    # comm = batch.comm[0].transpose(0, 1)
+                    # Run the model using the batch
+                    outputs = model((batch.code, batch.comm))
 
-                    outputs = model((batch.code, batch.comm))           # Run the model using the batch
-                    loss = F.binary_cross_entropy_with_logits(outputs.view(-1), truth.view(-1))  # Get loss from log(softmax())
+                    # Get loss from log(softmax())
+                    loss = F.binary_cross_entropy_with_logits(outputs.view(-1),
+                                                              truth.view(-1))
+
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
+
                     curr_loss = loss.item()
-                    loss_values.append((epoch, b_idx, curr_loss))
                     pbar.set_postfix(batch_loss=curr_loss)
                     pbar.update()
 
@@ -80,11 +76,6 @@ def main(args):
             scores = score_dataset(model, dev)
             acc = utils.accuracy_score(scores)
             sys.stdout.write("Epoch {} -- dev acc: {}%\n".format(epoch+1, acc))
-
-        with open("training_loss.txt", "w+") as loss_file:
-            loss_file.write("EPOCH\tBATCH\tLOSS\n")
-            for (e, b, l) in loss_values:
-                loss_file.write("{}\t{}\t{}\n".format(e, b, l))
 
     # Save the model weights
     if args.save != "":
@@ -118,10 +109,6 @@ def score_dataset(model, dataset):
     classes = [0, 1]
     with torch.no_grad():
         for i, batch in enumerate(dataset):
-            # Prepare input batch data for classification
-            # code = batch.code[0].transpose(0, 1)
-            # comm = batch.comm[0].transpose(0, 1)
-
             # Run the model on the input batch
             output = model((batch.code, batch.comm))
 
