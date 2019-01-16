@@ -122,20 +122,20 @@ class CodeCommClassifier(nn.Module):
         code_vecs, _ = pad_packed_sequence(code_enc_pad, batch_first=True)
         comm_vecs, _ = pad_packed_sequence(comm_enc_pad, batch_first=True)
         # Concatenate the final output from both LSTMs
-        recurrent_vecs = torch.cat((code_h_n[0,code_inv_order], code_h_n[1,code_inv_order], comm_h_n[0,comm_inv_order], comm_h_n[1,comm_inv_order]), 1)
+        # recurrent_vecs = torch.cat((code_h_n[0,code_inv_order], code_h_n[1,code_inv_order], comm_h_n[0,comm_inv_order], comm_h_n[1,comm_inv_order]), 1)
 
-        # code_avg_pool = F.adaptive_avg_pool1d(self.code_hd[0].permute(1, 2, 0), 1).view(bs, -1)
-        # code_max_pool = F.adaptive_max_pool1d(self.code_hd[0].permute(1, 2, 0), 1).view(bs, -1)
-        #
-        # comm_avg_pool = F.adaptive_avg_pool1d(self.comm_hd[0].permute(1, 2, 0), 1).view(bs, -1)
-        # comm_max_pool = F.adaptive_max_pool1d(self.comm_hd[0].permute(1, 2, 0), 1).view(bs, -1)
-        # pooled_vecs = torch.cat((code_avg_pool, code_max_pool, comm_avg_pool, comm_max_pool), dim=1)
+        code_avg_pool = F.adaptive_avg_pool1d(self.code_hd[0].permute(1, 2, 0), 1).view(bs, -1)
+        code_max_pool = F.adaptive_max_pool1d(self.code_hd[0].permute(1, 2, 0), 1).view(bs, -1)
+
+        comm_avg_pool = F.adaptive_avg_pool1d(self.comm_hd[0].permute(1, 2, 0), 1).view(bs, -1)
+        comm_max_pool = F.adaptive_max_pool1d(self.comm_hd[0].permute(1, 2, 0), 1).view(bs, -1)
+        pooled_vecs = torch.cat((code_avg_pool, code_max_pool, comm_avg_pool, comm_max_pool), dim=1)
 
         # Concatenate the final output from both LSTMs
         # recurrent_vecs = torch.cat((code_vecs[-1], comm_vecs[-1]), 1)
 
         # Transform recurrent output vector into a class prediction vector
-        y = F.relu(self.lstm2hidden(recurrent_vecs))
+        y = F.relu(self.lstm2hidden(pooled_vecs))
         y = self.hidden2label(y)
         return y
         # y = self.hidden2label(pooled_vecs)
