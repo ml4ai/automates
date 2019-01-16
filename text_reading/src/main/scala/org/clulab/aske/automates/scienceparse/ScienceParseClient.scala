@@ -76,20 +76,17 @@ class ScienceParseClient(
   }
 
   def parsePdf(file: File): ScienceParseDocument = {
-    val response = requests.post(url, headers = headers, data = file, readTimeout = timeout, connectTimeout = timeout)
-    val json = ujson.read(response.text)
+    val json = ujson.read(parsePdfToJson(file))
     mkDocument(json)
   }
 
   def parsePdf(path: Path): ScienceParseDocument = {
-    val response = requests.post(url, headers = headers, data = path)
-    val json = ujson.read(response.text)
+    val json = ujson.read(parsePdfToJson(path))
     mkDocument(json)
   }
 
   def parsePdf(bytes: Array[Byte]): ScienceParseDocument = {
-    val response = requests.post(url, headers = headers, data = bytes)
-    val json = ujson.read(response.text)
+    val json = ujson.read(parsePdfToJson(bytes))
     mkDocument(json)
   }
 
@@ -100,17 +97,17 @@ class ScienceParseClient(
   }
 
   def parsePdfToJson(file: File): String = {
-    val response = requests.post(url, headers = headers, data = file)
+    val response = requests.post(url, headers = headers, data = file, readTimeout = timeout, connectTimeout = timeout)
     response.text
   }
 
   def parsePdfToJson(path: Path): String = {
-    val response = requests.post(url, headers = headers, data = path)
+    val response = requests.post(url, headers = headers, data = path, readTimeout = timeout, connectTimeout = timeout)
     response.text
   }
 
   def parsePdfToJson(bytes: Array[Byte]): String = {
-    val response = requests.post(url, headers = headers, data = bytes)
+    val response = requests.post(url, headers = headers, data = bytes, readTimeout = timeout, connectTimeout = timeout)
     response.text
   }
 
