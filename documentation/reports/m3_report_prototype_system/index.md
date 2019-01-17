@@ -2,6 +2,7 @@
 title: "Month 3 Report: Description of Prototype System"
 toc: true
 layout: post
+author: The AutoMATES Team
 date: 2019-01-31
 ---
 
