@@ -1,1 +1,34 @@
-vars: org/clulab/aske_automates/grammars/vars.yml
+cdvars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+
+  - name: simple-np
+    label: Concept
+    priority: 1
+    type: token
+    pattern: |
+      # avoids event triggers, coordinations, refs, etc.
+      [chunk='B-NP'] [chunk='I-NP']+ | [chunk='B-NP']
+
+  - name: variable-value_of
+    label: Variable
+    priority: 2
+    type: token
+    pattern: |
+      (?<=calculation of) @Concept
+
+  - name: where-value_is
+    label: Variable
+    priority: 2
+    type: token
+    pattern: |
+      (?<=where) @Concept (?=is)
+
+  - name: where-dep
+    label: Variable
+    priority: 3
+    type: dependency
+    pattern: |
+      trigger = [lemma = "where"]
+      Variable:Concept+ = </advmod|advcl/+ conj_and? nsubj
