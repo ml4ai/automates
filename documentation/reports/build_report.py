@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" This script builds the month 1 report as a PDF by combining the markdown 
-    files, using pandoc.
+""" This script builds the ASKE deliverable reports as PDFs by combining the
+markdown files, using pandoc.
 
 Usage:
     ./build_report.py <report_name>
