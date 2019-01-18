@@ -44,8 +44,12 @@ def build_report(report_name):
     sp.call(
         [
             "pandoc",
+            "--template",
+            "../pandoc_report_template.tex",
             "--pdf-engine",
             "lualatex",
+            "-V",
+            f"reportname={report_name}",
             "-N",
             "-f",
             "markdown+tex_math_dollars",

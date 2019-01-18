@@ -1,9 +1,6 @@
 ---
 title: "Month 3 Report: Description of Prototype System"
-toc: true
 layout: post
-author: The AutoMATES Team
-mainfont: Alegreya
 date: 2019-01-31
 ---
 

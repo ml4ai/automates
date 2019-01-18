@@ -1,8 +1,5 @@
 ---
 title: "Month 1 Report: Initial AutoMATES architecture, algorithms, and approaches"
-author: The AutoMATES Team
-mainfont: Alegreya
-toc: true
 layout: post
 date: 2018-12-02
 ---
