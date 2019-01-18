@@ -50,6 +50,8 @@ def build_report(report_name):
             "lualatex",
             "-V",
             f"reportname={report_name}",
+            "-V",
+            "links-as-notes=true",
             "-N",
             "-f",
             "markdown+tex_math_dollars",
