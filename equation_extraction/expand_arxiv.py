@@ -5,7 +5,7 @@ import subprocess
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('dirname')
+    parser.add_argument('dirname') # the path with the arxiv arXiv_src_*_*.tar files
     args = parser.parse_args()
     return args
 
@@ -33,8 +33,7 @@ def mk_paper_dir(f):
         print "mkdir error"
     return paper_dir
 
-# args:
-#   wdir: the path with the arxiv arXiv_src_*_*.tar files
+# wdir: the path with the arxiv arXiv_src_*_*.tar files
 def expand_arxiv(wdir):
     arxiv_files = glob.glob(os.path.join(wdir, "*.tar"))
     print "arXiv dump files to be expanded:", arxiv_files
