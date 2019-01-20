@@ -7,7 +7,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('dirname') # the path with the arxiv arXiv_src_*_*.tar files
     parser.add_argument('outputdir')  # the path with the arxiv arXiv_src_*_*.tar files
-    parser.add_argument('--keepall', default=False)
+    parser.add_argument('--keepall', action='store_true', default=False)
     args = parser.parse_args()
     return args
 
