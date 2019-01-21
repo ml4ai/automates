@@ -32,11 +32,26 @@ object TestUtils {
   class ExtractionTest(val ieSystem: OdinEngine) extends Test {
     def this(config: Config = ConfigFactory.load("test")) = this(newEidosSystem(config))
 
-//    class GraphTester(text: String) extends graph.GraphTester(ieSystem, text)
-//
-//    class RuleTester(text: String) extends rule.RuleTester(ieSystem, text)
-
     def extractMentions(text: String): Seq[Mention] = TestUtils.extractMentions(ieSystem, text)
+
+    // Event Specific
+
+    def testDefinitionEvent(m: Mention, variable: String, definitions: Seq[String]) = {
+      mentionHasArguments(m, "variable", Seq(variable))
+      mentionHasArguments(m, "definition", definitions)
+    }
+
+    // General Purpose
+
+    def mentionHasArguments(m: Mention, argName: String, argValues: Seq[String]): Unit = {
+      // Check that the desired number of that argument were found
+      val selectedArgs = m.arguments.getOrElse(argName, Seq())
+      selectedArgs should have length(argValues.length)
+
+      // Check that each of the arg values is found
+      val argStrings = selectedArgs.map(_.text)
+      argValues.foreach(argStrings should contain (_))
+    }
 
   }
 

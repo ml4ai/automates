@@ -40,7 +40,7 @@ rules:
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
     pattern: |
       trigger = [lemma='calculation']
-      Variable:Concept = compound
+      variable:Concept = compound
 
   - name: var_is_defined
     label: Variable
@@ -85,7 +85,7 @@ rules:
     action: variableArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
-      @Variable:Concept (?= "=")
+      @variable:Concept (?= "=")
 
   # - name: where-value_is
   #   label: Variable
@@ -102,7 +102,7 @@ rules:
     example: "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
     pattern: |
       trigger = [lemma = "where"]
-      Variable:Concept+ = </advmod|advcl/+ conj_and? (nsubj|nsubjpass)
+      variable:Concept+ = </advmod|advcl/+ conj_and? (nsubj|nsubjpass)
 
   - name: var_and
     label: Variable
@@ -111,7 +111,7 @@ rules:
     action: variableArguments
     example: "E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      (?<=product of|values for) @Variable:Concept and @Variable:Concept
+      (?<=product of|values for) @variable:Concept and @variable:Concept
 
   - name: var_in_interval
     label: Variable
@@ -120,7 +120,7 @@ rules:
     action: variableArguments
     example: "E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      "<" @Variable:Concept "<"
+      "<" @variable:Concept "<"
 
 ####DEFINITIONS####
 
@@ -131,7 +131,7 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     #action: variableArguments
     pattern: |
-      @Variable:Variable ( is| is defined as) (a|the) @Definition:Concept
+      @variable:Variable ( is| is defined as) (a|the) @definition:Concept
 
   - name: var_definition_appos
     label: Definition
@@ -140,7 +140,7 @@ rules:
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     #action: variableArguments
     pattern: |
-      @Variable:Variable "-LRB-" @Definition:Concept "-RRB-"
+      @variable:Variable "-LRB-" @definition:Concept "-RRB-"
 
 ####VALUES####
 
@@ -153,4 +153,4 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
       # @trigger:Concept "=" @Value:Value
-      @Variable:Variable (?<trigger> [word="="]) @Value:Value
+      @variable:Variable (?<trigger> [word="="]) @value:Value

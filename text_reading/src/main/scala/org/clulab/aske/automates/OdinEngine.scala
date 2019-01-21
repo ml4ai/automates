@@ -93,7 +93,6 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
     // Prepare the initial state -- if you are using the entity finder then it contains the found entities,
     // else it is empty
     val initialState = loadableAttributes.entityFinders match {
-      case Seq() => new State()
       case efs => State(efs.flatMap(ef => ef.extract(doc)))
       case _ => new State()
     }
