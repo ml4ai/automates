@@ -3,10 +3,14 @@ import tarfile
 import argparse
 import subprocess
 
+# todo: count how many total and also how many were skipped for main None
+# iterate over dirs at end and rename (with glob)
+# verbose flag
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('dirname') # the path with the arxiv arXiv_src_*_*.tar files
-    parser.add_argument('outputdir')  # the path with the arxiv arXiv_src_*_*.tar files
+    parser.add_argument('outputdir')  # the path to store the expanded dirs
     parser.add_argument('--keepall', action='store_true', default=False)
     args = parser.parse_args()
     return args
