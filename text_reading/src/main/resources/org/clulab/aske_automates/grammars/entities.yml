@@ -2,33 +2,154 @@ cdvars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-
-  - name: simple-np
+  #you want smaller chunks to break up cases like LAI = 0, which is found as
+  #one Concept if we use BI chunks
+  - name: stand_alone_noun
     label: Concept
     priority: 1
     type: token
     pattern: |
-      # avoids event triggers, coordinations, refs, etc.
-      [chunk='B-NP'] [chunk='I-NP']+ | [chunk='B-NP']
+      [chunk='I-NP'] | [chunk='B-NP']
 
-  - name: variable-value_of
-    label: Variable
-    priority: 2
+  #to find full NPs made up of BI-NP chunks, e.g., "the simulated leaf area index"
+  - name: simple-np
+    label: Concept
+    priority: 3
     type: token
+    pattern: |
+      # avoids event triggers, coordinations, refs, etc.
+      [chunk='B-NP'] [chunk='I-NP']+ | [chunk='B-NP'] | [chunk='I-NP']
+      #[chunk='I-NP'] | [chunk='B-NP']
+
+
+
+####VARIABLES####
+  - name: var-calculation_of
+    label: Variable
+    priority: 4
+    type: token
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
       (?<=calculation of) @Concept
 
-  - name: where-value_is
+  - name: var-calculation
+    label: Variable
+    priority: 2
+    type: dependency
+    action: variableArguments
+    example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
+    pattern: |
+      trigger = [lemma='calculation']
+      Variable:Concept = compound
+
+  - name: var_is_defined
+    label: Variable
+    priority: 4
+    type: token
+    example: "E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      @Concept (?= is /correlated|defined|calculated|obtained/ /with|as|from/)
+
+  - name: var_calculate
+    label: Variable
+    priority: 4
+    type: token
+    example: "The approach uses model-simulated LAI to calculate the Kcb."
+    pattern: |
+      (?<= calculate) @Concept
+
+  # - name: var_verb
+  #   label: Variable
+  #   priority: 4
+  #   type: dependency
+  #   example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+  #   pattern: |
+  #     trigger = [lemma=/calculate|define/]
+  #     Variable:Concept+ = (dobj | nsubjpass) appos?
+  #     #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+
+  - name: var_in_equation
+    label: Variable
+    priority: 4
+    type: token
+    example: "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
+    pattern: |
+      @Concept (?= in equation)
+
+
+  - name: var_equals
     label: Variable
     priority: 2
     type: token
+    action: variableArguments
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
-      (?<=where) @Concept (?=is)
+      @Variable:Concept (?= "=")
 
-  - name: where-dep
+  # - name: where-value_is
+  #   label: Variable
+  #   priority: 2
+  #   type: token
+  #   pattern: |
+  #     (?<=where) @Concept (?=is)
+
+  - name: var_where-dep
     label: Variable
-    priority: 3
+    priority: 5
     type: dependency
+    action: variableArguments
+    example: "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
     pattern: |
       trigger = [lemma = "where"]
-      Variable:Concept+ = </advmod|advcl/+ conj_and? nsubj
+      Variable:Concept+ = </advmod|advcl/+ conj_and? (nsubj|nsubjpass)
+
+  - name: var_and
+    label: Variable
+    priority: 2
+    type: token
+    action: variableArguments
+    example: "E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      (?<=product of|values for) @Variable:Concept and @Variable:Concept
+
+  - name: var_in_interval
+    label: Variable
+    priority: 2
+    type: token
+    action: variableArguments
+    example: "E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      "<" @Variable:Concept "<"
+
+####DEFINITIONS####
+
+  - name: var_is_definition
+    label: Definition
+    priority: 6
+    type: token
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    #action: variableArguments
+    pattern: |
+      @Variable:Variable ( is| is defined as) @Definition:Concept
+
+  - name: var_definition_appos
+    label: Definition
+    priority: 6
+    type: token
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+    #action: variableArguments
+    pattern: |
+      @Variable:Variable "-LRB-" @Definition:Concept "-RRB-"
+
+####VALUES####
+
+    #only works if I-NP and B-NP are separate chunks (done with the rule "stand_alone_noun")
+  - name: var_equals_val
+    label: Value
+    priority: 2
+    type: token
+    #action: variableArguments
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    pattern: |
+      @trigger:Concept "=" @Value:Value

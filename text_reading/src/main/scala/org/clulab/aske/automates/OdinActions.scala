@@ -43,6 +43,48 @@ class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
     }
   }
 
+  def copyWithLabel(m: Mention, lab: String): Mention = {
+    val newLabels = taxonomy.hypernymsFor(lab)
+    val copy = m match {
+      case tb: TextBoundMention => tb.copy(labels = newLabels)
+      case rm: RelationMention => rm.copy(labels = newLabels)
+      case em: EventMention=> em.copy(labels = newLabels)
+      case _ => ???
+    }
+    copy
+  }
+
+  def variableArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val mentionsDisplayOnlyArgs = for {
+
+      m <- mentions
+      arg <- m.arguments.values.flatten
+      _ = println(s"current arg: ${arg.text}")
+    } yield copyWithLabel(arg, "Variable")
+    //println("prelim " + mentions_preliminary.length)
+    //    // only display entities, not relations TODO: when add relations, this needs to be rewritten to not eliminate relations, but only do so for entity rules
+    //    var mentions = for {
+    //      m <- mentions_preliminary
+    //      arg <- m.arguments.values.flatten
+    //
+    //    } yield arg
+    //
+    //    //println("len before grob " + mentions.length)
+    //
+    //    // adds the quantities found by grobid-quant to mentions;
+    //    mentions_preliminary.foreach { m =>
+    //      //println(m.foundBy.mkString(" "))
+    //      if (m.foundBy.matches("GrobidEntityFinder")) {    // ("GrobidEntityFinder")) {
+    //        //println(m.foundBy.mkString(""))
+    //        //println("grobid mention " + m.text)
+    //        //println("mentions length " + mentions.length)
+    //        mentions = mentions :+ m }
+    //    }
+    mentionsDisplayOnlyArgs
+  }
+
+
+
 
 }
 

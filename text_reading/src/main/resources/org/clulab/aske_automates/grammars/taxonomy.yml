@@ -1,6 +1,7 @@
 - Entity:
   - Concept:
       - Variable
+      - Definition
   - Measurement:
     - Value:
       - ValueAndUnit
