@@ -1,25 +1,25 @@
 package org.clulab.aske.automates
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.clulab.odin.{ExtractorEngine, Mention, State}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.aske.automates.entities.{EntityFinder, GrobidEntityFinder, RuleBasedEntityFinder}
 import org.clulab.sequences.LexiconNER
-import org.clulab.utils.{FileUtils, FilterByLength, PassThroughFilter}
+import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughFilter}
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
 
 
 class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
 
-  val odinConfig = config[Config]("OdinEngine")
+  val odinConfig: Config = config[Config]("OdinEngine")
 
   val proc: Processor = new FastNLPProcessor()
   // Document Filter, prunes sentences form the Documents to reduce noise/allow reasonable processing time
   val filterType: String = odinConfig[String]("documentFilter")
-  val documentFilter = filterType match {
+  val documentFilter: DocumentFilter = filterType match {
     case "none" => PassThroughFilter()
     case "length" => FilterByLength(proc, cutoff = 150)
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
@@ -31,7 +31,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
     // These are the values which can be reloaded.  Query them for current assignments.
     val actions: OdinActions,
     val engine: ExtractorEngine,
-    val entityFinder: Option[EntityFinder],
+    val entityFinders: Seq[EntityFinder],
     val lexiconNER: Option[LexiconNER],
   )
 
@@ -46,16 +46,13 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
       val masterRules = FileUtils.getTextFromResource(masterRulesPath)
       val actions = OdinActions(taxonomyPath)
       val extractorEngine = ExtractorEngine(masterRules, actions)
-      // EntityFinder
-      val entityFinder = if (enableEntityFinder) {
-        val entityFinderConfig = config[Config]("entityFinder")
-        entityFinderConfig[String]("finderType") match {
-          case "rulebased" => Some(RuleBasedEntityFinder.fromConfig(entityFinderConfig))
-          case "grobid" =>
-            Some(GrobidEntityFinder.fromConfig(entityFinderConfig))
-          case _ => throw new RuntimeException(s"Unexpected entity finder type")
-        }
-      } else None
+
+      // EntityFinder(s)
+      val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
+        val entityFinderConfig: Config = config[Config]("entityFinder")
+        val finderTypes: List[String] = entityFinderConfig[List[String]]("finderTypes")
+        finderTypes.map(finderType => EntityFinder.loadEntityFinder(finderType, entityFinderConfig))
+      } else Seq.empty[EntityFinder]
 
       // LexiconNER files
       val lexiconNER = if(enableLexiconNER) {
@@ -67,7 +64,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
       new LoadableAttributes(
         actions,
         extractorEngine, // ODIN component,
-        entityFinder,
+        entityFinders,
         lexiconNER
       )
     }
@@ -95,9 +92,9 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
   def extractFrom(doc: Document): Vector[Mention] = {
     // Prepare the initial state -- if you are using the entity finder then it contains the found entities,
     // else it is empty
-    val initalState = loadableAttributes.entityFinder match {
-      case None => new State()
-      case Some(ef) => State(ef.extract(doc))
+    val initalState = loadableAttributes.entityFinders match {
+      case Seq() => new State()
+      case efs => State(efs.flatMap(ef => ef.extract(doc)))
     }
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initalState).toVector
