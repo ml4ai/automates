@@ -4,22 +4,22 @@ rules:
 
   #you want smaller chunks to break up cases like LAI = 0, which is found as
   #one Concept if we use BI chunks
-  - name: stand_alone_noun
-    label: Concept
-    priority: 1
-    type: token
-    pattern: |
-      [chunk='I-NP'] | [chunk='B-NP']
-
-  #to find full NPs made up of BI-NP chunks, e.g., "the simulated leaf area index"
-  - name: simple-np
-    label: Concept
-    priority: 3
-    type: token
-    pattern: |
-      # avoids event triggers, coordinations, refs, etc.
-      [chunk='B-NP'] [chunk='I-NP']+ | [chunk='B-NP'] | [chunk='I-NP']
-      #[chunk='I-NP'] | [chunk='B-NP']
+  # - name: stand_alone_noun
+  #   label: Concept
+  #   priority: 1
+  #   type: token
+  #   pattern: |
+  #     [chunk='I-NP'] | [chunk='B-NP']
+  #
+  # #to find full NPs made up of BI-NP chunks, e.g., "the simulated leaf area index"
+  # - name: simple-np
+  #   label: Concept
+  #   priority: 3
+  #   type: token
+  #   pattern: |
+  #     # avoids event triggers, coordinations, refs, etc.
+  #     [chunk='B-NP'] [chunk='I-NP' & !mention=Avoid]+ | [chunk='B-NP']
+  #     #[chunk='I-NP'] | [chunk='B-NP']
 
 
 
@@ -131,7 +131,7 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     #action: variableArguments
     pattern: |
-      @Variable:Variable ( is| is defined as) @Definition:Concept
+      @Variable:Variable ( is| is defined as) (a|the) @Definition:Concept
 
   - name: var_definition_appos
     label: Definition
@@ -147,9 +147,10 @@ rules:
     #only works if I-NP and B-NP are separate chunks (done with the rule "stand_alone_noun")
   - name: var_equals_val
     label: Value
-    priority: 2
+    priority: 3
     type: token
     #action: variableArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
-      @trigger:Concept "=" @Value:Value
+      # @trigger:Concept "=" @Value:Value
+      @Variable:Variable (?<trigger> [word="="]) @Value:Value
