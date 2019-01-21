@@ -93,9 +93,12 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
     // Prepare the initial state -- if you are using the entity finder then it contains the found entities,
     // else it is empty
     val initalState = loadableAttributes.entityFinders match {
-      case Seq() => new State()
+
       case efs => State(efs.flatMap(ef => ef.extract(doc)))
+      case _ => new State()
     }
+    println(s"In extractFrom() -- res : ${initalState.allMentions.map(m => m.text).mkString(",\t")}")
+
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initalState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
@@ -139,4 +142,3 @@ object OdinEngine {
 
 
 }
-
