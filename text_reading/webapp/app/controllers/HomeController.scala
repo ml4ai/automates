@@ -55,32 +55,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     println(s"DOC : ${doc}")
     // extract mentions from annotated document
-    //val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
-//        val mentions_peliminary = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
-//        val mentions = for {
-//          m <- mentions_peliminary
-//          arg <- m.arguments.values.flatten
-//          arg.labels = "Var"
-//        } yield arg
-    val mentions_preliminary = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
-    println("prelim " + mentions_preliminary.length)
-    var mentions = for {
-      m <- mentions_preliminary
-      arg <- m.arguments.values.flatten
+    val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
 
-    } yield arg
-
-    println("len before grob " + mentions.length)
-
-    mentions_preliminary.foreach { m =>
-      //println(m.foundBy.mkString(" "))
-      if (m.foundBy.matches("GrobidEntityFinder")) {    // ("GrobidEntityFinder")) {
-        println(m.foundBy.mkString(""))
-        println("grobid mention " + m.text)
-        println("mentions length " + mentions.length)
-        mentions = mentions :+ m }
-    }
-    println("len after grob " + mentions.length)
     println(s"Done extracting the mentions ... ")
     println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
 
