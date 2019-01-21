@@ -19,7 +19,7 @@ rules:
     type: token
     pattern: |
       # avoid verbs with arguments
-      [outgoing=/^nsubj/]
+      [tag = /^V/ & outgoing=/^nsubj/]
 
   - name: "references-et-al"
     label: Avoid
@@ -28,3 +28,12 @@ rules:
     pattern: |
       # avoid xrefs
       [tag=NNP] "et" "al." @Avoid
+
+
+  - name: "equal_sign"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      #avoids equal signs
+      [word="="]

@@ -11,6 +11,13 @@ rules:
 
 
   # Extract the events
+  - import: "org/clulab/aske_automates/grammars/entities.yml"
+    vars:
+      rulepriority: "6"
+      addlabel: "Cause"
+      label: Causal
+      trigger: ${cause_triggers}
+
   - import: "org/clulab/aske_automates/grammars/template.yml"
     vars:
       rulepriority: "6"
