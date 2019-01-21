@@ -1,4 +1,3 @@
-
 The AutoMATES team will implement a module for automatically reading
 equations found in scientific papers describing models of interest.
 This section details the approach for data acquisition, model

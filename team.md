@@ -9,6 +9,7 @@ The members of the AutoMATES team.
 - [Adarsh Pyarelal](http://adarsh.cc) (co-PI)
 - [Rebecca Sharp](https://github.com/bsharpataz) (co-PI)
 - [Marco Valenzuela](https://github.com/marcovzla) (co-PI)
+- [Souratosh Khan](https://www.linkedin.com/in/souratosh-khan-ba01a8146) (Postdoctoral Fellow)
 - [Paul Hein](https://github.com/pauldhein) (Graduate Research Assistant)
 - [Pratik Bhandari](https://github.com/pratikbhd) (Graduate Research Assistant)
 - [Jennifer Kadowaki](https://jkadowaki.github.io/) (Graduate Research Assistant)
