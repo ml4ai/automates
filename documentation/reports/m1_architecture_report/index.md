@@ -1,6 +1,5 @@
 ---
 title: "Month 1 Report: Initial AutoMATES architecture, algorithms, and approaches"
-toc: true
 layout: post
 date: 2018-12-02
 ---
@@ -32,6 +31,8 @@ date: 2018-12-02
 
 ## 6. Model Analysis 
 {% include_relative model_analysis.md %}
+
+---
 
 ## 7. From GrFNs to DBNs
 {% include_relative delphi_representation.md %}
