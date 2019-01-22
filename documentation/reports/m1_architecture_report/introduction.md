@@ -28,6 +28,7 @@ columns below the heading:
 
 Extraction and Grounding are performed by three interacting pipelines:
 Program Analysis, Text Reading and Equation Reading. 
+
 1. The *Program Analysis* pipeline extracts program source code and
    associated comments and performs an analysis that identifies
    variables and the functional relationships between them, as
