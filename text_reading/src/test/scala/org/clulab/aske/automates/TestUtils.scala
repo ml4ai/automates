@@ -13,7 +13,7 @@ object TestUtils {
   // This is the standard way to extract mentions for testing
   def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = ieSystem.extractFromText(text, true, None)
 
-  def newEidosSystem(config: Config): OdinEngine = this.synchronized {
+  def newOdinSystem(config: Config): OdinEngine = this.synchronized {
     val eidosSystem =
       if (mostRecentOdinEngine.isEmpty) new OdinEngine(config)
       else if (mostRecentOdinEngine.get.config == config) mostRecentOdinEngine.get
@@ -30,15 +30,31 @@ object TestUtils {
   }
 
   class ExtractionTest(val ieSystem: OdinEngine) extends Test {
-    def this(config: Config = ConfigFactory.load("test")) = this(newEidosSystem(config))
+    def this(config: Config = ConfigFactory.load("test")) = this(newOdinSystem(config))
 
     def extractMentions(text: String): Seq[Mention] = TestUtils.extractMentions(ieSystem, text)
 
     // Event Specific
 
-    def testDefinitionEvent(m: Mention, variable: String, definitions: Seq[String]) = {
-      mentionHasArguments(m, "variable", Seq(variable))
-      mentionHasArguments(m, "definition", definitions)
+    def testDefinitionEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
+      val definedVariables = mentions.filter(_ matches "Definition")
+      definedVariables.length should be(desired.size)
+
+      val grouped = definedVariables.groupBy(_.arguments("variable").head.text) // we assume only one variable arg!
+      for {
+        (desiredVar, desiredDefs) <- desired
+        correspondingMentions = grouped.getOrElse(desiredVar, Seq())
+      } testDefinitionEvent(correspondingMentions, desiredVar, desiredDefs)
+    }
+
+    def testDefinitionEvent(ms: Seq[Mention], variable: String, definitions: Seq[String]) = {
+      val variableDefinitionPairs = for {
+        m <- ms
+        v <- m.arguments.getOrElse("variable", Seq()).map(_.text)
+        d <- m.arguments.getOrElse("definition", Seq()).map(_.text)
+      } yield (v, d)
+
+      definitions.foreach(d => variableDefinitionPairs should contain ((variable, d)))
     }
 
     // General Purpose
