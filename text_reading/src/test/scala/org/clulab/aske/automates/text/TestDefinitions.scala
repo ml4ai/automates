@@ -20,9 +20,3 @@ class TestDefinitions extends ExtractionTest {
   }
 
 }
-
-object TestMethods {
-
-
-}
-
