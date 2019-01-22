@@ -3,15 +3,13 @@ import tarfile
 import argparse
 import subprocess
 
-# todo: count how many total and also how many were skipped for main None
-# iterate over dirs at end and rename (with glob)
-# verbose flag
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('dirname') # the path with the arxiv arXiv_src_*_*.tar files
     parser.add_argument('outputdir')  # the path to store the expanded dirs
-    parser.add_argument('--keepall', action='store_true', default=False)
+    parser.add_argument('--keepall', action='store_true', default=False) # set to true to keep tarballs and pdfs
+    parser.add_argument('--verbose', action='store_true', default=False)
     args = parser.parse_args()
     return args
 
@@ -37,13 +35,24 @@ def mk_paper_dir(f):
         os.makedirs(paper_dir)
     return paper_dir
 
+def rename_dirs(outdir):
+    dirs_to_rename = glob.glob(os.path.join(outdir, "*/*_dir"))
+    for paper in dirs_to_rename:
+        new_path = paper[:-4]
+        os.rename(paper, new_path)
+
+
 # wdir: the path with the arxiv arXiv_src_*_*.tar files
-def expand_arxiv(wdir, outdir, keep_all):
+def expand_arxiv(wdir, outdir, keep_all, verbose):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
     arxiv_files = glob.glob(os.path.join(wdir, "*.tar"))
-    print "arXiv dump files to be expanded:", arxiv_files
+    if verbose:
+        print "arXiv dump files to be expanded:", arxiv_files
+
+    # counter for info purposes
+    handled = 0
 
     # expand the initial files, e.g., arXiv_src_1808_023.tar
     for fn in arxiv_files:
@@ -54,7 +63,7 @@ def expand_arxiv(wdir, outdir, keep_all):
         tar.extractall(path=outdir)
         tar.close()
 
-        counter = 0
+        file_counter = 0
         for f in extracted_files:
             # path to the extracted file that needs to be handled
             f = os.path.join(outdir, f)
@@ -62,7 +71,7 @@ def expand_arxiv(wdir, outdir, keep_all):
             # We expect that this file will be a gzipped file or a pdf
             # If it's a gzipped file (i.e., with latex source):
             if is_gz(f):
-                counter += 1
+                file_counter += 1
                 # gunzip it, return newly uncompressed filename
                 base_path = gunzip_file(f)
                 # make dir where paper contents will go
@@ -93,12 +102,22 @@ def expand_arxiv(wdir, outdir, keep_all):
             # There are a few other formats, we also will disregard them, but just in case we want to see
             # how many and of what type...
             else:
-                print "INFO: didn't handle file ", f
+                if verbose:
+                    print "INFO: didn't handle file ", f
                 # not removing here bc we get the main dir in the list, I guess bc of the api for
                 # tarfile.getnames()...
+        if verbose:
+            print "... finished extracting {0} papers".format(file_counter)
+        handled += file_counter
 
-        print "... finished extracting {0} papers".format(counter)
+    # Iterate and rename the directories
+    rename_dirs(outdir)
+
+
+    print "Finished, {0} arxiv papers expanded".format(handled)
+
+
 
 if __name__ == '__main__':
     args = parse_args()
-    expand_arxiv(args.dirname, args.outputdir, args.keepall)
+    expand_arxiv(args.dirname, args.outputdir, args.keepall, args.verbose)
