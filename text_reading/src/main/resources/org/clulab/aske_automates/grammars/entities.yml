@@ -122,31 +122,12 @@ rules:
     pattern: |
       "<" @variable:Concept "<"
 
-####DEFINITIONS####
-
-  - name: var_is_definition
-    label: Definition
-    priority: 6
-    type: token
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    #action: variableArguments
-    pattern: |
-      @variable:Variable ( is| is defined as) (a|the) @definition:Concept
-
-  - name: var_definition_appos
-    label: Definition
-    priority: 6
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    #action: variableArguments
-    pattern: |
-      @variable:Variable "-LRB-" @definition:Concept "-RRB-"
 
 ####VALUES####
 
     #only works if I-NP and B-NP are separate chunks (done with the rule "stand_alone_noun")
   - name: var_equals_val
-    label: Value
+    label: ParameterSetting
     priority: 3
     type: token
     #action: variableArguments
