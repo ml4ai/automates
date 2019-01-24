@@ -3,6 +3,7 @@ package org.clulab.aske.automates
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
 import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.aske.automates.OdinEngine._
 
 object TestUtils {
 
@@ -36,28 +37,42 @@ object TestUtils {
 
     // Event Specific
 
-    def testDefinitionEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
-      val definedVariables = mentions.filter(_ matches "Definition")
-      definedVariables.length should be(desired.size)
+    // Definition Events:
 
-      val grouped = definedVariables.groupBy(_.arguments("variable").head.text) // we assume only one variable arg!
+    def testDefinitionEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
+      testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
+    }
+
+    def testParameterSettingEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
+      testBinaryEvent(mentions, PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_ARG, desired)
+    }
+
+
+    // ParameterSetting Events:
+
+    def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Map[String, Seq[String]]): Unit = {
+      val found = mentions.filter(_ matches eventType)
+      found.length should be(desired.size)
+
+
+      val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
       for {
         (desiredVar, desiredDefs) <- desired
         correspondingMentions = grouped.getOrElse(desiredVar, Seq())
-      } testDefinitionEvent(correspondingMentions, desiredVar, desiredDefs)
-    }
-
-    def testDefinitionEvent(ms: Seq[Mention], variable: String, definitions: Seq[String]) = {
-      val variableDefinitionPairs = for {
-        m <- ms
-        v <- m.arguments.getOrElse("variable", Seq()).map(_.text)
-        d <- m.arguments.getOrElse("definition", Seq()).map(_.text)
-      } yield (v, d)
-
-      definitions.foreach(d => variableDefinitionPairs should contain ((variable, d)))
+      } testBinaryEvent(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
     }
 
     // General Purpose
+
+    def testBinaryEvent(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
+      val variableDefinitionPairs = for {
+        m <- ms
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(_.text)
+        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(_.text)
+      } yield (a1, a2)
+
+      arg2Strings.foreach(arg2String => variableDefinitionPairs should contain ((arg1String, arg2String)))
+    }
 
     def mentionHasArguments(m: Mention, argName: String, argValues: Seq[String]): Unit = {
       // Check that the desired number of that argument were found
