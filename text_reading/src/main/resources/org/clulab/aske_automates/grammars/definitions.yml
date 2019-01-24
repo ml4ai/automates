@@ -1,4 +1,4 @@
-cdvars: org/clulab/aske_automates/grammars/vars.yml
+vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
@@ -11,7 +11,7 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     #action: variableArguments
     pattern: |
-      @variable:Variable ( is| is defined as) (a|the) @definition:Concept
+      @variable:Variable ( is| is defined as) (an|a|the) @definition:Concept
 
   - name: var_definition_appos
     label: Definition
@@ -21,3 +21,26 @@ rules:
     #action: variableArguments
     pattern: |
       @variable:Variable "-LRB-" @definition:Concept "-RRB-"
+
+
+  - name: var_verb
+    label: Definition
+    priority: 4
+    type: dependency
+    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      trigger = [word=/(?i)^calculat|defin/]
+      variable:Concept+ = /${agents}/
+      defintion: Concept = /nmod_as|nmod_by|nmod_with/
+      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+  - name: var_cop_definition
+    label: Definition
+    priority: 4
+    type: dependency
+    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Concept+ = <cop /${agents}/
+      defintion: Concept = <cop
+      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
