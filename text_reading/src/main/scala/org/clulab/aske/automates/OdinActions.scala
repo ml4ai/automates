@@ -43,6 +43,26 @@ class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
     }
   }
 
+  def copyWithLabel(m: Mention, lab: String): Mention = {
+    val newLabels = taxonomy.hypernymsFor(lab)
+    val copy = m match {
+      case tb: TextBoundMention => tb.copy(labels = newLabels)
+      case rm: RelationMention => rm.copy(labels = newLabels)
+      case em: EventMention=> em.copy(labels = newLabels)
+      case _ => ???
+    }
+    copy
+  }
+
+  def variableArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val mentionsDisplayOnlyArgs = for {
+      m <- mentions
+      arg <- m.arguments.values.flatten
+      _ = println(s"current arg: ${arg.text}")
+    } yield copyWithLabel(arg, "Variable")
+
+    mentionsDisplayOnlyArgs
+  }
 
 }
 
