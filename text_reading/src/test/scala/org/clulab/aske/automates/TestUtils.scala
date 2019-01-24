@@ -37,7 +37,6 @@ object TestUtils {
 
     // Event Specific
 
-    // Definition Events:
 
     def testDefinitionEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
       testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
@@ -48,7 +47,15 @@ object TestUtils {
     }
 
 
-    // ParameterSetting Events:
+    // General Purpose
+
+    def testTextBoundMention(mentions: Seq[Mention], eventType: String, desired: Seq[String]): Unit = {
+      val found = mentions.filter(_ matches eventType).map(_.text)
+      found.length should be(desired.size)
+
+      desired.foreach(d => found should contain(d))
+    }
+
 
     def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Map[String, Seq[String]]): Unit = {
       val found = mentions.filter(_ matches eventType)
@@ -62,7 +69,6 @@ object TestUtils {
       } testBinaryEvent(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
     }
 
-    // General Purpose
 
     def testBinaryEvent(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
       val variableDefinitionPairs = for {
