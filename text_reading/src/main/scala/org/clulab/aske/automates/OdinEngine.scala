@@ -96,7 +96,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
       case efs => State(efs.flatMap(ef => ef.extract(doc)))
       case _ => new State()
     }
-    println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
+    // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
