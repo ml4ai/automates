@@ -135,6 +135,16 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
 
 object OdinEngine {
 
+  // Mention labels
+  val DEFINITION_LABEL: String = "Definition"
+  val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
+  val VALUE_LABEL: String = "Value"
+  val VARIABLE_LABEL: String = "Variable"
+  // Mention argument types
+  val VARIABLE_ARG: String = "variable"
+  val DEFINITION_ARG: String = "definition"
+  val VALUE_ARG: String = "value"
+
   val logger = LoggerFactory.getLogger(this.getClass())
   // Used by LexiconNER
   val NER_OUTSIDE = "O"
