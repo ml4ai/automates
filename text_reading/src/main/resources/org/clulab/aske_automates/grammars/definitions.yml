@@ -23,6 +23,7 @@ rules:
       @variable:Variable "-LRB-" @definition:Concept "-RRB-"
 
 
+    #todo: with these, more tests fail
   - name: var_verb
     label: Definition
     priority: 4
