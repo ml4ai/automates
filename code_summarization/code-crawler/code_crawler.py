@@ -124,7 +124,11 @@ class CodeCrawler():
 
     def build_code_comment_pairs(self, outpath):
         if not self.functions:
-            raise RuntimeWarning("Function dataset has not been built!!")
+            code_path = join(outpath + "code.pkl")
+            if isfile(code_path):
+                self.functions = pickle.load(open(code_path, "rb"))
+            else:
+                raise RuntimeWarning("Function dataset has not been built!!")
 
         filepath = join(outpath, "{}.pkl".format(self.name))
         code_filepath = join(outpath, "clean_code_data.pkl")

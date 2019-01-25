@@ -1,8 +1,0 @@
-dynet
-torch
-torchtext
-torchvision
-autograd
-tangent
-chainer
-h5py
