@@ -22,19 +22,62 @@ class TestDefinitions extends ExtractionTest {
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
 
   val t1 = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+  passingTest should "extract definitions from t1" in {
+    val desired = Map(
+      "Kcs" -> Seq("Crop coefficients")
+    )
+    val mentions = extractMentions(t1)
+    testDefinitionEvent(mentions, desired)
+  }
+
 
   val t2 = "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 " +
     "(Sau et al., 2004; Thorp et al., 2010), and Kcs is the DSSAT-CSM crop coefficient."
+  passingTest should "extract definitions from t2" in {
+    val desired = Map(
+      "LAI" -> Seq("simulated leaf area index"),
+      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0")
+    )
+    val mentions = extractMentions(t2)
+    testDefinitionEvent(mentions, desired)
+  }
 
-  val t3 = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop coefficient " +
-    "at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
+  val t3 = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
+    "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
+  passingTest should "find definitions from t3" in {
+    val desired = Map(
+      "Kcdmin" -> Seq("minimum crop coefficient"),
+      "Kcdmax" -> Seq("maximum crop coefficient"), // Seq("maximum crop coefficient at high LAI"), fixme?
+      "SKc" -> Seq("shaping parameter")
+    )
+    val mentions = extractMentions(t3)
+    testDefinitionEvent(mentions, desired)
+  }
 
   val t4 = "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+  passingTest should "extract definitions from t4" in {
+    val desired = Map(
+      "E0" -> Seq("potential crop ET")
+    )
+    val mentions = extractMentions(t4)
+    testDefinitionEvent(mentions, desired)
+  }
 
   val t5 = "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
+  passingTest should "find NO definitions from t5" in {
+    val desired = Map.empty[String, Seq[String]]
+    val mentions = extractMentions(t5)
+    testDefinitionEvent(mentions, desired)
+  }
 
   val t6 = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-
+  passingTest should "find definitions from t6" in {
+    val desired = Map(
+      "E0" -> Seq("product of Kcd and ETpm")
+    )
+    val mentions = extractMentions(t6)
+    testDefinitionEvent(mentions, desired)
+  }
   // Tests from paper: 2016-Camargo-and Kemanian-Six-crop-models differ-in-their-simulation-of water-uptake
 
   val t7 = "In APSIM, water uptake (Ta, mm d−1) is determined from potential transpiration demand (Tp, mm d−1), soil " +
