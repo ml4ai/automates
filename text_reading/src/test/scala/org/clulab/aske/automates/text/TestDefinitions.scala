@@ -98,7 +98,7 @@ class TestDefinitions extends ExtractionTest {
     " \\\"pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
     "is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be " +
     "supplied to the plant from each rooted soil layer."
-  passingTest should "find definitions from t9" in {
+  passingTest should "find definitions from t8" in {
     val desired = Map(
       "fi" -> Seq("daily fractional light interception"),
       "ETo" -> Seq("daily reference evapotranspiration"),
