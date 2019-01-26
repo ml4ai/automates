@@ -58,7 +58,6 @@ class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
     val mentionsDisplayOnlyArgs = for {
       m <- mentions
       arg <- m.arguments.values.flatten
-      _ = println(s"current arg: ${arg.text}")
     } yield copyWithLabel(arg, "Variable")
 
     mentionsDisplayOnlyArgs
