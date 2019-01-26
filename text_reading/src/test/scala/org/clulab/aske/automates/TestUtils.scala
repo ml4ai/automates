@@ -2,10 +2,18 @@ package org.clulab.aske.automates
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
 
 object TestUtils {
+
+  class TesterTag extends Tag("TesterTag")
+
+  object Nobody   extends TesterTag
+  object Somebody extends TesterTag
+  object Andrew   extends TesterTag
+  object Becky    extends TesterTag
+  object Masha    extends TesterTag
 
   val successful = Seq()
 
