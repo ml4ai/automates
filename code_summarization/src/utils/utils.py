@@ -1,3 +1,4 @@
+from pathlib import Path
 import pickle
 import os
 
@@ -7,6 +8,9 @@ from torchtext import vocab
 import torch.nn.functional as F
 
 from sklearn.metrics import f1_score, precision_score, recall_score
+
+
+CODE_CORPUS = Path(os.environ["CODE_CORPUS"])
 
 
 def accuracy_score(data):
