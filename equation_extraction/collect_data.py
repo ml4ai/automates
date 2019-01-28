@@ -18,7 +18,7 @@ from latex import tokenize, extract_equations, find_main_tex_file
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('dirname')
+    parser.add_argument('indir')
     parser.add_argument('--outdir', default='output')
     parser.add_argument('--template', default='misc/template.tex')
     args = parser.parse_args()
@@ -97,7 +97,7 @@ def list_paper_dirs(indir):
 def process_paper(dirname, template, outdir):
     texfile = find_main_tex_file(dirname)
     paper_id = os.path.basename(os.path.normpath(dirname))
-    outdir = os.path.abspath(os.path.join(outdir, paper_id))
+    outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id))
     # read latex tokens from document
     tokens = tokenize(texfile)
     # extract equations from token stream
@@ -155,4 +155,6 @@ def process_paper(dirname, template, outdir):
 
 if __name__ == '__main__':
     args = parse_args()
-    process_paper(args.dirname, args.template, args.outdir)
+    for paper_dir in list_paper_dirs(args.indir):
+        print('processing', paper_dir)
+        process_paper(paper_dir, args.template, args.outdir)
