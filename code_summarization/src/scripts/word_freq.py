@@ -1,9 +1,12 @@
 import pickle
 import sys
 
+from utils.utils import CODE_CORPUS
+
 
 min_freq = int(sys.argv[1])
-code_data = pickle.load(open("../../data/corpus/code-comment-corpus.pkl", "rb"))
+code_path = CODE_CORPUS / "corpus" / "code-comment-corpus.pkl"
+code_data = pickle.load(open(code_path, "rb"))
 words = [word for code, comm in code_data.values() for word in code]
 word_counts = dict()
 for word in words:

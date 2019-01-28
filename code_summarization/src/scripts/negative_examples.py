@@ -1,7 +1,6 @@
 from copy import deepcopy
 import random
 import pickle
-import sys
 
 from tqdm import tqdm
 import numpy as np
@@ -10,7 +9,6 @@ import utils.utils as utils
 
 code_comm_corpus_path = utils.CODE_CORPUS / "corpus" / "code-comment-corpus.pkl"
 pos_neg_path = utils.CODE_CORPUS / "corpus" / "pos-neg-corpus.pkl"
-
 code_comm_data = pickle.load(open(code_comm_corpus_path, "rb"))
 
 full_dataset = dict()
@@ -29,7 +27,7 @@ for key in tqdm(data_pair_keys[:100], desc="Finding negs"):
     full_dataset[key] = {
         "code": positive_example[0],
         "comm": positive_example[1],
-        "negs": negative_examples
+        "random_negs": negative_examples
     }
     index = random.randint(0, len(data_pair_keys) - 1)
     shuffled_keys.insert(index, key_string)

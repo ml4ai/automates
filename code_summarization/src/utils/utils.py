@@ -2,10 +2,8 @@ from pathlib import Path
 import pickle
 import os
 
-import torch
 from torchtext import data
 from torchtext import vocab
-import torch.nn.functional as F
 
 from sklearn.metrics import f1_score, precision_score, recall_score
 
@@ -23,7 +21,7 @@ def accuracy_score(data):
     return 100 * sum([1 if p == t else 0 for p, t in data]) / len(data)
 
 
-def load_all_data(data_path, batch_size):
+def load_all_data(batch_size):
     """
     This function loads all data necessary for training and evaluation of a
     code/comment classification model. Data is loaded from a TSV file that
@@ -34,14 +32,14 @@ def load_all_data(data_path, batch_size):
     function also loads pretrained word embedding vectors that are located in
     the data_path directory.
 
-    :param data_path: [String] -- path to location of all input data
+    :param batch_size: [int] -- amount of data elements per batch
     :returns: [Tuple] -- (TRAIN set of batches,
                           DEV set of batches,
                           TEST set of batches,
                           code pretrained vectors,
                           docstring pretrained vectors)
     """
-
+    input_path = CODE_CORPUS / "input"
     # Create a field variable for each field that will be in our TSV file
     code_field = data.Field(sequential=True, tokenize=lambda s: s.split(" "),
                             include_lengths=True, use_vocab=True)
@@ -60,17 +58,17 @@ def load_all_data(data_path, batch_size):
     ]
 
     # Build the large tabular dataset using the defined fields
-    tsv_file_path = os.path.join(data_path, "classification_data.tsv")
+    tsv_file_path = input_path / "classification_data.tsv"
     tab_data = data.TabularDataset(tsv_file_path, "TSV", train_val_fields)
 
     # Split the large dataset into TRAIN, DEV, TEST portions
-    train_data, dev_data, test_data = tab_data.split(split_ratio=[0.92, 0.03, 0.05])
+    train_data, dev_data, test_data = tab_data.split(split_ratio=[0.85, 0.05, 0.1])
 
     # Load the pretrained word embedding vectors
-    code_vec_path = os.path.join(data_path, "code-vectors.txt")
-    comm_vec_path = os.path.join(data_path, "comm-vectors.txt")
-    code_vectors = vocab.Vectors(code_vec_path, data_path)
-    comm_vectors = vocab.Vectors(comm_vec_path, data_path)
+    code_vec_path = input_path / "code-vectors.txt"
+    comm_vec_path = input_path / "comm-vectors.txt"
+    code_vectors = vocab.Vectors(code_vec_path, input_path)
+    comm_vectors = vocab.Vectors(comm_vec_path, input_path)
 
     # Builds the known word vocab for code and comments from the pretrained vectors
     code_field.build_vocab(train_data, dev_data, test_data, vectors=code_vectors)
@@ -83,7 +81,6 @@ def load_all_data(data_path, batch_size):
         sort_key=lambda x: (len(x.code), len(x.comm)),  # Allows for auto-batching by instance size
         batch_size=batch_size,                          # size of batches (for all three datasets)
         repeat=False,                                   # TODO: fill in this
-        # sort_within_batch=True,                         # Required for padding/unpadding
         shuffle=True                                    # Shuffle after full iteration
     )
 

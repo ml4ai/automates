@@ -17,7 +17,7 @@ def main(args):
     torch.manual_seed(17)   # Randomly seed PyTorch
 
     # Load train, dev, test iterators with auto-batching and pretrained vectors
-    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data("../data/input/", args.batch_size)
+    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size)
 
     # Pick a model to train
     if args.model == "both":
