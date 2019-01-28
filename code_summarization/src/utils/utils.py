@@ -1,12 +1,14 @@
+from pathlib import Path
 import pickle
 import os
 
-import torch
 from torchtext import data
 from torchtext import vocab
-import torch.nn.functional as F
 
 from sklearn.metrics import f1_score, precision_score, recall_score
+
+
+CODE_CORPUS = Path(os.environ["CODE_CORPUS"])
 
 
 def accuracy_score(data):
@@ -19,7 +21,7 @@ def accuracy_score(data):
     return 100 * sum([1 if p == t else 0 for p, t in data]) / len(data)
 
 
-def load_all_data(data_path, batch_size):
+def load_all_data(batch_size):
     """
     This function loads all data necessary for training and evaluation of a
     code/comment classification model. Data is loaded from a TSV file that
@@ -30,14 +32,14 @@ def load_all_data(data_path, batch_size):
     function also loads pretrained word embedding vectors that are located in
     the data_path directory.
 
-    :param data_path: [String] -- path to location of all input data
+    :param batch_size: [int] -- amount of data elements per batch
     :returns: [Tuple] -- (TRAIN set of batches,
                           DEV set of batches,
                           TEST set of batches,
                           code pretrained vectors,
                           docstring pretrained vectors)
     """
-
+    input_path = CODE_CORPUS / "input"
     # Create a field variable for each field that will be in our TSV file
     code_field = data.Field(sequential=True, tokenize=lambda s: s.split(" "),
                             include_lengths=True, use_vocab=True)
@@ -56,17 +58,17 @@ def load_all_data(data_path, batch_size):
     ]
 
     # Build the large tabular dataset using the defined fields
-    tsv_file_path = os.path.join(data_path, "classification_data.tsv")
+    tsv_file_path = input_path / "classification_data.tsv"
     tab_data = data.TabularDataset(tsv_file_path, "TSV", train_val_fields)
 
     # Split the large dataset into TRAIN, DEV, TEST portions
-    train_data, dev_data, test_data = tab_data.split(split_ratio=[0.92, 0.03, 0.05])
+    train_data, dev_data, test_data = tab_data.split(split_ratio=[0.85, 0.05, 0.1])
 
     # Load the pretrained word embedding vectors
-    code_vec_path = os.path.join(data_path, "code-vectors.txt")
-    comm_vec_path = os.path.join(data_path, "comm-vectors.txt")
-    code_vectors = vocab.Vectors(code_vec_path, data_path)
-    comm_vectors = vocab.Vectors(comm_vec_path, data_path)
+    code_vec_path = input_path / "code-vectors.txt"
+    comm_vec_path = input_path / "comm-vectors.txt"
+    code_vectors = vocab.Vectors(code_vec_path, input_path)
+    comm_vectors = vocab.Vectors(comm_vec_path, input_path)
 
     # Builds the known word vocab for code and comments from the pretrained vectors
     code_field.build_vocab(train_data, dev_data, test_data, vectors=code_vectors)
@@ -79,8 +81,7 @@ def load_all_data(data_path, batch_size):
         sort_key=lambda x: (len(x.code), len(x.comm)),  # Allows for auto-batching by instance size
         batch_size=batch_size,                          # size of batches (for all three datasets)
         repeat=False,                                   # TODO: fill in this
-        sort_within_batch=True,                         # Required for padding/unpadding
-        # shuffle=True                                    # Shuffle after full iteration
+        shuffle=True                                    # Shuffle after full iteration
     )
 
     # We need to return the test sets and the field pretrained vectors
@@ -98,70 +99,6 @@ def save_translations(translations, filepath):
 def save_scores(s, filepath):
     """Saves a set of classifications."""
     pickle.dump(s, open(filepath, "wb"))
-
-
-def train_on_batch(model, optimizer, batch, use_gpu):
-    """
-    Given a model, optimizer and a batch of training data perform classification
-    of the training data using the model, propagate loss as needed and update
-    the optimizer.
-
-    :param model:     [nn.Module] -- A classification network
-    :param optimizer: [torch Optimizer] -- A net param optimizier
-    :param batch:     [Tuple] -- All data needed for several training instances
-    :param use_gpu:   [Bool] -- Whether to use a GPU(s) for training
-    """
-    model.zero_grad()   # Clear current gradient
-
-    # Get the label into a tensor for loss prop
-    truth = torch.autograd.Variable(batch.label).long()
-    if use_gpu:
-        truth = truth.cuda()
-
-    # Transpose the input data from batch storage to network form
-    # Batch storage will store the code/docstring data as column data, we need
-    # them in row data form to be embedded.
-    code = batch.code[0].transpose(0, 1)
-    comm = batch.comm[0].transpose(0, 1)
-
-    outputs = model((code, comm))           # Run the model using the batch
-    loss = F.cross_entropy(outputs, truth)  # Get loss from log(softmax())
-    loss.backward()                         # Propagate loss
-    optimizer.step()                        # Update the optimizer
-
-
-def score_dataset(model, dataset):
-    """
-    Given a neural net classification model and a dataset of batches, evaluate
-    the model on all the batches and return the predictions along with the truth
-    values for every batch.
-
-    :param model:   [nn.Module] -- A classification network (single arg)
-    :param dataset: [Batch Iterator] -- The training set of batches
-    :returns:       [List[Tuple]] -- A flat list of tuples, one tuple for each
-                                     training instance, where the tuple is of
-                                     the form (prediction, truth)
-    """
-    scores = list()
-    model.eval()    # Set the model to evaluation mode
-    with torch.no_grad():
-        for i, batch in enumerate(dataset):
-            # Prepare input batch data for classification
-            code = batch.code[0].transpose(0, 1)
-            comm = batch.comm[0].transpose(0, 1)
-
-            # Run the model on the input batch
-            output = model((code, comm))
-
-            # Get predictions for every instance in the batch
-            preds = torch.argmax(F.softmax(output, dim=1), dim=1).cpu().numpy()
-
-            # Prepare truth data
-            truth = batch.label.cpu().numpy()
-
-            # Add new tuples to output
-            scores.extend([(int(p), int(t)) for p, t in zip(preds, truth)])
-    return scores
 
 
 def score_classifier(data):
