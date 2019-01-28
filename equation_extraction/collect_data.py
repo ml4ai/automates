@@ -3,6 +3,7 @@
 from __future__ import division, print_function
 
 import os
+import re
 import json
 import argparse
 import subprocess
@@ -74,6 +75,22 @@ def match_template(pages, template):
     upper_left = best_loc
     lower_right = (best_loc[0] + w, best_loc[1] + h)
     return best_val, best_page, upper_left, lower_right
+
+
+
+def list_paper_dirs(indir):
+    """
+    gets a directory that is expected to contain directories of the form
+    `1810` which themselves would contain directories of the form `1810.04805`
+    with the tex source for the corresponding paper in arxiv, and returns
+    the directory paths to the directories with the papers source
+    """
+    for chunk in os.listdir(indir):
+        if re.match(r'^\d{4}$', chunk):
+            chunkdir = os.path.join(indir, chunk)
+            for paper in os.listdir(chunkdir):
+                if re.match(r'^\d{4}\.\d{5}$', paper):
+                    yield os.path.join(chunkdir, paper)
 
 
 
