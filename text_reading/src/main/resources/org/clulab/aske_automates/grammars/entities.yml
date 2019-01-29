@@ -24,13 +24,13 @@ rules:
 
 
 ####VARIABLES####
-  - name: var-calculation_of
+  - name: var-noun_of
     label: Variable
     priority: 4
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
-      (?<=calculation of) @Concept
+      (?<=calculation of|value of) @Concept
 
   - name: var-calculation
     label: Variable

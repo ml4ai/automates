@@ -27,5 +27,16 @@ class TestParameterSetting  extends ExtractionTest {
     val mentions = extractMentions(t1)
     testParameterSettingEvent(mentions, desired)
   }
+//
+//  val t2 = "The value of Kcbmax was varied between 0.9 and 1.4 with a base level of Kcbmax = 1.15, which is the " +
+//    "tabular value from FAO-56 (Allen et al., 1998) for both crops."
+//  passingTest should s"extract definitions from t1: ${t2}" taggedAs(Somebody) in {
+//    val desired = Map(
+//      "Kcbmax" -> Seq("0.9", "1.4"), // todo: depends on how we decide to return intervals
+//      "Kcbmax" -> Seq("1.15") //todo is this going to break if there are two kcbmax values
+//    )
+//    val mentions = extractMentions(t2)
+//    testParameterSettingEvent(mentions, desired)
+//  }
 
 }
