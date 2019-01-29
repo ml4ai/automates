@@ -3,13 +3,9 @@ As outlined in our previous report, structural comparison of two competing facto
 
 The team has accomplished the task of discovering the portion of two factor networks that is derived from shared inputs and outputs for the two evapo-transpiration models shown in our project proposal.
 
-<p align="center">
-<img src="figs/cmb_pt.png" width="75%">
-</p>
+![Forward influence blanket for the Priestley-Taylor model](figs/cmb_pt.png)
 
-<p align="center">
-<img src="figs/cmb_asce.png" width="90%">
-</p>
+![Forward influence blanket for the ASCE model](figs/cmb_asce.png)
 
 ### Forward Influence Blanket (FIB) description
 
