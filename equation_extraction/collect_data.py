@@ -30,10 +30,22 @@ def render_tex(filename, outdir):
     """render latex document"""
     dirname = os.path.dirname(filename)
     basename = os.path.basename(filename)
-    command = ['latexmk', '-outdir=' + outdir, '-pdf', basename]
-    returncode = subprocess.call(command, cwd=dirname)
-    pdf_name = os.path.join(outdir, os.path.splitext(basename)[0] + '.pdf')
+    command = ['latexmk', '-halt-on-error', '-outdir=' + outdir, '-pdf', basename]
+    return_code = run_command(command, dirname, os.path.join(outdir, basename + '.automates_logfile'))
+    if return_code == 0:
+        pdf_name = os.path.join(outdir, os.path.splitext(basename)[0] + '.pdf')
+    else:
+        pdf_name = None
     return pdf_name
+
+
+
+def run_command(cmd, dirname, log_fn):
+    with open(log_fn, 'w') as logfile:
+        p = subprocess.Popen(cmd, stdout=logfile, stderr=subprocess.STDOUT, cwd=dirname)
+        p.communicate()
+        return_code = p.wait()
+        return return_code
 
 
 
@@ -45,7 +57,10 @@ def render_equation(equation, template, filename):
     with open(filename, 'w') as f:
         f.write(equation_tex)
     pdf_name = render_tex(filename, dirname)
-    image = get_pages(pdf_name)[0]
+    if pdf_name:
+        image = get_pages(pdf_name)[0]
+    else:
+        image = None
     return image
 
 
@@ -98,6 +113,8 @@ def process_paper(dirname, template, outdir):
     texfile = find_main_tex_file(dirname)
     paper_id = os.path.basename(os.path.normpath(dirname))
     outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id))
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     # read latex tokens from document
     tokens = tokenize(texfile)
     # extract equations from token stream
@@ -131,6 +148,9 @@ def process_paper(dirname, template, outdir):
             # make pdf
             fname = os.path.join(outdir, eq_name, 'equation.tex')
             equation = render_equation(eq_tex, template, fname)
+            if equation is None:
+                # equation couldn't be rendered
+                continue
             # find page and aabb where equation appears
             match, p, start, end = match_template(pages, equation)
             # write image with aabb
