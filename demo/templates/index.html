@@ -1,51 +1,45 @@
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" 
-          content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <link rel="stylesheet" 
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
-          crossorigin="anonymous">
-
-
-    <script src="static/codemirror/lib/codemirror.js"></script>
-    <link rel="stylesheet" href="static/codemirror/lib/codemirror.css" />
-    <script src="static/codemirror/mode/fortran/fortran.js"></script>
-    <link rel="stylesheet" href="static/codemirror/theme/monokai.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.12.0/addon/display/placeholder.js"></script>
-    <script type="text/javascript" async
-      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
-    </script>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
-            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
-            crossorigin="anonymous"> </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
-            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
-            crossorigin="anonymous"> </script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
-            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.8/cytoscape.js"> </script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.4/dagre.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.2.2/cytoscape-dagre.min.js"></script>
-    <script src="https://unpkg.com/popper.js"></script>
-	<script src="static/cytoscape-popper.js"></script>
-	<script src="https://unpkg.com/tippy.js@2.0.9/dist/tippy.all.js"></script>
-	<link rel="stylesheet" href="static/tippy.css" />
-
-    <style> .CodeMirror { height: 90%; font-family: Fira Code, Menlo, Consolas, monospace; font-size: 0.8rem} </style>
-    <link rel="stylesheet" href="static/style.css">
-  </head>
+  {% include "head.html" %}
   <body>
     <div class="container-fluid"> 
-      <div class="row justify-content-md-center border">
+      <div class="row justify-content-md-center border" style="padding: 10px;">
         <h1>AutoMATES Demo</h1>
+          <br>
+      </div>
+      <div class="row justify-content-md-left">
+        <div class="col border" style="padding: 10px">
+          <p>Input Fortran code in the code editor area below (for two examples
+          that have been tested with this webapp, see the following (you can
+          just copy and paste the code into the editor) and hit the 'Submit'
+          button:<p>
+          <ul>
+            <li>
+              <a href="https://raw.githubusercontent.com/ml4ai/delphi/master/tests/data/crop_yield.f">crop_yield.f: </a>
+              A toy example of a crop yield model that contains some important
+              representative Fortran features for control flow like for-loops
+              and conditional statements. 
+            </li>
+            <li>
+              <a href="https://raw.githubusercontent.com/ml4ai/delphi/master/tests/data/PETPT.for">PETPT.for:</a>
+              A 'real-world' example of a model - this is the Priestley-Taylor
+              model of Potential Evapotranspiration, as implemented in the 
+              <a href="https://dssat.net">DSSAT</a>
+              crop model.
+            </li>
+          </ul>
+        </div>
+        <div class="col" style="padding: 10px">
+          Things you can try doing:
+          <ul>
+            <li>Click on the __assign__ nodes to view the equation that is
+              automatically constructed from the code, and typeset with LaTeX.</li>
+            <li>Rename a variable in the code and resubmit it for processing
+              (make sure to rename all instances of it in the code!)
+          <ul>
+        </div>
       </div>
       <div class="row justify-content-md-center border">
         <div class="col-sm-4 border">
-          Input Fortran code here:
           <form method="POST" action="/processCode">
             {{ form.source_code }}
             <input type="submit" value="Submit">
@@ -55,74 +49,7 @@
       </div>
     </div>
       <script>
-        var cy = cytoscape({
-        container: document.getElementById('cy'),
-          elements: {{ elementsJSON | safe }},
-          style: [
-                  { selector: 'node',
-                    style: { 
-                        'label': 'data(label)',
-                        'shape': 'data(shape)',
-                        'background-color': 'white',
-                        'border-color': 'data(color)',
-                        'border-width': '3pt',
-                        'font-family': 'Menlo, monospace',
-                        'width':'label',
-                        'text-valign': 'data(textValign)',
-                        'padding': 15,
-                    } 
-                  }, { 
-                    selector: 'edge',
-                    style: { 
-                      'curve-style' : 'bezier',
-                      'target-arrow-shape': 'triangle',
-                    } 
-                  }, { 
-                    selector: '.selectedNode',
-                    style: { 
-                      'background-color': '#d3d3d3',
-                    } 
-                  }
-              ],
-          layout: { name: 'dagre' , rankDir: 'TB'},
-          maxZoom : 10,
-          minZoom : 0.1,
-          selectionType: 'single'
-        });
-
-        var makeTippy = function(node){
-            return tippy(node.popperRef(), {
-                html: (function(){
-                    var div = document.createElement('div');
-                    div.innerHTML = node.data('tooltip');
-                    return div;
-                })(),
-                trigger: 'manual',
-                arrow: true,
-                placement: 'bottom',
-                hideOnClick: 'toggle',
-                multiple: true,
-                sticky: true
-            } ).tooltips[0];
-        };
-        cy.nodes().forEach(function(ele){
-          ele.scratch()._tippy = makeTippy(ele);
-        });
-        cy.on('tap', 'node', function(evt){
-          cy.$(':selected').removeClass('selectedNode');
-          var node = evt.target;
-          node.toggleClass('selectedNode');
-          if (!node.selected()){
-            node.select();
-            node.scratch()._tippy.show();
-            MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-          }
-          else {
-            node.deselect();
-            node.scratch()._tippy.hide();
-          }
-        });
-
+      {% include "cyjs.js" %}
       </script>
   </body>
 </html>
