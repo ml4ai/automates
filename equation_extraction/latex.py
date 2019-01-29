@@ -55,58 +55,66 @@ def read_group(tokens):
 
 
 
-def extract_equations(tokens):
-    try:
-        while True:
-            token = next(tokens)
-            if token.data == 'begin':
-                group_name = read_group(tokens)[0]
-                if group_name in ('equation', 'equation*', 'align', 'align*'):
-                    equation = []
-                    while True:
-                        t = next(tokens)
-                        if t.data == 'end':
-                            name, ts = read_group(tokens)
-                            if name == group_name:
-                                break
+class LatexTokenizer:
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.tokens = list(self.itertokens())
+
+    def __iter__(self):
+        return iter(self.tokens)
+
+    def itertokens(self):
+        """read tex tokens, including imported files"""
+        dirname = os.path.dirname(self.filename)
+        tex = TeX(file=self.filename)
+        tokens = tex.itertokens()
+        try:
+            while True:
+                token = next(tokens)
+                if token.data == 'input':
+                    fname = os.path.join(dirname, read_group(tokens)[0])
+                    fname = maybe_add_extension(fname)
+                    for t in LatexTokenizer(fname):
+                        yield t
+                elif token.data == 'import':
+                    # TODO handle \subimport, and also \import* and \subimport*
+                    raise NotImplementedError("we don't handle \\import yet")
+                elif token.data == 'include':
+                    # TODO be aware of \includeonly
+                    raise NotImplementedError("we don't handle \\include yet")
+                else:
+                    yield token
+        except StopIteration:
+            pass
+
+    def equations(self):
+        tokens = iter(self.tokens)
+        try:
+            while True:
+                token = next(tokens)
+                if token.data == 'begin':
+                    group_name = read_group(tokens)[0]
+                    if group_name in ('equation', 'equation*', 'align', 'align*'):
+                        equation = []
+                        while True:
+                            t = next(tokens)
+                            if t.data == 'end':
+                                name, ts = read_group(tokens)
+                                if name == group_name:
+                                    break
+                                else:
+                                    equation.append(t)
+                                    equation += ts
                             else:
                                 equation.append(t)
-                                equation += ts
-                        else:
-                            equation.append(t)
-                    yield (group_name, equation)
-            # TODO add support for other math environments
-    except StopIteration:
-        pass
-
-
-
-def tokenize(filename):
-    """read tex tokens, including imported files"""
-    dirname = os.path.dirname(filename)
-    tex = TeX(file=filename)
-    tokens = tex.itertokens()
-    try:
-        while True:
-            token = next(tokens)
-            if token.data == 'input':
-                fname = os.path.join(dirname, read_group(tokens)[0])
-                fname = maybe_add_extension(fname)
-                for t in tokenize(fname):
-                    yield t
-            elif token.data == 'import':
-                # TODO handle \subimport, and also \import* and \subimport*
-                raise NotImplementedError("we don't handle \\import yet")
-            elif token.data == 'include':
-                # TODO be aware of \includeonly
-                raise NotImplementedError("we don't handle \\include yet")
-            else:
-                yield token
-    except StopIteration:
-        pass
+                        yield (group_name, equation)
+                # TODO add support for other math environments
+        except StopIteration:
+            pass
 
 
 
 if __name__ == '__main__':
-    for t in tokenize(find_main_tex_file(sys.argv[1])):
+    for t in LatexTokenizer(find_main_tex_file(sys.argv[1])):
         print(type(t), repr(t))

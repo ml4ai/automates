@@ -12,7 +12,7 @@ import jinja2
 import numpy as np
 from skimage import img_as_ubyte
 from pdf2image import convert_from_path
-from latex import tokenize, extract_equations, find_main_tex_file
+from latex import LatexTokenizer, find_main_tex_file
 
 
 
@@ -118,9 +118,9 @@ def process_paper(dirname, template, outdir):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     # read latex tokens from document
-    tokens = tokenize(texfile)
+    tokenizer = LatexTokenizer(texfile)
     # extract equations from token stream
-    equations = extract_equations(tokens)
+    equations = tokenizer.equations()
     # compile pdf from document
     pdf_name = render_tex(texfile, outdir)
     # retrieve pdf pages as images
