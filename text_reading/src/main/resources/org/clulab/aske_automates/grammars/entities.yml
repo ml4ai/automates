@@ -1,4 +1,4 @@
-cdvars: org/clulab/aske_automates/grammars/vars.yml
+vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 

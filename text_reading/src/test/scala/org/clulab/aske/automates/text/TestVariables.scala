@@ -14,4 +14,13 @@ class TestVariables extends ExtractionTest {
       testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
+
+  passingTest should "find variables 2" in {
+    val text = "Note that Kcdmax in equation 5 is different from Kcdmax in equation A6."
+
+    val desired = Seq("Kcdmax", "Kcdmax")
+    val mentions = extractMentions(text)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
+  }
+
 }
