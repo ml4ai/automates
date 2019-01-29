@@ -3,8 +3,13 @@ from __future__ import print_function
 import os
 import sys
 import glob
+from collections import namedtuple
 from plasTeX.TeX import TeX
 from plasTeX.Tokenizer import BeginGroup, EndGroup
+
+
+
+MacroDef = namedtuple('MacroDef', 'n_args definition')
 
 
 
@@ -55,11 +60,35 @@ def read_group(tokens):
 
 
 
+def read_balanced_brackets(tokens):
+    """
+    returns the contents of a group (i.e. curly brackets)
+    including the curly brackets
+    may contain nested curly brackets
+    """
+    t = next(tokens)
+    assert isinstance(t, BeginGroup)
+    n_open = 1
+    capture = [t]
+    while True:
+        t = next(tokens)
+        capture.append(t)
+        if isinstance(t, BeginGroup):
+            n_open += 1
+        elif isinstance(t, EndGroup):
+            n_open -= 1
+        if n_open == 0:
+            break
+    return capture
+
+
+
 class LatexTokenizer:
 
     def __init__(self, filename):
         self.filename = filename
         self.tokens = list(self.itertokens())
+        self.macros_lut = {}
 
     def __iter__(self):
         return iter(self.tokens)
@@ -83,6 +112,12 @@ class LatexTokenizer:
                 elif token.data == 'include':
                     # TODO be aware of \includeonly
                     raise NotImplementedError("we don't handle \\include yet")
+                elif token.data == 'newcommand':
+                    name = read_group(tokens)[0]
+                    n_args = 0 # TODO number of args
+                    definition = read_balanced_brackets(tokens)
+                    definition = definition[1:-1] # drop brackets
+                    self.macros_lut[name] = MacroDef(n_args, definition)
                 else:
                     yield token
         except StopIteration:
