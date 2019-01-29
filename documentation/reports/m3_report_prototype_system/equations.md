@@ -56,7 +56,7 @@ The analysis shows that the most commonly used math environments (in order) are:
 environment (40% of the equations found), the pipeline will be extended to accomodate
 the other two as well.  In terms of the preamble packages related to math rendering, 
 both `amsmath` and `amssymb` occurred in over 70% of the main files, and the next most
-common package (`amsfonts` occurred in only 35% of the main files).  Accordingly,
+common package (`amsfonts`) occurred in only 35% of the main files.  Accordingly,
 the initial template for rendering the standalone equations contains those two most
 prevalent packages for now, with the option to extend as needed in the future.
 
