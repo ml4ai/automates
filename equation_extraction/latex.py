@@ -83,12 +83,29 @@ def read_balanced_brackets(tokens):
 
 
 
+def maybe_expand_macro(token, tokens, macro_lut):
+    if not isinstance(token, EscapeSequence):
+        # this is not a macro
+        yield token
+    elif token.data not in macro_lut:
+        # this isn't a macro either
+        yield token
+    else:
+        macro_def = macro_lut[token.data]
+        assert macro_def.n_args == 0, "we don't support args yet"
+        for expanded in macro_def.definition:
+            for t in maybe_expand_macro(expanded, tokens, macro_lut):
+                yield t
+
+
+
+
 class LatexTokenizer:
 
     def __init__(self, filename):
         self.filename = filename
         self.tokens = list(self.itertokens())
-        self.macros_lut = {}
+        self.macro_lut = {}
 
     def __iter__(self):
         return iter(self.tokens)
@@ -114,12 +131,14 @@ class LatexTokenizer:
                     raise NotImplementedError("we don't handle \\include yet")
                 elif token.data == 'newcommand':
                     name = read_group(tokens)[0]
+                    name = name[1:] # drop backslash
                     n_args = 0 # TODO number of args
                     definition = read_balanced_brackets(tokens)
                     definition = definition[1:-1] # drop brackets
                     self.macros_lut[name] = MacroDef(n_args, definition)
                 else:
-                    yield token
+                    for t in maybe_expand_macro(token, self.macro_lut):
+                        yield t
         except StopIteration:
             pass
 
