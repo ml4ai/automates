@@ -3,6 +3,7 @@
 from __future__ import division, print_function
 
 import os
+import re
 import json
 import argparse
 import subprocess
@@ -17,7 +18,7 @@ from latex import tokenize, extract_equations, find_main_tex_file
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('dirname')
+    parser.add_argument('indir')
     parser.add_argument('--outdir', default='output')
     parser.add_argument('--template', default='misc/template.tex')
     args = parser.parse_args()
@@ -29,10 +30,24 @@ def render_tex(filename, outdir):
     """render latex document"""
     dirname = os.path.dirname(filename)
     basename = os.path.basename(filename)
-    command = ['latexmk', '-outdir=' + outdir, '-pdf', basename]
-    returncode = subprocess.call(command, cwd=dirname)
-    pdf_name = os.path.join(outdir, os.path.splitext(basename)[0] + '.pdf')
+    # we use -halt-on-error so that the latexmk dies if an error is encountered
+    # so that we can move on to the next tex file
+    command = ['latexmk', '-halt-on-error', '-outdir=' + outdir, '-pdf', basename]
+    return_code = run_command(command, dirname, os.path.join(outdir, 'latexmk.logfile'))
+    if return_code == 0:
+        pdf_name = os.path.join(outdir, os.path.splitext(basename)[0] + '.pdf')
+    else:
+        pdf_name = None
     return pdf_name
+
+
+
+def run_command(cmd, dirname, log_fn):
+    with open(log_fn, 'w') as logfile:
+        p = subprocess.Popen(cmd, stdout=logfile, stderr=subprocess.STDOUT, cwd=dirname)
+        p.communicate()
+        return_code = p.wait()
+        return return_code
 
 
 
@@ -44,7 +59,10 @@ def render_equation(equation, template, filename):
     with open(filename, 'w') as f:
         f.write(equation_tex)
     pdf_name = render_tex(filename, dirname)
-    image = get_pages(pdf_name)[0]
+    if pdf_name:
+        image = get_pages(pdf_name)[0]
+    else:
+        image = None
     return image
 
 
@@ -77,10 +95,28 @@ def match_template(pages, template):
 
 
 
+def list_paper_dirs(indir):
+    """
+    gets a directory that is expected to contain directories of the form
+    `1810` which themselves would contain directories of the form `1810.04805`
+    with the tex source for the corresponding paper in arxiv, and returns
+    the directory paths to the directories with the papers source
+    """
+    for chunk in os.listdir(indir):
+        if re.match(r'^\d{4}$', chunk):
+            chunkdir = os.path.join(indir, chunk)
+            for paper in os.listdir(chunkdir):
+                if re.match(r'^\d{4}\.\d{5}$', paper):
+                    yield os.path.join(chunkdir, paper)
+
+
+
 def process_paper(dirname, template, outdir):
     texfile = find_main_tex_file(dirname)
     paper_id = os.path.basename(os.path.normpath(dirname))
-    outdir = os.path.abspath(os.path.join(outdir, paper_id))
+    outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id))
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     # read latex tokens from document
     tokens = tokenize(texfile)
     # extract equations from token stream
@@ -114,6 +150,9 @@ def process_paper(dirname, template, outdir):
             # make pdf
             fname = os.path.join(outdir, eq_name, 'equation.tex')
             equation = render_equation(eq_tex, template, fname)
+            if equation is None:
+                # equation couldn't be rendered
+                continue
             # find page and aabb where equation appears
             match, p, start, end = match_template(pages, equation)
             # write image with aabb
@@ -138,4 +177,6 @@ def process_paper(dirname, template, outdir):
 
 if __name__ == '__main__':
     args = parse_args()
-    process_paper(args.dirname, args.template, args.outdir)
+    for paper_dir in list_paper_dirs(args.indir):
+        print('processing', paper_dir)
+        process_paper(paper_dir, args.template, args.outdir)

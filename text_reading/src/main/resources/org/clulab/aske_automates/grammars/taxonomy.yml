@@ -1,5 +1,7 @@
 - Entity:
-  - Concept
+  - Concept:
+      - Variable
+
   - Measurement:
     - Value:
       - ValueAndUnit
@@ -7,3 +9,5 @@
     - Interval
 - Event:
   - Causal
+  - Definition
+  - ParameterSetting

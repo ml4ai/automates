@@ -48,7 +48,7 @@ class RuleBasedEntityFinder(
 
   // regexes describing valid outgoing dependencies
   val VALID_OUTGOING = Set[scala.util.matching.Regex](
-    "^amod$".r, "^advmod$".r,
+    "^amod$".r, //"^advmod$".r,
     "^dobj$".r,
     "^compound".r, // replaces nn
     "^name".r, // this is equivalent to compound when NPs are tagged as named entities, otherwise unpopulated
@@ -71,11 +71,11 @@ class RuleBasedEntityFinder(
     val avoid = avoidEngine.extractFrom(doc)
     val stateFromAvoid = State(avoid)
     val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filter{ entity => ! stateFromAvoid.contains(entity) }
-    val expandedEntities: Seq[Mention] = baseEntities.map(entity => expand(entity, maxHops))
+    //val expandedEntities: Seq[Mention] = baseEntities.map(entity => expand(entity, maxHops))
     // split entities on likely coordinations
-    val splitEntities = (baseEntities ++ expandedEntities).flatMap(EntityHelper.splitCoordinatedEntities)
+    //val splitEntities = (baseEntities ++ expandedEntities).flatMap(EntityHelper.splitCoordinatedEntities)
     // remove entity duplicates introduced by splitting expanded
-    val distinctEntities = splitEntities.distinct
+    val distinctEntities = baseEntities.distinct
     val trimmedEntities = distinctEntities.map(EntityHelper.trimEntityEdges)
     // if there are no avoid mentions, no need to filter
     val res = if (avoid.isEmpty) {
@@ -194,14 +194,14 @@ object RuleBasedEntityFinder extends LazyLogging {
   }
 
   val DEFAULT_MAX_LENGTH = 50 // maximum length (in tokens) for an entity
-  
+
   def apply(entityRulesPath: String, avoidRulesPath: String, maxHops: Int, maxLength: Int = DEFAULT_MAX_LENGTH): RuleBasedEntityFinder = {
     val entityRules = FileUtils.getTextFromResource(entityRulesPath)
     val entityEngine = ExtractorEngine(entityRules)
-    
+
     val avoidRules = FileUtils.getTextFromResource(avoidRulesPath)
     val avoidEngine = ExtractorEngine(avoidRules)
-    
+
     new RuleBasedEntityFinder(entityEngine = entityEngine, avoidEngine = avoidEngine, maxHops = maxHops)
   }
 

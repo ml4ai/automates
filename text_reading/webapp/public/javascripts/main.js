@@ -3,7 +3,9 @@ var bratLocation = 'assets/brat';
 // Color names used
 var baseConceptColor = '#CCD1D1';
 var causalEventColor = '#BB8FCE';
-
+var variableColor = '#ef9f6e';
+var parameterSettingColor = '#99daef';
+var valueColor = '#b0a0e5';
 
 
 head.js(
@@ -38,7 +40,23 @@ var collData = {
         "bgColor": baseConceptColor,
         // Use a slightly darker version of the bgColor for the border
         "borderColor": "darken"
-    }
+    },
+    {
+            "type"   : "Variable",
+            "labels" : ["Variable"],
+            // Blue is a nice colour for a person?
+            "bgColor": variableColor,
+            // Use a slightly darker version of the bgColor for the border
+            "borderColor": "darken"
+        },
+        {
+                "type"   : "Value",
+                "labels" : ["Value"],
+                // Blue is a nice colour for a person?
+                "bgColor": valueColor,
+                // Use a slightly darker version of the bgColor for the border
+                "borderColor": "darken"
+            }
     ],
 //    relation_types: [{
 //                         type     : 'Note',
@@ -65,7 +83,27 @@ var collData = {
             {"type": "agent", "labels": ["agent"], "borderColor": "darken", "bgColor":"violet"},
             {"type": "theme", "labels": ["theme"], "borderColor": "darken", "bgColor":"violet"}
         ]
-      }
+      },
+     {
+         "type": "Variable",
+         "labels": ["VARIABLE"],
+         "bgColor": variableColor,
+         "borderColor": "darken",
+         "arcs": [
+             {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
+             {"type": "definition", "labels": ["definition"], "borderColor": "darken", "bgColor":"violet"}
+         ]
+       },
+       {
+           "type": "ParameterSetting",
+           "labels": ["PARAMSETTING"],
+           "bgColor": parameterSettingColor,
+           "borderColor": "darken",
+           "arcs": [
+               {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
+               {"type": "value", "labels": ["value"], "borderColor": "darken", "bgColor":"violet"}
+           ]
+         }
     ]
 };
 

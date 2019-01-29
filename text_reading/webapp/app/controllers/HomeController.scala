@@ -56,6 +56,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println(s"DOC : ${doc}")
     // extract mentions from annotated document
     val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
+
     println(s"Done extracting the mentions ... ")
     println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
 

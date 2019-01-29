@@ -11,6 +11,12 @@ rules:
 
 
   # Extract the events
+  - import: "org/clulab/aske_automates/grammars/entities.yml"
+
+
+  - import: "org/clulab/aske_automates/grammars/definitions.yml"
+
+
   - import: "org/clulab/aske_automates/grammars/template.yml"
     vars:
       rulepriority: "6"
