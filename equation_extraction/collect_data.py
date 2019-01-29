@@ -30,6 +30,8 @@ def render_tex(filename, outdir):
     """render latex document"""
     dirname = os.path.dirname(filename)
     basename = os.path.basename(filename)
+    # we use -halt-on-error so that the latexmk dies if an error is encountered
+    # so that we can move on to the next tex file
     command = ['latexmk', '-halt-on-error', '-outdir=' + outdir, '-pdf', basename]
     return_code = run_command(command, dirname, os.path.join(outdir, basename + '.automates_logfile'))
     if return_code == 0:
