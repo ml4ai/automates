@@ -22,9 +22,9 @@ odin grammars for full control.
 In terms of extraction, the team has begin a light-weight information extraction framework for use in the aske program.  The system incorporates
 elements of [eidos](https://github.com/clulab/eidos) (e.g., the webapp for visualizing extractions, entity finders based on syntax and the results of grobid-quantities, and the expansion of entities that participate in relevant events) 
 along with new [odin](http://clulab.cs.arizona.edu/papers/lrec2016-odin.pdf) grammars for identifying, quantifying, and defining variables as shown here: 
-<p align="center">
-<img src="figs/extractions.png" width="90%">
-</p>
+
+![](figs/extractions.png)
+
 This project is fully open-source and has already been utilized and contributed to by the Georgia Tech aske team.
 
 To promote rapid grammar development, the team has developed a framework for writing unit tests 
