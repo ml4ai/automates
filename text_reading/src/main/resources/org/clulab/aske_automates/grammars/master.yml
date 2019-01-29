@@ -16,6 +16,8 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/definitions.yml"
 
+  - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
+
 
   - import: "org/clulab/aske_automates/grammars/template.yml"
     vars:

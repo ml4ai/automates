@@ -123,15 +123,3 @@ rules:
       "<" @variable:Concept "<"
 
 
-####VALUES####
-
-    #only works if I-NP and B-NP are separate chunks (done with the rule "stand_alone_noun")
-  - name: var_equals_val
-    label: ParameterSetting
-    priority: 3
-    type: token
-    #action: variableArguments
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    pattern: |
-      # @trigger:Concept "=" @Value:Value
-      @variable:Variable (?<trigger> [word="="]) @value:Value

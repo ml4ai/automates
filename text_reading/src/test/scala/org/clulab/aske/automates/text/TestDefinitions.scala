@@ -7,7 +7,7 @@ class TestDefinitions extends ExtractionTest {
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
 
   val t1 = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-  passingTest should "extract definitions from t1" taggedAs(Somebody) in {
+  passingTest should s"extract definitions from t1: ${t1}" taggedAs(Somebody) in {
     val desired = Map(
       "Kcs" -> Seq("Crop coefficients")
     )
@@ -149,7 +149,7 @@ class TestDefinitions extends ExtractionTest {
     " \\\"pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
     "is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be " +
     "supplied to the plant from each rooted soil layer."
-  passingTest should "find definitions from t16" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t16: ${t16}" taggedAs(Somebody) in {
     val desired = Map(
       "fi" -> Seq("daily fractional light interception"),
       "ETo" -> Seq("daily reference evapotranspiration"),
