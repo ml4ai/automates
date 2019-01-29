@@ -33,7 +33,7 @@ def render_tex(filename, outdir):
     # we use -halt-on-error so that the latexmk dies if an error is encountered
     # so that we can move on to the next tex file
     command = ['latexmk', '-halt-on-error', '-outdir=' + outdir, '-pdf', basename]
-    return_code = run_command(command, dirname, os.path.join(outdir, basename + '.automates_logfile'))
+    return_code = run_command(command, dirname, os.path.join(outdir, 'latexmk.logfile'))
     if return_code == 0:
         pdf_name = os.path.join(outdir, os.path.splitext(basename)[0] + '.pdf')
     else:
