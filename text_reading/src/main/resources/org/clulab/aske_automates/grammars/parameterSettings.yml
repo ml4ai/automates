@@ -1,0 +1,29 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+
+  ####VALUES####
+
+
+  - name: var_equals_val
+    label: ParameterSetting
+    priority: 3
+    type: token
+    #action: variableArguments
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    pattern: |
+      # @trigger:Concept "=" @Value:Value
+      @variable:Variable (?<trigger> [word="="]) @value:Value
+
+
+#  - name: var-vary_between
+#    label: Variable
+#    priority: 2
+#    type: dependency
+#    #action: variableArguments
+#    example: "The value of Kcbmax was varied between 0.9 and 1.4"
+#    pattern: |
+#      trigger = [lemma='vary']
+#      variable:Variable = nsubjpass nmod_of
+#      value:Concept+ = nmod_between

@@ -24,13 +24,13 @@ rules:
 
 
 ####VARIABLES####
-  - name: var-calculation_of
+  - name: var-noun_of
     label: Variable
     priority: 4
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
-      (?<=calculation of) @Concept
+      (?<=calculation of|value of) @Concept
 
   - name: var-calculation
     label: Variable
@@ -123,15 +123,3 @@ rules:
       "<" @variable:Concept "<"
 
 
-####VALUES####
-
-    #only works if I-NP and B-NP are separate chunks (done with the rule "stand_alone_noun")
-  - name: var_equals_val
-    label: ParameterSetting
-    priority: 3
-    type: token
-    #action: variableArguments
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    pattern: |
-      # @trigger:Concept "=" @Value:Value
-      @variable:Variable (?<trigger> [word="="]) @value:Value
