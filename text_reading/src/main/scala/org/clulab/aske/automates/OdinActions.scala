@@ -8,10 +8,12 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 
 
-case class PitchInfo(pitch: String, octave: Option[Int], accidental: Option[String]) extends Attachment
-
 
 class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
+
+  def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    mentions
+  }
 
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {

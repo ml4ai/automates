@@ -45,7 +45,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
       // Reread these values from their files/resources each time based on paths in the config file.
       val masterRules = FileUtils.getTextFromResource(masterRulesPath)
       val actions = OdinActions(taxonomyPath)
-      val extractorEngine = ExtractorEngine(masterRules, actions)
+      val extractorEngine = ExtractorEngine(masterRules, actions, actions.globalAction)
 
       // EntityFinder(s)
       val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
