@@ -81,16 +81,22 @@ def match_template(pages, template):
     best_val = -np.inf
     best_loc = (-1, -1)
     best_page = -1
-    h, w = template.shape[:2]
-    for i, page in enumerate(pages):
-        result = cv2.matchTemplate(page, template, cv2.TM_CCOEFF_NORMED)
-        (min_val, max_val, min_loc, max_loc) = cv2.minMaxLoc(result)
-        if best_val < max_val:
-            best_val = max_val
-            best_loc = max_loc
-            best_page = i
+    best_h, best_w = -1, -1 # essentially keeps track of the best scale factor
+    # Try several scale factors in case the standalone equation is slightly smaller/bigger
+    # than the one in the original paper
+    for scale in np.linspace(0.8, 1.2, 5):
+        # resize/scale the template
+        resized = cv2.resize(template, (0,0), fx=scale, fy=scale)
+        for i, page in enumerate(pages):
+            result = cv2.matchTemplate(page, resized, cv2.TM_CCOEFF_NORMED)
+            (min_val, max_val, min_loc, max_loc) = cv2.minMaxLoc(result)
+            if best_val < max_val:
+                best_val = max_val
+                best_loc = max_loc
+                best_page = i
+                best_h, best_w = resized.shape[:2]
     upper_left = best_loc
-    lower_right = (best_loc[0] + w, best_loc[1] + h)
+    lower_right = (best_loc[0] + best_w, best_loc[1] + best_h)
     return best_val, best_page, upper_left, lower_right
 
 
