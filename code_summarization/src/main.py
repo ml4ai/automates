@@ -10,21 +10,22 @@ from tqdm import tqdm
 import utils.classfiers as cl
 import utils.utils as utils
 import torch.nn.functional as F
+import numpy as np
 
 
 def main(args):
     torch.manual_seed(17)   # Randomly seed PyTorch
 
     # Load train, dev, test iterators with auto-batching and pretrained vectors
-    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data("../data/input/", args.batch_size)
+    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size)
 
     # Pick a model to train
     if args.model == "both":
         model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu)
     elif args.model == "code":
-        model = cl.CodeOnlyClassifier(code_vecs, gpu=args.use_gpu)
+        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_comm=False)
     elif args.model == "comm":
-        model = cl.CommOnlyClassifier(comm_vecs, gpu=args.use_gpu)
+        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_code=False)
     else:
         raise RuntimeError("Unidentified model type selected")
 
@@ -43,35 +44,31 @@ def main(args):
 
     # Do training
     if args.epochs > 0:
-        loss_values = list()
         # Adam optimizer works, SGD fails to train the network for any batch size
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.1)
+        optimizer = optim.Adam(model.parameters(), args.learning_rate)
         for epoch in range(args.epochs):
             model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
-                # for batch in tqdm(train, desc="Epoch {}/{}".format(epoch+1, args.epochs)):
                 for b_idx, batch in enumerate(train):
-                    # utils.train_on_batch(model, optimizer, batch, args.use_gpu)
-                    model.zero_grad()
+                    # model.zero_grad()
                     optimizer.zero_grad()   # Clear current gradient
 
                     # Get the label into a tensor for loss prop
-                    truth = torch.autograd.Variable(batch.label).long()
+                    truth = torch.autograd.Variable(batch.label).float()
                     if args.use_gpu:
                         truth = truth.cuda()
 
-                    # Transpose the input data from batch storage to network form
-                    # Batch storage will store the code/docstring data as column data, we need
-                    # them in row data form to be embedded.
-                    # code = batch.code[0].transpose(0, 1)
-                    # comm = batch.comm[0].transpose(0, 1)
+                    # Run the model using the batch
+                    outputs = model((batch.code, batch.comm))
 
-                    outputs = model((batch.code, batch.comm))           # Run the model using the batch
-                    loss = F.cross_entropy(outputs, truth)  # Get loss from log(softmax())
+                    # Get loss from log(softmax())
+                    loss = F.binary_cross_entropy_with_logits(outputs.view(-1),
+                                                              truth.view(-1))
+
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
+
                     curr_loss = loss.item()
-                    loss_values.append((epoch, b_idx, curr_loss))
                     pbar.set_postfix(batch_loss=curr_loss)
                     pbar.update()
 
@@ -79,11 +76,6 @@ def main(args):
             scores = score_dataset(model, dev)
             acc = utils.accuracy_score(scores)
             sys.stdout.write("Epoch {} -- dev acc: {}%\n".format(epoch+1, acc))
-
-        with open("training_loss.txt", "w+") as loss_file:
-            loss_file.write("EPOCH\tBATCH\tLOSS\n")
-            for (e, b, l) in loss_values:
-                loss_file.write("{}\t{}\t{}\n".format(e, b, l))
 
     # Save the model weights
     if args.save != "":
@@ -114,23 +106,21 @@ def score_dataset(model, dataset):
     """
     scores = list()
     model.eval()    # Set the model to evaluation mode
+    classes = [0, 1]
     with torch.no_grad():
         for i, batch in enumerate(dataset):
-            # Prepare input batch data for classification
-            # code = batch.code[0].transpose(0, 1)
-            # comm = batch.comm[0].transpose(0, 1)
-
             # Run the model on the input batch
             output = model((batch.code, batch.comm))
 
             # Get predictions for every instance in the batch
-            preds = torch.argmax(F.softmax(output, dim=1), dim=1).cpu().numpy()
+            signum_outs = torch.sign(output).cpu().numpy()
+            preds = [0 if arr_el[0] < 0 else 1 if arr_el[0] > 0 else np.choice(classes) for arr_el in signum_outs]
 
             # Prepare truth data
             truth = batch.label.cpu().numpy()
 
             # Add new tuples to output
-            scores.extend([(int(p), int(t)) for p, t in zip(preds, truth)])
+            scores.extend([(p, int(t)) for p, t in zip(preds, truth)])
     return scores
 
 
@@ -156,6 +146,10 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--batch_size", type=int,
                         help="size of batch",
                         default=50)
+
+    parser.add_argument("-r", "--learning-rate", type=float,
+                        help="learning rate",
+                        default=1e-3)
 
     parser.add_argument("-g", "--use_gpu", dest="use_gpu", action="store_true",
                         help="indicate whether to use CPU or GPU")
