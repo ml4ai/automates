@@ -22,6 +22,7 @@ def parse_args():
     parser.add_argument('--outdir', default='output')
     parser.add_argument('--template', default='misc/template.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
+    parser.add_argument('--dump-pages', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -125,7 +126,7 @@ def list_paper_dirs(indir):
 
 
 
-def process_paper(dirname, template, outdir, rescale_factor):
+def process_paper(dirname, template, outdir, rescale_factor, dump_pages):
     texfile = find_main_tex_file(dirname)
     paper_id = os.path.basename(os.path.normpath(dirname))
     outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id))
@@ -139,6 +140,11 @@ def process_paper(dirname, template, outdir, rescale_factor):
     pdf_name = render_tex(texfile, outdir)
     # retrieve pdf pages as images
     pages = get_pages(pdf_name)
+    if dump_pages:
+        os.makedirs(os.path.join(outdir, 'pages'))
+        for i,p in enumerate(pages):
+            img_name = os.path.join(outdir, 'pages', '%03d.png' % i)
+            cv2.imwrite(img_name, p)
     # load jinja2 template
     template_loader = jinja2.FileSystemLoader(searchpath='.')
     template_env = jinja2.Environment(loader=template_loader)
@@ -192,5 +198,5 @@ def process_paper(dirname, template, outdir, rescale_factor):
 if __name__ == '__main__':
     args = parse_args()
     for paper_dir in list_paper_dirs(args.indir):
-        print('processing', paper_dir)
-        process_paper(paper_dir, args.template, args.outdir, args.rescale_factor)
+        print('processing', paper_dir, '...')
+        process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages)
