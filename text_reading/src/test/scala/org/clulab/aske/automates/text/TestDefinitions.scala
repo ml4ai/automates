@@ -20,7 +20,8 @@ class TestDefinitions extends ExtractionTest {
   passingTest should "extract definitions from t2" taggedAs(Somebody) in {
     val desired = Map(
       "LAI" -> Seq("simulated leaf area index"),
-      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0")
+      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"),
+      "Kcs" -> Seq("DSSAT-CSM crop coefficient") //todo: include model?
     )
     val mentions = extractMentions(t2)
     testDefinitionEvent(mentions, desired)

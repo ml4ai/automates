@@ -16,6 +16,7 @@ rules:
       # @trigger:Concept "=" @Value:Value
       @variable:Variable (?<trigger> [word="="]) @value:Value
 
+
 #  - name: var-vary_between
 #    label: Variable
 #    priority: 2
@@ -25,6 +26,4 @@ rules:
 #    pattern: |
 #      trigger = [lemma='vary']
 #      variable:Variable = nsubjpass nmod_of
-#      value:Concept = nmod_between
-
-
+#      value:Concept+ = nmod_between
