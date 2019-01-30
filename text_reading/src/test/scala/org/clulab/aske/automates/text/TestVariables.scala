@@ -22,6 +22,10 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
+  //
+  // sentences from 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
+  //
+
   passingTest should "find variables 2" in {
     val text = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
     // TODO:  Is Penman-Monteith part of the variable? Is DSSAT-CSM a variable?
@@ -134,6 +138,10 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
+  //
+  // sentences from 2016-Camargo-and Kemanian-Six-crop-models differ-in-their-simulation-of water-uptake
+  //
+
   passingTest should "find variables 16" in {
     val text = "In APSIM, water uptake (Ta, mm d−1) is determined from potential transpiration demand (Tp, mm d−1), soil water available (WA, mm d−1), and water supply (WS, mm d−1) for each ith day and soil layer as:"
     // TODO:  Is APSIM a variable or the name of a model?
@@ -174,21 +182,84 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  passingTest should "find variables X" in {
-    val text = ""
 
-    val desired = Seq()
+  // NEW FORMAT
+
+  val text = "The L is calculated using T, Cp and  ̄S ."
+  passingTest should "extract definitions from 21" taggedAs(Somebody) in {
+    val desired = Seq("L", "T", "Cp", "S")
     val mentions = extractMentions(text)
-    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
+    testDefinitionEvent(mentions, desired)
   }
 
-  // new format
+  val text = "If L falls below that of permanent wilting point ( Lpwp), then Ta = 0"
+  passingTest should "extract definitions from 22" taggedAs(Somebody) in {
+    val desired = Seq("L", "Lpwp", "Ta")
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
 
-  val text = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-  passingTest should "extract definitions from 21" taggedAs(Somebody) in {
-    val desired = Map(
-      "Kcs" -> Seq("Crop coefficients")
-    )
+  val text = "Finally, Ta is calculated using s and L, Cp and Tp:"
+  passingTest should "extract definitions from 23" taggedAs(Somebody) in {
+    val desired = Seq("Ta", "s", "L", "Cp", "Tp")
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val text = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
+  passingTest should "extract definitions from 24" taggedAs(Somebody) in {
+    val desired = Seq("Tx", "Lsc", "Lpwp")
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val text = "In DSSAT, root water uptake is calculated in two steps."
+  passingTest should "extract definitions from 25" taggedAs(Somebody) in {
+    // TODO: Is DSSAT a variable?
+    val desired = Seq(DSSAT)
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val text = "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:"
+  passingTest should "extract definitions from 26" taggedAs(Somebody) in {
+    val desired = Seq("Url")
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val text = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl times !r for each layer and summing over the soil profile:"
+  passingTest should "extract definitions from 27" taggedAs(Somebody) in {
+    // TODO:  Ta, rl, !r ??
+    val desired = Seq("Ux", "Ta", "rl", "!r")
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val text = "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the soil limitation to water uptake of each layer."
+  passingTest should "extract definitions from 28" taggedAs(Somebody) in {
+    val desired = Seq("s1", "s2", "w")
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
+
+
+  // sentences from 2013-Quantifying the Influence of Climate on Human Conflict_Burke-Science
+
+  val text = "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
+  passingTest should "extract definitions from 29" taggedAs(Somebody) in {
+    // TODO:  deal with "∈" somehow ?
+    val desired = Seq("i", "t", "b", "∈")
+    val mentions = extractMentions(text)
+    testDefinitionEvent(mentions, desired)
+  }
+
+
+  // sentences from 2006-Root Water Extraction and Limiting Soil Hydraulic Conditions Estimated by Numerical Simulation
+
+  val text = ""
+  passingTest should "extract definitions from X" taggedAs(Somebody) in {
+    val desired = Seq()
     val mentions = extractMentions(text)
     testDefinitionEvent(mentions, desired)
   }
