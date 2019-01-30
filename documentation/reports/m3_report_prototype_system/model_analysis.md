@@ -3,15 +3,15 @@ As outlined in our previous report, structural comparison of two competing facto
 
 The team has accomplished the task of discovering the shared portion of two factor networks derived from the two evapotranspiration models shown in our project proposal. Below we show a graphical representation of the shared portions of these two models, which are represented by a new structure that we are referring to as Forward Influence Blankets (FIB). In the following section we will formally define the structure of a FIB and its use-case for model analysis.
 
-<div style="position: relative; width: 55%; left: 22.5%;" align="center">
 ![Forward influence blanket for the Priestley-Taylor model](figs/cmb_pt.png)
-<p align="left">**Figure 1:** Graphical view of the FIB for the Priestly-Taylor factor network.</p>
-</div>
+**Figure 1:** Graphical view of the FIB for the Priestly-Taylor factor network.
+
 <br>
-<div style="position: relative; width: 80%; left: 10%;" align="center">
 ![Forward influence blanket for the ASCE model](figs/cmb_asce.png)
-<p align="left"> **Figure 2:** Graphical view of the FIB for the ASCE factor network.</p>
-</div>
+**Figure 2:** Graphical view of the FIB for the ASCE factor network.
+<br>
+
+Lorem ipsum dolor sit amet
 
 ### Forward Influence Blanket (FIB) description
 A common method for isolating a probabilistic subnetwork is to form a [Markov Blanket](https://en.wikipedia.org/wiki/Markov_blanket) around the subnetwork of interest. To form a full markov blanket, all of the parent nodes of the subnetwork of interest, as well as all the child nodes and parents of child nodes must be included, in order to fully isolate the probabilistic subnetwork. This is required in order to perform both forward and reverse inference on the subnetwork. However, for the purposes of model analysis we are currently only interested in questions pertaining to forward analysis (i.e. how do inputs to the model affect the output). Therefore we have created a loose variant of a markov blanket that we have named a Forward Influence Blanket (FIB). Our rationale for this naming is that a FIB is a _blanket_ around a probabilistic subnetwork that only captures the information necessary to determine the _influence_ that nodes have on each other in the _forward_ direction.
