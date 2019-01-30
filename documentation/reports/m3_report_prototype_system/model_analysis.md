@@ -5,7 +5,7 @@ The team has accomplished the task of discovering the shared portion of two fact
 
 <table class="image" align="center">
 <caption align="bottom">Graphical view of the FIB for the Priestly-Taylor factor network.</caption>
-<tr><td><img src="figs/cmb_pt.png" alt="PETPT FIB"/></td></tr>
+<tr align="center"><td align="center"><img src="figs/cmb_pt.png" alt="PETPT FIB"/></td></tr>
 </table>
 
 <table class="image" align="center">
