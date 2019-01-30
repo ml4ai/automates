@@ -142,7 +142,7 @@ class TestVariables extends ExtractionTest {
   // sentences from 2016-Camargo-and Kemanian-Six-crop-models differ-in-their-simulation-of water-uptake
   //
 
-  passingTest should "find variables 16" in {
+  passingTest should "find variables 1b" in {
     val text = "In APSIM, water uptake (Ta, mm d−1) is determined from potential transpiration demand (Tp, mm d−1), soil water available (WA, mm d−1), and water supply (WS, mm d−1) for each ith day and soil layer as:"
     // TODO:  Is APSIM a variable or the name of a model?
     val desired = Seq("APSIM", "Ta", "Tp", "WA", "WS")
@@ -150,7 +150,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  passingTest should "find variables 17" in {
+  passingTest should "find variables 2b" in {
     val text = "where fi is the daily fractional light interception, ETo is the daily reference evapotranspiration (mm d−1), pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be supplied to the plant from each rooted soil layer."
 
     val desired = Seq("fi", "ETo", "pwp", "$z", "kl")
@@ -158,7 +158,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  passingTest should "find variables 18" in {
+  passingTest should "find variables 3b" in {
     val text = "This means that kl represents a maximum supply determined by !r and the resistance to water flow (Passioura, 1983; Monteith, 1986)"
 
     val desired = Seq("kl", "!r")
@@ -166,7 +166,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  passingTest should "find variables 19" in {
+  passingTest should "find variables 4b" in {
     val text = "The plant conductance is calculated by inverting the transpiration equation using a maximum expected transpiration (Tx, mm d−1), the soil water potential at field capacity ( Sfc, J kg−1) and the leaf water potential at the onset of stomatal closure ( Lsc, J kg−1):"
 
     val desired = Seq("Tx", "Sfc", "Lsc")
@@ -174,7 +174,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  passingTest should "find variables 20" in {
+  passingTest should "find variables 5b" in {
     val text = "The average soil water potential ( ̄S , J kg−1) is calculated based on a representative root length fraction for each soil layer (fr,j):"
     // TODO:  What is (fr,j) ?
     val desired = Seq("S", "(fr,j)")
@@ -185,83 +185,83 @@ class TestVariables extends ExtractionTest {
 
   // NEW FORMAT
 
-  val text = "The L is calculated using T, Cp and  ̄S ."
-  passingTest should "extract definitions from 21" taggedAs(Somebody) in {
+  val t6b = "The L is calculated using T, Cp and  ̄S ."
+  passingTest should "extract variables from t6b" taggedAs(Somebody) in {
     val desired = Seq("L", "T", "Cp", "S")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t6b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val text = "If L falls below that of permanent wilting point ( Lpwp), then Ta = 0"
-  passingTest should "extract definitions from 22" taggedAs(Somebody) in {
+  val t7b = "If L falls below that of permanent wilting point ( Lpwp), then Ta = 0"
+  passingTest should "extract variables from t7b" taggedAs(Somebody) in {
     val desired = Seq("L", "Lpwp", "Ta")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t7b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val text = "Finally, Ta is calculated using s and L, Cp and Tp:"
-  passingTest should "extract definitions from 23" taggedAs(Somebody) in {
+  val t8b = "Finally, Ta is calculated using s and L, Cp and Tp:"
+  passingTest should "extract variables from t8b" taggedAs(Somebody) in {
     val desired = Seq("Ta", "s", "L", "Cp", "Tp")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t8b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val text = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
-  passingTest should "extract definitions from 24" taggedAs(Somebody) in {
+  val t9b = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
+  passingTest should "extract variables from t9b" taggedAs(Somebody) in {
     val desired = Seq("Tx", "Lsc", "Lpwp")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t9b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val text = "In DSSAT, root water uptake is calculated in two steps."
-  passingTest should "extract definitions from 25" taggedAs(Somebody) in {
+  val t10b = "In DSSAT, root water uptake is calculated in two steps."
+  passingTest should "extract variables from t10b" taggedAs(Somebody) in {
     // TODO: Is DSSAT a variable?
-    val desired = Seq(DSSAT)
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val desired = Seq("DSSAT")
+    val mentions = extractMentions(t10b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val text = "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:"
-  passingTest should "extract definitions from 26" taggedAs(Somebody) in {
+  val t11b = "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:"
+  passingTest should "extract variables from t11b" taggedAs(Somebody) in {
     val desired = Seq("Url")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t11b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val text = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl times !r for each layer and summing over the soil profile:"
-  passingTest should "extract definitions from 27" taggedAs(Somebody) in {
+  val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl times !r for each layer and summing over the soil profile:"
+  passingTest should "extract variables from t12b" taggedAs(Somebody) in {
     // TODO:  Ta, rl, !r ??
     val desired = Seq("Ux", "Ta", "rl", "!r")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t12b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val text = "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the soil limitation to water uptake of each layer."
-  passingTest should "extract definitions from 28" taggedAs(Somebody) in {
+  val t13b = "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the soil limitation to water uptake of each layer."
+  passingTest should "extract variables from t13b" taggedAs(Somebody) in {
     val desired = Seq("s1", "s2", "w")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t13b)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
 
   // sentences from 2013-Quantifying the Influence of Climate on Human Conflict_Burke-Science
 
-  val text = "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
-  passingTest should "extract definitions from 29" taggedAs(Somebody) in {
+  val t1c = "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
+  passingTest should "extract variables from t1c" taggedAs(Somebody) in {
     // TODO:  deal with "∈" somehow ?
     val desired = Seq("i", "t", "b", "∈")
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(t1c)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
 
   // sentences from 2006-Root Water Extraction and Limiting Soil Hydraulic Conditions Estimated by Numerical Simulation
 
-  val text = ""
-  passingTest should "extract definitions from X" taggedAs(Somebody) in {
+  val tX = ""
+  passingTest should "extract variables from tX" taggedAs(Somebody) in {
     val desired = Seq()
-    val mentions = extractMentions(text)
-    testDefinitionEvent(mentions, desired)
+    val mentions = extractMentions(tX)
+    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
 }
