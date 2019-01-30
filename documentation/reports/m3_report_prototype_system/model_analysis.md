@@ -3,13 +3,19 @@ As outlined in our previous report, structural comparison of two competing facto
 
 The team has accomplished the task of discovering the shared portion of two factor networks derived from the two evapotranspiration models shown in our project proposal. Below we show a graphical representation of the shared portions of these two models, which are represented by a new structure that we are referring to as Forward Influence Blankets (FIB). In the following section we will formally define the structure of a FIB and its use-case for model analysis.
 
+---
+
 ![Forward influence blanket for the Priestley-Taylor model](figs/cmb_pt.png)
 **Figure 1:** Graphical view of the FIB for the Priestly-Taylor factor network.
 <br>
 
+---
+
 ![Forward influence blanket for the ASCE model](figs/cmb_asce.png)
 **Figure 2:** Graphical view of the FIB for the ASCE factor network.
 <br>
+
+---
 
 ### Forward Influence Blanket (FIB) description
 A common method for isolating a probabilistic subnetwork is to form a [Markov Blanket](https://en.wikipedia.org/wiki/Markov_blanket) around the subnetwork of interest. To form a full markov blanket, all of the parent nodes of the subnetwork of interest, as well as all the child nodes and parents of child nodes must be included, in order to fully isolate the probabilistic subnetwork. This is required in order to perform both forward and reverse inference on the subnetwork. However, for the purposes of model analysis we are currently only interested in questions pertaining to forward analysis (i.e. how do inputs to the model affect the output). Therefore we have created a loose variant of a markov blanket that we have named a Forward Influence Blanket (FIB). Our rationale for this naming is that a FIB is a _blanket_ around a probabilistic subnetwork that only captures the information necessary to determine the _influence_ that nodes have on each other in the _forward_ direction.
@@ -21,12 +27,13 @@ In our previous report we demonstrated the ability to automatically conduct sens
 1. Take *N* samples from the input space of *f*
 2. Evaluate each of the *N* samples on *f* to form the set *E*
 3. Perform Sobol analysis on *E*
-4. Recover the $S_1$, $S_2$, and $S_T$ sensitivity indices
+4. Recover the $$S_1$$, $$S_2$$, and $$S_T$$ sensitivity indices
 
 This method has been successful in retrieving all the information we needed in order to determine which inputs account for the most uncertainty in model output. Since our last report we began experimenting to see how the runtime of sensitivity analysis is affected by varying the sample size *N* or the size of the input space of function *f*. Below we show graphs that depict runtime as a function of the two previously mentioned variables. For each of these graphs the red line shows the runtime for the entirety of sensitivity analysis and the blue line shows the runtime of part (3) of the analysis as we vary the variable under inspection.
 
 ##### Runtime as a function of sample size
 As our models become more complex we expect that we will need to increase the number of samples taken and evaluated in order to achieve a similar amount of accuracy in sensitivity index estimation during sensitivity analysis. Because of this we determined that we needed to empirically inspect the runtime of sensitivity analysis as the number of samples increases. From the graph below we can see that the increase in runtime as the number of samples increases is roughly linearly, both for the entirety of sensitivity analysis and for the Sobol portion of sensitivity analysis. This result is encouraging because it ensures that as long as we maintain only a linear increase in the number of samples required to conduct sensitivity analysis on our larger models then we should not see a runtime increase that would render sensitivity analysis unusable.
+
 <br>
 ![SA runtime when varying number of samples](figs/sa_samples_vs_runtime.png)
 **Figure 3:** Visual depiction of increase in runtime for our Sobol analysis method given an increase in sample size. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.
