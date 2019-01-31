@@ -96,12 +96,7 @@ def format_n_args(bracketed_tokens):
     return int(''.join(bracketed_tokens[1:-1]))
 
 def maybe_expand_macro(token, tokens, macro_args, macro_lut):
-    #print ("maybe_expand_macro token: ", token)
-    # for t in tokens:
-    #     print(t)
-    # sys.exit()
 
-# make sep iter from def
     if not isinstance(token, EscapeSequence):
         # this is not a macro
         #print(token, "is not an EscapeSequence")
@@ -121,7 +116,6 @@ def maybe_expand_macro(token, tokens, macro_args, macro_lut):
         for i in range(n_args):
             print("Reading arg", i)
             # trying to consume tokens to get the arguments, but we already have the arguments...
-            #print("Tokens left:", list(tokens)[:])
             if len(macro_args) < n_args:
                 macro_args.append(read_balanced_brackets(tokens)[1:-1])
                 print("macro_args:", macro_args)
@@ -129,7 +123,6 @@ def maybe_expand_macro(token, tokens, macro_args, macro_lut):
         for expanded in macro_iter:
             print("Looking at expanded:", expanded)
             if isinstance(expanded, Parameter):
-                # print("tokens remaining:", list(tokens))
                 arg_index = int(next(macro_iter))
                 print("found arg_index:", arg_index)
                 supplied_arg_tokens = macro_args[arg_index - 1]
