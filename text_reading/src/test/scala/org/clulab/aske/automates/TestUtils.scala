@@ -14,6 +14,7 @@ object TestUtils {
   object Andrew   extends TesterTag
   object Becky    extends TesterTag
   object Masha    extends TesterTag
+  object Interval extends TesterTag
 
   val successful = Seq()
 

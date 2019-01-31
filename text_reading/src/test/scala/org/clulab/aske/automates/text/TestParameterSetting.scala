@@ -138,7 +138,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t12 = "Under full irrigation, Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield " +
     "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
-  passingTest should s"extract the parameter setting(s) from t12 and NOT extract the figure number: ${t12}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t12 and NOT extract the figure number: ${t12}" taggedAs(Somebody, Interval) in {
     val desired = Map(
       "Kcbmax" -> Seq("0.9", "1.5"), //todo: how do we extract intervals like this?
       "Kcbmax" -> Seq("1.15") //todo: see t8
