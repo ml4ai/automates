@@ -22,9 +22,9 @@ A common method for isolating a probabilistic subnetwork is to form a [Markov Bl
 
 The two FIBs shown in the section above are color-coded to provide a visual depiction of the different components of a FIB. Let us consider the FIB for the shared subnetwork of the ASCE evapotranspiration model. We can see that some nodes are colored blue, and of those nodes some are bolded. All blue nodes in the network represent shared nodes that are also present in the Priestly-Taylor evapotranspiration model. The blue nodes that are bolded represent nodes that are shared inputs to both models (these are likely the nodes of highest interest to model analysis). Between the blue nodes in our FIB we have a series of one or more black nodes. These nodes are nodes that are found in the ASCE factor network but are not present in the Priestly-Taylor factor network. These nodes likely represent a difference in the computation used to derive the shared output from the shared inputs in these two models and they will likely be the cause of differences observed in model output uncertainty during analysis. We also observe nodes in the ASCE FIB that are colored green. These nodes are part of the blanket portion of the FIB that allow us to isolate the probabilistic subnetworks of the two models. We will need to observe values for these nodes as well when conducting uncertainty analysis.
 
-### Runtime cost of sensitivity index discovery
+### Sensitivity index discovery
 In our previous report we demonstrated the ability to automatically conduct sensitivity analysis on the inputs to the source code of an extract models factor network. The method we presented involved three steps to fully conduct a sensitivity analysis of a given function *f*:
-1. Take *N* samples from the input space of *f*
+1. Take *N* samples from the input space of *f* using Saltelli sampling
 2. Evaluate each of the *N* samples on *f* to form the set *E*
 3. Perform Sobol analysis on *E*
 4. Recover the $$S_1$$, $$S_2$$, and $$S_T$$ sensitivity indices
@@ -40,10 +40,18 @@ As our models become more complex we expect that we will need to increase the nu
 <br>
 
 ##### Runtime as a function of input space size
-The models we plan on extracting from the DSSAT library will likely have a very large number of inputs. This entails that our input space size will be much larger than in the examples we have studied thus far. Therefore we determined that we needed to empirically observe the affects of increasing the input space size (via increasing the number of model inputs) on the runtime of sensitivity analysis. From the graph below we can see that as we linearly increase the amount of inputs to a model the runtime for the Sobol portion of sensitivity analysis increases greater than linearly. We also notice that this increase in runtime for the Sobol portion explains the greater than linear increase in runtime for the entirety of sensitivity analysis. 
+The models we plan on extracting from the DSSAT library will likely have a very large number of inputs. This entails that our input space size will be much larger than in the examples we have studied thus far. Therefore we determined that we needed to empirically observe the affects of increasing the input space size (via increasing the number of model inputs) on the runtime of sensitivity analysis. From the graph below we can see that as we linearly increase the amount of inputs to a model the runtime for the Sobol portion of sensitivity analysis increases greater than linearly. We also notice that this increase in runtime for the Sobol portion explains the greater than linear increase in runtime for the entirety of sensitivity analysis. This result is discouraging as our models of interest are likely going to have a large number of inputs (for example the ASCE evapotranspiration model has 12 inputs). In order to handle larger models we are planning on investigating methods of computing sensitivity analysis on subnetworks of the models that have fewer inputs. This was a key motivation for the development of Forward Influence Blankets as mentioned earlier in the report that will allow us to study sensitivity analysis only on the shared components of two large competing models of the same phenomena.
 <br>
 ![SA runtime when varying number of function inputs](figs/sa_inputs_vs_runtime.png)
 **Figure 4:** Visual depiction of increase in runtime for our Sobol analysis method given an increase in number of inputs for the function under analysis. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.
+<br>
+
+##### Sensitivity index stability
+After reviewing the runtime requirements of sensitivity analysis, the next question our team desired to answer was: how many samples are necessary for the estimated sensitivity indices to be stable? To visualize this we experimented with the PLANT model by varying the number of samples supplied to our sensitivity analysis metric and recording the S1 indices for the two inputs with highest sensitivity. From our results it seems that the amount of samples needed to reach stability of the S1 indices is much higher than the amount needed to determine the ordering of which variables contribute the most uncertainty to model output. As we will discuss in the following section one of our plans for the next iteration of model analysis is to implement efficient sampling methods that can allow our estimates of the sensitivity indices to converge with far fewer samples.
+
+<br>
+![Stability of S1 estimates from PLANT model](figs/plant_s1_est.png)
+**Figure 4:** Visual depiction of changes in stability of S1 sensitivity indices with respect to increases in sample size from Saltelli sampling. The model under evaluation for this test was the PLANT model from Joshua's toy example.
 <br>
 
 ### Next steps
