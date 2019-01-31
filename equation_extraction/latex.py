@@ -5,7 +5,7 @@ import sys
 import glob
 from collections import namedtuple
 from plasTeX.TeX import TeX
-from plasTeX.Tokenizer import BeginGroup, EndGroup
+from plasTeX.Tokenizer import BeginGroup, EndGroup, EscapeSequence, Parameter
 
 
 
@@ -60,6 +60,12 @@ def read_group(tokens):
 
 
 
+def is_begin_group(t):
+    return isinstance(t, BeginGroup) or t == '['
+
+def is_end_group(t):
+    return isinstance(t, EndGroup) or t == ']'
+
 def read_balanced_brackets(tokens):
     """
     returns the contents of a group (i.e. curly brackets)
@@ -67,35 +73,71 @@ def read_balanced_brackets(tokens):
     may contain nested curly brackets
     """
     t = next(tokens)
-    assert isinstance(t, BeginGroup)
+    print("t: ", t)
+    #print("tokens passed:", list(tokens))
+    #assert isinstance(t, BeginGroup), t + " isn't a BeginGroup"
+    assert is_begin_group(t), t + " isn't a BeginGroup, tokens passed:" + ",".join(list(tokens))
     n_open = 1
     capture = [t]
     while True:
         t = next(tokens)
         capture.append(t)
-        if isinstance(t, BeginGroup):
+        # if isinstance(t, BeginGroup):
+        if is_begin_group(t):
             n_open += 1
-        elif isinstance(t, EndGroup):
+        # elif isinstance(t, EndGroup):
+        elif is_end_group(t):
             n_open -= 1
         if n_open == 0:
             break
     return capture
 
+def format_n_args(bracketed_tokens):
+    return int(''.join(bracketed_tokens[1:-1]))
 
+def maybe_expand_macro(token, tokens, macro_args, macro_lut):
+    #print ("maybe_expand_macro token: ", token)
+    # for t in tokens:
+    #     print(t)
+    # sys.exit()
 
-def maybe_expand_macro(token, tokens, macro_lut):
+# make sep iter from def
     if not isinstance(token, EscapeSequence):
         # this is not a macro
+        #print(token, "is not an EscapeSequence")
         yield token
     elif token.data not in macro_lut:
         # this isn't a macro either
+        # print(token, "is not in macro_lut")
         yield token
     else:
+        print(token, "IS in the macro_lut")
         macro_def = macro_lut[token.data]
-        assert macro_def.n_args == 0, "we don't support args yet"
-        for expanded in macro_def.definition:
-            for t in maybe_expand_macro(expanded, tokens, macro_lut):
-                yield t
+        n_args = macro_def.n_args
+        print("macro definition:", macro_def.definition)
+        # note: consuming some tokens here fyi
+        # macro_args = []
+        # fixme I don't think I have the recursion right with this...
+        for i in range(n_args):
+            print("Reading arg", i)
+            # trying to consume tokens to get the arguments, but we already have the arguments...
+            #print("Tokens left:", list(tokens)[:])
+            if len(macro_args) < n_args:
+                macro_args.append(read_balanced_brackets(tokens)[1:-1])
+                print("macro_args:", macro_args)
+        macro_iter = iter(macro_def.definition)
+        for expanded in macro_iter:
+            print("Looking at expanded:", expanded)
+            if isinstance(expanded, Parameter):
+                # print("tokens remaining:", list(tokens))
+                arg_index = int(next(macro_iter))
+                print("found arg_index:", arg_index)
+                supplied_arg_tokens = macro_args[arg_index - 1]
+                for arg_t in supplied_arg_tokens:
+                    yield arg_t
+            else:
+                for t in maybe_expand_macro(expanded, tokens, macro_args, macro_lut):
+                    yield t
 
 
 
@@ -104,8 +146,8 @@ class LatexTokenizer:
 
     def __init__(self, filename):
         self.filename = filename
-        self.tokens = list(self.itertokens())
         self.macro_lut = {}
+        self.tokens = list(self.itertokens())
 
     def __iter__(self):
         return iter(self.tokens)
@@ -130,14 +172,23 @@ class LatexTokenizer:
                     # TODO be aware of \includeonly
                     raise NotImplementedError("we don't handle \\include yet")
                 elif token.data == 'newcommand':
+                    print("found a NEW COMMAND!")
                     name = read_group(tokens)[0]
-                    name = name[1:] # drop backslash
-                    n_args = 0 # TODO number of args
-                    definition = read_balanced_brackets(tokens)
-                    definition = definition[1:-1] # drop brackets
-                    self.macros_lut[name] = MacroDef(n_args, definition)
+                    #name = name[1:] # drop backslash
+                    print("   name:", name)
+                    # check to see if this is followed by the
+                    # n_args = 0 # TODO number of args
+                    args_or_def = read_balanced_brackets(tokens)
+                    if args_or_def[0] == '[': # n_args
+                        n_args = format_n_args(args_or_def)
+                        definition = read_balanced_brackets(tokens)
+                    else:
+                        n_args = 0
+                        definition = args_or_def
+                    definition = iter(definition[1:-1]) # drop brackets
+                    self.macro_lut[name] = MacroDef(n_args, definition)
                 else:
-                    for t in maybe_expand_macro(token, self.macro_lut):
+                    for t in maybe_expand_macro(token, tokens, [], self.macro_lut):
                         yield t
         except StopIteration:
             pass
