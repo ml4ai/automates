@@ -58,8 +58,8 @@ class GrobidQuantitiesClient(
 
   def mkUnit(json: ujson.Js): UnitOfMeasurement = {
     val name = json("name").str
-    val unitType = json("type").str
-    val system = json("system").str
+    val unitType = json.obj.get("type").map(_.str)
+    val system = json.obj.get("system").map(_.str)
     val offset = if (json.obj.keySet contains "offsetStart") Some(mkOffset(json)) else None
     UnitOfMeasurement(name, unitType, system, offset)
   }

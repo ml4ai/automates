@@ -28,8 +28,8 @@ case class Offset(
 
 case class UnitOfMeasurement(
   name: String,
-  unitType: String,
-  system: String,
+  unitType: Option[String],
+  system: Option[String],
   offset: Option[Offset]
 )
 
