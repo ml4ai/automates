@@ -1,6 +1,7 @@
 ## FOR2PY
 
-Support for the following FORTRAN language constructs have been added with progress being made on other constructs as well:
+Our work in `for2py` has focused on extending the range of Fortran language constructs handled.  We have implemented support for the FORTRAN language constructs listed below.  In addition, we have mapped out the translation of a number of additional Fortran language constructs and are currently in the process of implementing their translation.
+
 **1. FORTRAN I/O**
     
 FORTRAN's file-handling and formatted I/O handling mechanisms have been implemented in the `for2py` IR. This gives us a way to validate the front-end translation by comparing the observable behavior of the generated Python code with that of the original Fortran code. In particular, we have implemented the following:
