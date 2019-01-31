@@ -95,9 +95,9 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t8 = "In DSSATCSM v4.5, the model erroneously used α = 2.0, which was corrected to α = 0.2 in DSSAT-CSM v4.6."
   passingTest should s"extract the parameter setting(s) from t8: ${t8}" taggedAs(Somebody) in {
-    val desired = Map(
+    val desired = Seq(
       "α" -> Seq("2.0"),
-      "α" -> Seq("0.2") //todo: this is a map but have the same key, so we get this error (2 was not equal to 1
+      "α" -> Seq("0.2") // todo: we get 0.2 in here tragically
       // (TestUtils.scala:70)), where the first two is the number of mentions found (I think)
     )
     val mentions = extractMentions(t8)
