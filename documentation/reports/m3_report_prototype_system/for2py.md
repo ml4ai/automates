@@ -19,3 +19,15 @@ Support for the following FORTRAN language constructs have been added with progr
     Python does not have an explicit _`private`_ command to keep variables and funtions as private but by using the name mangling mechanism, adding an underscore in front of variables/funtions ( _\_<variable_name>_ ) will limit their scope wihthin its function therefore effectively replicating the behaviour of FORTRAN's PRIVATE declarations.
     
     In addition to these, there are various corner cases in the implementation of Modules which will be handled moving forward.
+
+3.  `Open-ended Loop`
+`for2py` is able to read in Fortran open-ended loop code and translate it into fully working Python script.
+The syntax of the open-ended loop in Fortran is `DO WHILE (condition)`. When the Open Fortran Parser (OFP)
+reads in the Fortran script and generates the Abstract Syntax Tree (AST), it represents the DO WHILE loop
+as an XML tag `<loop type="do-while">`. Then, `translate.py` processes and transforms this XML into IR
+as a pickled Python object. Finally,`pyTranslate.py` translates the generated pickle file into Python script
+that holds the open-ended loop syntax of `WHILE (condition):`.
+
+4.  `Array`
+The difference of array implementation, such as the starting index (1 in Fortran and 0 in Python), explicit range assignment, and negative index, between Fortran and Python limits the direct translation of code from Fortran-to-XML-to-Python script. Therefore, the Python program needs to import `for2py_arrays.py` class file and treat arrays as `Array` class objects that use `Array` class member functions (or methods) to access the array values. In Fortran, arrays are declared as a dimension, for example, `REAL DIMENSION (10) :: X` is represented in Python as `X = Array([1, 10])`. Then, the Python program uses `set_(subs, val)` to set a value of an array and `get_(subs)` to return the stored value.
+Currently, `for2py` can handle a single-, multidimensional arrays, implicit and explicit range assignment, and negative index. For example, `REAL DIMENSION (2:5, -10:10) :: Y` in Fortran translates to `Y = Array([(2,5), (-10,10]))` in Python.
