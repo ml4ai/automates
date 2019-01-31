@@ -113,12 +113,14 @@ def maybe_expand_macro(token, tokens, macro_args, macro_lut):
         # note: consuming some tokens here fyi
         # macro_args = []
         # fixme I don't think I have the recursion right with this...
+        # todo(marco): check the recursive reading of args - arg propogation
         for i in range(n_args):
             print("Reading arg", i)
             # trying to consume tokens to get the arguments, but we already have the arguments...
             if len(macro_args) < n_args:
                 macro_args.append(read_balanced_brackets(tokens)[1:-1])
                 print("macro_args:", macro_args)
+        #todo(marco) - should this be an iterator?
         macro_iter = iter(macro_def.definition)
         for expanded in macro_iter:
             print("Looking at expanded:", expanded)
@@ -178,6 +180,7 @@ class LatexTokenizer:
                     else:
                         n_args = 0
                         definition = args_or_def
+                    # todo(marco): check -- maybe this shoulnd't be an iterator
                     definition = iter(definition[1:-1]) # drop brackets
                     self.macro_lut[name] = MacroDef(n_args, definition)
                 else:
