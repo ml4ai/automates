@@ -14,6 +14,8 @@ object TestUtils {
   object Andrew   extends TesterTag
   object Becky    extends TesterTag
   object Masha    extends TesterTag
+  object Interval extends TesterTag
+  object DiscussWithModelers extends TesterTag // i.e., Clay and Adarsh
 
   val successful = Seq()
 
@@ -35,6 +37,7 @@ object TestUtils {
     val passingTest = it
     val failingTest = ignore
     val brokenSyntaxTest = ignore
+    val toDiscuss = ignore
 
   }
 
@@ -45,15 +48,19 @@ object TestUtils {
 
     // Event Specific
 
-
+    //fixme -- when we move all Maps to Seqs: let's make the change here too
     def testDefinitionEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
-      testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
+      testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired.toSeq)
     }
 
+    //fixme -- when we move all Maps to Seqs: let's remove this overloaded version
     def testParameterSettingEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
+      testBinaryEvent(mentions, PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_ARG, desired.toSeq)
+    }
+
+    def testParameterSettingEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testBinaryEvent(mentions, PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_ARG, desired)
     }
-
 
     // General Purpose
 
@@ -65,7 +72,7 @@ object TestUtils {
     }
 
 
-    def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Map[String, Seq[String]]): Unit = {
+    def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Seq[(String, Seq[String])]): Unit = {
       val found = mentions.filter(_ matches eventType)
       found.length should be(desired.size)
 
@@ -74,11 +81,11 @@ object TestUtils {
       for {
         (desiredVar, desiredDefs) <- desired
         correspondingMentions = grouped.getOrElse(desiredVar, Seq())
-      } testBinaryEvent(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
+      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
     }
 
 
-    def testBinaryEvent(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
+    def testBinaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
       val variableDefinitionPairs = for {
         m <- ms
         a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(_.text)
