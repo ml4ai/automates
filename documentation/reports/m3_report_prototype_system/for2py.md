@@ -5,9 +5,9 @@ Support for the following FORTRAN language constructs have been added with progr
     
 FORTRAN's file-handling and formatted I/O handling mechanisms have been implemented in the `for2py` IR. This gives us a way to validate the front-end translation by comparing the observable behavior of the generated Python code with that of the original Fortran code. In particular, we have implemented the following:
     
-1. _`File Input`_: Reading data in from a file. Analogoues to Python's _read_line_.
-2. _`File Output`_: Writing data onto a file in the disk. Analogoues to Python's _write_.
-3. _`List-Directed Output`_: Analogous to Python's _sys.stdout_. 
+1. _File Input_: Reading data in from a file. Analogous to Python's _read_line_.
+2. _File Output_: Writing data onto a file in the disk. Analogous to Python's _write_.
+3. _List-Directed Output_: Analogous to Python's _sys.stdout_. 
     
 **2. Modules**
     
