@@ -16,7 +16,7 @@ Modules provide a mechanism for programmers to organize their code, control visi
     
 Our implementation translates each FORTRAN module into its own Python file (named as _`m_<module_name>.py`_).  This has a number of advantages, among them that it is easy to identify, isolate, and access the Python code corresponding to each Fortran module, and also that the Fortran module does not have to be analyzed and translated to Python more than once.  FORTRAN's `USE` construct is mapped into the `import` command in Python. FORTRAN supports universal as well as selective imports of variables, functions and subroutines. This is replicated in Python with the `from <module_name> import *` and `from <module_name> import <list of symbols>` commands.  Since Python does not have an explicit _`private`_ command to limit the visibility of names outside a given scope, we use Python's name mangling to replicate the behavior of FORTRAN's PRIVATE declarations.
     
-    We are currently working on implementing the translation of Fortran modules from `for2py` IR into the GrFN specification language.
+We are currently working on implementing the translation of Fortran modules from `for2py` IR into the GrFN specification language.
 
 
 **3. Open-ended Loops**
