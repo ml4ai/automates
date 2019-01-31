@@ -104,17 +104,17 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
-//  val t9 = "This coding error in DSSAT-CSM version 4.5 (and likely prior versions) greatly affects ETpm calculations " +
-//    "for weather networks with anemometers at heights other than 2.0 m, such as AZMET in Arizona, but has no effect on " +
-//    "networks with anemometers at 2.0 m, such as CoAgMet in Colorado."
-//  passingTest should s"extract the parameter setting(s) from t9: ${t9}" taggedAs(Somebody) in {
-//    val desired = Map(
-//      "???" -> Seq("2.0 m"), //todo what will be the variable?
-//      "???" -> Seq("2.0 m")
-//    )
-//    val mentions = extractMentions(t9)
-//    testParameterSettingEvent(mentions, desired)
-//  }
+  val t9 = "This coding error in DSSAT-CSM version 4.5 (and likely prior versions) greatly affects ETpm calculations " +
+    "for weather networks with anemometers at heights other than 2.0 m, such as AZMET in Arizona, but has no effect on " +
+    "networks with anemometers at 2.0 m, such as CoAgMet in Colorado."
+  toDiscuss should s"extract the parameter setting(s) from t9: ${t9}" taggedAs(Somebody, DiscussWithModelers) in {
+    val desired = Map(
+      "???" -> Seq("2.0 m"), //todo what will be the variable?
+      "???" -> Seq("2.0 m")
+    )
+    val mentions = extractMentions(t9)
+    testParameterSettingEvent(mentions, desired)
+  }
 
   val t10 = "Thus, differences between ETpm (figs. 1b and 1e) and ETo (figs. 1c and 1f) calculations in DSSAT-CSM " +
     "version 4.6 are partially attributed to different wind speed adjustment equations for each method " +
@@ -148,7 +148,7 @@ class TestParameterSetting  extends ExtractionTest {
   }
 
   val t13 = "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
-  passingTest should s"extract the parameter setting(s) from t13 and NOT extract the figure number: ${t13}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t13 and NOT extract the figure number: ${t13}" taggedAs(Somebody, Interval) in {
     val desired = Map(
       "SKc" -> Seq("0.5", "0.7") //todo: how do we extract intervals like this?
     )
@@ -158,7 +158,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t14 = "For the mid-season transpiration portion, the ETo-Kcs method for maize had the limitation of Kcs = 1.0 " +
     "(fig. 2a) and for cotton was defined very close to 1.0 (fig. 3a)."
-  passingTest should s"extract the parameter setting(s) from t14 and NOT extract the figure numbers: ${t14}" taggedAs(Somebody) in {
+  toDiscuss should s"extract the parameter setting(s) from t14 and NOT extract the figure numbers: ${t14}" taggedAs(Somebody, DiscussWithModelers) in {
     val desired = Map(
       "Kcs" -> Seq("0.1"),
       "Kcs" -> Seq("1.0") //todo: do we want to account for "close" in "close to 1.0"?

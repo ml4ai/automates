@@ -15,6 +15,7 @@ object TestUtils {
   object Becky    extends TesterTag
   object Masha    extends TesterTag
   object Interval extends TesterTag
+  object DiscussWithModelers extends TesterTag // i.e., Clay and Adarsh
 
   val successful = Seq()
 
@@ -36,6 +37,7 @@ object TestUtils {
     val passingTest = it
     val failingTest = ignore
     val brokenSyntaxTest = ignore
+    val toDiscuss = ignore
 
   }
 
