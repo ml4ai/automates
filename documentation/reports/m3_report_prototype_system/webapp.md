@@ -6,15 +6,23 @@ here](http://ec2-13-57-207-3.us-west-1.compute.amazonaws.com)!
 
 ![Screenshot of AutoMATES demo webapp](figs/webapp_screenshot.png)
 
+When Fortran source code is submitted, it is processed by the Program 
+Analysis (`for2py`) pipeline, generating both equivalent target, 
+executable Python internal representation and matching GrFN 
+specification representation, which in turn is then rendered as a 
+graph (that you can interact with).
+
 Currently, the demo has been only been tested with a limited number of
 programs, so we encourage users as of now to experiment by modifying the
 two suggested examples on the page, rather than trying to process
 arbitrary Fortran programs. 
 
-Clicking on the assign nodes yields a LaTeX representation of the
-equation corresponding to the assign statement. This equation is
-constructed using `SymPy`, and will facilitate the linkage to equations
-extracted from papers using the equation parsing module.
+Clicking on the `__assign__` in the rendered GrFN function network graph 
+nodes yields a LaTeX representation of the equation corresponding to the 
+assign statement. This equation is constructed from the Python source 
+represented using [`SymPy`](https://www.sympy.org), and will facilitate 
+the linkage to equations extracted from papers using the equation parsing 
+module.
 
 For example - the screenshot above shows the analysis of the
 Priestley-Taylor method of calculating potential evapotranspiration, as
