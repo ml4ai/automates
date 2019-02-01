@@ -23,12 +23,14 @@ for model analysis.
 ---
 
 ![Forward influence blanket for the Priestley-Taylor model](figs/cmb_pt.png)
+
 **Figure 1:** Graphical view of the FIB for the Priestley-Taylor factor network.
 <br>
 
 ---
 
 ![Forward influence blanket for the ASCE model](figs/cmb_asce.png)
+
 **Figure 2:** Graphical view of the FIB for the ASCE factor network.
 <br>
 

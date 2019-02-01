@@ -20,6 +20,8 @@ def transform_line(line):
         line = line.replace(header_level, header_level[:-1])
         if line.split()[1][0].isdigit():
             line = "# " + " ".join(line.split()[2:])
+    if line.startswith("**Figure"):
+        line=""
 
     # Transform math expression delimiters
     line = line.replace("$$", "$")
