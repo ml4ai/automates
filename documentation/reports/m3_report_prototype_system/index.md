@@ -36,10 +36,5 @@ toc: true
 
 ---
 
-## Updates on GrFNs to DBN translation
-{% include_relative delphi_representation.md %}
-
----
-
 ## Updates on Code Summarization
 {% include_relative code_summarization.md %}
