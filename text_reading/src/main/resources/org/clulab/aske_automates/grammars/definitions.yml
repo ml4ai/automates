@@ -6,7 +6,7 @@ rules:
 
   - name: var_is_definition
     label: Definition
-    priority: 6
+    priority: ${priority}
     type: token
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     #action: variableArguments
@@ -15,7 +15,7 @@ rules:
 
   - name: var_definition_appos
     label: Definition
-    priority: 6
+    priority: ${priority}
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     #action: variableArguments
@@ -26,7 +26,7 @@ rules:
     #todo: with the next two rules, more tests fail
 #  - name: var_verb
 #    label: Definition
-#    priority: 4
+#    priority: ${priority}
 #    type: dependency
 #    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
 #    pattern: |
@@ -37,7 +37,7 @@ rules:
 #
 #  - name: var_cop_definition
 #    label: Definition
-#    priority: 4
+#    priority: ${priority}
 #    type: dependency
 #    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
 #    pattern: |
