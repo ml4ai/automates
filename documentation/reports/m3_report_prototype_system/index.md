@@ -5,20 +5,18 @@ date: 2019-01-31
 toc: true
 ---
 
-## Overview
 {% include_relative overview.md %}
 
-## Demo Webapp
+---
+
 {% include_relative webapp.md %}
 
 ---
 
-## Updates to GrFN representation
 {% include_relative grfn.md %}
 
 ---
 
-## Updates on Program Analysis
 {% include_relative for2py.md %}
 
 ---
