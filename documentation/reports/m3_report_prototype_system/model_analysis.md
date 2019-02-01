@@ -13,16 +13,17 @@ function of the shared model inputs.
 
 The team has accomplished the task of discovering the shared portion of
 two factor networks derived from the two evapotranspiration models
-highlighted in our grant proposal. Below we show a graphical
-representation of the shared portions of these two models, which are
-represented by a new structure that we are referring to as Forward
-Influence Blankets (FIB).  In the following section we will formally
-define the structure of a FIB and its use-case for model analysis.
+highlighted in our grant proposal, the ASCE and the Priestley-Taylor
+models. Below, we show a graphical representation of the shared portions
+of these two models, which are represented by a new structure that we
+are referring to as a Forward Influence Blanket (FIB). In the following
+section we will formally define the structure of a FIB and its use-case
+for model analysis.
 
 ---
 
 ![Forward influence blanket for the Priestley-Taylor model](figs/cmb_pt.png)
-**Figure 1:** Graphical view of the FIB for the Priestly-Taylor factor network.
+**Figure 1:** Graphical view of the FIB for the Priestley-Taylor factor network.
 <br>
 
 ---
@@ -37,7 +38,7 @@ define the structure of a FIB and its use-case for model analysis.
 
 A common method for isolating a probabilistic subnetwork is to form a
 [Markov Blanket](https://en.wikipedia.org/wiki/Markov_blanket) around
-the subnetwork of interest. To form a full markov blanket, all of the
+a node of interest. To form a full Markov blanket, all of the
 parent nodes of the subnetwork of interest, as well as all the child
 nodes and parents of child nodes must be included, in order to fully
 isolate the probabilistic subnetwork. This is required in order to
@@ -45,7 +46,7 @@ perform both forward and reverse inference on the subnetwork. However,
 for the purposes of model analysis we are currently only interested in
 questions pertaining to forward analysis (i.e. how do inputs to the
 model affect the output). Therefore we have created a loose variant of a
-markov blanket that we have named a Forward Influence Blanket (FIB). Our
+Markov blanket that we have named a Forward Influence Blanket (FIB). Our
 rationale for this naming is that a FIB is a _blanket_ around a
 probabilistic subnetwork that only captures the information necessary to
 determine the _influence_ that nodes have on each other in the _forward_
@@ -56,12 +57,12 @@ visual depiction of the different components of a FIB. Let us consider
 the FIB for the shared subnetwork of the ASCE evapotranspiration model.
 We can see that some nodes are colored blue, and of those nodes some are
 bolded. All blue nodes in the network represent shared nodes that are
-also present in the Priestly-Taylor evapotranspiration model. The blue
+also present in the Priestley-Taylor evapotranspiration model. The blue
 nodes that are bolded represent nodes that are shared inputs to both
-models (these are likely the nodes of highest interest to model
+models (these are likely the nodes of highest interest for model
 analysis). Between the blue nodes in our FIB we have a series of one or
 more black nodes. These nodes are nodes that are found in the ASCE
-factor network but are not present in the Priestly-Taylor factor
+factor network but are not present in the Priestley-Taylor factor
 network. These nodes likely represent a difference in the computation
 used to derive the shared output from the shared inputs in these two
 models and they will likely be the cause of differences observed in
@@ -99,10 +100,10 @@ variable under inspection.
 As our models become more complex we expect that we will need to
 increase the number of samples taken and evaluated in order to achieve a
 similar amount of accuracy in sensitivity index estimation during
-sensitivity analysis. Because of this we determined that we needed to
+sensitivity analysis. Because of this, we determined that we needed to
 empirically inspect the runtime of sensitivity analysis as the number of
-samples increases. From the graph below we can see that the increase in
-runtime as the number of samples increases is roughly linearly, both for
+samples increases. From the graph below, we can see that the increase in
+runtime as the number of samples increases is roughly linear, both for
 the entirety of sensitivity analysis and for the Sobol portion of
 sensitivity analysis. This result is encouraging because it ensures that
 as long as we maintain only a linear increase in the number of samples
@@ -111,20 +112,26 @@ should not see a runtime increase that would render sensitivity analysis
 unusable.
 
 <br>
-![SA runtime when varying number of samples](figs/sa_samples_vs_runtime.png)
-**Figure 3:** Visual depiction of increase in runtime for our Sobol analysis method given an increase in sample size. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.
+![Visual depiction of increase in runtime for our Sobol
+analysis method given an increase in sample size. The blue line depicts
+the increase in runtime for the Sobol algorithm and the red line depicts
+the runtime for the total program.](figs/sa_samples_vs_runtime.png)
+**Figure 3:** Visual depiction of increase in runtime for our Sobol
+analysis method given an increase in sample size. The blue line depicts
+the increase in runtime for the Sobol algorithm and the red line depicts
+the runtime for the total program.
 <br>
 
 ##### Runtime as a function of input space size
 
 The models we plan on extracting from the DSSAT library will likely have
-a very large number of inputs. This entails that our input space size
+a very large number of inputs. This entails that the size of our input space
 will be much larger than in the examples we have studied thus far.
-Therefore we determined that we needed to empirically observe the
+Therefore, we determined that we needed to empirically observe the
 affects of increasing the input space size (via increasing the number of
 model inputs) on the runtime of sensitivity analysis. From the graph
-below we can see that as we linearly increase the amount of inputs to a
-model the runtime for the Sobol portion of sensitivity analysis
+below, we can see that as we linearly increase the amount of inputs to a
+model, the runtime for the Sobol portion of sensitivity analysis
 increases greater than linearly. We also notice that this increase in
 runtime for the Sobol portion explains the greater than linear increase
 in runtime for the entirety of sensitivity analysis. This result is
@@ -136,12 +143,17 @@ of the models that have fewer inputs. This was a key motivation for the
 development of Forward Influence Blankets as mentioned earlier in the
 report that will allow us to study sensitivity analysis only on the
 shared components of two large competing models of the same phenomena.
-<br> ![SA runtime when varying number of function
-inputs](figs/sa_inputs_vs_runtime.png) **Figure 4:** Visual depiction of
-increase in runtime for our Sobol analysis method given an increase in
-number of inputs for the function under analysis. The blue line depicts
-the increase in runtime for the Sobol algorithm and the red line depicts
-the runtime for the total program.  <br>
+<br> ![Visual depiction of increase in runtime for our Sobol analysis
+method given an increase in number of inputs for the function under
+analysis. The blue line depicts the increase in runtime for the Sobol
+algorithm and the red line depicts the runtime for the total
+program.](figs/sa_inputs_vs_runtime.png) 
+**Figure 4:** Visual depiction of increase in runtime for our Sobol
+analysis method given an increase in number of inputs for the function
+under analysis. The blue line depicts the increase in runtime for the
+Sobol algorithm and the red line depicts the runtime for the total
+program.
+<br>
 
 ##### Sensitivity index stability
 
@@ -160,8 +172,14 @@ implement efficient sampling methods that can allow our estimates of the
 sensitivity indices to converge with far fewer samples.
 
 <br>
-![Stability of S1 estimates from PLANT model](figs/plant_s1_est.png)
-**Figure 4:** Visual depiction of changes in stability of S1 sensitivity indices with respect to increases in sample size from Saltelli sampling. The model under evaluation for this test was the PLANT model from Joshua's toy example.
+![Visual depiction of changes in stability of S1 sensitivity
+indices with respect to increases in sample size from Saltelli sampling.
+The model under evaluation for this test was the PLANT model from
+the SimpleModular crop model.](figs/plant_s1_est.png)
+**Figure 4:** Visual depiction of changes in stability of S1 sensitivity
+indices with respect to increases in sample size from Saltelli sampling.
+The model under evaluation for this test was the PLANT model from
+the SimpleModular crop model.
 <br>
 
 ### Next steps
@@ -177,7 +195,7 @@ factor networks (and FIBs) in a recursive style. This would mean that we
 would only consider the immediate parents of a node when running
 sensitivity analysis of that particular node. Afterwards we would
 conduct sensitivity analysis on each of the parent nodes to determine
-the sensitivity indices for each of the parent nodes parents. Doing this
+the sensitivity indices for each of the parent nodes' parents. Doing this
 will allow us to see how sensitivity propagates from the input nodes to
 output of any model under study at the finest granularity possible given
 our modeling structure.
