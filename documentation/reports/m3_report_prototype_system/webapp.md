@@ -9,7 +9,7 @@ programs, so we encourage users as of now to experiment by modifying the
 two suggested examples on the page, rather than trying to process
 arbitrary Fortran programs. 
 
-Clicking on the assign nodes yields a $$\LaTeX$$ representation of the
+Clicking on the assign nodes yields a LaTeX representation of the
 equation corresponding to the assign statement. This equation is
 constructed using `SymPy`, and will facilitate the linkage to equations
 extracted from papers using the equation parsing module.
