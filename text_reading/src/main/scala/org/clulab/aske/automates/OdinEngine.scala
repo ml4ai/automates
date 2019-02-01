@@ -10,6 +10,7 @@ import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughFilter}
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
+import org.clulab.aske.automates.actions.ExpansionHandler
 
 
 class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
@@ -32,7 +33,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
     val actions: OdinActions,
     val engine: ExtractorEngine,
     val entityFinders: Seq[EntityFinder],
-    val lexiconNER: Option[LexiconNER],
+    val lexiconNER: Option[LexiconNER]
   )
 
   object LoadableAttributes {
@@ -40,11 +41,12 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
     def taxonomyPath: String = odinConfig[String]("taxonomyPath")
     def enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
     def enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
+    def enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
     def apply(): LoadableAttributes = {
       // Reread these values from their files/resources each time based on paths in the config file.
       val masterRules = FileUtils.getTextFromResource(masterRulesPath)
-      val actions = OdinActions(taxonomyPath)
+      val actions = OdinActions(taxonomyPath, enableExpansion)
       val extractorEngine = ExtractorEngine(masterRules, actions, actions.globalAction)
 
       // EntityFinder(s)
@@ -60,6 +62,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
         val lexicons = lexiconNERConfig[List[String]]("lexicons")
         Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
       } else None
+
 
       new LoadableAttributes(
         actions,
