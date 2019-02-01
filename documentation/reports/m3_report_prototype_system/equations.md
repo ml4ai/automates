@@ -1,12 +1,12 @@
-# Equation detection and parsing
+## Equation detection and parsing
 
-## ArXiv bulk download
+### ArXiv bulk download
 
 The team has downloaded the complete set of arXiv PDFs their
 corresponding source files from Amazon S3 as described
 [here](https://arxiv.org/help/bulk_data_s3).
 
-## Preprocessing pipeline
+### Preprocessing pipeline
 
 The team has put together a preprocessing pipeline with the purpose of
 preparing the data for training the statistical models.
@@ -17,14 +17,14 @@ the paper submission (e.g.,`1810` corresponds to October 2018).  Inside,
 each paper's source files are stored in a directory named after the
 paper's id (e.g., `1810.04805`).
 
-Then, the file that has the `\documentclass` directive is selected as
-the main tex file (see https://arxiv.org/help/faq/mistakes#wrongtex).
-Once a main tex file has been selected, the tex source is tokenized and
-the content of certain environments are collected together with the
-environment itself (e.g., the tokens inside the `begin{equation}` and
+Then, the file that has the `\documentclass` directive is selected as the main
+TeX file (see [here](https://arxiv.org/help/faq/mistakes#wrongtex) for more
+information). Once a main TeX file has been selected, the TeX source is
+tokenized and the content of certain environments are collected together with
+the environment itself (e.g., the tokens inside the `\begin{equation}` and
 `\end{equation}` directives, together with the label `equation`).
 
-Currently, the team is focused on processing the tex code extracted from
+Currently, the team is focused on processing the TeX code extracted from
 the `equation` environment, while still collecting the code from other
 math environments for later use.
 
@@ -35,19 +35,19 @@ matching](https://docs.opencv.org/4.0.0/df/dfb/group__imgproc__object.html).
 The resulting axis-aligned bounding box (AABB) is stored for the
 subsequent training of an equation detector.
 
-The team will next work on the preprocessing of the extracted tex tokens
+The team will next work on the preprocessing of the extracted TeX tokens
 to provide the equation decoder a more consistent input.  At minimum,
 the preprocessing will include the removal of superfluous code such as
 `\label{}` directives, the normalization of certain latex expressions
-(e.g., arbitrary ordering of super and sub-script in equations), and
+(e.g., arbitrary ordering of super and sub-scripts in equations), and
 expanding user-defined macros.
 
-### Data driven analysis of preamble to inform template design
+#### Data driven analysis of preamble to inform template design
 
 The team has conducted an analysis on a sample of 1600 of the arXiv
 retrieved sources to inform the design of the templates used to render
 standalone equation images. The purpose of this analysis is the
-identification of the math environments and tex packages that are most
+identification of the math environments and TeX packages that are most
 commonly used for the writing of math in academic papers.  By knowing
 which environments and packages are most common, the team can assemble a
 template that (a) has broad coverage (i.e., can make the most use of the
@@ -65,10 +65,10 @@ Accordingly, the initial template for rendering the standalone equations
 contains those two most prevalent packages for now, with the option to
 extend as needed in the future.
 
-## Deploying `im2markup` on UofA HPC
+### Deploying `im2markup` on UofA HPC
 
-The team has built a [singularity
+The team has also built a [singularity
 container](https://www.sylabs.io/guides/3.0/user-guide/) with the lua
-and python libraries required to run
+and Python libraries required to run
 [im2markup](https://github.com/harvardnlp/im2markup).  This will allow
 for rapid development of the equation decoding system.
