@@ -4,6 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from tqdm import tqdm
+
 import utils.utils as utils
 
 deep_learning = ["mxnet", "tensorflow", "theano", "h2o", "chainer"]
