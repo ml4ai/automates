@@ -12,3 +12,6 @@ version:          2.0.0
 
 github:
   repo:           https://github.com/ml4ai/automates
+
+plugins:
+  - jekyll-toc

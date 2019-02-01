@@ -1,13 +1,15 @@
-A [demo of the current version of the prototype
-system](http://ec2-13-57-207-3.us-west-1.compute.amazonaws.com) has been set up
-on AWS. It has has currently been tested with the toy fortran program below
-(you can copy and paste the code into the editor in the demo webapp):
+A demo of the current version of the prototype system is now live - you
+can [try it out
+here](http://ec2-13-57-207-3.us-west-1.compute.amazonaws.com)!
 
-```fortran
-{% include_relative crop_yield.f %}
-```
+![Screenshot of AutoMATES demo webapp](figs/webapp_screenshot.png)
 
-Clicking on the assign nodes yields a LaTeX representation of the equation
-corresponding to the assign statement. This equation is constructed using `SymPy`,
-and will facilitate the linkage to equations extracted from papers using the
-equation parsing module.
+Currently the demo has been tested with a limited number of programs, so
+we encourage users as of now to experiment by modifying the two
+suggested examples on the page, rather than trying to process arbitrary
+Fortran programs. 
+
+Clicking on the assign nodes yields a LaTeX representation of the
+equation corresponding to the assign statement. This equation is
+constructed using `SymPy`, and will facilitate the linkage to equations
+extracted from papers using the equation parsing module.

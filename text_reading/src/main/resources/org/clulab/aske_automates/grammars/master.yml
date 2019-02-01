@@ -17,6 +17,8 @@ rules:
   - import: "org/clulab/aske_automates/grammars/definitions.yml"
 
   - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
+    vars:
+      priority: 4 # fixme -- likely not the # you want
 
 
   - import: "org/clulab/aske_automates/grammars/template.yml"

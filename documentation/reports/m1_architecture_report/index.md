@@ -2,6 +2,7 @@
 title: "Month 1 Report: Initial AutoMATES architecture, algorithms, and approaches"
 layout: post
 date: 2018-12-02
+toc: true
 ---
 
 ## 1. Architecture Overview

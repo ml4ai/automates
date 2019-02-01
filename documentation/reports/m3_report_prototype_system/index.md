@@ -2,6 +2,7 @@
 title: "Month 3 Report: Description of Prototype System"
 layout: post
 date: 2019-01-31
+toc: true
 ---
 
 ## 1. Overview
