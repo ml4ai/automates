@@ -16,16 +16,6 @@ rules:
       # @trigger:Concept "=" @Value:Value
       @variable:Variable (?<trigger> [word="="]) @value:Value
 
-  #fixme - move somewhere else
-  # todo: can we have a tag specification here? like tag=/CD/ ?
-  - name: interval_between
-    label: Interval
-    priority: ${priority}
-    type: token
-    #action: variableArguments
-    example: "The value of Kcbmax was varied between 0.9 and 1.4"
-    pattern: |
-      (?<=between) @least:Concept []? and @most:Concept []?
 
   # todo: unify the priorities
   # todo: try to get everything in a certain file to have the same priority, pass the priority in as a variable
