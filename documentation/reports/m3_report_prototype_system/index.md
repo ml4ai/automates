@@ -23,12 +23,10 @@ toc: true
 
 ---
 
-## Updates on Machine Reading and Grounding
 {% include_relative machine_reading.md %}
 
 ---
 
-## Updates on Equation Reading
 {% include_relative equations.md %}
 
 ---
