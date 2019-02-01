@@ -2,7 +2,6 @@ package controllers
 
 import play.api.libs.json._
 import org.clulab.odin._
-import org.clulab.aske.automates.PitchInfo
 
 /** utilities to convert odin mentions into json objects
  *  that can be returned in http responses
@@ -63,16 +62,8 @@ object JsonUtils {
   }
 
   def mkJson(attachment: Attachment): Json.JsValueWrapper = attachment match {
-    case info: PitchInfo => mkJson(info)
     case _ => ???
   }
 
-  def mkJson(info: PitchInfo): Json.JsValueWrapper = {
-    Json.obj(
-      "pitch" -> info.pitch,
-      "octave" -> info.octave,
-      "accidental" -> info.accidental
-    )
-  }
 
 }
