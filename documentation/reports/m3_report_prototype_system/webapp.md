@@ -22,7 +22,7 @@ of the equations involved in this calculation - these very equations can
 be found on page 46 of the book [Understanding Options for Agricultural
 Production](https://link-springer-com.ezproxy2.library.arizona.edu/book/10.1007%2F978-94-017-3624-4)
 (reproduced below - the equations matching the ones in the screenshot of
-thw webapp are highlighted with maroon borders).
+the webapp are highlighted with maroon borders).
 
 ---
 
