@@ -31,7 +31,7 @@ class TestDefinitions extends ExtractionTest {
   passingTest should "find definitions from t3" taggedAs(Somebody) in {
     val desired = Map(
       "Kcdmin" -> Seq("minimum crop coefficient"),
-      "Kcdmax" -> Seq("maximum crop coefficient"), // Seq("maximum crop coefficient at high LAI"), fixme?
+      "Kcdmax" -> Seq("maximum crop coefficient at high LAI"),
       "SKc" -> Seq("shaping parameter")
     )
     val mentions = extractMentions(t3)
