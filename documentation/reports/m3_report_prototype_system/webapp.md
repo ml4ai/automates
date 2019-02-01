@@ -4,10 +4,10 @@ here](http://ec2-13-57-207-3.us-west-1.compute.amazonaws.com)!
 
 ![Screenshot of AutoMATES demo webapp](figs/webapp_screenshot.png)
 
-Currently the demo has been tested with a limited number of programs, so
-we encourage users as of now to experiment by modifying the two
-suggested examples on the page, rather than trying to process arbitrary
-Fortran programs. 
+Currently, the demo has been only been tested with a limited number of
+programs, so we encourage users as of now to experiment by modifying the
+two suggested examples on the page, rather than trying to process
+arbitrary Fortran programs. 
 
 Clicking on the assign nodes yields a $$\LaTeX$$ representation of the
 equation corresponding to the assign statement. This equation is
@@ -28,4 +28,3 @@ thw webapp are highlighted with maroon borders).
 
 ![Page 46 of the book Understanding Options for Agricultural
 Production](figs/petpt_equations_example.png)
-
