@@ -1,6 +1,7 @@
 package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
+import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.odin._
 import org.clulab.odin.impl.Taxonomy
 import org.clulab.utils.FileUtils
@@ -9,10 +10,20 @@ import org.yaml.snakeyaml.constructor.Constructor
 
 
 
-class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
+class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler]) extends Actions with LazyLogging {
 
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    mentions
+
+    if (expansionHandler.nonEmpty) {
+      // expand arguments
+      val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
+      val expanded = expansionHandler.get.expandArguments(expandable, state)
+      keepLongest(expanded) ++ textBounds
+      //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
+      //val result = mostComplete ++ textBounds
+    } else {
+      mentions
+    }
   }
 
   /** Keeps the longest mention for each group of overlapping mentions **/
@@ -69,8 +80,13 @@ class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
 
 object OdinActions {
 
-  def apply(taxonomyPath: String) =
-    new OdinActions(readTaxonomy(taxonomyPath))
+  def apply(taxonomyPath: String, enableExpansion: Boolean) =
+    {
+      val expansionHandler = if(enableExpansion) {
+      Some(ExpansionHandler())
+      } else None
+      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler)
+    }
 
   def readTaxonomy(path: String): Taxonomy = {
     val input = FileUtils.getTextFromResource(path)
