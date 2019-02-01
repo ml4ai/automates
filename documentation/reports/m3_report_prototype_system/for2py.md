@@ -1,4 +1,4 @@
-## FOR2PY
+## Program Analysis: FOR2PY
 
 Our work in `for2py` has focused on extending the range of Fortran
 language constructs handled.  We have implemented support for the
