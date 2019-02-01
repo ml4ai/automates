@@ -6,7 +6,7 @@ summarizations for source code. Our results indicated that the model was
 failing to learn from the data. We decided on the three following tasks
 that would help increase our models ability to learn from data and allow
 us to debug what portions of the model may be failing. The first task is
-to reassess the code/docstring corpus to see if there were unnecessary
+to reassess the code/docstring corpus to see if there were avoidable
 sources of error in the corpus and to attempt to gather more data. The
 second task is to reassess the code/docstring embeddings by observing
 the vocabulary size and determining whether lowering the vocabulary size
@@ -21,20 +21,20 @@ these three tasks.
 ### Progress on code/docstring corpus
 
 The team was able to increase the size of our overall code/docstring
-corpus by indexing more python packages to look for additional python
+corpus by indexing more Python packages to look for additional Python
 functions that had PEP-style descriptive docstrings. We were able to
-index additional python packages from the following lists of packages:
+index additional Python packages from the following lists of packages:
 the [anaconda
 distribution](https://docs.anaconda.com/anaconda/packages/py3.6_osx-64/),
 the [awesome-python](https://github.com/vinta/awesome-python) list, and
 the list of all available [SciKit
-packages](http://scikits.appspot.com/scikits). In total we increased the
-amount of python packages that we are searching for code/docstring pairs
+packages](http://scikits.appspot.com/scikits). In total, we increased the
+amount of Python packages that we are searching for code/docstring pairs
 to add to our corpus from only 24 to 1132. However, the amount of data
 we discovered from these packages has only increased from roughly 22,000
 examples to roughly 82,000 examples. This suggests that the variance in
 functionality of code samples included in our dataset has greatly
-increased. We have added the following graphic to give a preview of the
+increased. The following graphic gives a preview of the
 styles of code-bases that have added the largest amount of
 code/docstring pairs to our corpus.
 
@@ -66,7 +66,7 @@ function or variable names that occurred fewer than five times each, not
 nearly enough to be able to establish useful embeddings that capture the
 type of semantic information carried in function or variable names.
 
-We decided to remedy this problem by splitting function and variable
+We decided to address this issue by splitting function and variable
 names into sub-components using `snake_case` and `camelCase` rules. In
 order to preserve name semantics we added unique identifiers `<BoN>` and
 `<EoN>` that specify the beginning and end of function/variable names.
@@ -81,10 +81,10 @@ table.
 | `fromOpenSSLCipherString`   | `<BoN> from Open SSL Cipher String <EoN>` |
 | `fromISO8601`               | `<BoN> from ISO 8601 <EoN>`               |
 
-Splitting function/variable lowered our code vocabulary size from
+Splitting functions/variables lowered our code vocabulary size from
 roughly 53,000 to roughly 16,000 unique tokens. It also lowered the
 amount of tokens that appear fewer than five times from roughly 35,000
-to roughly 5,000. This will give our code embeddings and incredible
+to roughly 5,000. This will give our code embeddings an incredible
 boost in semantic power that will be useful for docstring generation.
 
 ### Docstring classification task
@@ -140,13 +140,13 @@ as mismatched pairs. The code blocks with their correct docstrings will
 serve as instances for our classifier to label as correctly matched
 pairs.
 
-For our first dataset we used complete random sampling to select our
+For our first dataset, we used complete random sampling to select our
 negative examples. We named this dataset the random-draw dataset, and
 its purpose is to be our first dataset to use when testing our
 classifier. This is because the act of randomly selecting a negative
 example docstring should greatly increase the chance that the docstring
 selected has very little in common with the true docstring for the code
-block and thus should be easily identified as a mismatch. As such, this
+block and thus should be easily identified as a mismatch.  As such, this
 dataset will be used for the earliest phases of experimentation with our
 classifier. Once we determine that our classifier can do reasonably well
 on the random-draw dataset we will move on to testing our model on our
@@ -173,7 +173,7 @@ table below.
 
 As you may have noticed when looking at the final entry in the table,
 sometimes the negative example for a code block seems to be a fitting
-docstring for the code block. For instance the final example in the
+docstring for the code block. For instance, the final example in the
 table above seems to have a negative example for `twisted.internet.tcp`
 that would actually be a perfectly fine docstring for the function. We
 welcome instances such as this in our challenge dataset, because this
