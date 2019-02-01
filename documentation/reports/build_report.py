@@ -50,16 +50,15 @@ def build_report(report_name):
             "lualatex",
             "-V",
             f"reportname={report_name}",
-            "-V",
-            "links-as-notes=true",
             "-N",
             "-f",
             "markdown+tex_math_dollars",
             "index_transformed.md",
             "-o",
-            f"{report_name}.pdf",
+            f"{report_name}.tex",
         ]
     )
+    sp.call(["latexmk","-lualatex",f"{report_name}.tex"])
     os.remove("index_transformed.md")
 
 

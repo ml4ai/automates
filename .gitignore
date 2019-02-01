@@ -51,3 +51,6 @@ wheels/
 # Generated files from program analysis
 *lambdas.py
 preprocessed*
+
+# Ruby stuff
+Gemfile.lock

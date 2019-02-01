@@ -21,6 +21,8 @@ def parse_args():
     parser.add_argument('indir')
     parser.add_argument('--outdir', default='output')
     parser.add_argument('--template', default='misc/template.tex')
+    parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
+    parser.add_argument('--dump-pages', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -77,20 +79,33 @@ def get_pages(pdf_name):
 
 
 
-def match_template(pages, template):
+def match_template(pages, template, rescale_factor):
     best_val = -np.inf
     best_loc = (-1, -1)
     best_page = -1
-    h, w = template.shape[:2]
-    for i, page in enumerate(pages):
-        result = cv2.matchTemplate(page, template, cv2.TM_CCOEFF_NORMED)
-        (min_val, max_val, min_loc, max_loc) = cv2.minMaxLoc(result)
-        if best_val < max_val:
-            best_val = max_val
-            best_loc = max_loc
-            best_page = i
+    best_h, best_w = -1, -1 # essentially keeps track of the best scale factor
+    # rescale pages and template to speed up template matching
+    if rescale_factor != 1:
+        template = cv2.resize(template, (0,0), fx=rescale_factor, fy=rescale_factor)
+        pages = [cv2.resize(p, (0,0), fx=rescale_factor, fy=rescale_factor) for p in pages]
+    # Try several scale factors in case the standalone equation is slightly smaller/bigger
+    # than the one in the original paper
+    for scale in np.linspace(0.8, 1.2, 5):
+        # resize/scale the template
+        resized = cv2.resize(template, (0,0), fx=scale, fy=scale)
+        for i, page in enumerate(pages):
+            result = cv2.matchTemplate(page, resized, cv2.TM_CCOEFF_NORMED)
+            (min_val, max_val, min_loc, max_loc) = cv2.minMaxLoc(result)
+            if best_val < max_val:
+                best_val = max_val
+                best_loc = max_loc
+                best_page = i
+                best_h, best_w = resized.shape[:2]
     upper_left = best_loc
-    lower_right = (best_loc[0] + w, best_loc[1] + h)
+    lower_right = (best_loc[0] + best_w, best_loc[1] + best_h)
+    if rescale_factor != 1:
+        upper_left = int(upper_left[0] / rescale_factor), int(upper_left[1] / rescale_factor)
+        lower_right = int(lower_right[0] / rescale_factor), int(lower_right[1] / rescale_factor)
     return best_val, best_page, upper_left, lower_right
 
 
@@ -111,7 +126,7 @@ def list_paper_dirs(indir):
 
 
 
-def process_paper(dirname, template, outdir):
+def process_paper(dirname, template, outdir, rescale_factor, dump_pages):
     texfile = find_main_tex_file(dirname)
     paper_id = os.path.basename(os.path.normpath(dirname))
     outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id))
@@ -125,6 +140,11 @@ def process_paper(dirname, template, outdir):
     pdf_name = render_tex(texfile, outdir)
     # retrieve pdf pages as images
     pages = get_pages(pdf_name)
+    if dump_pages:
+        os.makedirs(os.path.join(outdir, 'pages'))
+        for i,p in enumerate(pages):
+            img_name = os.path.join(outdir, 'pages', '%03d.png' % i)
+            cv2.imwrite(img_name, p)
     # load jinja2 template
     template_loader = jinja2.FileSystemLoader(searchpath='.')
     template_env = jinja2.Environment(loader=template_loader)
@@ -154,7 +174,7 @@ def process_paper(dirname, template, outdir):
                 # equation couldn't be rendered
                 continue
             # find page and aabb where equation appears
-            match, p, start, end = match_template(pages, equation)
+            match, p, start, end = match_template(pages, equation, rescale_factor)
             # write image with aabb
             image = pages[p].copy()
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
@@ -178,5 +198,5 @@ def process_paper(dirname, template, outdir):
 if __name__ == '__main__':
     args = parse_args()
     for paper_dir in list_paper_dirs(args.indir):
-        print('processing', paper_dir)
-        process_paper(paper_dir, args.template, args.outdir)
+        print('processing', paper_dir, '...')
+        process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages)
