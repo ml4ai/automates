@@ -5,7 +5,7 @@
 A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN function networks is to identify where the models overlap.
 
 During this phase, the team developed an algorithm to identify the shared portion of
-two function networks. As a working example, we show how the algorithm identifies the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor.
+two function networks. As a working example, we show what the algorithm identifies as the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor.
 The following two figures show a graphical representation of the shared portions of these two models, which are identified by a network property that we refer to as a _Forward Influence Blanket_ (FIB). In the following section we will formally define the structure of a FIB and its role in model analysis.
 
 ---
