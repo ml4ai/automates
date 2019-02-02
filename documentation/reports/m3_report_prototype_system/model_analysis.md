@@ -1,8 +1,8 @@
 ## Model Analysis
 
-### Automated function network comparison
+A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN function networks is to identify where the models overlap. We first review the team's work on automating function network comparison, and then present some initial results investigating the complexity of running sensitivity analysis, which in turn is informing our next approaches to scaling sensitivity analysis.
 
-A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN function networks is to identify where the models overlap.
+### Automated function network comparison
 
 During this phase, the team developed an algorithm to identify the shared portion of
 two function networks. As a working example, we show what the algorithm identifies as the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor.
@@ -82,7 +82,7 @@ required to conduct sensitivity analysis on our larger models then we
 should not see a runtime increase that would render sensitivity analysis
 intractable.
 
-<br>
+---
 
 ![Plot of the increase in runtime for our Sobol
 analysis method as sample size increases. The blue line depicts
@@ -91,7 +91,7 @@ the runtime for the total program.](figs/sa_samples_vs_runtime.png)
 
 **Figure 6:** Plot of the increase in runtime for our Sobol analysis method as sample size increases. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.  
 
-<br>
+---
 
 ##### Runtime as a function of the number of input variables
 
@@ -99,7 +99,7 @@ We are also exploring the impact of increasing the number of input variables con
 As expected, the graph below does show that the runtime for the Sobol portion of sensitivity analysis increases super-linearly as the number of input variables increases. To address this, we are currently exploring several ways to reduce the number of inputs analyzed at one time.
 One strategy already described above, motivating the FIB analysis, is to identify modular components of the function network with fewer inputs that can be analyzed independently. We are also exploring doing this at the level of performing sensitivity analysis one function at a time, and then composing the results. This work is ongoing.
 
-<br> 
+---
 
 ![Plot of the increase in runtime for the Sobol analysis
 method given an increase in number of inputs for the function under
@@ -109,4 +109,3 @@ program.](figs/sa_inputs_vs_runtime.png)
 
 **Figure 7:** Plot of the increase in runtime for the Sobol analysis method given an increase in number of inputs for the function under analysis. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.
 
-<br>
