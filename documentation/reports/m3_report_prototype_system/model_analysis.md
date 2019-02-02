@@ -1,8 +1,8 @@
 ## Model Analysis
 
-### Automated function network comparison
+A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN function networks is to identify where the models overlap. We first review the team's work on automating function network comparison, and then present some initial results investigating the complexity of running sensitivity analysis, which in turn is informing our next approaches to scaling sensitivity analysis.
 
-A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN function networks is to identify where the models overlap.
+### Automated function network comparison
 
 During this phase, the team developed an algorithm to identify the shared portion of
 two function networks. As a working example, we show what the algorithm identifies as the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor.
