@@ -2,79 +2,42 @@
 
 ### Automated factor network comparison
 
-As outlined in our previous report, the structural comparison of two
-competing factor networks is a very important portion of model analysis.
-For two competing models (each represented by a factor network) that
-model the same natural phenomenon, we would like to generate comparative
-sensitivity reports about the shared inputs of the two models (i.e.
-inputs that both models have in common). In order to do this, we must
-first determine the portions of the factor networks of the two models
-that overlap, based upon shared inputs and outputs. Doing this allows us
-to compare the uncertainty in model output between two models as a
-function of the shared model inputs.
+A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN factor networks is to identify where the models overlap.
 
-The team has accomplished the task of discovering the shared portion of
-two factor networks derived from the two evapotranspiration models
-highlighted in our grant proposal, the ASCE and the Priestley-Taylor
-models. Below, we show a graphical representation of the shared portions
-of these two models, which are represented by a new structure that we
-are referring to as a Forward Influence Blanket (FIB). In the following
-section we will formally define the structure of a FIB and its use-case
-for model analysis.
+During this phase, the team developed an algorithm to identify the shared portion of
+two factor networks. As a working example, we show how the algorithm identifies the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor. 
+The following two figures show a graphical representation of the shared portions of these two models, which are identified by a network property that we refer to as a _Forward Influence Blanket_ (FIB). In the following section we will formally define the structure of a FIB and its role in model analysis.
 
 ---
 
-![Forward influence blanket for the Priestley-Taylor model](figs/cmb_pt.png)
+![Representation of the subnetwork within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model](figs/cmb_pt.png)
 
-**Figure 1:** Graphical view of the FIB for the Priestley-Taylor factor network.
+**Figure 1:** Representation of the subnetwork within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model.
 <br>
 
 ---
 
-![Forward influence blanket for the ASCE model](figs/cmb_asce.png)
+![Representation of the subnetwork within the ASCE model identified by the Forward Influence Blanket that intersects with the Priestley-Taylor model](figs/full-asce-cmb.png)
 
-**Figure 2:** Graphical view of the FIB for the ASCE factor network.
+**Figure 2:** Representation of the subnetwork within the ASCE model identified by the Forward Influence Blanket that intersects with the Priestley-Taylor model.
 <br>
 
 ---
 
-### Forward Influence Blanket (FIB) description
+### Identifying the Forward Influence Blanket (FIB)
 
-A common method for isolating a probabilistic subnetwork is to form a
-[Markov Blanket](https://en.wikipedia.org/wiki/Markov_blanket) around
-a node of interest. To form a full Markov blanket, all of the
-parent nodes of the subnetwork of interest, as well as all the child
-nodes and parents of child nodes must be included, in order to fully
-isolate the probabilistic subnetwork. This is required in order to
-perform both forward and reverse inference on the subnetwork. However,
-for the purposes of model analysis we are currently only interested in
-questions pertaining to forward analysis (i.e. how do inputs to the
-model affect the output). Therefore we have created a loose variant of a
-Markov blanket that we have named a Forward Influence Blanket (FIB). Our
-rationale for this naming is that a FIB is a _blanket_ around a
-probabilistic subnetwork that only captures the information necessary to
-determine the _influence_ that nodes have on each other in the _forward_
-direction.
+Drawing a loose analogy to a [Markov Blanket](https://en.wikipedia.org/wiki/Markov_blanket), a _Forward Influence Blanket_ identifies the variables that are shared between two function networks, along with the non-shared variables that are involved in any functional relationships that are along the directed paths between the shared variables. The FIB gets its name because we are analyzing the _influence_ that variables have on one another in a directed (_forward_ from input to output) network, and the _blanket_ identifies minimal subset of such influences shared between the two networks.
 
-The two FIBs shown in the section above are color-coded to provide a
-visual depiction of the different components of a FIB. Let us consider
-the FIB for the shared subnetwork of the ASCE evapotranspiration model.
-We can see that some nodes are colored blue, and of those nodes some are
-bolded. All blue nodes in the network represent shared nodes that are
-also present in the Priestley-Taylor evapotranspiration model. The blue
-nodes that are bolded represent nodes that are shared inputs to both
-models (these are likely the nodes of highest interest for model
-analysis). Between the blue nodes in our FIB we have a series of one or
-more black nodes. These nodes are nodes that are found in the ASCE
-factor network but are not present in the Priestley-Taylor factor
-network. These nodes likely represent a difference in the computation
-used to derive the shared output from the shared inputs in these two
-models and they will likely be the cause of differences observed in
-model output uncertainty during analysis. We also observe nodes in the
-ASCE FIB that are colored green. These nodes are part of the blanket
-portion of the FIB that allow us to isolate the probabilistic
-subnetworks of the two models. We will need to observe values for these
-nodes as well when conducting uncertainty analysis.
+The two figures above depict the portions of the function networks for the two models identifies as overlapping, by identifying the FIB. The nodes in the graphs represent variables, the directed arcs indicate a directed functional relationships (variable at the tail is an input, the variable at the head is the output variable that is a function of the input), and the nodes are color-coded to provide a visual depiction of different relationships with respect to the FIB. Consider the second figure, depicting the ASCE function network. All the blue nodes in the network represent variables that are also found int he Priestly-Taylor model. The blue nodes with thicker lines represent variables that play \"input\" roles in both of the overlapping subnetworks: they are shared and do not have any parents that are also in the subnetworks. 
+
+Next, between the blue nodes, along the directed paths from the \"inputs\" to the output nodes are black nodes that represent variables that are not shared between the two models, and therefore represent intermediate values that may represent differences in the functional relationships between the inputs and outputs of the subnetwork. (Determining what the functional differences may be is the subject of the next phase, sensitivity analysis, described in the next section.)
+
+In the first figure, depicting the Priestley-Taylor function network, all of the black nodes are between blue nodes. In fact, there are no other nodes or edges that are not colored blue and black. This means the inputs and outputs of the Priestley-Taylor network are \"contained within\" the ASCE network while there are some differences in the computation between the inputs and outputs (the black nodes).
+
+In the ASCE network, however, there are a number of additional nodes. The green colored nodes depict the variables that have directed influence on the computations along the paths from inputs to outputs, although they are _not_ shared between the networks. If one is interested in directly comparing the subnetworks to each other, the states of the green variables may affect the input-to-output relationships.
+
+Finally, the ### nodes represent all of the variables in the 
+
 
 ### Sensitivity index discovery
 
