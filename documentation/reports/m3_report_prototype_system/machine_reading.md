@@ -49,10 +49,13 @@ This project is fully open-source and has already been utilized and
 contributed to by the Georgia Tech ASKE team.
 
 To promote rapid grammar development, the team has developed a framework
-for writing unit tests to assess the extraction coverage.  This will
-allow for quickly increasing rule coverage while ensuring that previous
-results are maintained. Currently, there are 39 tests written, of which
-15 pass.
+for writing unit tests to assess the extraction coverage.  Currently, 
+there are 77 tests written to test the extraction of variables, 
+definitions, and setting of parameter values, of which 16 pass. 
+This test-driven approach (in which we first write the tests based on 
+the desired functionality and then work to ensure they pass) will allow 
+for quickly increasing rule coverage while ensuring that previous results 
+are maintained. 
 
 ### Next Steps
 
