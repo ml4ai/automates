@@ -2,7 +2,7 @@
 
 ### Automated function network comparison
 
-A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN factor networks is to identify where the models overlap.
+A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN function networks is to identify where the models overlap.
 
 During this phase, the team developed an algorithm to identify the shared portion of
 two function networks. As a working example, we show how the algorithm identifies the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor.
