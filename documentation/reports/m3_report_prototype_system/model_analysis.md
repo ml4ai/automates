@@ -45,19 +45,19 @@ Having identified the FIB, with the blue and green nodes constituting all of the
 ### Sensitivity index discovery
 
 In our previous report we demonstrated the ability to automatically
-conduct sensitivity analysis on the inputs to the source code of an
-extract models function network. The method we presented involved three
+conduct sensitivity analysis on the inputs to an
+extracted function network. The method we presented involved three
 steps to fully conduct a sensitivity analysis of a given function *f*:
 
-1. Take *N* samples from the input space of *f* using Saltelli sampling
+1. Take *N* samples from the input space of *f* using [Saltelli sampling](https://en.wikipedia.org/wiki/Variance-based_sensitivity_analysis)
 2. Evaluate each of the *N* samples on *f* to form the set *E*
-3. Perform Sobol analysis on *E*
+3. Perform [Sobol](https://en.wikipedia.org/wiki/Variance-based_sensitivity_analysis) analysis on *E*
 4. Recover the $$S_1$$, $$S_2$$, and $$S_T$$ sensitivity indices
 
 This method has been successful in retrieving all the information we
 needed in order to determine which inputs account for the most
-uncertainty in model output. Since our last report we began
-experimenting to see how the runtime of sensitivity analysis is affected
+uncertainty in model output. Since our last report the team has begun
+investigating how the runtime of sensitivity analysis is affected
 by varying the sample size *N* or the size of the input space of
 function *f*. Below we show graphs that depict runtime as a function of
 the two previously mentioned variables. For each of these graphs the red
@@ -67,19 +67,20 @@ variable under inspection.
 
 ##### Runtime as a function of sample size
 
-As our models become more complex we expect that we will need to
-increase the number of samples taken and evaluated in order to achieve a
-similar amount of accuracy in sensitivity index estimation during
+As models become more complex we expect that we will need to
+increase the number of samples taken and evaluated in order to achieve
+comparable accuracy in sensitivity index estimation during
 sensitivity analysis. Because of this, we determined that we needed to
 empirically inspect the runtime of sensitivity analysis as the number of
 samples increases. From the graph below, we can see that the increase in
-runtime as the number of samples increases is roughly linear, both for
+runtime as the number of samples increases is nearly linear 
+(with slight super-linear trend), both for
 the entirety of sensitivity analysis and for the Sobol portion of
-sensitivity analysis. This result is encouraging because it ensures that
+sensitivity analysis. This result is encouraging because it suggests that
 as long as we maintain only a linear increase in the number of samples
 required to conduct sensitivity analysis on our larger models then we
 should not see a runtime increase that would render sensitivity analysis
-unusable.
+intractable.
 
 <br>
 ![Visual depiction of increase in runtime for our Sobol
@@ -94,31 +95,29 @@ the runtime for the total program.
 
 ##### Runtime as a function of input space size
 
-The models we plan on extracting from the DSSAT library will likely have
-a very large number of inputs. This entails that the size of our input space
+The models that AutoMATES will extract from the DSSAT library will have
+a large number of inputs -- The size of the input space
 will be much larger than in the examples we have studied thus far.
-Therefore, we determined that we needed to empirically observe the
+Therefore, we determined that we need to study the
 affects of increasing the input space size (via increasing the number of
 model inputs) on the runtime of sensitivity analysis. From the graph
-below, we can see that as we linearly increase the amount of inputs to a
+below, we can see that as we increase the number of inputs to a
 model, the runtime for the Sobol portion of sensitivity analysis
-increases greater than linearly. We also notice that this increase in
+increases super-linearly. We also note that this increase in
 runtime for the Sobol portion explains the greater than linear increase
-in runtime for the entirety of sensitivity analysis. This result is
-discouraging as our models of interest are likely going to have a large
-number of inputs (for example the ASCE evapotranspiration model has 12
-inputs). In order to handle larger models we are planning on
-investigating methods of computing sensitivity analysis on subnetworks
-of the models that have fewer inputs. This was a key motivation for the
-development of Forward Influence Blankets as mentioned earlier in the
-report that will allow us to study sensitivity analysis only on the
-shared components of two large competing models of the same phenomena.
-<br> ![Visual depiction of increase in runtime for our Sobol analysis
+in runtime for the entirety of sensitivity analysis. 
+The take-home message here is that, as we've anticipated, we will need to investigate additional methods for making sensitivity analysis more efficient.
+One strategy, already introduced above, is to identify modular components of the function network with fewer inputs that can be analyzed independently.
+
+<br> 
+
+![Plot of the increase in runtime for the Sobol analysis
 method given an increase in number of inputs for the function under
 analysis. The blue line depicts the increase in runtime for the Sobol
 algorithm and the red line depicts the runtime for the total
 program.](figs/sa_inputs_vs_runtime.png)
-**Figure 4:** Visual depiction of increase in runtime for our Sobol
+
+**Figure 4:** Plot of the increase in runtime for the Sobol
 analysis method given an increase in number of inputs for the function
 under analysis. The blue line depicts the increase in runtime for the
 Sobol algorithm and the red line depicts the runtime for the total
