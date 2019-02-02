@@ -10,7 +10,11 @@ Prior to this update, a variety of naming conventions were used to represent sou
 	
 - Inclusion of namespace and scope context in identifier definitions make it possible for program analysis to represent the context of Fortran program Modules. This context also provides a consistent method for extending source code analysis beyond single source code files.
 	
-- An `<identifier string>` provides a single human-readable instance of an identifier while consistently representing all of its definitional information: namespace, scope, and base name. These will be used to denote instances of identifiers used in generated GrFN JSON (outside of the identifier declaration specs). For example, \"CROP\_YIELD::UPDATE\_EST.loop$1::YIELD\_EST\" is an identifier for a variable name originally given as \"YIELD\_EST\" in source code, but defined in the \"CROP\_YIELD\" namespace, and within the first loop of the function \"UPDATE\_EST\".
+- An `<identifier string>` provides a single human-readable instance of an identifier while consistently representing all of its definitional information: namespace, scope, and base name. These will be used to denote instances of identifiers used in generated GrFN JSON (outside of the identifier declaration specs). For example, 
+
+	"CROP_YIELD::UPDATE_EST.loop$1::YIELD_EST" 
+
+    is an identifier for a variable name originally given as \"YIELD\_EST\" in source code, but defined in the \"CROP\_YIELD\" namespace, and within the first loop of the function \"UPDATE\_EST\".
 	
 - Since identifiers themselves are now defined in terms of structured information (namespace, scope, and base name), identifier `<gensym>`s have been introduced to be used as unambiguous standins for identifiers used in generated intermediate target Python code.
 
