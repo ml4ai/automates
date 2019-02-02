@@ -2,14 +2,15 @@
 
 ### ArXiv bulk download
 
-The team has downloaded the complete set of arXiv PDFs their
+The team has downloaded the complete set of arXiv PDFs and their
 corresponding source files from Amazon S3 as described
-[here](https://arxiv.org/help/bulk_data_s3).
+[here](https://arxiv.org/help/bulk_data_s3). These will be used for
+training and evaluating equation detection and parsing.
 
 ### Preprocessing pipeline
 
 The team has put together a preprocessing pipeline with the purpose of
-preparing the data for training the statistical models.
+preparing the data for training the statistical models for equation detection.
 
 First, the source files retrieved from arXiv are arranged in a directory
 structure where the first directory corresponds to the year and month of
