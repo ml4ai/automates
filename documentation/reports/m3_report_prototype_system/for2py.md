@@ -7,7 +7,7 @@ out the translation of a number of additional Fortran language
 constructs and are currently in the process of implementing their
 translation.
 
-**1. Fortran I/O**
+### 1. Fortran I/O
 
 Fortran's file-handling and formatted I/O handling mechanisms have been
 implemented in the `for2py` IR. This gives us a way to validate the
@@ -19,7 +19,7 @@ particular, we have implemented the following:
 2. _File Output_: Writing data onto a file in the disk. Analogous to Python's _write_.
 3. _List-Directed Output_: Analogous to Python's _sys.stdout_. 
 
-**2. Modules**
+### 2. Modules
 
 Modules provide a mechanism for programmers to organize their code,
 control visibility of names, and allow code reuse; they are used
@@ -42,14 +42,14 @@ We are currently working on implementing the translation of Fortran
 modules from `for2py` IR into the GrFN specification language.
 
 
-**3. Open-ended Loops**
+### 3. Open-ended Loops
 
 `for2py` is able to translate Fortran `DO-WHILE` loops into an equivalent
 Python IR.  We are currently working on implementing the translation of
 such open-ended loops into the GrFN specification language.
 
 
-**4. Arrays**
+### 4. Arrays
 
 Fortran arrays differ from Python lists in a number of ways. By default,
 Fortran arrays are 1-based, i.e., the first element is at index 1, while
