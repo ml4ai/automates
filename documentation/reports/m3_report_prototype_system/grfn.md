@@ -26,5 +26,5 @@ The approach to representing program conditions (i.e., \"if statements\") was al
 
 Finally, there was a significant rewrite of the specification introduction as well as updates throughout to improve readability and ensure consistency. 
 
-The release version of the GrFN specification as of this report (Version 0.1.m3) is linked [here](GrFN_specification_v0.1.m3). (For the latest development version, see the [delphi read the docs page](https://delphi.readthedocs.io/en/master/grfn_spec.html).)
+The release version of the GrFN specification as of this report is linked here [GrFN Specification Version 0.1.m3](GrFN_specification_v0.1.m3). (For the latest development version, see the [Delphi read the docs page](https://delphi.readthedocs.io/en/master/grfn_spec.html).)
 
