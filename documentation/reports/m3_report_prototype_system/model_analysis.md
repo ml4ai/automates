@@ -157,38 +157,3 @@ The model under evaluation for this test was the PLANT model from
 the SimpleModular crop model.
 
 <br>
-
-### Next steps
-
-##### Sensitivity index propagation
-
-We anticipate that users of AutoMATES will likely want a visual
-understanding of how uncertainty is being propagated through our
-extracted function networks that represent their models of interest. In
-order to accommodate this desire we plan on adapting our sensitivity
-index discovery methods to be done on piecewise subnetworks of our
-function networks (and FIBs) in a recursive style. This would mean that we
-would only consider the immediate parents of a node when running
-sensitivity analysis of that particular node. Afterwards we would
-conduct sensitivity analysis on each of the parent nodes to determine
-the sensitivity indices for each of the parent nodes' parents. Doing this
-will allow us to see how sensitivity propagates from the input nodes to
-output of any model under study at the finest granularity possible given
-our modeling structure.
-
-##### Bayesian sampling for Sensitivity Analysis
-
-Given the results we have presented on in the increase in runtime for
-our Sobol algorithm with respect to an increase in sample size and an
-increase in the number of inputs, we have decided to investigate
-measures to increase the effectiveness of our sampling methods. Although
-runtime only increases linearly with an increase in the number of
-samples, the amount of samples needed as the number of inputs increases
-will increase exponentially due to [the curse of
-dimensionality](https://en.wikipedia.org/wiki/Curse_of_dimensionality).
-In order to combat this affect and keep our number of necessary samples
-to a minimum we are investigating sampling methods via [Bayesian
-Optimization](https://en.wikipedia.org/wiki/Bayesian_optimization) that
-will allow us to sample our larger search spaces efficiently by taking
-into account prior information about the models discovered during text
-reading, equation detection, and program analysis.
