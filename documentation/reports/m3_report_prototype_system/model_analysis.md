@@ -12,14 +12,14 @@ The following two figures show a graphical representation of the shared portions
 
 ![Representation of the subnetwork within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model](figs/full-pt-cmb.png)
 
-**Figure 1:** Representation of the subnetwork (blue and black nodes) within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model.
+**Figure 3:** Representation of the subnetwork (blue and black nodes) within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model.
 <br>
 
 ---
 
 ![Representation of the subnetwork within the ASCE model identified by the Forward Influence Blanket that intersects with the Priestley-Taylor model](figs/full-asce-cmb.png)
 
-**Figure 2:** Representation of the subnetwork (blue and black nodes) within the ASCE model identified by the Forward Influence Blanket (blue and green nodes) that intersects with the Priestley-Taylor model.
+**Figure 4:** Representation of the subnetwork (blue and black nodes) within the ASCE model identified by the Forward Influence Blanket (blue and green nodes) that intersects with the Priestley-Taylor model.
 <br>
 
 ---
@@ -83,14 +83,17 @@ should not see a runtime increase that would render sensitivity analysis
 intractable.
 
 <br>
+
 ![Visual depiction of increase in runtime for our Sobol
 analysis method given an increase in sample size. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.](figs/sa_samples_vs_runtime.png)
-**Figure 3:** Visual depiction of increase in runtime for our Sobol
+
+**Figure 5:** Visual depiction of increase in runtime for our Sobol
 analysis method given an increase in sample size. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.
+
 <br>
 
 ##### Runtime as a function of input space size
@@ -117,11 +120,12 @@ analysis. The blue line depicts the increase in runtime for the Sobol
 algorithm and the red line depicts the runtime for the total
 program.](figs/sa_inputs_vs_runtime.png)
 
-**Figure 4:** Plot of the increase in runtime for the Sobol
+**Figure 6:** Plot of the increase in runtime for the Sobol
 analysis method given an increase in number of inputs for the function
 under analysis. The blue line depicts the increase in runtime for the
 Sobol algorithm and the red line depicts the runtime for the total
 program.
+
 <br>
 
 ##### Sensitivity index stability
@@ -141,14 +145,17 @@ implement efficient sampling methods that can allow our estimates of the
 sensitivity indices to converge with far fewer samples.
 
 <br>
+
 ![Visual depiction of changes in stability of S1 sensitivity
 indices with respect to increases in sample size from Saltelli sampling.
 The model under evaluation for this test was the PLANT model from
 the SimpleModular crop model.](figs/plant_s1_est.png)
-**Figure 4:** Visual depiction of changes in stability of S1 sensitivity
+
+**Figure 7:** Visual depiction of changes in stability of S1 sensitivity
 indices with respect to increases in sample size from Saltelli sampling.
 The model under evaluation for this test was the PLANT model from
 the SimpleModular crop model.
+
 <br>
 
 ### Next steps
