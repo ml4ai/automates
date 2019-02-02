@@ -127,3 +127,13 @@ will allow us to sample our larger search spaces efficiently by taking
 into account prior information about the models discovered during text
 reading, equation detection, and program analysis.
 
+
+---
+
+As the exampels above show, it is possible for a "negative" example to actually be suitably close to pass for an accurate description. For instance, the last row in the
+table above includes a "negative" example for `twisted.internet.tcp` that would actually be a perfectly fine docstring for the function. We welcome instances such as this in our challenge dataset, because this will serve as noise that our model will need to learn to distinguish appropriately. 
+
+In order to ensure our dataset is not too noisy, we include 10 negative examples for every positive example in our challenge dataset, where the 10 examples included will be the 10
+docstrings with the highest lexical overlap with the true docstring. While it may be possible for the docstring with highest lexical overlap to be a fitting docstring for the original code block it is highly unlikely that the remaining nine docstrings will fit as well, thus the amount of noise added to our challenge dataset from creating negative
+examples via lexical overlap will be minimized.
+
