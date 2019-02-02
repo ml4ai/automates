@@ -12,14 +12,14 @@ The following two figures show a graphical representation of the shared portions
 
 ![Representation of the subnetwork within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model](figs/full-pt-cmb.png)
 
-**Figure 1:** Representation of the subnetwork within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model.
+**Figure 1:** Representation of the subnetwork (blue and black nodes) within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model.
 <br>
 
 ---
 
 ![Representation of the subnetwork within the ASCE model identified by the Forward Influence Blanket that intersects with the Priestley-Taylor model](figs/full-asce-cmb.png)
 
-**Figure 2:** Representation of the subnetwork within the ASCE model identified by the Forward Influence Blanket that intersects with the Priestley-Taylor model.
+**Figure 2:** Representation of the subnetwork (blue and black nodes) within the ASCE model identified by the Forward Influence Blanket (blue and green nodes) that intersects with the Priestley-Taylor model.
 <br>
 
 ---
