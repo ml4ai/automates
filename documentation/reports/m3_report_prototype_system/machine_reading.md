@@ -1,16 +1,16 @@
 ## Text Reading
 
-### Converting pdf to text
+### Converting PDF to text
 
 As discussed in the previous report, the first task required to perform
 automated text reading and information extraction was the conversion of
-the source documents from PDF to text. Several tools were evaluated on
+the source documents from PDF to text. This phase the team evaluated several tools on
 the specific types of documents that are used here (i.e., scientific
-papers) and at the end the team chose to use [science
+papers) and in the end the team chose to use [science
 parse](https://github.com/allenai/science-parse) for both its quick
-processing of texts as well as the fact that it handles section
-divisions and greek letters well. The team integrated science parse
-with their pipeline via a Docker container such that it can be run
+processing of texts as well as the fact that it does a good job handling section
+divisions and greek letters. The team integrated science parse
+into the text reading pipeline via a Docker container such that it can be run
 offline (as a preprocessing step) or online during the extraction.
 
 ### Extracting quantities
@@ -25,8 +25,8 @@ extraction system converts the extractions into mentions for use in
 later rules (i.e., the team's extraction rules can look for a previously
 found quantity and attach it to a variable).  While grobid-quantities
 has allowed the team to begin extracting model information more quickly,
-there are limitations to the tool (i.e., unreliable handling of unicode
-and inconsistent intervals).  The team has opened several issues on the
+there are limitations to the tool, such as unreliable handling of unicode
+and inconsistent intervals.  The team has opened several issues on the
 Github page for grobid-quanities and will continue to do so.  If
 nesessary, the extraction of quantities may be moved into the Odin
 grammars for full control.
@@ -35,12 +35,12 @@ grammars for full control.
 
 In terms of extraction, the team has begun implementing a light-weight
 information extraction framework for use in the ASKE program.  The
-system incorporates elements of [eidos](https://github.com/clulab/eidos)
+system incorporates elements of [Eidos](https://github.com/clulab/eidos)
 (e.g., the webapp for visualizing extractions, entity finders based on
 syntax and the results of grobid-quantities, and the expansion of
 entities that participate in relevant events) along with new
 [Odin](http://clulab.cs.arizona.edu/papers/lrec2016-odin.pdf) grammars
-for identifying, quantifying, and defining variables as shown here: 
+for identifying, quantifying, and defining variables, as shown here: 
 
 ![A screenshot of the web-based visualizer showing the results of
 the rule-based extraction framework.](figs/extractions.png)
