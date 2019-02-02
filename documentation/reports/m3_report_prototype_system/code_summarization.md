@@ -41,16 +41,19 @@ styles of code-bases that have added the largest amount of
 code/docstring pairs to our corpus.
 
 <br>
+
 ![Graphical view of the amount of usable code/docstring
 pairs each python module has added to our code-summarization corpus
 (only the 25 modules with the largest amount of usable pairs are shown)
 Modules are color-coded according to the type of code most likely to be
 found in the module.](figs/module_corpus_contributions.png)
-**Figure 1:** Graphical view of the amount of usable code/docstring
+
+**Figure 8:** Graphical view of the amount of usable code/docstring
 pairs each python module has added to our code-summarization corpus
 (only the 25 modules with the largest amount of usable pairs are shown)
 Modules are color-coded according to the type of code most likely to be
 found in the module.
+
 <br>
 
 ### Progress on code embeddings
