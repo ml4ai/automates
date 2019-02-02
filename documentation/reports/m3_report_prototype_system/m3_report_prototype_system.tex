@@ -54,7 +54,7 @@
 \settocdepth{subsection}
 \setsecheadstyle{\color{Maroon}\large\sffamily\bfseries}
 \setsubsecheadstyle{\bfseries}
-\setparaheadstyle{\bfseries\sffamily\large}
+\setparaheadstyle{\bfseries\sffamily}
 \tightlists
 
 \counterwithout{section}{chapter}
@@ -89,16 +89,15 @@
 \hypertarget{overview}{%
 \section{Overview}\label{overview}}
 
-In this report the AutoMATES team describes the development work done in
-the past two months on the AutoMATES prototype system. No changes have
-been made to the overall architecture design, but significant progress
-has been made in each of the architecture components introduced in the
+In this report, the AutoMATES team describes the development work done
+in the past two months on the AutoMATES prototype system. No changes
+have been made to the overall architecture and design, but significant
+progress has been made in each of the architecture components introduced
+in the
 \href{https://ml4ai.github.io/automates/documentation/reports/m1_architecture_report/}{Month
 1 Report}. We are on track for successfully achieving our Phase 1 goals
-for the prototype.
-
-Among the highlights for this phase, detailed in the sections below, are
-the following:
+for the prototype. Among the highlights for this phase are the
+following: 
 
 \begin{itemize}
 \tightlist
@@ -127,7 +126,7 @@ the following:
   code summary generation.
 \end{itemize}
 
-All code supporting the contributions reported here are available in the
+All code supporting the contributions reported here is available in the
 \href{https://github.com/ml4ai/automates}{AutoMATES} and
 \href{https://github.com/ml4ai/delphi/}{Delphi} Github repositories.
 
@@ -212,7 +211,7 @@ includes the following additions and advantages:
 \item
   \texttt{\textless{}identifier\_spec\textgreater{}} declarations in
   GrFN associate identifier usage, such as the location within source
-  code of where the identifier was declared, as well as "aliases" (other
+  code of where the identifier was declared, as well as ``aliases" (other
   names used to refer to the same program elements). The location of
   identifier use will be used to connect identifiers with source code
   comments and documentation strings. Also, base names, aliases, and
@@ -237,8 +236,8 @@ includes the following additions and advantages:
 \end{verbatim}
 
   is an identifier for a variable name originally given as "YIELD\_EST"
-  in source code, but defined in the "CROP\_YIELD" namespace, and within
-  the first loop of the function "UPDATE\_EST".
+  in source code, but defined in the ``CROP\_YIELD" namespace, and within
+  the first loop of the function ``UPDATE\_EST".
 \item
   Since identifiers themselves are now defined in terms of structured
   information (namespace, scope, and base name), identifier
@@ -259,11 +258,11 @@ have been introduced.
 \hypertarget{conditions}{%
 \subsection{Conditions}\label{conditions}}
 
-The approach to representing program conditions (i.e., "if statements")
-was also updated. When program analysis analyzes a conditional in source
-code, a "condition" assignment function is introduced that sets the
+The approach to representing program conditions (i.e., ``if statements")
+was also updated. When a conditional block in source
+code is analyzed, a ``condition" assignment function is introduced that sets the
 state of a variable representing the condition, and then one or more
-"decision" assignment functions are introduce that represent updates to
+``decision" assignment functions are introduced that represent updates to
 other variables depending on the outcome of the condition.
 
 \hypertarget{specification-links}{%
@@ -277,7 +276,7 @@ The release version of the GrFN specification as of this report is
 linked here \href{GrFN_specification_v0.1.m3}{GrFN Specification Version
 0.1.m3}. (For the latest development version, see the
 \href{https://delphi.readthedocs.io/en/master/grfn_spec.html}{Delphi
-read the docs page}.)
+ReadTheDocs page}.)
 
 % \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
@@ -288,8 +287,7 @@ Our work in \texttt{for2py} has focused on extending the range of
 Fortran language constructs handled. We have implemented support for the
 Fortran language constructs listed below. In addition, we have mapped
 out the translation of a number of additional Fortran language
-constructs and are currently in the process of implementing their
-translation.
+constructs and are currently in the process of implementing it.
 
 \hypertarget{fortran-io}{%
 \subsection{Fortran I/O}\label{fortran-io}}
@@ -326,7 +324,7 @@ that the resulting Python code has the same behavior as the original
 Fortran code.
 
 Our implementation translates each Fortran module into its own Python
-file (named as
+file (named 
 \emph{\texttt{m\_\textless{}module\_name\textgreater{}.py}}). This has a
 number of advantages, among them that it is easy to identify, isolate,
 and access the Python code corresponding to each Fortran module, and
@@ -339,7 +337,7 @@ mangling} to replicate the behavior of Fortran's \texttt{PRIVATE}
 declarations.
 
 We are currently working on implementing the translation of Fortran
-modules from \texttt{for2py} intermediate representation into the GrFN
+modules from the \texttt{for2py} intermediate representation into the GrFN
 specification language, where we will make use of the new
 \texttt{identifier} and naming conventions.
 
@@ -384,13 +382,13 @@ specification language.
 
 As discussed in the previous report, the first task required to perform
 automated text reading and information extraction was the conversion of
-the source documents from PDF to text. This phase the team evaluated
+the source documents from PDF to text. This phase, the team evaluated
 several tools on the specific types of documents that are used here
-(i.e., scientific papers) and in the end the team chose to use
+(i.e., scientific papers), and in the end the team chose to use
 \href{https://github.com/allenai/science-parse}{science parse} for both
 its quick processing of texts as well as the fact that it does a good
 job handling section divisions and greek letters. The team integrated
-science parse into the text reading pipeline via a Docker container such
+science parse into the text reading pipeline via a Docker container so
 that it can be run offline (as a preprocessing step) or online during
 the extraction.
 
@@ -417,7 +415,7 @@ grammars for full control.
 \subsection{Rule-based extraction
 framework}\label{rule-based-extraction-framework}}
 
-In terms of extraction, the team has begun implementing a light-weight
+The team has begun implementing a lightweight
 information extraction framework for use in the ASKE program. The system
 incorporates elements of \href{https://github.com/clulab/eidos}{Eidos}
 (e.g., the webapp for visualizing extractions, entity finders based on
@@ -425,13 +423,14 @@ syntax and the results of grobid-quantities, and the expansion of
 entities that participate in relevant events) along with new
 \href{http://clulab.cs.arizona.edu/papers/lrec2016-odin.pdf}{Odin}
 grammars for identifying, quantifying, and defining variables, as shown
-here:
+in \autoref{fig:extraction_screenshot}.
 
 \begin{figure}[h]
 \centering
 \includegraphics{figs/extractions.png}
 \caption{A screenshot of the web-based visualizer showing the results of
 the rule-based extraction framework.}
+\label{fig:extraction_screenshot}
 \end{figure}
 
 This project is fully open-source and has already been utilized and
@@ -507,7 +506,7 @@ The team will next work on the preprocessing of the extracted TeX tokens
 to provide the equation decoder a more consistent input. At minimum, the
 preprocessing will include the removal of superfluous code such as
 \texttt{\textbackslash{}label\{\}} directives, the normalization of
-certain latex expressions (e.g., arbitrary ordering of super and
+certain LaTeX expressions (e.g., arbitrary ordering of super and
 sub-scripts in equations), and expanding user-defined macros.
 
 \hypertarget{data-driven-analysis-of-preamble-to-inform-template-design}{%
@@ -518,11 +517,11 @@ The team has conducted an analysis on a sample of 1600 of the arXiv
 retrieved sources to inform the design of the templates used to render
 standalone equation images. The purpose of this analysis is the
 identification of the math environments and TeX packages that are most
-commonly used for the writing of math in academic papers. By knowing
-which environments and packages are most common, the team can assemble a
+commonly used for the writing of math in academic papers, which
+will help the team assemble a
 template that (a) has broad coverage (i.e., can make the most use of the
 training data) and (b) is minimal (i.e., will be faster to run and will
-have fewer conflictes).
+have fewer conflicts).
 
 The analysis shows that the most commonly used math environments (in
 order) are: \texttt{equation}, \texttt{align}, and
@@ -624,12 +623,12 @@ of different relationships with respect to the FIB.
 Consider Figure~\ref{fig:asce}, depicting the ASCE function network. All the
 blue nodes in the network represent variables that are also found in the
 Priestly-Taylor model. The blue nodes with thicker lines represent
-variables that play "input" roles in both of the overlapping
+variables that play ``input" roles in both of the overlapping
 subnetworks: they are shared and do not have any parents that are also
 in the subnetworks.
 
 Next, between the blue nodes and along the directed paths from the
-"inputs" to the output nodes, are black nodes that represent variables
+``inputs" to the output nodes, are black nodes that represent variables
 that are not shared between the two models; these indicate intermediate
 values that may represent differences in the functional relationships
 between the inputs and outputs of the subnetwork. Determining what the
@@ -639,7 +638,7 @@ sensitivity analysis, described in the next section.
 In Figure~\ref{fig:pt}, depicting the Priestley-Taylor function network,
 all of the black nodes are between blue nodes. In fact, there are no
 other nodes or edges that are not colored blue and black. This means the
-inputs and outputs of the Priestley-Taylor network are "contained
+inputs and outputs of the Priestley-Taylor network are ``contained
 within" the ASCE network while there are some differences in the
 computation between the inputs and outputs (the black nodes).
 
@@ -696,9 +695,9 @@ sensitivity analysis of a given function \emph{f}:
   Recover the \(S_1\), \(S_2\), and \(S_T\) sensitivity indices
 \end{enumerate}
 
-This method has been successful in retrieving all the information we
+\noindent This method has been successful in retrieving all the information we
 needed in order to determine which inputs account for the most
-uncertainty in model output. Since our last report the team has begun
+uncertainty in model output. Since the last report, the team has begun
 investigating how the runtime of sensitivity analysis is affected by
 varying the sample size \emph{N} or the size of the input space (number
 of input variables) of function \emph{f}. The purpose of this study is
@@ -754,7 +753,7 @@ already described above, motivating the FIB analysis, is to identify
 modular components of the function network with fewer inputs that can be
 analyzed independently. We are also exploring doing this at the level of
 performing sensitivity analysis one function at a time, and then
-composing the results. This work is ongoing.
+composing the results.
 
 % \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
@@ -772,10 +771,10 @@ and the red line depicts the runtime for the total program.\label{fig:sa_inputs}
 \hypertarget{code-summarization}{%
 \section{Code Summarization}\label{code-summarization}}
 
-During this phase, the team began exploration of an encoder/decoder
-neural network model for code summarization generation. Initial results
+During this phase, the team began exploring an encoder/decoder
+neural network model for code summary generation. Initial results
 demonstrated that the model was not able to acquire enough signal to
-adequately generate docstring summarizations for source code. In
+adequately generate summarizations for source code. In
 response, the team developed the following three tasks to improve the
 model.
 
@@ -787,12 +786,12 @@ model.
 \item
   The second task involved trying different approaches to the
   code/docstring embeddings by investigating the vocabulary size (too
-  may vocabulary items can lead to data sparsity) and possible methods
-  for reducing the vocabulary.
+  many vocabulary items can lead to data sparsity) and possible methods
+  for reducing it.
 \item
   The third task involved creating a model for a simpler task
   (classification) that has the same form as the model for our
-  generation task but that we can used to directly assess the embedding
+  generation task but can be used to directly assess the embedding
   representation quality.
 \end{itemize}
 
@@ -820,8 +819,8 @@ code/docstring pairs from 24 to 1132.
 \centering
 \includegraphics{figs/module_corpus_contributions.png}
 \caption{Graphical view of the amount of usable code/docstring pairs
-each python module has added to our code-summarization corpus (only the
-25 modules with the largest amount of usable pairs are shown) Modules
+each Python module has added to our code-summarization corpus (only the
+25 modules with the largest amount of usable pairs are shown). Modules
 are color-coded according to the type of code most likely to be found in
 the module.\label{fig:sum_corpus}}
 \end{figure}
@@ -829,7 +828,7 @@ the module.\label{fig:sum_corpus}}
 From these packages, we have extracted code/docstring pairs, increasing
 our corpus from approximately 22,000 examples to approximately 82,000.
 Figure~\ref{fig:sum_corpus} summarizes the styles of code-bases and their
-relative contributions to the code/docstring pairs to our corpus.
+relative contributions to our corpus.
 
 % \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
@@ -841,16 +840,16 @@ relative contributions to the code/docstring pairs to our corpus.
 \subsection{Progress on code
 embeddings}\label{progress-on-code-embeddings}}
 
-Neural network model performance has been found to strongly depend on
+The performance of neural networks has been found to strongly depend on
 the quality of the embedding model used to represent the data. One of
 the biggest struggles for any embedding is to ensure that enough
 examples are present for every token you wish to embed. Without a large
-number of examples the embedding space cannot create meaningful
+number of examples, the embedding space cannot create meaningful
 embeddings for corresponding tokens. In the case of creating embeddings
-for code, it is likely the case that the names of functions are going to
-be some of the most important tokens to embed, and unfortunately these
-are also the most infrequent if each unique name is treated as a single
-token. From our original dataset of 22,000 examples we had roughly
+for code, it is likely that the names of functions are going to
+be some of the most important tokens to embed. Unfortunately, these
+are also the most infrequent, if each unique name is treated as a single
+token. From our original dataset of 22,000 examples, we had roughly
 53,000 unique tokens in the code portion of our corpus. The vast
 majority of these were function or variable names that occurred fewer
 than five times each, not nearly enough to be able to establish useful
@@ -890,17 +889,16 @@ times from roughly 35,000 to roughly 5,000.
 task}\label{docstring-classification-task}}
 
 One of the difficulties with generation tasks is being able to tell
-whether your model has enough signal from the data to be able to
+whether a model has enough signal from the data to be able to
 generate affectively.
-
 In order to evaluate whether our dataset provides enough signal for our
 generation task, we have designed a separate classification task in
 which the classifier is presented with a code and docstring pair and
 must predict whether the docstring describes the code, which we
 approximate by using the docstrings associated with code blocks in our
-corpus. In the following sections we describe the the classifier,
-present the two classification datasets we are using, present some
-preliminary classification results, and discuss the next steps for using
+corpus. In the following sections, we describe the classifier,
+present the two classification datasets we are using and some
+preliminary results, followed by a discussion of the next steps for using
 these methods to improve the code summary generation model.
 
 \hypertarget{baseline-neural-model-description}{%
@@ -909,8 +907,8 @@ description}\label{baseline-neural-model-description}}
 
 Our initial classification model is a simplification from the model we
 originally planned to use for generation. The model first embeds a code
-sequence using our pretrained code embeddings and embeds a docstring
-using our pretrained docstring embeddings. The two embedded sequences
+sequence and a docstring using our pretrained code 
+and docstring embeddings. The two embedded sequences
 are each fed into their own respective
 \href{https://pdfs.semanticscholar.org/4b80/89bc9b49f84de43acc2eb8900035f7d492b2.pdf}{Bi-LSTM
 recurrent network}. The final hidden state outputs from these networks
@@ -921,8 +919,8 @@ correctly paired with the provided function.
 Our rationale for simplifying the model used for classification is that
 we are currently testing to see if our data is providing enough signal
 to aid in classification. Once we verify that we do have enough signal
-to allow for decent classification results, we will increase the models
-complexity. It is important to note that since the main purpose of the
+to allow for decent classification results, we will increase the
+complexity of the model. It is important to note that since the main purpose of the
 classification model is to test the fitness of our data for generation,
 we cannot add any docstring specific information to the classification
 model, since such information would not be present during docstring
@@ -959,7 +957,7 @@ the ``challenge'' dataset, as now the ``mismatch'' pairings are much
 more likely to be close but still not correct. This allows us to
 rigorously test our classifier's ability to correctly identify whether a
 code/docstring pair is mismatched. To build the dataset, we use
-\href{http://lucene.apache.org/}{Apache lucene} to index and query our
+\href{http://lucene.apache.org/}{Apache Lucene} to index and query our
 set of docstrings. The following table shows five docstrings with their
 negative example docstring of highest lexical overlap is provided in the
 table below.
@@ -1044,7 +1042,7 @@ the alternate sequence respectively. If the results from the above
 experiments are not as good as we hoped then we will also investigate
 adding more docstring data to our docstring embeddings from large online
 documenation repositories such as
-\href{https://readthedocs.org/}{ReadtheDocs} to improve the signal from
+\href{https://readthedocs.org/}{ReadTheDocs} to improve the signal from
 our docstring sequences.
 
 \end{document}
