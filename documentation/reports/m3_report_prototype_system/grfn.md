@@ -1,4 +1,4 @@
-## GrFN representation
+## GrFN Specification
 
 During this phase, significant extensions were made to the GrFN specification that serves as the central representation between program analysis (which extracts variables and the network of functions among them) and model analysis (where the variables and their functional relationships are treated generally as a probabilistic dynamic systems model). The extensions include the following.
 
