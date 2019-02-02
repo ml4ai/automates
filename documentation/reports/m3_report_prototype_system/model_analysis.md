@@ -5,7 +5,7 @@
 A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN factor networks is to identify where the models overlap.
 
 During this phase, the team developed an algorithm to identify the shared portion of
-two factor networks. As a working example, we show how the algorithm identifies the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor.
+two function networks. As a working example, we show how the algorithm identifies the overlapping subnetworks of two evapotranspiration models in the DSSAT system: ASCE and Priestley-Taylor.
 The following two figures show a graphical representation of the shared portions of these two models, which are identified by a network property that we refer to as a _Forward Influence Blanket_ (FIB). In the following section we will formally define the structure of a FIB and its role in model analysis.
 
 ---
@@ -44,7 +44,7 @@ Having identified the FIB, with the blue and green nodes constitutes all of the 
 
 In our previous report we demonstrated the ability to automatically
 conduct sensitivity analysis on the inputs to the source code of an
-extract models factor network. The method we presented involved three
+extract models function network. The method we presented involved three
 steps to fully conduct a sensitivity analysis of a given function *f*:
 
 1. Take *N* samples from the input space of *f* using Saltelli sampling
@@ -156,10 +156,10 @@ the SimpleModular crop model.
 
 We anticipate that users of AutoMATES will likely want a visual
 understanding of how uncertainty is being propagated through our
-extracted factor networks that represent their models of interest. In
+extracted function networks that represent their models of interest. In
 order to accommodate this desire we plan on adapting our sensitivity
 index discovery methods to be done on piecewise subnetworks of our
-factor networks (and FIBs) in a recursive style. This would mean that we
+function networks (and FIBs) in a recursive style. This would mean that we
 would only consider the immediate parents of a node when running
 sensitivity analysis of that particular node. Afterwards we would
 conduct sensitivity analysis on each of the parent nodes to determine
