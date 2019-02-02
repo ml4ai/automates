@@ -242,7 +242,7 @@ The `<function_type>` is the string representing which of the four types the fun
 
 The optional `<code_given_name>` is used when the function identified by program analysis has also been given a name within source code. For example, in this python example:
 
-```python
+```javascript
 def foo():
     ...
 ```
@@ -371,7 +371,7 @@ NOTE: variables are not declared at the top-level `<grfn_spec>`, but will be def
 
 A (partial) example instance of the JSON generated for a `<grfn_spec>` of an analyzed file in the path \'crop\_system/yield/crop\_yield.py\' is:
 
-```python
+```javascript
 {
     "dateCreated": "20190127",
     "source": [["crop_system", "yield", "crop_yield.py"]],
@@ -459,7 +459,7 @@ Here are three examples of `<variable_spec>` objects:
 -   Example of a \"standard\" variable MAX\_RAIN within the CROP\_YIELD
     function of the CROP namespace:
 
-    ```python
+    ```javascript
     {
         "name": "CROP::CROP_YIELD::MAX_RAIN",
         "domain": "real"
@@ -469,7 +469,7 @@ Here are three examples of `<variable_spec>` objects:
 -   Example of loop index variable DAY in the context of the second
     instance of a loop in the function CROP\_YIELD (in the CROP namespace):
 
-    ```python
+    ```javascript
     {
         "name": "CROP::CROP_YIELD.loop$2::DAY"
         "domain": "integer"
@@ -480,7 +480,7 @@ Here are three examples of `<variable_spec>` objects:
     conditional statement that is within the named function
     UPDATE\_EST of the CROP namespace:
 
-    ```python
+    ```javascript
     {
         "name": "CROP::UPDATE_EST::IF_1"
         "domain": "boolean"
