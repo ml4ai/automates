@@ -45,6 +45,8 @@ for identifying, quantifying, and defining variables, as shown here:
 ![A screenshot of the web-based visualizer showing the results of
 the rule-based extraction framework.](figs/extractions.png)
 
+**Figure 3:** A screenshot of the web-based visualizer showing the results of the rule-based extraction framework.
+
 This project is fully open-source and has already been utilized and
 contributed to by the Georgia Tech ASKE team.
 
