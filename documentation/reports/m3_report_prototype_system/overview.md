@@ -1,3 +1,5 @@
+Link to the [PDF version of this report](ASKE_M3Report_UA-AutoMATES-20190201.pdf).
+
 ## Overview
 
 In this report the AutoMATES team describes the development work done in the past two months on the AutoMATES prototype system. No changes have been made to the overall architecture design, but significant progress has been made in each of the architecture components introduced in the [Month 1 Report](https://ml4ai.github.io/automates/documentation/reports/m1_architecture_report/). We are on track for successfully achieving our Phase 1 goals for the prototype.
