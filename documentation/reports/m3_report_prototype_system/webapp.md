@@ -6,6 +6,8 @@ here](http://ec2-13-57-207-3.us-west-1.compute.amazonaws.com)!
 
 ![Screenshot of AutoMATES demo webapp](figs/webapp_screenshot.png)
 
+**Figure 1:** Screenshot of AutoMATES demo webapp
+
 When Fortran source code is submitted to the demo, it is processed 
 by the Program Analysis (`for2py`) pipeline, generating both (1) equivalent 
 target executable Python internal representation and (2) matching GrFN 
@@ -38,3 +40,6 @@ the webapp are highlighted with maroon borders).
 
 ![Page 46 of the book Understanding Options for Agricultural
 Production](figs/petpt_equations_example.png)
+
+
+**Figure 2:** Page 46 of the book _Understanding Options for Agricultural Production_, describing the Priestley-Taylor method of calculating potential evapotranspiration.
