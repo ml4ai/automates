@@ -24,10 +24,10 @@ represented using [`SymPy`](https://www.sympy.org), and will facilitate
 the linkage to equations extracted from papers using the equation parsing 
 module.
 
-For example - the screenshot above shows the analysis of the
+For example, the screenshot above shows the analysis of the
 Priestley-Taylor method of calculating potential evapotranspiration, as
-implemented in DSSAT. A few of the `__assign__` functions have been
-clicked, showing a few tooltips with black backgrounds containing some
+implemented in DSSAT. Three of the `__assign__` functions have been
+clicked, showing tooltips with black backgrounds containing some
 of the equations involved in this calculation - these very equations can
 be found on page 46 of the book [Understanding Options for Agricultural
 Production](https://link-springer-com.ezproxy2.library.arizona.edu/book/10.1007%2F978-94-017-3624-4)
