@@ -81,7 +81,7 @@ required to conduct sensitivity analysis on our larger models then we
 should not see a runtime increase that would render sensitivity analysis
 intractable.
 
-<br>
+---
 
 ![Plot of the increase in runtime for our Sobol
 analysis method as sample size increases. The blue line depicts
@@ -93,7 +93,7 @@ analysis method as sample size increases. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.
 
-<br>
+---
 
 ##### Runtime as a function of the number of input variables
 
@@ -101,7 +101,7 @@ We are also exploring the impact of increasing the number of input variables con
 As expected, the graph below does show that the runtime for the Sobol portion of sensitivity analysis increases super-linearly as the number of input variables increases. To address this, we are currently exploring several ways to reduce the number of inputs analyzed at one time.
 One strategy already described above, motivating the FIB analysis, is to identify modular components of the function network with fewer inputs that can be analyzed independently. We are also exploring doing this at the level of performing sensitivity analysis one function at a time, and then composing the results. This work is ongoing.
 
-<br> 
+---
 
 ![Plot of the increase in runtime for the Sobol analysis
 method given an increase in number of inputs for the function under
@@ -115,4 +115,3 @@ under analysis. The blue line depicts the increase in runtime for the
 Sobol algorithm and the red line depicts the runtime for the total
 program.
 
-<br>
