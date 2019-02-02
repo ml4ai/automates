@@ -1,3 +1,7 @@
+% !TEX TS-program = lualatex
+% !TEX encoding = UTF-8 Unicode
+% !BIB program = biber 
+
 \documentclass[article, 12pt, oneside]{memoir}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{amsmath, amssymb}
@@ -63,7 +67,7 @@
 \checkandfixthelayout
 
 
-\title{Month 3 Report: Description of Prototype System}
+\title{Month 3 Report:\\Description of Prototype System}
 \author{\href{https://ml4ai.github.io/automates/team/}{The AutoMATES Team}}
 \date{2019-01-31}
 
@@ -97,6 +101,7 @@ Among the highlights for this phase, detailed in the sections below, are
 the following:
 
 \begin{itemize}
+\tightlist
 \item
   Deployment of a demonstration web application of the program
   analysis-to-function network translation translation.
@@ -126,7 +131,7 @@ All code supporting the contributions reported here are available in the
 \href{https://github.com/ml4ai/automates}{AutoMATES} and
 \href{https://github.com/ml4ai/delphi/}{Delphi} Github repositories.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{demo-webapp}{%
 \section{Demo Webapp}\label{demo-webapp}}
@@ -138,7 +143,7 @@ out here}!
 \begin{figure}
 \centering
 \includegraphics{figs/webapp_screenshot.png}
-\caption{Screenshot of AutoMATES demo webapp}
+\caption{Screenshot of AutoMATES demo webapp.\label{fig:webapp}}
 \end{figure}
 
 When Fortran source code is submitted to the demo, it is processed by
@@ -160,27 +165,27 @@ the Python source represented using
 linkage to equations extracted from papers using the equation parsing
 module.
 
-For example, the screenshot above shows the analysis of the
+For example, the screenshot in Figure~\ref{fig:webapp} shows the analysis of the
 Priestley-Taylor method of calculating potential evapotranspiration, as
 implemented in DSSAT. Three of the \texttt{\_\_assign\_\_} functions
 have been clicked, showing tooltips with black backgrounds containing
 some of the equations involved in this calculation - these very
 equations can be found on page 46 of the book
 \href{https://link-springer-com.ezproxy2.library.arizona.edu/book/10.1007\%2F978-94-017-3624-4}{Understanding
-Options for Agricultural Production} (reproduced below - the equations
+Options for Agricultural Production} (reproduced in Figure~\ref{fig:uoap-book} - the equations
 matching the ones in the screenshot of the webapp are highlighted with
 maroon borders).
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \begin{figure}
 \centering
-\includegraphics{figs/petpt_equations_example.png}
+\includegraphics[width=0.90\textwidth]{figs/petpt_equations_example.png}
 \caption{Page 46 of the book Understanding Options for Agricultural
-Production}
+Production.\label{fig:uoap-book}}
 \end{figure}
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{grfn-specification}{%
 \section{GrFN Specification}\label{grfn-specification}}
@@ -274,7 +279,7 @@ linked here \href{GrFN_specification_v0.1.m3}{GrFN Specification Version
 \href{https://delphi.readthedocs.io/en/master/grfn_spec.html}{Delphi
 read the docs page}.)
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{program-analysis-for2py}{%
 \section{Program Analysis: for2py}\label{program-analysis-for2py}}
@@ -369,7 +374,7 @@ We are currently working on implementing the translation of Fortran
 arrays from \texttt{for2py} intermediate representation into the GrFN
 specification language.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{text-reading}{%
 \section{Text Reading}\label{text-reading}}
@@ -422,7 +427,7 @@ entities that participate in relevant events) along with new
 grammars for identifying, quantifying, and defining variables, as shown
 here:
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \includegraphics{figs/extractions.png}
 \caption{A screenshot of the web-based visualizer showing the results of
@@ -450,7 +455,7 @@ information about variables from source code comments. The team will
 then create an end-to-end alignment tool to map variables found in code
 to the corresponding variable described in natural language.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{equation-detection-and-parsing}{%
 \section{Equation Detection and
@@ -542,7 +547,7 @@ container} with the lua and Python libraries required to run
 \href{https://github.com/harvardnlp/im2markup}{im2markup}. This will
 allow for rapid development of the equation decoding system.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{model-analysis}{%
 \section{Model Analysis}\label{model-analysis}}
@@ -564,33 +569,33 @@ During this phase, the team developed an algorithm to identify the
 shared portion of two function networks. As a working example, we show
 what the algorithm identifies as the overlapping subnetworks of two
 evapotranspiration models in the DSSAT system: ASCE and
-Priestley-Taylor. The following two figures show a graphical
+Priestley-Taylor.  Figures~\ref{fig:pt}~\&~\ref{fig:asce} show a graphical
 representation of the shared portions of these two models, which are
 identified by a network property that we refer to as a \emph{Forward
 Influence Blanket} (FIB). In the following section we will formally
 define the structure of a FIB and its role in model analysis.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \begin{figure}
 \centering
 \includegraphics{figs/full-pt-cmb.png}
 \caption{Representation of the subnetwork within the Priestley-Taylor
 model identified by the Forward Influence Blanket that intersects with
-the ASCE model}
+the ASCE model.\label{fig:pt}}
 \end{figure}
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \begin{figure}
 \centering
 \includegraphics{figs/full-asce-cmb.png}
 \caption{Representation of the subnetwork within the ASCE model
 identified by the Forward Influence Blanket that intersects with the
-Priestley-Taylor model}
+Priestley-Taylor model.\label{fig:asce}}
 \end{figure}
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{identifying-the-forward-influence-blanket-fib}{%
 \subsection{Identifying the Forward Influence Blanket
@@ -607,7 +612,8 @@ on one another in a directed (\emph{forward} from input to output)
 network, and the \emph{blanket} identifies minimal subset of such
 influences shared between the two networks.
 
-The two figures above depict (through node coloring) the portions of the
+Figures~\ref{fig:pt}~\&~\ref{fig:asce} depict 
+(through node coloring) the portions of the
 function networks for the two models identified as overlapping. The
 nodes in the graphs represent variables, the directed arcs indicate
 directed functional relationships (the variable at the tail is an input,
@@ -615,7 +621,7 @@ the variable at the head is the output variable that is a function of
 the input), and the nodes are color-coded to provide a visual depiction
 of different relationships with respect to the FIB.
 
-Consider the second figure, depicting the ASCE function network. All the
+Consider Figure~\ref{fig:asce}, depicting the ASCE function network. All the
 blue nodes in the network represent variables that are also found in the
 Priestly-Taylor model. The blue nodes with thicker lines represent
 variables that play "input" roles in both of the overlapping
@@ -630,7 +636,7 @@ between the inputs and outputs of the subnetwork. Determining what the
 functional differences may be is the subject of the next phase,
 sensitivity analysis, described in the next section.
 
-In the first figure, depicting the Priestley-Taylor function network,
+In Figure~\ref{fig:pt}, depicting the Priestley-Taylor function network,
 all of the black nodes are between blue nodes. In fact, there are no
 other nodes or edges that are not colored blue and black. This means the
 inputs and outputs of the Priestley-Taylor network are "contained
@@ -645,7 +651,7 @@ interested in directly comparing the subnetworks to each other, the
 states of the green variables may affect the input-to-output
 relationships.
 
-Finally, the orange nodes represent all of the variables in the ASCE
+Finally, the orange nodes in Figure~\ref{fig:asce} represent all of the variables in the ASCE
 model that are not shared by the Priestley-Taylor model and cannot
 directly affect the functional relationships between the shared inputs
 and outputs without either first passing through a blue or green node.
@@ -697,7 +703,7 @@ investigating how the runtime of sensitivity analysis is affected by
 varying the sample size \emph{N} or the size of the input space (number
 of input variables) of function \emph{f}. The purpose of this study is
 to understand which aspects of models contribute to the complexity of
-sensitivity analysis. Below we present and discuss plots of runtime as a
+sensitivity analysis. Below we present and discuss plots (Figures~\ref{fig:sa_samples}~\&~\ref{fig:sa_inputs}) of runtime as a
 function of the sample size and number of variables. For each of these
 graphs the red line shows the runtime for the entirety of sensitivity
 analysis and the blue line shows the runtime of part (3) of the
@@ -711,8 +717,8 @@ As models become more complex we expect that we will need to increase
 the number of samples taken and evaluated in order to achieve comparable
 accuracy in sensitivity index estimation during sensitivity analysis.
 Because of this, we determined that we needed to empirically inspect the
-runtime of sensitivity analysis as the number of samples increases. From
-the graph below, we can see that the increase in runtime as the number
+runtime of sensitivity analysis as the number of samples increases. 
+In Figures~\ref{fig:sa_samples}, we can see that the increase in runtime as the number
 of samples increases is nearly linear (with slight super-linear trend),
 both for the entirety of sensitivity analysis and for the Sobol portion
 of sensitivity analysis. This result is encouraging because it suggests
@@ -721,7 +727,7 @@ samples required to conduct sensitivity analysis on our larger models
 then we should not see a runtime increase that would render sensitivity
 analysis intractable.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \begin{figure}
 \centering
@@ -729,10 +735,10 @@ analysis intractable.
 \caption{Plot of the increase in runtime for our Sobol analysis method
 as sample size increases. The blue line depicts the increase in runtime
 for the Sobol algorithm and the red line depicts the runtime for the
-total program.}
+total program.\label{fig:sa_samples}}
 \end{figure}
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{runtime-as-a-function-of-the-number-of-input-variables}{%
 \paragraph{Runtime as a function of the number of input
@@ -740,7 +746,7 @@ variables}\label{runtime-as-a-function-of-the-number-of-input-variables}}
 
 We are also exploring the impact of increasing the number of input
 variables considered during an analysis on overall runtime. As expected,
-the graph below does show that the runtime for the Sobol portion of
+Figure~\ref{fig:sa_inputs} does show that the runtime for the Sobol portion of
 sensitivity analysis increases super-linearly as the number of input
 variables increases. To address this, we are currently exploring several
 ways to reduce the number of inputs analyzed at one time. One strategy
@@ -750,7 +756,7 @@ analyzed independently. We are also exploring doing this at the level of
 performing sensitivity analysis one function at a time, and then
 composing the results. This work is ongoing.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \begin{figure}
 \centering
@@ -758,10 +764,10 @@ composing the results. This work is ongoing.
 \caption{Plot of the increase in runtime for the Sobol analysis method
 given an increase in number of inputs for the function under analysis.
 The blue line depicts the increase in runtime for the Sobol algorithm
-and the red line depicts the runtime for the total program.}
+and the red line depicts the runtime for the total program.\label{fig:sa_inputs}}
 \end{figure}
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{code-summarization}{%
 \section{Code Summarization}\label{code-summarization}}
@@ -810,29 +816,26 @@ the list of all available
 increased the amount of Python packages that we are searching for
 code/docstring pairs from 24 to 1132.
 
-From these packages, we have extracted code/docstring pairs, increasing
-our corpus from approximately 22,000 examples to approximately 82,000.
-The following graphic summarizes the styles of code-bases and their
-relative contributions to the code/docstring pairs to our corpus.
-
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
-
-\begin{figure}
+\begin{figure}[h]
 \centering
 \includegraphics{figs/module_corpus_contributions.png}
 \caption{Graphical view of the amount of usable code/docstring pairs
 each python module has added to our code-summarization corpus (only the
 25 modules with the largest amount of usable pairs are shown) Modules
 are color-coded according to the type of code most likely to be found in
-the module.}
+the module.\label{fig:sum_corpus}}
 \end{figure}
 
-pairs each python module has added to our code-summarization corpus
-(only the 25 modules with the largest amount of usable pairs are shown)
-Modules are color-coded according to the type of code most likely to be
-found in the module.
+From these packages, we have extracted code/docstring pairs, increasing
+our corpus from approximately 22,000 examples to approximately 82,000.
+Figure~\ref{fig:sum_corpus} summarizes the styles of code-bases and their
+relative contributions to the code/docstring pairs to our corpus.
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+
+% Pairs each python module has added to our code-summarization corpus (only the 25 modules with the largest amount of usable pairs are shown) Modules are color-coded according to the type of code most likely to be found in the module.
+
+% \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
 \hypertarget{progress-on-code-embeddings}{%
 \subsection{Progress on code
@@ -973,7 +976,7 @@ Best negative example\strut
 \midrule
 \endhead
 \begin{minipage}[t]{0.31\columnwidth}\raggedright
-\texttt{kubernetes.client.api}\texttt{tabpy.client.rest}\strut
+{\footnotesize \texttt{kubernetes.client.api}\\ \texttt{tabpy.client.rest}}\strut
 \end{minipage} & \begin{minipage}[t]{0.31\columnwidth}\raggedright
 Builds a JSON POST object\strut
 \end{minipage} & \begin{minipage}[t]{0.29\columnwidth}\raggedright
@@ -981,7 +984,7 @@ Issues a POST request to the URL with the data specified . Returns an
 object that is parsed from the response JSON\strut
 \end{minipage}\tabularnewline
 \begin{minipage}[t]{0.31\columnwidth}\raggedright
-\texttt{sympy.ntheory.multinomial}\texttt{statsmodels.iolib.table}\strut
+{\footnotesize \texttt{sympy.ntheory.multinomial}\\ \texttt{statsmodels.iolib.table}}\strut
 \end{minipage} & \begin{minipage}[t]{0.31\columnwidth}\raggedright
 Return a list of binomial coefficients as rows of the Pascal's
 triangle\strut
@@ -989,7 +992,7 @@ triangle\strut
 Return list of Row , the raw data as rows of cells\strut
 \end{minipage}\tabularnewline
 \begin{minipage}[t]{0.31\columnwidth}\raggedright
-\texttt{matplotlib.image}\texttt{PIL.image}\strut
+{\footnotesize \texttt{matplotlib.image}\\ \texttt{PIL.image}}\strut
 \end{minipage} & \begin{minipage}[t]{0.31\columnwidth}\raggedright
 Set the grid for the pixel centers , and the pixel values\strut
 \end{minipage} & \begin{minipage}[t]{0.29\columnwidth}\raggedright
@@ -997,7 +1000,7 @@ Gets the the minimum and maximum pixel values for each band in the
 image\strut
 \end{minipage}\tabularnewline
 \begin{minipage}[t]{0.31\columnwidth}\raggedright
-\texttt{mxnet.model}\texttt{tensorflow.engine.training}\strut
+{\footnotesize \texttt{mxnet.model}\\ \texttt{tensorflow.engine.training}}\strut
 \end{minipage} & \begin{minipage}[t]{0.31\columnwidth}\raggedright
 Run the model given an input and calculate the score as assessed by an
 evaluation metric\strut
@@ -1005,7 +1008,7 @@ evaluation metric\strut
 Sets the metric attributes on the model for the given output\strut
 \end{minipage}\tabularnewline
 \begin{minipage}[t]{0.31\columnwidth}\raggedright
-\texttt{twisted.internet.tcp}\texttt{gevent.server}\strut
+{\footnotesize \texttt{twisted.internet.tcp}\\ \texttt{gevent.server}}\strut
 \end{minipage} & \begin{minipage}[t]{0.31\columnwidth}\raggedright
 Create and bind my socket , and begin listening on it\strut
 \end{minipage} & \begin{minipage}[t]{0.29\columnwidth}\raggedright
