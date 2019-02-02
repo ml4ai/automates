@@ -146,13 +146,13 @@ sensitivity indices to converge with far fewer samples.
 
 <br>
 
-![Visual depiction of changes in stability of S1 sensitivity
-indices with respect to increases in sample size from Saltelli sampling.
+![Plot of variance in stability of S1 sensitivity
+estimate with respect to increase in sample size from Saltelli sampling.
 The model under evaluation for this test was the PLANT model from
 the SimpleModular crop model.](figs/plant_s1_est.png)
 
-**Figure 7:** Visual depiction of changes in stability of S1 sensitivity
-indices with respect to increases in sample size from Saltelli sampling.
+**Figure 7:** Plot of variance in stability of S1 sensitivity
+estimate with respect to increase in sample size from Saltelli sampling.
 The model under evaluation for this test was the PLANT model from
 the SimpleModular crop model.
 
