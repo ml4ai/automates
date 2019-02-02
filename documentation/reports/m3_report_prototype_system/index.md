@@ -29,10 +29,8 @@ toc: true
 
 ---
 
-## Updates on Model Analysis 
 {% include_relative model_analysis.md %}
 
 ---
 
-## Updates on Code Summarization
 {% include_relative code_summarization.md %}

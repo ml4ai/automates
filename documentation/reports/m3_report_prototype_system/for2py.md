@@ -9,7 +9,7 @@ translation.
 
 ### 1. Fortran I/O
 
-Fortran's file-handling and formatted I/O handling mechanisms have been
+Fortran's file and formatted I/O handling mechanisms have been
 implemented in the `for2py` IR. This gives us a way to validate the
 front-end translation by comparing the observable behavior of the
 generated Python code with that of the original Fortran code. In
