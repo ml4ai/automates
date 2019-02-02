@@ -1,4 +1,4 @@
-## Equation detection and parsing
+## Equation Detection and Parsing
 
 ### ArXiv bulk download
 
