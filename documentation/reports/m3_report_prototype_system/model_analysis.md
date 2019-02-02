@@ -12,14 +12,14 @@ The following two figures show a graphical representation of the shared portions
 
 ![Representation of the subnetwork within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model](figs/full-pt-cmb.png)
 
-**Figure 3:** Representation of the subnetwork (blue and black nodes) within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model.
+**Figure 4:** Representation of the subnetwork (blue and black nodes) within the Priestley-Taylor model identified by the Forward Influence Blanket that intersects with the ASCE model.
 <br>
 
 ---
 
 ![Representation of the subnetwork within the ASCE model identified by the Forward Influence Blanket that intersects with the Priestley-Taylor model](figs/full-asce-cmb.png)
 
-**Figure 4:** Representation of the subnetwork (blue and black nodes) within the ASCE model identified by the Forward Influence Blanket (blue and green nodes) that intersects with the Priestley-Taylor model.
+**Figure 5:** Representation of the subnetwork (blue and black nodes) within the ASCE model identified by the Forward Influence Blanket (blue and green nodes) that intersects with the Priestley-Taylor model.
 <br>
 
 ---
@@ -51,7 +51,7 @@ steps to fully conduct a sensitivity analysis of a given function *f*:
 
 1. Take *N* samples from the input space of *f* using [Saltelli sampling](https://en.wikipedia.org/wiki/Variance-based_sensitivity_analysis)
 2. Evaluate each of the *N* samples on *f* to form the set *E*
-3. Perform [Sobol](https://en.wikipedia.org/wiki/Variance-based_sensitivity_analysis) analysis on *E*
+3. Perform [Sobol analysis](https://en.wikipedia.org/wiki/Variance-based_sensitivity_analysis) on *E*
 4. Recover the $$S_1$$, $$S_2$$, and $$S_T$$ sensitivity indices
 
 This method has been successful in retrieving all the information we
@@ -89,7 +89,7 @@ analysis method given an increase in sample size. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.](figs/sa_samples_vs_runtime.png)
 
-**Figure 5:** Visual depiction of increase in runtime for our Sobol
+**Figure 6:** Visual depiction of increase in runtime for our Sobol
 analysis method given an increase in sample size. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.
@@ -120,7 +120,7 @@ analysis. The blue line depicts the increase in runtime for the Sobol
 algorithm and the red line depicts the runtime for the total
 program.](figs/sa_inputs_vs_runtime.png)
 
-**Figure 6:** Plot of the increase in runtime for the Sobol
+**Figure 7:** Plot of the increase in runtime for the Sobol
 analysis method given an increase in number of inputs for the function
 under analysis. The blue line depicts the increase in runtime for the
 Sobol algorithm and the red line depicts the runtime for the total
@@ -151,7 +151,7 @@ estimate with respect to increase in sample size from Saltelli sampling.
 The model under evaluation for this test was the PLANT model from
 the SimpleModular crop model.](figs/plant_s1_est.png)
 
-**Figure 7:** Plot of variance in stability of S1 sensitivity
+**Figure 8:** Plot of variance in stability of S1 sensitivity
 estimate with respect to increase in sample size from Saltelli sampling.
 The model under evaluation for this test was the PLANT model from
 the SimpleModular crop model.
