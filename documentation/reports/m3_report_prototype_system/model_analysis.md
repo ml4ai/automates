@@ -1,6 +1,6 @@
 ## Model Analysis
 
-### Automated factor network comparison
+### Automated function network comparison
 
 A key goal of model analysis is to enable comparison of models that describe the underlying target domain. When the models overlap, they share some variables, but likely not others. The first task in comparing GrFN factor networks is to identify where the models overlap.
 
