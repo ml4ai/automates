@@ -36,8 +36,9 @@ In the first figure, depicting the Priestley-Taylor function network, all of the
 
 In the ASCE network, however, there are a number of additional nodes. The green colored nodes depict the variables that have directed influence on the computations along the paths from inputs to outputs, although they are _not_ shared between the networks. If one is interested in directly comparing the subnetworks to each other, the states of the green variables may affect the input-to-output relationships.
 
-Finally, the ### nodes represent all of the variables in the 
+Finally, the orange nodes represent all of the variables in the ASCE model that are not shared by the Priestley-Taylor model, and cannot directly affect the functional relationships between the shared inputs and outputs without either first passing through a blue or green node. It is in this sense that the green and blue nodes together form the **blanket** that isolates the functional relationships between the inputs and outputs that are shared between the two networks.
 
+Having identified the FIB, with the blue and green nodes constitutes all of the inputs that can eventually affect the output(s), we can now turn to analyze the functional relationship between inputs and outputs, including the sensitivity of outputs to changes in the inputs.
 
 ### Sensitivity index discovery
 
