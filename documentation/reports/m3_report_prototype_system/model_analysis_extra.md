@@ -40,6 +40,58 @@ nodes as well when conducting uncertainty analysis.
 
 
 
+The models that AutoMATES will extract from the DSSAT library will have
+a large number of inputs -- The size of the input space
+will be much larger than in the examples we have studied thus far.
+
+Therefore, we determined that we need to study the
+affects of increasing the input space size (via increasing the number of
+model inputs) on the runtime of sensitivity analysis. From the graph
+below, we can see that as we increase the number of inputs to a
+model, the runtime for the Sobol portion of sensitivity analysis
+increases super-linearly. We also note that this increase in
+runtime for the Sobol portion explains the greater than linear increase
+in runtime for the entirety of sensitivity analysis. 
+The take-home message here is that, as we've anticipated, we will need to investigate additional methods for making sensitivity analysis more efficient.
+
+
+##### Sensitivity index estimation
+
+The next natural question is how many samples are needed to achieve an estimate of sensitivity measure to some degree of accuracy.
+
+After reviewing the runtime requirements of sensitivity analysis, the
+next question our team desired to answer was: how many samples are
+necessary for the estimated sensitivity indices to be stable? 
+
+The plot below shows the estimate of S1 indices for two inputs to a model.
+
+To visualize this we experimented with the PLANT model by varying the
+number of samples supplied to our sensitivity analysis metric and
+recording the S1 indices for the two inputs with highest sensitivity.
+From our results it seems that the amount of samples needed to reach
+stability of the S1 indices is much higher than the amount needed to
+determine the ordering of which variables contribute the most
+uncertainty to model output. As we will discuss in the following section
+one of our plans for the next iteration of model analysis is to
+implement efficient sampling methods that can allow our estimates of the
+sensitivity indices to converge with far fewer samples.
+
+<br>
+
+![Plot of variance in stability of S1 sensitivity
+estimate with respect to increase in sample size from Saltelli sampling.
+The model under evaluation for this test was the PLANT model from
+the SimpleModular crop model.](figs/plant_s1_est.png)
+
+**Figure 7:** Plot of variance in stability of S1 sensitivity
+estimate with respect to increase in sample size from Saltelli sampling.
+The model under evaluation for this test was the PLANT model from
+the SimpleModular crop model.
+
+<br>
+
+
+
 ### Next steps
 
 ##### Sensitivity index propagation

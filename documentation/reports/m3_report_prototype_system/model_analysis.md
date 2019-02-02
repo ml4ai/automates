@@ -58,12 +58,11 @@ This method has been successful in retrieving all the information we
 needed in order to determine which inputs account for the most
 uncertainty in model output. Since our last report the team has begun
 investigating how the runtime of sensitivity analysis is affected
-by varying the sample size *N* or the size of the input space of
-function *f*. Below we show graphs that depict runtime as a function of
-the two previously mentioned variables. For each of these graphs the red
+by varying the sample size *N* or the size of the input space (number of input variables) of function *f*. The purpose of this study is to understand which aspects of models contribute to the complexity of sensitivity analysis.
+Below we present and discuss plots of runtime as a function of
+the sample size and number of variables. For each of these graphs the red
 line shows the runtime for the entirety of sensitivity analysis and the
-blue line shows the runtime of part (3) of the analysis as we vary the
-variable under inspection.
+blue line shows the runtime of part (3) of the analysis. All run times are in units of seconds.
 
 ##### Runtime as a function of sample size
 
@@ -84,33 +83,23 @@ intractable.
 
 <br>
 
-![Visual depiction of increase in runtime for our Sobol
-analysis method given an increase in sample size. The blue line depicts
+![Plot of the increase in runtime for our Sobol
+analysis method as sample size increases. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.](figs/sa_samples_vs_runtime.png)
 
-**Figure 6:** Visual depiction of increase in runtime for our Sobol
-analysis method given an increase in sample size. The blue line depicts
+**Figure 6:** Plot of the increase in runtime for our Sobol
+analysis method as sample size increases. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.
 
 <br>
 
-##### Runtime as a function of input space size
+##### Runtime as a function of the number of input variables
 
-The models that AutoMATES will extract from the DSSAT library will have
-a large number of inputs -- The size of the input space
-will be much larger than in the examples we have studied thus far.
-Therefore, we determined that we need to study the
-affects of increasing the input space size (via increasing the number of
-model inputs) on the runtime of sensitivity analysis. From the graph
-below, we can see that as we increase the number of inputs to a
-model, the runtime for the Sobol portion of sensitivity analysis
-increases super-linearly. We also note that this increase in
-runtime for the Sobol portion explains the greater than linear increase
-in runtime for the entirety of sensitivity analysis. 
-The take-home message here is that, as we've anticipated, we will need to investigate additional methods for making sensitivity analysis more efficient.
-One strategy, already introduced above, is to identify modular components of the function network with fewer inputs that can be analyzed independently.
+We are also exploring the impact of increasing the number of input variables considered during an analysis on overall runtime.
+As expected, the graph below does show that the runtime for the Sobol portion of sensitivity analysis increases super-linearly as the number of input variables increases. To address this, we are currently exploring several ways to reduce the number of inputs analyzed at one time.
+One strategy already described above, motivating the FIB analysis, is to identify modular components of the function network with fewer inputs that can be analyzed independently. We are also exploring doing this at the level of performing sensitivity analysis one function at a time, and then composing the results. This work is ongoing.
 
 <br> 
 
@@ -125,35 +114,5 @@ analysis method given an increase in number of inputs for the function
 under analysis. The blue line depicts the increase in runtime for the
 Sobol algorithm and the red line depicts the runtime for the total
 program.
-
-<br>
-
-##### Sensitivity index stability
-
-After reviewing the runtime requirements of sensitivity analysis, the
-next question our team desired to answer was: how many samples are
-necessary for the estimated sensitivity indices to be stable? To
-visualize this we experimented with the PLANT model by varying the
-number of samples supplied to our sensitivity analysis metric and
-recording the S1 indices for the two inputs with highest sensitivity.
-From our results it seems that the amount of samples needed to reach
-stability of the S1 indices is much higher than the amount needed to
-determine the ordering of which variables contribute the most
-uncertainty to model output. As we will discuss in the following section
-one of our plans for the next iteration of model analysis is to
-implement efficient sampling methods that can allow our estimates of the
-sensitivity indices to converge with far fewer samples.
-
-<br>
-
-![Plot of variance in stability of S1 sensitivity
-estimate with respect to increase in sample size from Saltelli sampling.
-The model under evaluation for this test was the PLANT model from
-the SimpleModular crop model.](figs/plant_s1_est.png)
-
-**Figure 8:** Plot of variance in stability of S1 sensitivity
-estimate with respect to increase in sample size from Saltelli sampling.
-The model under evaluation for this test was the PLANT model from
-the SimpleModular crop model.
 
 <br>
