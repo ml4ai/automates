@@ -1,8 +1,8 @@
 ## Updates to GrFN representation
 
-During this phase, significant extensions were made to the GrFN specification that serves as the central representation between program analysis (which extracts variables and the network of functions among them) and model analysis (where the variables and their functional relationships are treated generally as a probabilistic dynamic systems model). The extensions include the following:
+During this phase, significant extensions were made to the GrFN specification that serves as the central representation between program analysis (which extracts variables and the network of functions among them) and model analysis (where the variables and their functional relationships are treated generally as a probabilistic dynamic systems model). The extensions include the following.
 
-**Identifiers**
+### Identifiers
 
 Prior to this update, a variety of naming conventions were used to represent source code identifiers (names for program entities such as variables, constants, functions, etc.), and the disambiguating context in which they are defined. Identifiers now systematically represent *namespaces* and program *scope* as part of their definition, along with their *base name*. The representation of identifiers includes the following additions and advantages:
 
@@ -14,15 +14,15 @@ Prior to this update, a variety of naming conventions were used to represent sou
 	
 - Since identifiers themselves are now defined in terms of structured information (namespace, scope, and base name), identifier `<gensym>`s have been introduced to be used as unambiguous standins for identifiers used in generated intermediate target Python code.
 
-**Variable and Function Naming Conventions**
+### Variable and Function Naming Conventions
 
 The new systematic representation of namespace and scope rules for identifiers made it possible to clean up some of the previous ad-hoc approaches to naming variables and functions. New naming conventions have been introduced.
 
-**Conditions**
+### Conditions
 
 The approach to representing program conditions (i.e., \"if statements\") was also updated. When program analysis analyzes a conditional in source code, a \"condition\" assignment function is introduced that sets the state of a variable representing the condition, and then one or more \"decision\" assignment functions are introduce that represent updates to other variables depending on the outcome of the condition.
 
-**Specification Links**
+### Specification Links
 
 Finally, there was a significant rewrite of the specification introduction as well as updates throughout to improve readability and ensure consistency. 
 
