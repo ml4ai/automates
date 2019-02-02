@@ -89,7 +89,7 @@ analysis method as sample size increases. The blue line depicts
 the increase in runtime for the Sobol algorithm and the red line depicts
 the runtime for the total program.](figs/sa_samples_vs_runtime.png)
 
-**Figure 6:** Plot of the increase in runtime for our Sobol analysis method as sample size increases. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.  
+**Figure 6:** Plot of the increase in runtime (seconds) for our Sobol analysis method as sample size increases. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.  
 
 ---
 
@@ -107,5 +107,5 @@ analysis. The blue line depicts the increase in runtime for the Sobol
 algorithm and the red line depicts the runtime for the total
 program.](figs/sa_inputs_vs_runtime.png)
 
-**Figure 7:** Plot of the increase in runtime for the Sobol analysis method given an increase in number of inputs for the function under analysis. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.
+**Figure 7:** Plot of the increase in runtime (seconds) for the Sobol analysis method given an increase in number of inputs for the function under analysis. The blue line depicts the increase in runtime for the Sobol algorithm and the red line depicts the runtime for the total program.
 
