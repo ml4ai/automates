@@ -17,7 +17,7 @@ def main(args):
     torch.manual_seed(17)   # Randomly seed PyTorch
 
     # Load train, dev, test iterators with auto-batching and pretrained vectors
-    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size)
+    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size, args.corpus)
 
     # Pick a model to train
     if args.model == "both":
@@ -44,8 +44,10 @@ def main(args):
 
     # Do training
     if args.epochs > 0:
+        print("Training {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         # Adam optimizer works, SGD fails to train the network for any batch size
         optimizer = optim.Adam(model.parameters(), args.learning_rate)
+        class_weights = torch.tensor([10.])
         for epoch in range(args.epochs):
             model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
@@ -63,7 +65,8 @@ def main(args):
 
                     # Get loss from log(softmax())
                     loss = F.binary_cross_entropy_with_logits(outputs.view(-1),
-                                                              truth.view(-1))
+                                                              truth.view(-1),
+                                                              pos_weight=class_weights)
 
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
@@ -83,13 +86,17 @@ def main(args):
 
     # Save the DEV set evaluations
     if args.eval_dev:
+        print("Evaluating Dev for {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         scores = score_dataset(model, dev)
-        utils.save_scores(scores, "../data/scores_dev.pkl")
+        dev_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_scores_dev.pkl".format(args.model, args.batch_size, args.corpus)
+        utils.save_scores(scores, dev_score_path)
 
     # Save the TEST set evaluations
     if args.eval_test:
+        print("Evaluating Dev for {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         scores = score_dataset(model, test)
-        utils.save_scores(scores, "../data/scores_test.pkl")
+        test_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_scores_test.pkl".format(args.model, args.batch_size, args.corpus)
+        utils.save_scores(scores, test_score_path)
 
 
 def score_dataset(model, dataset):
@@ -150,6 +157,10 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--learning-rate", type=float,
                         help="learning rate",
                         default=1e-3)
+
+    parser.add_argument("-c", "--corpus", type=str,
+                        help="Dataset to use for classification",
+                        default="random_draw")
 
     parser.add_argument("-g", "--use_gpu", dest="use_gpu", action="store_true",
                         help="indicate whether to use CPU or GPU")

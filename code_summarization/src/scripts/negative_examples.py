@@ -16,7 +16,7 @@ data_pair_keys = list(code_comm_data.keys())
 shuffled_keys = ["{}-{}".format(path, l_num) for path, l_num in deepcopy(data_pair_keys)]
 random.shuffle(shuffled_keys)
 
-for key in tqdm(data_pair_keys[:100], desc="Finding negs"):
+for key in tqdm(data_pair_keys, desc="Finding negs"):
     key_string = "{}-{}".format(key[0], key[1])
     shuffled_keys.remove(key_string)
     positive_example = code_comm_data[key]

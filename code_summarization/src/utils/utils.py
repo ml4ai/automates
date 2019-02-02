@@ -21,7 +21,7 @@ def accuracy_score(data):
     return 100 * sum([1 if p == t else 0 for p, t in data]) / len(data)
 
 
-def load_all_data(batch_size):
+def load_all_data(batch_size, corpus_name):
     """
     This function loads all data necessary for training and evaluation of a
     code/comment classification model. Data is loaded from a TSV file that
@@ -58,7 +58,7 @@ def load_all_data(batch_size):
     ]
 
     # Build the large tabular dataset using the defined fields
-    tsv_file_path = input_path / "classification_data.tsv"
+    tsv_file_path = input_path / "{}_dataset.tsv".format(corpus_name)
     tab_data = data.TabularDataset(tsv_file_path, "TSV", train_val_fields)
 
     # Split the large dataset into TRAIN, DEV, TEST portions

@@ -1,6 +1,6 @@
 import tokenize as tok
 from io import BytesIO
-from os.path import join, isfile
+from os.path import isfile
 import inspect
 import random
 import pickle
@@ -10,20 +10,46 @@ import re
 from nltk.tokenize import word_tokenize
 from tqdm import tqdm
 
+import utils.utils as utils
+
+RESERVED_WORDS = [
+    "False", "class", "finally", "is", "return", "None", "continue", "for",
+    "lambda", "try", "True", "def", "from", "nonlocal", "while", "and", "del",
+    "global", "not", "with", "as", "elif", "if", "or", "yield", "assert",
+    "else", "import", "pass", "break", "except", "in", "raise"
+]
+
+BUILTIN_FUNCTIONS = [
+    "abs", "delattr", "hash", "memoryview", "set", "all", "dict", "help", "min",
+    "setattr", "any", "dir", "hex", "next", "slice", "ascii", "divmod", "id",
+    "object", "sorted", "bin", "enumerate", "input", "oct", "staticmethod",
+    "bool", "eval", "int", "open", "str", "breakpoint", "exec", "isinstance",
+    "ord", "sum", "bytearray", "filter", "issubclass", "pow", "super", "bytes",
+    "float", "iter", "print", "tuple", "callable", "format", "len", "property",
+    "type", "chr", "frozenset", "list", "range", "vars", "classmethod",
+    "getattr", "locals", "repr", "zip", "compile", "globals", "map", "reversed",
+    "__import__", "complex", "hasattr", "max", "round"
+]
+
 
 def clean_identifier(identifier):
     if "_" in identifier:
-        case_split = identifier.split("_")
+        snake_case_tokens = identifier.split("_")
     else:
-        # If the identifier is an all uppercase acronym (like `WMA`) then we
-        # need to capture that. But we also the case where the first two letters
-        # are capitals but the first letter does not belong with the second
-        # (like `AVariable`). We also need to capture the case of an acronym
-        # followed by a capital for the next word (like `AWSVars`).
-        case_split = re.split("([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", identifier)
+        snake_case_tokens = [identifier]
+
+    # If the identifier is an all uppercase acronym (like `WMA`) then we
+    # need to capture that. But we also the case where the first two letters
+    # are capitals but the first letter does not belong with the second
+    # (like `AVariable`). We also need to capture the case of an acronym
+    # followed by a capital for the next word (like `AWSVars`).
+    camel_case_tokens = list()
+    for token in snake_case_tokens:
+        camel_split = re.split("([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", token)
+        camel_case_tokens.extend(camel_split)
 
     char_digit_split = list()
-    for token in case_split:
+    for token in camel_case_tokens:
         char_digit_split.extend(re.split("(\d+)", token))
     no_empty_tokens = [t for t in char_digit_split if t != ""]
     return ["<BoN>"] + no_empty_tokens + ["<EoN>"]
@@ -31,14 +57,15 @@ def clean_identifier(identifier):
 
 class CodeCrawler():
     def __init__(self, corpus_name="code-comment-corpus", modules=[]):
+        self.base_path = utils.CODE_CORPUS / "corpus"
         self.name = corpus_name
         self.mods = modules
         self.functions = dict()
         self.code_comment_pairs = dict()
         self.clean_code_data = dict()
 
-    def build_function_dict(self, outpath):
-        filepath = join(outpath, "code.pkl")
+    def build_function_dict(self):
+        filepath = self.base_path / "code.pkl"
         if isfile(filepath):
             self.functions = pickle.load(open(filepath, "rb"))
             return
@@ -122,18 +149,19 @@ class CodeCrawler():
 
         pickle.dump(self.functions, open(filepath, "wb"))
 
-    def build_code_comment_pairs(self, outpath):
+    def build_code_comment_pairs(self):
         if not self.functions:
-            code_path = join(outpath + "code.pkl")
+            code_path = self.base_path / "code.pkl"
             if isfile(code_path):
                 self.functions = pickle.load(open(code_path, "rb"))
             else:
                 raise RuntimeWarning("Function dataset has not been built!!")
 
-        filepath = join(outpath, "{}.pkl".format(self.name))
-        code_filepath = join(outpath, "clean_code_data.pkl")
-        if isfile(filepath):
+        filepath = self.base_path / "{}.pkl".format(self.name)
+        code_filepath = self.base_path / "clean_code_data.pkl"
+        if isfile(filepath) and isfile(code_filepath):
             self.code_comment_pairs = pickle.load(open(filepath, "rb"))
+            self.clean_code_data = pickle.load(open(code_filepath, "rb"))
             return
 
         num_docs = 0
@@ -213,12 +241,21 @@ class CodeCrawler():
                     elif tok_type == tok.ENDMARKER:
                         clean_code.append("<END>")
                     elif tok_type == tok.NUMBER:
-                        clean_code.append("<NUMBER>")
+                        if "." in token:
+                            clean_code.append("<FLOAT>")
+                        else:
+                            if token == "0" or token == "1":
+                                clean_code.append(token)
+                            else:
+                                clean_code.append("<INT>")
                     elif tok_type == tok.STRING:
                         clean_code.append("<STRING>")
                     elif tok_type == tok.NAME:
-                        identifier_sequence = clean_identifier(token)
-                        clean_code.extend(identifier_sequence)
+                        if token in RESERVED_WORDS or token in BUILTIN_FUNCTIONS:
+                            clean_code.append(token)
+                        else:
+                            identifier_sequence = clean_identifier(token)
+                            clean_code.extend(identifier_sequence)
                     else:
                         clean_code.extend(token.split())
 
@@ -240,13 +277,13 @@ class CodeCrawler():
         pickle.dump(self.code_comment_pairs, open(filepath, "wb"))
         pickle.dump(self.clean_code_data, open(code_filepath, "wb"))
 
-    def get_sentence_output(self, filepath):
+    def get_sentence_output(self):
         if not self.code_comment_pairs:
             raise RuntimeWarning("Code/comment dataset has not been built!!")
 
-        outcode = join(filepath, "code-sentences.output")
-        outcomm = join(filepath, "comm-sentences.output")
-        outcodefull = join(filepath, "code-sentences-full.output")
+        outcode = self.base_path / "code-sentences.output"
+        outcomm = self.base_path / "comm-sentences.output"
+        outcodefull = self.base_path / "code-sentences-full.output"
 
         if isfile(outcode) and isfile(outcomm):
             return
@@ -272,40 +309,40 @@ class CodeCrawler():
     def init_code_comment_corpus_from_file(self, filepath):
         self.code_comment_pairs = pickle.load(open(filepath), "rb")
 
-    def split_code_comment_data(self, filepath, train_size=0.8, val_size=0.15):
-        if not self.code_comment_pairs:
-            raise RuntimeWarning("Code/comment dataset has not been built!!")
-
-        arr_data = list(self.code_comment_pairs.values())
-        random.shuffle(arr_data)
-        # total_length = len(arr_data)
-        # train_length = int(train_size * total_length)
-        # val_length = int(val_size * total_length) + train_length
-
-        (test_code, test_comm) = map(list, zip(*arr_data[:802]))
-        (val_code, val_comm) = map(list, zip(*arr_data[802: 1802]))
-        (train_code, train_comm) = map(list, zip(*arr_data[1802:]))
-
-        with open(join(filepath, "train.code"), "w") as outfile:
-            for line in train_code:
-                outfile.write("{}\n".format(" ".join(line)))
-
-        with open(join(filepath, "train.nl"), "w") as outfile:
-            for line in train_comm:
-                outfile.write("{}\n".format(" ".join(line)))
-
-        with open(join(filepath, "dev.code"), "w") as outfile:
-            for line in val_code:
-                outfile.write("{}\n".format(" ".join(line)))
-
-        with open(join(filepath, "dev.nl"), "w") as outfile:
-            for line in val_comm:
-                outfile.write("{}\n".format(" ".join(line)))
-
-        with open(join(filepath, "test.code"), "w") as outfile:
-            for line in test_code:
-                outfile.write("{}\n".format(" ".join(line)))
-
-        with open(join(filepath, "test.nl"), "w") as outfile:
-            for line in test_comm:
-                outfile.write("{}\n".format(" ".join(line)))
+    # def split_code_comment_data(self, filepath, train_size=0.8, val_size=0.15):
+    #     if not self.code_comment_pairs:
+    #         raise RuntimeWarning("Code/comment dataset has not been built!!")
+    #
+    #     arr_data = list(self.code_comment_pairs.values())
+    #     random.shuffle(arr_data)
+    #     # total_length = len(arr_data)
+    #     # train_length = int(train_size * total_length)
+    #     # val_length = int(val_size * total_length) + train_length
+    #
+    #     (test_code, test_comm) = map(list, zip(*arr_data[:802]))
+    #     (val_code, val_comm) = map(list, zip(*arr_data[802: 1802]))
+    #     (train_code, train_comm) = map(list, zip(*arr_data[1802:]))
+    #
+    #     with open(join(filepath, "train.code"), "w") as outfile:
+    #         for line in train_code:
+    #             outfile.write("{}\n".format(" ".join(line)))
+    #
+    #     with open(join(filepath, "train.nl"), "w") as outfile:
+    #         for line in train_comm:
+    #             outfile.write("{}\n".format(" ".join(line)))
+    #
+    #     with open(join(filepath, "dev.code"), "w") as outfile:
+    #         for line in val_code:
+    #             outfile.write("{}\n".format(" ".join(line)))
+    #
+    #     with open(join(filepath, "dev.nl"), "w") as outfile:
+    #         for line in val_comm:
+    #             outfile.write("{}\n".format(" ".join(line)))
+    #
+    #     with open(join(filepath, "test.code"), "w") as outfile:
+    #         for line in test_code:
+    #             outfile.write("{}\n".format(" ".join(line)))
+    #
+    #     with open(join(filepath, "test.nl"), "w") as outfile:
+    #         for line in test_comm:
+    #             outfile.write("{}\n".format(" ".join(line)))
