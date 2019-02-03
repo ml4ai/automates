@@ -4,6 +4,7 @@ import os
 import sys
 import glob
 from collections import namedtuple
+from itertools import tee
 from plasTeX.TeX import TeX
 from plasTeX.Tokenizer import BeginGroup, EndGroup, EscapeSequence, Parameter
 
@@ -105,9 +106,13 @@ def format_n_args(bracketed_tokens):
 
 def maybe_expand_macro(token, tokens, macro_lut):
     if not isinstance(token, EscapeSequence):
+        #print(token, "is not an EscapeSequence")
         # this is not a macro
         yield token
     elif token.data not in macro_lut:
+        print(token, "is not in lut")
+        for k, v in macro_lut.items():
+            print("\t", k, "-->", v)
         # this isn't a macro either
         yield token
     else:
@@ -139,8 +144,11 @@ def expand_macro(macro_def, macro_args):
 def read_input_file(dirname, tokens):
     fname = os.path.join(dirname, read_group(tokens)[0])
     fname = maybe_add_extension(fname)
-    for t in LatexTokenizer(fname):
-        yield t
+    tokens = []
+    tokenizer = LatexTokenizer(fname)
+    for t in tokenizer:
+        tokens.append(t)
+    return tokens, tokenizer.macro_lut
 
 
 class LatexTokenizer:
@@ -158,12 +166,15 @@ class LatexTokenizer:
         dirname = os.path.dirname(self.filename)
         tex = TeX(file=self.filename)
         tokens = tex.itertokens()
+
         try:
             while True:
                 token = next(tokens)
                 if token.data == 'input':
-                    for t in read_input_file(dirname, tokens):
-                        yield t
+                    input_tokens, input_lut = read_input_file(dirname, tokens)
+                    # prepend the input tokens to the token stack
+                    tokens = iter(input_tokens + list(tokens))
+                    self.macro_lut.update(input_lut)
                 elif token.data == 'import':
                     # TODO handle \subimport, and also \import* and \subimport*
                     # raise NotImplementedError("we don't handle \\import yet")
@@ -171,8 +182,10 @@ class LatexTokenizer:
                     yield token
                 elif token.data == 'include':
                     # TODO be aware of \includeonly
-                    for t in read_input_file(dirname, tokens):
-                        yield t
+                    input_tokens, input_lut = read_input_file(dirname, tokens)
+                    # prepend the input tokens to the token stack
+                    tokens = iter(input_tokens + list(tokens))
+                    self.macro_lut.update(input_lut)
                 elif token.data == 'newcommand':
                     try:
                         name = read_macro_name(tokens)
