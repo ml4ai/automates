@@ -103,19 +103,18 @@ def maybe_expand_macro(token, tokens, macro_lut):
         yield token
     else:
         macro_def = macro_lut[token.data]
-        n_args = macro_def.n_args
         # consume args
         macro_args = []
-        for i in range(n_args):
+        for i in range(macro_def.n_args):
             macro_args.append(read_balanced_brackets(tokens)[1:-1])
-        # invoke macro
-        expanded = invoke_macro(macro_def, macro_args)
+        # expand macro
+        expanded = expand_macro(macro_def, macro_args)
         # try to expand recursively
         for t in expanded:
             for t2 in maybe_expand_macro(t, expanded, macro_lut):
                 yield t2
 
-def invoke_macro(macro_def, macro_args):
+def expand_macro(macro_def, macro_args):
     """expands the macro definition with the provided arguments"""
     macro_iter = iter(macro_def.definition)
     for expanded in macro_iter:
