@@ -136,6 +136,11 @@ def expand_macro(macro_def, macro_args):
             yield expanded
 
 
+def read_input_file(dirname, tokens):
+    fname = os.path.join(dirname, read_group(tokens)[0])
+    fname = maybe_add_extension(fname)
+    for t in LatexTokenizer(fname):
+        yield t
 
 
 class LatexTokenizer:
@@ -157,16 +162,17 @@ class LatexTokenizer:
             while True:
                 token = next(tokens)
                 if token.data == 'input':
-                    fname = os.path.join(dirname, read_group(tokens)[0])
-                    fname = maybe_add_extension(fname)
-                    for t in LatexTokenizer(fname):
+                    for t in read_input_file(dirname, tokens):
                         yield t
                 elif token.data == 'import':
                     # TODO handle \subimport, and also \import* and \subimport*
-                    raise NotImplementedError("we don't handle \\import yet")
+                    # raise NotImplementedError("we don't handle \\import yet")
+                    print("WARNING: we don't handle \\import yet")
+                    yield token
                 elif token.data == 'include':
                     # TODO be aware of \includeonly
-                    raise NotImplementedError("we don't handle \\include yet")
+                    for t in read_input_file(dirname, tokens):
+                        yield t
                 elif token.data == 'newcommand':
                     try:
                         name = read_macro_name(tokens)
