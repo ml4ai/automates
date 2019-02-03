@@ -54,6 +54,7 @@ def main(args):
         for epoch in range(args.epochs):
             model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
+                total_loss = 0
                 for b_idx, batch in enumerate(train):
                     # model.zero_grad()
                     optimizer.zero_grad()   # Clear current gradient
@@ -79,7 +80,9 @@ def main(args):
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
 
-                    curr_loss = loss.item()
+                    new_loss = loss.item()
+                    total_loss += new_loss
+                    curr_loss = total_loss / (b_idx + 1)
                     pbar.set_postfix(batch_loss=curr_loss)
                     pbar.update()
 
@@ -129,7 +132,7 @@ def score_dataset(model, dataset):
             if args.use_gpu:    # Send data to GPU if available
                 code = code.cuda()
                 comm = comm.cuda()
-            output = model(((code, code_lengths), (comm, comm_lengths)))            
+            output = model(((code, code_lengths), (comm, comm_lengths)))
 
             # Run the model on the input batch
             # output = model((batch.code, batch.comm))
