@@ -43,13 +43,17 @@ def maybe_add_extension(filename):
         return filename + '.tex'
 
 
-
-def read_group(tokens):
+# prev_tok is a token that was read from the tokens already, currently only happens
+# when reading the macro name in read_macro_name()
+def read_group(tokens, prev_tok=None):
     """read the content of a tex group, i.e., the text surrounded by curly brackets"""
     s = ''
-    t = next(tokens)
+    if prev_tok:
+        t = prev_tok
+    else:
+        t = next(tokens)
     toks = [t]
-    assert isinstance(t, BeginGroup)
+    assert isinstance(t, BeginGroup), t + " isn't a BeginGroup, token.escape = " + str(isinstance(t, EscapeSequence)) + ", tokens passed:" + ",".join(list(tokens)[:20])
     while True:
         t = next(tokens)
         toks.append(t)
@@ -58,7 +62,12 @@ def read_group(tokens):
         s += t.data
     return s, toks
 
-
+def read_macro_name(tokens):
+    t = next(tokens)
+    if isinstance(t, EscapeSequence):
+        return t.data
+    else:
+        return read_group(tokens, prev_tok=t)[0]
 
 def is_begin_group(t):
     return isinstance(t, BeginGroup) or t == '['
@@ -159,7 +168,7 @@ class LatexTokenizer:
                     # TODO be aware of \includeonly
                     raise NotImplementedError("we don't handle \\include yet")
                 elif token.data == 'newcommand':
-                    name = read_group(tokens)[0]
+                    name = read_macro_name(tokens)
                     args_or_def = read_balanced_brackets(tokens)
                     if args_or_def[0] == '[': # n_args
                         n_args = format_n_args(args_or_def)
