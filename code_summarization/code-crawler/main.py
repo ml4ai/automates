@@ -23,12 +23,14 @@ from code_crawler import CodeCrawler
 def main():
     modules = []
     ccrawler = CodeCrawler(modules=modules)
-    # print("Building function dict")
-    # ccrawler.build_function_dict()
+    print("Building function dict")
+    ccrawler.build_function_dict()
     print("Building code/comment dict")
     ccrawler.build_code_comment_pairs()
     print("Getting output sentences")
     ccrawler.get_sentence_output()
+    print("Outputting clean comments")
+    ccrawler.output_clean_comments()
     print("done.")
 
 

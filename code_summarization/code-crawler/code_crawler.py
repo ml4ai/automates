@@ -31,6 +31,10 @@ BUILTIN_FUNCTIONS = [
     "__import__", "complex", "hasattr", "max", "round"
 ]
 
+SYMBOLS = [
+    "__", "++", "--", "**", "==", "~=", "||", "...", "<<", ">>", "<=", ">=", "->"
+]
+
 
 def clean_identifier(identifier):
     if "_" in identifier:
@@ -45,14 +49,173 @@ def clean_identifier(identifier):
     # followed by a capital for the next word (like `AWSVars`).
     camel_case_tokens = list()
     for token in snake_case_tokens:
-        camel_split = re.split("([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", token)
-        camel_case_tokens.extend(camel_split)
+        if not token.isupper():
+            camel_split = re.split("([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", token)
+            camel_case_tokens.extend(camel_split)
+        else:
+            camel_case_tokens.append(token)
 
     char_digit_split = list()
     for token in camel_case_tokens:
         char_digit_split.extend(re.split("(\d+)", token))
     no_empty_tokens = [t for t in char_digit_split if t != ""]
-    return ["<BoN>"] + no_empty_tokens + ["<EoN>"]
+    lower_case_toks = [t.lower() for t in no_empty_tokens]
+    final_tokens = list()
+    for token in lower_case_toks:
+        if token.isdigit():
+            new_toks = ["<BoINT>"] + [d for d in token] + ["<EoINT>"]
+            final_tokens.extend(new_toks)
+        else:
+            final_tokens.append(token)
+    return ["<BoN>"] + final_tokens + ["<EoN>"]
+
+
+def clean_number(num_str):
+    decimal_index = num_str.find(".")
+    if decimal_index > -1:
+        characteristic = num_str[:decimal_index]
+        mantissa = num_str[decimal_index + 1:]
+
+        characteristic_list = ["<BoINTP>"] + [d for d in characteristic] + ["<EoINTP>"]
+        mantissa_list = ["<BoDECP>"] + [d for d in mantissa] + ["<EoDECP>"]
+        return ["<BoFLT>"] + characteristic_list + ["."] + mantissa_list + ["<EoFLT>"]
+    else:
+        return ["<BoINT>"] + [d for d in num_str] + ["<EoINT>"]
+
+
+def handle_alphas(alpha_str):
+    has_unicode = not all([ord(c) < 128 for c in alpha_str])
+    if has_unicode:
+        print("Found unicode in alphas: ", alpha_str)
+
+    if not alpha_str.isupper():
+        camel_split = re.split("([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", alpha_str)
+        return [cstr.lower() for cstr in camel_split if cstr != ""]
+    else:
+        return [alpha_str.lower()]
+
+
+def handle_digits(digit_str):
+    has_unicode = not all([ord(c) < 128 for c in digit_str])
+    if has_unicode:
+        print("Found unicode in digits: ", digit_str)
+
+    return ["<BoNUM>"] + [d for d in digit_str] + ["<EoNUM>"]
+
+
+def handle_other(other):
+    has_unicode = not all([ord(c) < 128 for c in other])
+    if has_unicode:
+        print("Found unicode in other: ", other)
+
+    if "===" in other or "___" in other:
+        return []
+
+    other_list = re.split(r"(\*\*|\|\||--|\+\+|\.\.\.|~\=|__|\<\<|\>\>|\<\=|\>\=|-\>)", other)
+    no_empties = [o for o in other_list if len(o) > 0]
+    good_syms = list()
+    for sym in no_empties:
+        if sym in SYMBOLS:
+            good_syms.append(sym)
+        else:
+            sym = sym.strip("'").strip("\\").strip("_")
+            if len(sym) < 1:
+                good_syms.append(sym)
+    return good_syms
+
+
+def strip_unicode(token):
+    new_token = ""
+    for c in token:
+        if ord(c) < 128:                    # strips unicode
+            new_token += c
+    return new_token
+
+
+def superclean_docstring(docstring):
+    # STEPS: NOTE: skipping steps 1 and 2
+    # 1. Check for math components
+    # 2. Strip off any `__` tokens
+    # 3. Separate out into {letters | digits | other}
+        # NOTE: that digits should include `.`
+        # NOTE: other should be sure to capture || as a symbol and | w/o any other context
+    # 4. Split digits (be sure to do mantissa split if `.` is present)
+    # 5a. Split letters on `.` and `_` with B/EoN tags and then split on camelCase
+    # 5b. Normalize letters to lowercase
+        # NOTE: do not make lowercase if |letters| == 1
+    # 6. Strip unicode chars from any token (unless token is single unicode char)
+    typed_tokens = list()
+    for token in docstring:
+        if len(token) == 0:
+            continue
+
+        if len(token) == 1:                         # No need to process char tokens
+            if token.isdigit():
+                typed_tokens.extend(handle_digits(token))
+            else:
+                typed_tokens.append(token)
+            continue
+
+        if all([not c.isalnum() for c in token]):   # handle pre-existing non alphanumeric strings
+            no_unicode_token = strip_unicode(token)
+            if len(no_unicode_token) > 0:
+                typed_tokens.extend(handle_other(no_unicode_token))
+            continue
+
+        if token.isalpha():                         # handle only letters
+            no_unicode_token = strip_unicode(token)
+            if len(no_unicode_token) > 0:
+                typed_tokens.extend(handle_alphas(no_unicode_token))
+            continue
+
+        if token.isdigit():                         # handle only digits
+            typed_tokens.extend(handle_digits(token))
+            continue
+
+        cur_idx = 0
+        cur_type = "none"
+        cur_token = ""
+        while cur_idx < len(token):
+            if not ord(token[cur_idx]) < 128:       # strips unicode
+                cur_idx += 1
+                continue
+
+            if token[cur_idx].isalpha():
+                if cur_type == "alpha":
+                    cur_token += token[cur_idx]
+                else:
+                    if len(cur_token) > 0:
+                        if cur_type == "digit":
+                            typed_tokens.extend(handle_digits(cur_token))
+                        elif cur_type == "other":
+                            typed_tokens.extend(handle_other(cur_token))
+                    cur_type = "alpha"
+                    cur_token = token[cur_idx]
+            elif token[cur_idx].isdigit():
+                if cur_type == "digit":
+                    cur_token += token[cur_idx]
+                else:
+                    if len(cur_token) > 0:
+                        if cur_type == "alpha":
+                            typed_tokens.extend(handle_alphas(cur_token))
+                        elif cur_type == "other":
+                            typed_tokens.extend(handle_other(cur_token))
+                    cur_type = "digit"
+                    cur_token = token[cur_idx]
+            else:
+                if cur_type == "other":
+                    cur_token += token[cur_idx]
+                else:
+                    if len(cur_token) > 0:
+                        if cur_type == "alpha":
+                            typed_tokens.extend(handle_alphas(cur_token))
+                        elif cur_type == "digit":
+                            typed_tokens.extend(handle_digits(cur_token))
+                    cur_type = "other"
+                    cur_token = token[cur_idx]
+            cur_idx += 1
+
+    return typed_tokens
 
 
 class CodeCrawler():
@@ -241,13 +404,8 @@ class CodeCrawler():
                     elif tok_type == tok.ENDMARKER:
                         clean_code.append("<END>")
                     elif tok_type == tok.NUMBER:
-                        if "." in token:
-                            clean_code.append("<FLOAT>")
-                        else:
-                            if token == "0" or token == "1":
-                                clean_code.append(token)
-                            else:
-                                clean_code.append("<INT>")
+                        number_sequence = clean_number(token)
+                        clean_code.extend(number_sequence)
                     elif tok_type == tok.STRING:
                         clean_code.append("<STRING>")
                     elif tok_type == tok.NAME:
@@ -262,17 +420,85 @@ class CodeCrawler():
                 self.clean_code_data[identifier] = clean_code
                 if found_doc:
                     clean_doc = word_tokenize(clean_doc)
+                    clean_doct_str = " ".join(clean_doc)
+                    first_period = clean_doct_str.find(" . ")
+                    if 0 < first_period < 5:
+                        second_period = clean_doct_str.find(" . ", first_period + 3)
+                        clean_doct_str = clean_doct_str[: second_period + 3]
+                    elif first_period > 0:
+                        clean_doct_str = clean_doct_str[: first_period + 3]
 
-                    if len(clean_doc) > 5:
-                        if clean_doc[5:].count(".") > 2:
-                            first_period = clean_doc[5:].index(".") + 5
-                            clean_doc = clean_doc[:first_period + 1]
-                    if len(clean_code) <= 2000 and len(clean_doc) <= 110:
+                    clean_doc = clean_doct_str.split()
+                    clean_doc = superclean_docstring(clean_doc)
+
+                    if len(clean_code) <= 3000 and len(clean_doc) <= 300:
                         clean_code = ["<BoC>"] + clean_code + ["<EoC>"]
                         clean_doc = ["<BoL>"] + clean_doc + ["<EoL>"]
                         self.code_comment_pairs[identifier] = (clean_code, clean_doc)
             except tok.TokenError as e:
                 print(e)
+
+        # sys.exit()
+
+        code = [(name, code) for name, (code, comm) in self.code_comment_pairs.items()]
+        print("Sorting code")
+        code.sort(key=lambda tup: tup[1])
+        print("Code is sorted")
+
+        list_of_dup_lists = list()
+        for idx, (name1, code1) in enumerate(tqdm(code, desc="Finding dups")):
+            if idx < len(code):
+                dup_list = list()
+                for (name2, code2) in code[idx + 1:]:
+                    codestr1 = " ".join(code1)
+                    codestr2 = " ".join(code2)
+                    if codestr1 == codestr2:
+                        dup_list.extend([name1, name2])
+                    else:
+                        break
+
+                if len(dup_list) > 0:
+                    dup_list = list(set(dup_list))
+                    dup_list.sort(key=lambda tup: (len(tup[0]), tup[1], tup[0]))
+                    list_of_dup_lists.append(dup_list)
+
+        prev_length = len(self.code_comment_pairs.keys())
+        for dup_list in list_of_dup_lists:
+            for key in dup_list[1:]:
+                if key in self.code_comment_pairs:
+                    del self.code_comment_pairs[key]
+        new_length = len(self.code_comment_pairs.keys())
+        print("Code/comm had {} examples, now has {} examples".format(prev_length, new_length))
+
+        code = [(name, code) for name, code in self.clean_code_data.items()]
+        print("Sorting code")
+        code.sort(key=lambda tup: tup[1])
+        print("Code is sorted")
+
+        list_of_dup_lists = list()
+        for idx, (name1, code1) in enumerate(tqdm(code, desc="Finding dups")):
+            if idx < len(code):
+                dup_list = list()
+                for (name2, code2) in code[idx + 1:]:
+                    codestr1 = " ".join(code1)
+                    codestr2 = " ".join(code2)
+                    if codestr1 == codestr2:
+                        dup_list.extend([name1, name2])
+                    else:
+                        break
+
+                if len(dup_list) > 0:
+                    dup_list = list(set(dup_list))
+                    dup_list.sort(key=lambda tup: (len(tup[0]), tup[1], tup[0]))
+                    list_of_dup_lists.append(dup_list)
+
+        prev_length = len(self.clean_code_data.keys())
+        for dup_list in list_of_dup_lists:
+            for key in dup_list[1:]:
+                if key in self.clean_code_data:
+                    del self.clean_code_data[key]
+        new_length = len(self.clean_code_data.keys())
+        print("Full code had {} examples, now has {} examples".format(prev_length, new_length))
 
         pickle.dump(self.code_comment_pairs, open(filepath, "wb"))
         pickle.dump(self.clean_code_data, open(code_filepath, "wb"))
@@ -281,9 +507,9 @@ class CodeCrawler():
         if not self.code_comment_pairs:
             raise RuntimeWarning("Code/comment dataset has not been built!!")
 
-        outcode = self.base_path / "code-sentences.output"
-        outcomm = self.base_path / "comm-sentences.output"
-        outcodefull = self.base_path / "code-sentences-full.output"
+        outcode = self.base_path / "code-sentences.txt"
+        outcomm = self.base_path / "comm-sentences.txt"
+        outcodefull = self.base_path / "code-sentences-full.txt"
 
         if isfile(outcode) and isfile(outcomm):
             return
@@ -302,6 +528,30 @@ class CodeCrawler():
         outcodefile.close()
         outcommfile.close()
         outcodefullfile.close()
+
+    def output_clean_comments(self):
+        clean_comments = dict()
+        for key, (code, comm) in tqdm(self.code_comment_pairs.items(), desc="Cleaning comments"):
+            comm_str = " ".join(comm)
+            clean_comm = comm_str.replace("*", "STAR").replace("/", "DIV") \
+                                 .replace("+", "PLUS").replace("-", "SUB") \
+                                 .replace("?", "QUE").replace("\\", "SLSH") \
+                                 .replace("`", "BTCK").replace("'", "TCK") \
+                                 .replace("(", "LPAR").replace(")", "RPAR") \
+                                 .replace("[", "LBKT").replace("]", "RBKT") \
+                                 .replace("{", "LCRL").replace("}", "RCRL") \
+                                 .replace("|", "BAR").replace("!", "BNG") \
+                                 .replace(":", "CLN").replace(";", "SCLN") \
+                                 .replace("\"", "QTE").replace("=", "EQ") \
+                                 .replace("<", "LCAR").replace(">", "RCAR") \
+                                 .replace("@", "ATS").replace("#", "PND") \
+                                 .replace("$", "DLR").replace("%", "PRCT") \
+                                 .replace("^", "CAR").replace("&", "AMP") \
+                                 .replace("~", "TLD")
+            clean_comments[key] = clean_comm.split()
+
+        comm_path = self.base_path / "clean-comments.pkl"
+        pickle.dump(clean_comments, open(comm_path, "wb"))
 
     def init_functions_from_file(self, filepath):
         self.functions = pickle.load(open(filepath), "rb")

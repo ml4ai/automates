@@ -107,4 +107,4 @@ def score_classifier(data):
     p = precision_score(truth, preds)
     r = recall_score(truth, preds)
     f1 = f1_score(truth, preds)
-    print("(P, R, F1) = ({}, {}, {})".format(p, r, f1))
+    return p, r, f1
