@@ -69,6 +69,8 @@ def main(args):
                     if args.use_gpu:    # Send data to GPU if available
                         code = code.cuda()
                         comm = comm.cuda()
+                        # code_lengths = code_lengths.cuda()
+                        # comm_lengths = comm_lengths.cuda()
                     outputs = model(((code, code_lengths), (comm, comm_lengths)))
 
                     # Get loss from log(softmax())
