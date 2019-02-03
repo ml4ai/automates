@@ -106,13 +106,9 @@ def format_n_args(bracketed_tokens):
 
 def maybe_expand_macro(token, tokens, macro_lut):
     if not isinstance(token, EscapeSequence):
-        #print(token, "is not an EscapeSequence")
         # this is not a macro
         yield token
     elif token.data not in macro_lut:
-        print(token, "is not in lut")
-        for k, v in macro_lut.items():
-            print("\t", k, "-->", v)
         # this isn't a macro either
         yield token
     else:
@@ -141,6 +137,8 @@ def expand_macro(macro_def, macro_args):
             yield expanded
 
 
+# Read and tokenize file that is input to the current tex file,
+# return any found macros
 def read_input_file(dirname, tokens):
     fname = os.path.join(dirname, read_group(tokens)[0])
     fname = maybe_add_extension(fname)
@@ -161,6 +159,15 @@ class LatexTokenizer:
     def __iter__(self):
         return iter(self.tokens)
 
+    def add_input(self, dirname, tokens):
+        # read the file content, including any macros that were found
+        input_tokens, input_lut = read_input_file(dirname, tokens)
+        # prepend the new input tokens to the token stack
+        tokens = iter(input_tokens + list(tokens))
+        # add the found input macros the the look-up table
+        self.macro_lut.update(input_lut)
+        return tokens
+
     def itertokens(self):
         """read tex tokens, including imported files"""
         dirname = os.path.dirname(self.filename)
@@ -171,21 +178,14 @@ class LatexTokenizer:
             while True:
                 token = next(tokens)
                 if token.data == 'input':
-                    input_tokens, input_lut = read_input_file(dirname, tokens)
-                    # prepend the input tokens to the token stack
-                    tokens = iter(input_tokens + list(tokens))
-                    self.macro_lut.update(input_lut)
+                    tokens = self.add_input(dirname, tokens)
                 elif token.data == 'import':
                     # TODO handle \subimport, and also \import* and \subimport*
-                    # raise NotImplementedError("we don't handle \\import yet")
                     print("WARNING: we don't handle \\import yet")
                     yield token
                 elif token.data == 'include':
                     # TODO be aware of \includeonly
-                    input_tokens, input_lut = read_input_file(dirname, tokens)
-                    # prepend the input tokens to the token stack
-                    tokens = iter(input_tokens + list(tokens))
-                    self.macro_lut.update(input_lut)
+                    tokens = self.add_input(dirname, tokens)
                 elif token.data == 'newcommand':
                     try:
                         name = read_macro_name(tokens)
