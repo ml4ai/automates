@@ -36,6 +36,9 @@ def render_tex(filename, outdir):
     # so that we can move on to the next tex file
     command = ['latexmk', '-halt-on-error', '-outdir=' + outdir, '-pdf', basename]
     return_code = run_command(command, dirname, os.path.join(outdir, 'latexmk.logfile'))
+    # use -c to delete intermediate files, not the pdf
+    command = ['latexmk', '-c', '-outdir=' + outdir]
+    _ = run_command(command, dirname, '/dev/null')
     if return_code == 0:
         pdf_name = os.path.join(outdir, os.path.splitext(basename)[0] + '.pdf')
     else:
