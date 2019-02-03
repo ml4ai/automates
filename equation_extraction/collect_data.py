@@ -157,7 +157,7 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
     template = template_env.get_template(template)
     for (i, (environment_name, eq_toks)) in enumerate(equations):
         eq_tex = ''.join(repr(c) for c in eq_toks)
-        eq_name = 'equation%03d' % i
+        eq_name = 'equation%04d' % i
         # ensure directory exists
         dirname = os.path.join(outdir, eq_name)
         if not os.path.exists(dirname):
