@@ -84,7 +84,7 @@ def read_balanced_brackets(tokens):
     t = next(tokens)
     #print("tokens passed:", list(tokens))
     #assert isinstance(t, BeginGroup), t + " isn't a BeginGroup"
-    assert is_begin_group(t), t + " isn't a BeginGroup, tokens passed:" + ",".join(list(tokens))
+    assert is_begin_group(t), t + " isn't a BeginGroup, tokens passed:" + ",".join(list(tokens)[:20] + "...")
     n_open = 1
     capture = [t]
     while True:
@@ -168,15 +168,18 @@ class LatexTokenizer:
                     # TODO be aware of \includeonly
                     raise NotImplementedError("we don't handle \\include yet")
                 elif token.data == 'newcommand':
-                    name = read_macro_name(tokens)
-                    args_or_def = read_balanced_brackets(tokens)
-                    if args_or_def[0] == '[': # n_args
-                        n_args = format_n_args(args_or_def)
-                        definition = read_balanced_brackets(tokens)
-                    else:
-                        n_args = 0
-                        definition = args_or_def
-                    self.macro_lut[name] = MacroDef(n_args, definition[1:-1])
+                    try:
+                        name = read_macro_name(tokens)
+                        args_or_def = read_balanced_brackets(tokens)
+                        if args_or_def[0] == '[': # n_args
+                            n_args = format_n_args(args_or_def)
+                            definition = read_balanced_brackets(tokens)
+                        else:
+                            n_args = 0
+                            definition = args_or_def
+                        self.macro_lut[name] = MacroDef(n_args, definition[1:-1])
+                    except:
+                        yield token
                 else:
                     for t in maybe_expand_macro(token, tokens, self.macro_lut):
                         yield t
