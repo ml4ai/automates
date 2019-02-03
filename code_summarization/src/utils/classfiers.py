@@ -85,9 +85,9 @@ class CodeCommClassifier(nn.Module):
         :returns: [Tensor] -- A matrix with a vector of output for each instance
         """
         ((code, code_lengths), (comm, comm_lengths)) = data
-        if self.use_gpu:    # Send data to GPU if available
-            code = code.cuda()
-            comm = comm.cuda()
+        # if self.use_gpu:    # Send data to GPU if available
+        #     code = code.cuda()
+        #     comm = comm.cuda()
 
         # Prepare data for batch processing
         code = code.transpose(0, 1)
@@ -110,6 +110,7 @@ class CodeCommClassifier(nn.Module):
             code_inv_order = code_sort_order.sort()[1]
             code_encoding = self.code_embedding(code[code_sort_order])
             code_enc_pack = pack_padded_sequence(code_encoding, code_lengths, batch_first=True)
+            self.code_lstm.flatten_parameters()
             code_enc_pad, (code_h_n, code_c_n) = self.code_lstm(code_enc_pack)
             code_vecs, _ = pad_packed_sequence(code_enc_pad, batch_first=True)
 
@@ -118,6 +119,7 @@ class CodeCommClassifier(nn.Module):
             comm_inv_order = comm_sort_order.sort()[1]
             comm_encoding = self.comm_embedding(comm[comm_sort_order])
             comm_enc_pack = pack_padded_sequence(comm_encoding, comm_lengths, batch_first=True)
+            self.comm_lstm.flatten_parameters()
             comm_enc_pad, (comm_h_n, comm_c_n) = self.comm_lstm(comm_enc_pack)
             comm_vecs, _ = pad_packed_sequence(comm_enc_pad, batch_first=True)
 
