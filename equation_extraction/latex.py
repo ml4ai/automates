@@ -4,7 +4,6 @@ import os
 import sys
 import glob
 from collections import namedtuple
-from itertools import tee
 from plasTeX.TeX import TeX
 from plasTeX.Tokenizer import BeginGroup, EndGroup, EscapeSequence, Parameter
 
