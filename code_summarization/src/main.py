@@ -36,7 +36,8 @@ def main(args):
     # Discover available CUDA devices and use DataParallelism if possible
     devices = list(range(torch.cuda.device_count()))
     if len(devices) > 1:
-        model = nn.DataParallel(model, device_ids=devices)
+        print("Using {} GPUs!!".format(len(devices)))
+        model = nn.DataParallel(model)
 
     # Send model to GPU for processing
     if args.use_gpu:
@@ -48,6 +49,8 @@ def main(args):
         # Adam optimizer works, SGD fails to train the network for any batch size
         optimizer = optim.Adam(model.parameters(), args.learning_rate)
         class_weights = torch.tensor([10.])
+        if args.use_gpu:
+            class_weights = class_weights.cuda()
         for epoch in range(args.epochs):
             model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
@@ -61,7 +64,12 @@ def main(args):
                         truth = truth.cuda()
 
                     # Run the model using the batch
-                    outputs = model((batch.code, batch.comm))
+                    data = (batch.code, batch.comm)
+                    ((code, code_lengths), (comm, comm_lengths)) = data
+                    if args.use_gpu:    # Send data to GPU if available
+                        code = code.cuda()
+                        comm = comm.cuda()
+                    outputs = model(((code, code_lengths), (comm, comm_lengths)))
 
                     # Get loss from log(softmax())
                     loss = F.binary_cross_entropy_with_logits(outputs.view(-1),
@@ -88,14 +96,14 @@ def main(args):
     if args.eval_dev:
         print("Evaluating Dev for {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         scores = score_dataset(model, dev)
-        dev_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_scores_dev.pkl".format(args.model, args.batch_size, args.corpus)
+        dev_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_{}_gpus_scores_dev.pkl".format(args.model, args.batch_size, args.corpus, len(devices))
         utils.save_scores(scores, dev_score_path)
 
     # Save the TEST set evaluations
     if args.eval_test:
         print("Evaluating Dev for {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         scores = score_dataset(model, test)
-        test_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_scores_test.pkl".format(args.model, args.batch_size, args.corpus)
+        test_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_{}_gpus_scores_test.pkl".format(args.model, args.batch_size, args.corpus, len(devices))
         utils.save_scores(scores, test_score_path)
 
 
@@ -116,8 +124,15 @@ def score_dataset(model, dataset):
     classes = [0, 1]
     with torch.no_grad():
         for i, batch in enumerate(dataset):
+            data = (batch.code, batch.comm)
+            ((code, code_lengths), (comm, comm_lengths)) = data
+            if args.use_gpu:    # Send data to GPU if available
+                code = code.cuda()
+                comm = comm.cuda()
+            output = model(((code, code_lengths), (comm, comm_lengths)))            
+
             # Run the model on the input batch
-            output = model((batch.code, batch.comm))
+            # output = model((batch.code, batch.comm))
 
             # Get predictions for every instance in the batch
             signum_outs = torch.sign(output).cpu().numpy()
