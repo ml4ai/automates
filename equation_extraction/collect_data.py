@@ -86,6 +86,10 @@ def get_pages(pdf_name):
 
 
 def match_template(pages, template, rescale_factor):
+    # the margin is intended to add a bit of whitespace to account for slight differences
+    # in the way various stylesheets affect the equation character spacing (i.e., so things
+    # don't get clipped by the aabb)
+    margin = 3
     best_val = -np.inf
     best_loc = (-1, -1)
     best_page = -1
@@ -107,8 +111,9 @@ def match_template(pages, template, rescale_factor):
                 best_loc = max_loc
                 best_page = i
                 best_h, best_w = resized.shape[:2]
-    upper_left = best_loc
-    lower_right = (best_loc[0] + best_w, best_loc[1] + best_h)
+    # Note that we are adding the margin described above
+    upper_left = (best_loc[0] - margin, best_loc[1] - margin)
+    lower_right = (best_loc[0] + best_w + margin, best_loc[1] + best_h + margin)
     if rescale_factor != 1:
         upper_left = int(upper_left[0] / rescale_factor), int(upper_left[1] / rescale_factor)
         lower_right = int(lower_right[0] / rescale_factor), int(lower_right[1] / rescale_factor)
