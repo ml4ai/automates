@@ -140,8 +140,13 @@ def list_paper_dirs(indir):
 def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_intermediate):
     texfile = find_main_tex_file(dirname)
     paper_id = os.path.basename(os.path.normpath(dirname))
+    # directory for whole paper
     outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id))
-    if not os.path.exists(outdir):
+    # To restart gracefully after having crashed, check to see if we already processed this paper
+    if os.path.exists(outdir):
+        print("Paper ID already exists:", paper_id)
+        return
+    else:
         os.makedirs(outdir)
     # read latex tokens from document
     tokenizer = LatexTokenizer(texfile)
