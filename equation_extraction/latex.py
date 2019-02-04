@@ -136,6 +136,16 @@ def expand_macro(macro_def, macro_args):
             yield expanded
 
 
+# Read and tokenize file that is input to the current tex file,
+# return any found macros
+def read_input_file(dirname, tokens):
+    fname = os.path.join(dirname, read_group(tokens)[0])
+    fname = maybe_add_extension(fname)
+    tokens = []
+    tokenizer = LatexTokenizer(fname)
+    for t in tokenizer:
+        tokens.append(t)
+    return tokens, tokenizer.macro_lut
 
 
 class LatexTokenizer:
@@ -148,25 +158,33 @@ class LatexTokenizer:
     def __iter__(self):
         return iter(self.tokens)
 
+    def add_input(self, dirname, tokens):
+        # read the file content, including any macros that were found
+        input_tokens, input_lut = read_input_file(dirname, tokens)
+        # prepend the new input tokens to the token stack
+        tokens = iter(input_tokens + list(tokens))
+        # add the found input macros the the look-up table
+        self.macro_lut.update(input_lut)
+        return tokens
+
     def itertokens(self):
         """read tex tokens, including imported files"""
         dirname = os.path.dirname(self.filename)
         tex = TeX(file=self.filename)
         tokens = tex.itertokens()
+
         try:
             while True:
                 token = next(tokens)
                 if token.data == 'input':
-                    fname = os.path.join(dirname, read_group(tokens)[0])
-                    fname = maybe_add_extension(fname)
-                    for t in LatexTokenizer(fname):
-                        yield t
+                    tokens = self.add_input(dirname, tokens)
                 elif token.data == 'import':
                     # TODO handle \subimport, and also \import* and \subimport*
-                    raise NotImplementedError("we don't handle \\import yet")
+                    print("WARNING: we don't handle \\import yet")
+                    yield token
                 elif token.data == 'include':
                     # TODO be aware of \includeonly
-                    raise NotImplementedError("we don't handle \\include yet")
+                    tokens = self.add_input(dirname, tokens)
                 elif token.data == 'newcommand':
                     try:
                         name = read_macro_name(tokens)
