@@ -24,6 +24,15 @@ rules:
 
 
 ####VARIABLES####
+  - name: var-duck-rule
+    label: Variable
+    priority: ${priority}
+    type: token
+    example: ""
+    action: looksLikeAVariable
+    pattern: |
+      [mention=Concept]
+
   - name: var-noun_of
     label: Variable
     priority: ${priority}
@@ -57,6 +66,14 @@ rules:
     example: "The approach uses model-simulated LAI to calculate the Kcb."
     pattern: |
       (?<= calculate) @Concept
+
+  - name: var_versus
+    label: Variable
+    priority: ${priority}
+    type: token
+    example: "SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
+    pattern: |
+        @Concept (?= versus [] /curve|plot/)
 
   # - name: var_verb
   #   label: Variable
@@ -122,3 +139,10 @@ rules:
     pattern: |
       "<" @variable:Concept "<"
 
+  - name: var_dssat_model
+    label: Variable # should this be a Model instead?
+    priority: ${priority}
+    type: token
+    example: ""
+    pattern: |
+      [word=/^DSSAT/]
