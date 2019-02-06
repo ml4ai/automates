@@ -20,6 +20,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('indir')
     parser.add_argument('--outdir', default='output')
+    parser.add_argument('--logfile', default='collect_data.log')
     parser.add_argument('--template', default='misc/template.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
@@ -136,11 +137,20 @@ def list_paper_dirs(indir):
                 if re.match(r'^\d{4}\.\d{5}$', paper):
                     yield os.path.join(chunkdir, paper)
 
+# used to format error msgs for the poor man's log in process_paper()
+def error_msg(paper_name, msg, equations=[]):
+    eqns_failed = ', '.join(equations)
+    return '\t'.join([paper_name, msg, eqns_failed]) + '\n'
 
+def get_paper_id(dirname):
+    os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
 
 def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
+    # keep a poor man's log of what failed, if anything
+    info_log = ''
+
     texfile = find_main_tex_file(dirname)
-    paper_id = os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
+    paper_id = get_paper_id(dirname)  # e.g., 1807.07834
     # directory for whole paper
     outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id)) # e.g., .../1807/1807.07834/
     # To restart gracefully after having crashed, check to see if we already processed this paper
@@ -154,72 +164,94 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
     # extract equations from token stream
     equations = tokenizer.equations()
     # compile pdf from document
-    # todo: if given pdfnames, use that
     if pdfdir:
-        pdf_name =
+        # if given dir for pre-compiled pdfs, use that
+        pdf_name = os.path.join(pdfdir, paper_id + ".pdf")
     else:
+        # otherwise, render it from source
         pdf_name = render_tex(texfile, outdir, keep_intermediate)
-    # retrieve pdf pages as images
-    pages = get_pages(pdf_name)
-    if dump_pages:
-        os.makedirs(os.path.join(outdir, 'pages'))
-        for i,p in enumerate(pages):
-            img_name = os.path.join(outdir, 'pages', '%03d.png' % i)
-            cv2.imwrite(img_name, p)
-    # load jinja2 template
-    template_loader = jinja2.FileSystemLoader(searchpath='.')
-    template_env = jinja2.Environment(loader=template_loader)
-    template = template_env.get_template(template)
-    for (i, (environment_name, eq_toks)) in enumerate(equations):
-        eq_tex = ''.join(repr(c) for c in eq_toks)
-        eq_name = 'equation%04d' % i
-        # ensure directory exists
-        dirname = os.path.join(outdir, eq_name)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-        # write environment name
-        fname = os.path.join(outdir, eq_name, 'environment.txt')
-        with open(fname, 'w') as f:
-            f.write(environment_name)
-        # write tex tokens
-        fname = os.path.join(outdir, eq_name, 'tokens.json')
-        with open(fname, 'w') as f:
-            tokens = [dict(type=t.__class__.__name__, value=t.source) for t in eq_toks]
-            json.dump(tokens, f)
-        # render equation if possible
-        if environment_name in ('equation', 'equation*'):
-            # make pdf
-            fname = os.path.join(outdir, eq_name, 'equation.tex')
-            equation = render_equation(eq_tex, template, fname, keep_intermediate)
-            if equation is None:
-                # equation couldn't be rendered
-                continue
-            # find page and aabb where equation appears
-            match, p, start, end = match_template(pages, equation, rescale_factor)
-            # write image with aabb
-            image = pages[p].copy()
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-            cv2.rectangle(image, start, end, (0, 0, 255), 2)
-            img_name = os.path.join(outdir, eq_name, 'aabb.png')
-            cv2.imwrite(img_name, image)
-            # write aabb to file (using relative coordinates)
-            fname = os.path.join(outdir, eq_name, 'aabb.tsv')
-            h, w = image.shape[:2]
-            x1 = start[0] / w
-            y1 = start[1] / h
-            x2 = end[0] / w
-            y2 = end[1] / h
+    # if the pdf is there (rendered OR provided)
+    if pdf_name:
+        # retrieve pdf pages as images
+        pages = get_pages(pdf_name)
+        if dump_pages:
+            os.makedirs(os.path.join(outdir, 'pages'))
+            for i,p in enumerate(pages):
+                img_name = os.path.join(outdir, 'pages', '%03d.png' % i)
+                cv2.imwrite(img_name, p)
+        # load jinja2 template
+        template_loader = jinja2.FileSystemLoader(searchpath='.')
+        template_env = jinja2.Environment(loader=template_loader)
+        template = template_env.get_template(template)
+        # keep track of which eqns failed or were skipped, to hopefully later recover
+        failed_eqns = []
+        skipped_eqns = []
+        for (i, (environment_name, eq_toks)) in enumerate(equations):
+            eq_tex = ''.join(repr(c) for c in eq_toks)
+            eq_name = 'equation%04d' % i
+            # ensure directory exists
+            dirname = os.path.join(outdir, eq_name)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            # write environment name
+            fname = os.path.join(outdir, eq_name, 'environment.txt')
             with open(fname, 'w') as f:
-                values = [p, x1, y1, x2, y2]
-                tsv = '\t'.join(map(str, values))
-                print(tsv, file=f)
+                f.write(environment_name)
+            # write tex tokens
+            fname = os.path.join(outdir, eq_name, 'tokens.json')
+            with open(fname, 'w') as f:
+                tokens = [dict(type=t.__class__.__name__, value=t.source) for t in eq_toks]
+                json.dump(tokens, f)
+            # render equation if possible
+            if environment_name in ('equation', 'equation*'):
+                # make pdf
+                fname = os.path.join(outdir, eq_name, 'equation.tex')
+                equation = render_equation(eq_tex, template, fname, keep_intermediate)
+                if equation is None:
+                    # equation couldn't be rendered
+                    failed_eqns.append(eq_name)
+                    continue
+                # find page and aabb where equation appears
+                match, p, start, end = match_template(pages, equation, rescale_factor)
+                # write image with aabb
+                image = pages[p].copy()
+                image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+                cv2.rectangle(image, start, end, (0, 0, 255), 2)
+                img_name = os.path.join(outdir, eq_name, 'aabb.png')
+                cv2.imwrite(img_name, image)
+                # write aabb to file (using relative coordinates)
+                fname = os.path.join(outdir, eq_name, 'aabb.tsv')
+                h, w = image.shape[:2]
+                x1 = start[0] / w
+                y1 = start[1] / h
+                x2 = end[0] / w
+                y2 = end[1] / h
+                with open(fname, 'w') as f:
+                    values = [p, x1, y1, x2, y2]
+                    tsv = '\t'.join(map(str, values))
+                    print(tsv, file=f)
+            else:
+                # we skipped bc wasn't an equation environment
+                skipped_eqns.append(eq_name)
+        # add the failed/skipped eqn info to the log
+        info_log += error_msg(paper_id, 'eqn_failed', failed_eqns)
+        info_log += error_msg(paper_id, 'eqn_skipped', skipped_eqns)
+    else:
+        info_log += error_msg(paper_id, 'paper_failed')
 
+    return info_log
 
 
 if __name__ == '__main__':
     args = parse_args()
-    # todo: log
-    # todo: try catch
-    for paper_dir in list_paper_dirs(args.indir):
-        print('processing', paper_dir, '...')
-        process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
+    with open(args.logfile, 'w') as logfile:
+        for paper_dir in list_paper_dirs(args.indir):
+            print('processing', paper_dir, '...')
+            try:
+                paper_errors = process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
+            except:
+                paper_errors = error_msg(get_paper_id(paper_dir), 'paper_failed')
+            # record any errors
+            logfile.write(paper_errors)
+            logfile.flush()
+
