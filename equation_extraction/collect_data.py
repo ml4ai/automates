@@ -251,6 +251,8 @@ if __name__ == '__main__':
             print('processing', paper_dir, '...')
             try:
                 paper_errors = process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
+            except KeyboardInterrupt:
+                raise
             except:
                 paper_errors = error_msg(get_paper_id(paper_dir), 'paper_failed')
             # record any errors
