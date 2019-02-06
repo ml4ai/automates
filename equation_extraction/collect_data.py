@@ -143,7 +143,7 @@ def error_msg(paper_name, msg, equations=[]):
     return '\t'.join([paper_name, msg, eqns_failed]) + '\n'
 
 def get_paper_id(dirname):
-    os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
+    return os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
 
 def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
     # keep a poor man's log of what failed, if anything
