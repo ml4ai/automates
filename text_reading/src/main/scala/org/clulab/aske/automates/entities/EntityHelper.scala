@@ -63,7 +63,7 @@ object EntityHelper {
     // Check ending tag, get the location of last valid tag
     val endToken = entity.tokenInterval.end - 1  // subtracting 1 bc interval is exclusive
     val endTag = tags(endToken)
-    val lastValidEnd = if (validEdgeTag(endTag)) endToken else lastValid(tags, endToken)
+    var lastValidEnd = if (validEdgeTag(endTag)) endToken else lastValid(tags, endToken)
 
 
     if (firstValidStart == startToken && lastValidEnd == endToken) {
@@ -74,6 +74,10 @@ object EntityHelper {
       entity
     }
     else {
+      val currentTags = tags.slice(firstValidStart, lastValidEnd + 1)
+      if (currentTags.last == "-RRB-" && !tags.contains("-LRB-")) {
+        lastValidEnd = lastValidEnd - 1
+      }
       // Return a new entity with the trimmed token interval
       val interval = Interval(firstValidStart, lastValidEnd + 1)
       entity.asInstanceOf[TextBoundMention].copy(tokenInterval = interval)

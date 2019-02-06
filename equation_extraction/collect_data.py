@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
+    parser.add_argument('--pdfdir', help='directory with precompiled whole paper pdfs, if provided we will not regenerate them')
     args = parser.parse_args()
     return args
 
@@ -137,11 +138,11 @@ def list_paper_dirs(indir):
 
 
 
-def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_intermediate):
+def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
     texfile = find_main_tex_file(dirname)
-    paper_id = os.path.basename(os.path.normpath(dirname))
+    paper_id = os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
     # directory for whole paper
-    outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id))
+    outdir = os.path.abspath(os.path.join(outdir, paper_id[:4], paper_id)) # e.g., .../1807/1807.07834/
     # To restart gracefully after having crashed, check to see if we already processed this paper
     if os.path.exists(outdir):
         print("Paper ID already exists:", paper_id)
@@ -153,7 +154,11 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
     # extract equations from token stream
     equations = tokenizer.equations()
     # compile pdf from document
-    pdf_name = render_tex(texfile, outdir, keep_intermediate)
+    # todo: if given pdfnames, use that
+    if pdfdir:
+        pdf_name =
+    else:
+        pdf_name = render_tex(texfile, outdir, keep_intermediate)
     # retrieve pdf pages as images
     pages = get_pages(pdf_name)
     if dump_pages:
@@ -213,6 +218,8 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
 
 if __name__ == '__main__':
     args = parse_args()
+    # todo: log
+    # todo: try catch
     for paper_dir in list_paper_dirs(args.indir):
         print('processing', paper_dir, '...')
-        process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files)
+        process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
