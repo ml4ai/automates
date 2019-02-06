@@ -156,7 +156,7 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
     # To restart gracefully after having crashed, check to see if we already processed this paper
     if os.path.exists(outdir):
         print("Paper ID already exists:", paper_id)
-        return
+        return ''
     else:
         os.makedirs(outdir)
     # read latex tokens from document
