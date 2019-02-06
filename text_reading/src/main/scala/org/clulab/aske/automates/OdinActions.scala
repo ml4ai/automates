@@ -7,6 +7,9 @@ import org.clulab.odin.impl.Taxonomy
 import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
+import org.clulab.aske.automates.OdinEngine._
+import org.clulab.aske.automates.entities.EntityHelper
+import org.clulab.struct.Interval
 
 
 
@@ -74,6 +77,47 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield copyWithLabel(arg, "Variable")
 
     mentionsDisplayOnlyArgs
+  }
+
+  def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    def foundBy(base: String) = s"$base++selectShorter"
+
+    def mkDefinitionMention(m: Mention): Seq[Mention] = {
+      val outer = m.arguments("c1").head
+      val inner = m.arguments("c2").head
+      val sorted = Seq(outer, inner).sortBy(_.text.length)
+      val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
+      val definition = changeLabel(sorted.last, DEFINITION_LABEL) // the longest if the definition
+      val defMention = m match {
+        case rm: RelationMention => rm.copy(
+          arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
+          foundBy=foundBy(rm.foundBy),
+          tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
+        case _ => ???
+      }
+      Seq(variable, defMention)
+//      Seq(defMention)
+    }
+
+    mentions.flatMap(mkDefinitionMention)
+  }
+
+  def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      m <- mentions
+      if m.words.length == 1
+      word = m.words.head
+      if word.length <= 5
+      if word.toLowerCase != word // mixed case or all UPPER
+    } yield m
+  }
+
+  def changeLabel(orig: Mention, label: String): Mention = {
+    orig match {
+      case tb: TextBoundMention => tb.copy(labels = taxonomy.hypernymsFor(label))
+      case rm: RelationMention => rm.copy(labels = taxonomy.hypernymsFor(label))
+      case em: EventMention => em.copy(labels = taxonomy.hypernymsFor(label))
+    }
   }
 
 }

@@ -13,14 +13,24 @@ rules:
     pattern: |
       @variable:Variable ( is| is defined as) (an|a|the) @definition:Concept
 
-  - name: var_definition_appos
+#  - name: var_definition_appos
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+#    #action: variableArguments
+#    pattern: |
+#        @variable:Variable "-LRB-" @definition:Concept "-RRB-"
+
+  - name: var_definition_appos_bidir
     label: Definition
     priority: ${priority}
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     #action: variableArguments
+    action: selectShorterAsVariable
     pattern: |
-      @variable:Variable "-LRB-" @definition:Concept "-RRB-"
+        @c1:Concept "-LRB-" @c2:Concept # "-RRB-"
 
 
     #todo: with the next two rules, more tests fail
