@@ -234,8 +234,10 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
                 # we skipped bc wasn't an equation environment
                 skipped_eqns.append(eq_name)
         # add the failed/skipped eqn info to the log
-        info_log += error_msg(paper_id, 'eqn_failed', failed_eqns)
-        info_log += error_msg(paper_id, 'eqn_skipped', skipped_eqns)
+        if len(failed_eqns) > 0:
+            info_log += error_msg(paper_id, 'eqn_failed', failed_eqns)
+        if len(skipped_eqns) > 0:
+            info_log += error_msg(paper_id, 'eqn_skipped', skipped_eqns)
     else:
         info_log += error_msg(paper_id, 'paper_failed')
 
