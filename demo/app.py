@@ -172,7 +172,7 @@ def processCode():
     translator = translate.XMLToJSONTranslator()
     outputDict = translator.analyze(trees, comments)
     pySrc = pyTranslate.create_python_string(outputDict)
-    asts = [ast.parse(pySrc)]
+    asts = [ast.parse(pySrc[0][0])]
     pgm_dict = genPGM.create_pgm_dict("/tmp/lambdas.py", asts, "pgm.json")
     root = Scope.from_dict(pgm_dict)
     A = root.to_agraph()
