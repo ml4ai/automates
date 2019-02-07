@@ -19,6 +19,8 @@ Setting up AWS EC2 (partial instructions)
 After setting up your instance, log in and do:
 
 ```bash
+sudo apt-get update
+sudo apt-get install git
 git clone https://github.com/ml4ai/automates
 cd automates/demo
 sudo sh setup_aws_ec2.sh
