@@ -163,10 +163,13 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
     tokenizer = LatexTokenizer(texfile)
     # extract equations from token stream
     equations = tokenizer.equations()
+    print("hello")
+    print("equations:", len(list(equations)))
     # compile pdf from document
     if pdfdir:
         # if given dir for pre-compiled pdfs, use that
-        pdf_name = os.path.join(pdfdir, paper_id + ".pdf")
+        pdf_name = os.path.join(pdfdir, paper_id[:4], paper_id + ".pdf")
+        print("pdf_name:", pdf_name)
     else:
         # otherwise, render it from source
         pdf_name = render_tex(texfile, outdir, keep_intermediate)
@@ -174,6 +177,7 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
     if pdf_name:
         # retrieve pdf pages as images
         pages = get_pages(pdf_name)
+        print("Did get pages")
         if dump_pages:
             os.makedirs(os.path.join(outdir, 'pages'))
             for i,p in enumerate(pages):
@@ -187,6 +191,7 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
         failed_eqns = []
         skipped_eqns = []
         for (i, (environment_name, eq_toks)) in enumerate(equations):
+            print("Working on eqn", i)
             eq_tex = ''.join(repr(c) for c in eq_toks)
             eq_name = 'equation%04d' % i
             # ensure directory exists
