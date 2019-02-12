@@ -41,10 +41,12 @@ object StringMatchEntityFinder {
       if validLabels.contains(m2.label)
     } yield m2.text
     val noSpecSymbolsStrings = replaceSpecialSymbols(strings)
-    println(noSpecSymbolsStrings)
+    //println(noSpecSymbolsStrings)
     new StringMatchEntityFinder(noSpecSymbolsStrings.toSet, label) //todo: write method that will replace regex special symbols, e.g., "(" -> "\(" (scala method regex escape)
   }
 
+  //the goal was to replace special symbols in strings that could interfere with stringmatcher (see the todo in line 45);
+  //currently this just deletes parantheses and does not replace them with escape symbol + target symbol todo: this is a temp solution; need to adjust the regex in replaceAll
   def replaceSpecialSymbols(strings: Seq[String]): Seq[String] = {
    val regexString = for {
      str <- strings
