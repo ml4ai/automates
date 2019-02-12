@@ -40,6 +40,16 @@ object StringMatchEntityFinder {
       m2 <- Seq(m) ++ m.arguments.valuesIterator.flatten
       if validLabels.contains(m2.label)
     } yield m2.text
-    new StringMatchEntityFinder(strings.toSet, label)
+    val noSpecSymbolsStrings = replaceSpecialSymbols(strings)
+    println(noSpecSymbolsStrings)
+    new StringMatchEntityFinder(noSpecSymbolsStrings.toSet, label) //todo: write method that will replace regex special symbols, e.g., "(" -> "\(" (scala method regex escape)
   }
+
+  def replaceSpecialSymbols(strings: Seq[String]): Seq[String] = {
+   val regexString = for {
+     str <- strings
+   } yield str.replaceAll("[)(]","") //"[\\[\\^\\.\\|\\?\\*\\+\\(\\)\\]]"
+    regexString
+  }
+
 }
