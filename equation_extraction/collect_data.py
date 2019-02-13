@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('indir')
     parser.add_argument('--outdir', default='output')
     parser.add_argument('--logfile', default='collect_data.log')
-    parser.add_argument('--template', default='misc/template.tex')
+    parser.add_argument('--template', default='template.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
