@@ -5,6 +5,7 @@ from __future__ import division, print_function
 import os
 import sys
 import json
+import fcntl
 import argparse
 import subprocess
 import cv2
@@ -13,14 +14,14 @@ import numpy as np
 from skimage import img_as_ubyte
 from pdf2image import convert_from_path
 from latex import LatexTokenizer, find_main_tex_file
-
+from datetime import datetime
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('indir')
-    parser.add_argument('--outdir', default='output')
-    parser.add_argument('--logfile', default='collect_data.log')
+    parser.add_argument('--outdir', default='/data/output')
+    parser.add_argument('--logfile', default='/data/collect_data.log')
     parser.add_argument('--template', default='misc/template.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
@@ -232,7 +233,7 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
 
 if __name__ == '__main__':
     args = parse_args()
-    with open(args.logfile, 'w') as logfile:
+    with open(args.logfile, 'a') as logfile:
         print('processing', args.indir, '...')
         try:
             paper_errors = process_paper(args.indir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
@@ -242,6 +243,10 @@ if __name__ == '__main__':
             msg = sys.exc_info()[0]
             paper_errors = error_msg(get_paper_id(args.indir), 'paper_failed: {0}'.format(msg))
         # record any errors
-        logfile.write(paper_errors)
-        logfile.flush()
+        if paper_errors:
+            fcntl.lockf(logfile, fcntl.LOCK_EX)
+            logfile.write("# " + str(datetime.now()) + "\n")
+            logfile.write(paper_errors)
+            logfile.flush()
+            fcntl.lockf(logfile, fcntl.LOCK_UN)
 
