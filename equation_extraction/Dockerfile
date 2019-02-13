@@ -8,7 +8,8 @@ python-skimage poppler-utils python-pypdf2 python-poppler \
 RUN pip install pdf2image
 # replace imagemagick's policy with our own to enable PDF support
 COPY misc/policy.xml /etc/ImageMagick-6/policy.xml
-RUN mkdir /equation_extraction
+RUN mkdir -p /equation_extraction/misc
 ADD *.py /equation_extraction/
-ADD misc/template.tex /equation_extraction/
+ADD misc/template.tex /equation_extraction/misc/
+ADD run_data_collection.sh /equation_extraction/
 WORKDIR /equation_extraction
