@@ -3,7 +3,7 @@
 from __future__ import division, print_function
 
 import os
-import re
+import sys
 import json
 import argparse
 import subprocess
@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('indir')
     parser.add_argument('--outdir', default='output')
     parser.add_argument('--logfile', default='collect_data.log')
-    parser.add_argument('--template', default='template.tex')
+    parser.add_argument('--template', default='misc/template.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
@@ -121,21 +121,6 @@ def match_template(pages, template, rescale_factor):
         lower_right = int(lower_right[0] / rescale_factor), int(lower_right[1] / rescale_factor)
     return best_val, best_page, upper_left, lower_right
 
-
-
-def list_paper_dirs(indir):
-    """
-    gets a directory that is expected to contain directories of the form
-    `1810` which themselves would contain directories of the form `1810.04805`
-    with the tex source for the corresponding paper in arxiv, and returns
-    the directory paths to the directories with the papers source
-    """
-    for chunk in os.listdir(indir):
-        if re.match(r'^\d{4}$', chunk):
-            chunkdir = os.path.join(indir, chunk)
-            for paper in os.listdir(chunkdir):
-                if re.match(r'^\d{4}\.\d{5}$', paper):
-                    yield os.path.join(chunkdir, paper)
 
 # used to format error msgs for the poor man's log in process_paper()
 def error_msg(paper_name, msg, equations=[]):
@@ -248,15 +233,15 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
 if __name__ == '__main__':
     args = parse_args()
     with open(args.logfile, 'w') as logfile:
-        for paper_dir in list_paper_dirs(args.indir):
-            print('processing', paper_dir, '...')
-            try:
-                paper_errors = process_paper(paper_dir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
-            except KeyboardInterrupt:
-                raise
-            except:
-                paper_errors = error_msg(get_paper_id(paper_dir), 'paper_failed')
-            # record any errors
-            logfile.write(paper_errors)
-            logfile.flush()
+        print('processing', args.indir, '...')
+        try:
+            paper_errors = process_paper(args.indir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
+        except KeyboardInterrupt:
+            raise
+        except:
+            msg = sys.exc_info()[0]
+            paper_errors = error_msg(get_paper_id(args.indir), 'paper_failed: {0}'.format(msg))
+        # record any errors
+        logfile.write(paper_errors)
+        logfile.flush()
 
