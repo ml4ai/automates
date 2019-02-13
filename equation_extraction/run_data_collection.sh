@@ -67,5 +67,11 @@ while true; do
     esac
 done
 
+echo "INDIR: $INDIR"
+echo "NPROC: $NPROC"
+echo "ARGS: $ARGS"
+
+echo $(find $INDIR -type d -regextype posix-awk -regex '.*/[0-9]{4}\.[0-9]{5}')
+
 # read papers
-find $DATADIR -type d -regextype posix-awk -regex '.*/[0-9]{4}\.[0-9]{5}' -print0 | xargs -0 -I{} -n 1 -P $NPROC python -u /equation_extraction/collect_data.py {} $ARGS
+find $INDIR -type d -regextype posix-awk -regex '.*/[0-9]{4}\.[0-9]{5}' -print0 | xargs -0 -I{} -n 1 -P $NPROC python -u /equation_extraction/collect_data.py {} $ARGS
