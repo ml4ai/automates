@@ -13,6 +13,7 @@ from delphi.translators.for2py.scripts import (
 )
 from delphi.utils.fp import flatten
 from delphi.GrFN.scopes import Scope
+from delphi.GrFN.ProgramAnalysisGraph import ProgramAnalysisGraph
 import delphi.paths
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, redirect
@@ -82,9 +83,11 @@ def get_tooltip(n, lambdas):
                 src_lines[0]
                 .split("__lambda__")[1]
                 .split("(")[0]
-                .replace("_","\_")
+                .replace("_", "\_")
                 + " = "
-                + latex(sympify(src_lines[1][10:].replace("math.exp", "e^"))).replace("_", "\_")
+                + latex(
+                    sympify(src_lines[1][10:].replace("math.exp", "e^"))
+                ).replace("_", "\_")
             )
             return f"\({ltx}\)"
     else:
@@ -171,8 +174,8 @@ def processCode():
     comments = get_comments.get_comments(preprocessed_fortran_file)
     translator = translate.XMLToJSONTranslator()
     outputDict = translator.analyze(trees, comments)
-    pySrc = pyTranslate.create_python_string(outputDict)
-    asts = [ast.parse(pySrc[0][0])]
+    pySrc = pyTranslate.create_python_string(outputDict)[0][0]
+    asts = [ast.parse(pySrc)]
     pgm_dict = genPGM.create_pgm_dict("/tmp/lambdas.py", asts, "pgm.json")
     root = Scope.from_dict(pgm_dict)
     A = root.to_agraph()
