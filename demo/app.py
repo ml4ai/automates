@@ -34,14 +34,13 @@ class MyForm(FlaskForm):
         language="fortran",
         config={"lineNumbers": "true", "viewportMargin": 800},
     )
-    submit = SubmitField("Submit")
+    submit = SubmitField("Submit", render_kw={"class":"btn btn-primary"})
 
 
 SECRET_KEY = "secret!"
 # mandatory
 CODEMIRROR_LANGUAGES = ["fortran"]
 # optional
-CODEMIRROR_THEME = "monokai"
 CODEMIRROR_ADDONS = (("display", "placeholder"),)
 
 app = Flask(__name__)
@@ -57,7 +56,7 @@ def get_cluster_nodes(A):
                 "data": {
                     "id": subgraph.name,
                     "label": subgraph.name.replace("cluster_", ""),
-                    "shape": "rectangle",
+                    "shape": "roundrectangle",
                     "parent": A.name,
                     "color": subgraph.graph_attr["border_color"],
                     "textValign": "top",
@@ -94,7 +93,7 @@ def get_tooltip(n, lambdas):
         return json.dumps({"index": n.attr["index"]}, indent=2)
 
 
-def to_cyjs_elements_json_str(A) -> dict:
+def get_cyjs_elementsJSON_from_ScopeTree(A) -> str:
     sys.path.insert(0, "/tmp/")
     import lambdas
 
@@ -131,37 +130,6 @@ def to_cyjs_elements_json_str(A) -> dict:
     json_str = json.dumps(elements, indent=2)
     return json_str
 
-def to_cyjs_elements_json_str_2(A) -> dict:
-
-    elements = {
-        "nodes": [
-            {
-                "data": {
-                    "id": n[0],
-                    "label": n[0],
-                    "parent": "petpt",
-                    "shape": "ellipse",
-                    "color": 'black',
-                    "textValign": "center",
-                    "tooltip":'None',
-                }
-            }
-            for n in A.nodes(data=True)
-        ],
-        "edges": [
-            {
-                "data": {
-                    "id": f"{edge[0]}_{edge[1]}",
-                    "source": edge[0],
-                    "target": edge[1],
-                }
-            }
-            for edge in A.edges()
-        ],
-    }
-    json_str = json.dumps(elements, indent=2)
-    return json_str
-
 
 @app.route("/")
 def index():
@@ -183,17 +151,23 @@ def processCode():
         if line != ""
     ]
     input_code_tmpfile = "/tmp/input_code.f"
-    with open(input_code_tmpfile, 'w') as f:
+    with open(input_code_tmpfile, "w") as f:
         f.write("".join(lines))
-    root=Scope.from_fortran_file(input_code_tmpfile)
-    A = root.to_agraph()
-    elements = to_cyjs_elements_json_str(A)
-    A = ProgramAnalysisGraph.from_fortran_file(input_code_tmpfile)
+    root = Scope.from_fortran_file(input_code_tmpfile)
+    scopetree_graph = root.to_agraph()
+    scopeTree_elementsJSON = get_cyjs_elementsJSON_from_ScopeTree(
+        scopetree_graph
+    )
+    programAnalysisGraph = ProgramAnalysisGraph.from_fortran_file(input_code_tmpfile)
+    program_analysis_graph_elementsJSON = programAnalysisGraph.cyjs_elementsJSON()
     os.remove(input_code_tmpfile)
-    elements2 = to_cyjs_elements_json_str_2(A)
 
-    return render_template("index.html", form=form, elementsJSON=elements,
-            elementsJSON2 = elements2)
+    return render_template(
+        "index.html",
+        form=form,
+        scopeTree_elementsJSON=scopeTree_elementsJSON,
+        program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
+    )
 
 
 if __name__ == "__main__":
