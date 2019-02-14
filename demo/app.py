@@ -153,12 +153,12 @@ def processCode():
     input_code_tmpfile = "/tmp/input_code.f"
     with open(input_code_tmpfile, "w") as f:
         f.write("".join(lines))
-    root = Scope.from_fortran_file(input_code_tmpfile)
+    root = Scope.from_fortran_file(input_code_tmpfile, tmpdir="/tmp")
     scopetree_graph = root.to_agraph()
     scopeTree_elementsJSON = get_cyjs_elementsJSON_from_ScopeTree(
         scopetree_graph
     )
-    programAnalysisGraph = ProgramAnalysisGraph.from_fortran_file(input_code_tmpfile)
+    programAnalysisGraph = ProgramAnalysisGraph.from_fortran_file(input_code_tmpfile, tmpdir="/tmp")
     program_analysis_graph_elementsJSON = programAnalysisGraph.cyjs_elementsJSON()
     os.remove(input_code_tmpfile)
 
