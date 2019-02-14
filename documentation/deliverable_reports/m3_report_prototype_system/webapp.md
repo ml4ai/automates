@@ -2,7 +2,7 @@
 
 A demo of the current version of the prototype system is now live - you
 can [try it out
-here](http://vanga.sista.arizona.edu)!
+here](http://vanga.sista.arizona.edu/automates)!
 
 ![Screenshot of AutoMATES demo webapp](figs/webapp_screenshot.png)
 
