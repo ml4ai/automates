@@ -96,7 +96,7 @@ def get_tooltip(n, lambdas):
 
 def get_cyjs_elementsJSON_from_ScopeTree(A) -> str:
     sys.path.insert(0, "/tmp/")
-    lambdas = importlib.__import__("input_code" + "_lambdas")
+    lambdas = importlib.__import__("input_code_lambdas")
 
     lexer = PythonLexer()
     formatter = HtmlFormatter()
