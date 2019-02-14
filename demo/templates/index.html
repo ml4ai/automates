@@ -1,7 +1,7 @@
 <html>
   {% include "head.html" %}
   <body>
-    <div class="container-fluid"> 
+    <div class="container"> 
       <div class="row justify-content-md-center border" style="padding: 10px;">
         <h1>AutoMATES Demo</h1>
           <br>
@@ -45,11 +45,28 @@
             <input type="submit" value="Submit">
           </form>
         </div>
-        <div class="col-sm-8 border" id="cy"></div>
+        <div id="col2" class="col-sm-8 border">
+          <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="cy1-tab" data-toggle="tab" 
+                href="#cy1" role="tab" aria-controls="cy1" 
+                aria-selected="true">Computational Graph View</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="cy2-tab" data-toggle="tab" 
+                href="#cy2" role="tab" aria-controls="cy2" 
+                aria-selected="true">Causal Analysis Graph View</a>
+            </li>
+          </ul>
+          <div class="tab-content">
+            <div id="cy1" role="tabpanel" class="tab-pane show active"
+              aria-labelledby="cy1-tab" style="height:90%;">.</div>
+            <div id="cy2" role="tabpanel" class="tab-pane"
+              aria-labelledby="cy2-tab" style="height:90%;">.</div>
+          </div>
+        </div>
       </div>
     </div>
-      <script>
-      {% include "cyjs.js" %}
-      </script>
+      <script> {% include "cyjs.js" %} </script>
   </body>
 </html>
