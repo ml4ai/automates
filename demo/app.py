@@ -3,6 +3,7 @@ import sys
 import ast
 import json
 import subprocess as sp
+import importlib
 from pprint import pprint
 from delphi.translators.for2py.scripts import (
     f2py_pp,
@@ -95,7 +96,7 @@ def get_tooltip(n, lambdas):
 
 def get_cyjs_elementsJSON_from_ScopeTree(A) -> str:
     sys.path.insert(0, "/tmp/")
-    import lambdas
+    lambdas = importlib.__import__("input_code" + "_lambdas")
 
     lexer = PythonLexer()
     formatter = HtmlFormatter()
