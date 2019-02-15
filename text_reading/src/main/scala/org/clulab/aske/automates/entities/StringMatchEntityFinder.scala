@@ -15,7 +15,7 @@ class StringMatchEntityFinder(strings: Set[String], label: String) extends Entit
            |   priority: 1
            |   type: token
            |   pattern: |
-           |       /${stringToMatch}/
+           |       /\\Q${stringToMatch}\\E/
            |
         """.stripMargin
       engine = ExtractorEngine(ruleTemplate)
@@ -42,4 +42,5 @@ object StringMatchEntityFinder {
     } yield m2.text
     new StringMatchEntityFinder(strings.toSet, label)
   }
+
 }
