@@ -14,3 +14,5 @@ cd automates/demo
 pip install -r requirements.txt
 sudo ln -sfT ~/automates/demo /var/www/html/automates_demo
 sudo ln -sfT ~/delphi /var/www/html/delphi
+sudo mkdir -p /tmp/automates
+sudo chown -R www-data /tmp/automates

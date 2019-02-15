@@ -39,7 +39,7 @@ WSGIPythonHome "/home/adarsh/anaconda3"
 then, add the following lines under line `DocumentRoot /var/www/html`
 
 ```
-    WSGIDaemonProcess automates_demo threads=5 python-path=/home/adarsh/anaconda3/lib/python3.7/site-packages
+    WSGIDaemonProcess automates_demo threads=5 python-path=/home/adarsh/anaconda3/lib/python3.7/site-packages user=www-data group=www-data
     WSGIScriptAlias / /var/www/html/automates_demo/app.wsgi
 
     <Directory automates_demo>
@@ -56,3 +56,5 @@ Then restart the server.
 ```
 sudo apachectl restart
 ```
+
+
