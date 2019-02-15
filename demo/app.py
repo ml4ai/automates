@@ -2,6 +2,7 @@ import os
 import sys
 import ast
 import json
+from uuid import uuid4
 import subprocess as sp
 import importlib
 from pprint import pprint
@@ -94,10 +95,7 @@ def get_tooltip(n, lambdas):
         return json.dumps({"index": n.attr["index"]}, indent=2)
 
 
-def get_cyjs_elementsJSON_from_ScopeTree(A) -> str:
-    sys.path.insert(0, "/tmp/")
-    lambdas = importlib.__import__("input_code_lambdas")
-
+def get_cyjs_elementsJSON_from_ScopeTree(A, lambdas) -> str:
     lexer = PythonLexer()
     formatter = HtmlFormatter()
     elements = {
@@ -151,17 +149,25 @@ def processCode():
         for line in [line for line in code.split("\n")]
         if line != ""
     ]
-    input_code_tmpfile = "/tmp/input_code.f"
+    filename=f"input_code_{str(uuid4())}"
+    input_code_tmpfile = f"/tmp/automates/{filename}.f"
     with open(input_code_tmpfile, "w") as f:
         f.write("".join(lines))
-    root = Scope.from_fortran_file(input_code_tmpfile, tmpdir="/tmp")
+    root = Scope.from_fortran_file(input_code_tmpfile, tmpdir="/tmp/automates")
     scopetree_graph = root.to_agraph()
+
+    sys.path.insert(0, "/tmp/automates")
+    lambdas = f"{filename}_lambdas"
     scopeTree_elementsJSON = get_cyjs_elementsJSON_from_ScopeTree(
-        scopetree_graph
+        scopetree_graph, importlib.__import__(lambdas)
     )
-    programAnalysisGraph = ProgramAnalysisGraph.from_fortran_file(input_code_tmpfile, tmpdir="/tmp")
+    programAnalysisGraph = ProgramAnalysisGraph.from_agraph(
+        scopetree_graph,
+        importlib.__import__(lambdas)
+    )
     program_analysis_graph_elementsJSON = programAnalysisGraph.cyjs_elementsJSON()
     os.remove(input_code_tmpfile)
+    os.remove(f"/tmp/automates/{lambdas}.py")
 
     return render_template(
         "index.html",
