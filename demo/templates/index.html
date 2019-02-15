@@ -49,7 +49,7 @@
           </div>
       </div>
       <div class="col-4">
-        <form method="POST" action="/automates/processCode">
+        <form method="POST" action="{{ url_for('processCode') }}">
           {{ form.source_code }}
           <br>
           <input type="submit" value="Submit" class="btn btn-outline-primary btn-sm">
