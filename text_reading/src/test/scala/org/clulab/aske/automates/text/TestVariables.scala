@@ -260,11 +260,11 @@ class TestVariables extends ExtractionTest {
 
   // sentences from 2006-Root Water Extraction and Limiting Soil Hydraulic Conditions Estimated by Numerical Simulation
 
-  val tX = ""
-  passingTest should "extract variables from tX" taggedAs(Somebody) in {
-    val desired = Seq()
-    val mentions = extractMentions(tX)
-    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
-  }
+//  val tX = ""
+//  passingTest should "extract variables from tX" taggedAs(Somebody) in {
+//    val desired = Seq()
+//    val mentions = extractMentions(tX)
+//    testTextBoundMention(mentions, VARIABLE_LABEL, desired)
+//  }
 
 }
