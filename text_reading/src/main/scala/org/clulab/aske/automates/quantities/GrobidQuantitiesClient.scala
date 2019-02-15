@@ -2,6 +2,7 @@ package org.clulab.aske.automates.quantities
 
 import com.typesafe.config.Config
 import ai.lum.common.ConfigUtils._
+import requests.TimeoutException
 
 object GrobidQuantitiesClient {
   def fromConfig(config: Config): GrobidQuantitiesClient = {
@@ -20,9 +21,17 @@ class GrobidQuantitiesClient(
   val timeout: Int = 150000
 
   def getMeasurements(text: String): Vector[Measurement] = {
-    val response = requests.post(url, data = Map("text" -> text), readTimeout = timeout, connectTimeout=timeout)
-    val json = ujson.read(response.text)
-    json("measurements").arr.flatMap(mkMeasurement).toVector
+    try{
+      val response = requests.post(url, data = Map("text" -> text), readTimeout = timeout, connectTimeout=timeout)
+      val json = ujson.read(response.text)
+      json("measurements").arr.flatMap(mkMeasurement).toVector
+    } catch { // todo: we can count these one day... should we log them now?
+      case time: TimeoutException => Vector.empty[Measurement]
+      case parse: ujson.ParseException =>
+        println(s"ujson.ParseException with: $text")
+        Vector.empty[Measurement]
+      case other: Throwable => throw other
+    }
   }
 
   def mkMeasurement(json: ujson.Js): Option[Measurement] = json("type").str match {
@@ -48,7 +57,13 @@ class GrobidQuantitiesClient(
 
   def mkQuantity(json: ujson.Js): Quantity = {
     val rawValue = json("rawValue").str
-    val parsedValue = json("parsedValue")("numeric").num
+    val parsedValue = try {
+      json.obj.get("parsedValue").map(value => value.num)
+    } catch {
+      case e: ujson.Value.InvalidData => None
+      case other: Throwable => throw other
+    }
+
     val normalizedValue = json.obj.get("normalizedQuantity").map(_.num)
     val rawUnit = json.obj.get("rawUnit").map(mkUnit)
     val normalizedUnit = json.obj.get("normalizedUnit").map(mkUnit)

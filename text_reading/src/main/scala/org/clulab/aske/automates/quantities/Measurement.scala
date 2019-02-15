@@ -14,7 +14,7 @@ case class Interval(
 
 case class Quantity(
   rawValue: String,
-  parsedValue: Double,
+  parsedValue: Option[Double],
   normalizedValue: Option[Double],
   rawUnit: Option[UnitOfMeasurement],
   normalizedUnit: Option[UnitOfMeasurement],
