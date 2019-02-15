@@ -85,6 +85,7 @@
                     selector: 'edge',
                     style: { 
                       'curve-style' : 'bezier',
+                      'control-point-step-size': '70px',
                       'target-arrow-shape': 'triangle',
                     } 
                   }, { 
