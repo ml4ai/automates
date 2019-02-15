@@ -48,7 +48,15 @@ def expand_arxiv(fn, outdir, keep_all, verbose):
     print "Extracting files from", fn
     assert(tarfile.is_tarfile(fn) == True) # for good measure...
     tar = tarfile.open(fn)
-    extracted_files = tar.getnames()
+    extracted_files = tar.getnames() # files to extract
+    print(','.join(extracted_files))
+    # check to see if they are already extracted
+    # need_to_extract = 0
+    # for to_extract in extracted_files:
+    #     path_to_check = os.path.join(outdir, to_extract)
+    #     if not os.path.exists(path_to_check):
+    #         need_to_extract = 1
+
     tar.extractall(path=outdir)
     tar.close()
 
