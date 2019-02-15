@@ -3,6 +3,7 @@ import sys
 import ast
 import json
 import subprocess as sp
+import importlib
 from pprint import pprint
 from delphi.translators.for2py.scripts import (
     f2py_pp,
@@ -13,6 +14,7 @@ from delphi.translators.for2py.scripts import (
 )
 from delphi.utils.fp import flatten
 from delphi.GrFN.scopes import Scope
+from delphi.GrFN.ProgramAnalysisGraph import ProgramAnalysisGraph
 import delphi.paths
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, redirect
@@ -33,14 +35,13 @@ class MyForm(FlaskForm):
         language="fortran",
         config={"lineNumbers": "true", "viewportMargin": 800},
     )
-    submit = SubmitField("Submit")
+    submit = SubmitField("Submit", render_kw={"class":"btn btn-primary"})
 
 
 SECRET_KEY = "secret!"
 # mandatory
 CODEMIRROR_LANGUAGES = ["fortran"]
 # optional
-CODEMIRROR_THEME = "monokai"
 CODEMIRROR_ADDONS = (("display", "placeholder"),)
 
 app = Flask(__name__)
@@ -56,7 +57,7 @@ def get_cluster_nodes(A):
                 "data": {
                     "id": subgraph.name,
                     "label": subgraph.name.replace("cluster_", ""),
-                    "shape": "rectangle",
+                    "shape": "roundrectangle",
                     "parent": A.name,
                     "color": subgraph.graph_attr["border_color"],
                     "textValign": "top",
@@ -82,18 +83,20 @@ def get_tooltip(n, lambdas):
                 src_lines[0]
                 .split("__lambda__")[1]
                 .split("(")[0]
-                .replace("_","\_")
+                .replace("_", "\_")
                 + " = "
-                + latex(sympify(src_lines[1][10:].replace("math.exp", "e^"))).replace("_", "\_")
+                + latex(
+                    sympify(src_lines[1][10:].replace("math.exp", "e^"))
+                ).replace("_", "\_")
             )
             return f"\({ltx}\)"
     else:
         return json.dumps({"index": n.attr["index"]}, indent=2)
 
 
-def to_cyjs_elements_json_str(A) -> dict:
+def get_cyjs_elementsJSON_from_ScopeTree(A) -> str:
     sys.path.insert(0, "/tmp/")
-    import lambdas
+    lambdas = importlib.__import__("input_code_lambdas")
 
     lexer = PythonLexer()
     formatter = HtmlFormatter()
@@ -126,7 +129,6 @@ def to_cyjs_elements_json_str(A) -> dict:
         ],
     }
     json_str = json.dumps(elements, indent=2)
-    os.remove("/tmp/preprocessed_code.f")
     return json_str
 
 
@@ -149,36 +151,24 @@ def processCode():
         for line in [line for line in code.split("\n")]
         if line != ""
     ]
-    preprocessed_fortran_file = "/tmp/preprocessed_code.f"
+    input_code_tmpfile = "/tmp/input_code.f"
+    with open(input_code_tmpfile, "w") as f:
+        f.write("".join(lines))
+    root = Scope.from_fortran_file(input_code_tmpfile, tmpdir="/tmp")
+    scopetree_graph = root.to_agraph()
+    scopeTree_elementsJSON = get_cyjs_elementsJSON_from_ScopeTree(
+        scopetree_graph
+    )
+    programAnalysisGraph = ProgramAnalysisGraph.from_fortran_file(input_code_tmpfile, tmpdir="/tmp")
+    program_analysis_graph_elementsJSON = programAnalysisGraph.cyjs_elementsJSON()
+    os.remove(input_code_tmpfile)
 
-    with open(preprocessed_fortran_file, "w") as f:
-        f.write(f2py_pp.process(lines))
-
-    xml_string = sp.run(
-        [
-            "java",
-            "fortran.ofp.FrontEnd",
-            "--class",
-            "fortran.ofp.XMLPrinter",
-            "--verbosity",
-            "0",
-            preprocessed_fortran_file,
-        ],
-        stdout=sp.PIPE,
-    ).stdout
-
-    trees = [ET.fromstring(xml_string)]
-    comments = get_comments.get_comments(preprocessed_fortran_file)
-    translator = translate.XMLToJSONTranslator()
-    outputDict = translator.analyze(trees, comments)
-    pySrc = pyTranslate.create_python_string(outputDict)
-    asts = [ast.parse(pySrc)]
-    pgm_dict = genPGM.create_pgm_dict("/tmp/lambdas.py", asts, "pgm.json")
-    root = Scope.from_dict(pgm_dict)
-    A = root.to_agraph()
-    elements = to_cyjs_elements_json_str(A)
-
-    return render_template("index.html", form=form, elementsJSON=elements)
+    return render_template(
+        "index.html",
+        form=form,
+        scopeTree_elementsJSON=scopeTree_elementsJSON,
+        program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
+    )
 
 
 if __name__ == "__main__":

@@ -1,17 +1,18 @@
 <html>
   {% include "head.html" %}
-  <body>
+  <body class="theme-base-08">
     <div class="container-fluid"> 
-      <div class="row justify-content-md-center border" style="padding: 10px;">
-        <h1>AutoMATES Demo</h1>
-          <br>
-      </div>
-      <div class="row justify-content-md-left">
-        <div class="col border" style="padding: 10px">
-          <p>Input Fortran code in the code editor area below (for two examples
+
+        <div class="row border-bottom"
+          style="padding-top: 2rem; padding-left:4rem; padding-bottom: 1rem;">
+            <h1>AutoMATES CodeExplorer</h1>
+        </div>
+      <div class="row justify-content-md-center" style="padding-top: 1.5rem; padding-left:3rem; padding-right: 4rem;">
+      <div class="col-3" style="padding-right: 3rem;">
+          Input Fortran code in the code editor area to the right (for two examples
           that have been tested with this webapp, see the following (you can
           just copy and paste the code into the editor) and hit the 'Submit'
-          button:<p>
+          button:
           <ul>
             <li>
               <a href="https://raw.githubusercontent.com/ml4ai/delphi/master/tests/data/crop_yield.f">crop_yield.f: </a>
@@ -27,29 +28,61 @@
               crop model.
             </li>
           </ul>
-        </div>
-        <div class="col" style="padding: 10px">
           Things you can try doing:
           <ul>
             <li>Click on the __assign__ nodes to view the equation that is
               automatically constructed from the code, and typeset with LaTeX.</li>
             <li>Rename a variable in the code and resubmit it for processing
               (make sure to rename all instances of it in the code!)
-          <ul>
-        </div>
+          </ul>
+            <p>
+          For more information, please visit the AutoMATES project homepage at <a
+            href="https://ml4ai.github.io/automates">ml4ai.github.io/automates.</a></p>
+          AutoMATES is funded by the Defense Advanced Research Projects Agency
+          (DARPA) under the Automated Scientific Knowledge Extraction (ASKE)
+          program.
+          <div class="row" style="padding-top: 2rem; margin-left: auto; margin-right: auto;">
+              <img src="static/ml4ai.png" alt="ML4AI" class="rounded"
+                  style="max-height: 70px; width: auto; padding-right: 3rem; padding-left: 3rem;">
+              <img src="static/ua_logo.png" alt="University of Arizona" class="rounded"
+                  style="max-height: 50px; width: auto;">
+          </div>
       </div>
-      <div class="row justify-content-md-center border">
-        <div class="col-sm-4 border">
-          <form method="POST" action="/processCode">
-            {{ form.source_code }}
-            <input type="submit" value="Submit">
-          </form>
-        </div>
-        <div class="col-sm-8 border" id="cy"></div>
+      <div class="col-4">
+        <form method="POST" action="/automates/processCode">
+          {{ form.source_code }}
+          <br>
+          <input type="submit" value="Submit" class="btn btn-outline-primary btn-sm">
+        </form>
       </div>
+      <div id="col2" class="col">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="computational_graph-tab" data-toggle="tab" 
+              href="#computational_graph" role="tab"
+                                          aria-controls="computational_graph" 
+              aria-selected="true">Computational Graph</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="causal_analysis_graph-tab" data-toggle="tab" 
+              href="#causal_analysis_graph" role="tab"
+                                            aria-controls="causal_analysis_graph" 
+              aria-selected="true">Causal Analysis Graph</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div id="computational_graph" role="tabpanel" class="tab-pane show
+                                                        active border-left
+                                                        border-right
+                                                        border-bottom"
+            aria-labelledby="computational_graph-tab" style="height:82%;"></div>
+          <div id="causal_analysis_graph" role="tabpanel" class="tab-pane
+                                                          border-left
+                                                          border-right
+                                                          border-bottom"
+            aria-labelledby="causal_analysis_graph-tab" style="height:82%;"></div>
+        </div>
     </div>
-      <script>
-      {% include "cyjs.js" %}
-      </script>
+      <script> {% include "cyjs.js" %} </script>
   </body>
 </html>

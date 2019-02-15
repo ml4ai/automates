@@ -8,7 +8,7 @@ rules:
 
   - name: var_equals_val
     label: ParameterSetting
-    priority: 3
+    priority: ${priority}
     type: token
     #action: variableArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
@@ -17,13 +17,16 @@ rules:
       @variable:Variable (?<trigger> [word="="]) @value:Value
 
 
-#  - name: var-vary_between
-#    label: Variable
-#    priority: 2
-#    type: dependency
-#    #action: variableArguments
-#    example: "The value of Kcbmax was varied between 0.9 and 1.4"
-#    pattern: |
-#      trigger = [lemma='vary']
-#      variable:Variable = nsubjpass nmod_of
-#      value:Concept+ = nmod_between
+  # todo: unify the priorities
+  # todo: try to get everything in a certain file to have the same priority, pass the priority in as a variable
+  # todo: so then you would have: `priority: ${priority}`
+  - name: var-vary_between
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    #action: variableArguments
+    example: "The value of Kcbmax was varied between 0.9 and 1.4"
+    pattern: |
+      trigger = [lemma='vary']
+      variable:Variable = nsubjpass nmod_of
+      value:Interval = nmod_between
