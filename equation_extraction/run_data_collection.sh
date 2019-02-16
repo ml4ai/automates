@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# we need at least the --indir option
-if [ $# == 0 ]; then
-    echo "please specify at least the input dir"
-    exit 1
-fi
-
 # read options
 OPTIONS=$(getopt -o i:o:l:t:r:dkp:n: -l indir:,outdir:,logfile:,template:,rescale-factor:,dump-pages,keep-intermediate-files,pdfdir:,nproc: -- "$@")
 
@@ -66,6 +60,13 @@ while true; do
             ;;
     esac
 done
+
+# fail if input dir was not specified
+if [ -z "$INDIR" ]; then
+    echo "Please specify the input directory with the --indir argument." >&2
+    echo "Terminating ..." >&2
+    exit 1
+fi
 
 echo "INDIR: $INDIR"
 echo "NPROC: $NPROC"
