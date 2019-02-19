@@ -21,6 +21,7 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
   def extract(doc: Document): Seq[Mention] = {
     // Run the grobid client over document
     // Run by document for now... todo should we revisit? by sentence??
+    // fixme: we should prob do this by sentence so we don't lose stuff when grobid fails...
     assert(doc.text.nonEmpty)  // assume that we are keeping text
     val text = doc.text.get
     val measurements = grobidClient.getMeasurements(text)
