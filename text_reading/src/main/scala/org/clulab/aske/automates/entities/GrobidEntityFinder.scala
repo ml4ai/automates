@@ -118,15 +118,14 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
 
   def valueListToMentions(valueList: ValueList, doc: Document): Seq[Mention] = {
     val mentions = new ArrayBuffer[Mention]()
-    var sentence: Int = -1
-    val arguments = new scala.collection.mutable.HashMap[String, Seq[Mention]]
+    //var sentence: Int = -1
+    //val arguments = new scala.collection.mutable.HashMap[String, Seq[Mention]]
     // Get the Mentions from each of the Quantities
     val values = valueList.values
     if (values.nonEmpty) {
       values.foreach(q => quantityToMentions(q.get, doc).foreach(m => mentions.append(m)))
 
     }
-
 
     mentions
   }

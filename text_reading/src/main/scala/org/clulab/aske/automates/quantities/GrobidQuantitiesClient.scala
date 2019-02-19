@@ -49,8 +49,8 @@ class GrobidQuantitiesClient(
 
   def mkValueListFromListc(json: ujson.Js): ValueList = {
     val quantityList = json("quantities").arr.toList
-    quantityList.foreach(m => println(m + "\n"))
-    println("quant list" + quantityList)
+    //quantityList.foreach(m => println(m + "\n"))
+    //println("quant list" + quantityList)
     val values = for (quant <- quantityList) yield {Some(mkQuantity(quant))}
     val quantified = json.obj.get("quantified").map(mkQuantified)
 //    ValueList(values, quantified)
