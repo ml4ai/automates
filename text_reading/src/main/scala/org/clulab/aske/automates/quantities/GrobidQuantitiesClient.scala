@@ -28,6 +28,7 @@ class GrobidQuantitiesClient(
   def mkMeasurement(json: ujson.Js): Option[Measurement] = json("type").str match {
     case "value" => Some(mkValue(json))
     case "interval" => Some(mkInterval(json))
+    case "listc" => Some(mkValueListFromListc(json))
     //case t => throw new RuntimeException(s"unsupported measurement type '$t'")
     case t =>
       println(s"WARNING: there was an unsupported Measurement type ==> $t")
@@ -46,6 +47,17 @@ class GrobidQuantitiesClient(
     Interval(quantityLeast, quantityMost)
   }
 
+  def mkValueListFromListc(json: ujson.Js): ValueList = {
+    val quantityList = json("quantities").arr.toList
+    quantityList.foreach(m => println(m + "\n"))
+    println("quant list" + quantityList)
+    val values = for (quant <- quantityList) yield {Some(mkQuantity(quant))}
+    val quantified = json.obj.get("quantified").map(mkQuantified)
+//    ValueList(values, quantified)
+    ValueList(values, quantified)
+
+  }
+
   def mkQuantity(json: ujson.Js): Quantity = {
     val rawValue = json("rawValue").str
     val parsedValue = json("parsedValue")("numeric").num
@@ -55,6 +67,7 @@ class GrobidQuantitiesClient(
     val offset = mkOffset(json)
     Quantity(rawValue, parsedValue, normalizedValue, rawUnit, normalizedUnit, offset)
   }
+
 
   def mkUnit(json: ujson.Js): UnitOfMeasurement = {
     val name = json("name").str

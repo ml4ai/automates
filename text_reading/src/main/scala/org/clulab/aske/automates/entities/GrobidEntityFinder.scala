@@ -33,6 +33,7 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     measurement match {
       case v: Value => valueToMentions(v, doc)
       case i: Interval => intervalToMentions(i, doc)
+      case vl: ValueList => valueListToMentions(vl, doc)
     }
   }
 
@@ -111,6 +112,21 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     val args = arguments.toMap
     val intervalMention = new RelationMention(getLabels(GrobidEntityFinder.INTERVAL_LABEL), mkTokenInterval(args), args, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
     mentions.append(intervalMention)
+
+    mentions
+  }
+
+  def valueListToMentions(valueList: ValueList, doc: Document): Seq[Mention] = {
+    val mentions = new ArrayBuffer[Mention]()
+    var sentence: Int = -1
+    val arguments = new scala.collection.mutable.HashMap[String, Seq[Mention]]
+    // Get the Mentions from each of the Quantities
+    val values = valueList.values
+    if (values.nonEmpty) {
+      values.foreach(q => quantityToMentions(q.get, doc).foreach(m => mentions.append(m)))
+
+    }
+
 
     mentions
   }
