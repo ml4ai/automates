@@ -8,3 +8,9 @@ a {font-family: "PT Sans"; }
   font-family: "PT Sans"; 
 }
 
+.btn-secondary {
+  color: #ac4142;
+  border-color: #ac4142;
+  font-family: "PT Sans";
+}
+
