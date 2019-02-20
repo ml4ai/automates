@@ -14,11 +14,12 @@ Needed:
  [ ] GrFN for THIS model
     [ ] retrieve the variables
     [ ] retrieve the comments
-        [ ] RAW 
+        [x] RAW
+            >> petpt_extracted_comments.{txt | json}
+            These files were generated using the `get_comments.py` script from the delphi repo that is located at `delphi/translators/for2py/scripts/`. The script can be run with a provided path to a Fortran file and the extracted comments will be be output in JSON form
     [ ] hopefully, we can use the variables to find the relevant comments
 
  [ ] Print out page, highlight, manually determine what we want (whiteboard)
-  
+
   TODO:
    [ ] collect stuff
-
