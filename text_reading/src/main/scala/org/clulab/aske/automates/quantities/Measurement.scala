@@ -12,6 +12,11 @@ case class Interval(
   quantityMost: Option[Quantity]
 ) extends Measurement
 
+case class ValueList(
+  values: List[Some[Quantity]],
+  quantified: Option[Quantified]
+) extends Measurement
+
 case class Quantity(
   rawValue: String,
   parsedValue: Option[Double],
