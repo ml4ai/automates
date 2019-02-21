@@ -18,7 +18,7 @@ from delphi.GrFN.scopes import Scope
 from delphi.GrFN.ProgramAnalysisGraph import ProgramAnalysisGraph
 import delphi.paths
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 from flask_wtf import FlaskForm
 from flask_codemirror.fields import CodeMirrorField
 from wtforms.fields import SubmitField
@@ -182,8 +182,11 @@ def modelAnalysis():
     import delphi.analysis.comparison.utils as utils
     from delphi.analysis.comparison.ForwardInfluenceBlanket import ForwardInfluenceBlanket
 
-    asce = utils.nx_graph_from_dotfile("static/graphviz_dot_files/asce-graph.dot")
-    pt = utils.nx_graph_from_dotfile("static/graphviz_dot_files/priestley-taylor-graph.dot")
+    THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+    asce = utils.nx_graph_from_dotfile(os.path.join(THIS_FOLDER,
+        "static/graphviz_dot_files/asce-graph.dot"))
+    pt = utils.nx_graph_from_dotfile(os.path.join(THIS_FOLDER,
+        "static/graphviz_dot_files/priestley-taylor-graph.dot"))
     shared_nodes = utils.get_shared_nodes(asce, pt)
 
     cmb_asce = ForwardInfluenceBlanket(asce, shared_nodes).cyjs_elementsJSON()
