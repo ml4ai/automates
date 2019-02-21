@@ -61,6 +61,7 @@
             MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
           }
           else {
+            node.toggleClass('selectedNode');
             node.deselect();
             node.scratch()._tippy.hide();
           }
@@ -129,6 +130,7 @@
             MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
           }
           else {
+            node.toggleClass('selectedNode');
             node.deselect();
             node.scratch()._tippy.hide();
           }
