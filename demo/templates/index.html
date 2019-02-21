@@ -21,7 +21,7 @@
 		  </div>
 		</div>
         <form method="POST" action="{{ url_for('processCode') }}">
-          <textarea id="flask-codemirror-source_code" name="source_code"></textarea>
+          <textarea id="flask-codemirror-source_code" name="source_code">{{ code | safe }}</textarea>
           <script>
             $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
             var editor_for_source_code = CodeMirror.fromTextArea(

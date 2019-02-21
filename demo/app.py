@@ -135,7 +135,7 @@ def index():
     form = MyForm()
     if form.validate_on_submit():
         text = form.source_code.data
-    return render_template("index.html", form=form)
+    return render_template("index.html", form=form, code='')
 
 
 @app.route("/processCode", methods=["POST"])
@@ -172,6 +172,7 @@ def processCode():
     return render_template(
         "index.html",
         form=form,
+        code=code,
         scopeTree_elementsJSON=scopeTree_elementsJSON,
         program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
     )
