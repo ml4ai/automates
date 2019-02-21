@@ -177,6 +177,23 @@ def processCode():
         program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
     )
 
+@app.route("/modelAnalysis")
+def modelAnalysis():
+    import delphi.analysis.comparison.utils as utils
+    from delphi.analysis.comparison.ForwardInfluenceBlanket import ForwardInfluenceBlanket
+
+    asce = utils.nx_graph_from_dotfile("static/graphviz_dot_files/asce-graph.dot")
+    pt = utils.nx_graph_from_dotfile("static/graphviz_dot_files/priestley-taylor-graph.dot")
+    shared_nodes = utils.get_shared_nodes(asce, pt)
+
+    cmb_asce = ForwardInfluenceBlanket(asce, shared_nodes).cyjs_elementsJSON()
+    cmb_pt = ForwardInfluenceBlanket(pt, shared_nodes).cyjs_elementsJSON()
+
+    return render_template(
+        "modelAnalysis.html",
+        model1_elementsJSON = cmb_asce,
+        model2_elementsJSON = cmb_pt,
+    )
 
 if __name__ == "__main__":
     app.run()
