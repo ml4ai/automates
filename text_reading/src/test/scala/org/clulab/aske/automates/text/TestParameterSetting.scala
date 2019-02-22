@@ -22,7 +22,7 @@ class TestParameterSetting  extends ExtractionTest {
   //can be done after we have confirmed that the tests look correct
 
   val t1a = "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
-  failingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
       "EORATIO" -> Seq("1.0")
     )
@@ -43,7 +43,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t3a = "The value of SKc was varied between 0.4 and 0.9 with a base level of 0.5 for maize and 0.6 for cotton from " +
     "prior calibration efforts."
-  failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
       "SKc" -> Seq("0.4", "0.9", "0.5", "0.6") // the last two need to come with modifiers (e.g., for maize)
     )
@@ -53,7 +53,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t4a = "With an assumption of Kcbmin = 0 as described before, the values of Kcbmax and SKc were varied to " +
     "understand the influence of these variables on simulated yield and ETc for maize and cotton."
-  failingTest should s"extract the parameter setting(s) from t4a: ${t4a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t4a: ${t4a}" taggedAs(Somebody) in {
     val desired = Seq(
       "Kcbmin" -> Seq("0")
     )
@@ -63,7 +63,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t5a = "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from " +
     "DSSAT-CSM version 4.5 for Arizona conditions (fig. 1a)."
-  failingTest should s"NOT extract model version, but should extract the parameter setting(s) from t5a: ${t5a}" taggedAs(Somebody) in {
+  passingTest should s"NOT extract model version, but should extract the parameter setting(s) from t5a: ${t5a}" taggedAs(Somebody) in {
     val desired = Seq(
       "RMSE" -> Seq("22.8") //todo: see t8 for an example where model version is relevant
     )
@@ -73,7 +73,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t6a = "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed " +
     "measurements to a standard height of 2.0 m."
-  failingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
     val desired = Seq(
       "wind speed measurements" -> Seq("2.0 m") //todo: attaching value and unit? finding variables when they are spelled out?
     )
@@ -94,7 +94,7 @@ class TestParameterSetting  extends ExtractionTest {
 
 
   val t8a = "In DSSATCSM v4.5, the model erroneously used α = 2.0, which was corrected to α = 0.2 in DSSAT-CSM v4.6."
-  failingTest should s"extract the parameter setting(s) from t8a: ${t8a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t8a: ${t8a}" taggedAs(Somebody) in {
     val desired = Seq(
       "α" -> Seq("2.0"),
       "α" -> Seq("0.2") // todo: we get 0.2 in here tragically
@@ -127,7 +127,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t11a = "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation " +
     "portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
-  failingTest should s"extract the parameter setting(s) from t11a: ${t11a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t11a: ${t11a}" taggedAs(Somebody) in {
     val desired = Seq(
       "DOY" -> Seq("165"),
       "DOY" -> Seq("175") // todo: see t8
@@ -138,7 +138,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t12a = "Under full irrigation, Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield " +
     "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
-  failingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "Kcbmax" -> Seq("0.9", "1.5"), //todo: how do we extract intervals like this?
       "Kcbmax" -> Seq("1.15") //todo: see t8
@@ -148,7 +148,7 @@ class TestParameterSetting  extends ExtractionTest {
   }
 
   val t13a = "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
-  failingTest should s"extract the parameter setting(s) from t13a and NOT extract the figure number: ${t13a}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from t13a and NOT extract the figure number: ${t13a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "SKc" -> Seq("0.5", "0.7") //todo: how do we extract intervals like this?
     )

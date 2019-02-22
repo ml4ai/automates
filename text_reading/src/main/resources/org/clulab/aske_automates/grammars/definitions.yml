@@ -30,13 +30,13 @@ rules:
     #action: variableArguments
     action: selectShorterAsVariable
     pattern: |
-        @c1:Concept "-LRB-" @c2:Concept # "-RRB-"
+      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
 
 
     #todo: with the next two rules, more tests fail
 #  - name: var_verb
 #    label: Definition
-#    priority: ${priority}
+#    priority: ${priority}s
 #    type: dependency
 #    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
 #    pattern: |

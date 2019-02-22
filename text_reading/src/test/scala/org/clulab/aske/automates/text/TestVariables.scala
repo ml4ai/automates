@@ -72,11 +72,11 @@ class TestVariables extends ExtractionTest {
     val mentions = extractMentions(t5a)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
-  val t6a = "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
+  val t6a = "The ESo calculation in equation 4 is implemented for the CSM-CERES-Maize model and several other crop models."
   passingTest should s"extract variables from t6a: ${t6a}" taggedAs(Becky) in {
 
 
-    val desired = Seq("ESo", "CSM-CERESMaize")
+    val desired = Seq("ESo", "CSM-CERES-Maize")
     val mentions = extractMentions(t6a)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
@@ -100,7 +100,7 @@ class TestVariables extends ExtractionTest {
   passingTest should s"extract variables from t9a: ${t9a}" taggedAs(Becky) in {
 
 
-    val desired = Seq("Kcdmin", "Kcdmax", "FAO-56", "SKc")
+    val desired = Seq("Kcdmin", "Kcdmax", "SKc") // todo: "FAO-56" - model?
     val mentions = extractMentions(t9a)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
