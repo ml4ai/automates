@@ -1,7 +1,8 @@
-import os, glob
+import os, glob, sys
 import tarfile
 import argparse
 import subprocess
+import fcntl
 
 
 def parse_args():
@@ -45,14 +46,15 @@ def rename_file(paperdir):
 # wdir: the path with the arxiv arXiv_src_*_*.tar files
 def expand_arxiv(fn, outdir, keep_all, verbose):
 
-    print "Extracting files from", fn
+
     assert(tarfile.is_tarfile(fn) == True) # for good measure...
     tar = tarfile.open(fn)
-    extracted_files = tar.getnames()
+    extracted_files = tar.getnames() # files to extract
     tar.extractall(path=outdir)
     tar.close()
 
     file_counter = 0
+    pdf_counter = 0
     for f in extracted_files:
         # path to the extracted file that needs to be handled
         f = os.path.join(outdir, f)
@@ -93,6 +95,7 @@ def expand_arxiv(fn, outdir, keep_all, verbose):
 
         # Otherwise, if it's a pdf, disregard
         elif is_pdf(f):
+            pdf_counter += 1
             if not keep_all:
                 subprocess.check_call(['rm', f])
         # There are a few other formats, we also will disregard them, but just in case we want to see
@@ -105,7 +108,7 @@ def expand_arxiv(fn, outdir, keep_all, verbose):
     if verbose:
         print "... finished extracting {0} papers".format(file_counter)
 
-    return file_counter
+    return file_counter, pdf_counter
 
 
 
@@ -115,9 +118,13 @@ if __name__ == '__main__':
     if not os.path.exists(args.outputdir):
         os.makedirs(args.outputdir)
 
+    fcntl.lockf(sys.stdout, fcntl.LOCK_EX)
+    print "Extracting files from", args.tarball
+    fcntl.lockf(sys.stdout, fcntl.LOCK_UN)
+
     # expand the initial files, e.g., arXiv_src_1808_023.tar
-    handled = expand_arxiv(args.tarball, args.outputdir, args.keepall, args.verbose)
+    handled_tex, handled_pdf = expand_arxiv(args.tarball, args.outputdir, args.keepall, args.verbose)
 
-
-    print "  ... {0} arxiv papers expanded".format(handled)
-
+    fcntl.lockf(sys.stdout, fcntl.LOCK_EX)
+    print "  ... {0} arxiv papers and/or {1} pdfs expanded".format(handled_tex, handled_pdf)
+    fcntl.lockf(sys.stdout, fcntl.LOCK_UN)
