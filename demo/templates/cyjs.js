@@ -32,6 +32,9 @@
           minZoom : 0.1,
           selectionType: 'single'
         });
+        var api = computational_graph.expandCollapse({
+            fisheye: false, undoable: false
+        });
 
         var makeTippy = function(node){
             return tippy(node.popperRef(), {
