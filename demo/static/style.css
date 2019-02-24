@@ -12,3 +12,6 @@ a {font-family: "PT Sans"; }
   font-family: "PT Sans";
 }
 
+.MathJax .mi, .MathJax .mo {
+    color: inherit;
+}
