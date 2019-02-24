@@ -12,9 +12,14 @@ case class Interval(
   quantityMost: Option[Quantity]
 ) extends Measurement
 
+case class ValueList(
+  values: List[Some[Quantity]],
+  quantified: Option[Quantified]
+) extends Measurement
+
 case class Quantity(
   rawValue: String,
-  parsedValue: Double,
+  parsedValue: Option[Double],
   normalizedValue: Option[Double],
   rawUnit: Option[UnitOfMeasurement],
   normalizedUnit: Option[UnitOfMeasurement],
@@ -28,8 +33,8 @@ case class Offset(
 
 case class UnitOfMeasurement(
   name: String,
-  unitType: String,
-  system: String,
+  unitType: Option[String],
+  system: Option[String],
   offset: Option[Offset]
 )
 

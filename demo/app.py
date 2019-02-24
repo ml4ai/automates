@@ -2,7 +2,9 @@ import os
 import sys
 import ast
 import json
+from uuid import uuid4
 import subprocess as sp
+import importlib
 from pprint import pprint
 from delphi.translators.for2py.scripts import (
     f2py_pp,
@@ -13,9 +15,10 @@ from delphi.translators.for2py.scripts import (
 )
 from delphi.utils.fp import flatten
 from delphi.GrFN.scopes import Scope
+from delphi.GrFN.ProgramAnalysisGraph import ProgramAnalysisGraph
 import delphi.paths
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 from flask_wtf import FlaskForm
 from flask_codemirror.fields import CodeMirrorField
 from wtforms.fields import SubmitField
@@ -33,14 +36,13 @@ class MyForm(FlaskForm):
         language="fortran",
         config={"lineNumbers": "true", "viewportMargin": 800},
     )
-    submit = SubmitField("Submit")
+    submit = SubmitField("Submit", render_kw={"class":"btn btn-primary"})
 
 
 SECRET_KEY = "secret!"
 # mandatory
 CODEMIRROR_LANGUAGES = ["fortran"]
 # optional
-CODEMIRROR_THEME = "monokai"
 CODEMIRROR_ADDONS = (("display", "placeholder"),)
 
 app = Flask(__name__)
@@ -56,7 +58,7 @@ def get_cluster_nodes(A):
                 "data": {
                     "id": subgraph.name,
                     "label": subgraph.name.replace("cluster_", ""),
-                    "shape": "rectangle",
+                    "shape": "roundrectangle",
                     "parent": A.name,
                     "color": subgraph.graph_attr["border_color"],
                     "textValign": "top",
@@ -82,19 +84,18 @@ def get_tooltip(n, lambdas):
                 src_lines[0]
                 .split("__lambda__")[1]
                 .split("(")[0]
-                .replace("_","\_")
+                .replace("_", "\_")
                 + " = "
-                + latex(sympify(src_lines[1][10:].replace("math.exp", "e^"))).replace("_", "\_")
+                + latex(
+                    sympify(src_lines[1][10:].replace("math.exp", "e^"))
+                ).replace("_", "\_")
             )
             return f"\({ltx}\)"
     else:
         return json.dumps({"index": n.attr["index"]}, indent=2)
 
 
-def to_cyjs_elements_json_str(A) -> dict:
-    sys.path.insert(0, "/tmp/")
-    import lambdas
-
+def get_cyjs_elementsJSON_from_ScopeTree(A, lambdas) -> str:
     lexer = PythonLexer()
     formatter = HtmlFormatter()
     elements = {
@@ -126,7 +127,6 @@ def to_cyjs_elements_json_str(A) -> dict:
         ],
     }
     json_str = json.dumps(elements, indent=2)
-    os.remove("/tmp/preprocessed_code.f")
     return json_str
 
 
@@ -135,7 +135,7 @@ def index():
     form = MyForm()
     if form.validate_on_submit():
         text = form.source_code.data
-    return render_template("index.html", form=form)
+    return render_template("index.html", form=form, code='')
 
 
 @app.route("/processCode", methods=["POST"])
@@ -149,37 +149,54 @@ def processCode():
         for line in [line for line in code.split("\n")]
         if line != ""
     ]
-    preprocessed_fortran_file = "/tmp/preprocessed_code.f"
+    filename=f"input_code_{str(uuid4())}"
+    input_code_tmpfile = f"/tmp/automates/{filename}.f"
+    with open(input_code_tmpfile, "w") as f:
+        f.write("".join(lines))
+    root = Scope.from_fortran_file(input_code_tmpfile, tmpdir="/tmp/automates")
+    scopetree_graph = root.to_agraph()
 
-    with open(preprocessed_fortran_file, "w") as f:
-        f.write(f2py_pp.process(lines))
+    sys.path.insert(0, "/tmp/automates")
+    lambdas = f"{filename}_lambdas"
+    scopeTree_elementsJSON = get_cyjs_elementsJSON_from_ScopeTree(
+        scopetree_graph, importlib.__import__(lambdas)
+    )
+    programAnalysisGraph = ProgramAnalysisGraph.from_agraph(
+        scopetree_graph,
+        importlib.__import__(lambdas)
+    )
+    program_analysis_graph_elementsJSON = programAnalysisGraph.cyjs_elementsJSON()
+    os.remove(input_code_tmpfile)
+    os.remove(f"/tmp/automates/{lambdas}.py")
 
-    xml_string = sp.run(
-        [
-            "java",
-            "fortran.ofp.FrontEnd",
-            "--class",
-            "fortran.ofp.XMLPrinter",
-            "--verbosity",
-            "0",
-            preprocessed_fortran_file,
-        ],
-        stdout=sp.PIPE,
-    ).stdout
+    return render_template(
+        "index.html",
+        form=form,
+        code=code,
+        scopeTree_elementsJSON=scopeTree_elementsJSON,
+        program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
+    )
 
-    trees = [ET.fromstring(xml_string)]
-    comments = get_comments.get_comments(preprocessed_fortran_file)
-    translator = translate.XMLToJSONTranslator()
-    outputDict = translator.analyze(trees, comments)
-    pySrc = pyTranslate.create_python_string(outputDict)
-    asts = [ast.parse(pySrc[0][0])]
-    pgm_dict = genPGM.create_pgm_dict("/tmp/lambdas.py", asts, "pgm.json")
-    root = Scope.from_dict(pgm_dict)
-    A = root.to_agraph()
-    elements = to_cyjs_elements_json_str(A)
+@app.route("/modelAnalysis")
+def modelAnalysis():
+    import delphi.analysis.comparison.utils as utils
+    from delphi.analysis.comparison.ForwardInfluenceBlanket import ForwardInfluenceBlanket
 
-    return render_template("index.html", form=form, elementsJSON=elements)
+    THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+    asce = utils.nx_graph_from_dotfile(os.path.join(THIS_FOLDER,
+        "static/graphviz_dot_files/asce-graph.dot"))
+    pt = utils.nx_graph_from_dotfile(os.path.join(THIS_FOLDER,
+        "static/graphviz_dot_files/priestley-taylor-graph.dot"))
+    shared_nodes = utils.get_shared_nodes(asce, pt)
 
+    cmb_asce = ForwardInfluenceBlanket(asce, shared_nodes).cyjs_elementsJSON()
+    cmb_pt = ForwardInfluenceBlanket(pt, shared_nodes).cyjs_elementsJSON()
+
+    return render_template(
+        "modelAnalysis.html",
+        model1_elementsJSON = cmb_asce,
+        model2_elementsJSON = cmb_pt,
+    )
 
 if __name__ == "__main__":
     app.run()

@@ -1,55 +1,48 @@
 <html>
   {% include "head.html" %}
-  <body>
+  <body class="theme-base-08">
     <div class="container-fluid"> 
-      <div class="row justify-content-md-center border" style="padding: 10px;">
-        <h1>AutoMATES Demo</h1>
+        <div class="row border-bottom"
+          style="padding-top: 2rem; padding-left:4rem; padding-bottom: 1rem;">
+            <h1>AutoMATES CodeExplorer</h1>
+        </div>
+      <div class="row justify-content-md-center" style="padding-top: 1.5rem; padding-left:3rem; padding-right: 4rem;">
+      {% include "about.html" %}
+      <div class="col-lg-4">
+		<div class="dropdown">
+		  <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
+				  id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+				  aria-expanded="false">
+			Choose model
+		  </button>
+		  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+			<a id="cropYield" class="dropdown-item" href="#">Crop Yield</a>
+			<a id="petPT" class="dropdown-item" href="#">Priestley-Taylor model of Evapotranspiration (DSSAT)</a>
+		  </div>
+		</div>
+        <form method="POST" action="{{ url_for('processCode') }}">
+          <textarea id="flask-codemirror-source_code" name="source_code">{{ code | safe }}</textarea>
+          <script>
+            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+            var editor_for_source_code = CodeMirror.fromTextArea(
+            document.getElementById('flask-codemirror-source_code'), {
+                  "lineNumbers": "true",
+                  "viewportMargin": 800,
+                  "mode": "fortran"
+              }
+            );
+            $("#cropYield").click(function(){
+              editor_for_source_code.getDoc().setValue(`{% include "example_programs/cropYield.f" %}`);
+            });
+            $("#petPT").click(function(){
+              editor_for_source_code.getDoc().setValue(`{% include "example_programs/petPT.f" %}`);
+            });
+		  </script>
           <br>
+          <input type="submit" value="Submit" class="btn btn-outline-primary btn-sm">
+        </form>
       </div>
-      <div class="row justify-content-md-left">
-        <div class="col border" style="padding: 10px">
-          <p>Input Fortran code in the code editor area below (for two examples
-          that have been tested with this webapp, see the following (you can
-          just copy and paste the code into the editor) and hit the 'Submit'
-          button:<p>
-          <ul>
-            <li>
-              <a href="https://raw.githubusercontent.com/ml4ai/delphi/master/tests/data/crop_yield.f">crop_yield.f: </a>
-              A toy example of a crop yield model that contains some important
-              representative Fortran features for control flow like for-loops
-              and conditional statements. 
-            </li>
-            <li>
-              <a href="https://raw.githubusercontent.com/ml4ai/delphi/master/tests/data/PETPT.for">PETPT.for:</a>
-              A 'real-world' example of a model - this is the Priestley-Taylor
-              model of Potential Evapotranspiration, as implemented in the 
-              <a href="https://dssat.net">DSSAT</a>
-              crop model.
-            </li>
-          </ul>
-        </div>
-        <div class="col" style="padding: 10px">
-          Things you can try doing:
-          <ul>
-            <li>Click on the __assign__ nodes to view the equation that is
-              automatically constructed from the code, and typeset with LaTeX.</li>
-            <li>Rename a variable in the code and resubmit it for processing
-              (make sure to rename all instances of it in the code!)
-          <ul>
-        </div>
-      </div>
-      <div class="row justify-content-md-center border">
-        <div class="col-sm-4 border">
-          <form method="POST" action="/processCode">
-            {{ form.source_code }}
-            <input type="submit" value="Submit">
-          </form>
-        </div>
-        <div class="col-sm-8 border" id="cy"></div>
-      </div>
-    </div>
-      <script>
-      {% include "cyjs.js" %}
-      </script>
+      {% include "viewpane.html" %}
+      <script> {% include "cyjs.js" %} </script>
   </body>
 </html>
