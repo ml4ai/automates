@@ -28,7 +28,7 @@
                   }
               ],
           layout: { name: 'dagre' , rankDir: 'TB'},
-          maxZoom : 10,
+          maxZoom : 2,
           minZoom : 0.1,
           selectionType: 'additive'
         });
@@ -112,7 +112,7 @@
                   }
               ],
           layout: { name: 'dagre' , rankDir: 'TB'},
-          maxZoom : 10,
+          maxZoom : 1,
           minZoom : 0.1,
           selectionType: 'single'
         });
