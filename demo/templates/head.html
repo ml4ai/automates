@@ -15,7 +15,13 @@
     <link rel="stylesheet" href="static/codemirror/theme/monokai.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.12.0/addon/display/placeholder.js"></script>
     <script type="text/javascript" async
-      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+      MathJax.Hub.Config({
+        "HTML-CSS": {
+          webFont: "STIX-Web",
+          preferredFont: "STIX"
+        }
+      });
     </script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
             integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
