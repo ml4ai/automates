@@ -30,7 +30,7 @@
           layout: { name: 'dagre' , rankDir: 'TB'},
           maxZoom : 10,
           minZoom : 0.1,
-          selectionType: 'single'
+          selectionType: 'additive'
         });
         var api = computational_graph.expandCollapse({
             fisheye: false, undoable: false
@@ -44,31 +44,43 @@
                     return div;
                 })(),
                 trigger: 'manual',
-                arrow: true,
                 placement: 'bottom',
+                arrow: true,
                 hideOnClick: 'toggle',
                 multiple: true,
                 sticky: true
-            } ).tooltips[0];
+            }).tooltips[0];
         };
         computational_graph.nodes().forEach(function(ele){
-          ele.scratch()._tippy = makeTippy(ele);
+            ele.scratch()._tippy = makeTippy(ele);
         });
-        computational_graph.on('tap', 'node', function(evt){
-          computational_graph.$(':selected').removeClass('selectedNode');
-          var node = evt.target;
+
+        computational_graph.nodes().on("expandcollapse.afterexpand", function(event) {
+          var node = event.target;
+          node.deselect();
           node.toggleClass('selectedNode');
-          if (!node.selected()){
-            node.select();
-            node.scratch()._tippy.show();
-            MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-          }
-          else {
+        })
+
+        computational_graph.nodes().on("expandcollapse.aftercollapse", function(event) {
+          var node = event.target;
+          node.deselect();
+          node.toggleClass('selectedNode');
+        })
+
+        computational_graph.on('tap', 'node', function(evt){
+          var node = evt.target;
+            if (!node.selected()){
+              if (!node.hasClass('cy-expand-collapse-collapsed-node') && !node.isParent()) {
+                node.scratch()._tippy.show();
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+              }
+            }
+            else {
+              node.scratch()._tippy.hide();
+            }
             node.toggleClass('selectedNode');
-            node.deselect();
-            node.scratch()._tippy.hide();
-          }
         });
+
         var causal_analysis_graph = cytoscape({
         container: document.getElementById('causal_analysis_graph'),
           elements: {{ program_analysis_graph_elementsJSON | safe }},
@@ -103,38 +115,4 @@
           maxZoom : 10,
           minZoom : 0.1,
           selectionType: 'single'
-        });
-
-        var makeTippy = function(node){
-            return tippy(node.popperRef(), {
-                html: (function(){
-                    var div = document.createElement('div');
-                    div.innerHTML = node.data('tooltip');
-                    return div;
-                })(),
-                trigger: 'manual',
-                arrow: true,
-                placement: 'bottom',
-                hideOnClick: 'toggle',
-                multiple: true,
-                sticky: true
-            } ).tooltips[0];
-        };
-        causal_analysis_graph.nodes().forEach(function(ele){
-          ele.scratch()._tippy = makeTippy(ele);
-        });
-        causal_analysis_graph.on('tap', 'node', function(evt){
-          causal_analysis_graph.$(':selected').removeClass('selectedNode');
-          var node = evt.target;
-          node.toggleClass('selectedNode');
-          if (!node.selected()){
-            node.select();
-            node.scratch()._tippy.show();
-            MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-          }
-          else {
-            node.toggleClass('selectedNode');
-            node.deselect();
-            node.scratch()._tippy.hide();
-          }
         });
