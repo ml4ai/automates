@@ -369,7 +369,9 @@ object ExpansionHandler {
     "^nmod_without$".r,
     "^punct".r,
     "^ref$".r,
-    "appos".r
+    "appos".r,
+    "nmod_for".r,
+    "nmod".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
@@ -397,8 +399,8 @@ object ExpansionHandler {
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
     "^amod$".r,
-    "^compound$".r,
-    "^nmod_of".r
+    "^compound$".r//,
+    //"^nmod_of".r
   )
 
   def apply() = new ExpansionHandler()

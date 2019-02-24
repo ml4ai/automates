@@ -17,9 +17,6 @@ rules:
       @variable:Variable (?<trigger> [word="="]) @value:Value
 
 
-  # todo: unify the priorities
-  # todo: try to get everything in a certain file to have the same priority, pass the priority in as a variable
-  # todo: so then you would have: `priority: ${priority}`
   - name: var-vary_between
     label: ParameterSetting
     priority: ${priority}
@@ -30,3 +27,22 @@ rules:
       trigger = [lemma='vary']
       variable:Variable = nsubjpass nmod_of
       value:Interval = nmod_between
+
+  - name: var_hard-coded
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
+    pattern: |
+      trigger = [word=/(?i)^hard-coded/]
+      variable:Concept = nsubj
+      value: Concept = /nmod_to/
+
+
+  - name: var-noun_of
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    example: "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
+    pattern: |
+      (?<trigger> [lemma="value"]) of @variable:Variable from @valueLeast:Value to @valueMost:Value
