@@ -370,7 +370,7 @@ object ExpansionHandler {
     "^punct".r,
     "^ref$".r,
     "appos".r,
-    "nmod_for".r,
+    //"nmod_for".r,
     "nmod".r
   )
 
