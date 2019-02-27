@@ -223,10 +223,10 @@ class ExpansionHandler() extends LazyLogging {
     (
       VALID_OUTGOING.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
         ! INVALID_OUTGOING.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
-      ) || (
+      ) // || (
 //      // Allow exception to close parens, etc.
-      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
-      )
+//      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
+//      )
   }
 
   /** Ensure incoming dependency may be safely traversed */
