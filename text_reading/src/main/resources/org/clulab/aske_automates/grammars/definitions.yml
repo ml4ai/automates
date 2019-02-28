@@ -36,7 +36,7 @@ rules:
     #todo: with the next two rules, more tests fail
 #  - name: var_verb
 #    label: Definition
-#    priority: ${priority}s
+#    priority: ${priority}
 #    type: dependency
 #    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
 #    pattern: |
