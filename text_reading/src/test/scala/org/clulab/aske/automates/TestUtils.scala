@@ -56,6 +56,10 @@ object TestUtils {
       testBinaryEvent(mentions, PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_ARG, desired)
     }
 
+    def testParameterSettingEventInterval(mentions: Seq[Mention], desired: Seq[Seq[String]]): Unit = {
+      testThreeArgEvent(mentions, INTERVAL_PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_LEAST_ARG, VALUE_MOST_ARG, desired)
+    }
+
     // General Purpose
 
     def testTextBoundMention(mentions: Seq[Mention], eventType: String, desired: Seq[String]): Unit = {
@@ -65,6 +69,12 @@ object TestUtils {
       desired.foreach(d => found should contain(d))
     }
 
+
+    def testThreeArgEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, arg3Role: String, desired: Seq[Seq[String]]): Unit = {
+      val found = mentions.filter(_ matches eventType)
+      found.length should be(desired.size)
+
+    }
 
     def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Seq[(String, Seq[String])]): Unit = {
       val found = mentions.filter(_ matches eventType)
