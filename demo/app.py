@@ -38,6 +38,9 @@ class MyForm(FlaskForm):
     )
     submit = SubmitField("Submit", render_kw={"class":"btn btn-primary"})
 
+LEXER = PythonLexer()
+FORMATTER = HtmlFormatter()
+
 
 SECRET_KEY = "secret!"
 # mandatory
@@ -96,8 +99,6 @@ def get_tooltip(n, lambdas):
 
 
 def get_cyjs_elementsJSON_from_ScopeTree(A, lambdas) -> str:
-    lexer = PythonLexer()
-    formatter = HtmlFormatter()
     elements = {
         "nodes": [
             {
@@ -109,7 +110,7 @@ def get_cyjs_elementsJSON_from_ScopeTree(A, lambdas) -> str:
                     "color": n.attr["color"],
                     "textValign": "center",
                     "tooltip": get_tooltip(n, lambdas)
-                    # "tooltip": highlight(get_tooltip(n, lambdas), lexer, formatter),
+                    # "tooltip": highlight(get_tooltip(n, lambdas), LEXER, FORMATTER),
                 }
             }
             for n in A.nodes()
@@ -153,11 +154,37 @@ def processCode():
     input_code_tmpfile = f"/tmp/automates/{filename}.f"
     with open(input_code_tmpfile, "w") as f:
         f.write("".join(lines))
-    root = Scope.from_fortran_file(input_code_tmpfile, tmpdir="/tmp/automates")
+
+    with open(input_code_tmpfile, "r") as f:
+        inputLines = f.readlines()
+
+    with open(input_code_tmpfile, "w") as f:
+        f.write(f2py_pp.process(inputLines))
+
+    xml_string = sp.run(
+        [
+            "java",
+            "fortran.ofp.FrontEnd",
+            "--class",
+            "fortran.ofp.XMLPrinter",
+            "--verbosity",
+            "0",
+            input_code_tmpfile,
+        ],
+        stdout=sp.PIPE,
+    ).stdout
+
+    trees = [ET.fromstring(xml_string)]
+    comments = get_comments.get_comments(input_code_tmpfile)
+    xml_to_json_translator = translate.XMLToJSONTranslator()
+    outputDict = xml_to_json_translator.analyze(trees, comments)
+    pySrc = pyTranslate.create_python_string(outputDict)[0][0]
+    lambdas = f"{filename}_lambdas"
+    lambdas_path = f"/tmp/automates/{lambdas}.py"
+    sys.path.insert(0, "/tmp/automates")
+    root = Scope.from_python_src(pySrc, lambdas_path, f"{filename}.json")
     scopetree_graph = root.to_agraph()
 
-    sys.path.insert(0, "/tmp/automates")
-    lambdas = f"{filename}_lambdas"
     scopeTree_elementsJSON = get_cyjs_elementsJSON_from_ScopeTree(
         scopetree_graph, importlib.__import__(lambdas)
     )
@@ -173,6 +200,7 @@ def processCode():
         "index.html",
         form=form,
         code=code,
+        python_code=highlight(pySrc, LEXER, FORMATTER),
         scopeTree_elementsJSON=scopeTree_elementsJSON,
         program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
     )
