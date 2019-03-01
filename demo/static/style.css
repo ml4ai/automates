@@ -1,6 +1,8 @@
-h1 {font-size: 2em; font-family: "PT Mono"; color: #ac4142; font-weight: normal;}
+nav a {font-family: "PT Sans"; color: #ac4142}
+.navbar-light .navbar-brand {font-size: 2em; font-family: "PT Mono"; color: #ac4142; font-weight: normal;}
+
 body {font-size: 0.85rem;font-family: "PT Sans"}
-a {font-family: "PT Sans"; }
+a {font-family: "PT Sans"; color: #ac4142}
 
 .btn-outline-primary {
   color: #ac4142;
@@ -12,3 +14,6 @@ a {font-family: "PT Sans"; }
   font-family: "PT Sans";
 }
 
+.MathJax .mi, .MathJax .mo {
+    color: inherit;
+}
