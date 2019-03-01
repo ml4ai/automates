@@ -4,7 +4,7 @@ import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
 
 class StringMatchEntityFinder(strings: Set[String], label: String) extends EntityFinder {
-
+  // alexeeva: added neg lookbehind to avoid equation # to be found as a variable
   def extract(doc: Document): Seq[Mention] = {
     val mentions = for {
       stringToMatch <- strings
@@ -15,7 +15,7 @@ class StringMatchEntityFinder(strings: Set[String], label: String) extends Entit
            |   priority: 1
            |   type: token
            |   pattern: |
-           |       /\\Q${stringToMatch}\\E/
+           |     (?<! [word = equation]) /\\Q${stringToMatch}\\E/
            |
         """.stripMargin
       engine = ExtractorEngine(ruleTemplate)

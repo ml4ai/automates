@@ -148,11 +148,14 @@ object OdinEngine {
 
   // Mention labels
   val DEFINITION_LABEL: String = "Definition"
+  val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
   val VARIABLE_LABEL: String = "Variable"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
+  val VALUE_LEAST_ARG: String = "ValueLeast"
+  val VALUE_MOST_ARG: String = "ValueMost"
   val DEFINITION_ARG: String = "definition"
   val VALUE_ARG: String = "value"
 
