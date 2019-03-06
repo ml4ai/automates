@@ -1,5 +1,10 @@
-to run data collection pipeline please type:
+to run data collection pipeline please type (for example):
 
-    ./docker.sh python -u collect_data.py <arxiv dir>
+    ./docker.sh ./run_data_collection.sh --indir=/data/arxiv/src --outdir=/data/arxiv/output --pdfdir=/data/arxiv/pdf --rescale-factor=0.5 --dump-pages --nproc=2 --logfile=/data/arxiv/logfile
 
-note the `-u`. This is required for printing to stdout without a buffer.
+There are several other options, please see the `run_data_collection.sh` for complete listing.  Also, note that currently the logfile must already exist (subject to change).
+
+If you make changes to the scripts used in data collection, you need to re-make the docker container:
+    make
+
+This may take a little time.

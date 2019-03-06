@@ -23,6 +23,7 @@ def parse_args():
     parser.add_argument('--outdir', default='/data/output')
     parser.add_argument('--logfile', default='/data/collect_data.log')
     parser.add_argument('--template', default='misc/template.tex')
+    parser.add_argument('--template-im2markup', default='misc/template_im2markup.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
@@ -131,7 +132,7 @@ def error_msg(paper_name, msg, equations=[]):
 def get_paper_id(dirname):
     return os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
 
-def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
+def process_paper(dirname, template, template_im2markup, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
     # keep a poor man's log of what failed, if anything
     info_log = ''
 
@@ -169,7 +170,10 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
         # load jinja2 template
         template_loader = jinja2.FileSystemLoader(searchpath='.')
         template_env = jinja2.Environment(loader=template_loader)
+
         template = template_env.get_template(template)
+        template_im2markup = template_env.get_template(template_im2markup)
+
         # keep track of which eqns failed or were skipped, to hopefully later recover
         failed_eqns = []
         skipped_eqns = []
@@ -193,7 +197,10 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
             if environment_name in ('equation', 'equation*'):
                 # make pdf
                 fname = os.path.join(outdir, eq_name, 'equation.tex')
+                fname_im2markup = os.path.join(outdir, eq_name, 'equation_im2markup.tex')
                 equation = render_equation(eq_tex, template, fname, keep_intermediate)
+                # also render using the template from im2markup
+                render_equation(eq_tex, template_im2markup, fname_im2markup, keep_intermediate)
                 if equation is None:
                     # equation couldn't be rendered
                     failed_eqns.append(eq_name)
@@ -236,7 +243,7 @@ if __name__ == '__main__':
     with open(args.logfile, 'a') as logfile:
         print('processing', args.indir, '...')
         try:
-            paper_errors = process_paper(args.indir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
+            paper_errors = process_paper(args.indir, args.template, args.template_im2markup, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
         except KeyboardInterrupt:
             raise
         except:
