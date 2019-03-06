@@ -36,7 +36,7 @@ class GrobidQuantitiesClient(
 
   def mkMeasurement(json: ujson.Js): Option[Measurement] = json("type").str match {
     case "value" => Some(mkValue(json))
-    case "interval" => Some(mkInterval(json))
+    case "interval" => Some(mkValueListFromInterval(json)) //returning intervals as value lists
     case "listc" => Some(mkValueListFromListc(json))
     //case t => throw new RuntimeException(s"unsupported measurement type '$t'")
     case t =>
@@ -56,15 +56,20 @@ class GrobidQuantitiesClient(
     Interval(quantityLeast, quantityMost)
   }
 
+
+  def mkValueListFromInterval(json: ujson.Js): ValueList = {
+    var values = List[Option[Quantity]]()
+    if (json.obj.get("quantityLeast").map(mkQuantity).nonEmpty) {values = values :+ json.obj.get("quantityLeast").map(mkQuantity)}
+    if (json.obj.get("quantityMost").map(mkQuantity).nonEmpty) {values = values :+ json.obj.get("quantityMost").map(mkQuantity)}
+    val quantified = json.obj.get("quantified").map(mkQuantified) //quantifies has not been in interval examples so far, but I keep it as option bc that's how I defined ValueList class (maxaalexeeva)
+    ValueList(values, quantified)
+  }
+
   def mkValueListFromListc(json: ujson.Js): ValueList = {
     val quantityList = json("quantities").arr.toList
-    //quantityList.foreach(m => println(m + "\n"))
-    //println("quant list" + quantityList)
     val values = for (quant <- quantityList) yield {Some(mkQuantity(quant))}
     val quantified = json.obj.get("quantified").map(mkQuantified)
-//    ValueList(values, quantified)
     ValueList(values, quantified)
-
   }
 
   def mkQuantity(json: ujson.Js): Quantity = {

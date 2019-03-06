@@ -13,7 +13,7 @@ case class Interval(
 ) extends Measurement
 
 case class ValueList(
-  values: List[Some[Quantity]],
+  values: List[Option[Quantity]],
   quantified: Option[Quantified]
 ) extends Measurement
 

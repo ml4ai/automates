@@ -7,7 +7,7 @@ class TestDefinitions extends ExtractionTest {
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
 
   val t1a = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-  failingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
+  passingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
       "Kcs" -> Seq("Crop coefficients")
     )
@@ -40,7 +40,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t4a = "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-  failingTest should s"extract definitions from t4a: ${t4a}" taggedAs(Somebody) in {
+  passingTest should s"extract definitions from t4a: ${t4a}" taggedAs(Somebody) in {
     val desired = Seq(
       "E0" -> Seq("potential crop ET")
     )
@@ -48,7 +48,7 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-  val t5a = "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
+  val t5a = "The ESo calculation in equation 4 is implemented for the CSM-CERES-Maize model and several other crop models."
   passingTest should s"find NO definitions from t5a: ${t5a}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t5a)
@@ -93,7 +93,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t10a = " The primary factor causing an increase in the crop coefficient is an increase in plant cover or leaf " +
     "area (Jensen and Allen, 2016); thus, Kc is correlated with LAI."
-  passingTest should s"find NO definitions from t10a: ${t10a}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t10a: ${t10a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t10a)
     testDefinitionEvent(mentions, desired)
@@ -206,7 +206,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t7b = "If L falls below that of permanent wilting point ( Lpwp), then Ta = 0"
-  failingTest should s"find definitions from t7b: ${t7b}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t7b: ${t7b}" taggedAs(Somebody) in {
     val desired = Seq(
       "Lpwp" -> Seq("permanent wilting point") // todo: or "that of permanent wilting point" ??
     )
@@ -222,7 +222,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t9b = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
-  failingTest should s"find NO definitions from t9b: ${t9b}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t9b: ${t9b}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t9b)
     testDefinitionEvent(mentions, desired)
@@ -315,7 +315,7 @@ class TestDefinitions extends ExtractionTest {
 
     }
   val t4c = "Segment size (dr) was chosen smaller near the root and larger at greater distance, according to"
-    failingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
+    passingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
       val desired = Seq(
         "dr" -> Seq("Segment size")
       )
