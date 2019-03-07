@@ -6,8 +6,8 @@ from uuid import uuid4
 import subprocess as sp
 import importlib
 from pprint import pprint
-from delphi.translators.for2py.scripts import (
-    f2py_pp,
+from delphi.translators.for2py import (
+    preprocessor,
     translate,
     get_comments,
     pyTranslate,
@@ -85,7 +85,7 @@ def get_tooltip(n, lambdas):
             symbs = src_lines[0].split("(")[1].split(")")[0].split(", ")
             ltx = (
                 src_lines[0]
-                .split("__lambda__")[1]
+                .split("__")[2]
                 .split("(")[0]
                 .replace("_", "\_")
                 + " = "
@@ -93,7 +93,32 @@ def get_tooltip(n, lambdas):
                     sympify(src_lines[1][10:].replace("math.exp", "e^"))
                 ).replace("_", "\_")
             )
-            return f"\({ltx}\)"
+            return """
+            <nav>
+                <div class="nav nav-tabs" id="nav-tab-{n}" role="tablist">
+                    <a class="nav-item nav-link active" id="nav-eq-tab-{n}"
+                        data-toggle="tab" href="#nav-eq-{n}" role="tab"
+                        aria-controls="nav-eq-{n}" aria-selected="true">
+                        Equation
+                    </a>
+                    <a class="nav-item nav-link" id="nav-code-tab-{n}"
+                        data-toggle="tab" href="#nav-code-{n}" role="tab"
+                        aria-controls="nav-code-{n}" aria-selected="false">
+                        Lambda Function
+                    </a>
+                </div>
+            </nav>
+            <div class="tab-content" id="nav-tabContent" style="padding-top:1rem; padding-bottom: 0.5rem;">
+                <div class="tab-pane fade show active" id="nav-eq-{n}"
+                    role="tabpanel" aria-labelledby="nav-eq-tab-{n}">
+                    \({ltx}\)
+                </div>
+                <div class="tab-pane fade" id="nav-code-{n}" role="tabpanel"
+                    aria-labelledby="nav-code-tab-{n}">
+                    {src}
+                </div>
+            </div>
+            """.format(ltx=ltx, src=highlight(src, LEXER, FORMATTER), n=n)
     else:
         return json.dumps({"index": n.attr["index"]}, indent=2)
 
@@ -159,7 +184,7 @@ def processCode():
         inputLines = f.readlines()
 
     with open(input_code_tmpfile, "w") as f:
-        f.write(f2py_pp.process(inputLines))
+        f.write(preprocessor.process(inputLines))
 
     xml_string = sp.run(
         [
