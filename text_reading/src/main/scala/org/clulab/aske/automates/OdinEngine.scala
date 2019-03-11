@@ -29,7 +29,6 @@ class OdinEngine(
   }
 
 
-
   class LoadableAttributes(
     // These are the values which can be reloaded.  Query them for current assignments.
     val actions: OdinActions,
@@ -56,8 +55,6 @@ class OdinEngine(
   // These public variables are accessed directly by clients which
   // don't know they are loadable and which had better not keep copies.
   def engine = loadableAttributes.engine
-  // def variableEngine = loadableAttributes.variableEngine
-
   def reload() = loadableAttributes = LoadableAttributes()
 
 
@@ -117,6 +114,9 @@ class OdinEngine(
 
 object OdinEngine {
 
+  // todo: ability to load/use diff processors
+  lazy val proc: Processor = new FastNLPProcessor()
+
   // Mention labels
   val DEFINITION_LABEL: String = "Definition"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
@@ -135,17 +135,18 @@ object OdinEngine {
   val NER_OUTSIDE = "O"
 
   def fromConfig(config: Config = ConfigFactory.load("automates")): OdinEngine = {
-    // todo: ability to load/use diff processors
-    val proc: Processor = new FastNLPProcessor()
-
+    // The config with the main settings
     val odinConfig: Config = config[Config]("OdinEngine")
 
+    // document filter: used to clean the input ahead of time
+    // fixme: should maybe be moved?
     val filterType = odinConfig[String]("documentFilter")
 
+    // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
-    // def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
     val taxonomyPath: String = odinConfig[String]("taxonomyPath")
 
+    // EntityFinders: used to find entities ahead of time
     val enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
     val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
       val entityFinderConfig: Config = config[Config]("entityFinder")
@@ -153,6 +154,7 @@ object OdinEngine {
       finderTypes.map(finderType => EntityFinder.loadEntityFinder(finderType, entityFinderConfig))
     } else Seq.empty[EntityFinder]
 
+    // LexiconNER: Used to annotate the documents with info from a gazetteer
     val enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
     val lexiconNER = if(enableLexiconNER) {
       val lexiconNERConfig = config[Config]("lexiconNER")
@@ -160,10 +162,10 @@ object OdinEngine {
       Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
     } else None
 
+    // expansion: used to optionally expand mentions in certain situations to get more complete text spans
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
     new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, lexiconNER, enableExpansion, filterType)
-
   }
 
 }
