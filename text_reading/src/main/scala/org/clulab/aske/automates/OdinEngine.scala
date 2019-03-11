@@ -16,9 +16,8 @@ import org.clulab.aske.automates.actions.ExpansionHandler
 class OdinEngine(
   masterRulesPath: String,
   taxonomyPath: String,
-  enableEntityFinder: Boolean,
-  entityFinderConfig: Option[Config],
-  enableLexiconNER: Boolean,
+  val entityFinders: Seq[EntityFinder],
+  val lexiconNER: Option[LexiconNER],
   enableExpansion: Boolean,
   filterType: String) {
 
@@ -40,8 +39,8 @@ class OdinEngine(
     val actions: OdinActions,
     val engine: ExtractorEngine,
     // val variableEngine: ExtractorEngine,
-    val entityFinders: Seq[EntityFinder],
-    val lexiconNER: Option[LexiconNER]
+//    val entityFinders: Seq[EntityFinder],
+//    val lexiconNER: Option[LexiconNER]
   )
 
   object LoadableAttributes {
@@ -58,30 +57,9 @@ class OdinEngine(
       val actions = OdinActions(taxonomyPath, enableExpansion)
       val extractorEngine = ExtractorEngine(masterRules, actions, actions.globalAction)
 
-      // val variableRules = FileUtils.getTextFromResource(variablesRulesPath)
-      // val variableExtractorEngine = ExtractorEngine(variableRules, actions, actions.globalAction)
-
-      // EntityFinder(s)
-      val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
-//        val entityFinderConfig: Config = config[Config]("entityFinder")
-        val finderTypes: List[String] = entityFinderConfig[List[String]]("finderTypes")
-        finderTypes.map(finderType => EntityFinder.loadEntityFinder(finderType, entityFinderConfig))
-      } else Seq.empty[EntityFinder]
-
-      // LexiconNER files
-      val lexiconNER = if(enableLexiconNER) {
-        val lexiconNERConfig = config[Config]("lexiconNER")
-        val lexicons = lexiconNERConfig[List[String]]("lexicons")
-        Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
-      } else None
-
-
       new LoadableAttributes(
         actions,
-        extractorEngine, // ODIN component,
-        // variableExtractorEngine,
-        entityFinders,
-        lexiconNER
+        extractorEngine
       )
     }
   }
@@ -109,7 +87,7 @@ class OdinEngine(
   def extractFrom(doc: Document): Vector[Mention] = {
     // Prepare the initial state -- if you are using the entity finder then it contains the found entities,
     // else it is empty
-    val initialState = loadableAttributes.entityFinders match {
+    val initialState = entityFinders match {
       case efs => State(efs.flatMap(ef => ef.extract(doc)))
       case _ => new State()
     }
@@ -135,7 +113,7 @@ class OdinEngine(
     val tokenized = proc.mkDocument(text, keepText = true)  // Formerly keepText, must now be true
     val filtered = documentFilter.filter(tokenized)         // Filter noise from document if enabled (else "pass through")
     val doc = proc.annotate(filtered)
-    if (loadableAttributes.lexiconNER.nonEmpty) {           // Add any lexicon/gazetteer tags
+    if (lexiconNER.nonEmpty) {           // Add any lexicon/gazetteer tags
       doc.sentences.foreach(addLexiconNER)
     }
     doc.id = filename
@@ -148,7 +126,7 @@ class OdinEngine(
     // for further processing and filtering operations that expect to be able to query the entities
     if (s.entities.isEmpty) s.entities = Some(Array.fill[String](s.words.length)("O"))
     for {
-      (lexiconNERTag, i) <- loadableAttributes.lexiconNER.get.find(s).zipWithIndex
+      (lexiconNERTag, i) <- lexiconNER.get.find(s).zipWithIndex
       if lexiconNERTag != OdinEngine.NER_OUTSIDE
     } s.entities.get(i) = lexiconNERTag
   }
@@ -182,9 +160,24 @@ object OdinEngine {
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
     // def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
     val taxonomyPath: String = odinConfig[String]("taxonomyPath")
+
     val enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
+    val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
+      val entityFinderConfig: Config = config[Config]("entityFinder")
+      val finderTypes: List[String] = entityFinderConfig[List[String]]("finderTypes")
+      finderTypes.map(finderType => EntityFinder.loadEntityFinder(finderType, entityFinderConfig))
+    } else Seq.empty[EntityFinder]
+
     val enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
+    val lexiconNER = if(enableLexiconNER) {
+      val lexiconNERConfig = config[Config]("lexiconNER")
+      val lexicons = lexiconNERConfig[List[String]]("lexicons")
+      Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
+    } else None
+
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
+
+    new OdinEngine(masterRulesPath, taxonomyPath, entityFinders, lexiconNER, enableExpansion, filterType)
 
   }
 
