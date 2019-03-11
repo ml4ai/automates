@@ -14,6 +14,7 @@ import org.clulab.aske.automates.actions.ExpansionHandler
 
 
 class OdinEngine(
+  val proc: Processor,
   masterRulesPath: String,
   taxonomyPath: String,
   val entityFinders: Seq[EntityFinder],
@@ -23,7 +24,7 @@ class OdinEngine(
 
 //  val odinConfig: Config = config[Config]("OdinEngine")
 
-  val proc: Processor = new FastNLPProcessor()
+//  val proc: Processor = new FastNLPProcessor()
   // Document Filter, prunes sentences form the Documents to reduce noise/allow reasonable processing time
 
   val documentFilter: DocumentFilter = filterType match {
@@ -88,8 +89,8 @@ class OdinEngine(
     // Prepare the initial state -- if you are using the entity finder then it contains the found entities,
     // else it is empty
     val initialState = entityFinders match {
-      case efs => State(efs.flatMap(ef => ef.extract(doc)))
-      case _ => new State()
+      case Seq() => new State()
+      case _ => State(entityFinders.flatMap(ef => ef.extract(doc)))
     }
 
     // todo: removed for now to simplify the pipeline, we can re-add later
@@ -153,6 +154,9 @@ object OdinEngine {
   val NER_OUTSIDE = "O"
 
   def fromConfig(config: Config = ConfigFactory.load("automates")): OdinEngine = {
+    // todo: ability to load/use diff processors
+    val proc: Processor = new FastNLPProcessor()
+
     val odinConfig: Config = config[Config]("OdinEngine")
 
     val filterType = odinConfig[String]("documentFilter")
@@ -177,7 +181,7 @@ object OdinEngine {
 
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
-    new OdinEngine(masterRulesPath, taxonomyPath, entityFinders, lexiconNER, enableExpansion, filterType)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, lexiconNER, enableExpansion, filterType)
 
   }
 
