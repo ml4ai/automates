@@ -22,11 +22,6 @@ class OdinEngine(
   enableExpansion: Boolean,
   filterType: String) {
 
-//  val odinConfig: Config = config[Config]("OdinEngine")
-
-//  val proc: Processor = new FastNLPProcessor()
-  // Document Filter, prunes sentences form the Documents to reduce noise/allow reasonable processing time
-
   val documentFilter: DocumentFilter = filterType match {
     case "none" => PassThroughFilter()
     case "length" => FilterByLength(proc, cutoff = 150)
@@ -39,18 +34,9 @@ class OdinEngine(
     // These are the values which can be reloaded.  Query them for current assignments.
     val actions: OdinActions,
     val engine: ExtractorEngine,
-    // val variableEngine: ExtractorEngine,
-//    val entityFinders: Seq[EntityFinder],
-//    val lexiconNER: Option[LexiconNER]
   )
 
   object LoadableAttributes {
-//    def masterRulesPath: String = odinConfig[String]("masterRulesPath")
-//    // def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
-//    def taxonomyPath: String = odinConfig[String]("taxonomyPath")
-//    def enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
-//    def enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
-//    def enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
     def apply(): LoadableAttributes = {
       // Reread these values from their files/resources each time based on paths in the config file.
@@ -92,12 +78,7 @@ class OdinEngine(
       case Seq() => new State()
       case _ => State(entityFinders.flatMap(ef => ef.extract(doc)))
     }
-
-    // todo: removed for now to simplify the pipeline, we can re-add later
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
-    // val variableMentions = variableEngine.extractFrom(doc, initialState)
-    // val variableMatcher = StringMatchEntityFinder(variableMentions, Seq("Variable"), "Variable")
-    // val matchedVariables = variableMatcher.extract(doc)
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
