@@ -32,14 +32,14 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
     // These are the values which can be reloaded.  Query them for current assignments.
     val actions: OdinActions,
     val engine: ExtractorEngine,
-    val variableEngine: ExtractorEngine,
+    // val variableEngine: ExtractorEngine,
     val entityFinders: Seq[EntityFinder],
     val lexiconNER: Option[LexiconNER]
   )
 
   object LoadableAttributes {
     def masterRulesPath: String = odinConfig[String]("masterRulesPath")
-    def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
+    // def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
     def taxonomyPath: String = odinConfig[String]("taxonomyPath")
     def enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
     def enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
@@ -48,10 +48,11 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
     def apply(): LoadableAttributes = {
       // Reread these values from their files/resources each time based on paths in the config file.
       val masterRules = FileUtils.getTextFromResource(masterRulesPath)
-      val variableRules = FileUtils.getTextFromResource(variablesRulesPath)
       val actions = OdinActions(taxonomyPath, enableExpansion)
       val extractorEngine = ExtractorEngine(masterRules, actions, actions.globalAction)
-      val variableExtractorEngine = ExtractorEngine(variableRules, actions, actions.globalAction)
+
+      // val variableRules = FileUtils.getTextFromResource(variablesRulesPath)
+      // val variableExtractorEngine = ExtractorEngine(variableRules, actions, actions.globalAction)
 
       // EntityFinder(s)
       val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
@@ -71,7 +72,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
       new LoadableAttributes(
         actions,
         extractorEngine, // ODIN component,
-        variableExtractorEngine,
+        // variableExtractorEngine,
         entityFinders,
         lexiconNER
       )
@@ -83,7 +84,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
   // These public variables are accessed directly by clients which
   // don't know they are loadable and which had better not keep copies.
   def engine = loadableAttributes.engine
-  def variableEngine = loadableAttributes.variableEngine
+  // def variableEngine = loadableAttributes.variableEngine
 
   def reload() = loadableAttributes = LoadableAttributes()
 
@@ -105,12 +106,15 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
       case efs => State(efs.flatMap(ef => ef.extract(doc)))
       case _ => new State()
     }
+
+    // todo: removed for now to simplify the pipeline, we can re-add later
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
-    val variableMentions = variableEngine.extractFrom(doc, initialState)
-    val variableMatcher = StringMatchEntityFinder(variableMentions, Seq("Variable"), "Variable")
-    val matchedVariables = variableMatcher.extract(doc)
+    // val variableMentions = variableEngine.extractFrom(doc, initialState)
+    // val variableMatcher = StringMatchEntityFinder(variableMentions, Seq("Variable"), "Variable")
+    // val matchedVariables = variableMatcher.extract(doc)
+
     // Run the main extraction engine, pre-populated with the initial state
-    val events =  engine.extractFrom(doc, initialState.updated(matchedVariables)).toVector
+    val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
 
     // todo: some appropriate version of "keepMostComplete"
