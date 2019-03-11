@@ -13,13 +13,20 @@ import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.actions.ExpansionHandler
 
 
-class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
+class OdinEngine(
+  masterRulesPath: String,
+  taxonomyPath: String,
+  enableEntityFinder: Boolean,
+  entityFinderConfig: Option[Config],
+  enableLexiconNER: Boolean,
+  enableExpansion: Boolean,
+  filterType: String) {
 
-  val odinConfig: Config = config[Config]("OdinEngine")
+//  val odinConfig: Config = config[Config]("OdinEngine")
 
   val proc: Processor = new FastNLPProcessor()
   // Document Filter, prunes sentences form the Documents to reduce noise/allow reasonable processing time
-  val filterType: String = odinConfig[String]("documentFilter")
+
   val documentFilter: DocumentFilter = filterType match {
     case "none" => PassThroughFilter()
     case "length" => FilterByLength(proc, cutoff = 150)
@@ -38,12 +45,12 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
   )
 
   object LoadableAttributes {
-    def masterRulesPath: String = odinConfig[String]("masterRulesPath")
-    // def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
-    def taxonomyPath: String = odinConfig[String]("taxonomyPath")
-    def enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
-    def enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
-    def enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
+//    def masterRulesPath: String = odinConfig[String]("masterRulesPath")
+//    // def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
+//    def taxonomyPath: String = odinConfig[String]("taxonomyPath")
+//    def enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
+//    def enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
+//    def enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
     def apply(): LoadableAttributes = {
       // Reread these values from their files/resources each time based on paths in the config file.
@@ -56,7 +63,7 @@ class OdinEngine(val config: Config = ConfigFactory.load("automates")) {
 
       // EntityFinder(s)
       val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
-        val entityFinderConfig: Config = config[Config]("entityFinder")
+//        val entityFinderConfig: Config = config[Config]("entityFinder")
         val finderTypes: List[String] = entityFinderConfig[List[String]]("finderTypes")
         finderTypes.map(finderType => EntityFinder.loadEntityFinder(finderType, entityFinderConfig))
       } else Seq.empty[EntityFinder]
@@ -167,5 +174,18 @@ object OdinEngine {
   // Used by LexiconNER
   val NER_OUTSIDE = "O"
 
+  def fromConfig(config: Config = ConfigFactory.load("automates")): OdinEngine = {
+    val odinConfig: Config = config[Config]("OdinEngine")
+
+    val filterType = odinConfig[String]("documentFilter")
+
+    val masterRulesPath: String = odinConfig[String]("masterRulesPath")
+    // def variablesRulesPath: String = odinConfig[String]("variablesRulesPath")
+    val taxonomyPath: String = odinConfig[String]("taxonomyPath")
+    val enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
+    val enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
+    val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
+
+  }
 
 }
