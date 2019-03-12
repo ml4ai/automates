@@ -1,16 +1,55 @@
 package org.clulab.aske.automates.alignment
 
-import org.clulab.odin.Mention
+import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 
 // todo: decide what to produce
-case class Alignment()
+case class Alignment(src: Int, dst: Int, score: Double)
 
 trait Aligner {
-  def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Alignment
-  def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Alignment
+  def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment]
+  def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment]
 }
 
-class PairwiseExhaustiveAligner() extends Aligner {
-  def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Alignment = ???
-  def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Alignment = ???
+/**
+  * Performs an exhaustive pairwise alignment, comparing each src item with each dst item independently of the others.
+  * @param w2v
+  * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "Variable" or "Definition")
+  */
+class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) extends Aligner {
+
+  def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
+    def mkTextFromArgs(argMap: Map[String, Seq[Mention]]): String = argMap.values.flatten.map(_.text).mkString(" ")
+    // Get the text from the arguments of the mention, but only the previously specified arguments
+    def getRelevantText(m: Mention): String = {
+      m match {
+        case tb: TextBoundMention => m.text
+        case rm: RelationMention =>
+          val relevantOnly = rm.arguments.filterKeys(arg => relevantArgs.contains(arg))
+          mkTextFromArgs(relevantOnly)
+        case em: EventMention =>
+          val relevantOnly = em.arguments.filterKeys(arg => relevantArgs.contains(arg))
+          mkTextFromArgs(relevantOnly)
+        case _ => ???
+      }
+    }
+    alignTexts(srcMentions.map(getRelevantText), dstMentions.map(getRelevantText))
+  }
+
+  def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
+    val exhaustiveScores = for {
+      (src, i) <- srcTexts.zipWithIndex
+      (dst, j) <- dstTexts.zipWithIndex
+      score = compare(src, dst)
+    } yield Alignment(i, j, score)
+    // redundant but good for debugging
+    exhaustiveScores
+  }
+
+  // fixme - pick something more intentional
+  def compare(src: String, dst: String): Double = {
+    val srcTokens = src.split(" ")
+    val dstTokens = dst.split(" ")
+    w2v.avgSimilarity(srcTokens, dstTokens) + w2v.maxSimilarity(srcTokens, dstTokens)
+  }
 }
