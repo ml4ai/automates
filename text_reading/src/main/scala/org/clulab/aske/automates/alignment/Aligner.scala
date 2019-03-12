@@ -1,9 +1,11 @@
 package org.clulab.aske.automates.alignment
 
+import ai.lum.common.ConfigUtils._
+import com.typesafe.config.Config
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 
-// todo: decide what to produce
+// todo: decide what to produce for reals
 case class Alignment(src: Int, dst: Int, score: Double)
 
 trait Aligner {
@@ -51,5 +53,26 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
     val srcTokens = src.split(" ")
     val dstTokens = dst.split(" ")
     w2v.avgSimilarity(srcTokens, dstTokens) + w2v.maxSimilarity(srcTokens, dstTokens)
+  }
+}
+
+object PairwiseW2VAligner {
+  def fromConfig(config: Config): Aligner = {
+    val w2vPath: String = config[String]("w2vPath")
+    val w2v = new Word2Vec(w2vPath)
+    val relevantArgs: List[String] = config[List[String]]("relevantArgs")
+
+    new PairwiseW2VAligner(w2v, relevantArgs.toSet)
+  }
+}
+
+object Aligner {
+
+  def fromConfig(config: Config): Aligner = {
+    val alignerType = config[String]("alignerType")
+    alignerType match {
+      case "pairwisew2v" => PairwiseW2VAligner.fromConfig(config)
+      case _ => ???
+    }
   }
 }
