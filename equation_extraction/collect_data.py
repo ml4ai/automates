@@ -97,14 +97,15 @@ def match_template(pages, template, rescale_factor):
     best_val = -np.inf
     best_loc = (-1, -1)
     best_page = -1
-    best_h, best_w = -1, -1 # essentially keeps track of the best scale factor
+    best_h, best_w = -1, -1 # keeps track of the dims of the resized box (from best scale)
+    best_scale = -1
     # rescale pages and template to speed up template matching
     if rescale_factor != 1:
         template = cv2.resize(template, (0,0), fx=rescale_factor, fy=rescale_factor)
         pages = [cv2.resize(p, (0,0), fx=rescale_factor, fy=rescale_factor) for p in pages]
     # Try several scale factors in case the standalone equation is slightly smaller/bigger
     # than the one in the original paper
-    for scale in np.linspace(0.8, 1.2, 5):
+    for scale in np.linspace(0.8, 1.4, 16):
         # resize/scale the template
         resized = cv2.resize(template, (0,0), fx=scale, fy=scale)
         for i, page in enumerate(pages):
@@ -115,13 +116,14 @@ def match_template(pages, template, rescale_factor):
                 best_loc = max_loc
                 best_page = i
                 best_h, best_w = resized.shape[:2]
+		best_scale = scale
     # Note that we are adding the margin described above
     upper_left = (best_loc[0] - margin, best_loc[1] - margin)
     lower_right = (best_loc[0] + best_w + margin, best_loc[1] + best_h + margin)
     if rescale_factor != 1:
         upper_left = int(upper_left[0] / rescale_factor), int(upper_left[1] / rescale_factor)
         lower_right = int(lower_right[0] / rescale_factor), int(lower_right[1] / rescale_factor)
-    return best_val, best_page, upper_left, lower_right
+    return best_val, best_scale, best_page, upper_left, lower_right
 
 
 # used to format error msgs for the poor man's log in process_paper()
@@ -206,7 +208,7 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
                     failed_eqns.append(eq_name)
                     continue
                 # find page and aabb where equation appears
-                match, p, start, end = match_template(pages, equation, rescale_factor)
+                match, scale, p, start, end = match_template(pages, equation, rescale_factor)
                 # write image with aabb
                 image = pages[p].copy()
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
@@ -221,7 +223,7 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
                 x2 = end[0] / w
                 y2 = end[1] / h
                 with open(fname, 'w') as f:
-                    values = [p, x1, y1, x2, y2]
+                    values = [match, scale, p, x1, y1, x2, y2]
                     tsv = '\t'.join(map(str, values))
                     print(tsv, file=f)
             else:
