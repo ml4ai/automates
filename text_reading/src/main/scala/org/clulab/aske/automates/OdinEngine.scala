@@ -28,7 +28,6 @@ class OdinEngine(
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
   }
 
-
   class LoadableAttributes(
     // These are the values which can be reloaded.  Query them for current assignments.
     val actions: OdinActions,
@@ -136,7 +135,7 @@ object OdinEngine {
 
   def fromConfig(config: Config = ConfigFactory.load("automates")): OdinEngine = {
     // The config with the main settings
-    val odinConfig: Config = config[Config]("OdinEngine")
+    val odinConfig: Config = config[Config]("TextEngine")
 
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
@@ -147,7 +146,7 @@ object OdinEngine {
     val taxonomyPath: String = odinConfig[String]("taxonomyPath")
 
     // EntityFinders: used to find entities ahead of time
-    val enableEntityFinder: Boolean = odinConfig[Boolean]("enableEntityFinder")
+    val enableEntityFinder: Boolean = odinConfig.get[Boolean]("entityFinder.enable").getOrElse(false)
     val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
       val entityFinderConfig: Config = config[Config]("entityFinder")
       val finderTypes: List[String] = entityFinderConfig[List[String]]("finderTypes")
@@ -155,7 +154,7 @@ object OdinEngine {
     } else Seq.empty[EntityFinder]
 
     // LexiconNER: Used to annotate the documents with info from a gazetteer
-    val enableLexiconNER: Boolean = odinConfig[Boolean]("enableLexiconNER")
+    val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(false)
     val lexiconNER = if(enableLexiconNER) {
       val lexiconNERConfig = config[Config]("lexiconNER")
       val lexicons = lexiconNERConfig[List[String]]("lexicons")
