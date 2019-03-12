@@ -54,7 +54,7 @@ object ExtractAndAlign {
       // Parse the comment texts
       // todo!!
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
-      docs.flatMap(textReader.extractFrom)
+      docs.flatMap(commentReader.extractFrom)
     }
 
 //    // Align
