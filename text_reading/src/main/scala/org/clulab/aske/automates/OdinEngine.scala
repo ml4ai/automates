@@ -133,9 +133,9 @@ object OdinEngine {
   // Used by LexiconNER
   val NER_OUTSIDE = "O"
 
-  def fromConfig(config: Config = ConfigFactory.load("automates")): OdinEngine = {
-    // The config with the main settings
-    val odinConfig: Config = config[Config]("TextEngine")
+  def fromConfig(odinConfig: Config = ConfigFactory.load("automates")): OdinEngine = {
+//    // The config with the main settings
+//    val odinConfig: Config = config[Config]("TextEngine")
 
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
@@ -148,7 +148,7 @@ object OdinEngine {
     // EntityFinders: used to find entities ahead of time
     val enableEntityFinder: Boolean = odinConfig.get[Boolean]("entityFinder.enable").getOrElse(false)
     val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
-      val entityFinderConfig: Config = config[Config]("entityFinder")
+      val entityFinderConfig: Config = odinConfig[Config]("entityFinder")
       val finderTypes: List[String] = entityFinderConfig[List[String]]("finderTypes")
       finderTypes.map(finderType => EntityFinder.loadEntityFinder(finderType, entityFinderConfig))
     } else Seq.empty[EntityFinder]
@@ -156,7 +156,7 @@ object OdinEngine {
     // LexiconNER: Used to annotate the documents with info from a gazetteer
     val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(false)
     val lexiconNER = if(enableLexiconNER) {
-      val lexiconNERConfig = config[Config]("lexiconNER")
+      val lexiconNERConfig = odinConfig[Config]("lexiconNER")
       val lexicons = lexiconNERConfig[List[String]]("lexicons")
       Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
     } else None

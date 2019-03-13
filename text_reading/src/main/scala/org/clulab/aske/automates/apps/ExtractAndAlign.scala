@@ -15,10 +15,14 @@ object ExtractAndAlign {
 
 
   def main(args: Array[String]): Unit = {
-    val config = ConfigFactory.load("automates")
+    val config: Config = ConfigFactory.load("automates")
+    for (abc <- config.entrySet().toArray()) {
+      println(abc)
+    }
 
     // Instantiate the text reader
-    val textReader = OdinEngine.fromConfig(config[Config]("TextEngine"))
+    val textconfig: Config = config[Config]("TextEngine")
+    val textReader = OdinEngine.fromConfig(textconfig)
 
     // Load text input from directory
     val inputDir = config[String]("apps.inputDirectory")
