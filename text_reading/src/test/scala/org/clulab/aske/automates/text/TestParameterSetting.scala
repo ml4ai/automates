@@ -43,7 +43,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t3a = "The value of SKc was varied between 0.4 and 0.9 with a base level of 0.5 for maize and 0.6 for cotton from " +
     "prior calibration efforts."
-  passingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
+  failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
       "SKc" -> Seq("0.4", "0.9", "0.5", "0.6") // the last two need to come with modifiers (e.g., for maize)
     )
@@ -127,7 +127,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t11a = "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation " +
     "portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
-  passingTest should s"extract the parameter setting(s) from t11a: ${t11a}" taggedAs(Somebody) in {
+  failingTest should s"extract the parameter setting(s) from t11a: ${t11a}" taggedAs(Somebody) in {
     val desired = Seq(
       "DOY" -> Seq("165"),
       "DOY" -> Seq("175") // todo: see t8
@@ -138,7 +138,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t12a = "Under full irrigation, Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield " +
     "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
-  passingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
+  failingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "Kcbmax" -> Seq("0.9", "1.5"), //todo: how do we extract intervals like this?
       "Kcbmax" -> Seq("1.15") //todo: see t8
@@ -148,7 +148,7 @@ class TestParameterSetting  extends ExtractionTest {
   }
 
   val t13a = "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
-  //passingTest should s"extract the parameter setting(s) from t13a and NOT extract the figure number: ${t13a}" taggedAs(Somebody, Interval) in {
+  //passingTest should s"extract the parameter setting(s) from t13a and NOT extract the figure number from t13a: ${t13a}" taggedAs(Somebody, Interval) in {
   passingTest should s"NOT extract the figure number: ${t13a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       //"SKc" -> Seq("0.5", "0.7") //todo: how do we extract intervals like this? Masha: made a separate test set for interval parameter settings

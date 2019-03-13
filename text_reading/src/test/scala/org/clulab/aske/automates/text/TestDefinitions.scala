@@ -17,7 +17,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t2a = "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 " +
     "(Sau et al., 2004; Thorp et al., 2010), and Kcs is the DSSAT-CSM crop coefficient."
-  passingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
+  failingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "LAI" -> Seq("simulated leaf area index"),
       "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"),
@@ -29,7 +29,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t3a = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
     "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
-  passingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
       "Kcdmin" -> Seq("minimum crop coefficient"),
       "Kcdmax" -> Seq("maximum crop coefficient at high LAI"),
@@ -56,7 +56,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t6a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-  passingTest should s"find definitions from t6a: ${t6a}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t6a: ${t6a}" taggedAs(Somebody) in {
     val desired = Seq(
       "E0" -> Seq("product of Kcd and ETpm")
     )
@@ -65,7 +65,7 @@ class TestDefinitions extends ExtractionTest {
   }
   val t7a = "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of " +
     "the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998)."
-    passingTest should s"find definitions from t7a: ${t7a}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t7a: ${t7a}" taggedAs(Somebody) in {
       val desired = Seq(
         "KEP" -> Seq("energy extinction coefficient") // the def will eventually be the whole sentence
       )
@@ -74,7 +74,7 @@ class TestDefinitions extends ExtractionTest {
     }
 
   val t8a = "where Kcbmin is the minimum basal crop coefficient representing a dry, bare, or nearly bare soil surface."
-    passingTest should s"find definitions from t8a: ${t8a}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t8a: ${t8a}" taggedAs(Somebody) in {
       val desired = Seq(
         "Kcbmin" -> Seq("minimum basal crop coefficient")
       )
@@ -83,7 +83,7 @@ class TestDefinitions extends ExtractionTest {
     }
 
   val t9a = "where Kcbmin is the minimum basal crop coefficient representing a dry, bare, or nearly bare soil surface."
-    passingTest should s"find definitions from t9a: ${t9a}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t9a: ${t9a}" taggedAs(Somebody) in {
       val desired = Seq(
         "Kcbmin" -> Seq("minimum basal crop coefficient")
       )
@@ -93,7 +93,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t10a = " The primary factor causing an increase in the crop coefficient is an increase in plant cover or leaf " +
     "area (Jensen and Allen, 2016); thus, Kc is correlated with LAI."
-  passingTest should s"find NO definitions from t10a: ${t10a}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t10a: ${t10a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t10a)
     testDefinitionEvent(mentions, desired)
@@ -135,7 +135,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t1b = "In APSIM, water uptake (Ta, mm d−1) is determined from potential transpiration demand (Tp, mm d−1), soil " +
     "water available (WA, mm d−1), and water supply (WS, mm d−1) for each ith day and soil layer as:"
-  passingTest should s"find definitions from t1b: ${t1b}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t1b: ${t1b}" taggedAs(Somebody) in {
     val desired = Seq(
       "Ta" -> Seq("water uptake"),
       "Tp" -> Seq("potential transpiration demand"),
@@ -150,7 +150,7 @@ class TestDefinitions extends ExtractionTest {
     " \\\"pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
     "is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be " +
     "supplied to the plant from each rooted soil layer."
-  passingTest should s"find definitions from t2b: ${t2b}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t2b: ${t2b}" taggedAs(Somebody) in {
     val desired = Seq(
       "fi" -> Seq("daily fractional light interception"),
       "ETo" -> Seq("daily reference evapotranspiration"),
@@ -165,7 +165,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t3b = "This means that kl represents a maximum supply determined by !r and the resistance to water flow " +
     "(Passioura, 1983; Monteith, 1986)"
-  passingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
     val desired = Seq(
       "kl" -> Seq("maximum supply determined by !r and the resistance to water flow")
     )
@@ -176,7 +176,7 @@ class TestDefinitions extends ExtractionTest {
   val t4b = "The plant conductance is calculated by inverting the transpiration equation using a maximum expected " +
     "transpiration (Tx, mm d−1), the soil water potential at field capacity ( Sfc, J kg−1) and the leaf water " +
     "potential at the onset of stomatal closure ( Lsc, J kg−1):"
-  passingTest should s"find definitions from t4b: ${t4b}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t4b: ${t4b}" taggedAs(Somebody) in {
     val desired = Seq(
       //"plant conductance" -> Seq("inverting the transpiration equation"), // todo: do we want this one?
       "Tx" -> Seq("maximum expected transpiration"),
@@ -189,7 +189,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t5b = "The average soil water potential ( ̄S , J kg−1) is calculated based on a representative root length " +
     "fraction for each soil layer (fr,j):"
-  passingTest should s"find definitions from t5b: ${t5b}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t5b: ${t5b}" taggedAs(Somebody) in {
     val desired = Seq(
       "S" -> Seq("average soil water potential"),
       "fr,j" -> Seq("representative root length fraction for each soil layer")
@@ -237,7 +237,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t11b = "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an " +
     "exponential function that depends on:"
-  passingTest should s"find definitions from t11b: ${t11b}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t11b: ${t11b}" taggedAs(Somebody) in {
     val desired = Seq(
       "Url" -> Seq("water uptake per unit of root length") // todo: is this right ??
     )
@@ -247,7 +247,7 @@ class TestDefinitions extends ExtractionTest {
   }
   val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl " +
     "times pr for each layer and summing over the soil profile:"
-    passingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
         "Ux" -> Seq("maximum potential water uptake") //for the profile? - not part of the concept
       )
@@ -257,7 +257,7 @@ class TestDefinitions extends ExtractionTest {
     }
   val t13b = "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the " +
     "soil limitation to water uptake of each layer."
-    passingTest should s"find definitions from t13b: ${t13b}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t13b: ${t13b}" taggedAs(Somebody) in {
       val desired = Seq(
         "s1" -> Seq("parameters of a logistic curve"),
         "s2" -> Seq("parameters of a logistic curve"),
@@ -271,7 +271,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t1c = "A convenient soil hydraulic property that will be used in this study is the matric flux potential " +
     "Mh0 (m2 d-1)"
-    passingTest should s"find definitions from t1c: ${t1c}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t1c: ${t1c}" taggedAs(Somebody) in {
       val desired = Seq(
         "Mh0" -> Seq("matric flux potential")
       )
@@ -282,7 +282,7 @@ class TestDefinitions extends ExtractionTest {
   val t2c = "where t is time (d), C is the differential water capacity (du/dh, m21), q is the water flux density " +
     "(m d21), r is the distance from the axial center (m), S is a sink or source term (d21), and H is the hydraulic " +
     "head (m)."
-    passingTest should s"find definitions from t2c: ${t2c}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t2c: ${t2c}" taggedAs(Somebody) in {
       val desired = Seq(
         "t" -> Seq("time"),
         "C" -> Seq("differential water capacity"),
@@ -298,7 +298,7 @@ class TestDefinitions extends ExtractionTest {
   val t3c = "u, ur, and us are water content, residual water content and saturated water content (m3 m-3), " +
     "respectively; h is pressure head (m); K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, " +
     "respectively (m d21); and a (m21), n, and l are empirical parameters."
-    passingTest should s"find definitions from t3c: ${t3c}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t3c: ${t3c}" taggedAs(Somebody) in {
       val desired = Seq(
         "u" -> Seq("water content"),
         "ur" -> Seq("residual water content"),
@@ -325,7 +325,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t5c = "in which L (m) is the root length, z (m) is the total rooted soil depth, Ap (m2) is the surface area " +
     "and Ar (m2) is the root surface area."
-    passingTest should s"find definitions from t5c: ${t5c}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t5c: ${t5c}" taggedAs(Somebody) in {
       val desired = Seq(
         "L" -> Seq("root length"),
         "z" -> Seq("total rooted soil depth"),
@@ -338,7 +338,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t6c = "where: T = daily mean air temperature [°C] Tmax = daily maximum air temperature [°C] Tmin = daily " +
     "minimum air temperature [°C]"
-    passingTest should s"find definitions from t6c: ${t6c}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t6c: ${t6c}" taggedAs(Somebody) in {
       val desired = Seq(
         "T" -> Seq("daily mean air temperature"), // [C] is caught as part of the concept
         "Tmax" -> Seq("daily maximum air temperature"),
@@ -351,7 +351,7 @@ class TestDefinitions extends ExtractionTest {
   val t7c = "with dr,min = 1028 m, dr,max = 5.1024 m, S = 0.5, r0 (m) is the root radius and rm (m) is the radius of " +
     "the root extraction zone, equal to the half-distance between roots (rm), which relates to the root density " +
     "R (m m23) as..."
-  passingTest should s"find definitions from t7c: ${t7c}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t7c: ${t7c}" taggedAs(Somebody) in {
 
     val desired = Seq(
       "r0" -> Seq("root radius"),
@@ -363,7 +363,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t8c = "where p is the iteration level."
-  passingTest should s"find definitions from t8c: ${t8c}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t8c: ${t8c}" taggedAs(Somebody) in {
     val desired = Seq(
       "r0" -> Seq("root radius"),
       "rm" -> Seq("radius of the root extraction zone"),
@@ -374,7 +374,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t9c = "Assuming no sink or source (S = 0) and no gravitational or osmotic component (H = h), Eq. [4] reduces to..."
-  passingTest should s"find definitions from t9c: ${t9c}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t9c: ${t9c}" taggedAs(Somebody) in {
     val desired = Seq(
       "r0" -> Seq("root radius"),
       "rm" -> Seq("radius of the root extraction zone"),

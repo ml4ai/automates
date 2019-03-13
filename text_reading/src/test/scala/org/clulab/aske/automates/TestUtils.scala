@@ -20,18 +20,20 @@ object TestUtils {
   val successful = Seq()
 
   protected var mostRecentOdinEngine: Option[OdinEngine] = None
+  protected var mostRecentConfig: Option[Config] = None
 
   // This is the standard way to extract mentions for testing
   def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = ieSystem.extractFromText(text, true, None)
 
   def newOdinSystem(config: Config): OdinEngine = this.synchronized {
-    val eidosSystem =
-      if (mostRecentOdinEngine.isEmpty) new OdinEngine(config)
-      else if (mostRecentOdinEngine.get.config == config) mostRecentOdinEngine.get
-      else new OdinEngine(config)
+    val readingSystem =
+      if (mostRecentOdinEngine.isEmpty) OdinEngine.fromConfig(config)
+      else if (mostRecentConfig.get == config) mostRecentOdinEngine.get
+      else OdinEngine.fromConfig(config)
 
-    mostRecentOdinEngine = Some(eidosSystem)
-    eidosSystem
+    mostRecentOdinEngine = Some(readingSystem)
+    mostRecentConfig = Some(config)
+    readingSystem
   }
   class Test extends FlatSpec with Matchers {
     val passingTest = it

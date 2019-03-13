@@ -12,7 +12,6 @@ class testParameterSettingEventInterval  extends ExtractionTest {
       Seq("SKc", "0.5", "0.7")
     )
     val mentions = extractMentions(t1a)
-    mentions.foreach(m => println("---> " + m.text + " " + m.arguments.toString()))
     testParameterSettingEventInterval(mentions, desired)
   }
 

@@ -91,11 +91,12 @@ class ExpansionHandler() extends LazyLogging {
 
   // Do the expansion, but if the expansion causes you to suck up something we wanted to avoid, split at the
   // avoided thing and keep the half containing the original (pre-expansion) entity.
+  // todo: Currently we are only expanding TextBound Mentions, if another type is passed we return it un-expanded
+  // we should perhaps revisit this
   def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State): Mention = {
     val expanded = orig match {
       case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
       case _ => orig
-
     }
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
 

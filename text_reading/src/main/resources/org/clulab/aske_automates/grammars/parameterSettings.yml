@@ -71,7 +71,7 @@ rules:
       value: Concept = /nmod_to/
 
 
-  - name: var-noun_of
+  - name: var-noun_of_param
     label: IntervalParameterSetting
     priority: ${priority}
     type: token

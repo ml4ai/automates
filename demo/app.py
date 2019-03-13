@@ -6,8 +6,8 @@ from uuid import uuid4
 import subprocess as sp
 import importlib
 from pprint import pprint
-from delphi.translators.for2py.scripts import (
-    f2py_pp,
+from delphi.translators.for2py import (
+    preprocessor,
     translate,
     get_comments,
     pyTranslate,
@@ -37,6 +37,9 @@ class MyForm(FlaskForm):
         config={"lineNumbers": "true", "viewportMargin": 800},
     )
     submit = SubmitField("Submit", render_kw={"class":"btn btn-primary"})
+
+LEXER = PythonLexer()
+FORMATTER = HtmlFormatter()
 
 
 SECRET_KEY = "secret!"
@@ -82,7 +85,7 @@ def get_tooltip(n, lambdas):
             symbs = src_lines[0].split("(")[1].split(")")[0].split(", ")
             ltx = (
                 src_lines[0]
-                .split("__lambda__")[1]
+                .split("__")[2]
                 .split("(")[0]
                 .replace("_", "\_")
                 + " = "
@@ -90,14 +93,37 @@ def get_tooltip(n, lambdas):
                     sympify(src_lines[1][10:].replace("math.exp", "e^"))
                 ).replace("_", "\_")
             )
-            return f"\({ltx}\)"
+            return """
+            <nav>
+                <div class="nav nav-tabs" id="nav-tab-{n}" role="tablist">
+                    <a class="nav-item nav-link active" id="nav-eq-tab-{n}"
+                        data-toggle="tab" href="#nav-eq-{n}" role="tab"
+                        aria-controls="nav-eq-{n}" aria-selected="true">
+                        Equation
+                    </a>
+                    <a class="nav-item nav-link" id="nav-code-tab-{n}"
+                        data-toggle="tab" href="#nav-code-{n}" role="tab"
+                        aria-controls="nav-code-{n}" aria-selected="false">
+                        Lambda Function
+                    </a>
+                </div>
+            </nav>
+            <div class="tab-content" id="nav-tabContent" style="padding-top:1rem; padding-bottom: 0.5rem;">
+                <div class="tab-pane fade show active" id="nav-eq-{n}"
+                    role="tabpanel" aria-labelledby="nav-eq-tab-{n}">
+                    \({ltx}\)
+                </div>
+                <div class="tab-pane fade" id="nav-code-{n}" role="tabpanel"
+                    aria-labelledby="nav-code-tab-{n}">
+                    {src}
+                </div>
+            </div>
+            """.format(ltx=ltx, src=highlight(src, LEXER, FORMATTER), n=n)
     else:
         return json.dumps({"index": n.attr["index"]}, indent=2)
 
 
 def get_cyjs_elementsJSON_from_ScopeTree(A, lambdas) -> str:
-    lexer = PythonLexer()
-    formatter = HtmlFormatter()
     elements = {
         "nodes": [
             {
@@ -109,7 +135,7 @@ def get_cyjs_elementsJSON_from_ScopeTree(A, lambdas) -> str:
                     "color": n.attr["color"],
                     "textValign": "center",
                     "tooltip": get_tooltip(n, lambdas)
-                    # "tooltip": highlight(get_tooltip(n, lambdas), lexer, formatter),
+                    # "tooltip": highlight(get_tooltip(n, lambdas), LEXER, FORMATTER),
                 }
             }
             for n in A.nodes()
@@ -153,11 +179,37 @@ def processCode():
     input_code_tmpfile = f"/tmp/automates/{filename}.f"
     with open(input_code_tmpfile, "w") as f:
         f.write("".join(lines))
-    root = Scope.from_fortran_file(input_code_tmpfile, tmpdir="/tmp/automates")
+
+    with open(input_code_tmpfile, "r") as f:
+        inputLines = f.readlines()
+
+    with open(input_code_tmpfile, "w") as f:
+        f.write(preprocessor.process(inputLines))
+
+    xml_string = sp.run(
+        [
+            "java",
+            "fortran.ofp.FrontEnd",
+            "--class",
+            "fortran.ofp.XMLPrinter",
+            "--verbosity",
+            "0",
+            input_code_tmpfile,
+        ],
+        stdout=sp.PIPE,
+    ).stdout
+
+    trees = [ET.fromstring(xml_string)]
+    comments = get_comments.get_comments(input_code_tmpfile)
+    xml_to_json_translator = translate.XMLToJSONTranslator()
+    outputDict = xml_to_json_translator.analyze(trees, comments)
+    pySrc = pyTranslate.create_python_string(outputDict)[0][0]
+    lambdas = f"{filename}_lambdas"
+    lambdas_path = f"/tmp/automates/{lambdas}.py"
+    sys.path.insert(0, "/tmp/automates")
+    root = Scope.from_python_src(pySrc, lambdas_path, f"{filename}.json")
     scopetree_graph = root.to_agraph()
 
-    sys.path.insert(0, "/tmp/automates")
-    lambdas = f"{filename}_lambdas"
     scopeTree_elementsJSON = get_cyjs_elementsJSON_from_ScopeTree(
         scopetree_graph, importlib.__import__(lambdas)
     )
@@ -173,6 +225,7 @@ def processCode():
         "index.html",
         form=form,
         code=code,
+        python_code=highlight(pySrc, LEXER, FORMATTER),
         scopeTree_elementsJSON=scopeTree_elementsJSON,
         program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
     )
