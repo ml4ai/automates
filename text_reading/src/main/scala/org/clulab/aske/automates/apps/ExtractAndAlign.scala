@@ -38,6 +38,7 @@ object ExtractAndAlign {
     }
     println("-->" + lines_combined.length)
     val doc = proc.annotate(lines_combined.mkString(". "), keepText = true)
+    doc.id = filename
     doc
   }
 
