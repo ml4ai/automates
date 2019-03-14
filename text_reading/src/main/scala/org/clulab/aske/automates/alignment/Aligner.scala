@@ -16,7 +16,7 @@ trait Aligner {
 /**
   * Performs an exhaustive pairwise alignment, comparing each src item with each dst item independently of the others.
   * @param w2v
-  * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "Variable" or "Definition")
+  * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "variable" or "definition")
   */
 class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) extends Aligner {
 
