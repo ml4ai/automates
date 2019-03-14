@@ -2,6 +2,7 @@ package org.clulab.aske.automates.apps
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.aske.automates.alignment.Aligner
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -86,14 +87,13 @@ object ExtractAndAlign {
       docs.flatMap(commentReader.extractFrom)
     }
 
-//    // Align
-//    // todo
-//    val aligner = Aligner.fromConfig(config[Config]("alignment"))
-//    val alignment = aligner.alignSources(textMentions.seq, commentMentions.seq)
-//
-//    // Export alignment
-//    val outputDir = config[String]("apps.outputDirectory")
-//    // todo
+    // Align
+    val aligner = Aligner.fromConfig(config[Config]("alignment"))
+    val alignments = aligner.alignMentions(textMentions.seq, commentMentions.seq)
+
+    // Export alignment
+    val outputDir = config[String]("apps.outputDirectory")
+    // todo
 
   }
 }
