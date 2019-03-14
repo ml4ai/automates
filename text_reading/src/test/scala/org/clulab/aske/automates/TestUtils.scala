@@ -4,8 +4,14 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
 import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
+import org.clulab.processors.Document
+import org.clulab.serialization.json.JSONSerializer
+import org.json4s.jackson.JsonMethods._
 
 object TestUtils {
+
+  // From Processors -- I couldn't import it for some reason
+  def jsonStringToDocument(jsonstr: String): Document = JSONSerializer.toDocument(parse(jsonstr))
 
   class TesterTag extends Tag("TesterTag")
 
