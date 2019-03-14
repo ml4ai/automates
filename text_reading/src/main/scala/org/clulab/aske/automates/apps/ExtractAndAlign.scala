@@ -4,13 +4,40 @@ import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
 import org.clulab.processors.Document
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.FileUtils
+
+import scala.io.Source
 
 object ExtractAndAlign {
 
+  def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
+
   def parseCommentText(text: String, filename: Option[String] = None): Document = {
     // todo: make sure that the filename gets stored as the doc.id
-    ???
+    val proc = new FastNLPProcessor()
+    //val Docs = Source.fromFile(filename).getLines().mkString("\n")
+    val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1) yield ltrim(sent)//.split(" ")
+    var lines_combined = Array[String]()
+
+    for (line <- lines) {
+      //var prevLine = lines(lines.indexOf(line)-1)
+      if (line.startsWith(" ")) {
+        var prevLine = lines(lines.indexOf(line)-1)
+        prevLine = prevLine + " " + ltrim(line)
+        lines_combined = lines_combined.slice(0, lines_combined.size-1)
+        lines_combined = lines_combined :+ prevLine
+      }
+      else {
+        lines_combined = lines_combined :+ line
+      }
+    }
+    for (line <- lines_combined) {
+      println(line)
+    }
+    println("-->" + lines_combined.length)
+    val doc = proc.annotate(lines_combined.mkString(". "), keepText = true)
+    doc
   }
 
 
@@ -52,6 +79,7 @@ object ExtractAndAlign {
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
       val texts = dataLoader.loadFile(file)
+      println("TEXTS: " + texts.length)
       // Parse the comment texts
       // todo!!
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
