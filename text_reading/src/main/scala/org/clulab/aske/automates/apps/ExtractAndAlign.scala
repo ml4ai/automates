@@ -16,9 +16,6 @@ object ExtractAndAlign {
 
   def main(args: Array[String]): Unit = {
     val config: Config = ConfigFactory.load("automates")
-    for (abc <- config.entrySet().toArray()) {
-      println(abc)
-    }
 
     // Instantiate the text reader
     val textconfig: Config = config[Config]("TextEngine")
