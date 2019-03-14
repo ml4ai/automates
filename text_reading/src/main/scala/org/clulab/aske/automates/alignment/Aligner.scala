@@ -21,20 +21,6 @@ trait Aligner {
 class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) extends Aligner {
 
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
-    def mkTextFromArgs(argMap: Map[String, Seq[Mention]]): String = argMap.values.flatten.map(_.text).mkString(" ")
-    // Get the text from the arguments of the mention, but only the previously specified arguments
-    def getRelevantText(m: Mention): String = {
-      m match {
-        case tb: TextBoundMention => m.text
-        case rm: RelationMention =>
-          val relevantOnly = rm.arguments.filterKeys(arg => relevantArgs.contains(arg))
-          mkTextFromArgs(relevantOnly)
-        case em: EventMention =>
-          val relevantOnly = em.arguments.filterKeys(arg => relevantArgs.contains(arg))
-          mkTextFromArgs(relevantOnly)
-        case _ => ???
-      }
-    }
     alignTexts(srcMentions.map(getRelevantText), dstMentions.map(getRelevantText))
   }
 
@@ -53,6 +39,22 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
     val srcTokens = src.split(" ")
     val dstTokens = dst.split(" ")
     w2v.avgSimilarity(srcTokens, dstTokens) + w2v.maxSimilarity(srcTokens, dstTokens)
+  }
+
+  // Helper methods for handling mentions
+  def mkTextFromArgs(argMap: Map[String, Seq[Mention]]): String = argMap.values.flatten.map(_.text).mkString(" ")
+  // Get the text from the arguments of the mention, but only the previously specified arguments
+  def getRelevantText(m: Mention): String = {
+    m match {
+      case tb: TextBoundMention => m.text
+      case rm: RelationMention =>
+        val relevantOnly = rm.arguments.filterKeys(arg => relevantArgs.contains(arg))
+        mkTextFromArgs(relevantOnly)
+      case em: EventMention =>
+        val relevantOnly = em.arguments.filterKeys(arg => relevantArgs.contains(arg))
+        mkTextFromArgs(relevantOnly)
+      case _ => ???
+    }
   }
 }
 
