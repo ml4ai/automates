@@ -184,6 +184,12 @@ Once the job has been submitted to the scheduler, you can check the status of yo
 qstat -u $USER
 ```
 
+You can also peek at the progress of your script with
+
+```
+qpeek <jobid>
+```
+
 or interactively with [Open OnDemand](https://ood.hpc.arizona.edu/pun/sys/dashboard/apps/show/activejobs). The total compute time for testing is <2 minutes with exclusive access to 28 cores on 1 GPU on Ocelote.
 
 ### Debugging
@@ -219,4 +225,18 @@ python scripts/evaluation/evaluate_text_edit_distance.py --result-path results/r
 
 ### Submitting a Job on the HPC
 ```
+```
+
+
+### notes march 15
+
+```
+conda create -n im2markup python=2.7
+source activate im2markup
+conda install numpy pillow
+(install node.js)
+
+git clone git@github.com:harvardnlp/im2markup.git
+(follow preprocessing steps above)
+tar czvf im2markup.tar.gz im2markup
 ```
