@@ -8,6 +8,7 @@ import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.FileUtils
 
+
 import scala.io.Source
 
 object ExtractAndAlign {
@@ -15,22 +16,26 @@ object ExtractAndAlign {
   def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
 
   def parseCommentText(text: String, filename: Option[String] = None): Document = {
-    // todo: make sure that the filename gets stored as the doc.id
     val proc = new FastNLPProcessor()
     //val Docs = Source.fromFile(filename).getLines().mkString("\n")
-    val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1) yield ltrim(sent)//.split(" ")
+    val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1) yield ltrim(sent)
     var lines_combined = Array[String]()
+    // which lines we want to ignore (for now, may change later)
+    val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES)".r
 
-    for (line <- lines) {
-      //var prevLine = lines(lines.indexOf(line)-1)
+    for (line <- lines if ignoredLines.findAllIn(line).isEmpty) {
       if (line.startsWith(" ")) {
         var prevLine = lines(lines.indexOf(line)-1)
-        prevLine = prevLine + " " + ltrim(line)
-        lines_combined = lines_combined.slice(0, lines_combined.size-1)
-        lines_combined = lines_combined :+ prevLine
+        if (lines_combined.contains(prevLine)) {
+          prevLine = prevLine + " " + ltrim(line)
+          lines_combined = lines_combined.slice(0, lines_combined.length-1)
+          lines_combined = lines_combined :+ prevLine
+        }
       }
       else {
-        lines_combined = lines_combined :+ line
+        if (!lines_combined.contains(line)) {
+          lines_combined = lines_combined :+ line
+        }
       }
     }
     for (line <- lines_combined) {
