@@ -30,7 +30,7 @@ rules:
     #action: variableArguments
     action: selectShorterAsVariable
     pattern: |
-        @c1:Concept "-LRB-" @c2:Concept # "-RRB-"
+      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
 
 
     #todo: with the next two rules, more tests fail

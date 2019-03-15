@@ -36,7 +36,7 @@ object ExtractAndExport extends App with Configured {
   val dataLoader = DataLoader.selectLoader(inputExtension) // txt or json are supported, and we assume json == science parse json
   val exportAs = getArgStrings("apps.exportAs", None)
   val files = FileUtils.findFiles(inputDir, inputExtension)
-  val reader = new OdinEngine()
+  val reader = OdinEngine.fromConfig()
 
   // For each file in the input directory:
   files.par.foreach { file =>

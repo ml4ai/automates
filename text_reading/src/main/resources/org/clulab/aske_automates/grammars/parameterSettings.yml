@@ -14,12 +14,9 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
       # @trigger:Concept "=" @Value:Value
-      @variable:Variable (?<trigger> [word="="]) @value:Value
+      (@variable:Variable|@variable:Concept) (?<trigger> [word="="]) @value:Value
 
 
-  # todo: unify the priorities
-  # todo: try to get everything in a certain file to have the same priority, pass the priority in as a variable
-  # todo: so then you would have: `priority: ${priority}`
   - name: var-vary_between
     label: ParameterSetting
     priority: ${priority}
@@ -30,3 +27,64 @@ rules:
       trigger = [lemma='vary']
       variable:Variable = nsubjpass nmod_of
       value:Interval = nmod_between
+
+
+  - name: var-vary_between_symbols
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: token
+    #action: variableArguments
+    example: "Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield for 0.9 < Kcbmax < 1.15"
+    pattern: |
+      @valueLeast:Value [word = "<"] @variable:Concept [word = "<"] @valueMost:Value #todo: but Kcbmax is not found as concept; works if the var has been previously found (e.g., the rule works for Kcb because it has been found previously by stringmatcher
+
+  - name: var-more_than_symbol
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    #action: variableArguments
+    example: "The value of Kcbmax was varied between 0.9 and 1.4"
+    pattern: |
+      trigger = [lemma='>']
+      variable:Concept = <advmod <nummod
+      value:Value = <advmod [tag = "CD"]
+
+  - name: var-less_than_symbol
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    #action: variableArguments
+    example: "The value of Kcbmax was varied between 0.9 and 1.4"
+    pattern: |
+      trigger = [lemma='<']
+      variable:Concept = <dep <nummod <dep | <advmod <nummod
+      value:Value = </dep|advmod/ [tag = "CD"]
+
+  - name: var_hard-coded
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
+    pattern: |
+      trigger = [word=/(?i)^hard-coded/]
+      variable:Concept = nsubj
+      value: Concept = /nmod_to/
+
+
+  - name: var-noun_of_param
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: token
+    example: "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
+    pattern: |
+      (?<trigger> [lemma="value"]) of @variable:Variable from @valueLeast:Value to @valueMost:Value
+
+
+  - name: var-noun_of1
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    example: "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from DSSAT-CSM version 4.5 for Arizona conditions."
+    pattern: |
+      /(?i)with/ (an|a|the) @variable:Variable of @value:ValueAndUnit
+

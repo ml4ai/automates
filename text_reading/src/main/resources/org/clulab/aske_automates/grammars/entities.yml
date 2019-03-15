@@ -57,7 +57,7 @@ rules:
     type: token
     example: "E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      @Concept (?= is /correlated|defined|calculated|obtained/ /with|as|from/)
+      @Concept (?= [lemma = "be"] /correlated|defined|calculated|obtained/ /with|as|from/)
 
   - name: var_calculate
     label: Variable
@@ -66,6 +66,14 @@ rules:
     example: "The approach uses model-simulated LAI to calculate the Kcb."
     pattern: |
       (?<= calculate) @Concept
+
+#  - name: var_indices
+#    label: Variable
+#    priority: ${priority}
+#    type: token
+#    example: "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
+#    pattern: |
+#      (?<= indexed by) @Concept
 
   - name: var_versus
     label: Variable
@@ -146,3 +154,11 @@ rules:
     example: ""
     pattern: |
       [word=/^DSSAT/]
+
+  - name: var_csm_model
+    label: Variable # should this be a Model instead?
+    priority: ${priority}
+    type: token
+    example: ""
+    pattern: |
+      [word = /^CSM.*/]

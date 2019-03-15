@@ -91,8 +91,13 @@ class ExpansionHandler() extends LazyLogging {
 
   // Do the expansion, but if the expansion causes you to suck up something we wanted to avoid, split at the
   // avoided thing and keep the half containing the original (pre-expansion) entity.
+  // todo: Currently we are only expanding TextBound Mentions, if another type is passed we return it un-expanded
+  // we should perhaps revisit this
   def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State): Mention = {
-    val expanded = expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
+    val expanded = orig match {
+      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
+      case _ => orig
+    }
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
 
     // split expanded at trigger (only thing in state to avoid)
@@ -223,7 +228,7 @@ class ExpansionHandler() extends LazyLogging {
     (
       VALID_OUTGOING.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
         ! INVALID_OUTGOING.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
-      )// || (
+      ) // || (
 //      // Allow exception to close parens, etc.
 //      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
 //      )
@@ -368,7 +373,10 @@ object ExpansionHandler {
     "^nmod_since".r,
     "^nmod_without$".r,
     "^punct".r,
-    "^ref$".r
+    "^ref$".r,
+    "appos".r,
+    //"nmod_for".r,
+    "nmod".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
@@ -396,8 +404,8 @@ object ExpansionHandler {
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
     "^amod$".r,
-    "^compound$".r,
-    "^nmod_of".r
+    "^compound$".r//,
+    //"^nmod_of".r
   )
 
   def apply() = new ExpansionHandler()

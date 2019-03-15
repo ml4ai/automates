@@ -48,7 +48,9 @@
                 arrow: true,
                 hideOnClick: 'toggle',
                 multiple: true,
-                sticky: true
+                sticky: true,
+                interactive: true,
+                theme: 'light',
             }).tooltips[0];
         };
         computational_graph.nodes().forEach(function(ele){
