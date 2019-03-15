@@ -21,12 +21,13 @@ case class GrFNSource(
   sourceType: String
 )
 
+// fixme
 case class GrFNBody(
   bodyType: Option[String],
   name: String,
   reference: Option[Int],
-  input: Option[],
-  output: Option[]
+  //input: Option[], // fixme
+  //output: Option[]
 )
 
 case class GrFNVariable(
