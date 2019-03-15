@@ -14,10 +14,11 @@ from pdf2image import convert_from_path
 from PIL import Image
 
 import sys
-sys.path.append('./scripts/preprocessing')
+#sys.path.append('/home/jkadowaki/im2markup/utils')
+sys.path.append('/home/jkadowaki/im2markup/scripts/preprocessing')
 import preprocess_images, preprocess_formulas, preprocess_filter
 
-sys.path.append('./scripts/evaluation')
+sys.path.append('/home/jkadowaki/im2markup/scripts/evaluation')
 try:
     import evaluate_image
 except ImportError:
@@ -29,29 +30,30 @@ except ImportError:
 ################################################################################
 
 """
-    OBJECTIVE:
-    Make (toy first, then using the full test set) a tsv with the columns:
-    image_name \t gold_tokens \t generated_tokens \t compiled_yesno
-    
+OBJECTIVE:
+
     docker container:
     `./docker.sh python -u <file_you're_running.py> <args.....>`
-    
-    """
+
+"""
 
 ################################################################################
 
 def create_directory(path):
     
     """
-        Creates a new directory if one does not exist.
+    Creates a new directory if one does not exist.
         
-        Args:
-        path (str): Name of directory
+    Args:
+        path (str) - Name of directory
         
-        """
-    #
+    """
+    
+    # Tries to Create a New Directory
     try:
         os.makedirs(path)
+    
+    # Raises an Exception if Directory Already Exists
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
@@ -59,32 +61,33 @@ def create_directory(path):
 
 ################################################################################
 
-def get_data(directory, extension=".pdf"):
+def get_data(directory, extension=".pdf", prefix=None):
     
     """
-        Walks through specified directory to find all files with specified extension.
-        
-        Args:
+    Walks through specified directory to find all files with specified extension.
+    
+    Args:
         directory (str) - Name of Directory to Search
         extension (str) - Extension of File to Search
-        
-        Returns:
-        A list of file names satisfying extension criteria.
-        """
-    #
-    file_results = []
-    #
+    
+    Returns:
+    An iterator of file names satisfying extension criteria.
+    """
+
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith(extension):
-                file_results.append(os.path.join(root, file))
-    #
-    return file_results
+            if all([file.endswith(extension),
+                    (prefix is None or file.startswith(prefix)) ]):
+
+                # Creates an Iterator of File Names
+                yield os.path.join(root, file)
 
 
 ################################################################################
 
-def main(directory='.', rawdata_directory='./img_eqn_pairs'):
+def main(directory='./data_20190315',
+         rawdata_directory='/projects/automates/arxiv/output',
+         a4=True):
     
     """
     Renders all images
@@ -98,12 +101,13 @@ def main(directory='.', rawdata_directory='./img_eqn_pairs'):
     """
 
     # File Names
-    gold_image = "equation.pdf"
-    gold_latex = "tokens.json"
-    formulas   = "formulas.lst"
-    norm       = "formulas.norm.lst"
-    test       = "test.lst"
-    filter     = "test_filter.lst"
+    gold_prefix = "equation_im2markup"
+    gold_im_ext = ".pdf"
+    gold_latex  = "tokens.json"
+    formulas    = "formulas.lst"
+    norm        = "formulas.norm.lst"
+    test        = "test.lst"
+    filter      = "test_filter.lst"
 
     # Directories
     img_dir    = "images"
@@ -123,55 +127,73 @@ def main(directory='.', rawdata_directory='./img_eqn_pairs'):
     create_directory(os.path.join(directory, img_dir))
 
     # Retrieves a List of Gold Images
-    gold_img_list = get_data(rawdata_directory, extension=gold_image)
-    
+    gold_img_iter = get_data(rawdata_directory,
+                             prefix=gold_prefix,
+                             extension=gold_im_ext)
+
     # Creates a Formula List & Test List
     tex_list  = open(os.path.join(directory, formulas), "w")
     test_list = open(os.path.join(directory, test), "w")
 
-    for idx, img_file in enumerate(gold_img_list):
-        #
-        # Corresponding Gold LaTeX File
-        tex_file = img_file.replace(gold_image, gold_latex)
-        print(tex_file)
-        #
-        # Store Contents of Text File
-        with open(tex_file) as f:     # Opens File
-            data = json.load(f)       # Loads Data from JSON File
+    # Equation Counter
+    idx = 0
+    
+    
+    while True:
+        
+        # Checks Whether  Equation Exists
+        try:
+            img_file = next(gold_img_iter)
+        except StopIteration:
+            break
+        else:
+            # Corresponding Gold LaTeX File
+            tex_file = img_file.replace(gold_prefix + gold_im_ext, gold_latex)
+            print(tex_file)
             #
-            # Extract LaTeX Tokens from Tex File & Write to LST File
-            tex_list.write("".join([d.get('value') for d in data]) + "\n")
-        #
-        # Creates a Transparent Image of Desired Size
-        blank = Image.new('RGBA', (width, height), color)
-        #
-        # Convert PDF Image to PNG File
-        # Note: Do NOT use 'transparent=True' parameter in convert_from_path!
-        #       RGB-values set to Black (0,0,0) when transparency is set to 0.
-        image = convert_from_path(img_file, dpi=dpi, fmt='png')[0].convert('RGBA')
-        new_data = []
-        for item in image.getdata():
-            if item[0] == 255 and item[1] == 255 and item[2] == 255:
-                new_data.append((255, 255, 255, 0))
+            # Store Contents of Text File
+            with open(tex_file) as f:     # Opens File
+                data = json.load(f)       # Loads Data from JSON File
+                #
+                # Extract LaTeX Tokens from Tex File & Write to LST File
+                tex = "".join([d.get("value") for d in data])
+                tex_list.write(tex + "\n")
+                print(tex)
+            #
+            # Convert PDF Image to PNG File
+            # Note: Do NOT use 'transparent=True' parameter in convert_from_path!
+            #       RGB-values set to Black (0,0,0) when transparency is set to 0.
+            image = convert_from_path(img_file, dpi=dpi, fmt='png')[0].convert('RGBA')
+            new_data = []
+            for item in image.getdata():
+                if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                    new_data.append((255, 255, 255, 0))
+                else:
+                    new_data.append(item)
+            image.putdata(new_data)
+            #
+            # File Name Convension to Save PNG Image
+            ppr = os.path.basename(os.path.dirname(os.path.dirname(img_file)))
+            eqn = os.path.basename(os.path.dirname(img_file))
+            img = ppr + "_" + eqn + ".png"
+            #
+            if a4:
+                image.save(os.path.join(directory, img_dir, img), "PNG", quality=100)
             else:
-                new_data.append(item)
-        image.putdata(new_data)
-        #
-        # Compute Image Offset for Centering onto Transparent Image
-        img_width, img_height = image.size
-        offset = ((width - img_width) // 2, voffset - img_height//2)
-        #
-        # Paste Image onto Full-Sized Transparent Blank Images
-        blank.paste(image, offset)
-        #
-        # File Name Convension to Save PNG Image
-        ppr = os.path.basename(os.path.dirname(os.path.dirname(img_file)))
-        eqn = os.path.basename(os.path.dirname(img_file))
-        img = ppr + "_" + eqn + ".png"
-        blank.save(os.path.join(directory, img_dir, img), "PNG", quality=100)
-        #
-        # Write Test List
-        test_list.write(" ".join([str(idx), os.path.splitext(img)[0], "basic\n"]))
+                # Creates a Transparent Image of Desired Size
+                blank = Image.new('RGBA', (width, height), color)
+                #
+                # Compute Image Offset for Centering onto Transparent Image
+                img_width, img_height = image.size
+                offset = ((width - img_width) // 2, voffset - img_height//2)
+                #
+                # Paste Image onto Full-Sized Transparent Blank Images
+                blank.paste(image, offset)
+                blank.save(os.path.join(directory, img_dir, img), "PNG", quality=100)
+                #
+            # Write Test List
+            test_list.write(" ".join([str(idx), os.path.splitext(img)[0], "basic\n"]))
+            idx += 1
 
     # Closes File
     tex_list.close()
@@ -201,4 +223,7 @@ def main(directory='.', rawdata_directory='./img_eqn_pairs'):
 ################################################################################
 
 if __name__ == '__main__':
-    main(directory='./data/img_eqn_pairs')
+    #main(directory='./data/img_eqn_pairs')
+    main(directory='/home/jkadowaki/automates',
+         rawdata_directory='/projects/automates/arxiv/output')
+
