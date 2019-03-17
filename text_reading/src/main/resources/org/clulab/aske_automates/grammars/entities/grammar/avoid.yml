@@ -37,3 +37,13 @@ rules:
     pattern: |
       #avoids equal signs
       [word="="]
+
+  # todo: verify that this prevents double finding when the StringMatchEF is used
+  # todo: verify there are no expansion ramifications due to Avoid label
+  - name: "prev_found_variable"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      #avoids previously found Variables
+      [mention=Variable]

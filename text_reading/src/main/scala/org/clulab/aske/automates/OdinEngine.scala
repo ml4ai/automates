@@ -76,9 +76,10 @@ class OdinEngine(
   def extractFrom(doc: Document): Vector[Mention] = {
     // Add any mentions from the entityFinders to the initial state
     if (entityFinders.nonEmpty) {
+      println("Using EFs")
       initialState = initialState.updated(entityFinders.flatMap(ef => ef.extract(doc)))
     }
-    // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
+//     println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
@@ -137,7 +138,7 @@ object OdinEngine {
   // Used by LexiconNER
   val NER_OUTSIDE = "O"
 
-  def fromConfig(odinConfig: Config = ConfigFactory.load("automates")): OdinEngine = {
+  def fromConfig(odinConfig: Config = ConfigFactory.load("automates")[Config]("TextEngine")): OdinEngine = {
 //    // The config with the main settings
 //    val odinConfig: Config = config[Config]("TextEngine")
 
@@ -150,7 +151,7 @@ object OdinEngine {
     val taxonomyPath: String = odinConfig[String]("taxonomyPath")
 
     // EntityFinders: used to find entities ahead of time
-    val enableEntityFinder: Boolean = odinConfig.get[Boolean]("entityFinder.enable").getOrElse(false)
+    val enableEntityFinder: Boolean = odinConfig.get[Boolean]("entityFinder.enabled").getOrElse(false)
     val entityFinders: Seq[EntityFinder] = if (enableEntityFinder) {
       val entityFinderConfig: Config = odinConfig[Config]("entityFinder")
       val finderTypes: List[String] = entityFinderConfig[List[String]]("finderTypes")
