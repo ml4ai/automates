@@ -9,15 +9,49 @@ import org.clulab.aske.automates.entities.StringMatchEntityFinder
 import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
 import org.clulab.processors.Document
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.FileUtils
 import org.slf4j.LoggerFactory
+
+
+import scala.io.Source
 
 object ExtractAndAlign {
 
   val logger = LoggerFactory.getLogger(this.getClass())
+
+  def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
+
   def parseCommentText(text: String, filename: Option[String] = None): Document = {
-    // todo: make sure that the filename gets stored as the doc.id
-    ???
+    val proc = new FastNLPProcessor()
+    //val Docs = Source.fromFile(filename).getLines().mkString("\n")
+    val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1) yield ltrim(sent)
+    var lines_combined = Array[String]()
+    // which lines we want to ignore (for now, may change later)
+    val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES)".r
+
+    for (line <- lines if ignoredLines.findAllIn(line).isEmpty) {
+      if (line.startsWith(" ")) {
+        var prevLine = lines(lines.indexOf(line)-1)
+        if (lines_combined.contains(prevLine)) {
+          prevLine = prevLine + " " + ltrim(line)
+          lines_combined = lines_combined.slice(0, lines_combined.length-1)
+          lines_combined = lines_combined :+ prevLine
+        }
+      }
+      else {
+        if (!lines_combined.contains(line)) {
+          lines_combined = lines_combined :+ line
+        }
+      }
+    }
+    for (line <- lines_combined) {
+      println(line)
+    }
+    println("-->" + lines_combined.length)
+    val doc = proc.annotate(lines_combined.mkString(". "), keepText = true)
+    doc.id = filename
+    doc
   }
 
 
@@ -71,6 +105,7 @@ object ExtractAndAlign {
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
       val texts = dataLoader.loadFile(file)
+      println("TEXTS: " + texts.length)
       // Parse the comment texts
       // todo!!
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
