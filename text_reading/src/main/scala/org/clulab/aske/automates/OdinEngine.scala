@@ -22,6 +22,10 @@ class OdinEngine(
   enableExpansion: Boolean,
   filterType: String) {
 
+  // Initial State for Odin
+  // todo: cleaner way than a var?
+  var initialState = new State()
+
   val documentFilter: DocumentFilter = filterType match {
     case "none" => PassThroughFilter()
     case "length" => FilterByLength(proc, cutoff = 150)
@@ -68,11 +72,9 @@ class OdinEngine(
 
 
   def extractFrom(doc: Document): Vector[Mention] = {
-    // Prepare the initial state -- if you are using the entity finder then it contains the found entities,
-    // else it is empty
-    val initialState = entityFinders match {
-      case Seq() => new State()
-      case _ => State(entityFinders.flatMap(ef => ef.extract(doc)))
+    // Add any mentions from the entityFinders to the initial state
+    if (entityFinders.nonEmpty) {
+      initialState = initialState.updated(entityFinders.flatMap(ef => ef.extract(doc)))
     }
     // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
