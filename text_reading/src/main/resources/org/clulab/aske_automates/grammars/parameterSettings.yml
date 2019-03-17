@@ -18,7 +18,7 @@ rules:
 
 
   - name: var-vary_between
-    label: ParameterSetting
+    label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
     #action: variableArguments

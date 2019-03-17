@@ -13,7 +13,7 @@ rules:
 #    vars:
 #      priority: 2
 
-  - import: "org/clulab/aske_automates/grammars/definitions.yml"
+  - import: "org/clulab/aske_automates/grammars/comments/definitions.yml"
     vars:
       priority: 3
 
