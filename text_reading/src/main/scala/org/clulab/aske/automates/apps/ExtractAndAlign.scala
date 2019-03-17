@@ -1,8 +1,11 @@
 package org.clulab.aske.automates.apps
 
+import java.io.File
+
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.alignment.Aligner
+import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
 import org.clulab.processors.Document
 import org.clulab.utils.FileUtils
@@ -46,7 +49,16 @@ object ExtractAndAlign {
     val commentDataLoader = DataLoader.selectLoader(commentInputType) // txt, json (science parse) supported
     val commentFiles = FileUtils.findFiles(commentInputDir, commentDataLoader.extension)
 
-    
+
+    // Get the Variable names from the GrFn
+    val grfnFile: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later
+    val grfn = GrFNParser.mkDocument(new File(grfnFile))
+    val grfnVars = GrFNDocument.getVariables(grfn)
+    val variableNames = grfnVars.map(_.name)
+    println(variableNames.mkString("\n"))
+
+    // Make a StringMatchEF based on the variable names
+
     // Read the comments
     val commentMentions = commentFiles.par.flatMap { file =>
       // Open corresponding output file and make all desired exporters

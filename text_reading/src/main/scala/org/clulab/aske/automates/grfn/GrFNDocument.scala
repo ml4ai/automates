@@ -8,10 +8,10 @@ case class GrFNDocument (
 
 case class GrFNFunction(
   name: String,
-  functionType: String,
+  functionType: Option[String],
   sources: Option[Vector[GrFNSource]],
   body: Option[Vector[GrFNBody]],
-  target: String,
+  target: Option[String],
   input: Option[Vector[GrFNVariable]],
   variables: Option[Vector[GrFNVariable]]
 )
@@ -39,3 +39,13 @@ case class GrFNIO(
   name: String,
   index: Int
 )
+
+object GrFNDocument {
+  def getVariables(grfnDocument: GrFNDocument): Seq[GrFNVariable] = {
+    val variables = for {
+      f <- grfnDocument.functions
+      vs <- f.variables
+    } yield vs
+    variables.flatten
+  }
+}

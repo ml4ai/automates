@@ -24,7 +24,8 @@ libraryDependencies ++= {
     "com.typesafe"  %  "config"                   % "1.3.1",
     "org.json4s"              %%  "json4s-core"               % json4sVersion,
 
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2"
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+    "com.lihaoyi" %% "upickle" % "0.7.1"
   )
 }
 

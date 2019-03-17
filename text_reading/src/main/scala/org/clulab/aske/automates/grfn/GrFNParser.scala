@@ -24,19 +24,19 @@ object GrFNParser {
 
   def mkFunction(json: ujson.Js): GrFNFunction = {
     val name: String = json("name").str
-    val functionType: String = json("functionType").str
+    val functionType: Option[String] = json.obj.get("functionType").map(_.str)
     val sources: Option[Vector[GrFNSource]] = json.obj.get("sources").map(_.arr.map(mkSource).toVector)
     val body: Option[Vector[GrFNBody]] = json.obj.get("body").map(_.arr.map(mkBody).toVector)
-    val target: String = json("target").str
-    val input: Option[Vector[GrFNVariable]] = json.obj.get("body").map(_.arr.map(mkInput).toVector)
-    val variables: Option[Vector[GrFNVariable]] = json.obj.get("body").map(_.arr.map(mkVariable).toVector)
+    val target: Option[String] = json.obj.get("target").map(_.str)
+    val input: Option[Vector[GrFNVariable]] = json.obj.get("input").map(_.arr.map(mkInput).toVector)
+    val variables: Option[Vector[GrFNVariable]] = json.obj.get("variables").map(_.arr.map(mkVariable).toVector)
     GrFNFunction(name, functionType, sources, body, target, input, variables)
   }
 
 
   def mkSource(json: ujson.Js): GrFNSource = {
     val name = json("name").str
-    val sourceType = json("sourceType").str
+    val sourceType = json("type").str
     GrFNSource(name, sourceType)
   }
 
