@@ -1,5 +1,6 @@
 package org.clulab.aske.automates
 
+import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
 import org.scalatest._
@@ -50,7 +51,7 @@ object TestUtils {
   }
 
   class ExtractionTest(val ieSystem: OdinEngine) extends Test {
-    def this(config: Config = ConfigFactory.load("test")) = this(newOdinSystem(config))
+    def this(config: Config = ConfigFactory.load("test")) = this(newOdinSystem(config[Config]("TextEngine")))
 
     def extractMentions(text: String): Seq[Mention] = TestUtils.extractMentions(ieSystem, text)
 
