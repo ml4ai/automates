@@ -24,7 +24,7 @@ class OdinEngine(
 
   // Initial State for Odin
   // todo: cleaner way than a var?
-  var initialState = new State()
+  private var initialState = new State()
 
   val documentFilter: DocumentFilter = filterType match {
     case "none" => PassThroughFilter()
@@ -60,6 +60,8 @@ class OdinEngine(
   def engine = loadableAttributes.engine
   def reload() = loadableAttributes = LoadableAttributes()
 
+  // Accessor Method for initial state
+  def updateInitialState(ms: Seq[Mention]) = initialState = initialState.updated(ms)
 
   // MAIN PIPELINE METHOD
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
