@@ -62,6 +62,7 @@ class OdinEngine(
 
   // Accessor Method for initial state
   def updateInitialState(ms: Seq[Mention]) = initialState = initialState.updated(ms)
+  def resetInitialState(ms: Seq[Mention]) = initialState = State(ms)
 
   // MAIN PIPELINE METHOD
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
