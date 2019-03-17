@@ -20,15 +20,15 @@ class OdinEngine(
   val entityFinders: Seq[EntityFinder],
   val lexiconNER: Option[LexiconNER],
   enableExpansion: Boolean,
-  filterType: String) {
+  filterType: Option[String]) {
 
   // Initial State for Odin
   // todo: cleaner way than a var?
   private var initialState = new State()
 
   val documentFilter: DocumentFilter = filterType match {
-    case "none" => PassThroughFilter()
-    case "length" => FilterByLength(proc, cutoff = 150)
+    case None => PassThroughFilter()
+    case Some("length") => FilterByLength(proc, cutoff = 150)
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
   }
 
@@ -143,7 +143,7 @@ object OdinEngine {
 
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
-    val filterType = odinConfig[String]("documentFilter")
+    val filterType = odinConfig.get[String]("documentFilter")
 
     // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
