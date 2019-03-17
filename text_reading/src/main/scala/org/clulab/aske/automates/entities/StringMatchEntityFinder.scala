@@ -43,4 +43,6 @@ object StringMatchEntityFinder {
     new StringMatchEntityFinder(strings.toSet, label)
   }
 
+  def fromStrings(ss: Seq[String], label: String): StringMatchEntityFinder = new StringMatchEntityFinder(ss.toSet, label)
+
 }
