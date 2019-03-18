@@ -4,14 +4,14 @@ rules:
 
 ####DEFINITIONS####
 
-  - name: var_is_definition
+  - name: var_definition
     label: Definition
     priority: ${priority}
     type: token
     example: "TK4 is Temperature to 4th power ((oK)**4)"
     #action: variableArguments
     pattern: |
-      @variable:Variable is (?<Definition> /.*/)
+      @variable:Variable (?<Definition> [word = /.*/ & !word="-LRB-"]+)
 
 #  - name: var_definition_appos
 #    label: Definition

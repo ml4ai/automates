@@ -117,6 +117,9 @@ object ExtractAndAlign {
         // Reset the odin initial state with the found GrFN variables
         _ = commentReader.resetInitialState(foundGrFNVars)
       } yield commentReader.extractFrom(doc)
+      for (m <- mentions) {
+        println("-->", m.mkString(" "))
+      }
 
       mentions.flatten
     }
