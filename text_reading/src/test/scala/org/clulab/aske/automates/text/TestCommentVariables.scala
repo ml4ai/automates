@@ -11,9 +11,6 @@ class TestCommentVariables extends ExtractionFromCommentsTest {
 
     val desired = Seq("EEQ")
     val mentions = extractMentions(t1)
-    for (m <- mentions) {
-      println("--> " + m.text + " " + m.label)
-    }
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
@@ -24,9 +21,6 @@ class TestCommentVariables extends ExtractionFromCommentsTest {
 
     val desired = Seq()  // this is from revision history; do we eliminate these in preprocessing? Can probably make a neg lookbehind for date format? but can keep the test in case it gets in as a sentence
     val mentions = extractMentions(t2)
-    for (m <- mentions) {
-      println("--> " + m.text + " " + m.label)
-    }
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
