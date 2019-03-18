@@ -76,9 +76,9 @@ class OdinEngine(
 
   def extractFrom(doc: Document): Vector[Mention] = {
     // Add any mentions from the entityFinders to the initial state
-    if (entityFinders.nonEmpty) {
-      println("Using EFs")
-      initialState = initialState.updated(entityFinders.flatMap(ef => ef.extract(doc)))
+    val initialState = entityFinders match {
+      case Seq() => new State()
+      case _ => State(entityFinders.flatMap(ef => ef.extract(doc)))
     }
 //     println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
