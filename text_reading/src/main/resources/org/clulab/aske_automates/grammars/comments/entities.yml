@@ -1,0 +1,15 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+
+
+####VARIABLES####
+
+  - name: var_is_defined
+    label: Variable
+    priority: 1
+    type: token
+    example: "E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      ^[chunk="B-NP" & !tag="CD"]

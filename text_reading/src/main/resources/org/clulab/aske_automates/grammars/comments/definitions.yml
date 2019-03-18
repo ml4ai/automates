@@ -8,10 +8,10 @@ rules:
     label: Definition
     priority: ${priority}
     type: token
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    example: "TK4 is Temperature to 4th power ((oK)**4)"
     #action: variableArguments
     pattern: |
-      @variable:Variable ( is| is defined as) (an|a|the) @definition:Concept
+      @variable:Variable is (?<Definition> /.*/)
 
 #  - name: var_definition_appos
 #    label: Definition
@@ -21,16 +21,16 @@ rules:
 #    #action: variableArguments
 #    pattern: |
 #        @variable:Variable "-LRB-" @definition:Concept "-RRB-"
-
-  - name: var_definition_appos_bidir
-    label: Definition
-    priority: ${priority}
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    #action: variableArguments
-    action: selectShorterAsVariable
-    pattern: |
-      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
+#
+#  - name: var_definition_appos_bidir
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+#    #action: variableArguments
+#    action: selectShorterAsVariable
+#    pattern: |
+#      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
 
 
     #todo: with the next two rules, more tests fail
