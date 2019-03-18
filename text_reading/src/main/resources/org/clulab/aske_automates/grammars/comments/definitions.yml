@@ -8,50 +8,8 @@ rules:
     label: Definition
     priority: ${priority}
     type: token
-    example: "TK4 is Temperature to 4th power ((oK)**4)"
+    example: "EEQ Equilibrium evaporation (mm/d)"
     #action: variableArguments
     pattern: |
-      @variable:Variable (?<Definition> [word = /.*/ & !word="-LRB-"]+)
+       @variable:Variable (?<definition> [word = /.*/ & !word="-LRB-"]+)
 
-#  - name: var_definition_appos
-#    label: Definition
-#    priority: ${priority}
-#    type: token
-#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-#    #action: variableArguments
-#    pattern: |
-#        @variable:Variable "-LRB-" @definition:Concept "-RRB-"
-#
-#  - name: var_definition_appos_bidir
-#    label: Definition
-#    priority: ${priority}
-#    type: token
-#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-#    #action: variableArguments
-#    action: selectShorterAsVariable
-#    pattern: |
-#      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
-
-
-    #todo: with the next two rules, more tests fail
-#  - name: var_verb
-#    label: Definition
-#    priority: ${priority}
-#    type: dependency
-#    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
-#    pattern: |
-#      trigger = [word=/(?i)^calculat|defin/]
-#      variable:Concept+ = /${agents}/
-#      defintion: Concept = /nmod_as|nmod_by|nmod_with/
-#      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-#
-#  - name: var_cop_definition
-#    label: Definition
-#    priority: ${priority}
-#    type: dependency
-#    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
-#    pattern: |
-#      trigger = [lemma="be"]
-#      variable:Concept+ = <cop /${agents}/
-#      defintion: Concept = <cop
-#      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"

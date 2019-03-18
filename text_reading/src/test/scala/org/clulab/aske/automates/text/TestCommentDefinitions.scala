@@ -5,27 +5,21 @@ import org.clulab.aske.automates.TestUtils._
 class TestCommentDefinitions extends ExtractionFromCommentsTest {
 
 
-  val t1a = "EEQ equilibrium evaporation (mm/d)"
+  val t1a = "EEQ Equilibrium evaporation (mm/d)"
   passingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "EEQ" -> Seq("equilibrium evaporation")
+      "EEQ" -> Seq("Equilibrium evaporation")
     )
     val mentions = extractMentions(t1a)
-    for (m <- mentions) {
-      println("--> " + m.text + " " + "Label: " + m.label )
-    }
     testDefinitionEvent(mentions, desired)
   }
 
-  val t2a = "S rate of change of saturated vapor pressure of air with temperature (Pa/K)"
+  val t2a = "S Rate of change of saturated vapor pressure of air with temperature (Pa/K)"
   passingTest should s"extract definitions from t1a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "S" -> Seq("rate of change of saturated vapor pressure of air with temperature")
+      "S" -> Seq("Rate of change of saturated vapor pressure of air with temperature")
     )
     val mentions = extractMentions(t2a)
-    for (m <- mentions) {
-      println("--> " + m.text + " " + m.label)
-    }
     testDefinitionEvent(mentions, desired)
   }
 
