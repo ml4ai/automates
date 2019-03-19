@@ -3,7 +3,7 @@ package org.clulab.aske.automates.text
 import org.clulab.aske.automates.OdinEngine.VARIABLE_LABEL
 import org.clulab.aske.automates.TestUtils._
 
-class TestCommentVariables extends ExtractionTest {
+class TestCommentVariables extends ExtractionFromCommentsTest {
 
   val t1 = "EEQ is equilibrium evaporation (mm/d)"
   passingTest should s"extract variables from t1: ${t1}" taggedAs(Somebody) in {
