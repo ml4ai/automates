@@ -27,7 +27,7 @@ rules:
     type: token
     pattern: |
       # avoid xrefs
-      [tag=NNP] "et" "al." @Avoid
+      [tag=/NNP|FW/] (?="et" "al")
 
 
   - name: "equal_sign"
