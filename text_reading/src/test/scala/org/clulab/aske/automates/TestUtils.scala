@@ -30,7 +30,10 @@ object TestUtils {
   protected var mostRecentConfig: Option[Config] = None
 
   // This is the standard way to extract mentions for testing
-  def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = ieSystem.extractFromText(text, true, None)
+  def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = {
+    ieSystem.resetInitialState(Seq.empty)
+    ieSystem.extractFromText(text, true, None)
+  }
 
   def newOdinSystem(config: Config): OdinEngine = this.synchronized {
     val readingSystem =
