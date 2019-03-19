@@ -105,7 +105,7 @@ object ExtractAndAlign {
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
       val texts = dataLoader.loadFile(file)
-      println("TEXTS: " + texts.length)
+      //println("TEXTS: " + texts.length)
       // Parse the comment texts
       // todo!!
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
@@ -117,6 +117,9 @@ object ExtractAndAlign {
         // Reset the odin initial state with the found GrFN variables
         _ = commentReader.resetInitialState(foundGrFNVars)
       } yield commentReader.extractFrom(doc)
+//      for (m <- mentions) {
+//        println("-->", m.mkString(" "))
+//      }
 
       mentions.flatten
     }

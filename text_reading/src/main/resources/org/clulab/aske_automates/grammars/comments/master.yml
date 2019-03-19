@@ -5,17 +5,17 @@ vars: "org/clulab/aske_automates/grammars/triggers.yml"
 rules:
 
 
-  - import: "org/clulab/aske_automates/grammars/entities.yml"
+  - import: "org/clulab/aske_automates/grammars/comments/entities.yml"
     vars:
       priority: 1
 
 #  - import: "org/clulab/aske_automates/grammars/intervalVariables.yml"
 #    vars:
 #      priority: 2
-
+#
   - import: "org/clulab/aske_automates/grammars/comments/definitions.yml"
     vars:
-      priority: 3
+      priority: 2
 
 #  - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
 #    vars:
