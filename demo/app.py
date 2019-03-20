@@ -19,7 +19,7 @@ from delphi.GrFN.scopes import Scope
 from delphi.GrFN.ProgramAnalysisGraph import ProgramAnalysisGraph
 import delphi.paths
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 from flask_wtf import FlaskForm
 from flask_codemirror.fields import CodeMirrorField
 from wtforms.fields import SubmitField
@@ -169,12 +169,14 @@ def index():
 def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
-    return response
+    flash(response.json["message"])
+    return render_template("index.html", code=app.code)
 
 @app.route("/processCode", methods=["POST"])
 def processCode():
     form = MyForm()
     code = form.source_code.data
+    app.code=code
     if code == "":
         return render_template("index.html", form=form)
     lines = [
@@ -227,7 +229,7 @@ def processCode():
     return render_template(
         "index.html",
         form=form,
-        code=code,
+        code=app.code,
         python_code=highlight(pySrc, LEXER, FORMATTER),
         scopeTree_elementsJSON=scopeTree_elementsJSON,
         program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,
