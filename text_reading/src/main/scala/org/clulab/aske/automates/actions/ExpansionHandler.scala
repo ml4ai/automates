@@ -39,9 +39,9 @@ class ExpansionHandler() extends LazyLogging {
           // mention to the right of the trigger
           math.abs(m.start - t.end)
         } else {
-          logger.debug(s"Unexpected overlap of trigger and argument: \n\t" +
+          logger.debug(s"distToTrigger: Unexpected overlap of trigger and argument: \n\t" +
             s"sent: [${m.sentenceObj.getSentenceText}]\n\tRULE: " +
-            s"${t.foundBy}\n\ttrigger: ${t.text}\torig: [${m.text}]\n")
+            s"${m.foundBy}\n\ttrigger: ${t.text}\torig: [${m.text}]\n")
           m.start
         }
       } else {
@@ -117,9 +117,9 @@ class ExpansionHandler() extends LazyLogging {
             //throw new RuntimeException("original mention overlaps trigger")
             // This shouldn't happen, but Odin seems to handle this situation gracefully (by not extracting anything),
             // I guess here we'll do the same (i.e., not throw an exception)
-            logger.debug(s"Unexpected overlap of trigger and argument: \n\t" +
+            logger.debug(s"ExpandIfNotAvoid: Unexpected overlap of trigger and argument: \n\t" +
               s"sent: [${orig.sentenceObj.getSentenceText}]\n\tRULE: " +
-              s"${trigger.foundBy}\n\ttrigger: ${trigger.text}\torig: [${orig.text}]\n")
+              s"${orig.foundBy}\n\ttrigger: ${trigger.text}\torig: [${orig.text}]\n")
             orig
           }
         } else {
