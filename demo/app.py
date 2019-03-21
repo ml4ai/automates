@@ -207,7 +207,7 @@ def processCode():
     comments = get_comments.get_comments(input_code_tmpfile)
     xml_to_json_translator = translate.XMLToJSONTranslator()
     outputDict = xml_to_json_translator.analyze(trees, comments)
-    pySrc = pyTranslate.create_python_string(outputDict)[0][0]
+    pySrc = pyTranslate.create_python_source_list(outputDict)[0][0]
 
     lambdas = f"{filename}_lambdas"
     lambdas_path = f"/tmp/automates/{lambdas}.py"
