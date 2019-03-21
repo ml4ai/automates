@@ -2,9 +2,12 @@ package org.clulab.aske.automates.quantities
 
 import com.typesafe.config.Config
 import ai.lum.common.ConfigUtils._
+import org.slf4j.LoggerFactory
 import requests.TimeoutException
 
 object GrobidQuantitiesClient {
+  val logger = LoggerFactory.getLogger(this.getClass())
+
   def fromConfig(config: Config): GrobidQuantitiesClient = {
     val domain = config[String]("domain")
     val port = config[String]("port")
@@ -17,6 +20,8 @@ class GrobidQuantitiesClient(
     val port: String
 ) {
 
+  import GrobidQuantitiesClient.logger
+
   val url = s"http://$domain:$port/service/processQuantityText"
   val timeout: Int = 150000
 
@@ -28,7 +33,10 @@ class GrobidQuantitiesClient(
     } catch { // todo: we can count these one day... should we log them now?
       case time: TimeoutException => Vector.empty[Measurement]
       case parse: ujson.ParseException =>
-        println(s"ujson.ParseException with: $text")
+        logger.warn(s"ujson.ParseException with: $text")
+        Vector.empty[Measurement]
+      case incomplete: ujson.IncompleteParseException =>
+        logger.warn(s"ujson.IncompleteParseException with: $text")
         Vector.empty[Measurement]
       case other: Throwable => throw other
     }
@@ -40,7 +48,7 @@ class GrobidQuantitiesClient(
     case "listc" => Some(mkValueListFromListc(json))
     //case t => throw new RuntimeException(s"unsupported measurement type '$t'")
     case t =>
-      println(s"WARNING: there was an unsupported Measurement type ==> $t")
+      logger.warn(s"there was an unsupported Measurement type ==> $t")
       None
   }
 

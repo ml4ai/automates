@@ -62,7 +62,7 @@ class OdinEngine(
 
   // Accessor Method for initial state
   def updateInitialState(ms: Seq[Mention]) = initialState = initialState.updated(ms)
-  def resetInitialState(ms: Seq[Mention]) = initialState = State(ms)
+  def resetInitialState(ms: Seq[Mention] = Seq.empty) = initialState = State(ms)
 
   // MAIN PIPELINE METHOD
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -77,10 +77,9 @@ class OdinEngine(
   def extractFrom(doc: Document): Vector[Mention] = {
     // Add any mentions from the entityFinders to the initial state
     if (entityFinders.nonEmpty) {
-      println("Using EFs")
       initialState = initialState.updated(entityFinders.flatMap(ef => ef.extract(doc)))
     }
-//     println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
+    // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
