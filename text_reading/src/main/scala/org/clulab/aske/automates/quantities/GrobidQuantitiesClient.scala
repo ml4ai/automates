@@ -38,7 +38,6 @@ class GrobidQuantitiesClient(
       case incomplete: ujson.IncompleteParseException =>
         logger.warn(s"ujson.IncompleteParseException with: $text")
         Vector.empty[Measurement]
-      case other: Throwable => throw other
     }
   }
 

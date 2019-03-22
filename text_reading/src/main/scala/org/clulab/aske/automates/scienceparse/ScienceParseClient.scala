@@ -27,7 +27,7 @@ object ScienceParseClient {
     val title = json.obj.get("title").map(_.str)
     val year = json("year").num.toInt
     val authors = json("authors").arr.map(mkAuthor).toVector
-    val abstractText = json("abstractText").str
+    val abstractText = json.obj.get("abstractText").map(_.str)
     val sections = json("sections").arr.map(mkSection).toVector
     val references = json("references").arr.map(mkReference).toVector
     ScienceParseDocument(id, title, year, authors, abstractText, sections, references)

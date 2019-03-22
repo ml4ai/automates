@@ -92,6 +92,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val outer = m.arguments("c1").head
       val inner = m.arguments("c2").head
       val sorted = Seq(outer, inner).sortBy(_.text.length)
+      // The longest mention (i.e., the definition) should be at least 3 characters, else it's likely a false positive
+      // todo: tune
+      // todo: should we constrain on the length of the variable name??
+      if (sorted.last.text.length < 3) {
+        return Seq.empty
+      }
       val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
       val definition = changeLabel(sorted.last, DEFINITION_LABEL) // the longest if the definition
       val defMention = m match {
