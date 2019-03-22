@@ -53,7 +53,7 @@ rules:
     pattern: |
       #avoids pointers to equations/figures as those are frequently found as variables
       #might need to be revisited
-      [word=/figs?|eqs?/] [word="."]
+      [word=/(?i)figs?|eqs?/] [word="."]
 
   # todo: verify that this prevents double finding when the StringMatchEF is used
   # todo: verify there are no expansion ramifications due to Avoid label
@@ -78,6 +78,21 @@ rules:
     type: token
     pattern: |
       [word="i.e"]
+
+  - name: "person" #doesn't work bc Kcbmin is found as PERSON
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="PERSON"] [entity="PERSON"] [entity="PERSON"]
+
+
+  - name: "person_2" #doesn't work bc Kcbmin is found as PERSON
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="PERSON"] [entity="PERSON"]
 
 
 
