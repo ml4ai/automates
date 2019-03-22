@@ -125,15 +125,15 @@ object ExtractAndAlign {
     // Align
     val aligner = Aligner.fromConfig(config[Config]("alignment"))
     val variableMentions = textMentions.seq.filter(_ matches "Definition")
-//    // ----------------------------------
-//    val pw = new PrintWriter("/Users/bsharp/definitions.txt")
-//    for (m <- variableMentions) {
-//      pw.println("**************************************************")
-//      pw.println(m.sentenceObj.getSentenceText)
-//      DisplayUtils.printMention(m, pw)
-//      pw.println("")
-//    }
-//    pw.close()
+    // ----------------------------------
+    val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
+    for (m <- variableMentions) {
+      pw.println("**************************************************")
+      pw.println(m.sentenceObj.getSentenceText)
+      DisplayUtils.printMention(m, pw)
+      pw.println("")
+    }
+    pw.close()
 
     // ----------------------------------
     val alignments = aligner.alignMentions(variableMentions, commentMentions)
