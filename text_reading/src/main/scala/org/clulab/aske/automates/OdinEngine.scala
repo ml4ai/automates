@@ -22,10 +22,6 @@ class OdinEngine(
   enableExpansion: Boolean,
   filterType: Option[String]) {
 
-  // Initial State for Odin
-  // todo: cleaner way than a var?
-  private var initialState = new State()
-
   val documentFilter: DocumentFilter = filterType match {
     case None => PassThroughFilter()
     case Some("length") => FilterByLength(proc, cutoff = 150)
@@ -60,10 +56,6 @@ class OdinEngine(
   def engine = loadableAttributes.engine
   def reload() = loadableAttributes = LoadableAttributes()
 
-  // Accessor Method for initial state
-  def updateInitialState(ms: Seq[Mention]) = initialState = initialState.updated(ms)
-  def resetInitialState(ms: Seq[Mention]) = initialState = State(ms)
-
   // MAIN PIPELINE METHOD
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
     val doc = annotate(text, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
@@ -74,13 +66,13 @@ class OdinEngine(
   }
 
 
-  def extractFrom(doc: Document): Vector[Mention] = {
+  def extractFrom(doc: Document, initialMentions: Seq[Mention] = Seq.empty): Vector[Mention] = {
+    var initialState = State(initialMentions)
     // Add any mentions from the entityFinders to the initial state
     if (entityFinders.nonEmpty) {
-      println("Using EFs")
       initialState = initialState.updated(entityFinders.flatMap(ef => ef.extract(doc)))
     }
-//     println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
+    // println(s"In extractFrom() -- res : ${initialState.allMentions.map(m => m.text).mkString(",\t")}")
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector

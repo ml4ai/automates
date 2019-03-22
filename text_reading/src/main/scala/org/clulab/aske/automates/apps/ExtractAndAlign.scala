@@ -1,6 +1,6 @@
 package org.clulab.aske.automates.apps
 
-import java.io.File
+import java.io.{File, PrintWriter}
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -10,9 +10,8 @@ import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.utils.FileUtils
+import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
-
 
 import scala.io.Source
 
@@ -76,6 +75,7 @@ object ExtractAndAlign {
       val texts = dataLoader.loadFile(file)
       texts.flatMap(textReader.extractFromText(_, filename = Some(file.getName)))
     }
+    println(s"Extracted ${textMentions.length} text mentions")
 
     // Instantiate the comment reader
     val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
@@ -104,7 +104,7 @@ object ExtractAndAlign {
       // Open corresponding output file and make all desired exporters
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
-      val texts = dataLoader.loadFile(file)
+      val texts = commentDataLoader.loadFile(file)
       //println("TEXTS: " + texts.length)
       // Parse the comment texts
       // todo!!
@@ -114,9 +114,7 @@ object ExtractAndAlign {
         doc <- docs
         // Find occurrences of the GrFN Variables
         foundGrFNVars = stringMatcher.extract(doc)
-        // Reset the odin initial state with the found GrFN variables
-        _ = commentReader.resetInitialState(foundGrFNVars)
-      } yield commentReader.extractFrom(doc)
+      } yield commentReader.extractFrom(doc, foundGrFNVars)
 //      for (m <- mentions) {
 //        println("-->", m.mkString(" "))
 //      }
@@ -126,7 +124,26 @@ object ExtractAndAlign {
 
     // Align
     val aligner = Aligner.fromConfig(config[Config]("alignment"))
-    val alignments = aligner.alignMentions(textMentions.seq, commentMentions)
+    val variableMentions = textMentions.seq.filter(_ matches "Definition")
+//    // ----------------------------------
+//    val pw = new PrintWriter("/Users/bsharp/definitions.txt")
+//    for (m <- variableMentions) {
+//      pw.println("**************************************************")
+//      pw.println(m.sentenceObj.getSentenceText)
+//      DisplayUtils.printMention(m, pw)
+//      pw.println("")
+//    }
+//    pw.close()
+
+    // ----------------------------------
+    val alignments = aligner.alignMentions(variableMentions, commentMentions)
+    alignments.foreach{ a =>
+      val v1Text = variableMentions(a.src).text
+      val v2Text = commentMentions(a.dst).text
+      println(s"text: ${v1Text}")
+      println(s"comment: ${v2Text}")
+      println(s"score: ${a.score}\n")
+    }
 
     // Export alignment
     val outputDir = config[String]("apps.outputDirectory")

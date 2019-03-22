@@ -51,13 +51,15 @@ object GrFNParser {
   def mkInput(json: ujson.Js): GrFNVariable = {
     val name: String = json("name").str
     val domain: String = json("domain").str
-    GrFNVariable(name, domain)
+    val description: Option[GrFNProvenance] = None // fixme
+    GrFNVariable(name, domain, description)
   }
 
   def mkVariable(json: ujson.Js): GrFNVariable = {
     val name: String = json("name").str
     val domain: String = json("domain").str
-    GrFNVariable(name, domain)
+    val description: Option[GrFNProvenance] = None // fixme
+    GrFNVariable(name, domain, description)
   }
 
 }

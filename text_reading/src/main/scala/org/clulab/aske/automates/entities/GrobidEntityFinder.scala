@@ -9,8 +9,8 @@ import org.clulab.struct.{Interval => TokenInterval}
 import org.clulab.utils.DisplayUtils
 import ai.lum.common.ConfigUtils._
 import org.clulab.odin.impl.Taxonomy
-
 import org.clulab.aske.automates.OdinActions
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -59,18 +59,22 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
 
         // Get the TBM for the unit, if any
         if (quantity.rawUnit.isDefined) {
-          val unit = quantity.rawUnit.get
-          val rawUnit = unit.name
-          val unitTokenInterval = getTokenOffsets(doc, sentence, unit.offset.get.start, unit.offset.get.end) // if there is a raw unit, it will always have an Offset
-          // todo: we're assuming the same sentence as the values above, revisit?
-          val unitMention = new TextBoundMention(getLabels(UNIT_LABEL), unitTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
-          mentions.append(unitMention)
+          try {
+            val unit = quantity.rawUnit.get
+            val rawUnit = unit.name
+            val unitTokenInterval = getTokenOffsets(doc, sentence, unit.offset.get.start, unit.offset.get.end) // if there is a raw unit, it will always have an Offset
+            // todo: we're assuming the same sentence as the values above, revisit?
+            val unitMention = new TextBoundMention(getLabels(UNIT_LABEL), unitTokenInterval, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+            mentions.append(unitMention)
 
-          // Make the RelationMention
-          val arguments = Map(GrobidEntityFinder.VALUE_ARG -> Seq(rawValueMention), GrobidEntityFinder.UNIT_ARG -> Seq(unitMention))
-          // todo: using same sentence as above and empty map for paths
-          val quantityWithUnitMention = new RelationMention(getLabels(VALUE_AND_UNIT), mkTokenInterval(arguments), arguments, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
-          mentions.append(quantityWithUnitMention)
+            // Make the RelationMention
+            val arguments = Map(GrobidEntityFinder.VALUE_ARG -> Seq(rawValueMention), GrobidEntityFinder.UNIT_ARG -> Seq(unitMention))
+            // todo: using same sentence as above and empty map for paths
+            val quantityWithUnitMention = new RelationMention(getLabels(VALUE_AND_UNIT), mkTokenInterval(arguments), arguments, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
+            mentions.append(quantityWithUnitMention)
+          } catch {
+            case r: RuntimeException => logger.warn(s"Unable to make mention from grobid quantity: ${quantity.rawValue}, in sentence: ${doc.sentences(sentence).getSentenceText}")
+          }
         }
 
         // return
@@ -189,6 +193,8 @@ object GrobidEntityFinder {
   val MOST_ARG: String = "most"
   // Other
   val GROBID_FOUNDBY: String = "GrobidEntityFinder"
+
+  val logger = LoggerFactory.getLogger(this.getClass())
 
   def fromConfig(config: Config): GrobidEntityFinder = {
     val taxonomy = OdinActions.readTaxonomy(config[String]("taxonomy"))
