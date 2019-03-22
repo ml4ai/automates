@@ -25,10 +25,10 @@ The processing of the input source code proceeds as follows:
 Many of the components in the pipeline described above can be run as stand-alone programs as described below.
 
 * **Preprocessing:**
-    `python preprocessor.py` *infile* *outfile*
+    `python preprocessor.py` *in_file* *out_file*
 
 * **Comment processing:** 
-    `python get_comments.py` *src_file_name*
+    `python get_comments.py` *src_file*
 
 * **OFP parser:**
     `java fortran.ofp.FrontEnd --class fortran.ofp.XMLPrinter --verbosity 0` *src_file* `>` *ast_file*
@@ -45,4 +45,10 @@ Many of the components in the pipeline described above can be run as stand-alone
 
 #### Updates
 
->TODO: Summary (bullet points) of updates since last report.
+Our implementation effort since the last report has focused on the following:
+
+1) **Modules.** At the time of our previous report, we were able to read in Fortran modules into the `for2py` IR.  Since then we have focused on translating this IR into the corresponding GrFN representation.  This led to a reexamination and generalization of the treatment of scopes and namespaces in GrFN.  We have now incorporated this generalization into the translation of module constructs in `for2py`.
+2) **Derived types.** These are the Fortran equivalent of `struct`s in the C programming language; `for2py` translates these into `@dataclass` objects in Python.  The translation of derived types is complicated by `OFP`'s handling of this construct (see above, under *AST rectification*).  We are currently working on (*a*) refactoring and cleaning up our initial code to handle derived types to use rectification; and (*b*) extending the implementation to handle nested derived types.
+3) **Testing and debugging.** We have been working on testing and debugging the end-to-end translation pipeline to improve its usability and robustness.
+4) **Refactoring.** We have been working on refactoring the `for2py` code to make it easier to understand and maintain.
+
