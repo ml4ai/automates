@@ -25,7 +25,6 @@ The processing of the input source code proceeds as follows:
 Many of the components in the pipeline described above can be run as stand-alone programs as described below.
 
 * **Preprocessing:**
-
     `python preprocessor.py` *infile* *outfile*
 
 * **Comment processing:** 
