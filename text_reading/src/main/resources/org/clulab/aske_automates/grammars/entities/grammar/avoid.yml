@@ -64,3 +64,22 @@ rules:
     pattern: |
       #avoids previously found Variables
       [mention=Variable]
+
+  - name: "YEAR"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="DATE"]
+
+  - name: "ie"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [word="i.e"]
+
+
+
+
+
