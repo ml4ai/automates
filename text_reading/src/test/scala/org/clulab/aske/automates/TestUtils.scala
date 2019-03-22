@@ -31,7 +31,6 @@ object TestUtils {
 
   // This is the standard way to extract mentions for testing
   def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = {
-    ieSystem.resetInitialState(Seq.empty)
     ieSystem.extractFromText(text, true, None)
   }
 
