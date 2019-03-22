@@ -29,6 +29,14 @@ rules:
       # avoid xrefs
       [tag=/NNP|FW/] (?="et" "al")
 
+  - name: "references-name-year"
+    label: Avoid
+    priority: 3
+    type: token
+    pattern: |
+      # avoid xrefs
+      [tag=/NNP|FW/] (?= "," [tag=CD])
+
 
   - name: "equal_sign"
     label: Avoid

@@ -4,6 +4,7 @@ rules:
 
 ####DEFINITIONS####
 
+#    todo: tests pass only for token rules
   - name: var_is_definition
     label: Definition
     priority: ${priority}
@@ -11,7 +12,17 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     #action: variableArguments
     pattern: |
-      @variable:Variable ( is| is defined as) (an|a|the) @definition:Concept
+      @variable:Variable ( is| is defined as ) (an|a|the) @definition:Concept
+
+
+  - name: var_equals_def #needed bc of bad parse
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    #action: variableArguments
+    pattern: |
+      @variable:Variable "=" (an|a|the)? (?! [tag=CD]) @definition:Concept
 
 #  - name: var_definition_appos
 #    label: Definition
@@ -40,9 +51,9 @@ rules:
     type: dependency
     example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      trigger = [word=/(?i)^calculat|defin/]
-      variable:Concept+ = /${agents}/
-      defintion: Concept = /nmod_as|nmod_by|nmod_with/
+      trigger = [word=/(?i)^defin|represent|=/]
+      variable:Concept = /${agents}/
+      defintion: Concept = /nmod_as|nmod_by|nmod_with|dobj/
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 #
   - name: var_cop_definition
