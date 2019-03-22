@@ -114,9 +114,7 @@ object ExtractAndAlign {
         doc <- docs
         // Find occurrences of the GrFN Variables
         foundGrFNVars = stringMatcher.extract(doc)
-        // Reset the odin initial state with the found GrFN variables
-        _ = commentReader.resetInitialState(foundGrFNVars)
-      } yield commentReader.extractFrom(doc)
+      } yield commentReader.extractFrom(doc, foundGrFNVars)
 //      for (m <- mentions) {
 //        println("-->", m.mkString(" "))
 //      }
