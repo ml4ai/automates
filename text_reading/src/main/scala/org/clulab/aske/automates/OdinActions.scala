@@ -105,6 +105,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
           foundBy=foundBy(rm.foundBy),
           tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
+        case em: EventMention => em.copy(
+          arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
+          foundBy=foundBy(em.foundBy),
+          tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
         case _ => ???
       }
       Seq(variable, defMention)

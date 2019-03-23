@@ -33,18 +33,29 @@ rules:
 #    pattern: |
 #        @variable:Variable "-LRB-" @definition:Concept "-RRB-"
 
-  - name: var_definition_appos_bidir
+#  - name: var_definition_appos_bidir
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+#    #action: variableArguments
+#    action: selectShorterAsVariable
+#    pattern: |
+#      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
+
+  - name: var_def_appos_bidir_dep
     label: Definition
     priority: ${priority}
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    #action: variableArguments
+    type: dependency
     action: selectShorterAsVariable
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
-      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
+      trigger = [word="-LRB-"]
+      c1:Concept = <punct
+      c2: Concept = <punct <appos
+      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
 
-    #todo: with the next two rules, more tests fail
   - name: var_verb
     label: Definition
     priority: ${priority}
