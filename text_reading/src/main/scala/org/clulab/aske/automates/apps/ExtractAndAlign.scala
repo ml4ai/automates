@@ -129,6 +129,7 @@ object ExtractAndAlign {
     val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
     for (m <- variableMentions) {
       pw.println("**************************************************")
+      pw.println("count: " + variableMentions.indexOf(m))
       pw.println(m.sentenceObj.getSentenceText)
       DisplayUtils.printMention(m, pw)
       pw.println("")

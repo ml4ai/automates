@@ -53,7 +53,7 @@ rules:
     pattern: |
       trigger = [word=/(?i)^defin|represent|=/]
       variable:Concept = /${agents}/
-      defintion: Concept = /nmod_as|nmod_by|nmod_with|dobj/
+      definition: Concept = /nmod_as|nmod_by|nmod_with|dobj/
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 #
   - name: var_cop_definition
@@ -64,5 +64,5 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Concept+ = <cop /${agents}/
-      defintion: Concept = <cop (?! case)
+      definition: Concept = <cop (?! case)
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
