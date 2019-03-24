@@ -19,7 +19,7 @@ object GrFNParser {
     val start: String = json("start").str
     val name: String = json("name").str
     val dateCreated: String = json("dateCreated").str
-    GrFNDocument(functions, start, name, dateCreated)
+    GrFNDocument(functions, start, name, dateCreated, None, None) // fixme
   }
 
   def mkFunction(json: ujson.Js): GrFNFunction = {
