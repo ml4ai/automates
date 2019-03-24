@@ -24,7 +24,8 @@ libraryDependencies ++= {
     "org.scalatest" %% "scalatest"                % "3.0.4" % "test",
     "com.typesafe"  %  "config"                   % "1.3.1",
     "org.json4s"    %%  "json4s-core"             % json4sVersion,
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2"
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+    "org.apache.commons" % "commons-text" % "1.6"
   )
 }
 

@@ -7,7 +7,10 @@ case class GrFNDocument (
   functions: Vector[GrFNFunction],
   start: String,
   name: String,
-  dateCreated: String)
+  dateCreated: String,
+  variables: Option[Seq[GrFNVariable]],
+  alignments: Option[Seq[GrFNAlignment]]
+)
 object GrFNDocument {
   implicit val rw: RW[GrFNDocument] = macroRW
 
@@ -67,9 +70,9 @@ case class GrFNProvenance(
 )
 object GrFNProvenance {implicit val rw: RW[GrFNProvenance] = macroRW}
 
-case class GrFNAlignments(
+case class GrFNAlignment(
   src: String,
   dst: String,
   score: Double
 )
-object GrFNAlignments {implicit val rw: RW[GrFNAlignments] = macroRW}
+object GrFNAlignment {implicit val rw: RW[GrFNAlignment] = macroRW}

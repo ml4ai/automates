@@ -4,14 +4,15 @@ import java.io.{File, PrintWriter}
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.alignment.Aligner
+import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
 import org.clulab.aske.automates.entities.StringMatchEntityFinder
-import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
+import org.clulab.aske.automates.grfn._
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
+import upickle.default._
 
 import scala.io.Source
 
@@ -122,33 +123,90 @@ object ExtractAndAlign {
       mentions.flatten
     }
 
-    // Align
-    val aligner = Aligner.fromConfig(config[Config]("alignment"))
-    val variableMentions = textMentions.seq.filter(_ matches "Definition")
-    // ----------------------------------
-    val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
-    for (m <- variableMentions) {
-      pw.println("**************************************************")
-      pw.println("count: " + variableMentions.indexOf(m))
-      pw.println(m.sentenceObj.getSentenceText)
-      DisplayUtils.printMention(m, pw)
-      pw.println("")
-    }
-    pw.close()
+    // Align the comment definitions to the GrFN variables
+    val commentDefinitionMentions = commentMentions.filter(_ matches "Definition")
+    val variableNameAligner = new VariableEditDistanceAligner
+    val varNameAlignments = variableNameAligner.alignTexts(variableNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
+    val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
+
+
+    // Align the comment definitions to the text definitions
+    val w2vAligner = Aligner.fromConfig(config[Config]("alignment"))
+    val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
 
     // ----------------------------------
-    val alignments = aligner.alignMentions(variableMentions, commentMentions)
-    alignments.foreach{ a =>
-      val v1Text = variableMentions(a.src).text
-      val v2Text = commentMentions(a.dst).text
-      println(s"text: ${v1Text}")
-      println(s"comment: ${v2Text}")
-      println(s"score: ${a.score}\n")
-    }
+    // Debug:
+//    val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
+//    for (m <- textDefinitionMentions) {
+//      pw.println("**************************************************")
+//      pw.println(m.sentenceObj.getSentenceText)
+//      DisplayUtils.printMention(m, pw)
+//      pw.println("")
+//    }
+//    pw.close()
+    // ----------------------------------
 
-    // Export alignment
+    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    val topKAlignments = Aligner.topKBySrc(commentToTextAlignments, 3)
+
+    // ----------------------------------
+    // Debug:
+    topKAlignments.foreach { aa =>
+      println("====================================================================")
+      println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
+      println("====================================================================")
+      aa.foreach { topK =>
+        val v1Text = commentDefinitionMentions(topK.src).text
+        val v2Text = textDefinitionMentions(topK.dst).text
+        println(s"comment: ${v1Text}")
+        println(s"text: ${v2Text}")
+        println(s"score: ${topK.score}\n")
+      }
+    }
+    // ----------------------------------
+
+    // Export alignment:
     val outputDir = config[String]("apps.outputDirectory")
-    // todo
+    // Map the Comment Variables (from Definition Mentions) to a Seq[GrFNVariable]
+    val commentGrFNVars = commentDefinitionMentions.map{ commentDef =>
+      val name = commentDef.arguments("variable").head.text + "_COMMENT"
+      val domain = "COMMENT"
+      val definition = commentDef.arguments("definition").head.text
+      val provenance = GrFNProvenance(definition, commentDef.document.id.getOrElse("COMMENT-UNK"), commentDef.sentence)
+      GrFNVariable(name, domain, Some(provenance))
+    }
+    // Map the Text Variables (from Definition Mentions) to a Seq[GrFNVariable]
+    val textGrFNVars = textDefinitionMentions.map{ textDef =>
+      val name = textDef.arguments("variable").head.text + "_TEXT"
+      val domain = "TEXT"
+      val definition = textDef.arguments("definition").head.text
+      val provenance = GrFNProvenance(definition, textDef.document.id.getOrElse("TEXT-UNK"), textDef.sentence)
+      GrFNVariable(name, domain, Some(provenance))
+    }
+    val topLevelVariables = grfnVars ++ commentGrFNVars ++ textGrFNVars
 
+    // Gather the alignments from src variable to comment definition
+    // srcSet is the sorted group of alignments for a particular src variable
+    val srcVarToCommentGrFNAlignments = top1ByVariableName.flatMap { srcSet =>
+      srcSet.map(a => mkGrFNAlignment(a, grfnVars, commentGrFNVars))
+    }
+    // Gather the alignments from comment definition to text definition
+    // srcSet is the sorted group of alignments for a particular src variable
+    val commentToTextGrFNAlignments = topKAlignments.flatMap { srcSet =>
+      srcSet.map(a => mkGrFNAlignment(a, commentGrFNVars, textGrFNVars))
+    }
+    val topLevelAlignments = srcVarToCommentGrFNAlignments ++ commentToTextGrFNAlignments
+
+    val grfnToExport = GrFNDocument(grfn.functions, grfn.start, grfn.name, grfn.dateCreated, Some(topLevelVariables), Some(topLevelAlignments))
+    val grfnWriter = new PrintWriter(s"$outputDir/grfn_with_alignments.json")
+    grfnWriter.println(write(grfnToExport))
+    grfnWriter.close()
+  }
+
+  def mkGrFNAlignment(a: Alignment, srcs: Seq[GrFNVariable], dsts: Seq[GrFNVariable]): GrFNAlignment = {
+    val srcVar = srcs(a.src).name
+    val dstVar = dsts(a.dst).name
+    val score = a.score
+    GrFNAlignment(srcVar, dstVar, score)
   }
 }
