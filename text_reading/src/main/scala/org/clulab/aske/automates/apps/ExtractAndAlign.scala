@@ -124,10 +124,11 @@ object ExtractAndAlign {
 
     // Align
     val aligner = Aligner.fromConfig(config[Config]("alignment"))
-    val variableMentions = textMentions.seq.filter(_ matches "Definition")
+    val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
+    val commentDefinitionMentions = commentMentions.filter(_ matches "Definition")
     // ----------------------------------
     val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
-    for (m <- variableMentions) {
+    for (m <- textDefinitionMentions) {
       pw.println("**************************************************")
       pw.println(m.sentenceObj.getSentenceText)
       DisplayUtils.printMention(m, pw)
@@ -136,13 +137,19 @@ object ExtractAndAlign {
     pw.close()
 
     // ----------------------------------
-    val alignments = aligner.alignMentions(variableMentions, commentMentions)
-    alignments.foreach{ a =>
-      val v1Text = variableMentions(a.src).text
-      val v2Text = commentMentions(a.dst).text
-      println(s"text: ${v1Text}")
-      println(s"comment: ${v2Text}")
-      println(s"score: ${a.score}\n")
+    val allAlignments = aligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    val topKAlignments = Aligner.topKBySrc(allAlignments, 10)
+    topKAlignments.foreach { aa =>
+      println("====================================================================")
+      println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
+      println("====================================================================")
+      aa.foreach { topK =>
+        val v1Text = textDefinitionMentions(topK.src).text
+        val v2Text = commentMentions(topK.dst).text
+        println(s"text: ${v1Text}")
+        println(s"comment: ${v2Text}")
+        println(s"score: ${topK.score}\n")
+      }
     }
 
     // Export alignment

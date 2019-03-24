@@ -77,4 +77,12 @@ object Aligner {
       case _ => ???
     }
   }
+
+  def topKBySrc(alignments: Seq[Alignment], k: Int): Seq[Seq[Alignment]] = {
+    val grouped = alignments.groupBy(_.src).toSeq
+    for {
+      (srcIdx, aa) <- grouped
+      topK = aa.sortBy(-_.score).slice(0,k)
+    } yield topK
+  }
 }
