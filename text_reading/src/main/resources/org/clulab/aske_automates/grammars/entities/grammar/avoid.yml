@@ -94,6 +94,12 @@ rules:
     pattern: |
       [entity="PERSON"] [entity="PERSON"]
 
+  - name: "person_2authors"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="PERSON"] [word="and"] [entity="PERSON"]
 
 
 
