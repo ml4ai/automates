@@ -105,6 +105,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
           foundBy=foundBy(rm.foundBy),
           tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
+//         case em: EventMention => em.copy(//alexeeva wrote this to try to try to fix an appos. dependency rule todo: what seems to need don
+        //is changing the keys in 'paths' to variable and defintion bc as of now they show up downstream (in the expansion handler) as c1 and c2
+//           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
+//           foundBy=foundBy(em.foundBy),
+//           tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
         case _ => ???
       }
       Seq(variable, defMention)

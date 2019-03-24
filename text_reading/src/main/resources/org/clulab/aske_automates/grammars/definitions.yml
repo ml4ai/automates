@@ -12,7 +12,7 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     #action: variableArguments
     pattern: |
-      @variable:Variable ( is| is defined as ) (an|a|the) @definition:Concept
+      @variable:Variable [tag="-LRB-"] [] [tag="-RRB-"] ( is| is defined as ) (an|a|the) @definition:Concept
 
 
   - name: var_equals_def #needed bc of bad parse
@@ -32,7 +32,7 @@ rules:
 #    #action: variableArguments
 #    pattern: |
 #        @variable:Variable "-LRB-" @definition:Concept "-RRB-"
-
+#
   - name: var_definition_appos_bidir
     label: Definition
     priority: ${priority}
@@ -43,8 +43,19 @@ rules:
     pattern: |
       @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
 
+#  - name: var_def_appos_bidir_dep
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+#    action: selectShorterAsVariable
+#    pattern: |
+#      trigger = [word="-LRB-"]
+#      c1:Concept = <punct
+#      c2:Concept = <punct <appos
+#      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
-    #todo: with the next two rules, more tests fail
+
   - name: var_verb
     label: Definition
     priority: ${priority}
@@ -53,9 +64,9 @@ rules:
     pattern: |
       trigger = [word=/(?i)^defin|represent|=/]
       variable:Concept = /${agents}/
-      definition: Concept = /nmod_as|nmod_by|nmod_with|dobj/
+      definition: Concept+ = /nmod_as|nmod_by|nmod_with|dobj/ nmod_of?
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-#
+
   - name: var_cop_definition
     label: Definition
     priority: ${priority}
@@ -64,5 +75,15 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Concept+ = <cop /${agents}/
-      definition: Concept = <cop (?! case)
+      definition: Concept = <cop (?! case) nmod_for?
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+#  - name: var_respectively_first
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "We achieve the above by learning the transformation matrix as follows: W = UtBU ⊤ s , where Ut and Us are the orthogonal transformations for target and source language embeddings, respectively, and B is a positive definite matrix representing the Mahalanobis metric."
+#    pattern: |
+#      trigger = [lemma="be"]
+#      variable: Concept = <cop /${agents}/
+#      definition: Concept =
