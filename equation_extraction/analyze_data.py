@@ -12,15 +12,10 @@ import os
 from PIL import Image
 
 import sys
-#sys.path.append('./data/code/equation_extraction')
-#sys.path.append('./code/equation_extraction')
 sys.path.append('/home/jkadowaki/im2markup/code/equation_extraction')
 from collect_data import render_tex, render_equation
 
 
-#sys.path.append('./im2markup/scripts/evaluation')
-#sys.path.append('./scripts/evaluation')
-#sys.path.append('./utils')
 sys.path.append('/home/jkadowaki/im2markup/scripts/evaluation')
 sys.path.append('/home/jkadowaki/im2markup/utils')
 import render_latex, utils
@@ -78,9 +73,9 @@ def get_data(directory, extension=".pdf"):
     Returns:
         A list of file names satisfying extension criteria.
     """
-    #
+    
     file_results = []
-    #
+    
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(extension):
@@ -109,7 +104,7 @@ def panel_plot(gold_im_directory, pred_im_directory, extension=".png",
     gold_im_list = get_data(gold_im_directory, extension='.png')
     #
     # Create Side-by-Side Plots
-    f, axarr = plt.subplots(len(gold_im_list), 2,
+    f, axarr = plt.subplots(len(pred_im_list), 2,
                             figsize=(0.5*len(gold_im_list), 2*len(gold_im_list)) )
     #
     # Axes Labels
@@ -176,7 +171,8 @@ def compare_plot(gold_im_directory, pred_im_directory, extension=".png",
 
 ################################################################################
 
-def main(directory='./im2markup/data/sample'):
+def main(list_directory='./im2markup/data/sample',
+         processed_directory='./im2markup/data/sample'):
     
     """
     Renders all images
@@ -201,43 +197,42 @@ def main(directory='./im2markup/data/sample'):
 
 
     #images    = get_data(os.path.join(directory, img_path), extension='.png')
-    processed = get_data(os.path.join(directory, process_dir), extension='.png')
+    processed = get_data(os.path.join(processed_directory, process_dir), extension='.png')
 
     # Load Results File. Format:
     # <img_name1>\t<label_gold1>\t<label_pred1>\t<score_pred1>\t<score_gold1>
-    results = np.genfromtxt(os.path.join(directory, results_file),
+    results = np.genfromtxt(os.path.join(list_directory, results_file),
                             delimiter='\t', dtype=None, comments=None)
 
     # Render Gold & Predicted LaTeX Equations
-    render_latex.main(["--result-path", os.path.join(directory, results_file),
-                       "--data-path",   os.path.join(directory, test_list),
-                       "--label-path",  os.path.join(directory, gold_list),
-                       "--output-dir",  os.path.join(directory, render_dir),
+    render_latex.main(["--result-path", os.path.join(list_directory, results_file),
+                       "--data-path",   os.path.join(list_directory, test_list),
+                       "--label-path",  os.path.join(list_directory, gold_list),
+                       "--output-dir",  os.path.join(processed_directory, render_dir),
                        "--no-replace"])
     logging.info('Jobs finished')
 
     # Create Side-by-Side Plots of Rendered Gold & Predicted Equations
-    panel_plot(os.path.join(directory, render_dir, gold_im_dir),
-               os.path.join(directory, render_dir, pred_im_dir),
+    panel_plot(os.path.join(processed_directory, render_dir, gold_im_dir),
+               os.path.join(processed_directory, render_dir, pred_im_dir),
                extension=".png",
                plot_name=plot_name,
-               plot_directory=os.path.join(directory, plot_dir))
+               plot_directory=os.path.join(list_directory, plot_dir))
 
     # Print Evaluation Metrics
-    evaluate_image.main(["--images-dir", os.path.join(directory, render_dir)])
+    evaluate_image.main(["--images-dir", os.path.join(processed_directory, render_dir)])
 
     # Write Rendered Results File
-    with open(os.path.join(directory, render_file), 'wt') as out_file:
+    with open(os.path.join(list_directory, render_file), 'wt') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
         for idx, obj in enumerate(results):
-            pred = os.path.join(directory, render_dir, pred_im_dir, results[idx][0])
+            pred = os.path.join(processed_directory, render_dir, pred_im_dir, results[idx][0])
             tsv_writer.writerow([obj[0], obj[1], obj[2], os.path.isfile(pred)])
 
 
 ################################################################################
 
 if __name__ == '__main__':
-    main(directory='./')
-    #main(directory='./im2markup/data/sample')
-    #main(directory='./im2markup/data')
-    #main(directory='./data/img_eqn_pairs')
+    main(list_directory='/home/jkadowaki/automates/data_1802',
+         processed_directory='/projects/automates/arxiv')
+

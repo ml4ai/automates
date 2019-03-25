@@ -12,13 +12,14 @@ from delphi.translators.for2py import (
     get_comments,
     pyTranslate,
     genPGM,
+    For2PyError
 )
 from delphi.utils.fp import flatten
 from delphi.GrFN.scopes import Scope
 from delphi.GrFN.ProgramAnalysisGraph import ProgramAnalysisGraph
 import delphi.paths
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 from flask_wtf import FlaskForm
 from flask_codemirror.fields import CodeMirrorField
 from wtforms.fields import SubmitField
@@ -164,10 +165,18 @@ def index():
     return render_template("index.html", form=form, code='')
 
 
+@app.errorhandler(For2PyError)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    flash(response.json["message"])
+    return render_template("index.html", code=app.code)
+
 @app.route("/processCode", methods=["POST"])
 def processCode():
     form = MyForm()
     code = form.source_code.data
+    app.code=code
     if code == "":
         return render_template("index.html", form=form)
     lines = [
@@ -177,14 +186,9 @@ def processCode():
     ]
     filename=f"input_code_{str(uuid4())}"
     input_code_tmpfile = f"/tmp/automates/{filename}.f"
-    with open(input_code_tmpfile, "w") as f:
-        f.write("".join(lines))
-
-    with open(input_code_tmpfile, "r") as f:
-        inputLines = f.readlines()
 
     with open(input_code_tmpfile, "w") as f:
-        f.write(preprocessor.process(inputLines))
+        f.write(preprocessor.process(lines))
 
     xml_string = sp.run(
         [
@@ -203,7 +207,8 @@ def processCode():
     comments = get_comments.get_comments(input_code_tmpfile)
     xml_to_json_translator = translate.XMLToJSONTranslator()
     outputDict = xml_to_json_translator.analyze(trees, comments)
-    pySrc = pyTranslate.create_python_string(outputDict)[0][0]
+    pySrc = pyTranslate.create_python_source_list(outputDict)[0][0]
+
     lambdas = f"{filename}_lambdas"
     lambdas_path = f"/tmp/automates/{lambdas}.py"
     sys.path.insert(0, "/tmp/automates")
@@ -224,7 +229,7 @@ def processCode():
     return render_template(
         "index.html",
         form=form,
-        code=code,
+        code=app.code,
         python_code=highlight(pySrc, LEXER, FORMATTER),
         scopeTree_elementsJSON=scopeTree_elementsJSON,
         program_analysis_graph_elementsJSON=program_analysis_graph_elementsJSON,

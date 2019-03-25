@@ -58,6 +58,13 @@
           <br>
           <input type="submit" value="Submit" class="btn btn-outline-primary btn-sm">
         </form>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-danger">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
       </div>
       <div id="viewpane" class="col-lg-6">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
