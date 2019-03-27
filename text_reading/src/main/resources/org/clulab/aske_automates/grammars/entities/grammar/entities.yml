@@ -20,3 +20,13 @@ rules:
 #      [chunk='B-VP' & !mention=Avoid]? [chunk='I-VP' & !mention=Avoid]+
 #      |
 #      [chunk='B-VP' & !mention=Avoid]
+
+
+#might be necessary for processing glossary of terms, e.g., p. 56 of 2005 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
+#  - name: adj_mascarading_for_noun
+#    label: Concept
+#    priority: 1
+#    type: token
+#    example: "Cd denominator constant that changes with reference type and calculation time step (s m-1)"
+#    pattern: |
+#      (?<=[tag=NN]) [tag=JJ] (?=[tag=IN])

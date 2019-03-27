@@ -44,7 +44,7 @@ rules:
     type: token
     pattern: |
       #avoids equal signs
-      [word="="]
+      [word=/=|>|</]
 
   - name: "figure-equation-ref"
     label: Avoid
@@ -100,7 +100,4 @@ rules:
     type: token
     pattern: |
       [entity="PERSON"] [word="and"] [entity="PERSON"]
-
-
-
 
