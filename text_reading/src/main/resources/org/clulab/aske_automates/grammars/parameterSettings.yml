@@ -33,7 +33,7 @@ rules:
     type: token
     example: "Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield for 0.9 < Kcbmax < 1.15"
     pattern: |
-      @valueLeast:Value [word = "<"] (?<trigger> @Variable) [word = "<"] @valueMost:Value #todo: but Kcbmax is not found as concept; works if the var has been previously found (e.g., the rule works for Kcb because it has been found previously by stringmatcher
+      @valueLeast:Value [word = "<"] (?<trigger> @Variable) [word = "<"] @valueMost:Value
 #
 
   - name: var-more_than_symbol
