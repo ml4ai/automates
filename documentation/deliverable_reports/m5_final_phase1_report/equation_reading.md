@@ -4,22 +4,22 @@ Models are often represented concisely as equations, at a level of abstraction t
 both the natural language description as well as the source code implementation. Accordingly, the AutoMATES team is implementing a module for automatically reading equations found in scientific papers.  This section details the approaches for (a) data acquisition, (b) detecting the location of equations, (c) encoding the image of the equation and then decoding it into a formal representation, and (d) converting the formal representation into an executable one that can be used in program analysis.  Here we discuss the current progress as well as the next steps.  To make rapid progress, the team has extensively explored available state-of-the-art (SOA) open-source tools and resources, and so additionally we discuss the limitations of these tools as well as our plans for addressing these limitations. 
 
 All code for the Equation Reading pipeine is implemented within the AutoMATES
-[equation_extraction](https://github.com/ml4ai/automates/tree/master/equation_extraction) repository directory.  There is additionally a [section below](#Instructions-for-running-components) devoted to explaining the steps needed to run each component of the architecture. **TODO: can we link this somehow?**
+[equation_extraction](https://github.com/ml4ai/automates/tree/master/equation_extraction) repository directory.  There is additionally a [section below](#Instructions-for-running-components) devoted to explaining the steps needed to run each component of the architecture. 
 
 #### Architecture
 
 >TODO: Description of current state of the overall equation reading architecture.
 Possibly include a figure (architecture diagram)?
 
-In Figure **XX** we show the overall architecture for equation detection and reading.  In grey are the linkages that are planned, but not yet in place.  The currently-used SOA open source components are indicated with striped fill.  See the corresponding sections for the discovered limitations of these third-party components for our use case and our plans for replacing/extending each. 
+The overall architecture for equation detection and reading.  In grey are the linkages that are planned, but not yet in place.  The currently-used SOA open source components are indicated with striped fill.  See the corresponding sections for the discovered limitations of these third-party components for our use case and our plans for replacing/extending each. 
 
 #### Data collection
 
 In order to train and evaluate the neural machine learning components used in the detection and decoding of equations found in text, several datasets needed to be constructed.  
 
 For this purpose, the team is making use of papers written in LaTeX (TeX), downloaded
-in bulk from arXiv, an open-access preprint database for scientific publications **[LINK]**. The team has downloaded the complete set of arXiv PDFs and their corresponding source files from Amazon S3 as described [here](https://arxiv.org/help/bulk_data_s3).  Previously, similar datasets have been constructed but they are very limited in scope.
-Most relevantly, a sample of source files from the `hep-th` (theoretical high-energy physics) section of arXiv was collected in 2003 for the [KDD cup competition] (see Section **TODO** for an example of the consequence of this limited scope).  By downloading the full set of arXiv, the team has extended this dataset to both increase the number of training examples and to include a variety of relevant
+in bulk from [arXiv](https://arxiv.org), an open-access preprint database for scientific publications. The team has downloaded the complete set of arXiv PDFs and their corresponding source files from Amazon S3 as described [here](https://arxiv.org/help/bulk_data_s3).  Previously, similar datasets have been constructed but they are very limited in scope.
+Most relevantly, a sample of source files from the `hep-th` (theoretical high-energy physics) section of arXiv was collected in 2003 for the [KDD cup competition](https://www.cs.cornell.edu/projects/kddcup/datasets.html) (see [equation decoding section](#Equation-decoding) for examples of the consequence of this limited scope).  By downloading the full set of arXiv, the team has extended this dataset to both increase the number of training examples and to include a variety of relevant
 domains (including agriculture, biology, and computer science).
 
 ##### Dataset preprocessing pipeline
@@ -34,19 +34,15 @@ the environment itself (e.g., the tokens inside the `\begin{equation}` and `\end
 
 Based on an analysis of 1600 arXiv papers, the most commonly used math environments (in order) are: `equation`, `align`, and `\[ \]`.  While the team currently only handles the `equation` environment (40% of the equations found), the pipeline will be extended to accomodate the other two as well.
 
-The extracted code for each equation is rendered into a standalone equation image.  The paired standalone image and source tokens form the training data for the **equation decoder** (Section XX).  Additionally, the PDF file for the entire paper is scanned for the standalone equation image using [template matching](https://docs.opencv.org/4.0.0/df/dfb/group__imgproc__object.html).  The resulting axis-aligned bounding box (AABB) is stored for the subsequent training of an **equation detector** (Section XX).
+The extracted code for each equation is rendered into a standalone equation image.  The paired standalone image and source tokens form the training data for the [equation decoder](#Equation-decoding).  Additionally, the PDF file for the entire paper is scanned for the standalone equation image using [template matching](https://docs.opencv.org/4.0.0/df/dfb/group__imgproc__object.html).  The resulting axis-aligned bounding box (AABB) is stored for the subsequent training of an [equation detector](#Equation-detection).
 
-**TODO** edit next paragraph:
-
-The team will next work on the preprocessing of the extracted TeX tokens to provide the equation decoder a more consistent input.  At minimum, the preprocessing will include the removal of superfluous code such as`\label{}` directives, the normalization of certain latex expressions
-(e.g., arbitrary ordering of super and sub-scripts in equations), and the augmentation of the rendered standalone equations (see Section XX).
-
->TODO: describe lessons learned so far, state of the art methods tried, shortcomings, plans/strategies for adapting. Summarize results, include figures.
+While much of the preprocessing pipeline is complete, there are a few remaining elements that need to be implemented.  The team will work on additional normalization of the extracted TeX tokens to provide the equation decoder a more consistent input.  At minimum, the this will include the removal of superfluous code such as`\label{}` directives, the normalization of certain latex expressions
+(e.g., arbitrary ordering of super and sub-scripts in equations), and the [augmentation of the rendered standalone equations](#Equation-decoding).
 
 #### Equation detection
 
 Before equations can be decoded, they first need to be located within
-the scientific papers encoded as PDF files.  For this, the team evaluated standard machine vision techniques.  The SOA Mask-RCNN **TODO: LINK** was selected both for its robust performance across several detection tasks as well as its ease of use.  Here, as the desired output of the model is the page and AABB of the detected equations, we ignore the mask (i.e., the precise set of pixels which compose the object), and as such the model is essentially an easy to use Faster R-CNN.
+the scientific papers encoded as PDF files.  For this, the team evaluated standard machine vision techniques.  The SOA [Mask-RCNN](https://github.com/matterport/Mask_RCNN) (He et al., 2017) was selected both for its robust performance across several detection tasks as well as its ease of use.  Here, as the desired output of the model is the page and AABB of the detected equations, we ignore the mask (i.e., the precise set of pixels which compose the object), and as such the model is essentially an easy to use Faster R-CNN.
 
 The Faster R-CNN model uses a base network consisting of a series of convolutional and pooling layers as feature extractors for subsequent steps. In the implementation we are initially beginning with, this network is (WHICH?) [ResNet](https://arxiv.org/abs/1512.03385) trained on [ImageNet](http://www.image-net.org/). (could be either)
 
@@ -148,6 +144,8 @@ That said, even after taking these steps, it is clear that we will need to exten
 - added latex-to-sympy component (WIP)
 
 Baird, H. S. (1993, October). Document image defect models and their uses. In *Proceedings of 2nd International Conference on Document Analysis and Recognition (ICDAR'93)* (pp. 62-67). IEEE.
+
+He, K., Gkioxari, G., Dollár, P., & Girshick, R. (2017). Mask r-cnn. In *Proceedings of the IEEE international conference on computer vision* (pp. 2961-2969).
 
 Wang, J., & Perez, L. (2017). The effectiveness of data augmentation in image classification using deep learning. *Convolutional Neural Networks Vis. Recognit*.
 
