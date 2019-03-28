@@ -215,7 +215,7 @@ def superclean_docstring(docstring):
                     cur_token = token[cur_idx]
             cur_idx += 1
 
-    return [tok for tok in typed_tokens if tok != ""]
+    return typed_tokens
 
 
 class CodeCrawler():
@@ -417,7 +417,7 @@ class CodeCrawler():
                     else:
                         clean_code.extend(token.split())
 
-                self.clean_code_data[identifier] = ["<BoC>"] + clean_code + ["<EoC>"]
+                self.clean_code_data[identifier] = clean_code
                 if found_doc:
                     clean_doc = word_tokenize(clean_doc)
                     clean_doct_str = " ".join(clean_doc)

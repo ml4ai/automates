@@ -17,17 +17,17 @@ def main(args):
     torch.manual_seed(17)   # Randomly seed PyTorch
 
     # Load train, dev, test iterators with auto-batching and pretrained vectors
-    (train, dev, test,
-     code_vecs, comm_vecs,
-     code_char_vecs, comm_char_vecs) = utils.load_all_data(args.batch_size, args.corpus)
+    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size, args.corpus)
 
     # Pick a model to train
-    model = cl.CodeCommClassifier(code_vecs,
-                                  comm_vecs,
-                                  code_char_vecs,
-                                  comm_char_vecs,
-                                  gpu=args.use_gpu,
-                                  model_type=args.model)
+    if args.model == "both":
+        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu)
+    elif args.model == "code":
+        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_comm=False)
+    elif args.model == "comm":
+        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_code=False)
+    else:
+        raise RuntimeError("Unidentified model type selected")
 
     # Load a saved model
     if args.load != "":
@@ -66,7 +66,14 @@ def main(args):
 
                     # Run the model using the batch
                     data = (batch.code, batch.comm)
-                    outputs = model(data)
+                    ((code, code_lengths), (comm, comm_lengths)) = data
+                    if args.use_gpu:    # Send data to GPU if available
+                        code = code.cuda()
+                        comm = comm.cuda()
+                        # code_lengths = code_lengths.cuda()
+                        # comm_lengths = comm_lengths.cuda()
+                    outputs = model(((code, code_lengths), (comm, comm_lengths)))
+
                     # Get loss from log(softmax())
                     loss = F.binary_cross_entropy_with_logits(outputs.view(-1),
                                                               truth.view(-1),
@@ -122,9 +129,15 @@ def score_dataset(model, dataset):
     classes = [0, 1]
     with torch.no_grad():
         for i, batch in enumerate(dataset):
-            # Run the model on the input batch
             data = (batch.code, batch.comm)
-            output = model(data)
+            ((code, code_lengths), (comm, comm_lengths)) = data
+            if args.use_gpu:    # Send data to GPU if available
+                code = code.cuda()
+                comm = comm.cuda()
+            output = model(((code, code_lengths), (comm, comm_lengths)))
+
+            # Run the model on the input batch
+            # output = model((batch.code, batch.comm))
 
             # Get predictions for every instance in the batch
             signum_outs = torch.sign(output).cpu().numpy()
@@ -159,7 +172,7 @@ if __name__ == '__main__':
 
     parser.add_argument("-b", "--batch_size", type=int,
                         help="size of batch",
-                        default=30)
+                        default=50)
 
     parser.add_argument("-r", "--learning-rate", type=float,
                         help="learning rate",

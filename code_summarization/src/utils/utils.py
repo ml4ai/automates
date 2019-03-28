@@ -1,7 +1,7 @@
 from pathlib import Path
 import pickle
 import os
-import sys
+
 from torchtext import data
 from torchtext import vocab
 
@@ -47,12 +47,6 @@ def load_all_data(batch_size, corpus_name):
     comm_field = data.Field(sequential=True, tokenize=lambda s: s.split(" "),
                             include_lengths=True, use_vocab=True)
 
-    # code_char_field = data.Field(sequential=True, tokenize=lambda s: s.split(" "),
-    #                              include_lengths=True, use_vocab=True)
-    #
-    # comm_char_field = data.Field(sequential=True, tokenize=lambda s: s.split(" "),
-    #                              include_lengths=True, use_vocab=True)
-
     label_field = data.Field(sequential=False, use_vocab=False,
                              pad_token=None, unk_token=None)
 
@@ -60,9 +54,7 @@ def load_all_data(batch_size, corpus_name):
     train_val_fields = [
         ("label", label_field),
         ("code", code_field),
-        ("comm", comm_field),
-        # ("code_char", code_char_field),
-        # ("comm_char", comm_char_field)
+        ("comm", comm_field)
     ]
 
     # Build the large tabular dataset using the defined fields
@@ -78,16 +70,9 @@ def load_all_data(batch_size, corpus_name):
     code_vectors = vocab.Vectors(str(code_vec_path), str(input_path))
     comm_vectors = vocab.Vectors(str(comm_vec_path), str(input_path))
 
-    code_char_vec_path = input_path / "code-char-vectors.txt"
-    comm_char_vec_path = input_path / "comm-char-vectors.txt"
-    code_char_vectors = vocab.Vectors(str(code_char_vec_path), str(input_path))
-    comm_char_vectors = vocab.Vectors(str(comm_char_vec_path), str(input_path))
-
     # Builds the known word vocab for code and comments from the pretrained vectors
     code_field.build_vocab(train_data, dev_data, test_data, vectors=code_vectors)
     comm_field.build_vocab(train_data, dev_data, test_data, vectors=comm_vectors)
-    # code_char_field.build_vocab(train_data, dev_data, test_data, vectors=code_char_vectors)
-    # comm_char_field.build_vocab(train_data, dev_data, test_data, vectors=comm_char_vectors)
     label_field.build_vocab(train_data, dev_data, test_data)    # Necesary for iterator
 
     # Creates batched TRAIN, DEV, TEST sets for faster training (uses auto-batching)
@@ -100,13 +85,7 @@ def load_all_data(batch_size, corpus_name):
     )
 
     # We need to return the test sets and the field pretrained vectors
-    return (
-        train, val, test,
-        code_vectors,
-        comm_vectors,
-        code_char_vectors,
-        comm_char_vectors
-    )
+    return train, val, test, code_field.vocab.vectors, comm_field.vocab.vectors
 
 
 def save_translations(translations, filepath):
