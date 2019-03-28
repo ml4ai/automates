@@ -46,14 +46,6 @@ rules:
       variable:Concept = <advmod <nummod
       value:Value = <advmod [tag = "CD"]
 
-#  - name: var-more_than_symbol
-#    label: ParameterSetting
-#    priority: ${priority}
-#    type: token
-#    #action: variableArguments
-#    example: "but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
-#    pattern: |
-#      (?<variable> [word = /.*/ & !tag="CD"]) ">" (value:Value [tag = "CD"])
 
   - name: var-less_than_symbol
     label: ParameterSetting
@@ -64,16 +56,6 @@ rules:
       trigger = [lemma='<']
       variable:Concept = <dep <nummod <dep | <advmod <nummod
       value:Value = </dep|advmod/ [tag = "CD"]
-
-
-#  - name: var-less_than_symbol
-#    label: ParameterSetting
-#    priority: ${priority}
-#    type: dependency
-#    #action: variableArguments
-#    example: "but simulated yield decreased rapidly for Kcbmax < 1.15 (fig. 6a)."
-#    pattern: |
-#      (?<variable> [word = /.*/ & !tag="CD"]) "<" (value:Value [tag = "CD"])
 
   - name: var_hard-coded
     label: ParameterSetting
