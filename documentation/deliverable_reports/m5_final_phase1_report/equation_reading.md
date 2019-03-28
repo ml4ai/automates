@@ -102,7 +102,7 @@ To determine to what extent we can use this library out of the box, we used it t
 
 After removing spaces, we found that simple expressions were correctly converted, as in the example shown here:
 
-![sympy with simple eqn](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/good_sympy.png | width=100)
+<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/good_sympy.png" width="50%" height="50%">
 
    However, equations which are slightly more complex are not properly handled.  As demonstrated below, we found that it conversion is improved if we remove the typesetting (e.g., the font specifications and specialized grouping symbols).  
 
