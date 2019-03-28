@@ -4,7 +4,7 @@ Models are often represented concisely as equations, at a level of abstraction t
 both the natural language description as well as the source code implementation. Accordingly, the AutoMATES team is implementing a module for automatically reading equations found in scientific papers.  This section details the approaches for (a) data acquisition, (b) detecting the location of equations, (c) encoding the image of the equation and then decoding it into a formal representation, and (d) converting the formal representation into an executable one that can be used in program analysis.  Here we discuss the current progress as well as the next steps.  To make rapid progress, the team has extensively explored available state-of-the-art (SOA) open-source tools and resources, and so additionally we discuss the limitations of these tools as well as our plans for addressing these limitations. 
 
 All code for the Equation Reading pipeine is implemented within the AutoMATES
-[equation_extraction](https://github.com/ml4ai/automates/tree/master/equation_extraction) repository directory.  There is additionally a section below devoted to explaining the steps needed to run each component of the architecture. **TODO: can we link this somehow?**
+[equation_extraction](https://github.com/ml4ai/automates/tree/master/equation_extraction) repository directory.  There is additionally a [section below](#Instructions-for-running-components) devoted to explaining the steps needed to run each component of the architecture. **TODO: can we link this somehow?**
 
 #### Architecture
 
