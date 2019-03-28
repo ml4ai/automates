@@ -143,7 +143,7 @@ Since the last report, progress hass been made on several fronts.  Here are the 
 
 - Equation decoding:
 
-  - The team has succesfully reproduced equation decoding results from original paper using the pre-trained model and the provided evaluation data.  We have additionally successfully run the training procedure with a small toy dataset.  While we could now train with additional data, we will instead reimplement the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU).
+  - The team has succesfully reproduced equation decoding results from original paper using the pre-trained model and the provided evaluation data.  We have additionally successfully run the training procedure with a small toy dataset.  While we could now train with additional data, we will instead reimplement the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU) in response to the found limitations of the SOA model.
 
 - Conversion to executable representation:
 
