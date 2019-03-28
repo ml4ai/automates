@@ -17,11 +17,15 @@ def main(args):
     torch.manual_seed(17)   # Randomly seed PyTorch
 
     # Load train, dev, test iterators with auto-batching and pretrained vectors
-    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size, args.corpus)
+    (train, dev, test,
+     code_vecs, comm_vecs,
+     code_char_vecs, comm_char_vecs) = utils.load_all_data(args.batch_size, args.corpus)
 
     # Create model
     model = cl.CodeCommClassifier(code_vecs,
                                   comm_vecs,
+                                  code_char_vecs,
+                                  comm_char_vecs,
                                   gpu=args.use_gpu,
                                   model_type=args.model)
 
@@ -62,7 +66,6 @@ def main(args):
 
                     # Run the model using the batch
                     outputs = model((batch.code, batch.comm))
-
                     # Get loss from log(softmax())
                     loss = F.binary_cross_entropy_with_logits(outputs.view(-1),
                                                               truth.view(-1),

@@ -17,21 +17,20 @@ for name, func_dict in tqdm(pos_neg_dataset.items(), desc="Creating Datasets"):
     corr_comm = func_dict["comm"]
     rand_negs = func_dict["random_negs"]
 
-    random_dataset.append((code, corr_comm, True))
+    random_dataset.append((1, code, corr_comm))
     for neg in rand_negs:
-        random_dataset.append((code, neg, False))
+        random_dataset.append((0, code, neg))
 
     lucene_negs = func_dict["lucene_negs"]
-    challenge_dataset.append((code, corr_comm, True))
+    challenge_dataset.append((1, code, corr_comm))
     for neg in lucene_negs:
-        challenge_dataset.append((code, neg, False))
+        challenge_dataset.append((0, code, neg))
 
 
 def write_tsv(path, data):
     with open(path, 'wt') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
-        for (code, comm, label) in data:
-            tsv_writer.writerow([int(label), " ".join(code), " ".join(comm)])
+        tsv_writer.writerows(data)
 
 
 random.shuffle(random_dataset)

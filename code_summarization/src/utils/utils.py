@@ -1,7 +1,6 @@
 from pathlib import Path
 import pickle
 import os
-
 from torchtext import data
 from torchtext import vocab
 
@@ -54,7 +53,7 @@ def load_all_data(batch_size, corpus_name):
     train_val_fields = [
         ("label", label_field),
         ("code", code_field),
-        ("comm", comm_field)
+        ("comm", comm_field),
     ]
 
     # Build the large tabular dataset using the defined fields
@@ -69,6 +68,11 @@ def load_all_data(batch_size, corpus_name):
     comm_vec_path = input_path / "comm-vectors.txt"
     code_vectors = vocab.Vectors(str(code_vec_path), str(input_path))
     comm_vectors = vocab.Vectors(str(comm_vec_path), str(input_path))
+
+    code_char_vec_path = input_path / "code-char-vectors.txt"
+    comm_char_vec_path = input_path / "comm-char-vectors.txt"
+    code_char_vectors = vocab.Vectors(str(code_char_vec_path), str(input_path))
+    comm_char_vectors = vocab.Vectors(str(comm_char_vec_path), str(input_path))
 
     # Builds the known word vocab for code and comments from the pretrained vectors
     code_field.build_vocab(train_data, dev_data, test_data, vectors=code_vectors)
@@ -85,7 +89,13 @@ def load_all_data(batch_size, corpus_name):
     )
 
     # We need to return the test sets and the field pretrained vectors
-    return train, val, test, code_field.vocab.vectors, comm_field.vocab.vectors
+    return (
+        train, val, test,
+        code_vectors,
+        comm_vectors,
+        code_char_vectors,
+        comm_char_vectors
+    )
 
 
 def save_translations(translations, filepath):
