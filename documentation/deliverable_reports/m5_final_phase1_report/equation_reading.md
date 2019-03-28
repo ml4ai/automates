@@ -129,14 +129,29 @@ That said, even after taking these steps, it is clear that we will need to exten
 
 #### Updates
 
->TODO: Summary (bullet points) of updates since last report.
+Since the last report, progress hass been made on several fronts.  Here are the highlights, though more detail is provided in the sections above.
 
-- macro expansion
-- template rescaling
-- reproduced results from original paper
-- trained custom model
-- processed data to train detection model
-- added latex-to-sympy component (WIP)
+- Data collection:
+  - Since the last report, the team has [added the LaTeX macro expansion](https://github.com/ml4ai/automates/blob/master/equation_extraction/latex.py), accomplished through a recursively applied lookup table.  This allows for the critical normalization of tokens for training the equation decoder.  
+  - Additionally, the team incorporated template rescaling to better match the rendered equation against the original pdf.  This resulted in significantly more accurate axis-aligned bounding boxes.
+
+- Equation detection: 
+
+  - The team has downloaded the current SOA model and processed the training data to fit the required format.  
+
+  - > TODO: update!
+
+- Equation decoding:
+
+  - The team has succesfully reproduced equation decoding results from original paper using the pre-trained model and the provided evaluation data.  We have additionally successfully run the training procedure with a small toy dataset.  While we could now train with additional data, we will instead reimplement the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU).
+
+- Conversion to executable representation:
+
+  - The team has chosen a library for converting the generated LaTeX to SymPy and evaluated the output.  Based on this output, we will consider either expanding the corresponding antlr4 grammar or extend the plasTeX library, as the current SOA is not well-suited to the equations of interest.
+
+
+
+#### References
 
 Baird, H. S. (1993, October). Document image defect models and their uses. In *Proceedings of 2nd International Conference on Document Analysis and Recognition (ICDAR'93)* (pp. 62-67). IEEE.
 
