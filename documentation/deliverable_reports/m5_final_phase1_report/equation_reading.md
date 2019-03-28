@@ -8,9 +8,7 @@ All code for the Equation Reading pipeine is implemented within the AutoMATES
 
 #### Architecture
 
->TODO: Description of current state of the overall equation reading architecture.
-Possibly include a figure (architecture diagram)?
-
+<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/equation-architecture.png" width="50%" height="50%">
 The overall architecture for equation detection and reading.  In grey are the linkages that are planned, but not yet in place.  The currently-used SOA open source components are indicated with striped fill.  See the corresponding sections for the discovered limitations of these third-party components for our use case and our plans for replacing/extending each. 
 
 #### Data collection
@@ -42,25 +40,22 @@ While much of the preprocessing pipeline is complete, there are a few remaining 
 #### Equation detection
 
 Before equations can be decoded, they first need to be located within
-the scientific papers encoded as PDF files.  For this, the team evaluated standard machine vision techniques.  The SOA [Mask-RCNN](https://github.com/matterport/Mask_RCNN) (He et al., 2017) was selected both for its robust performance across several detection tasks as well as its ease of use.  Here, as the desired output of the model is the page and AABB of the detected equations, we ignore the mask (i.e., the precise set of pixels which compose the object), and as such the model is essentially an easy to use Faster R-CNN.
+the scientific papers encoded as PDF files.  For this, the team evaluated standard machine vision techniques.  The SOA [Mask-RCNN](https://github.com/matterport/Mask_RCNN) (He et al., 2017) was selected both for its robust performance across several detection tasks as well as its ease of use.  Here, as the desired output of the model is the page and AABB of the detected equations, we ignore the mask (i.e., the precise set of pixels which compose the object), and as such the model is essentially an easy to use Faster R-CNN (Ren et al., 2015).
 
-The Faster R-CNN model uses a base network consisting of a series of convolutional and pooling layers as feature extractors for subsequent steps. In the implementation we are initially beginning with, this network is (WHICH?) [ResNet](https://arxiv.org/abs/1512.03385) trained on [ImageNet](http://www.image-net.org/). (could be either)
+The Faster R-CNN model uses a base network consisting of a series of convolutional and pooling layers as feature extractors for subsequent steps. This network is typically [ResNet](https://arxiv.org/abs/1512.03385) which is trained on [ImageNet](http://www.image-net.org/). 
+>TODO: Marco review resnet/magenet
 
 Next, a region proposal network (RPN) uses the features found in the previous step to propose a predefined number of bounding boxes that may contain equations. For this purpose, fixed bounding boxes of different sizes are placed throughout the image. Then the RPN predicts two values: the probability that the bounding box contains an object of interest, and a correction to the bounding box for it to better fit the object.
 
-At this point, the Faster R-CNN uses a second step to classify the type of object, using a traditional R-CNN. Since here there is only one type of object of interest (equations), the output of the RPN can
-be used directly, simplifying training and speeding up inference. However, one potential disadvantage of only having a single label is that the model could be confused by similar page components (e.g., section titles and tables).  Since we have access to the TeX source code, in the future we can include these other objects and their labels and will train the model to differentiate between them explicitly.
+At this point, the Faster R-CNN uses a second step to classify the type of object, using a traditional R-CNN. Since here there is only one type of object of interest (equations), the output of the RPN can be used directly, simplifying training and speeding up inference. However, one potential disadvantage of only having a single label is that the model could be confused by similar page components (e.g., section titles and tables).  Since we have access to the TeX source code, in the future we can include these other objects and their labels and will train the model to differentiate between them explicitly.
 
 #### Equation decoding 
 
-Once detected, the rendered equations need to be automatically converted into LaTeX code.  For this purpose, we employ an encoder-decoder architecture, which encodes the equation image into a
-dense embedding and subsequentially decodes it into LaTeX code capable of being compiled into an image. LaTeX was selected as the intermediary representation between image and executable model because of the availability of training data (arXiv) and because it preserves
-both typographic information about how equations are rendered (e.g., bolding, italics, subscript, etc.) while also preserving the components of the notation that will be used for the successful interpretation of the equation semantics.
+Once detected, the rendered equations need to be automatically converted into LaTeX code.  For this purpose, we employ an encoder-decoder architecture, which encodes the equation image into a dense embedding and subsequentially decodes it into LaTeX code capable of being compiled into an image. LaTeX was selected as the intermediary representation between image and executable model because of the availability of training data (arXiv) and because it preserves both typographic information about how equations are rendered (e.g., bolding, italics, subscript, etc.) while also preserving the components of the notation that will be used for the successful interpretation of the equation semantics.
 
-Encoder-decoder architectures like the one proposed have been successfully applied in the past for the purpose of image caption generation (e.g., [Show and Tell: Lessons learned from the 2015 MSCOCO
-Image Captioning Challenge](https://arxiv.org/abs/1609.06647)).  Here, to make rapid progress, we began with an existing SOA model previously trained for the purpose of converting images to markup (i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).  The model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample of arXiv mentioned above. 
+Encoder-decoder architectures like the one proposed have been successfully applied in the past for the purpose of image caption generation (e.g., [Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge](https://arxiv.org/abs/1609.06647)).  Here, to make rapid progress, we began with an existing SOA model previously trained for the purpose of converting images to markup (i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).  The model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample of arXiv mentioned above. 
 
-We evaluated this pre-trained model for our use case on a sample of 20 domain-relevant equations from a scientific paper describing the **(TODO write out)** ASCE model (**TODO LINK or CITE**).  We provided the model with two versions of each equation.  The first version of the equation conforms exactly to the model's training data.  To achieve this, we were required to manually transcribe the equation into LaTeX, render it with the authors' exact template, convert the resulting pdf into a png file using a specific tool with specific resolution settings, and finally pass it through their pre-processing pipeline.  We refer to this version of the equation image as the _transcribed_ version.  This is clearly not scalable, as the entire purpose of this component is to avoid hand-transcribing equations into LaTeX, however, the model's results on these versions of the equations serve as a useful ceiling perfomance for the pre-trained model without updating.  
+We evaluated this pre-trained model for our use case on a sample of 20 domain-relevant equations from a scientific paper describing the ASCE evapotranspiration model (Walter et al., 2000).  We provided the model with two versions of each equation.  The first version of the equation conforms exactly to the model's training data.  To achieve this, we were required to manually transcribe the equation into LaTeX, render it with the authors' exact template, convert the resulting pdf into a png file using a specific tool with specific resolution settings, and finally pass it through their pre-processing pipeline.  We refer to this version of the equation image as the _transcribed_ version.  This is clearly not scalable, as the entire purpose of this component is to avoid hand-transcribing equations into LaTeX, however, the model's results on these versions of the equations serve as a useful ceiling perfomance for the pre-trained model without updating.  
 
 The second version of the equation image is more representative of a real-world usage within the AutoMATES project.  We took screenshots of the equations from the original paper that are cropped to the size of an AABB (as such, we refer to this version of the equation image as the _cropped_ version).  We found that the pre-trained model was unable to handle these as initially created, and they needed to be rescaled to 50% of their original size.  These images were then also passed through the authors' pre-processing pipeline.  
 
@@ -146,6 +141,10 @@ That said, even after taking these steps, it is clear that we will need to exten
 Baird, H. S. (1993, October). Document image defect models and their uses. In *Proceedings of 2nd International Conference on Document Analysis and Recognition (ICDAR'93)* (pp. 62-67). IEEE.
 
 He, K., Gkioxari, G., Dollár, P., & Girshick, R. (2017). Mask r-cnn. In *Proceedings of the IEEE international conference on computer vision* (pp. 2961-2969).
+
+Ren, S., He, K., Girshick, R., & Sun, J. (2015). Faster r-cnn: Towards real-time object detection with region proposal networks. In Advances in neural information processing systems (pp. 91-99).
+
+Walter, I.A., Allen, R.G., Elliott, R., Jensen, M.E., Itenfisu, D., Mecham, B., Howell, T.A., Snyder, R., Brown, P., Echings, S. & Spofford, T. (2000). ASCE's standardized reference evapotranspiration equation. In Watershed management and operations management 2000 (pp. 1-11).
 
 Wang, J., & Perez, L. (2017). The effectiveness of data augmentation in image classification using deep learning. *Convolutional Neural Networks Vis. Recognit*.
 
