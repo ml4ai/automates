@@ -8,7 +8,7 @@ All code for the Equation Reading pipeine is implemented within the AutoMATES
 
 #### Architecture
 
-<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/equation-architecture.png" width="50%" height="50%">
+<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/equation-architecture.png" width="100%" height="100%">
 The overall architecture for equation detection and reading.  In grey are the linkages that are planned, but not yet in place.  The currently-used SOA open source components are indicated with striped fill.  See the corresponding sections for the discovered limitations of these third-party components for our use case and our plans for replacing/extending each. 
 
 #### Data collection
