@@ -53,7 +53,7 @@ At this point, the Faster R-CNN uses a second step to classify the type of objec
 
 Once detected, the rendered equations need to be automatically converted into LaTeX code.  For this purpose, we employ an encoder-decoder architecture, which encodes the equation image into a dense embedding and subsequentially decodes it into LaTeX code capable of being compiled into an image. LaTeX was selected as the intermediary representation between image and executable model because of the availability of training data (arXiv) and because it preserves both typographic information about how equations are rendered (e.g., bolding, italics, subscript, etc.) while also preserving the components of the notation that will be used for the successful interpretation of the equation semantics.
 
-Encoder-decoder architectures like the one proposed have been successfully applied in the past for the purpose of image caption generation (e.g., [Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge](https://arxiv.org/abs/1609.06647)).  Here, to make rapid progress, we began with an existing SOA model previously trained for the purpose of converting images to markup (i.e., [Image-to-Markup Generation with Coarse-to-Fine Attention](https://arxiv.org/abs/1609.04938)).  The model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample of arXiv mentioned above. 
+Encoder-decoder architectures like the one proposed have been successfully applied in the past for the purpose of image caption generation (e.g., Vinyals et al., (2017)).  Here, to make rapid progress, we began with an existing SOA model previously trained for the purpose of converting images to markup (Deng et al., 2017).  The model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample of arXiv mentioned above. 
 
 We evaluated this pre-trained model for our use case on a sample of 20 domain-relevant equations from a scientific paper describing the ASCE evapotranspiration model (Walter et al., 2000).  We provided the model with two versions of each equation.  The first version of the equation conforms exactly to the model's training data.  To achieve this, we were required to manually transcribe the equation into LaTeX, render it with the authors' exact template, convert the resulting pdf into a png file using a specific tool with specific resolution settings, and finally pass it through their pre-processing pipeline.  We refer to this version of the equation image as the _transcribed_ version.  This is clearly not scalable, as the entire purpose of this component is to avoid hand-transcribing equations into LaTeX, however, the model's results on these versions of the equations serve as a useful ceiling perfomance for the pre-trained model without updating.  
 
@@ -155,11 +155,15 @@ Since the last report, progress hass been made on several fronts.  Here are the 
 
 Baird, H. S. (1993, October). Document image defect models and their uses. In *Proceedings of 2nd International Conference on Document Analysis and Recognition (ICDAR'93)* (pp. 62-67). IEEE.
 
+Deng, Y., Kanervisto, A., Ling, J., & Rush, A. M. (2017, August). Image-to-markup generation with coarse-to-fine attention. In *Proceedings of the 34th International Conference on Machine Learning-Volume 70* (pp. 980-989). JMLR. org.
+
 He, K., Gkioxari, G., Dollár, P., & Girshick, R. (2017). Mask r-cnn. In *Proceedings of the IEEE international conference on computer vision* (pp. 2961-2969).
 
 Krishnamurthy, J., Dasigi, P., & Gardner, M. (2017). Neural semantic parsing with type constraints for semi-structured tables. In *Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing* (pp. 1516-1526).
 
 Ren, S., He, K., Girshick, R., & Sun, J. (2015). Faster r-cnn: Towards real-time object detection with region proposal networks. In Advances in neural information processing systems (pp. 91-99).
+
+Vinyals, O., Toshev, A., Bengio, S., & Erhan, D. (2017). Show and tell: Lessons learned from the 2015 mscoco image captioning challenge. *IEEE transactions on pattern analysis and machine intelligence*, *39*(4), 652-663.
 
 Walter, I.A., Allen, R.G., Elliott, R., Jensen, M.E., Itenfisu, D., Mecham, B., Howell, T.A., Snyder, R., Brown, P., Echings, S. & Spofford, T. (2000). ASCE's standardized reference evapotranspiration equation. In Watershed management and operations management 2000 (pp. 1-11).
 
