@@ -1,17 +1,33 @@
 package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
+import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.odin._
 import org.clulab.odin.impl.Taxonomy
 import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
+import org.clulab.aske.automates.OdinEngine._
+import org.clulab.aske.automates.entities.EntityHelper
+import org.clulab.struct.Interval
 
 
-case class PitchInfo(pitch: String, octave: Option[Int], accidental: Option[String]) extends Attachment
 
+class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler]) extends Actions with LazyLogging {
 
-class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
+  def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
+    if (expansionHandler.nonEmpty) {
+      // expand arguments
+      val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
+      val expanded = expansionHandler.get.expandArguments(expandable, state)
+      keepLongest(expanded) ++ textBounds
+      //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
+      //val result = mostComplete ++ textBounds
+    } else {
+      mentions
+    }
+  }
 
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -63,12 +79,58 @@ class OdinActions(val taxonomy: Taxonomy) extends Actions with LazyLogging {
     mentionsDisplayOnlyArgs
   }
 
+  def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    def foundBy(base: String) = s"$base++selectShorter"
+
+    def mkDefinitionMention(m: Mention): Seq[Mention] = {
+      val outer = m.arguments("c1").head
+      val inner = m.arguments("c2").head
+      val sorted = Seq(outer, inner).sortBy(_.text.length)
+      val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
+      val definition = changeLabel(sorted.last, DEFINITION_LABEL) // the longest if the definition
+      val defMention = m match {
+        case rm: RelationMention => rm.copy(
+          arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
+          foundBy=foundBy(rm.foundBy),
+          tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
+        case _ => ???
+      }
+      Seq(variable, defMention)
+//      Seq(defMention)
+    }
+
+    mentions.flatMap(mkDefinitionMention)
+  }
+
+  def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      m <- mentions
+      if m.words.length == 1
+      word = m.words.head
+      if word.length <= 5
+      if word.toLowerCase != word // mixed case or all UPPER
+    } yield m
+  }
+
+  def changeLabel(orig: Mention, label: String): Mention = {
+    orig match {
+      case tb: TextBoundMention => tb.copy(labels = taxonomy.hypernymsFor(label))
+      case rm: RelationMention => rm.copy(labels = taxonomy.hypernymsFor(label))
+      case em: EventMention => em.copy(labels = taxonomy.hypernymsFor(label))
+    }
+  }
+
 }
 
 object OdinActions {
 
-  def apply(taxonomyPath: String) =
-    new OdinActions(readTaxonomy(taxonomyPath))
+  def apply(taxonomyPath: String, enableExpansion: Boolean) =
+    {
+      val expansionHandler = if(enableExpansion) {
+      Some(ExpansionHandler())
+      } else None
+      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler)
+    }
 
   def readTaxonomy(path: String): Taxonomy = {
     val input = FileUtils.getTextFromResource(path)

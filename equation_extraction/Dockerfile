@@ -1,11 +1,15 @@
 FROM ubuntu:18.04
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get -q update
-RUN apt-get -qy install build-essential python-pip cython \
-texlive-full latexmk biber graphviz chktex dot2tex imagemagick \
-python-opencv python-plastex python-jinja2 python-skimage \
-poppler-utils python-pypdf2
+RUN apt-get update && apt-get install -y \
+build-essential python-pip cython texlive-full latexmk biber graphviz \
+chktex dot2tex imagemagick python-opencv python-plastex python-jinja2 \
+python-skimage poppler-utils python-pypdf2 python-poppler \
+&& rm -rf /var/lib/apt/lists/*
 RUN pip install pdf2image
 # replace imagemagick's policy with our own to enable PDF support
 COPY misc/policy.xml /etc/ImageMagick-6/policy.xml
-WORKDIR /data
+RUN mkdir -p /equation_extraction/misc
+ADD *.py /equation_extraction/
+ADD misc/template.tex /equation_extraction/misc/
+ADD run_data_collection.sh /equation_extraction/
+WORKDIR /equation_extraction

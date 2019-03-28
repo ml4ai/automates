@@ -21,6 +21,7 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
   def extract(doc: Document): Seq[Mention] = {
     // Run the grobid client over document
     // Run by document for now... todo should we revisit? by sentence??
+    // fixme: we should prob do this by sentence so we don't lose stuff when grobid fails...
     assert(doc.text.nonEmpty)  // assume that we are keeping text
     val text = doc.text.get
     val measurements = grobidClient.getMeasurements(text)
@@ -33,6 +34,7 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     measurement match {
       case v: Value => valueToMentions(v, doc)
       case i: Interval => intervalToMentions(i, doc)
+      case vl: ValueList => valueListToMentions(vl, doc)
     }
   }
 
@@ -112,6 +114,16 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
     val intervalMention = new RelationMention(getLabels(GrobidEntityFinder.INTERVAL_LABEL), mkTokenInterval(args), args, Map.empty, sentence, doc, keep = true, foundBy = GrobidEntityFinder.GROBID_FOUNDBY)
     mentions.append(intervalMention)
 
+    mentions
+  }
+
+  def valueListToMentions(valueList: ValueList, doc: Document): Seq[Mention] = {
+    val mentions = new ArrayBuffer[Mention]()
+    // Get the Mentions from each of the Quantities in the value list; not doing anything with 'quantified'
+    val values = valueList.values
+    if (values.nonEmpty) {
+      values.foreach(q => quantityToMentions(q.get, doc).foreach(m => mentions.append(m)))
+    }
     mentions
   }
 

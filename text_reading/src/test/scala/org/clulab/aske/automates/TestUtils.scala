@@ -4,8 +4,14 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
 import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
+import org.clulab.processors.Document
+import org.clulab.serialization.json.JSONSerializer
+import org.json4s.jackson.JsonMethods._
 
 object TestUtils {
+
+  // From Processors -- I couldn't import it for some reason
+  def jsonStringToDocument(jsonstr: String): Document = JSONSerializer.toDocument(parse(jsonstr))
 
   class TesterTag extends Tag("TesterTag")
 
@@ -20,18 +26,20 @@ object TestUtils {
   val successful = Seq()
 
   protected var mostRecentOdinEngine: Option[OdinEngine] = None
+  protected var mostRecentConfig: Option[Config] = None
 
   // This is the standard way to extract mentions for testing
   def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = ieSystem.extractFromText(text, true, None)
 
   def newOdinSystem(config: Config): OdinEngine = this.synchronized {
-    val eidosSystem =
-      if (mostRecentOdinEngine.isEmpty) new OdinEngine(config)
-      else if (mostRecentOdinEngine.get.config == config) mostRecentOdinEngine.get
-      else new OdinEngine(config)
+    val readingSystem =
+      if (mostRecentOdinEngine.isEmpty) OdinEngine.fromConfig(config)
+      else if (mostRecentConfig.get == config) mostRecentOdinEngine.get
+      else OdinEngine.fromConfig(config)
 
-    mostRecentOdinEngine = Some(eidosSystem)
-    eidosSystem
+    mostRecentOdinEngine = Some(readingSystem)
+    mostRecentConfig = Some(config)
+    readingSystem
   }
   class Test extends FlatSpec with Matchers {
     val passingTest = it
@@ -48,18 +56,16 @@ object TestUtils {
 
     // Event Specific
 
-    //fixme -- when we move all Maps to Seqs: let's make the change here too
-    def testDefinitionEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
-      testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired.toSeq)
-    }
-
-    //fixme -- when we move all Maps to Seqs: let's remove this overloaded version
-    def testParameterSettingEvent(mentions: Seq[Mention], desired: Map[String, Seq[String]]): Unit = {
-      testBinaryEvent(mentions, PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_ARG, desired.toSeq)
+    def testDefinitionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
     }
 
     def testParameterSettingEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testBinaryEvent(mentions, PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_ARG, desired)
+    }
+
+    def testParameterSettingEventInterval(mentions: Seq[Mention], desired: Seq[Seq[String]]): Unit = {
+      testThreeArgEvent(mentions, INTERVAL_PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_LEAST_ARG, VALUE_MOST_ARG, desired)
     }
 
     // General Purpose
@@ -71,6 +77,12 @@ object TestUtils {
       desired.foreach(d => found should contain(d))
     }
 
+
+    def testThreeArgEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, arg3Role: String, desired: Seq[Seq[String]]): Unit = {
+      val found = mentions.filter(_ matches eventType)
+      found.length should be(desired.size)
+
+    }
 
     def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Seq[(String, Seq[String])]): Unit = {
       val found = mentions.filter(_ matches eventType)

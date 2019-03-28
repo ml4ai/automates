@@ -2,6 +2,7 @@ package org.clulab.aske.automates.quantities
 
 import com.typesafe.config.Config
 import ai.lum.common.ConfigUtils._
+import requests.TimeoutException
 
 object GrobidQuantitiesClient {
   def fromConfig(config: Config): GrobidQuantitiesClient = {
@@ -20,14 +21,23 @@ class GrobidQuantitiesClient(
   val timeout: Int = 150000
 
   def getMeasurements(text: String): Vector[Measurement] = {
-    val response = requests.post(url, data = Map("text" -> text), readTimeout = timeout, connectTimeout=timeout)
-    val json = ujson.read(response.text)
-    json("measurements").arr.flatMap(mkMeasurement).toVector
+    try{
+      val response = requests.post(url, data = Map("text" -> text), readTimeout = timeout, connectTimeout=timeout)
+      val json = ujson.read(response.text)
+      json("measurements").arr.flatMap(mkMeasurement).toVector
+    } catch { // todo: we can count these one day... should we log them now?
+      case time: TimeoutException => Vector.empty[Measurement]
+      case parse: ujson.ParseException =>
+        println(s"ujson.ParseException with: $text")
+        Vector.empty[Measurement]
+      case other: Throwable => throw other
+    }
   }
 
   def mkMeasurement(json: ujson.Js): Option[Measurement] = json("type").str match {
     case "value" => Some(mkValue(json))
-    case "interval" => Some(mkInterval(json))
+    case "interval" => Some(mkValueListFromInterval(json)) //returning intervals as value lists
+    case "listc" => Some(mkValueListFromListc(json))
     //case t => throw new RuntimeException(s"unsupported measurement type '$t'")
     case t =>
       println(s"WARNING: there was an unsupported Measurement type ==> $t")
@@ -46,9 +56,31 @@ class GrobidQuantitiesClient(
     Interval(quantityLeast, quantityMost)
   }
 
+
+  def mkValueListFromInterval(json: ujson.Js): ValueList = {
+    var values = List[Option[Quantity]]()
+    if (json.obj.get("quantityLeast").map(mkQuantity).nonEmpty) {values = values :+ json.obj.get("quantityLeast").map(mkQuantity)}
+    if (json.obj.get("quantityMost").map(mkQuantity).nonEmpty) {values = values :+ json.obj.get("quantityMost").map(mkQuantity)}
+    val quantified = json.obj.get("quantified").map(mkQuantified) //quantifies has not been in interval examples so far, but I keep it as option bc that's how I defined ValueList class (maxaalexeeva)
+    ValueList(values, quantified)
+  }
+
+  def mkValueListFromListc(json: ujson.Js): ValueList = {
+    val quantityList = json("quantities").arr.toList
+    val values = for (quant <- quantityList) yield {Some(mkQuantity(quant))}
+    val quantified = json.obj.get("quantified").map(mkQuantified)
+    ValueList(values, quantified)
+  }
+
   def mkQuantity(json: ujson.Js): Quantity = {
     val rawValue = json("rawValue").str
-    val parsedValue = json("parsedValue")("numeric").num
+    val parsedValue = try {
+      json.obj.get("parsedValue").map(value => value.num)
+    } catch {
+      case e: ujson.Value.InvalidData => None
+      case other: Throwable => throw other
+    }
+
     val normalizedValue = json.obj.get("normalizedQuantity").map(_.num)
     val rawUnit = json.obj.get("rawUnit").map(mkUnit)
     val normalizedUnit = json.obj.get("normalizedUnit").map(mkUnit)
@@ -56,10 +88,11 @@ class GrobidQuantitiesClient(
     Quantity(rawValue, parsedValue, normalizedValue, rawUnit, normalizedUnit, offset)
   }
 
+
   def mkUnit(json: ujson.Js): UnitOfMeasurement = {
     val name = json("name").str
-    val unitType = json("type").str
-    val system = json("system").str
+    val unitType = json.obj.get("type").map(_.str)
+    val system = json.obj.get("system").map(_.str)
     val offset = if (json.obj.keySet contains "offsetStart") Some(mkOffset(json)) else None
     UnitOfMeasurement(name, unitType, system, offset)
   }

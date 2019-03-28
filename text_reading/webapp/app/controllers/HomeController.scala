@@ -19,7 +19,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   // Initialize the EidosSystem
   // -------------------------------------------------
   println("[OdinEngine] Initializing the OdinEngine ...")
-  val ieSystem = new OdinEngine()
+  val ieSystem = OdinEngine.fromConfig()
   var proc = ieSystem.proc
   println("[OdinEngine] Completed Initialization ...")
   // -------------------------------------------------

@@ -24,9 +24,18 @@ rules:
 
 
 ####VARIABLES####
+  - name: var-duck-rule
+    label: Variable
+    priority: ${priority}
+    type: token
+    example: ""
+    action: looksLikeAVariable
+    pattern: |
+      [mention=Concept]
+
   - name: var-noun_of
     label: Variable
-    priority: 4
+    priority: ${priority}
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
@@ -34,7 +43,7 @@ rules:
 
   - name: var-calculation
     label: Variable
-    priority: 2
+    priority: ${priority}
     type: dependency
     action: variableArguments
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
@@ -44,19 +53,35 @@ rules:
 
   - name: var_is_defined
     label: Variable
-    priority: 4
+    priority: ${priority}
     type: token
     example: "E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      @Concept (?= is /correlated|defined|calculated|obtained/ /with|as|from/)
+      @Concept (?= [lemma = "be"] /correlated|defined|calculated|obtained/ /with|as|from/)
 
   - name: var_calculate
     label: Variable
-    priority: 4
+    priority: ${priority}
     type: token
     example: "The approach uses model-simulated LAI to calculate the Kcb."
     pattern: |
       (?<= calculate) @Concept
+
+#  - name: var_indices
+#    label: Variable
+#    priority: ${priority}
+#    type: token
+#    example: "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
+#    pattern: |
+#      (?<= indexed by) @Concept
+
+  - name: var_versus
+    label: Variable
+    priority: ${priority}
+    type: token
+    example: "SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
+    pattern: |
+        @Concept (?= versus [] /curve|plot/)
 
   # - name: var_verb
   #   label: Variable
@@ -71,7 +96,7 @@ rules:
 
   - name: var_in_equation
     label: Variable
-    priority: 4
+    priority: ${priority}
     type: token
     example: "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
     pattern: |
@@ -80,7 +105,7 @@ rules:
 
   - name: var_equals
     label: Variable
-    priority: 2
+    priority: ${priority}
     type: token
     action: variableArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
@@ -96,7 +121,7 @@ rules:
 
   - name: var_where-dep
     label: Variable
-    priority: 5
+    priority: ${priority}
     type: dependency
     action: variableArguments
     example: "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
@@ -106,7 +131,7 @@ rules:
 
   - name: var_and
     label: Variable
-    priority: 2
+    priority: ${priority}
     type: token
     action: variableArguments
     example: "E0 is calculated as the product of Kcd and ETpm."
@@ -115,11 +140,25 @@ rules:
 
   - name: var_in_interval
     label: Variable
-    priority: 2
+    priority: ${priority}
     type: token
     action: variableArguments
-    example: "E0 is calculated as the product of Kcd and ETpm."
+    example: " Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. (2012a) recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
     pattern: |
       "<" @variable:Concept "<"
 
+  - name: var_dssat_model
+    label: Variable # should this be a Model instead?
+    priority: ${priority}
+    type: token
+    example: ""
+    pattern: |
+      [word=/^DSSAT/]
 
+  - name: var_csm_model
+    label: Variable # should this be a Model instead?
+    priority: ${priority}
+    type: token
+    example: ""
+    pattern: |
+      [word = /^CSM.*/]
