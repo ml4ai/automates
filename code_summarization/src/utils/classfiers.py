@@ -12,9 +12,17 @@ class CodeCommClassifier(nn.Module):
     One LSTM runs over the code input and the other runs over the docstring.
     """
     def __init__(self, cd_vecs, cm_vecs, cls_sz=1, cd_drp=0, cm_drp=0, hd_lyr_sz=100,
-                 cd_hd_sz=50, cm_hd_sz=50, cd_nm_lz=1, cm_nm_lz=1, gpu=False, use_code=True, use_comm=True):
+                 cd_hd_sz=50, cm_hd_sz=50, cd_nm_lz=1, cm_nm_lz=1, gpu=False, model_type="both"):
         super(CodeCommClassifier, self).__init__()
-        self.use_gpu, self.use_code, self.use_comm = gpu, use_code, use_comm
+        self.use_gpu = gpu
+        if model_type == "both":
+            self.use_code, self.use_comm = True, True
+        elif model_type == "code":
+            self.use_code, self.use_comm = True, False
+        elif model_type == "comm":
+            self.use_code, self.use_comm = False, True
+        else:
+            raise RuntimeError("Unidentified model type selected")
 
         # Initialize embeddings from pretrained embeddings
         self.code_embedding = nn.Embedding.from_pretrained(cd_vecs)
@@ -110,6 +118,7 @@ class CodeCommClassifier(nn.Module):
             code_inv_order = code_sort_order.sort()[1]
             code_encoding = self.code_embedding(code[code_sort_order])
             code_enc_pack = pack_padded_sequence(code_encoding, code_lengths, batch_first=True)
+            self.code_lstm.flatten_parameters()
             code_enc_pad, (code_h_n, code_c_n) = self.code_lstm(code_enc_pack)
             code_vecs, _ = pad_packed_sequence(code_enc_pad, batch_first=True)
 
@@ -118,6 +127,7 @@ class CodeCommClassifier(nn.Module):
             comm_inv_order = comm_sort_order.sort()[1]
             comm_encoding = self.comm_embedding(comm[comm_sort_order])
             comm_enc_pack = pack_padded_sequence(comm_encoding, comm_lengths, batch_first=True)
+            self.comm_lstm.flatten_parameters()
             comm_enc_pad, (comm_h_n, comm_c_n) = self.comm_lstm(comm_enc_pack)
             comm_vecs, _ = pad_packed_sequence(comm_enc_pad, batch_first=True)
 

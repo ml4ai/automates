@@ -21,7 +21,7 @@ def accuracy_score(data):
     return 100 * sum([1 if p == t else 0 for p, t in data]) / len(data)
 
 
-def load_all_data(batch_size):
+def load_all_data(batch_size, corpus_name):
     """
     This function loads all data necessary for training and evaluation of a
     code/comment classification model. Data is loaded from a TSV file that
@@ -58,8 +58,8 @@ def load_all_data(batch_size):
     ]
 
     # Build the large tabular dataset using the defined fields
-    tsv_file_path = input_path / "classification_data.tsv"
-    tab_data = data.TabularDataset(tsv_file_path, "TSV", train_val_fields)
+    tsv_file_path = input_path / "{}_dataset.tsv".format(corpus_name)
+    tab_data = data.TabularDataset(str(tsv_file_path), "TSV", train_val_fields)
 
     # Split the large dataset into TRAIN, DEV, TEST portions
     train_data, dev_data, test_data = tab_data.split(split_ratio=[0.85, 0.05, 0.1])
@@ -67,8 +67,8 @@ def load_all_data(batch_size):
     # Load the pretrained word embedding vectors
     code_vec_path = input_path / "code-vectors.txt"
     comm_vec_path = input_path / "comm-vectors.txt"
-    code_vectors = vocab.Vectors(code_vec_path, input_path)
-    comm_vectors = vocab.Vectors(comm_vec_path, input_path)
+    code_vectors = vocab.Vectors(str(code_vec_path), str(input_path))
+    comm_vectors = vocab.Vectors(str(comm_vec_path), str(input_path))
 
     # Builds the known word vocab for code and comments from the pretrained vectors
     code_field.build_vocab(train_data, dev_data, test_data, vectors=code_vectors)
@@ -98,7 +98,7 @@ def save_translations(translations, filepath):
 
 def save_scores(s, filepath):
     """Saves a set of classifications."""
-    pickle.dump(s, open(filepath, "wb"))
+    pickle.dump(s, open(str(filepath), "wb"))
 
 
 def score_classifier(data):
@@ -107,4 +107,4 @@ def score_classifier(data):
     p = precision_score(truth, preds)
     r = recall_score(truth, preds)
     f1 = f1_score(truth, preds)
-    print("(P, R, F1) = ({}, {}, {})".format(p, r, f1))
+    return p, r, f1
