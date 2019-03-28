@@ -78,12 +78,22 @@ To promote rapid grammar development, the team has developed a framework
 for writing unit tests to assess the extraction coverage.  Currently,
 there are 77 tests written to test the extraction of variables,
 definitions, and setting of parameter values, of which 16 pass [todo for Masha: check the #
-of passing tests].
+of passing tests--> see below].
 This test-driven approach (in which we first write the tests based on
 the desired functionality and then work to ensure they pass) will allow
 for quickly increasing rule coverage while ensuring that previous results
 are maintained. [Masha: More rules are written as we continue to analyze the data
 and the outputs from the text reading system.]
+
+For reference:
+Comment: 6, all pass
+Param set: 12,  6 pass
+Vars:  30,  17 pass
+Defs: 35, 16 pass
+---> 83 that check rules 45 pass
++ stringmatch 4 , all pass
+---> overall with stringmatch 87, 49 pass
++ aligner tests: 3, 2 pass
 
 After preprocessing, the contextual information will be extracted
 through the use of
@@ -129,7 +139,7 @@ from which we can extract the variables, variable definitions, and potentially t
 The information extracted from the two sources is later aligned (see below) to [Becky, insert a good phrasing of the goal here? :)]
 
 For paper reading, we currently have sets of rules written for extracting entities (#? todo for Masha--see which can be safely deleted),
-definitions (four rules), and parameter settings (eight rules, which extract both (stand-alone?) values and value intervals/ranges (see Figure ?)).
+definitions (four rules), and parameter settings (eight rules, which extract both (stand-alone?) values and value intervals/ranges (see Figure "ParamSettingVisualization.png)).
 
 For comment extraction, we run the rules on the lines that we have selected as likely to contain variables during
 preprocessing. Since there is less variability in the way comments are written than text from scientific papers,
