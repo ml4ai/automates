@@ -12,9 +12,17 @@ class CodeCommClassifier(nn.Module):
     One LSTM runs over the code input and the other runs over the docstring.
     """
     def __init__(self, cd_vecs, cm_vecs, cls_sz=1, cd_drp=0, cm_drp=0, hd_lyr_sz=100,
-                 cd_hd_sz=50, cm_hd_sz=50, cd_nm_lz=1, cm_nm_lz=1, gpu=False, use_code=True, use_comm=True):
+                 cd_hd_sz=50, cm_hd_sz=50, cd_nm_lz=1, cm_nm_lz=1, gpu=False, model_type="both"):
         super(CodeCommClassifier, self).__init__()
-        self.use_gpu, self.use_code, self.use_comm = gpu, use_code, use_comm
+        self.use_gpu = gpu
+        if model_type == "both":
+            self.use_code, self.use_comm = True, True
+        elif model_type == "code":
+            self.use_code, self.use_comm = True, False
+        elif model_type == "comm":
+            self.use_code, self.use_comm = False, True
+        else:
+            raise RuntimeError("Unidentified model type selected")
 
         # Initialize embeddings from pretrained embeddings
         self.code_embedding = nn.Embedding.from_pretrained(cd_vecs)
@@ -85,9 +93,9 @@ class CodeCommClassifier(nn.Module):
         :returns: [Tensor] -- A matrix with a vector of output for each instance
         """
         ((code, code_lengths), (comm, comm_lengths)) = data
-        # if self.use_gpu:    # Send data to GPU if available
-        #     code = code.cuda()
-        #     comm = comm.cuda()
+        if self.use_gpu:    # Send data to GPU if available
+            code = code.cuda()
+            comm = comm.cuda()
 
         # Prepare data for batch processing
         code = code.transpose(0, 1)
