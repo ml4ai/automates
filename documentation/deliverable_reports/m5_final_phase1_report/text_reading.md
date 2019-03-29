@@ -8,9 +8,7 @@ To contextualize the models lifted from source code, we have implemented a machi
 
 For the text extraction, we use a [pre-processing pipeline](#Data-formatting) that converts pdfs to text, parses the text, and extracts measurements.  A set of [rule grammars](#Rule-based-extraction-framework) then extract variables, their descriptions, and their values.  For the comment extraction, we also use rule grammars to extract the variables and descriptions.  The text variables are aligned to their corresponding comment variables using lexical semantics to provide richer context for the user-facing webapp as well as to inform analyses performed in downstream components (e.g., model and sensitivity analysis).  
 
-Detailed instructions on how to run this pipeline are included below.
-
-> todo link
+Detailed instructions on how to run this pipeline are included [below](#Instructions-for-running-components).
 
 #### Natural language data preprocessing
 
@@ -21,13 +19,6 @@ As the PDF-to-text conversion process is always noisy, the text is then filtered
 After filtering, the text is [syntactically parsed](https://github.com/clulab/processors) and processed with [grobid quantities](https://github.com/kermitt2/grobid-quantities), an open-source tool which finds and normalizes quantities and their units, and even detects the type of the quantities, e.g., _mass_.  The tool finds both single quantities and intervals, with differing degrees of accuracy. The grobid-quantities server is run through Docker and the AutoMATES extraction system converts the extractions into mentions for use in later rules (i.e., the team's extraction rules can look for a previously found quantity and attach it to a variable).  While grobid-quantities has allowed the team to begin extracting model information more quickly, there are limitations to the tool, such as unreliable handling of unicode and inconsistent intervals.  For this reason, the extraction of intervals has been ported into Odin, where the team using syntax to identify intervals and attach them to variables.
 
 - TODO (MASHA+ANDREW): example from webapp?
-
-<!-- [Masha (wrote this before finished reading and later saw that you have already addressed this;
-will keep it here for a bit in case I can reuse the phrasing somewhere below):
-The tool can be used to find both quantities and intervals; however, because of inconsistent
-performance of the tool on the intervals, we have disabled that functionality, and are
-only using the extracted quantities at this stage, while getting the information about the intervals
-from using rules (see below).] -->
 
 #### Rule-based extraction frameworks
 
@@ -62,7 +53,7 @@ definitions (four rules), and parameter settings (eight rules).  The rules for p
 
 ##### Extraction from comments
 
-For comment extraction, we currently consider all of the comments from a given source file, though in the future we will be able to query ever-widening program scopes to retrieve sections of comments which are most relevant to a given GrFN variable.  We then use regular expressions to parse the comment lines, which cannot be straightforwardly be processed using standard tools because there are not easily determinable sentence boundaries and even if segmented, the comments are not true sentences.  Then, we locate instances of the model variables (which are retrived from the GrFN json ) [**TODO** link] by using string matching.  Finally, we use surface rules to extract the corresponding descriptions.   
+For comment extraction, we currently consider all of the comments from a given source file, though in the future we will be able to query ever-widening program scopes to retrieve sections of comments which are most relevant to a given GrFN variable.  We then use regular expressions to parse the comment lines, which cannot be straightforwardly be processed using standard tools because there are not easily determinable sentence boundaries and even if segmented, the comments are not true sentences.  Then, we locate instances of the model variables which are retrived from the GrFN json by using string matching.  Finally, we use surface rules to extract the corresponding descriptions.   
 
 Since there is less variability in the way comments are written than text from scientific papers, there were only two rules necessary for comment reading---one for extracting the variable and one for extracting the definition for the variable.
 
@@ -80,21 +71,22 @@ The final alignments are output to the GrFN json for downstream use.
 
 #### Instructions for running components
 
->TODO: Describe how each individual component of the equation pipeline works, so someone could train/run if desired. E.g., could describe how to launch the TR-Odin component webapp for rule authoring.
+We have separate README files for the individual components of the text reading pipeline:
 
-- development webapp
-- extract and align
-- extract and export
-- how to launch (docker compose, etc)
-    - preprocessing of pdf
+- [Development webapp](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_development_webapp.md) for visualizing the extractions
+
+- [ExtractAndAlign](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_extract_and_align.md) entrypoint, for extracting model information from free text and comments and generating and exporting alignments.  This is the primary pipeline for the text reading module.
 
 #### Updates
 
->TODO: Summary (bullet points) of updates since last report.
+The team has made progess in several areas since the last report.  Here we summarize the new additions, which are described in much more detail in the sections above.
 
-- alignment
+- Alignment
+  - Since the last report, the team has added the Alignment component descibed above to align the variables from the source, the mentions of these variables in the comments, and the corresponding variables in the free text model descriptions.  
 - export into json
-- reading of comments
+  - To facilitate the extraction of variables and descriptions from comments as well as to provide the aligment information to downstream components, the team added code to parse the GrFN jsons and generate a new ones with the additional context.
+- Reading of comments
+  - The team added code to select relevant lines from the source code comments and tokenize them.  Additionally, a small number of new rules were developed to extract variables and descriptions from the comment text.
 
 #### References
 
