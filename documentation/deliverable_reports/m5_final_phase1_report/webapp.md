@@ -3,6 +3,11 @@
 #### Instructions for running
 
 >TODO: Provide instructions for how someone could setup and run the webapp locally
+After installing delphi, do
+
+```
+codex
+```
 
 #### Updates
 
