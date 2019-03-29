@@ -11,6 +11,7 @@ import org.clulab.aske.automates.scienceparse.ScienceParseClient.mkDocument
   * a sequence of Strings.
   */
 abstract class DataLoader {
+  val extension: String
   def loadFile(f: File): Seq[String]
   def loadFile(filename: String): Seq[String] = loadFile(new File(filename))
 //  // defaultExtension can always be overridden, but will hopefully make calls to this method easier...?
@@ -43,6 +44,7 @@ class ScienceParsedDataLoader extends DataLoader {
     val scienceParseDoc = mkDocument(f)
     scienceParseDoc.sections.map(_.text)
   }
+  override val extension: String = "json"
 }
 
 
@@ -54,7 +56,7 @@ class PlainTextDataLoader extends DataLoader {
     * @return string content of file (wrapped in sequence)
     */
   def loadFile(f: File): Seq[String] = Seq(getTextFromFile(f))
-
+  override val extension: String = "txt"
 }
 
 

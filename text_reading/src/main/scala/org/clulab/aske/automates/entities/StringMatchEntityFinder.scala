@@ -1,10 +1,15 @@
 package org.clulab.aske.automates.entities
 
+import ai.lum.regextools.RegexBuilder
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
 
 class StringMatchEntityFinder(strings: Set[String], label: String) extends EntityFinder {
+  val regexBuilder = new RegexBuilder()
+  regexBuilder.add(strings.toSeq:_*)
+  val regex = regexBuilder.mkPattern
   // alexeeva: added neg lookbehind to avoid equation # to be found as a variable
+  //           |     (?<! [word = equation]) /\\Q${stringToMatch}\\E/
   def extract(doc: Document): Seq[Mention] = {
     val mentions = for {
       stringToMatch <- strings
@@ -15,7 +20,7 @@ class StringMatchEntityFinder(strings: Set[String], label: String) extends Entit
            |   priority: 1
            |   type: token
            |   pattern: |
-           |     (?<! [word = equation]) /\\Q${stringToMatch}\\E/
+           |       (?<! [word = equation]) /${regex}/
            |
         """.stripMargin
       engine = ExtractorEngine(ruleTemplate)
@@ -42,5 +47,7 @@ object StringMatchEntityFinder {
     } yield m2.text
     new StringMatchEntityFinder(strings.toSet, label)
   }
+
+  def fromStrings(ss: Seq[String], label: String): StringMatchEntityFinder = new StringMatchEntityFinder(ss.toSet, label)
 
 }

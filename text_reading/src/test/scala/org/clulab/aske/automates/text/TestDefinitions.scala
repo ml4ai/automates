@@ -24,6 +24,10 @@ class TestDefinitions extends ExtractionTest {
       "Kcs" -> Seq("DSSAT-CSM crop coefficient") //todo: include model?
     )
     val mentions = extractMentions(t2a)
+    val defMentions = mentions.seq.filter(_ matches "Definition")
+    for (dm <- defMentions) {
+      dm.arguments.keys.foreach(key => println("-->" + key))
+    }
     testDefinitionEvent(mentions, desired)
   }
 
@@ -56,10 +60,11 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t6a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-  failingTest should s"find definitions from t6a: ${t6a}" taggedAs(Somebody) in {
-    val desired = Seq(
-      "E0" -> Seq("product of Kcd and ETpm")
-    )
+  failingTest should s"find NO definitions from t6a: ${t6a}" taggedAs(Somebody) in {
+//    val desired = Seq(
+//      "E0" -> Seq("product of Kcd and ETpm")
+//    )
+    val desired =  Seq.empty[(String, Seq[String])] //todo: do we consider calculations to be definitions?
     val mentions = extractMentions(t6a)
     testDefinitionEvent(mentions, desired)
   }
@@ -356,7 +361,7 @@ class TestDefinitions extends ExtractionTest {
     val desired = Seq(
       "r0" -> Seq("root radius"),
       "rm" -> Seq("radius of the root extraction zone"),
-      "R" -> Seq("root density"),
+      "R" -> Seq("root density")
     )
     val mentions = extractMentions(t7c)
     testDefinitionEvent(mentions, desired)
@@ -365,23 +370,19 @@ class TestDefinitions extends ExtractionTest {
   val t8c = "where p is the iteration level."
   failingTest should s"find definitions from t8c: ${t8c}" taggedAs(Somebody) in {
     val desired = Seq(
-      "r0" -> Seq("root radius"),
-      "rm" -> Seq("radius of the root extraction zone"),
-      "R" -> Seq("root density"),
+      "p" -> Seq("iteration level")
     )
     val mentions = extractMentions(t8c)
     testDefinitionEvent(mentions, desired)
   }
 
-  val t9c = "Assuming no sink or source (S = 0) and no gravitational or osmotic component (H = h), Eq. [4] reduces to..."
-  failingTest should s"find definitions from t9c: ${t9c}" taggedAs(Somebody) in {
-    val desired = Seq(
-      "r0" -> Seq("root radius"),
-      "rm" -> Seq("radius of the root extraction zone"),
-      "R" -> Seq("root density"),
-    )
-    val mentions = extractMentions(t9c)
-    testDefinitionEvent(mentions, desired)
-  }
+//  val t9c = "Assuming no sink or source (S = 0) and no gravitational or osmotic component (H = h), Eq. [4] reduces to..."
+//  failingTest should s"find definitions from t9c: ${t9c}" taggedAs(Somebody) in {
+//    val desired = Seq(
+//
+//    )
+//    val mentions = extractMentions(t9c)
+//    testDefinitionEvent(mentions, desired)
+//  }
 
 }
