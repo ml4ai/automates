@@ -18,21 +18,17 @@ As the PDF-to-text conversion process is always noisy, the text is then filtered
 
 After filtering, the text is [syntactically parsed](https://github.com/clulab/processors) and processed with [grobid quantities](https://github.com/kermitt2/grobid-quantities), an open-source tool which finds and normalizes quantities and their units, and even detects the type of the quantities, e.g., _mass_.  The tool finds both single quantities and intervals, with differing degrees of accuracy. The grobid-quantities server is run through Docker and the AutoMATES extraction system converts the extractions into mentions for use in later rules (i.e., the team's extraction rules can look for a previously found quantity and attach it to a variable).  While grobid-quantities has allowed the team to begin extracting model information more quickly, there are limitations to the tool, such as unreliable handling of unicode and inconsistent intervals.  For this reason, the extraction of intervals has been ported into Odin, where the team using syntax to identify intervals and attach them to variables.
 
-- TODO (MASHA+ANDREW): example from webapp?
-
 #### Rule-based extraction frameworks
 
 For extracting model information (e.g., variables, their descriptions, values, etc.) from free text and comments, the team implemented a light-weight information extraction framework for use in the ASKE program.  The system incorporates elements of the machine reader developed for the World Modeler's program, [Eidos](https://github.com/clulab/eidos) (e.g., the development webapp for visualizing extractions, entity finders based on syntax and the results of grobid-quantities, and the expansion of entities (Hahn-Powell et al., 2017) that participate in relevant events) along with new [Odin](http://clulab.cs.arizona.edu/papers/lrec2016-odin.pdf) grammars (Valenzuela-Escárcega et al., 2016) for identifying, quantifying, and defining variables, as shown in this screenshot of the development webapp:
 
->  img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/extractions.png" width="100%" height="100%"
+<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/extractions.png" width="100%" height="100%">
 
 Odin grammars have proven to be reliable, robust, and efficient for diverse reading at scale in both the Big Mechanism program (with the [Reach](https://academic.oup.com/database/article/2018/1/bay098/5107029) system) and the World Modeler's program (with the [Eidos](https://github.com/clulab/eidos/) system).  The flexibility of Odin's extraction engine allows it to easily ingest the normalized measurements from grobid quantities along with the surface form and the dependency syntax of the text, such that all representations can be used in the rule grammars during extraction. 
 
 To promote rapid grammar development, the team is using test-based developed.  That is, the team has created a framework for writing unit tests representing ideal extraction coverage and is adding rules to continue to increase the number of tests that are passed.  This test-driven approach (in which we first write the tests based on the desired functionality and then work to ensure they pass) allows for quickly increasing rule coverage (i.e., we are writing more rules as we continue to analyze the data and the outputs from the text reading system) while ensuring that previous results are maintained.
 
 Currently, there are 83 tests written to test the extraction of variables, definitions, and setting of parameter values from text and comments, of which 45 pass: 
-
-> [todo for Masha: check the # of passing tests--> see below].
 
 ##### Summary of extraction unit tests
 
@@ -83,7 +79,7 @@ The team has made progess in several areas since the last report.  Here we summa
 
 - Alignment
   - Since the last report, the team has added the Alignment component descibed above to align the variables from the source, the mentions of these variables in the comments, and the corresponding variables in the free text model descriptions.  
-- export into json
+- Import and export in GrFN json format
   - To facilitate the extraction of variables and descriptions from comments as well as to provide the aligment information to downstream components, the team added code to parse the GrFN jsons and generate a new ones with the additional context.
 - Reading of comments
   - The team added code to select relevant lines from the source code comments and tokenize them.  Additionally, a small number of new rules were developed to extract variables and descriptions from the comment text.
