@@ -105,19 +105,11 @@ That said, even after taking these steps, it is clear that we will need to exten
 
 #### Instructions for running components
 
->TODO: Describe how each individual component of the equation pipeline works, so someone could train/run if desired.
+We have separate README files for the individual components of the equation reading pipeline:
 
-- detection will be in docker container
-
-- decoding is in singularity container (needs gpu)
-
-  The team has also built a [singularity
-  container](https://www.sylabs.io/guides/3.0/user-guide/) with the lua
-  and Python libraries required to run
-  [im2markup](https://github.com/harvardnlp/im2markup).  This will allow
-  for rapid development of the equation decoding system.
-
-- sympy can be anywhere
+- [Downloading and processing arXiv](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_arxiv.md)
+- [Detecting equations in a pdf](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_equation_detection.md)
+- [Decoding equation images into LaTeX](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_equation_decoding.md) (requires gpu)
 
 #### Data set
 

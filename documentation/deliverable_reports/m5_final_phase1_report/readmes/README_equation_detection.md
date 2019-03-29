@@ -1,32 +1,42 @@
 # Running the equation detection module
 
-1. Clones the AutoMATES [mask-rcnn repo]() 
+1. Clones the [AutoMATES repo](https://github.com/ml4ai/automates) 
 
-2. Clone the [matterport Mask-RCNN](https://github.com/matterport/Mask_RCNN) repo inside our repo
+2. Clone the [matterport Mask-RCNN](https://github.com/matterport/Mask_RCNN) repo inside the maskrcnn subdirectory
 
-   cd maskrcnn
-
+   ```
+   cd automates/maskrcnn
    git clone https://github.com/matterport/Mask_RCNN.git
+   ```
 
 3. Download and extract data 
 
-   - Contact us for the file, we don't have rights to post...
+   - Contact us for the data tar file, we don't have rights to post...
 
-     cd maskrcnn
-
+     ```
      tar -zxvf output_objdet.tar.gz
+     ```
 
-4. Put the extracted `equation` directory in the ...
-
-`equations` inside MaskRCNN repo, `maskrcnn/Mask_RCNN/samples/equation`
 
 5. Build the docker container
-6. Run the docker container using the desired mode and base model
 
-training/inference based on argument in script, tell where data lives
+    ```
+    docker build -t maskrcnn-gpu .
+    ```
 
-at beginning we have examples
+6. Run the docker container using the desired mode (train or detect) and base model (i.e., imagenet)
 
-inside docker container, wdir = /data so when running, we have to map our dir to /data
+   - train:
 
-shell s
+     ```
+     sudo ./docker.sh python3 equation.py train --dataset=dataset --subset=train --weights=imagenet
+     ```
+
+   - detect (i.e., find AABBs for the test images):
+
+     ```
+     sudo ./docker.sh python3 equation.py detect --dataset=dataset --subset=test --weights=last
+     ```
+
+     > TODO: update after we try
+
