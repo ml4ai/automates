@@ -33,8 +33,7 @@ from using rules (see below).] -->
 
 For extracting model information (e.g., variables, their descriptions, values, etc.) from free text and comments, the team implemented a light-weight information extraction framework for use in the ASKE program.  The system incorporates elements of the machine reader developed for the World Modeler's program, [Eidos](https://github.com/clulab/eidos) (e.g., the development webapp for visualizing extractions, entity finders based on syntax and the results of grobid-quantities, and the expansion of entities (Hahn-Powell et al., 2017) that participate in relevant events) along with new [Odin](http://clulab.cs.arizona.edu/papers/lrec2016-odin.pdf) grammars (Valenzuela-Escárcega et al., 2016) for identifying, quantifying, and defining variables, as shown in this screenshot of the development webapp:
 
-![A screenshot of the web-based visualizer showing the results of
-the rule-based extraction framework.](figs/extractions.png)
+<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/extractions.png" width="100%" height="100%">
 
 Odin grammars have proven to be reliable, robust, and efficient for diverse reading at scale in both the Big Mechanism program (with the [Reach](https://academic.oup.com/database/article/2018/1/bay098/5107029) system) and the World Modeler's program (with the [Eidos](https://github.com/clulab/eidos/) system).  The flexibility of Odin's extraction engine allows it to easily ingest the normalized measurements from grobid quantities along with the surface form and the dependency syntax of the text, such that all representations can be used in the rule grammars during extraction. 
 
