@@ -6,7 +6,7 @@ import upickle.default.{ReadWriter => RW, macroRW}
 case class GrFNDocument (
   functions: Vector[GrFNFunction],
   start: String,
-  name: String,
+  name: Option[String],
   dateCreated: String,
   variables: Option[Seq[GrFNVariable]],
   alignments: Option[Seq[GrFNAlignment]]

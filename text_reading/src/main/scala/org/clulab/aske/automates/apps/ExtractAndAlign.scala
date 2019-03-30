@@ -3,6 +3,7 @@ package org.clulab.aske.automates.apps
 import java.io.{File, PrintWriter}
 
 import ai.lum.common.ConfigUtils._
+import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
 import org.clulab.aske.automates.entities.StringMatchEntityFinder
@@ -198,7 +199,8 @@ object ExtractAndAlign {
     val topLevelAlignments = srcVarToCommentGrFNAlignments ++ commentToTextGrFNAlignments
 
     val grfnToExport = GrFNDocument(grfn.functions, grfn.start, grfn.name, grfn.dateCreated, Some(topLevelVariables), Some(topLevelAlignments))
-    val grfnWriter = new PrintWriter(s"$outputDir/grfn_with_alignments.json")
+    val grfnBaseName = new File(grfnFile).getBaseName()
+    val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_alignments.json")
     grfnWriter.println(write(grfnToExport))
     grfnWriter.close()
   }
