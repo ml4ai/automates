@@ -69,6 +69,8 @@ We also found that, when the model is given the _cropped_ images, because of the
 
 ![mis-matched braces](figs/j_psi.png)
 
+>TODO: fix psi
+>TODO: fix the good sympy size....? what happened to the img notation? 
 While this may appear to be strange behavior, recall that the model is pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, however, there is a [specific subatomic particle that is interchangeably refered to as J/$\Psi$](https://en.m.wikipedia.org/wiki/J/psi_meson). This highlights that the model is over-fitted to the specific domain it was trained on.
 
 To address these limitations of poorly handling variations in the input, we will re-train the model using the much larger set of equations from arXiv. The collected data represents a much wider set of domains and has orders of magnitude more data, which will help with the issue of overfitting. Additionally, to ensure robustness to different image sizes, fonts, typesettings, etc. we will augment the training data using techniques that have been proven to improve generality in machine vision systems (e.g., Baird, 1993; Wong et al., 2016; Wang & Perez, 2017, _inter alia_). Specifically, by manipulating the image size, text font, blurriness, rotation, etc. we can generate additional training data to help the model to better generalize to unseen examples which come from a variety of sources.
