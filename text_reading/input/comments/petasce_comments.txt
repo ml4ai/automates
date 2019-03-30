@@ -1,0 +1,167 @@
+$file_head:
+    C Module PETASCE_INIT defines the initial values for a number of
+    C variables used in the computation
+    
+    
+    
+    
+    
+    
+
+$file_foot:
+    
+    C=======================================================================
+
+Function: UPDATE_VARS
+  head:
+    C Module PETASCE_INIT defines the initial values for a number of
+    C variables used in the computation
+    
+    
+    
+    
+    
+    
+
+  neck:
+
+  foot:
+    
+    C         EV_TRANSP: potential evapotranspiration (FAO-56 Eq. 69)
+
+Function: REFET
+  head:
+    !-----------------------------------------------------------------------
+    
+    C Module MOD_EVAPOTRANSP contains code to compute potential evapotranspiration
+    C (FAO-56 Eq. 69)
+    C         REFET: Standardized reference evapotranspiration (ASCE Standard Eq. 1)
+
+  neck:
+
+  foot:
+    
+    !-----------------------------------------------------------------------
+    
+
+Function: EV_TRANSP
+  head:
+    
+    C         EV_TRANSP: potential evapotranspiration (FAO-56 Eq. 69)
+
+  neck:
+
+  foot:
+
+Function: PETASCE
+  head:
+    
+    !-----------------------------------------------------------------------
+    
+
+  neck:
+    
+
+  foot:
+    
+    C=======================================================================
+
+  internal:
+  line 94:
+    !-----------------------------------------------------------------------
+    
+    !     ASCE Standardized Reference Evapotranspiration
+    !     Average temperature (ASCE Standard Eq. 2)
+
+  line 98:
+    !     Atmospheric pressure (ASCE Standard Eq. 3)
+
+  line 101:
+    !     Psychrometric constant (ASCE Standard Eq. 4)
+
+  line 104:
+    !     Slope of the saturation vapor pressure-temperature curve
+    !     (ASCE Standard Eq. 5)                                !kPa/degC
+
+  line 108:
+    !     Saturation vapor pressure (ASCE Standard Eqs. 6 and 7)
+
+  line 113:
+    !     Actual vapor pressure (ASCE Standard Eq. 8)
+
+  line 116:
+    !     RHmin (ASCE Standard Eq. 13, RHmin limits from FAO-56 Eq. 70)
+
+  line 119:
+    !     Net shortwave radiation (ASCE Standard Eq. 16)
+
+  line 127:
+    !     Extraterrestrial radiation (ASCE Standard Eqs. 21,23,24,27)
+
+  line 136:
+    !     Clear sky solar radiation (ASCE Standard Eq. 19)
+
+  line 139:
+    !     Net longwave radiation (ASCE Standard Eqs. 17 and 18)
+
+  line 150:
+    !     Net radiation (ASCE Standard Eq. 15)
+
+  line 153:
+    !     Soil heat flux (ASCE Standard Eq. 30)
+
+  line 156:
+    !     Wind speed (ASCE Standard Eq. 33)
+
+  line 166:
+    !     Aerodynamic roughness and surface resistance daily timestep constants
+    !     (ASCE Standard Table 1)
+    
+    !      SELECT CASE(MEEVP) !
+    !        CASE('A') !Alfalfa reference
+    !          Cn = 1600.0 !K mm s^3 Mg^-1 d^-1
+    !          Cd = 0.38 !s m^-1
+    !        CASE('G') !Grass reference
+    !          Cn = 900.0 !K mm s^3 Mg^-1 d^-1
+    !          Cd = 0.34 !s m^-1
+    !      END SELECT
+    
+    !     FAO-56 dual crop coefficient approach
+    !     Basal crop coefficient (Kcb)
+    !     Also similar to FAO-56 Eq. 97
+    !     KCB is zero when LAI is zero
+    
+    C The three calls to GET below are commented out and replaced by hard-coded
+    C assignments to match the Python code that Paul constructed
+    
+    C      CALL GET('SPAM', 'SKC', SKC)
+    C      CALL GET('SPAM', 'KCBMIN', KCBMIN)
+    C      CALL GET('SPAM', 'KCBMAX', KCBMAX)
+    
+
+  line 197:
+             !DeJonge et al. (2012) equation
+
+  line 201:
+          !Maximum crop coefficient (Kcmax) (FAO-56 Eq. 72)
+
+  line 220:
+          !Effective canopy cover (fc) (FAO-56 Eq. 76)
+
+  line 227:
+          !Exposed and wetted soil fraction (FAO-56 Eq. 75)
+          !Unresolved issue with FW (fraction wetted soil surface).
+          !Some argue FW should not be used to adjust demand.
+          !Rather wetting fraction issue should be addressed on supply side.
+          !Difficult to do with a 1-D soil water model
+
+  line 235:
+          !Potential evaporation coefficient (Ke) (Based on FAO-56 Eq. 71)
+          !Kr = 1.0 since this is potential Ke. Model routines handle stress
+
+  line 239:
+          !Potential crop coefficient (Kc) (FAO-56 Eqs. 58 & 69)
+
+  line 242:
+          !Potential evapotranspiration (FAO-56 Eq. 69)
+

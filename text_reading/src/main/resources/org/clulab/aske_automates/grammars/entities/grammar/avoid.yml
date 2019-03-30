@@ -27,7 +27,15 @@ rules:
     type: token
     pattern: |
       # avoid xrefs
-      [tag=NNP] "et" "al." @Avoid
+      [tag=/NNP|FW/] (?="et" "al")
+
+  - name: "references-name-year"
+    label: Avoid
+    priority: 3
+    type: token
+    pattern: |
+      # avoid xrefs
+      [tag=/NNP|FW/] (?= "," [tag=CD])
 
 
   - name: "equal_sign"
@@ -36,4 +44,60 @@ rules:
     type: token
     pattern: |
       #avoids equal signs
-      [word="="]
+      [word=/=|>|</]
+
+  - name: "figure-equation-ref"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      #avoids pointers to equations/figures as those are frequently found as variables
+      #might need to be revisited
+      [word=/(?i)figs?|eqs?/] [word="."]
+
+  # todo: verify that this prevents double finding when the StringMatchEF is used
+  # todo: verify there are no expansion ramifications due to Avoid label
+  - name: "prev_found_variable"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      #avoids previously found Variables
+      [mention=Variable]
+
+  - name: "YEAR"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="DATE"]
+
+  - name: "ie"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [word="i.e"]
+
+  - name: "person" #doesn't work bc Kcbmin is found as PERSON
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="PERSON"] [entity="PERSON"] [entity="PERSON"]
+
+
+  - name: "person_2" #doesn't work bc Kcbmin is found as PERSON
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="PERSON"] [entity="PERSON"]
+
+  - name: "person_2authors"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [entity="PERSON"] [word="and"] [entity="PERSON"]
+

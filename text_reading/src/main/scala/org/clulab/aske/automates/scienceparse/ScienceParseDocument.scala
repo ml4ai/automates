@@ -5,7 +5,7 @@ case class ScienceParseDocument(
   title: Option[String],
   year: Int,
   authors: Vector[Author],
-  abstractText: String,
+  abstractText: Option[String],
   sections: Vector[Section],
   references: Vector[Reference]
 )

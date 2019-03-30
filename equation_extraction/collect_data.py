@@ -23,6 +23,7 @@ def parse_args():
     parser.add_argument('--outdir', default='/data/output')
     parser.add_argument('--logfile', default='/data/collect_data.log')
     parser.add_argument('--template', default='misc/template.tex')
+    parser.add_argument('--template-im2markup', default='misc/template_im2markup.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
@@ -96,14 +97,15 @@ def match_template(pages, template, rescale_factor):
     best_val = -np.inf
     best_loc = (-1, -1)
     best_page = -1
-    best_h, best_w = -1, -1 # essentially keeps track of the best scale factor
+    best_h, best_w = -1, -1 # keeps track of the dims of the resized box (from best scale)
+    best_scale = -1
     # rescale pages and template to speed up template matching
     if rescale_factor != 1:
         template = cv2.resize(template, (0,0), fx=rescale_factor, fy=rescale_factor)
         pages = [cv2.resize(p, (0,0), fx=rescale_factor, fy=rescale_factor) for p in pages]
     # Try several scale factors in case the standalone equation is slightly smaller/bigger
     # than the one in the original paper
-    for scale in np.linspace(0.8, 1.2, 5):
+    for scale in np.linspace(0.8, 1.4, 16):
         # resize/scale the template
         resized = cv2.resize(template, (0,0), fx=scale, fy=scale)
         for i, page in enumerate(pages):
@@ -114,13 +116,14 @@ def match_template(pages, template, rescale_factor):
                 best_loc = max_loc
                 best_page = i
                 best_h, best_w = resized.shape[:2]
+		best_scale = scale
     # Note that we are adding the margin described above
     upper_left = (best_loc[0] - margin, best_loc[1] - margin)
     lower_right = (best_loc[0] + best_w + margin, best_loc[1] + best_h + margin)
     if rescale_factor != 1:
         upper_left = int(upper_left[0] / rescale_factor), int(upper_left[1] / rescale_factor)
         lower_right = int(lower_right[0] / rescale_factor), int(lower_right[1] / rescale_factor)
-    return best_val, best_page, upper_left, lower_right
+    return best_val, best_scale, best_page, upper_left, lower_right
 
 
 # used to format error msgs for the poor man's log in process_paper()
@@ -131,7 +134,7 @@ def error_msg(paper_name, msg, equations=[]):
 def get_paper_id(dirname):
     return os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
 
-def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
+def process_paper(dirname, template, template_im2markup, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
     # keep a poor man's log of what failed, if anything
     info_log = ''
 
@@ -169,7 +172,10 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
         # load jinja2 template
         template_loader = jinja2.FileSystemLoader(searchpath='.')
         template_env = jinja2.Environment(loader=template_loader)
+
         template = template_env.get_template(template)
+        template_im2markup = template_env.get_template(template_im2markup)
+
         # keep track of which eqns failed or were skipped, to hopefully later recover
         failed_eqns = []
         skipped_eqns = []
@@ -193,13 +199,16 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
             if environment_name in ('equation', 'equation*'):
                 # make pdf
                 fname = os.path.join(outdir, eq_name, 'equation.tex')
+                fname_im2markup = os.path.join(outdir, eq_name, 'equation_im2markup.tex')
                 equation = render_equation(eq_tex, template, fname, keep_intermediate)
+                # also render using the template from im2markup
+                render_equation(eq_tex, template_im2markup, fname_im2markup, keep_intermediate)
                 if equation is None:
                     # equation couldn't be rendered
                     failed_eqns.append(eq_name)
                     continue
                 # find page and aabb where equation appears
-                match, p, start, end = match_template(pages, equation, rescale_factor)
+                match, scale, p, start, end = match_template(pages, equation, rescale_factor)
                 # write image with aabb
                 image = pages[p].copy()
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
@@ -214,7 +223,7 @@ def process_paper(dirname, template, outdir, rescale_factor, dump_pages, keep_in
                 x2 = end[0] / w
                 y2 = end[1] / h
                 with open(fname, 'w') as f:
-                    values = [p, x1, y1, x2, y2]
+                    values = [match, scale, p, x1, y1, x2, y2]
                     tsv = '\t'.join(map(str, values))
                     print(tsv, file=f)
             else:
@@ -236,7 +245,7 @@ if __name__ == '__main__':
     with open(args.logfile, 'a') as logfile:
         print('processing', args.indir, '...')
         try:
-            paper_errors = process_paper(args.indir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
+            paper_errors = process_paper(args.indir, args.template, args.template_im2markup, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
         except KeyboardInterrupt:
             raise
         except:

@@ -1,0 +1,313 @@
+{
+  "sections": [{
+    "text": "ar X\niv :1\n80 8.\n08 77\n3v 3\n[ cs\n.L G\n] 1\n8 D\nec 2\n01 8\nlearning bilingual mappings given monolingual embeddings and a bilingual dictionary. Our approach decouples the source-to-target language transformation into (a) languagespecific rotations on the original embeddings to align them in a common, latent space, and (b) a language-independent similarity metric in this common space to better model the similarity between the embeddings. Overall, we pose the bilingual mapping problem as a classification problem on smooth Riemannian manifolds. Empirically, our approach outperforms previous approaches on the bilingual lexicon induction and cross-lingual word similarity tasks.\nWe next generalize our framework to represent multiple languages in a common latent space. Language-specific rotations for all the languages and a common similarity metric in the latent space are learned jointly from bilingual dictionaries for multiple language pairs. We illustrate the effectiveness of joint learning for multiple languages in an indirect word translation setting."
+  }, {
+    "heading": "1 Introduction",
+    "text": "Bilingual word embeddings are a useful tool in NLP that has attracted a lot of interest lately, due to a fundamental property: similar concepts/words across different languages are mapped close to each other in a common embedding space. Hence, they are useful for joint/transfer learning and sharing annotated data across languages in different NLP applications like machine translation (Gu et al., 2018), building bilingual dictionaries (Mikolov et al., 2013b), mining parallel corpora (Conneau et al., 2018), text classification (Klementiev et al., 2012), sentiment analy-\n∗ This work was carried out during the author’s intern-\nship at Microsoft, India.\nsis (Zhou et al., 2015), and dependency parsing (Ammar et al., 2016).\nMikolov et al. (2013b) empirically show that a linear transformation of embeddings from one language to another preserves the geometric arrangement of word embeddings. In a supervised setting, the transformation matrix, W, is learned given a small bilingual dictionary and their corresponding monolingual embeddings. Subsequently, many refinements to the bilingual mapping framework have been proposed. (Xing et al., 2015; Smith et al., 2017b; Conneau et al., 2018; Artetxe et al., 2016, 2017, 2018a,b).\nIn this work, we propose a novel geometric approach for learning bilingual embeddings. We rotate the source and target language embeddings from their original vector spaces to a common latent space via language-specific orthogonal transformations. Furthermore, we define a similarity metric, the Mahalanobis metric, in this common space to refine the notion of similarity between a pair of embeddings. We achieve the above by learning the transformation matrix as follows: W = UtBU ⊤ s , where Ut and Us are the orthogonal transformations for target and source language embeddings, respectively, and B is a positive definite matrix representing the Mahalanobis metric.\nThe proposed formulation has the following\nbenefits: • The learned similarity metric allows for a more effective similarity comparison of embeddings based on evidence from the data. • A common latent space decouples the source and target language transformations, and naturally enables representation of word embeddings from both languages in a single vector space. • We also show that the proposed method can be easily generalized to jointly learn multilingual embeddings, given bilingual dictionaries of multiple language pairs. We map multiple languages into a single vector space by learning the characteristics\ncommon across languages (the similarity metric) as well as language specific attributes (the orthogonal transformations).\nThe optimization problem resulting from our formulation involves orthogonal constraints on language-specific transformations (Ui for language i) as well as the symmetric positive-definite constraint on the metric B. Instead of solving the optimization problem in the Euclidean space with constraints, we view it as an optimization problem in smooth Riemannian manifolds, which are well-studied topological spaces (Lee, 2003). The Riemannian optimization framework embeds the given constraints into the search space, and conceptually views the problem as an unconstrained optimization problem over the manifolds.\nWe evaluate our approach on different bilingual as well as multilingual tasks across multiple languages and datasets. The following is a summary of our findings:\n• Our approach outperforms state-of-the-art supervised and unsupervised bilingual mapping methods on the bilingual lexicon induction as well as the cross-lingual word similarity tasks.\n• An ablation analysis reveals that the following contribute to our model’s improved performance: (a) aligning the embedding spaces of different languages, (b) learning a similarity metric which induces a latent space, (c) performing inference in the induced latent space, and (d) formulating the tasks as a classification problem.\n• We evaluate our multilingual model on an indirect word translation task: translation between a language pair that does not have a bilingual dictionary, but the source and target languages each possess a bilingual dictionary with a third, common pivot language. Our multilingual model outperforms a strong unsupervised baseline as well as methods based on adapting bilingual methods for this indirect translation task.\n• Lastly, we propose a semi-supervised extension of our approach which further improves performance over the supervised approaches.\nThe rest of the paper is organized as follows. Section 2 discusses related work. The proposed framework, including problem formulations for bilingual and multilingual mappings, is presented in Section 3. The proposed Riemannian optimization algorithm is described in Section 4. In Section 5, we discuss our experimental setup. Section 6 presents the results of experiments on direct\ntranslation with our algorithms and analyzes the results. Section 7 presents experiments on indirect translation using our generalized multilingual algorithm. We discuss a semi-supervised extension to our framework in Section 8. Section 9 concludes the paper."
+  }, {
+    "heading": "2 Related Work",
+    "text": "Bilingual embeddings. Mikolov et al. (2013b) show that a linear transformation from embeddings of one language to another can be learned from a bilingual dictionary and corresponding monolingual embeddings by performing linear least-squares regression. A popular modification to this formulation constrains the transformation matrix to be orthogonal (Xing et al., 2015; Smith et al., 2017b; Artetxe et al., 2018a). This is known as the orthogonal Procrustes problem (Schönemann, 1966). Orthogonality preserves monolingual distances and ensures the transformation is reversible. Lazaridou et al. (2015) and Joulin et al. (2018) optimize alternative loss functions in this framework. Artetxe et al. (2018a) improves upon the Procrustes solution and propose a multi-step framework consisting of a series of linear transformations to the data. Faruqui and Dyer (2014) use Canonical Correlation Analysis (CCA) to learn linear projections from the source and target languages to a common space such that correlations between the embeddings projected to this space are maximized. Procrustes solution based approaches have been shown to perform better than CCA-based approaches (Artetxe et al., 2016, 2018a).\nWe view the problem of mapping the source and target languages word embeddings as (a) aligning the two language spaces, and (b) learning a similarity metric in this (learned) common space. We accomplish this by learning suitable language-specific orthogonal transformations (for alignment) and a symmetric positive-definite matrix (as Mahalanobis metric). The similarity metric is useful in addressing the limitations of mapping to a common latent space under orthogonality constraints, an issue discussed by Doval et al. (2018). While Doval et al. (2018) learn a second correction transformation by assuming the average of the projected source and target embeddings as the true latent representation, we make no such assumption and learn the similarity metric from the data. Kementchedjhieva et al. (2018), re-\ncently, employed the generalized Procrustes analysis (GPA) method (Gower, 1975) for the bilingual mapping problem. GPA maps both the source and target language embeddings to a latent space, which is constructed by averaging over the two language spaces.\nUnsupervised methods have shown promising results, matching supervised methods in many studies. Artetxe et al. (2017) proposed a bootstrapping method for bilingual lexicon induction problem using a small seed bilingual dictionary. Subsequently, Artetxe et al. (2018b) and Hoshen and Wolf (2018) have proposed initialization methods that eliminate the need for a seed dictionary. Zhang et al. (2017b) and Grave et al. (2018) proposed aligning the the source and target language word embeddings by optimizing the the Wasserstein distance. Unsupervised methods based on adversarial training objectives have also been proposed (Barone, 2016; Zhang et al., 2017a; Conneau et al., 2018; Chen and Cardie, 2018). A recent work by Søgaard et al. (2018) discusses cases in which unsupervised bilingual lexicon induction does not lead to good performance.\nMultilingual embeddings. Ammar et al. (2016) and Smith et al. (2017a) adapt bilingual approaches for representing embeddings of multiple languages in a common vector space by designating one of the languages as a pivot language. In this simple approach, bilingual mappings are learned independently from all other languages to the pivot language. GPA based method (Kementchedjhieva et al., 2018) may also be used to jointly transform multiple languages to a common latent space. However, this requires an nway dictionary to represent n languages. In contrast, the proposed approach requires only pairwise bilingual dictionaries such that every language under consideration is represented in at least one bilingual dictionary.\nThe above-mentioned approaches are referred to as offline since the monolingual and bilingual embeddings are learned separately. In contrast online approaches directly learn a bilingual/multilingual embedding from parallel corpora (Hermann and Blunsom, 2014; Huang et al., 2015; Duong et al., 2017), optionally augmented with monolingual corpora (Klementiev et al., 2012; Chandar et al., 2014; Gouws et al., 2015). In this work, we focus on offline approaches."
+  }, {
+    "heading": "3 Learning Latent Space Representation",
+    "text": "In this section, we first describe the proposed geometric framework to learn bilingual embeddings. We then present its generalization to the multilingual setting."
+  }, {
+    "heading": "3.1 Geometry-aware Factorization",
+    "text": "We propose to transform the word embeddings from the source and target languages to a common space in which the similarity of words embeddings may be better learned. To this end, we align the source and target languages embedding spaces by learning language-specific rotations: Us ∈ O d and Ut ∈ O d for the source and target languages embeddings, respectively. Here O d represents the space of d-dimensional orthogonal matrices. An embedding x in the source language is thus transformed to ψs(x) = U ⊤ s x. Similarly, for an embedding z in the target language: ψt(z) = U ⊤ t z. These orthogonal transformations map (align) both the source and target language embeddings to a common space in which we learn a data-dependent similarity measure, as discussed below.\nWe learn a Mahalanobis metric B to refine the notion of similarity1 between the two transformed embeddings ψs(x) and ψt(z). The Mahalanobis metric incorporates the feature correlation information from the given training data. This allows for a more effective similarity comparison of language embeddings (than the cosine similarity). In fact, Mahalanobis similarity measure reduces to cosine similarity when the features are uncorrelated and have unit variance, which may be a strong assumption in real-world applications. Søgaard et al. (2018) have argued that monolingual embedding spaces across languages are not necessarily isomorphic, hence learning a orthogonal transformation alone may not be sufficient. A similarity metric learned from the data may mitigate this limitation to some extent by learning a correction in the latent space.\nSince B is a Mahalanobis metric in Rd space, it is a d× d symmetric positive-definite matrix B, i.e., B ≻ 0. The similarity between the embeddings x and z in the proposed setting is computed\n1Mahalanobis metric generalizes the notion of cosine similarity. For given two unit normalized vectors x1, x2 ∈ R d, their cosine similarity is given by simI(x1, x2) = x ⊤ 1 Ix2 = x ⊤ 1 x2, where I is the identity matrix. If this space is endowed with a metric B ≻ 0, then simB(x1, x2) = x ⊤ 1 Bx2.\nas hst(x, z) = ψt(z) ⊤ Bψs(x) = z ⊤(UtBU ⊤ s )x. The source to the target language transformation is expressed as Wts = UtBU ⊤ s . For an embedding x in the source language, its transformation to the target language space is given by Wtsx.\nThe proposed factorization of the transformation W = UBV⊤, where U,V ∈ Od and B ≻ 0, is sometimes referred to as polar factorization of a matrix (Bonnabel and Sepulchre, 2010; Meyer et al., 2011). Polar factorization is similar to the singular value decomposition (SVD) The key difference is that SVD enforces B to be a diagonal matrix with non-negative entries, which accounts for only the axis rescaling instead of full feature correlation and is more difficult to optimize (Mishra et al., 2014; Harandi et al., 2017)."
+  }, {
+    "heading": "3.2 Latent Space Interpretation",
+    "text": "Computing the Mahalanobis similarity measure is equivalent to computing the cosine similarity in a special latent (feature) space. This latent space is defined by the transformation φ : Rd → Rd, where the mapping is defined as φ(w) = B 1\n2w. Since B is a symmetric positive-definite matrix, B 1 2 is well-defined and unique.\nHence, our model may equivalently be viewed as learning a suitable latent space as follows. The source and target languages embeddings are linearly transformed as x 7→ φ(ψs(x)) and z 7→ φ(ψt(z)), respectively. The functions φ(ψs(·)) and φ(ψt(·)) map the source and target language embeddings, respectively, to a common latent space. We learn the matrices B, Us, and Ut corresponding to the transformations φ(·), ψs(·), and ψt(·), respectively. Since the matrix B is embedded implicitly in this latent feature space, we employ the usual cosine similarity measure, computed as φ(ψt(z)) ⊤φ(ψs(x)) = z ⊤ UtBU ⊤ s x. It should be noted that this is equal to hst(x, z)."
+  }, {
+    "heading": "3.3 A Classification Model",
+    "text": "We assume a small bilingual dictionary (of size n) is available as the training data. Let Xs ∈ R d×ns and Xt ∈ R d×nt denote the embeddings of the dictionary words from the source and target languages, respectively. Here, ns and nt are the number of unique words in the source and target languages present in the dictionary.\nWe propose to model the bilingual word embedding mapping problem as a binary classification problem. Consider word embeddings x and\nz from the source and target languages, respectively. If the words corresponding to x and z constitute a translation pair then the pair {x, z} belongs to the positive class, else it belongs to the negative class. The prediction function for the pair {x, z} is hst(x, z). We create a binary label matrix Yst ∈ {0, 1}\nns×nt whose (i, j)-th entry corresponds to the correctness of mapping the i-th embedding in Xs to the j-th embedding in Xt. Our overall optimization problem is as follows:\nmin Us∈Od,Ut∈Od,B≻0\n‖X⊤s UsBU ⊤ t Xt −Yst‖ 2 F\n+ λ‖B‖2F . (1)\nwhere ‖·‖F is the Frobenius norm and λ > 0 is the regularization parameter. We employ the square loss function since it is smooth and relatively easier to optimize. It should be noted that our prediction function is invariant of the direction of mapping, i.e., hst(x, z) = hts(z, x). Hence, our model learns bidirectional mapping. The transformation matrix from the target to the source language is given by Wst = UsBU ⊤ t , i.e., Wst = W ⊤ ts.\nThe computation complexity of computing the loss term in (1) is linear in n, the size of the given bilingual dictionary. This is because the loss term in (1) can be re-written as follows:\n‖X⊤s UsBU ⊤ t Xt −Yst‖ 2 F\n= Tr ( UtBU ⊤ s (XsX ⊤ s )UsBU ⊤ t (XtX ⊤ t ) ) + |Ω|\n− 2 ∑\n{(i,j):(i,j)∈Ω}\nx⊤siUsBU ⊤ t xtj , (2)\nwhere xsi represents the i-th column in Xs, xtj represents the j-th column in Xt, Ω is the set of row-column indices corresponding to entry value 1 in Yst, and Tr(·) denotes the trace of a matrix. The complexity of computing the first and third term in (2) is O(d3 + nsd 2 + ntd\n2) and O(nd + nsd 2 + ntd 2), respectively. Similarly, the computation cost of the gradient of the objective function in (1) is also linear in n. Hence, our framework can efficiently leverage information from all the negative samples.\nIn the next section, we discuss a generalization\nof our approach to multilingual settings."
+  }, {
+    "heading": "3.4 Generalization to Multilingual Setting",
+    "text": "In this section, we propose a unified framework for learning mappings when bilingual dictionaries are available for multiple language pairs. We formalize the setting as an undirected, connected graph\nG(V,E), where each node represents a language and an edge represents the availability of a bilingual dictionary between the corresponding pair of languages. Given all bilingual dictionaries corresponding to the edge set E, we propose to align the embedding spaces of all languages in the node set V and learn a common latent space for them.\nTo this end, we jointly learn an orthogonal transformation Ui ∈ O d for every language Li and the Mahalanobis metric B ≻ 0. The latter is common across all languages in the multilingual setu p and helps incorporate information across languages in the latent space. It should be noted that the transformation Ui is employed for all the bilingual mapping problems in this graph associated withLi. The transformation from Li to Lj is given by Wji = UjBU ⊤ i . Further, we are also able to obtain transformations between any language pair in the graph, even if a bilingual dictionary between them is not available.\nLet X j i ∈ R d×m be2 the embeddings of the dictionary words of Li in the dictionary corresponding to edge eij ∈ E. Let Yij ∈ {0, 1} m×m be the binary label matrix corresponding to the dictionary between Li and Lj . The proposed optimization problem for multilingual setting is\nmin Ui∈O\nd ∀i B≻0\n∑\neij∈E\n1\n|Ωij | ‖(Xji ) ⊤ UiBU ⊤ j X i j −Yij‖ 2 F\n+ λ‖B‖2F . (3)\nWe term our approach as Geometry-aware Multilingual Mapping (GeoMM). We next discuss the optimization algorithm for solving the bilingual mapping problem (1) as well as its generalization to the multilingual setting (3)."
+  }, {
+    "heading": "4 Optimization Algorithm",
+    "text": "The geometric constraints Us ∈ O d,Ut ∈ O d and B ≻ 0 in the proposed problems (1) and (3) have been studied as smooth Riemannian manifolds, which are well explored topological spaces (Edelman et al., 1998). The orthogonal matrices Ui lie in, what is popularly known as, the ddimensional Orthogonal manifold. The space of d × d symmetric positive definite matrices (B ≻ 0) is known as the Symmetric Positive Definite manifold. The Riemannian optimization framework embeds such constraints into the search\n2For notational convenience, the number of unique words\nin every language in all their dictionaries is kept same (m).\nspace and conceptually views the problem as an unconstrained problem over the manifolds. In the process, it is able to exploit the geometry of the manifolds and the symmetries involved in them. Absil et al. (2008) discuss several tools to systematically optimize such problems. We optimize the problems (1) and (3) using the Riemannian conjugate gradient algorithm (Absil et al., 2008; Sato and Iwai, 2013).\nPublicly available toolboxes such as Manopt (Boumal et al., 2014), Pymanopt (Townsend et al., 2016) or ROPTLIB (Huang et al., 2016) have scalable off-the-shelf generic implementations of several Riemannian optimization algorithms. We employ Pymanopt in our experiments, where we only need to supply the objective function."
+  }, {
+    "heading": "5 Experimental Settings",
+    "text": "In this section, we describe the evaluation tasks, the datasets used, and the experimental details of the proposed approach.\nEvaluation tasks. We evaluate our approach on several tasks: • To evaluate the quality of the bilingual mappings generated, we evaluate our algorithms primarily for the bilingual lexicon induction (BLI) task, i.e., word translation task and compare Precision@1 with previously reported state-of-the-art results on benchmark datasets (Dinu and Baroni, 2015; Artetxe et al., 2016; Conneau et al., 2018). • We also evaluate on the cross-lingual word similarity task using the SemEval 2017 dataset. • To ensure that quality of embeddings on monolingual tasks does not degrade, we evaluate the quality of our embeddings on the monolingual word analogy task (Artetxe et al., 2016). • To illustrate the utility of representing embeddings of multiple language in a single latent space, we evaluate our multilingual embeddings on the one-hop translation task, i.e., a direct dictionary between the source and target languages is not available, but the source and target languages share a bilingual dictionary with a pivot language. Datasets. For bilingual and multilingual experiments, we report results on the following widely used, publicly available datasets: • VecMap: This dataset was originally made available by Dinu and Baroni (2015) with subsequent extensions by other researchers (Artetxe et al., 2017, 2018a). It contains bilingual dictionaries from English (en) to four languages:\nItalian (it), German (de), Finnish (fi) and Spanish (es). The detailed experimental settings for this BLI task can be found in Artetxe et al. (2018b). • MUSE: This dataset was originally made available by Conneau et al. (2018). It contains bilingual dictionaries from English to many languages such as Spanish (es), French (fr), German (de), Russian (ru), Chinese (zh), and vice versa. The detailed experimental settings for this BLI task can be found in Conneau et al. (2018). This dataset also contains bilingual dictionaries between several other European languages, which we employ in multilingual experiments. Experimental settings of GeoMM. We select the regularization hyper-parameter λ from the set {10, 102, 103, 104} by evaluation on a validation set created out of the training dataset. For inference, we use the (normalized) latent space representations of embeddings (B 1\n2U ⊤ i x) to compute\nsimilarity between the embeddings. For inference in the bilingual lexicon induction task, we employ the Cross-domain Similarity Local Scaling (CSLS) similarity score (Conneau et al., 2018) in nearest neighbor search, unless otherwise mentioned. CSLS has been shown to perform better than other methods in mitigating the hubness problem (Dinu and Baroni, 2015) for search in high dimensional spaces.\nWhile discussing experiments, we denote our bilingual mapping algorithm (Section 3.3) as GeoMM and its generalization to the multilingual setting (Section 3.4) as GeoMMmulti. Our code is available at https://github.com/ anoopkunchukuttan/geomm."
+  }, {
+    "heading": "6 Direct Translation: Results and Analysis",
+    "text": "In this section, we evaluate the performance of our approach on two tasks: bilingual lexicon induction and cross-lingual word similarity. We also perform ablation tests to understand the effect of major sub-components of our algorithm. We verify the monolingual performance of the mapped embeddings generated by our algorithm."
+  }, {
+    "heading": "6.1 Bilingual Lexicon Induction (BLI)",
+    "text": "We compare GeoMM with the best performing supervised methods. We also compare with unsupervised methods as they have been shown to be competitive with supervised methods. The following baselines are compared in the BLI experiments.\n• Procrustes: the bilingual mapping is learned by solving the orthogonal Procrustes problem (Xing et al., 2015; Artetxe et al., 2016; Smith et al., 2017b; Conneau et al., 2018).\n• MSF: the Multi-Step Framework proposed by Artetxe et al. (2018a), with CSLS retrieval. It improves upon the original system (MSF-ISF) by Artetxe et al. (2018a), which employs inverted softmax function (ISF) score for retrieval.\n• Adv-Refine: unsupervised adversarial training approach, with bilingual dictionary refinement (Conneau et al., 2018).\n• SL-unsup: state-of-the-art self-learning (SL) unsupervised method (Artetxe et al., 2018b), employing structural similarity of the embeddings.\nWe also include results of the correction algorithm proposed by Doval et al. (2018) on the MSF results (referred to as MSFµ). In addition, we also include results of several recent works (Kementchedjhieva et al., 2018; Grave et al., 2018; Chen and Cardie, 2018; Hoshen and Wolf, 2018) on MUSE and VecMap datasets, which are reported in the original papers.\nResults on MUSE dataset: Table 1 reports the results on the MUSE dataset. We observe that our algorithm GeoMM outperforms all the supervised baselines. GeoMM also obtains significant improvements over unsupervised approaches.\nThe performance of the multilingual extension, GeoMMmulti, is almost equivalent to the bilingual GeoMM. This means that in spite of multiple embeddings being jointly learned and represented in a common space, its performance is still better than existing bilingual approaches. Thus, our multilingual framework is quite robust since languages from diverse language families have been embedded in the same space. This can allow downstream applications to support multiple languages without performance degradation. Even if bilingual embeddings are represented in a single vector space using a pivot language, the embedding quality is inferior compared to GeoMMmulti. We discuss more multilingual experiments in Section 7.\nResults on VecMap dataset: Table 2 reports the results on the VecMap dataset. We observe that GeoMM obtains the best performance in each language pair, surpassing state-of-the-art results reported on this dataset. GeoMM also outperforms GPA (Kementchedjhieva et al., 2018), which also learns bilingual embeddings in a latent space."
+  }, {
+    "heading": "6.2 Ablation Tests",
+    "text": "We next study the impact of different components of our framework by varying one component at a time. The results of these tests on VecMap dataset are shown in Table 3 and are discussed below. (1) Classification with unconstrained W. We learn the transformation W directly as follows:\nmin W∈Rd×d\nλ‖W‖2F + ‖X ⊤ s W ⊤ Xt −Yst‖ 2 F . (4)\nThe performance drops in this setting compared to GeoMM, underlining the importance of the proposed factorization and the latent space representation. In addition, the proposed factor-\nization helps GeoMM generalize to the multilingual setting (GeoMMmulti). Further, we also observe that the overall performance of this simple classification based model is better than recent supervised approaches such as Procrustes, MSF-ISF (Artetxe et al., 2018a), and GPA (Kementchedjhieva et al., 2018). This suggests that a classification model is better suited for the BLI task.\nNext, we look at both components of the factor-\nization.\n(2) Without language specific rotations. We enforce Us = Ut = I in (1) for GeoMM, i.e., W = B. We observe a significant drop in performance, which highlights the need for aligning the feature space of different languages. (3) Without similarity metric. We enforce B = I in (1) for GeoMM, i.e., W = UtU ⊤ s . It can be observed that the results are poor, which underlines the importance of a suitable similarity metric in the proposed classification model. (4) Target space inference. We learn W =\nUtBU ⊤ s by solving (1), as in GeoMM. During the retrieval stage, the similarity between embeddings is computed in the target space, i.e., given embeddings x and z from the source and target languages, respectively, we compute the similarity of the (normalized) vectors Wx and z. It should be noted that GeoMM computes similarity of x and z in the latent space, i.e., it computes the similarity of the (normalized) vectors B 1\n2U ⊤ s x and B\n1 2U ⊤ t z,\nrespectively. We observe that inference in the target space degrades the performance. This shows that the latent space representation captures useful information and allows GeoMM to obtain much better accuracy.\n(5) Regression with proposed factorization. We pose BLI as a regression problem, as done in previous approaches, by employing the following loss function: ‖UtBU ⊤ s Xs −Xt‖ 2 F . We observe that its performance is worse than the classification baseline (W ∈ Rd×d). The classification setting directly models the similarity score via the loss function, and hence corresponds with inference more closely. This result further reinforces the observation made in the first ablation test.\nTo summarize, the proposed modeling choices are better than the alternatives compared in the ablation tests."
+  }, {
+    "heading": "6.3 Cross-lingual Word Similarity",
+    "text": "The results on the cross-lingual word similarity task using the SemEval 2017 dataset (Camacho-Collados et al., 2017) are shown in Table 4. We observe that GeoMM performs better than Procrustes, MSF, and the SemEval 2017 baseline NASARI (Camacho-Collados et al., 2016). It is also competitive with Luminoso_run2 (Speer and Lowry-Duda, 2017), the best reported system on this dataset. It should be noted that NASARI and luminoso_run2 use additional knowledge sources like BabelNet and ConceptNet."
+  }, {
+    "heading": "6.4 Monolingual Word Analogy",
+    "text": "Table 5 shows the results on the English monolingual analogy task after obtaining it→en mapping on the VecMap dataset (Mikolov et al., 2013a; Artetxe et al., 2016). We observe that there is no significant drop in the monolingual performance by the use of non-orthogonal mappings compared to monolingual embeddings as well as other bilingual embeddings (Procrustes and MSF)."
+  }, {
+    "heading": "7 Indirect Translation: Results and Analysis",
+    "text": "In the previous sections, we have established the efficacy of our approach for bilingual mapping problem when a bilingual dictionary between the source and target languages is available. We also showed that our proposed multilingual generalization (Section 3.4) performs well in this scenario. In this section, we explore if our multilingual generalization is beneficial when a bilingual dictionary is not available between the source and the target, in other words, indirect translation. For this evaluation, our algorithm learns a single model for various language pairs such that word embeddings of different languages are transformed to a common latent space.\nEvaluation Task: One-hop Translation\nWe consider the BLI task from language Lsrc to language Ltgt in the absence of a bilingual lexicon between them. We, however, assume the availability of lexicons for Lsrc-Lpvt and Lpvt-Ltgt, where Lpvt is a pivot language.\nAs baselines, we adapt any supervised bilingual approach (Procrustes, MSF, and the proposed GeoMM) to the one-hop translation setting by considering their following variants: • Composition (cmp): Using the given bilingual approach, we learn the Lsrc → Lpvt and Lpvt → Ltgt transformations as W1 and W2, respectively. Given an embedding x from Lsrc, the corresponding embedding in Ltgt is obtained by a composi-\ntion of the transformations, i.e., W2W1x. This is equivalent to computing the similarity of Lsrc and Ltgt embeddings in the Lpvt embedding space. Recently, Smith et al. (2017a) explored this technique with the Procrustes algorithm. • Pipeline (pip): Using the given bilingual approach, we learn the Lsrc → Lpvt and Lpvt → Ltgt transformations as W1 and W2, respectively. Given a word embedding x from Lsrc, we infer its translation embedding z in Lpvt. Then, the corresponding embedding of x in Ltgt is W2z.\nAs discussed in Section 3.4, our framework allows the flexibility to jointly learn the common latent space of multiple languages, given bilingual dictionaries of multiple language pairs. Our multilingual approach, GeoMMmulti, views this setting as a graph with three nodes {Lsrc, Ltgt, Lpvt} and two edges {Lsrc-Lpvt, Lpvt-Ltgt} (dictionaries).\nExperimental Settings\nWe experiment with the following one-hop translation cases: (a) fr-it-pt, (b) it-de-es, and (c) es-ptfr (read the triplets as Lsrc-Lpvt-Ltgt). The training/test dictionaries and the word embeddings are from the MUSE dataset. In order to minimize direct transfer of information from Lsrc to Ltgt, we generate Lsrc-Lpvt and Lpvt-Ltgt training dictionaries such that they do not have any Lpvt word in common. The training dictionaries have the same size as the Lsrc-Lpvt and Lpvt-Ltgt dictionaries provided in the MUSE dataset while the test dictionaries have 1 500 entries.\nResults and Analysis\nTable 6 shows the results of the one-hop translation experiments. We observe that GeoMMmulti outperforms pivoting methods (cmp and pip) built\non top of MSF and Procrustes for all language pairs. It should be noted that pivoting may lead to cascading of errors in the solution, whereas learning a common embedding space jointly mitigates this disadvantage. This is reaffirmed by our observation that GeoMMmulti performs significantly better than GeoMM (cmp) and GeoMM (pip).\nSince unsupervised methods have been shown to be competitive with supervised methods, they can be an alternative to pivoting. Indeed, we observe that the unsupervised method SL-unsup is better than the pivoting methods though it used no bilingual dictionaries. On the other hand, GeoMMmulti is better than the unsupervised methods too. It should be noted that the unsupervised methods use much larger vocabulary than GeoMMmulti during the training stage.\nWe also experimented with scenarios where some words from Lpvt occur in both Lsrc-Lpvt and Lpvt-Ltgt training dictionaries. In these cases too, we observed that GeoMMmulti perform better than other methods. We have not included these results due to space constraints."
+  }, {
+    "heading": "8 Semi-supervised GeoMM",
+    "text": "In this section, we discuss an extension of GeoMM, which benefits from unlabeled data. For the bilingual mapping problem, unlabeled data is available in the form of vocabulary lists for both the source and target languages. Existing unsupervised and semi-supervised techniques (Artetxe et al., 2017, 2018b; Joulin et al., 2018; Hoshen and Wolf, 2018) have an iterative refinement procedure that employs the vocabulary lists to augment the dictionary with positive or negative mappings.\nGiven a seed bilingual dictionary, we implement a bootstrapping procedure that iterates over the following two steps until convergence:\n1. Learn the GeoMM model by solving the pro-\nposed formulation (1) with the current bilingual dictionary. 2. Compute a new bilingual dictionary from the\nvocabulary lists, using the (current) GeoMM model for retrieval. The seed dictionary along with this new dictionary is used in the next iteration.\nIn order to keep the computational cost low, we restrict the vocabulary list to k most frequent words for both the languages (Artetxe et al., 2018b; Hoshen and Wolf, 2018). In addition, we perform\nbidirectional dictionary induction (Artetxe et al., 2018b; Hoshen and Wolf, 2018). We track the model’s performance on a validation set to avoid overfitting and use it as a criterion for convergence of the bootstrap procedure.\nWe evaluate the proposed semi-supervised GeoMM algorithm (referred to as GeoMMsemi) on the bilingual lexicon induction task on MUSE and VecMap datasets. The bilingual dictionary for training is split 80/20 into the seed dictionary and the validation set. We set k = 25000, which works well in practice.\nWe compare GeoMMsemi with RCSLS, a recently proposed state-of-the-art semi-supervised algorithm by Joulin et al. (2018). RCSLS directly optimizes the CSLS similarity score (Conneau et al., 2018), which is used during retrieval stage for GeoMM, among other algorithms. On the other hand, GeoMMsemi optimizes a simpler classification based square loss function (refer Section 3.3). In addition to the training dictionary, RCSLS uses the full vocabulary list of the source and target languages (200 000 words each) during training.\nThe results are reported in Table 7. We observe that the overall performance of GeoMMsemi is slightly better than RCSLS. In addition, our supervised approach GeoMM performs slightly worse than RCSLS, though it does not have the advantage of learning from unlabeled data, as is the case for RCSLS and GeoMMsemi. We also notice that GeoMMsemi improves upon GeoMM in almost all language pairs.\nWe also evaluate GeoMMsemi on the VecMap dataset. The results are reported in Table 8. To the best of our knowledge, GeoMMsemi obtains state-\nof-the-art results on the VecMap dataset."
+  }, {
+    "heading": "9 Conclusion and Future Work",
+    "text": "In this work, we develop a framework for learning multilingual word embeddings by aligning the embeddings for various languages in a common space and inducing a Mahalanobis similarity metric in the common space. We view the translation of embeddings from one language to another as a series of geometrical transformations and jointly learn the language-specific orthogonal rotations and the symmetric positive definite matrix representing the Mahalanobis metric. Learning such transformations can also be viewed as learning a suitable common latent space for multiple languages. We formulate the problem in the Riemannian optimization framework, which models the above transformations efficiently.\nWe evaluate our bilingual and multilingual algorithms on the bilingual lexicon induction and the cross-lingual word similarity tasks. The results show that our algorithm outperforms existing approaches on multiple datasets. In addition, we demonstrate the efficacy of our multilingual algorithm in a one-hop translation setting for bilingual lexicon induction, in which a direct dictionary between the source and target languages is not available. The semi-supervised extension of our algorithm shows that our framework can leverage unlabeled data to obtain further improvements. Our analysis shows that the combination of the proposed transformations, inference in the induced latent space, and modeling the problem in classification setting allows the proposed approach to achieve state-of-the-art performance.\nIn future, an unsupervised extension to our approach can be explored. Optimizing the CSLS loss function (Joulin et al., 2018) within our framework can be investigated to address the hubness problem. We plan to work on downstream applications like text classification, machine translation, etc., which may potentially benefit from the pro-\nposed latent space representation of multiple languages by sharing annotated resources across languages."
+  }],
+  "year": 2018,
+  "references": [{
+    "title": "Optimization Algorithms on Matrix Manifolds",
+    "authors": ["Pierre-Antoine Absil", "Robert Mahony", "Rodolphe Sepulchre."],
+    "venue": "Princeton University Press, Princeton, NJ.",
+    "year": 2008
+  }, {
+    "title": "Massively multilingual word embeddings",
+    "authors": ["Waleed Ammar", "George Mulcaire", "Yulia Tsvetkov", "Guillaume Lample", "Chris Dyer", "Noah A. Smith."],
+    "venue": "Technical report, arXiv preprint arXiv:1602.01925.",
+    "year": 2016
+  }, {
+    "title": "Learning principled bilingual mappings of word embeddings while preserving monolingual invariance",
+    "authors": ["Mikel Artetxe", "Gorka Labaka", "Eneko Agirre."],
+    "venue": "Proceedings of the Conference on Empirical Methods in Natural Lan-",
+    "year": 2016
+  }, {
+    "title": "Learning bilingual word embeddings with (almost) no bilingual data",
+    "authors": ["Mikel Artetxe", "Gorka Labaka", "Eneko Agirre."],
+    "venue": "Proceedings of the Annual Meeting of the Association for Computational Linguistics, pages 451–462.",
+    "year": 2017
+  }, {
+    "title": "Generalizing and improving bilingual word embedding mappings with a multi-step framework of linear transformations",
+    "authors": ["Mikel Artetxe", "Gorka Labaka", "Eneko Agirre."],
+    "venue": "Proceedings of the AAAI Conference on Artificial",
+    "year": 2018
+  }, {
+    "title": "A robust self-learning method for fully unsupervised cross-lingual mappings of word embeddings",
+    "authors": ["Mikel Artetxe", "Gorka Labaka", "Eneko Agirre."],
+    "venue": "Proceedings of the Annual Meeting of the Association for Computational",
+    "year": 2018
+  }, {
+    "title": "Towards cross-lingual distributed representations without parallel text trained with adversarial autoencoders",
+    "authors": ["Antonio Valerio Miceli Barone."],
+    "venue": "Proceedings of the 1st Workshop on Representation Learning for NLP.",
+    "year": 2016
+  }, {
+    "title": "Riemannian metric and geometric mean for positive semidefinite matrices of fixed rank",
+    "authors": ["Silvère Bonnabel", "Rodolphe Sepulchre"],
+    "year": 2010
+  }, {
+    "title": "Manopt, a Matlab toolbox for optimization on manifolds",
+    "authors": ["Nicolas Boumal", "Bamdev Mishra", "Pierre-Antoine Absil", "Rodolphe Sepulchre."],
+    "venue": "Journal of Machine Learning Research, 15(Apr):1455–1459.",
+    "year": 2014
+  }, {
+    "title": "SemEval-2017 Task 2: Multilingual and Crosslingual Semantic Word Similarity",
+    "authors": ["José Camacho-Collados", "Mohammad Taher Pilehvar", "Nigel Collier", "Roberto Navigli."],
+    "venue": "Proceedings of the 11th International Workshop on Se-",
+    "year": 2017
+  }, {
+    "title": "Nasari: Integrating explicit knowledge and corpus statistics for a multilingual representation of concepts and entities",
+    "authors": ["José Camacho-Collados", "Mohammad Taher Pilehvar", "Roberto Navigli."],
+    "venue": "Artificial Intelligence, 240:36–64.",
+    "year": 2016
+  }, {
+    "title": "An autoencoder approach to learning bilingual word representations",
+    "authors": ["Sarath Chandar", "Stanislas Lauly", "Hugo Larochelle", "Mitesh Khapra", "Balaraman Ravindran", "Vikas C Raykar", "Amrita Saha."],
+    "venue": "Proceedings of the Advances in",
+    "year": 2014
+  }, {
+    "title": "Unsupervise multilingual word embeddings",
+    "authors": ["Xilun Chen", "Claire Cardie."],
+    "venue": "Proceedings of the Conference on Empirical Methods in Natural Language Processing.",
+    "year": 2018
+  }, {
+    "title": "Word translation without parallel data",
+    "authors": ["Alexis Conneau", "Guillaume Lample", "Marc’Aurelio Ranzato", "Ludovic Denoyer", "Hervé Jégou"],
+    "venue": "In Proceedings of the International Conference on Learning Repre-",
+    "year": 2018
+  }, {
+    "title": "Improving zero-shot learning by mitigating the hubness problem",
+    "authors": ["Georgiana Dinu", "Marco Baroni."],
+    "venue": "Workshop track of International Conference on Learning Representations.",
+    "year": 2015
+  }, {
+    "title": "Improving cross-lingual word embeddings by meeting in the middle",
+    "authors": ["Yerai Doval", "Jose Camacho-Collados", "Luis Espinosa-Anke", "Steven Schockaert."],
+    "venue": "Proceedings of the Conference on Empirical Methods in Nat-",
+    "year": 2018
+  }, {
+    "title": "Multilingual training of crosslingual word embeddings",
+    "authors": ["Long Duong", "Hiroshi Kanayama", "Tengfei Ma", "Steven Bird", "Trevor Cohn."],
+    "venue": "Proceedings of the Conference of the European Chapter of the Association for Computa-",
+    "year": 2017
+  }, {
+    "title": "The geometry of algorithms with orthogonality constraints",
+    "authors": ["Alan Edelman", "Tomás A. Arias", "Steven T. Smith."],
+    "venue": "SIAM Journal on Matrix Analysis and Applications, 20(2):303– 353.",
+    "year": 1998
+  }, {
+    "title": "Improving vector space word representations using multilingual correlation",
+    "authors": ["Manaal Faruqui", "Chris Dyer."],
+    "venue": "Proceedings of the Conference of the European Chapter of the Association for Computational Linguistics, pages 462–",
+    "year": 2014
+  }, {
+    "title": "Bilbowa: Fast bilingual distributed representations without word alignments",
+    "authors": ["Stephan Gouws", "Yoshua Bengio", "Greg Corrado."],
+    "venue": "Proceedings of the International Conference on Machine Learning, pages 748–756.",
+    "year": 2015
+  }, {
+    "title": "Generalized procrustes analysis",
+    "authors": ["John C. Gower."],
+    "venue": "Psychometrika, 40(1):33–51.",
+    "year": 1975
+  }, {
+    "title": "Unsupervised alignment of embeddings with Wasserstein Procrustes",
+    "authors": ["Edouard Grave", "Armand Joulin", "Quentin Berthet."],
+    "venue": "Technical report, arXiv preprint arXiv:1805.11222.",
+    "year": 2018
+  }, {
+    "title": "Universal neural machine translation for extremely low resource languages",
+    "authors": ["Jiatao Gu", "Hany Hassan", "Jacob Devlin", "Victor OK Li."],
+    "venue": "Proceedings of the Conference of the North American Chapter of the Association for",
+    "year": 2018
+  }, {
+    "title": "Joint dimensionality reduction and metric learning: A geometric take",
+    "authors": ["Mehrtash Harandi", "Mathieu Salzmann", "Richard Hartley."],
+    "venue": "Proceedings of the International Conference on Machine Learning.",
+    "year": 2017
+  }, {
+    "title": "Multilingual models for compositional distributed semantics",
+    "authors": ["Karl Moritz Hermann", "Phil Blunsom."],
+    "venue": "Proceedings of the Annual Meeting of the Association for Computational Linguistics, pages 58–68.",
+    "year": 2014
+  }, {
+    "title": "Nonadversarial unsupervised word translation",
+    "authors": ["Yedid Hoshen", "Lior Wolf."],
+    "venue": "Proceedings of the Conference on Empirical Methods in Natural Language Processing, pages 469–478.",
+    "year": 2018
+  }, {
+    "title": "Translation invariant word embeddings",
+    "authors": ["Kejun Huang", "Matt Gardner", "Evangelos E. Papalexakis", "Christos Faloutsos", "Nikos D. Sidiropoulos", "Tom M. Mitchell", "Partha Pratim Talukdar", "Xiao Fu."],
+    "venue": "Proceedings of",
+    "year": 2015
+  }, {
+    "title": "ROPTLIB: An object-oriented C++ library for optimization on Riemannian manifolds",
+    "authors": ["Wen Huang", "Pierre-Antoine Absil", "Kyle A. Gallivan", "Paul Hand."],
+    "venue": "Technical Report FSU16-14.v2, Florida State University.",
+    "year": 2016
+  }, {
+    "title": "Loss in translation: Learning bilingual word mapping with a retrieval criterion",
+    "authors": ["Armand Joulin", "Piotr Bojanowski", "Tomas Mikolov", "Edouard Grave", "Hervè Jègou."],
+    "venue": "Proceedings of the Conference on Empirical",
+    "year": 2018
+  }, {
+    "title": "Generalizing Procrustes analysis for better bilingual dictionary induction",
+    "authors": ["Y. Kementchedjhieva", "S. Ruder", "R. Cotterell", "A. Søgaard."],
+    "venue": "Proceedings of the SIGNLL Conference on Computational Natural Language Learning.",
+    "year": 2018
+  }, {
+    "title": "Inducing crosslingual distributed representations of words",
+    "authors": ["Alexandre Klementiev", "Ivan Titov", "Binod Bhattarai."],
+    "venue": "Proceedings of the International Conference on Computational Linguistics: Technical Papers, pages",
+    "year": 2012
+  }, {
+    "title": "Hubness and pollution: Delving into cross-space mapping for zero-shot learning",
+    "authors": ["Angeliki Lazaridou", "Georgiana Dinu", "Marco Baroni."],
+    "venue": "Proceedings of the Annual Meeting of the Association for Computational Linguistics,",
+    "year": 2015
+  }, {
+    "title": "Introduction to Smooth Manifolds, second edition",
+    "authors": ["John M. Lee."],
+    "venue": "Springer-Verlag, New York.",
+    "year": 2003
+  }, {
+    "title": "Linear regression under fixedrank constraints: A Riemannian approach",
+    "authors": ["Gilles Meyer", "Silvère Bonnabel", "Rodolphe Sepulchre."],
+    "venue": "In",
+    "year": 2011
+  }, {
+    "title": "Efficient estimation of word representations in vector space",
+    "authors": ["Tomas Mikolov", "Kai Chen", "Greg Corrado", "Jeffrey Dean."],
+    "venue": "Technical report, arXiv preprint arXiv:1301.3781.",
+    "year": 2013
+  }, {
+    "title": "Exploiting similarities among languages for machine translation",
+    "authors": ["Tomas Mikolov", "Quoc V Le", "Ilya Sutskever."],
+    "venue": "Technical report, arXiv preprint arXiv:1309.4168.",
+    "year": 2013
+  }, {
+    "title": "Fixed-rank matrix factorizations and Riemannian lowrank optimization",
+    "authors": ["Bamdev Mishra", "Gilles Meyer", "Silvère Bonnabel", "Rodolphe Sepulchre."],
+    "venue": "Computational Statistics, 29(3):591–621.",
+    "year": 2014
+  }, {
+    "title": "A new, globally convergent Riemannian conjugate gradient method",
+    "authors": ["Hiroyuki Sato", "Toshihiro Iwai."],
+    "venue": "Optimization: A Journal of Mathematical Programming and Operations Research, 64(4):1011–1031.",
+    "year": 2013
+  }, {
+    "title": "A generalized solution of the orthogonal Procrustes problem",
+    "authors": ["Peter H. Schönemann."],
+    "venue": "Psychometrika, 31(1):1–10.",
+    "year": 1966
+  }, {
+    "title": "Aligning the fastText vectors of 78 languages",
+    "authors": ["Samuel L. Smith", "David H.P. Turban", "Steven Hamblin", "Nils Y. Hammerla."],
+    "venue": "URL: https://github. com/Babylonpartners/fastText_",
+    "year": 2017
+  }, {
+    "title": "Offline bilingual word vectors, orthogonal transformations and the inverted softmax",
+    "authors": ["Samuel L. Smith", "David H.P. Turban", "Steven Hamblin", "Nils Y. Hammerla."],
+    "venue": "Proceedings of the International Conference on",
+    "year": 2017
+  }, {
+    "title": "On the limitations of unsupervised bilingual dictionary induction",
+    "authors": ["Anders Søgaard", "Sebastian Ruder", "Ivan Vulić."],
+    "venue": "Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics, pages 778–788.",
+    "year": 2018
+  }, {
+    "title": "ConceptNet at SemEval-2017 Task 2: Extending word embeddings with multilingual relational knowledge",
+    "authors": ["Robert Speer", "Joanna Lowry-Duda."],
+    "venue": "Proceedings of the 11th International Workshop on Semantic Evalua-",
+    "year": 2017
+  }, {
+    "title": "Pymanopt: A python toolbox for optimization on manifolds using automatic differentiation",
+    "authors": ["James Townsend", "Niklas Koep", "Sebastian Weichwald."],
+    "venue": "Journal of Machine Learning Research, 17(137):1–5. URL: https://",
+    "year": 2016
+  }, {
+    "title": "Normalized word embedding and orthogonal transform for bilingual word translation",
+    "authors": ["Chao Xing", "Dong Wang", "Chao Liu", "Yiye Lin."],
+    "venue": "Proceedings of the Conference of the North American Chapter of the Association for Com-",
+    "year": 2015
+  }, {
+    "title": "Adversarial training for unsupervised bilingual lexicon induction",
+    "authors": ["Meng Zhang", "Yang Liu", "Huanbo Luan", "Maosong Sun."],
+    "venue": "Proceedings of the Annual Meeting of the Association for Computational Linguistics, pages",
+    "year": 2017
+  }, {
+    "title": "Earth mover’s distance minimization for unsupervised bilingual lexicon induction",
+    "authors": ["Meng Zhang", "Yang Liu", "Huanbo Luan", "Maosong Sun."],
+    "venue": "Proceedings of the Conference on Empirical Methods in Natural Lan-",
+    "year": 2017
+  }, {
+    "title": "Learning bilingual sentiment word embeddings for cross-language sentiment classification",
+    "authors": ["Huiwei Zhou", "Long Chen", "Fulin Shi", "Degen Huang."],
+    "venue": "Proceedings of the Annual Meeting of the Association for Computational",
+    "year": 2015
+  }],
+  "id": "SP:cabb025e2126c64d4f9afdeb36b75edd5b8695ca",
+  "authors": [{
+    "name": "Pratik Jawanpuria",
+    "affiliations": []
+  }, {
+    "name": "Arjun Balgovind",
+    "affiliations": []
+  }, {
+    "name": "Anoop Kunchukuttan",
+    "affiliations": []
+  }, {
+    "name": "Bamdev Mishra",
+    "affiliations": []
+  }],
+  "abstractText": "We propose a novel geometric approach for learning bilingual mappings given monolingual embeddings and a bilingual dictionary. Our approach decouples the source-to-target language transformation into (a) languagespecific rotations on the original embeddings to align them in a common, latent space, and (b) a language-independent similarity metric in this common space to better model the similarity between the embeddings. Overall, we pose the bilingual mapping problem as a classification problem on smooth Riemannian manifolds. Empirically, our approach outperforms previous approaches on the bilingual lexicon induction and cross-lingual word similarity tasks. We next generalize our framework to represent multiple languages in a common latent space. Language-specific rotations for all the languages and a common similarity metric in the latent space are learned jointly from bilingual dictionaries for multiple language pairs. We illustrate the effectiveness of joint learning for multiple languages in an indirect word translation setting.",
+  "title": "Learning Multilingual Word Embeddings in Latent Metric Space: A Geometric Approach"
+}
