@@ -152,10 +152,10 @@ def translate(encoder, decoder, dataset, code_vocab, comm_vocab, max_length=3000
 
             decoded_words = ["<BoL>"]
             state = enc_state
-            dec_input = comm[0]
+            dec_input = comm[0].unsqueeze(0)
             for di in range(1, len(comm)):
                 dec_output, state, _ = decoder(dec_input, state, encoder_outputs)
-                dec_input, _ = dec_output.max()
+                _, dec_input = dec_output.max(dim=1)
                 word_idx = dec_input.item()
                 if word_idx == comm_vocab.stoi["<EoL>"]:
                     decoded_words.append("<EOS>")
