@@ -16,7 +16,9 @@ data = list()
 for code_line, comm_line in tqdm(zip(codefile.readlines(), commfile.readlines())):
     code_line = code_line.strip()
     comm_line = comm_line.strip()
-    data.append((code_line, comm_line))
+    stripped = (c for c in comm_line if ord(c) < 128)
+    stripped_code = (c for c in code_line if ord(c) < 128)
+    data.append(("".join(stripped_code), "".join(stripped)))
 
 codefile.close()
 commfile.close()

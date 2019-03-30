@@ -142,7 +142,11 @@ def load_generation_data():
 
 def save_translations(pairs, filepath):
     """Saves a set of generated translations."""
-    (truths, translations) = map(list, zip(*pairs))
+    (code, truths, translations) = map(list, zip(*pairs))
+
+    with open(filepath + "_code.txt", "w") as outfile:
+        for c in code:
+            outfile.write(f"{' '.join(c)}\n")
 
     with open(filepath + "_truth.txt", "w") as outfile:
         for truth in truths:

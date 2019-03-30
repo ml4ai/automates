@@ -163,7 +163,7 @@ def translate(encoder, decoder, dataset, code_vocab, comm_vocab, max_length=3000
                 else:
                     decoded_words.append(comm_vocab.itos[word_idx])
 
-            pairs.append((example.comm, decoded_words))
+            pairs.append((example.code, example.comm, decoded_words))
 
     return pairs
 
