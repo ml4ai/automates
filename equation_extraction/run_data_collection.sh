@@ -28,6 +28,7 @@ while true; do
             shift 2
             ;;
         -l|--logfile)
+            touch $2
             ARGS="$ARGS --logfile=$2"
             shift 2
             ;;

@@ -10,6 +10,6 @@ RUN pip install pdf2image
 COPY misc/policy.xml /etc/ImageMagick-6/policy.xml
 RUN mkdir -p /equation_extraction/misc
 ADD *.py /equation_extraction/
-ADD misc/template.tex /equation_extraction/misc/
+ADD misc/* /equation_extraction/misc/
 ADD run_data_collection.sh /equation_extraction/
 WORKDIR /equation_extraction
