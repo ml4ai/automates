@@ -6,7 +6,7 @@ The core functionality of `for2py` is that of extracting the syntactic structure
 
 The architecture of the `for2py` Fortran-to-GrFN translator is shown below.  It is organized as a pipeline that reads in the Fortran source code, transforms it through a succession of intermediate representations, as described below, and writes out the GrFN representation of the code along with associated Python code ("lambdas").
 
-![for2py architecture](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/for2py-architecture.png)
+![for2py architecture](for2py-architecture.png)
 
 
 The processing of the input source code proceeds as follows:
