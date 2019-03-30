@@ -4,7 +4,7 @@
 
 To contextualize the models lifted from source code, we have implemented a machine reading system that extracts model information from two sources: (a) the scientific paper that describes a model of interest (from which we extract the variables, the definitions for those variables, and the parameter settings for the variables); and (b) the comments from the Fortran code that accompanies the paper (from which we can extract the variables, variable definitions, and potentially the units).
 
-<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/textrdg-architecture.png" width="100%" height="100%">
+![](figs/textrdg-architecture.png)
 
 For the text extraction, we use a [pre-processing pipeline](#Data-formatting) that converts pdfs to text, parses the text, and extracts measurements. A set of [rule grammars](#Rule-based-extraction-framework) then extract variables, their descriptions, and their values. For the comment extraction, we also use rule grammars to extract the variables and descriptions. The text variables are aligned to their corresponding comment variables using lexical semantics to provide richer context for the user-facing webapp as well as to inform analyses performed in downstream components (e.g., model and sensitivity analysis).
 
@@ -22,7 +22,7 @@ After filtering, the text is [syntactically parsed](https://github.com/clulab/pr
 
 For extracting model information (e.g., variables, their descriptions, values, etc.) from free text and comments, the team implemented a light-weight information extraction framework for use in the ASKE program. The system incorporates elements of the machine reader developed for the World Modeler's program, [Eidos](https://github.com/clulab/eidos) (e.g., the development webapp for visualizing extractions, entity finders based on syntax and the results of grobid-quantities, and the expansion of entities (Hahn-Powell et al., 2017) that participate in relevant events) along with new [Odin](http://clulab.cs.arizona.edu/papers/lrec2016-odin.pdf) grammars (Valenzuela-Escárcega et al., 2016) for identifying, quantifying, and defining variables, as shown in this screenshot of the development webapp:
 
-<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/extractions.png" width="100%" height="100%">
+![](figs/extractions.png)
 
 Odin grammars have proven to be reliable, robust, and efficient for diverse reading at scale in both the Big Mechanism program (with the [Reach](https://academic.oup.com/database/article/2018/1/bay098/5107029) system) and the World Modeler's program (with the [Eidos](https://github.com/clulab/eidos/) system). The flexibility of Odin's extraction engine allows it to easily ingest the normalized measurements from grobid quantities along with the surface form and the dependency syntax of the text, such that all representations can be used in the rule grammars during extraction.
 
@@ -45,7 +45,7 @@ Unsurprisingly, fewer of the tests for free text (i.e., the scientific papers) p
 For paper reading, we currently have several small sets of rules written for extracting entities (eight rules),
 definitions (four rules), and parameter settings (eight rules). The rules for parameter settings extract both values and value intervals/ranges, as shown here:
 
-<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/paramSettingVisualization.png" width="100%" height="100%">
+![](figs/paramSettingVisualization.png)
 
 ##### Extraction from comments
 

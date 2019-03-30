@@ -8,8 +8,9 @@ All code for the Equation Reading pipeine is implemented within the AutoMATES
 
 #### Architecture
 
-<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/equation-architecture.png" width="100%" height="100%">
-The overall architecture for equation detection and reading.  In grey are the linkages that are planned, but not yet in place.  The currently-used SOA open source components are indicated with striped fill.  See the corresponding sections for the discovered limitations of these third-party components for our use case and our plans for replacing/extending each.
+![](figs/equation-architecture.png)
+
+The overall architecture for equation detection and reading. In grey are the linkages that are planned, but not yet in place. The currently-used SOA open source components are indicated with striped fill. See the corresponding sections for the discovered limitations of these third-party components for our use case and our plans for replacing/extending each.
 
 #### Data collection
 
@@ -66,19 +67,19 @@ First, there are several cases in which the pre-trained model is able to correct
 
 We also found that, when the model is given the _cropped_ images, because of the font difference the model over-predicts characters as being in a bold typeface. While this difference is minor on the surface, in reality the bold typeface is semantically meaningful in mathematical notation as it signals that the variable is likely a vector, rather than a scalar. We also noticed that in multiple places the when there is a "J" in the original equation, the model decodes a $\Psi​$, as shown here.
 
-![mis-matched braces](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/j_psi.png)
+![mis-matched braces](figs/j_psi.png)
 
-While this may appear to be strange behavior, recall that the model is pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, however, there is a [specific subatomic particle that is interchangeably refered to as J/$\Psi$](https://en.m.wikipedia.org/wiki/J/psi_meson). This highlights that the model is over-fitted to the specific domain it was trained on.
+While this may appear to be strange behavior, recall that the model is pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, however, there is a [specific subatomic particle that is interchangeably refered to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). This highlights that the model is over-fitted to the specific domain it was trained on.
 
 To address these limitations of poorly handling variations in the input, we will re-train the model using the much larger set of equations from arXiv. The collected data represents a much wider set of domains and has orders of magnitude more data, which will help with the issue of overfitting. Additionally, to ensure robustness to different image sizes, fonts, typesettings, etc. we will augment the training data using techniques that have been proven to improve generality in machine vision systems (e.g., Baird, 1993; Wong et al., 2016; Wang & Perez, 2017, _inter alia_). Specifically, by manipulating the image size, text font, blurriness, rotation, etc. we can generate additional training data to help the model to better generalize to unseen examples which come from a variety of sources.
 
 Further, we found several mistakes that are likely influenced by the unconstrained nature of the sequence decoder. In each set of images, there are examples where the pre-trained model generates a sequence of tokens which cannot be compiled in LaTex (10% of the _transcribed_ images and 35% of the _cropped_ images). As an example, in one of the equations the generated LaTeX cannot be compiled because the decoder produced a left bracket without producing the corresponding right bracket. Similarly, even when images compile, we still see this phenomenon as demonstrated in this example where the model mis-matches the braces.
 
-![mis-matched braces](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/mismatched_braces.png)
+![mis-matched braces](figs/mismatched_braces.png)
 
 Also, we often found that multiple mentions of a single variable in an equation are decoded differently, as shown in the examples below.
 
-![wrong mult mentions](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/mult_mentions_wrong.png)
+![wrong mult mentions](figs/mult_mentions_wrong.png)
 
 In the left-most example (a), the problem is minor, as the wrongly decoded variable is where the equation is being _stored_. In the right-most equation (b), the semantics of the formula are completely lost. In both cases, the problem will be exacerbated when converting the equations to executable code and especially when the extracted information needs to be assembled for model analysis.
 
@@ -90,15 +91,15 @@ The final stage in the pipeline is the conversion of the equation to an executab
 
 To determine to what extent we can use this library out of the box, we used it to convert the decoded equations from the _transcribed_ equation images. We restricted this analysis to this subset because (a) we won't have access to the gold data, only model decoded LaTeX and (b) the decoded LaTeX from the _cropped_ images was of too low quality to provide meaningful library evaluation. The first thing we noted, was that the model output has to be pre-processed to use the library. Minimally, the model generates the tokens with spaces in between, but these need to be removed to use latex2sympy.
 
-![with spaces stack trace](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/stack_trace.png)
+![with spaces stack trace](figs/stack_trace.png)
 
 After removing spaces, we found that simple expressions were correctly converted, as in the example shown here:
 
-<img src="https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/good_sympy.png" width="50%" height="50%">
+![](figs/good_sympy.png)
 
 However, equations which are slightly more complex are not properly handled. As demonstrated below, we found that it conversion is improved if we remove the typesetting (e.g., the font specifications and specialized grouping symbols).
 
-![sympy with more complex eqn](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/figs/bad_sympy.png)
+![sympy with more complex eqn](figs/bad_sympy.png)
 
 That said, even after taking these steps, it is clear that we will need to extend the antlr4 grammar in order to handle the decided equations. In particular, we need to inform the splitting of characters into distinct variables (e.g., subscripts such as _max_ should not be considered as three variables multiplied together, _e<sup>o</sup>_ should not be considered as an exponential if we have previously seen it defined as a variable, etc.). Also, equations which contain other equations need to be represented with function calls, rather than multipication (i.e., _e<sup>o</sup>(T)_ is a reference to an equation, but latex2sympy converts it as `e**o*(T)`). Moving forward, the team will either expand the latex2sympy grammar or perhaps intead expand the library that we are already using for tokenizing LaTeX, plasTeX, which has the advantage of more robustly handling LateX (e.g., spacing, etc.).
 
