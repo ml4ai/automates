@@ -79,7 +79,7 @@ We have separate README files for the individual components of the text reading 
 The team has made progess in several areas since the last report. Here we summarize the new additions, which are described in much more detail in the sections above.
 
 - **Alignment**: Since the last report, the team has added the Alignment component descibed above to align the variables from the source, the mentions of these variables in the comments, and the corresponding variables in the free text model descriptions.
-- **Import and export in GrFN JSON format**: To facilitate the extraction of variables and descriptions from comments as well as to provide the aligment information to downstream components, the team added code to parse the GrFN JSONsons and generate a new ones with the additional context.
+- **Import and export in GrFN JSON format**: To facilitate the extraction of variables and descriptions from comments as well as to provide the aligment information to downstream components, the team added code to parse the GrFN JSONs and generate a new ones with the additional context.
 - **Reading of comments**: The team added code to select relevant lines from the source code comments and tokenize them. Additionally, a small number of new rules were developed to extract variables and descriptions from the comment text.
 
 ### References
