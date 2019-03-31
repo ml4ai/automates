@@ -1,4 +1,4 @@
-## Demo Webapp
+## CodeExplorer
 
 ### Architecture
 
@@ -97,3 +97,8 @@ below). The blue nodes in the graph indicate variables common to the two
 models.
 
 ![Model Comparison](figs/codex_model_comparison.png)
+
+### Data sets
+
+All code and data used for the webapp can be found in the [Delphi Github
+repository](https://github.com/ml4ai/delphi)
