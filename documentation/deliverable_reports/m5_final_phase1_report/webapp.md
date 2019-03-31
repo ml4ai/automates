@@ -1,10 +1,30 @@
 ## Demo Webapp
 
+### Architecture
+
+The CodeExplorer webapp is built using [Flask](http://flask.pocoo.org). It has
+two main sections - the home page is for 'live' experimentation, while the
+'Model Comparison' page provides a more 'curated' experience, with fewer knobs
+to play with.
+
+The [program analysis module](/#program-analysis-for2py) is still under active
+development, and does not cover all Fortran features yet, so we encourage the
+user to try small modifications to one of the three example models provided,
+rather than trying arbitrary Fortran code.
+
 ### Instructions for running
+
+#### Accessing the webapp online
+
+The quickest way to try out CodeExplorer, without having to install it, is by
+visiting the version deployed at
+[http://vanga.sista.arizona.edu/automates/](http://vanga.sista.arizona.edu/automates/).
 
 #### Running the webapp locally
 
-To install Delphi, run the following
+To run the webapp locally instead, you will need to install Delphi. For
+*nix systems, assuming you have the prerequisite (Python 3.6+ and
+graphviz), you can install Delphi with the following commands:
 
 ```
 git clone https://github.com/ml4ai/delphi
@@ -12,7 +32,7 @@ cd delphi
 pip install .
 ```
 
-This will also install a command line hook to launch the CodeXplorer app, so
+This will also install a command line hook to launch the CodeExplorer app, so
 you can just do
 
 ```
@@ -20,20 +40,16 @@ codex
 ```
 
 and navigate to [http://127.0.0.1:5000/](http://127.0.0.1:5000/) in your
-browser.
+browser to view the app.
 
-#### Accessing the webapp online
-
-CodeXplorer is also live at
-[http://vanga.sista.arizona.edu/automates/](http://vanga.sista.arizona.edu/automates/),
-where you can try it out without having to install it.
 
 ### Updates
 
 The UA team has made numerous improvements to the demo webapp (now christened
-CodeXplorer). Below is a screenshot of the current iteration of the app,
+CodeExplorer). Below is a screenshot of the current iteration of the app,
 showing a computational graph view of the Priestley-Taylor model of potential
 evapotranspiration.
+
 ![Computational Graph](figs/codex_computational_graph.png)
 
 #### NLP Annotations
