@@ -87,7 +87,7 @@ Also, we often found that multiple mentions of a single variable in an equation 
 
 In the left-most example (a), the problem is minor, as the wrongly decoded variable is where the equation is being _stored_. In the right-most equation (b), the semantics of the formula are completely lost. In both cases, the problem will be exacerbated when converting the equations to executable code and especially when the extracted information needs to be assembled for model analysis.
 
-To address issues such as these, the team will explore methods for enforcing syntactic constraints on the decoded sequence. For example, one solution is to change from making local decoding decisions to finding the global best decoding for the image. That is, currently at a given time-step during decoding, the decision about what token should be produced next is made by greedily choosing the output token with the highest liklihood, given the input encoding and the previously decoded tokens. Instead, when the decisions are made to find the best _global_ sequence, then the model is unlikely to produce certain token combinations that never occured in training (e.g., an left bracket without a matching right bracket). This could be done through the addition of a conditional random field layer on top of the decoder or perhaps through an implementation of the viterbi algorithm which utilizes domain-specific constraints. Additionally, a grammer can be used with the decoder (as was done by Krishnamurthy et al. (2017) for generating a well-formed logical forms for use in querying a knowledge base) to ensure generating valid LaTeX. To facilitate this exploration, the team will begin reimplementing the model (likely in pytorch) to be able to have more control over the format of the inputs as well as the model architecture itself. Additionally, the current library we're using assumes the availability of a GPU, which limits the usabilility of a final model (as not all users have easy access to a GPU). During reimplementation, we can intentionally ensure that a final model can be run on either a GPU or a CPU.
+To address issues such as these, the team will explore methods for enforcing syntactic constraints on the decoded sequence. For example, one solution is to change from making local decoding decisions to finding the global best decoding for the image. That is, currently at a given time-step during decoding, the decision about what token should be produced next is made by greedily choosing the output token with the highest liklihood, given the input encoding and the previously decoded tokens. Instead, when the decisions are made to find the best _global_ sequence, then the model is unlikely to produce certain token combinations that never occured in training (e.g., an left bracket without a matching right bracket). This could be done through the addition of a conditional random field layer on top of the decoder or perhaps through an implementation of the Viterbi algorithm which utilizes domain-specific constraints. Additionally, a grammar can be used with the decoder (as was done by Krishnamurthy et al. (2017) for generating a well-formed logical forms for use in querying a knowledge base) to ensure generating valid LaTeX. To facilitate this exploration, the team will begin reimplementing the model (likely in pytorch) to be able to have more control over the format of the inputs as well as the model architecture itself. Additionally, the current library we're using assumes the availability of a GPU, which limits the usabilility of a final model (as not all users have easy access to a GPU). During reimplementation, we can intentionally ensure that a final model can be run on either a GPU or a CPU.
 
 ### Conversion to executable representation
 
@@ -127,22 +127,22 @@ We have separate README files for the individual components of the equation read
 
 Since the last report, progress hass been made on several fronts. Here are the highlights, though more detail is provided in the sections above.
 
-- Data collection:
+- **Data collection**:
 
   - Since the last report, the team has [added the LaTeX macro expansion](https://github.com/ml4ai/automates/blob/master/equation_extraction/latex.py), accomplished through a recursively applied lookup table. This allows for the critical normalization of tokens for training the equation decoder.
   - Additionally, the team incorporated template rescaling to better match the rendered equation against the original pdf. This resulted in significantly more accurate axis-aligned bounding boxes.
 
-- Equation detection:
+- **Equation detection**:
 
   - The team has downloaded the current SOA model and processed the training data to fit the required format.
 
   - > TODO: update!
 
-- Equation decoding:
+- **Equation decoding**:
 
   - The team has succesfully reproduced equation decoding results from original paper using the pre-trained model and the provided evaluation data. We have additionally successfully run the training procedure with a small toy dataset. While we could now train with additional data, we will instead reimplement the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU) in response to the found limitations of the SOA model.
 
-- Conversion to executable representation:
+- **Conversion to executable representation**:
 
   - The team has chosen a library for converting the generated LaTeX to SymPy and evaluated the output. Based on this output, we will consider either expanding the corresponding antlr4 grammar or extend the plasTeX library, as the current SOA is not well-suited to the equations of interest.
 
