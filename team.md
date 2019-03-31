@@ -14,5 +14,5 @@ The members of the AutoMATES team.
 - [Pratik Bhandari](https://github.com/pratikbhd) (Graduate Research Assistant)
 - [Paul Hein](https://github.com/pauldhein) (Graduate Research Assistant)
 - [Jennifer Kadowaki](https://jkadowaki.github.io/) (Graduate Research Assistant)
-- HeuiChan (Terrance) Lim (Graduate Research Assistant)
-- Andrew Zupon (Graduate Research Assistant)
+- [HeuiChan (Terrence) Lim](https://github.com/hlim1) (Graduate Research Assistant)
+- [Andrew Zupon](https://github.com/zupon) (Graduate Research Assistant)
