@@ -55,7 +55,7 @@ class TestPairwiseW2VAligner extends FlatSpec with Matchers {
     val rm = new RelationMention("Definition", Map("variable" -> Seq(variable), "definition" -> Seq(definition), "conditional" -> Seq(condition)),
       0, doc1, true, "<MANUAL>")
 
-    aligner.getRelevantText(rm) should be ("TEMPMIN minimum temperature")
+    Aligner.getRelevantText(rm, aligner.relevantArgs) should be ("TEMPMIN minimum temperature")
   }
 
 

@@ -2,27 +2,6 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-  #you want smaller chunks to break up cases like LAI = 0, which is found as
-  #one Concept if we use BI chunks
-  # - name: stand_alone_noun
-  #   label: Concept
-  #   priority: 1
-  #   type: token
-  #   pattern: |
-  #     [chunk='I-NP'] | [chunk='B-NP']
-  #
-  # #to find full NPs made up of BI-NP chunks, e.g., "the simulated leaf area index"
-  # - name: simple-np
-  #   label: Concept
-  #   priority: 3
-  #   type: token
-  #   pattern: |
-  #     # avoids event triggers, coordinations, refs, etc.
-  #     [chunk='B-NP'] [chunk='I-NP' & !mention=Avoid]+ | [chunk='B-NP']
-  #     #[chunk='I-NP'] | [chunk='B-NP']
-
-
-
 ####VARIABLES####
   - name: var-duck-rule
     label: Variable
@@ -31,7 +10,7 @@ rules:
     example: ""
     action: looksLikeAVariable
     pattern: |
-      [mention=Concept]
+      (?<! equation) [mention=Concept]
 
   - name: var-noun_of
     label: Variable
@@ -39,41 +18,16 @@ rules:
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
-      (?<=calculation of|value of) @Concept
+      (?<=calculation of|value of) (@Concept [word = /.*/])
 
   - name: var-calculation
     label: Variable
     priority: ${priority}
-    type: dependency
+    type: token
     action: variableArguments
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
     pattern: |
-      trigger = [lemma='calculation']
-      variable:Concept = compound
-
-  - name: var_is_defined
-    label: Variable
-    priority: ${priority}
-    type: token
-    example: "E0 is calculated as the product of Kcd and ETpm."
-    pattern: |
-      @Concept (?= [lemma = "be"] /correlated|defined|calculated|obtained/ /with|as|from/)
-
-  - name: var_calculate
-    label: Variable
-    priority: ${priority}
-    type: token
-    example: "The approach uses model-simulated LAI to calculate the Kcb."
-    pattern: |
-      (?<= calculate) @Concept
-
-#  - name: var_indices
-#    label: Variable
-#    priority: ${priority}
-#    type: token
-#    example: "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
-#    pattern: |
-#      (?<= indexed by) @Concept
+      (?<variable> [word = /.*/]) calculation
 
   - name: var_versus
     label: Variable
@@ -83,41 +37,23 @@ rules:
     pattern: |
         @Concept (?= versus [] /curve|plot/)
 
-  # - name: var_verb
-  #   label: Variable
-  #   priority: 4
-  #   type: dependency
-  #   example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
-  #   pattern: |
-  #     trigger = [lemma=/calculate|define/]
-  #     Variable:Concept+ = (dobj | nsubjpass) appos?
-  #     #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-
-
   - name: var_in_equation
     label: Variable
     priority: ${priority}
     type: token
     example: "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
     pattern: |
-      @Concept (?= in equation)
-
+      (@Concept [word = /.*/]) (?= in equation)
 
   - name: var_equals
     label: Variable
     priority: ${priority}
     type: token
     action: variableArguments
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    example: "T = daily mean air temperature [°C]"
     pattern: |
       @variable:Concept (?= "=")
 
-  # - name: where-value_is
-  #   label: Variable
-  #   priority: 2
-  #   type: token
-  #   pattern: |
-  #     (?<=where) @Concept (?=is)
 
   - name: var_where-dep
     label: Variable
@@ -138,27 +74,11 @@ rules:
     pattern: |
       (?<=product of|values for) @variable:Concept and @variable:Concept
 
-  - name: var_in_interval
-    label: Variable
-    priority: ${priority}
-    type: token
-    action: variableArguments
-    example: " Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. (2012a) recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
-    pattern: |
-      "<" @variable:Concept "<"
-
   - name: var_dssat_model
     label: Variable # should this be a Model instead?
     priority: ${priority}
     type: token
     example: ""
     pattern: |
-      [word=/^DSSAT/]
+      [word=/^DSSAT|^CSM/]
 
-  - name: var_csm_model
-    label: Variable # should this be a Model instead?
-    priority: ${priority}
-    type: token
-    example: ""
-    pattern: |
-      [word = /^CSM.*/]

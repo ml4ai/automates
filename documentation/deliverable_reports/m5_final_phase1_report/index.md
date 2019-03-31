@@ -13,7 +13,7 @@ toc: true
 
 ---
 
-## AutoMATES Components
+# AutoMATES Components
 
 {% include_relative grfn.md %}
 

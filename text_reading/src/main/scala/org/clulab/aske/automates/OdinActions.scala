@@ -19,9 +19,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     if (expansionHandler.nonEmpty) {
       // expand arguments
-      val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
+      //val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
+      //val expanded = expansionHandler.get.expandArguments(expandable, state)
+      //keepLongest(expanded) ++ textBounds
+
+      val (expandable, other) = mentions.partition(m => m matches "Definition")
       val expanded = expansionHandler.get.expandArguments(expandable, state)
-      keepLongest(expanded) ++ textBounds
+      keepLongest(expanded) ++ other
+
+
       //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
       //val result = mostComplete ++ textBounds
     } else {
@@ -86,6 +92,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val outer = m.arguments("c1").head
       val inner = m.arguments("c2").head
       val sorted = Seq(outer, inner).sortBy(_.text.length)
+      // The longest mention (i.e., the definition) should be at least 3 characters, else it's likely a false positive
+      // todo: tune
+      // todo: should we constrain on the length of the variable name??
+      if (sorted.last.text.length < 3) {
+        return Seq.empty
+      }
       val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
       val definition = changeLabel(sorted.last, DEFINITION_LABEL) // the longest if the definition
       val defMention = m match {
@@ -93,6 +105,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
           foundBy=foundBy(rm.foundBy),
           tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
+//         case em: EventMention => em.copy(//alexeeva wrote this to try to try to fix an appos. dependency rule todo: what seems to need don
+        //is changing the keys in 'paths' to variable and defintion bc as of now they show up downstream (in the expansion handler) as c1 and c2
+//           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
+//           foundBy=foundBy(em.foundBy),
+//           tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
         case _ => ???
       }
       Seq(variable, defMention)
