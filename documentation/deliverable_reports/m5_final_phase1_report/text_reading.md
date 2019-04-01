@@ -4,7 +4,7 @@
 
 To contextualize the models lifted from source code, we have implemented a machine reading system that extracts model information from two sources: (_a_) the scientific papers and technical documents that describe a model of interest (from which we extract the variables, the definitions for those variables, and the parameter settings for the variables); and (_b_) the comments from the Fortran source code (from which we can extract the variables, variable definitions, and potentially the units).
 
-![](figs/textrdg-architecture.png)
+![Architecture of the text reading pipeline](figs/textrdg-architecture.png)
 
 For paper text extraction, we use a [pre-processing pipeline](#natural-language-data-preprocessing) that converts PDFs to text, parses the text, and extracts measurements. A set of [rule grammars](#rule-based-extraction-framework) then extract variables, their descriptions, and their values. For the source code comment extraction, we also use rule grammars to extract the variables and descriptions. The text variables are aligned to their corresponding comment variables using lexical semantics to provide richer context for the [CodeExplorer webapp](#codeexplorer) as well as to inform analyses performed in downstream components (e.g., model Sensitivity Analysis).
 
@@ -69,7 +69,7 @@ The final alignments are output to the GrFN JSON for downstream use.
 
 ### Instructions for running text reading components
 
-We have separate README files providing instructions for running the individual components of the text reading pipeline:
+We have separate README files that provide instructions for running the individual components of the text reading pipeline:
 
 - [Development webapp](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_development_webapp.md) for visualizing the extractions
 
