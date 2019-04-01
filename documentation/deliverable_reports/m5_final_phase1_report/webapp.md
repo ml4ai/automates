@@ -1,6 +1,6 @@
 ## CodeExplorer
 
-The UA team has significantly extended the functionality of the original AutoMATES demo webapp to create the AutoMATES CodeExplorer, the main HMI for the AutoMATES prototype. The CodeExplorer demonstrates a processing pipeline that includes:
+The UA team has significantly extended the functionality of the original AutoMATES demo webapp to create the AutoMATES CodeExplorer, the main HMI for the AutoMATES Prototype. The CodeExplorer demonstrates a processing pipeline that includes:
 
 - Performing Program Analysis on input Fortran source code to produce an intermediate Grounded Function Network (GrFN) representation.
 - Inspection of the [GrFN representation](#function-network).
