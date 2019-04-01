@@ -15,6 +15,8 @@ toc: true
 
 # AutoMATES Components
 
+In the following six sections we describe the current state of each of the core AutoMATES Prototype components.
+
 {% include_relative grfn.md %}
 
 {% include_relative for2py.md %}
