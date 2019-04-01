@@ -85,9 +85,3 @@ The team has made progess in several areas since the last report. Here we summar
 - **Alignment**: Since the last report, the team has added the Alignment component descibed above to align the variables from the source, the mentions of these variables in the comments, and the corresponding variables in the free text model descriptions.
 - **Import and export in GrFN JSON format**: To facilitate the extraction of variables and descriptions from comments as well as to provide the aligment information to downstream components, the team added code to parse GrFN JSON files and generate new versions with the text-extracted context associated with GrFN Variables.
 - **Reading of comments**: The team added code to select relevant lines from the source code comments and tokenize them. Additionally, a small number of new rules were developed to extract variables and descriptions from the comment text.
-
-### References
-
-Hahn-Powell, G., Valenzuela-Escarcega, M. A., & Surdeanu, M. (2017). Swanson linking revisited: Accelerating literature-based discovery across domains using a conceptual influence graph. _Proceedings of ACL 2017, System Demonstrations_, 103-108.
-
-Valenzuela-Escárcega, M. A., Hahn-Powell, G., & Surdeanu, M. (2016, January). Odin's Runes: A rule language for information extraction. In _10th International Conference on Language Resources and Evaluation, LREC 2016_. European Language Resources Association (ELRA).
