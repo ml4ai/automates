@@ -9,9 +9,9 @@ All code for the Equation Reading pipeine is implemented within the AutoMATES
 
 ![The overall architecture for equation detection and reading](figs/equation-architecture.png)
 
-**Figure 11**: The overall architecture for equation detection and reading.
+**Figure 12**: The overall architecture for equation detection and reading.
 
-Figure 11 shows the Equation Detection and Reading architecture. Blue-stripe-filled boxes indicate SOA open source components that are currently used. These components currently run stand-alone and are not yet integrated into an end-to-end pipeline, but will soon. The grey-label lines between the SOA components indicate the representation that is to be passed between them. In the following sections we describe the discovered limitations of these third-party components for our use case and our plans for replacing/extending each.
+Figure 12 shows the Equation Detection and Reading architecture. Blue-stripe-filled boxes indicate SOA open source components that are currently used. These components currently run stand-alone and are not yet integrated into an end-to-end pipeline, but will soon. The grey-label lines between the SOA components indicate the representation that is to be passed between them. In the following sections we describe the discovered limitations of these third-party components for our use case and our plans for replacing/extending each.
 
 ### Data collection
 
@@ -65,11 +65,11 @@ First, there are several cases in which the pre-trained model is able to complet
 
 We also found that when the model is given the _cropped_ images, because of the font difference the model over-predicts characters as being in a bold typeface. While this difference is minor for general text, bold typeface is semantically meaningful in mathematical notation as it signals that the variable is likely a vector rather than a scalar. 
 
-We also observed that in multiple cases, a 'J' in the original equation was decoded it as a $$\Psi$$, as shown in the comparsion in Figure 12.
+We also observed that in multiple cases, a 'J' in the original equation was decoded it as a $$\Psi$$, as shown in the comparsion in Figure 13.
 
 ![Incorrect decoding of 'J' to '$$\Psi$$'.](figs/j_psi.png)
 
-**Figure 12**: Incorrect decoding of 'J' as '$$\Psi$$'.
+**Figure 13**: Incorrect decoding of 'J' as '$$\Psi$$'.
 
 A likely explanation for this common confusion between 'J' and '$$\Psi$$' is that the Deng et al. model was pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, there is a [specific subatomic particle that is refered to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). The model is likely over-fitted to the specific domain it was trained on.
 
@@ -83,13 +83,13 @@ Further, we found several mistakes that are likely influenced by the unconstrain
 
 ![Example with mismatched braces.](figs/mismatched_braces.png)
 
-**Figure 13**: 
+**Figure 14**: 
 
 Also, we often found that multiple mentions of a single variable in an equation are decoded differently, as shown in the examples below.
 
 ![Example with multiple mentions.](figs/mult_mentions_wrong.png)
 
-**Figure 14**: 
+**Figure 15**: 
 
 In the left-most example (a), the problem is minor, as the wrongly decoded variable is where the equation is being _stored_. In the right-most equation (b), the semantics of the formula are completely lost. In both cases, the problem will be exacerbated when converting the equations to executable code and especially when the extracted information needs to be assembled for model analysis.
 
@@ -103,19 +103,19 @@ To determine to what extent we can use this library out of the box, we used it t
 
 ![with spaces stack trace](figs/stack_trace.png)
 
-**Figure 15**: 
+**Figure 16**: 
 
 After removing spaces, we found that simple expressions were correctly converted, as in the example shown here:
 
 ![](figs/good_sympy.png)
 
-**Figure 16**: 
+**Figure 17**: 
 
 However, equations which are slightly more complex are not properly handled. As demonstrated below, we found that it conversion is improved if we remove the typesetting (e.g., the font specifications and specialized grouping symbols).
 
 ![sympy with more complex eqn](figs/bad_sympy.png)
 
-**Figure 17**: 
+**Figure 18**: 
 
 That said, even after taking these steps, it is clear that we will need to extend the antlr4 grammar in order to handle the decided equations. In particular, we need to inform the splitting of characters into distinct variables (e.g., subscripts such as _max_ should not be considered as three variables multiplied together, _e<sup>o</sup>_ should not be considered as an exponential if we have previously seen it defined as a variable, etc.). Also, equations which contain other equations need to be represented with function calls, rather than multipication (i.e., _e<sup>o</sup>(T)_ is a reference to an equation, but latex2sympy converts it as `e**o*(T)`). Moving forward, the team will either expand the latex2sympy grammar or perhaps intead expand the library that we are already using for tokenizing LaTeX, plasTeX, which has the advantage of more robustly handling LateX (e.g., spacing, etc.).
 
