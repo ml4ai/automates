@@ -32,7 +32,7 @@ If you want to get the tagged version corresponding to this milestone, you can
 do
 
 ```
-pip install git+git://github.com/ml4ai/delphi.git@4.0.1
+pip install git+https://github.com/ml4ai/delphi.git@4.0.1
 ```
 
 (Note: to use the AnalysisGraph class to create and parameterize models from
