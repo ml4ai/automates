@@ -1,5 +1,6 @@
 # FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
-FROM ubuntu:16.04
+FROM tensorflow/tensorflow:1.6.0-devel-gpu-py3
+# FROM ubuntu:16.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -26,14 +27,14 @@ RUN pip3 --no-cache-dir install Pillow
 
 # Science libraries and other common packages
 RUN pip3 --no-cache-dir install \
-    numpy scipy sklearn scikit-image==0.13.1 pandas matplotlib Cython requests pandas imgaug
+    numpy scipy sklearn scikit-image==0.14.2 pandas matplotlib Cython requests pandas imgaug
 
 #
 # Tensorflow 1.6.0 - GPU
 #
 # Install TensorFlow
-# RUN pip3 --no-cache-dir install tensorflow-gpu
-RUN pip3 --no-cache-dir install tensorflow
+# RUN pip3 --no-cache-dir install tensorflow-gpu==1.6.0
+# RUN pip3 --no-cache-dir install tensorflow
 
 # Expose port for TensorBoard
 EXPOSE 6006
