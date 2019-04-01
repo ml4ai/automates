@@ -1,6 +1,6 @@
 # Running the equation decoder
 
-###Getting set-up
+### Getting set-up
 
 1. Make you have access to a GPU
 
