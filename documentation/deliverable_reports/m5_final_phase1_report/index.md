@@ -26,3 +26,5 @@ toc: true
 {% include_relative model_analysis.md %}
 
 {% include_relative code_summarization.md %}
+
+{% include_relative references.md %}

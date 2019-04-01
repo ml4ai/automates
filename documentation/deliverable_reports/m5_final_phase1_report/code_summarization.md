@@ -1,4 +1,5 @@
 ## Code Summarization
+
 So far, our experiments in code summarization have focused on the ability to
 generate natural language descriptions of source code functions using the
 state-of-the-art `Sequence2Sequence` neural machine translation (NMT) model
@@ -91,71 +92,109 @@ capabilities. We trained our generative model on our initial corpus of
 code/docstring pairs with part of our corpus as a development set to allow us
 to optimize the model's hyperparameters. We then tested our generator's ability
 to translate unseen source code functions into a descriptive summary
-docstring. The `BLEU-4` score obtained by our method was `1.88`, which is far
-lower than the `BLEU-4` scores obtained in many contemporary code summarization
+docstring. The `BLEU-4` score obtained by our method was 1.88, which is far
+lower than the scores obtained in many contemporary code summarization
 tasks. We will discuss the quality of our generation in the corpus
 quality discussion section.
 
 ### Experimental data and scripts
 
 The data necessary to replicate our experiments can downloaded using the
-following command:
+following commands (for *nix systems):
 
 ```
 curl -O http://vision.cs.arizona.edu/adarsh/automates/code-summ-corpus.zip
 ```
 
-You must then unzip the file to expose the contained folder `code-summ-corpus/`. After unzipping the file, the following environment variable needs to be defined before running any of our mentioned tools:
+Unzip the file to expose the contained folder
+`code-summ-corpus/`, and then set the `CODE_CORPUS` environment variable to
+point to the data folder:
 
 ```
 export CODE_CORPUS="/path/to/code-summ-corpus"
 ```
-All of our tools require these Python modules: `numpy, torch, torchtext, tqdm`
-These can all easily be installed in a python virtualenv using `pip` or `conda`.
+
+The code summarization tools require the following Python modules: `numpy, torch,
+torchtext, tqdm`. These can all easily be installed using `pip` or `conda`.
 
 ##### Running the CodeCrawler tool
-To run the `CodeCrawler` tool you will need to install `nltk` to the same environment as the other packages defined above. The `CodeCrawler` tool can be run using this command:
+
+To run `CodeCrawler`, you will need to install `nltk` as well. The
+`CodeCrawler` tool can be run using this command (assuming you've cloned the
+automates Github repo):
+
 ```
 python automates/code_summarization/code-crawler/main.py
 ```
 
 ##### Running the classification experiments
+
 The classification experiments can be run with the following command:
+
 ```
 python automates/code_summarization/src/main.py [-e <amt>] [-b <amt>] [-c <name>] [-g] [-d] [-t]
 ```
+
 The flags associated with this command are:
-- `-e`: The number of epochs to train the model. Increasing the number of epochs will increase the training time, but result in higher accuracy.
-- `-b`: The size of a batch for training and testing. Larger batch sizes decrease the training time for a model, but can decrease accuracy.
+- `-e`: The number of epochs to train the model. Increasing the number of
+  epochs will increase the training time, but result in higher accuracy.
+- `-b`: The size of a batch for training and testing. Larger batch sizes
+  decrease the training time for a model, but can decrease accuracy.
 - `-c`: The classification corpus to use, either `rand_draw` or `challenge`
 - `-g`: GPU availability. Include this flag if your system has an Nvidia GPU
-- `-d`: Development set evaluation. Include this flag to evaluate the model on the development set.
-- `-t`: Test set evaluation. Include this flag to evaluate the model on the test set.
+- `-d`: Development set evaluation. Include this flag to evaluate the model on
+  the development set.
+- `-t`: Test set evaluation. Include this flag to evaluate the model on the
+  test set.
 
 In addition to running the code, our pre-computed results can be observed by running:
+
 ```
 python automates/code_summarization/src/scripts/dataset_scores.py <score-file>
 ```
-where `score-file` is one of the pickle files stored at `/path/to/code-summ-corpus/results/`.
+
+where `score-file` is one of the pickle files stored at
+`/path/to/code-summ-corpus/results/`.
 
 ##### Running the generation experiment
+
 The generation experiment can be run with the following command:
+
 ```
 python automates/code_summarization/src/generation.py [-e <amt>] [-b <amt> [-g] [-d] [-t]
 ```
-All of the flags mentioned in the command above have the same definitions as the commands outlined in the above section dealing with our classification experiments.
+
+All of the flags mentioned in the command above have the same definitions as
+the commands outlined in the above section dealing with our classification
+experiments.
 
 Our generation results can also be verified using our pre-computed results with the following script:
+
 ```
 python automates/code_summarization/src/utils/bleu.py <truth-file> <trans-file>
 ```
-where `truth-file` and `trans-file` are text files located at stored at `/path/to/code-summ-corpus/results/`. Note that the two files should have the same prefix, the `truth-file` should end with `_truth.txt`, and `trans-file` should end with `_trans.txt`.
 
+where `truth-file` and `trans-file` are text files located at stored at
+`/path/to/code-summ-corpus/results/`. Note that the two files should have the
+same prefix, the `truth-file` should end with `_truth.txt`, and `trans-file`
+should end with `_trans.txt`.
 
 ### Corpus quality discussion
-After observing the results discussed in the sections above for our classification and generation experiments we decided to manually inspect our corpus of code/docstring pairs. To do this, we randomly sampled a set of 100 code/docstring pairs for evaluation. All of the examples shown below that will be used to make conjectures about our code/docstring corpus were taken from this random sampling.
 
-Our end-goal for this corpus is for the functions it contains to emulate the content of functions we expect to see in our generated lambda functions, and for the docstrings associated with the functions to be descriptive of the code  in the function. Below are two examples from our corpus that do meet these standards. The docstrings are descriptive of the actual code in the functions and the identifiers in the functions can be used to deduce the proper docstrings.
+We decided to manually inspect a randomly sampled subset of 100
+code/docstring pairs from our corpus to ascertain the limitations of our
+strategy and how we might overcome them.
+Based on these samples, we postulate a few conjectures about the nature our
+code/docstring corpus.
+
+Our end-goal for this corpus is for the functions it contains to emulate the
+content of functions we expect to see in our generated lambda functions, and
+for the docstrings associated with the functions to be descriptive of the code
+in the function.
+Below are two examples from our corpus that do meet these standards. The
+docstrings are descriptive of the actual code in the functions and the
+identifiers in the functions can be used to deduce the proper docstrings.
+
 ```python
 def __ne__(self, other):
     """Returns true if both objects are not equal"""
@@ -166,7 +205,16 @@ def printSchema(self):
     print(self._jdf.schema().treeString())
 ```
 
-Unfortunately many of the functions found in our corpus included associative docstrings as opposed to descriptive docstrings. By associative docstring we mean that the portion of the dosctring that we are recovering, which is intended to be descriptive by PEP 257 standards, merely associates the function either with some other module level construct or some real-world phenomena. Some examples of such functions are included below. It is easy to see how creating these docstrings would require outside context and cannot be recovered from the actual source code. While these functions may be ideal for a different task, they are not useful in our corpus, and are more numerous than we had hoped.
+Unfortunately, many of the functions found in our corpus had associative,
+rather than descriptive, docstrings, i.e. the portion of the dosctring that we
+are recovering, which is intended to be descriptive by PEP 257 standards,
+merely associates the function either with some other module level construct or
+some real-world phenomena. Some examples of such functions are included below.
+It is easy to see how creating these docstrings would require outside context
+and cannot be recovered from the actual source code. While these functions may
+be ideal for a different task, they are not useful in our corpus, and are more
+numerous than we had expected.
+
 ```python
 def __repr__(self):
     """For `print` and `pprint`"""
@@ -204,7 +252,26 @@ def is_hom(self, allele=None):
     return out
 ```
 
-We have identified a second class of problematic functions in our corpus. This class of functions have descriptive docstrings, but the functions are composed mainly of references to items created in the module hierarchy of Python module that the function was originally taken from. This presents two challenges for docstring generation. First it is expected to include information when generating the description of a function that is not contained in the function. An example of this is presented as the first of two examples below, where a docstring includes references to the pandas and scipy libraries. Such information would never be included in the source code of a Python function. The second challenge for docstring generation is in dealing with module level information. Python is an object oriented language, and thus functions written in Python deal with objects, and it is expected that programmers inspecting and utilizing the functions will be aware of those objects. This is additional information outside of the actual function itself that our docstring generator will not have access to, and a perfect example of this is shown as the second example below, where the `Point` and `imageItem` class are both objects at the module level that are referenced by the function.
+We have identified a second class of problematic functions in our corpus, that
+have docstrings that are descriptive, but composed mainly of references to items
+created in the module hierarchy of the Python module that the function resides
+in.
+This presents two challenges for docstring generation.
+First, it is expected to include information when generating the description of
+a function that is not contained in the function.
+This is ilustrated in the first of the two examples below, where a
+docstring includes references to the `pandas` and `scipy` libraries.
+Such information would never be included in the source code of a Python function.
+The second challenge for docstring generation is in dealing with module level
+information.
+Python is an object-oriented language, and thus functions written
+in Python deal with objects, and it is expected that programmers inspecting and
+utilizing the functions will be aware of those objects.
+This is additional information outside of the actual function itself that our
+docstring generator will not have access to, and a perfect example of this is
+shown as the second example below, where the `Point` and `imageItem` class are
+both objects at the module level that are referenced by the function.
+
 ```python
 def sparseDfToCsc(self, df):
     """convert a pandas sparse dataframe to a scipy sparse array"""
@@ -232,4 +299,21 @@ def getArrayRegion(self, data, img, axes=(0,1), order=1, **kwds):
 ```
 
 #### Alternative strategy for code summarization
-To summarize the findings on the quality of our corpus, we found that most of the code/docstring pairs were non-atomic, meaning that docstring paired with the code relied upon at least one form of additional information in order to be formed. For our purposes we desire atomic functions, whose docstrings could be generated without any additional information. Our lambda functions generated by the AutoMATES pipeline certainly fit this definition, and thus our code/docstring corpus is not a good model for our target generation task. This realization has encouraged us to abandon the use of the code/docstring corpus as training data for our docstring generation method. Unfortunately this restricts our generation methods due to the lack of available data. Without a sufficiently sized amount of data `Sequence2Sequence` models cannot perform well at generation tasks. Therefore our new strategy for code summarization will be to investigate rule-based methods for generating function descriptions. We are confident that rules can take advantage of the highly structured, simplistic, and atomic nature of our generated lambda functions in order to create descriptions of each lambda function that can then be pieced together to form larger descriptions of the original subroutines.
+
+In summary, we found that most of the code/docstring pairs were non-atomic,
+meaning that docstrings paired with the code relied upon at least one form of
+additional information in order to be formed. For our purposes, we desire
+atomic functions, whose docstrings could be generated without any additional
+information.  Our lambda functions generated by the AutoMATES pipeline
+certainly fit this definition, and thus our code/docstring corpus is not a good
+model for our target generation task.  This realization has encouraged us to
+abandon the use of the code/docstring corpus as training data for our docstring
+generation method. Unfortunately this restricts our generation methods due to
+the lack of available data. Without a sufficiently sized amount of data
+`Sequence2Sequence` models cannot perform well at generation tasks. Therefore
+our new strategy for code summarization will be to investigate rule-based
+methods for generating function descriptions.  We are confident that rules can
+take advantage of the highly structured, simplistic, and atomic nature of our
+generated lambda functions in order to create descriptions of each lambda
+function that can then be pieced together to form larger descriptions of the
+original subroutines.
