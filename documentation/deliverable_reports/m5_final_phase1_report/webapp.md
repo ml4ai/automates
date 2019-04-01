@@ -21,6 +21,14 @@ cd delphi
 pip install .
 ```
 
+To get the tag associated with the code release for this milestone, do the
+following after cloning the repo and `cd`-ing into the `delphi` directory:
+
+```
+git fetch && git fetch --tags
+git checkout 4.0.0-alpha
+```
+
 This will also install a command line hook to launch the CodeExplorer app, so you can just execute the following from the command-line
 
 ```
