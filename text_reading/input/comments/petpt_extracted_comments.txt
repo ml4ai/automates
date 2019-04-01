@@ -1,0 +1,115 @@
+$file_head:
+    C=======================================================================
+    C  PETPT, Subroutine, J.T. Ritchie
+    C  Calculates Priestly-Taylor potential evapotranspiration
+    C-----------------------------------------------------------------------
+    C  REVISION HISTORY
+    C  ??/??/19?? JR  Written
+    C  11/04/1993 NBP Modified
+    C  10/17/1997 CHP Updated for modular format.
+    C  09/01/1999 GH  Incorporated into CROPGRO
+    !  07/24/2006 CHP Use MSALB instead of SALB (includes mulch and soil
+    !                 water effects on albedo)
+    !-----------------------------------------------------------------------
+    !  Called by:   WATBAL
+    !  Calls:       None
+    C=======================================================================
+
+$file_foot:
+    !-----------------------------------------------------------------------
+    !     PETPT VARIABLES:
+    !-----------------------------------------------------------------------
+    ! ALBEDO  Reflectance of soil-crop surface (fraction)
+    ! EEQ     Equilibrium evaporation (mm/d)
+    ! EO      Potential evapotranspiration rate (mm/d)
+    ! MSALB   Soil albedo with mulch and soil water effects (fraction)
+    ! SLANG   Solar radiation
+    ! SRAD    Solar radiation (MJ/m2-d)
+    ! TD      Approximation of average daily temperature (ï¿½C)
+    ! TMAX    Maximum daily temperature (ï¿½C)
+    ! TMIN    Minimum daily temperature (ï¿½C)
+    ! XHLAI   Leaf area index (m2[leaf] / m2[ground])
+    !-----------------------------------------------------------------------
+    !     END SUBROUTINE PETPT
+    C=======================================================================
+
+Function: PETPT
+  head:
+    C=======================================================================
+    C  PETPT, Subroutine, J.T. Ritchie
+    C  Calculates Priestly-Taylor potential evapotranspiration
+    C-----------------------------------------------------------------------
+    C  REVISION HISTORY
+    C  ??/??/19?? JR  Written
+    C  11/04/1993 NBP Modified
+    C  10/17/1997 CHP Updated for modular format.
+    C  09/01/1999 GH  Incorporated into CROPGRO
+    !  07/24/2006 CHP Use MSALB instead of SALB (includes mulch and soil
+    !                 water effects on albedo)
+    !-----------------------------------------------------------------------
+    !  Called by:   WATBAL
+    !  Calls:       None
+    C=======================================================================
+
+  neck:
+    
+    !-----------------------------------------------------------------------
+
+  foot:
+    !-----------------------------------------------------------------------
+    !     PETPT VARIABLES:
+    !-----------------------------------------------------------------------
+    ! ALBEDO  Reflectance of soil-crop surface (fraction)
+    ! EEQ     Equilibrium evaporation (mm/d)
+    ! EO      Potential evapotranspiration rate (mm/d)
+    ! MSALB   Soil albedo with mulch and soil water effects (fraction)
+    ! SLANG   Solar radiation
+    ! SRAD    Solar radiation (MJ/m2-d)
+    ! TD      Approximation of average daily temperature (ï¿½C)
+    ! TMAX    Maximum daily temperature (ï¿½C)
+    ! TMIN    Minimum daily temperature (ï¿½C)
+    ! XHLAI   Leaf area index (m2[leaf] / m2[ground])
+    !-----------------------------------------------------------------------
+    !     END SUBROUTINE PETPT
+    C=======================================================================
+
+!-----------------------------------------------------------------------
+!     PETPEN VARIABLES:
+!-----------------------------------------------------------------------
+! ALBEDO  Reflectance of soil-crop surface (fraction)
+! CLOUDS  Relative cloudiness factor (0-1)
+! DAIR
+! EAIR    Vapor pressure at dewpoint (Pa)
+! EO      Potential evapotranspiration rate (mm/d)
+! ESAT    Vapor pressure of air (Pa)
+! G       Soil heat flux density term (MJ/m2/d)
+! LHVAP   Latent head of water vaporization (J/kg)
+! PATM     = 101300.0
+! PSYCON  Psychrometric constant (Pa/K)
+! RADB    Net outgoing thermal radiation (MJ/m2/d)
+! RNET    Net radiation (MJ/m2/d)
+! RNETMG  Radiant energy portion of Penman equation (mm/d)
+! RT
+! S       Rate of change of saturated vapor pressure of air with
+!           temperature (Pa/K)
+! MSALB   Soil albedo with mulch and soil water effects (fraction)
+! SBZCON   Stefan Boltzmann constant = 4.093E-9 (MJ/m2/d)
+! SHAIR    = 1005.0
+! SRAD    Solar radiation (MJ/m2-d)
+! TAVG    Average daily temperature (\B0C)
+! TDEW    Dewpoint temperature (\B0C)
+! TK4     Temperature to 4th power ((oK)**4)
+! TMAX    Maximum daily temperature (\B0C)
+! TMIN    Minimum daily temperature (\B0C)
+! VHCAIR
+! VPD     Vapor pressure deficit (Pa)
+! VPSAT   Saturated vapor pressure of air (Pa)
+! VPSLOP  Calculates slope of saturated vapor pressure versus
+!           temperature curve (Pa/K)
+! WFNFAO  FAO 24 hour wind function
+! WIND2   Windspeed at 2m reference height. (km/d)
+! WINDSP  Wind speed at 2m (km/d)
+! XHLAI   Leaf area index (m2[leaf] / m2[ground])
+!-----------------------------------------------------------------------
+!     END SUBROUTINE PETPNO
+!-----------------------------------------------------------------------

@@ -4,24 +4,16 @@ rules:
 
 ####DEFINITIONS####
 
-  - name: var_is_definition
+  - name: var_equals_def #needed bc of bad parse
     label: Definition
     priority: ${priority}
     type: token
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    example: "T = daily mean air temperature [°C]"
     #action: variableArguments
     pattern: |
-      @variable:Variable ( is| is defined as) (an|a|the) @definition:Concept
+      @variable:Variable "=" (an|a|the)? (?! [tag=CD]) @definition:Concept
 
-#  - name: var_definition_appos
-#    label: Definition
-#    priority: ${priority}
-#    type: token
-#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-#    #action: variableArguments
-#    pattern: |
-#        @variable:Variable "-LRB-" @definition:Concept "-RRB-"
-
+#
   - name: var_definition_appos_bidir
     label: Definition
     priority: ${priority}
@@ -32,26 +24,24 @@ rules:
     pattern: |
       @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
 
+  - name: var_verb
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      trigger = [word=/(?i)^defin|represent|=/]
+      variable:Concept = /${agents}/
+      definition: Concept+ = /nmod_as|nmod_by|nmod_with|dobj/ nmod_of?
+      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
-    #todo: with the next two rules, more tests fail
-#  - name: var_verb
-#    label: Definition
-#    priority: ${priority}
-#    type: dependency
-#    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
-#    pattern: |
-#      trigger = [word=/(?i)^calculat|defin/]
-#      variable:Concept+ = /${agents}/
-#      defintion: Concept = /nmod_as|nmod_by|nmod_with/
-#      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-#
-#  - name: var_cop_definition
-#    label: Definition
-#    priority: ${priority}
-#    type: dependency
-#    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
-#    pattern: |
-#      trigger = [lemma="be"]
-#      variable:Concept+ = <cop /${agents}/
-#      defintion: Concept = <cop
-#      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+  - name: var_cop_definition
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Concept+ = <cop /${agents}/
+      definition: Concept = <cop (?! case) nmod_for?
+      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
