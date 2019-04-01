@@ -37,7 +37,7 @@ The CodeExplorer webapp is built using [Flask](http://flask.pocoo.org). All code
 The CodeExplorer has two main interfaces: 
 
 - The 'Home' page is for 'live' **Code Analysis**.
-- The 'Model Comparison' page provides a more 'curated' experience demonstrating the comparison of models extracted from two code sources.
+- The [**Model Comparison**](#model-comparison) page provides a more 'curated' experience demonstrating the comparison of models extracted from two code sources.
 
 Links to either interface are located adjacent to the CodeExplorer title bar (as shown in Figure 1).
 
@@ -112,7 +112,7 @@ Currently, this tab only works for the Priestly-Taylor model. For the other two 
 
 ### Model Comparison
 
-The 'Model Comparison' page provides a more 'curated' experience demonstrating the outcome of comparing two models extracted from two code sources, in this case the source code for the Priestly-Taylor and ASCE models from the main page. 
+The **Model Comparison** page provides a more 'curated' experience demonstrating the outcome of comparing two models extracted from two code sources, in this case the source code for the Priestly-Taylor and ASCE models from the main page. 
 
 The "Model Comparison" page displays two models of potential evapotranspiration as implemented in DSSAT - the Priestley-Taylor and ASCE models - and the 'forward influence blanket', i.e. the 'intersection' of the models (shown below). The blue nodes in the graph indicate variables common to the two models.
 
