@@ -38,5 +38,5 @@
      sudo ./docker.sh python3 equation.py detect --dataset=dataset --subset=test --weights=last
      ```
 
-     > TODO: update after we try
+     > TODO: update 
 
