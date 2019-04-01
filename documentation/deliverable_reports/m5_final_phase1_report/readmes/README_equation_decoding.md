@@ -16,7 +16,7 @@
 
 4. Download Data & Scripts from Deng et al., (2017): 
 
-   1. Python and Lua scripts can be cloned from the [**im2markup**](https://github.com/harvardnlp/im2markup) GitHub repository:
+   1. Python and Lua scripts can be cloned from the [im2markup](https://github.com/harvardnlp/im2markup) GitHub repository:
 
       ```
       git clone https://github.com/harvardnlp/im2markup.git
@@ -24,11 +24,32 @@
       ```
 
 5. Preprocess Data:
-    This library expects to have the gold formulas, even during inference because the evaluation code is always called.  We can avoid this requirement by provided random strings as the gold formulas so that the input is in the right format, but we don't cheat (and we don't have to know the answer before we ask the question)!
-    To generate this file, ....
-    > TODO: do
 
-    Then:
+    - This library expects to have the gold formulas (`formulas.norm.lst` in the script below), even during inference because the evaluation code is always called.  We can avoid this requirement by provided random strings as the gold formulas so that the input is in the right format, but we don't cheat (and we don't have to know the answer before we ask the question)!  
+
+      The format of this random string formula file we generate is:
+
+      ```
+        x x x
+        x x x
+        x x x
+        ...
+      ```
+      The library also wants to have list of the images to be decoded (`test_filter.lst` in the script below).  
+
+      The format of this file is:
+
+      ```
+        equation0.png 0
+        equation1.png 1
+        equation2.png 2
+        equation3.png 3
+        ...
+      ```
+
+      We generate these files in the process of formatting the images with [ImageMagick](https://www.imagemagick.org) using [this bash script](https://github.com/ml4ai/automates/blob/d14c69372b7cd20f6085812f66970b0bd9230409/equation_extraction/convert_to_png.sh) (please modify as needed).  
+
+    - Then, preprocess the images:
 
     ```
     cd im2markup
