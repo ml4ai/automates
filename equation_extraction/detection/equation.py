@@ -24,7 +24,7 @@ import skimage.draw
 import numpy as np
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath("../../")
+ROOT_DIR = os.path.abspath("Mask_RCNN")
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR) # To find local version of the library
@@ -56,7 +56,7 @@ class EquationConfig(Config):
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + equation
@@ -199,7 +199,7 @@ def train(model, dataset_dir):
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=20,
-                augmentation=augmentation,
+                # augmentation=augmentation,
                 layers='heads')
     end = time.time()
     print("Trained network heads in {} seconds".format(end-start))
@@ -209,7 +209,7 @@ def train(model, dataset_dir):
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=40,
-                augmentation=augmentation,
+                # augmentation=augmentation,
                 layers='all')
     end = time.time()
     print("Trained all layers in {} seconds".format(end-start))
@@ -361,7 +361,7 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model, args.dataset, args.subset)
+        train(model, args.dataset)
     elif args.command == "detect":
         detect(model, args.image_path)
     else:
