@@ -1,12 +1,14 @@
 ## Program Analysis: for2py
 
-The core functionality of `for2py` is that of extracting the syntactic structure of the input code in the form of an _abstract syntax tree_ (AST), which is then written out in a form suitable for subsequent analyses. Idiosyncracies of the Fortran language make it non-trivial and time-consuming to construct a Fortran parser from scratch, while most available Fortran parsers are part of compilers and closely integrated with them, making the extraction of the AST difficult. The only suitable Fortran parser that we found, and which we use in `for2py`, is the open-source tool `OFP` (Open Fortran Parser). While its functionality as a Fortran parser fits our needs, `OFP` suffers from some shortcomings, e.g., an inability to handle some legacy constructs and handling a few other constructs in unexpected ways, that require additional effort to work around.
+The core functionality of `for2py` consists of extracting the syntactic structure of the input code (Fotran) in the form of an _abstract syntax tree_ (AST), which is then written out in a form suitable for subsequent analyses. Idiosyncracies of the Fortran language make it non-trivial and time-consuming to construct a Fortran parser from scratch; also most available Fortran parsers are part of compilers and closely integrated with them, making the extraction of the AST difficult. The only suitable Fortran parser we have found, and which we use in `for2py`, is the open-source tool [Open Fortran Parser](https://github.com/OpenFortranProject/open-fortran-parser), `OFP`. While its functionality as a Fortran parser fits our needs, `OFP` suffers from some shortcomings, e.g., an inability to handle some legacy constructs and handling a few other constructs in unexpected ways, that require additional effort to work around.
 
 ### Architecture
 
-The architecture of the `for2py` Fortran-to-GrFN translator is shown below. It is organized as a pipeline that reads in the Fortran source code, transforms it through a succession of intermediate representations, as described below, and writes out the GrFN representation of the code along with associated Python code ("lambdas").
+The architecture of the `for2py` Fortran-to-GrFN translator is shown in Figure 8. It is organized as a pipeline that reads in the Fortran source code, transforms it through a succession of intermediate representations, as described below, and writes out the GrFN representation of the code along with associated Python code ("lambdas").
 
 ![for2py architecture](figs/for2py-architecture.png)
+
+**Figure 8:** for2py architecture
 
 The processing of the input source code proceeds as follows:
 
