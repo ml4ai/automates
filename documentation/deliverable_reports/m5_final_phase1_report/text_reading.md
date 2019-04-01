@@ -6,6 +6,8 @@ To contextualize the models lifted from source code, we have implemented a machi
 
 ![Architecture of the text reading pipeline](figs/textrdg-architecture.png)
 
+**Figure 9**: Architecture of the text reading pipeline.
+
 For paper text extraction, we use a [pre-processing pipeline](#natural-language-data-preprocessing) that converts PDFs to text, parses the text, and extracts measurements. A set of [rule grammars](#rule-based-extraction-framework) then extract variables, their descriptions, and their values. For the source code comment extraction, we also use rule grammars to extract the variables and descriptions. The text variables are aligned to their corresponding comment variables using lexical semantics to provide richer context for the [CodeExplorer webapp](#codeexplorer) as well as to inform analyses performed in downstream components (e.g., model Sensitivity Analysis).
 
 Detailed instructions on how to run this pipeline are provided [below](#instructions-for-running-text-reading-components).
@@ -20,11 +22,11 @@ After filtering, the text is [syntactically parsed](https://github.com/clulab/pr
 
 ### Rule-based extraction frameworks
 
-For extracting model information (e.g., variables, their descriptions, values, etc.) from free text and comments, the team implemented a light-weight information extraction framework for use in the ASKE program. The system incorporates elements of the machine reader developed for the World Modelers program, [Eidos](https://github.com/clulab/eidos) (e.g., the development webapp for visualizing extractions, entity finders based on syntax and the results of grobid-quantities, and the expansion of entities (Hahn-Powell et al., 2017) that participate in relevant events) along with new [Odin](http://clulab.cs.arizona.edu/papers/lrec2016-odin.PDF) grammars (Valenzuela-Escárcega et al., 2016) for identifying, quantifying, and defining variables, as shown in the screenshot of the development webapp in Figure 9.
+For extracting model information (e.g., variables, their descriptions, values, etc.) from free text and comments, the team implemented a light-weight information extraction framework for use in the ASKE program. The system incorporates elements of the machine reader developed for the World Modelers program, [Eidos](https://github.com/clulab/eidos) (e.g., the development webapp for visualizing extractions, entity finders based on syntax and the results of grobid-quantities, and the expansion of entities (Hahn-Powell et al., 2017) that participate in relevant events) along with new [Odin](http://clulab.cs.arizona.edu/papers/lrec2016-odin.PDF) grammars (Valenzuela-Escárcega et al., 2016) for identifying, quantifying, and defining variables, as shown in the screenshot of the development webapp in Figure 10.
 
 ![Screenshot of ASKE text reading webapp for rapid rule development](figs/extractions.png)
 
-**Figure 9:** Screenshot of ASKE text reading webapp for rapid rule development.
+**Figure 10:** Screenshot of ASKE text reading webapp for rapid rule development.
 
 Odin grammars have proven to be reliable, robust, and efficient for diverse reading at scale in both the DARPA Big Mechanism program (with the [Reach](https://academic.oup.com/database/article/2018/1/bay098/5107029) system) and the DARPA World Modelers program (with the [Eidos](https://github.com/clulab/eidos/) system). The flexibility of Odin's extraction engine allows it to easily ingest the normalized measurements from grobid-quantities along with the surface form and the dependency syntax of the text, such that all representations can be used in the rule grammars during extraction.
 
@@ -44,11 +46,11 @@ Currently, there are 83 tests written to test the extraction of variables, defin
 
 Unsurprisingly, fewer of the tests for free text (i.e., the scientific papers) pass, as there is much more linguistic variety in the way variables and their definitions or descriptions are written. Moving forward, the team will continue to develop the grammars to increase recall, as well as performing a more formal evaluation of the precision.
 
-For paper reading, we currently have several small sets of rules written for extracting entities (eight rules), definitions (four rules), and parameter settings (eight rules). The rules for parameter settings extract both values and value intervals/ranges, as shown in Figure 10.
+For paper reading, we currently have several small sets of rules written for extracting entities (eight rules), definitions (four rules), and parameter settings (eight rules). The rules for parameter settings extract both values and value intervals/ranges, as shown in Figure 11.
 
 ![Example of extraction of parameter values and ranges from free text.](figs/paramSettingVisualization.png)
 
-**Figure 10:** Example of extraction of paramter values and ranges from free text.
+**Figure 11:** Example of extraction of paramter values and ranges from free text.
 
 #### Extraction from comments
 

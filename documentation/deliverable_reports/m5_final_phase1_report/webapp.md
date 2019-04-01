@@ -28,6 +28,18 @@ To run the webapp locally instead, you will need to install Delphi. For *nix sys
 pip install https://github.com/ml4ai/delphi/archive/master.zip
 ```
 
+If you want to get the tagged version corresponding to this milestone, you can
+do
+
+```
+pip install git+https://github.com/ml4ai/delphi.git@4.0.1
+```
+
+(Note: to use the AnalysisGraph class to create and parameterize models from
+text reading, you'll need to download the delphi SQLite database and set the
+DELPHI_DB environment variable as described
+[here](https://ml4ai.github.io/delphi/installation.html#other-environment-variables).)
+
 This will also install a command line hook to launch the CodeExplorer app, so you can just execute the following from the command-line
 
 ```
