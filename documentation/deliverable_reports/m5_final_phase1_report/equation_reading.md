@@ -42,7 +42,6 @@ While much of the preprocessing pipeline is complete, there are a few remaining 
 
 ### Equation detection
 
-<<<<<<< HEAD
 Before equations can be decoded, they first need to be located within the scientific papers encoded as PDF files. For this, the team evaluated standard machine vision techniques. The SOA [Mask-RCNN](https://github.com/matterport/Mask_RCNN) (He et al., 2017) was selected both for its robust performance across several detection tasks as well as its ease of use. Here, as the desired output of the model is the page and AABB of the detected equations, we ignore the mask (i.e., the precise set of pixels which compose the object), and as such the model is essentially an easy to use Faster R-CNN (Ren et al., 2015).
 
 The Faster R-CNN model uses a base network consisting of a series of convolutional and pooling layers as feature extractors for subsequent steps. This network is typically a [ResNet](https://arxiv.org/abs/1512.03385) backbone trained over [ImageNet](http://www.image-net.org/) or [COCO](http://cocodataset.org).
