@@ -21,14 +21,6 @@ cd delphi
 pip install .
 ```
 
-To get the tag associated with the code release for this milestone, do the
-following after cloning the repo and `cd`-ing into the `delphi` directory:
-
-```
-git fetch && git fetch --tags
-git checkout 4.0.0-alpha
-```
-
 This will also install a command line hook to launch the CodeExplorer app, so you can just execute the following from the command-line
 
 ```
@@ -50,6 +42,7 @@ The CodeExplorer has two main interfaces:
 Links to either interface are located adjacent to the CodeExplorer title bar (as shown in Figure 1).
 
 ![Computational Graph](figs/codex_computational_graph.png)
+
 **Figure 1:** Screenshot of AutoMATES CodeExplorer interface
 
 Figure 1 shows a screenshot of the Code Analysis ("Home") interface. As with the Month 3 demo, Fortran source code is input in the pane to the left and submitted for analysis. The CodeExplorer now provides three source files through the `Choose Model` button:
@@ -84,6 +77,7 @@ Clicking on the variable nodes (maroon ovals) brings up
 automatically-associated metadata and provenance for the variables extracted by [Text Reading](#) from (1) code comments and (2) scientific texts. Figure 2 shows examples of metadata from each of these sources.
 
 ![NLP-extracted annotations](figs/codex_annotations.png)
+
 **Figure 2:** Variable metadata from code comments and scientific text.
 
 ##### Function lambda code and equations
@@ -91,6 +85,7 @@ automatically-associated metadata and provenance for the variables extracted by 
 Clicking on the black square nodes, representing functions, brings up the generated Python lambda function and the equation it represents. Figure 3 shows examples of the equation and lambda function from two functions.
 
 ![Lambda functions](figs/codex_lambdas.png)
+
 **Figure 3:** Function equation representation and lambda function.
 
 #### Causal Analysis Graph
@@ -98,6 +93,7 @@ Clicking on the black square nodes, representing functions, brings up the genera
 Clicking on the "Causal Analysis Graph" tab shows a simplified view of the model, in which the function nodes are elided, and the edges between the variable nodes denote causal influence relations. Clicking on the nodes brings up variable descriptions, similarly to the Function Network graph view.
 
 ![Causal Analysis Graph](figs/codex_cag.png)
+
 **Figure 4:** Causal Analysis Graph view
 
 (NOTE: although you can select Variable nodes, these do not currently populate their metadata; This is only currently possible in the Function Network graph pane.)
@@ -111,20 +107,21 @@ Clicking on the "Equivalen Python Code" tab displays the python code that was ge
 The "Sensitivity Surface" tab shows a surface plot of the output variable of the model with respect to the two input nodes that it is most sensitive to, as measured by the [$$S_2$$ (second order) Sobol sensitivity index](https://en.wikipedia.org/wiki/Variance-based_sensitivity_analysis). The creation of this surface requires knowing the bounds of the variables - right now we use a hard-coded dictionary of preset bounds for variables in the Priestley-Taylor model, but in the future we hope to automatically extract domain information for the variables using machine reading.
 
 ![Sensitivity surface for pre-selected Priestly-Taylor model](figs/codex_s2_surface.png)
+
 **Figure 5:** Sensitivity surface for pre-selected Priestly-Taylor model.
 
 Currently, this tab only works for the Priestly-Taylor model. For the other two source code examples, the notice shown in Figure 6 is displayed below the `Submit` button.
 
-![Warning about missing bounds information](figs/sensitivity-bounds-warning.png)
+![Warning about missing bounds information](figs/codex_sensitivity_bounds_warning.png)
+
 **Figure 6:** Warning about missing bounds information.
 
 ### Model Comparison
 
-The **Model Comparison** page provides a more 'curated' experience demonstrating the outcome of comparing two models extracted from two code sources, in this case the source code for the Priestly-Taylor and ASCE models from the main page. 
-
-The "Model Comparison" page displays two models of potential evapotranspiration as implemented in DSSAT - the Priestley-Taylor and ASCE models - and the 'forward influence blanket', i.e. the 'intersection' of the models (shown below). The blue nodes in the graph indicate variables common to the two models.
+The **Model Comparison** page provides a more 'curated' experience demonstrating the outcome of comparing two models extracted from two code sources, in this case the source code for the Priestly-Taylor and ASCE models from the main page. As shown in Figure 7, the Grounded Function Networks for the Priestly-Taylor and ASCE models are displayed in the left and right columns, respectively. 
 
 ![Model Comparison](figs/codex_model_comparison.png)
+
 **Figure 7:** The model 'intersection'
 
-
+In the middle column is a representation of the subset of the ASCE model that is contained in the Forward Influence Blanket identified by the nodes shared between Priestly-Taylor and ASCE. The blue nodes indicate the variables shared between the models. The green nodes indicate the variables in ASCE that do not appear in Priestly-Taylor but are direct parents of any nodes along a path between the blue nodes; these are the ASCE variables that directly affect any functions between the overlapping variables. 
