@@ -39,17 +39,17 @@ While much of the preprocessing pipeline is complete, there are a few remaining 
 
 #### Equation detection
 
-Before equations can be decoded, they first need to be located within
-the scientific papers encoded as PDF files.  For this, the team evaluated standard machine vision techniques.  The SOA [Mask-RCNN](https://github.com/matterport/Mask_RCNN) (He et al., 2017) was selected both for its robust performance across several detection tasks as well as its ease of use.  Here, as the desired output of the model is the page and AABB of the detected equations, we ignore the mask (i.e., the precise set of pixels which compose the object), and as such the model is essentially an easy to use Faster R-CNN (Ren et al., 2015).
+Before equations can be decoded, they first need to be located within the scientific papers encoded as PDF files. For this, the team evaluated standard machine vision techniques. The SOA [Mask-RCNN](https://github.com/matterport/Mask_RCNN) (He et al., 2017) was selected both for its robust performance across several detection tasks as well as its ease of use. Here, as the desired output of the model is the page and AABB of the detected equations, we ignore the mask (i.e., the precise set of pixels which compose the object), and as such the model is essentially an easy to use Faster R-CNN (Ren et al., 2015).
 
-The Faster R-CNN model uses a base network consisting of a series of convolutional and pooling layers as feature extractors for subsequent steps. This network is typically [ResNet](https://arxiv.org/abs/1512.03385) which is trained on [ImageNet](http://www.image-net.org/). 
->TODO: Marco review resnet/magenet
+The Faster R-CNN model uses a base network consisting of a series of convolutional and pooling layers as feature extractors for subsequent steps. This network is typically a [ResNet](https://arxiv.org/abs/1512.03385) backbone trained over [ImageNet](http://www.image-net.org/) or [COCO](http://cocodataset.org).
 
 Next, a region proposal network (RPN) uses the features found in the previous step to propose a predefined number of bounding boxes that may contain equations. For this purpose, fixed bounding boxes of different sizes are placed throughout the image. Then the RPN predicts two values: the probability that the bounding box contains an object of interest, and a correction to the bounding box for it to better fit the object.
 
 At this point, the Faster R-CNN uses a second step to classify the type of object, using a traditional R-CNN. Since here there is only one type of object of interest (equations), the output of the RPN can be used directly, simplifying training and speeding up inference. However, one potential disadvantage of only having a single label is that the model could be confused by similar page components (e.g., section titles and tables).  Since we have access to the TeX source code, in the future we can include these other objects and their labels and will train the model to differentiate between them explicitly.
 
-#### Equation decoding 
+Currently, the team has been able to train the Mask-RCNN, on the equation images and AABBs from the arXiv data, however GPU-related constraints have temporarily limited progress.  As results become available, we will update this report with the corresponding timestamps.
+
+### Equation decoding
 
 Once detected, the rendered equations need to be automatically converted into LaTeX code.  For this purpose, we employ an encoder-decoder architecture, which encodes the equation image into a dense embedding and subsequentially decodes it into LaTeX code capable of being compiled into an image. LaTeX was selected as the intermediary representation between image and executable model because of the availability of training data (arXiv) and because it preserves both typographic information about how equations are rendered (e.g., bolding, italics, subscript, etc.) while also preserving the components of the notation that will be used for the successful interpretation of the equation semantics.
 
@@ -111,34 +111,20 @@ We have separate README files for the individual components of the equation read
 - [Detecting equations in a pdf](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_equation_detection.md)
 - [Decoding equation images into LaTeX](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_equation_decoding.md) (requires gpu)
 
-#### Data set
+### Updates
 
->TODO: Description of dataset and how to obtain it.
-
-- link to pretrained model
-- arxiv currently on UofA servers
-- provide scripts to unpack and extract training data
-
-#### Updates
-
-Since the last report, progress hass been made on several fronts.  Here are the highlights, though more detail is provided in the sections above.
+Since the last report, progress has been made on several fronts. Here are the highlights, though more detail is provided in the sections above.
 
 - Data collection:
   - Since the last report, the team has [added the LaTeX macro expansion](https://github.com/ml4ai/automates/blob/master/equation_extraction/latex.py), accomplished through a recursively applied lookup table.  This allows for the critical normalization of tokens for training the equation decoder.  
   - Additionally, the team incorporated template rescaling to better match the rendered equation against the original pdf.  This resulted in significantly more accurate axis-aligned bounding boxes.
 
 - Equation detection: 
-
-  - The team has downloaded the current SOA model and processed the training data to fit the required format.  
-
-  - > TODO: update!
+  - The team has downloaded the current SOA model and processed the training data to fit the required format and begun the training procedure.
 
 - Equation decoding:
-
-  - The team has succesfully reproduced equation decoding results from original paper using the pre-trained model and the provided evaluation data.  We have additionally successfully run the training procedure with a small toy dataset.  While we could now train with additional data, we will instead reimplement the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU) in response to the found limitations of the SOA model.
-
-- Conversion to executable representation:
-
+  - The team has succesfully reproduced equation decoding results from original paper using the pre-trained model and the provided evaluation data. We have additionally successfully run the training procedure with a small toy dataset. While we could now train with additional data, we will instead reimplement the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU) in response to the found limitations of the SOA model.
+- XXX
   - The team has chosen a library for converting the generated LaTeX to SymPy and evaluated the output.  Based on this output, we will consider either expanding the corresponding antlr4 grammar or extend the plasTeX library, as the current SOA is not well-suited to the equations of interest.
 
 
