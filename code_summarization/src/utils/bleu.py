@@ -18,17 +18,8 @@ with open(trans_path, "r") as translation_file:
 
 scores = list()
 for reference, translation in zip(references, translations):
-    score = sentence_bleu([reference], translation, weights=(1.0,))
+    score = sentence_bleu([reference], translation, weights=(0.25, 0.25, 0.25, 0.25))
     scores.append((score, reference, translation))
 
 nums = [s for s, _, _ in scores]
 print(f"Average BLEU score: {np.mean(nums)}")
-
-scores.sort(key=lambda tup: tup[0], reverse=True)
-for i, (score, ref, trans) in enumerate(scores[:100]):
-    print(f"RANK: {i}\tSCORE: {score}")
-    print(f"\tTRUTH: {ref}\n")
-    print(f"\tTRANS: {trans}\n")
-    print("\n")
-
-print(sorted(nums, reverse=True)[:500])
