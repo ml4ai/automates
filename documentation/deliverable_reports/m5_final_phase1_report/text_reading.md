@@ -63,8 +63,6 @@ We have implemented an initial alignment module, based on the lexical semantic a
 
 The final alignments are output to the GrFN JSON for downstream use.
 
-> TODO: link? picture?
-
 ### Instructions for running text reading components
 
 We have separate README files for the individual components of the text reading pipeline:
@@ -72,8 +70,6 @@ We have separate README files for the individual components of the text reading 
 - [Development webapp](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_development_webapp.md) for visualizing the extractions
 
 - [ExtractAndAlign](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_extract_and_align.md) entrypoint, for extracting model information from free text and comments and generating and exporting alignments. This is the primary pipeline for the text reading module.
-> TODO: make this readme
-
 ### Updates
 
 The team has made progess in several areas since the last report. Here we summarize the new additions, which are described in much more detail in the sections above.
