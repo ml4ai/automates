@@ -47,23 +47,35 @@ Currently, the team has been able to train the Mask-RCNN on the equation images 
 
 ### Equation decoding
 
-Once detected, the rendered equations need to be automatically converted into LaTeX code. For this purpose, we employ an [encoder-decoder architecture](https://machinelearningmastery.com/encoder-decoder-recurrent-neural-network-models-neural-machine-translation/), which encodes the equation image into a dense embedding and subsequentially decodes it into LaTeX code capable of being compiled into an image. LaTeX was selected as the intermediate representation between image and executable model because of the availability of training data (arXiv) and because it preserves both typographic information about how equations are rendered (e.g., bolding, italics, subscript, etc.) while also preserving the components of the notation that will be used for the successful interpretation of the equation semantics.
+Once detected, the rendered equations need to be automatically converted into LaTeX code. For this task we employ a variant of an [encoder-decoder architecture](https://machinelearningmastery.com/encoder-decoder-recurrent-neural-network-models-neural-machine-translation/) that encodes the equation image into a dense embedding and then decodes it into LaTeX code capable of being compiled back into an image. LaTeX was selected as the intermediate representation between input image and the eventual target executable model of the equation because of the availability of a large amoutn of training data ([arXiv](https://arxiv.org/)) and because LaTeX preserves both typographic information about how equations are rendered (e.g., bolding, italics, subscript, etc.) while also preserving the components of the notation that will be used for the successful interpretation of the equation semantics.
 
-Encoder-decoder architectures like the one proposed have been successfully applied in the past for the purpose of image caption generation (e.g., Vinyals et al., 2017). Here, to make rapid progress, we began with an existing SOA model previously trained for the purpose of converting images to markup (Deng et al., 2017). The model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html) sample of arXiv mentioned above.
+Encoder-decoder architectures have been successfully applied to image caption generation (e.g., Vinyals et al., 2017), a task that is similar to our task of mapping equation images to equation code. In order to make rapid progress, we began with an existing SOA model previously trained for the purpose of converting images to markup (Deng et al., 2017). The model was trained with the [2003 KDD cup competition](http://www.cs.cornell.edu/projects/kddcup/datasets.html), which itself consists of a subset of arXiv physics papers.
 
-We evaluated this pre-trained model for our use case on a sample of 20 domain-relevant equations from a scientific paper describing the ASCE evapotranspiration model (Walter et al., 2000) that is also implemented in [DSSAT](https://github.com/DSSAT) (and available for analysis in the Prototype [CodeExplorer webapp](#codeexplorer)). We provided the model with two versions of each equation. The first version of the equation conforms exactly to the model's training data. To achieve this, we manually transcribed the equation into LaTeX, render it with the authors' exact template, convert the resulting PDF into a PNG file using a specific tool with specific resolution settings, and finally pass it through their pre-processing pipeline. We refer to this version of the equation image as the _transcribed_ version. This is clearly not scalable, as the entire purpose of this component is to avoid hand-transcribing equations into LaTeX, however, the model's results on these versions of the equations serve as a useful ceiling perfomance for the pre-trained model without updating.
+We evaluated the pre-trained Deng et al. model for our use case by taking a sample of 20 domain-relevant equations from a scientific paper describing the ASCE evapotranspiration model (Walter et al., 2000) (which is also implemented in [DSSAT](https://github.com/DSSAT) and has been made available for analysis in the Prototype [CodeExplorer webapp](#codeexplorer)). 
 
-The second version of the equation image is more representative of a real-world usage within the AutoMATES project. We took screenshots of the equations from the original paper that are cropped to the size of an AABB (as such, we refer to this version of the equation image as the _cropped_ version). We found that the pre-trained model was unable to handle these as initially created, and they needed to be rescaled to 50% of their original size. These images were then also passed through the authors' pre-processing pipeline.
+Based on this, we have learned that the Deng et al. model is sensitive to the source image equation font as well as the size of the image. For this reason, we present here the results of performance of the model based on two versions of the source equation images, as we have learned important lessons by considering both.
+
+For the first version of the equation images, we attempted to create a version of the equations that matches as closely as possible the equation font and rendered image size as used in the Deng et al. training data by manually transcribing the equations into a LaTeX that generates stylistically close equation renderings. We refer to this as the _transcribed_ version of the equations.
+
+For the second version of the equation images, we modeled how we expect to extract the equations in the context of the equation extraction pipeline. Here, the equation image was constructed by taking a screenshot of the equation from the original source paper, and then cropping the image to the size of the AABB returned from the [equation detection](#equation-detection) process described above. We found that in this case, the pre-trained Deng et al. model was unable to successfully process these images until they were rescaled to 50% of their original size. After rescaling, we then ran the images through the Deng et al. pipeline. We refer to these images as the _cropped_ version of the equations.
 
 When comparing the results of the model on the _transcribed_ and _cropped_ equation images, we found several patterns.
 
-First, there are several cases in which the pre-trained model is able to correctly decode the _transcribed_ image (12 out of 20, or 60% of the images). This correct decoding accuracy drops to 5% when using the _cropped_ images (strictly speaking, it is 0%, but on one image the only mistake is superficial only). The proportion of character-level mistakes (e.g., wrong characters or incorrect super/sub-script, etc.) also increases from 2.7% to 31.2% when comparing the results of the _transcribed_ and _cropped_ images (numbers reflect only images which are renderable). This highlights the brittleness of the pre-trained model — when used on images that are not perfectly in conformity to the training data used, the model is unable to produce usable results. This represents a major limitation of using the pre-trained model as-is, because for the final pipeline, we will need a system which can find equations in any given pdf, crop the page to the equation, and pass it the cropped image to the decoder.
+First, there are several cases in which the pre-trained model is able to completely correctly decode the _transcribed_ image (12 out of 20, or 60% of the images). This correct decoding accuracy drops to 5% when using the _cropped_ images (strictly speaking, it is 0%, but on one image the only mistake is superficial). The proportion of character-level mistakes (e.g., wrong characters or incorrect super/sub-script, etc.) also increases from 2.7% to 31.2% when comparing the results of the _transcribed_ and _cropped_ images (numbers reflect only images which are renderable). This highlights the brittleness of the pre-trained model: when used on images that do not conform to the conditions of the original training data used by Deng et al., the model is unable to produce usable results. 
 
-We also found that, when the model is given the _cropped_ images, because of the font difference the model over-predicts characters as being in a bold typeface. While this difference is minor on the surface, in reality the bold typeface is semantically meaningful in mathematical notation as it signals that the variable is likely a vector, rather than a scalar. We also noticed that in multiple places the when there is a 'J' in the original equation, the model decodes a $$\Psi$$, as shown here.
+We also found that when the model is given the _cropped_ images, because of the font difference the model over-predicts characters as being in a bold typeface. While this difference is minor for general text, bold typeface is semantically meaningful in mathematical notation as it signals that the variable is likely a vector rather than a scalar. 
 
-![mis-matched braces](figs/j_psi.png)
+We also observed that in multiple cases, a 'J' in the original equation was decoded it as a $$\Psi$$, as shown in the comparsion in Figure 12.
 
-While this may appear to be strange behavior, recall that the model is pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, however, there is a [specific subatomic particle that is refered to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). This highlights that the model is over-fitted to the specific domain it was trained on.
+![Incorrect decoding of 'J' to '$$\Psi$$'.](figs/j_psi.png)
+
+**Figure 12**: Incorrect decoding of 'J' as '$$\Psi$$'.
+
+A likely explanation for this common confusion between 'J' and '$$\Psi$$' is that the Deng et al. model was pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, there is a [specific subatomic particle that is refered to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). The model is likely over-fitted to the specific domain it was trained on.
+
+
+
+
 
 To address these limitations of poorly handling variations in the input, we will re-train the model using the much larger set of equations from arXiv. The collected data represents a much wider set of domains and has orders of magnitude more data, which will help with the issue of overfitting. Additionally, to ensure robustness to different image sizes, fonts, typesettings, etc. we will augment the training data using techniques that have been proven to improve generality in machine vision systems (e.g., Baird, 1993; Wong et al., 2016; Wang & Perez, 2017, _inter alia_). Specifically, by manipulating the image size, text font, blurriness, rotation, etc. we can generate additional training data to help the model to better generalize to unseen examples which come from a variety of sources.
 
@@ -71,9 +83,13 @@ Further, we found several mistakes that are likely influenced by the unconstrain
 
 ![Example with mismatched braces.](figs/mismatched_braces.png)
 
+**Figure 13**: 
+
 Also, we often found that multiple mentions of a single variable in an equation are decoded differently, as shown in the examples below.
 
 ![Example with multiple mentions.](figs/mult_mentions_wrong.png)
+
+**Figure 14**: 
 
 In the left-most example (a), the problem is minor, as the wrongly decoded variable is where the equation is being _stored_. In the right-most equation (b), the semantics of the formula are completely lost. In both cases, the problem will be exacerbated when converting the equations to executable code and especially when the extracted information needs to be assembled for model analysis.
 
@@ -87,13 +103,19 @@ To determine to what extent we can use this library out of the box, we used it t
 
 ![with spaces stack trace](figs/stack_trace.png)
 
+**Figure 15**: 
+
 After removing spaces, we found that simple expressions were correctly converted, as in the example shown here:
 
 ![](figs/good_sympy.png)
 
+**Figure 16**: 
+
 However, equations which are slightly more complex are not properly handled. As demonstrated below, we found that it conversion is improved if we remove the typesetting (e.g., the font specifications and specialized grouping symbols).
 
 ![sympy with more complex eqn](figs/bad_sympy.png)
+
+**Figure 17**: 
 
 That said, even after taking these steps, it is clear that we will need to extend the antlr4 grammar in order to handle the decided equations. In particular, we need to inform the splitting of characters into distinct variables (e.g., subscripts such as _max_ should not be considered as three variables multiplied together, _e<sup>o</sup>_ should not be considered as an exponential if we have previously seen it defined as a variable, etc.). Also, equations which contain other equations need to be represented with function calls, rather than multipication (i.e., _e<sup>o</sup>(T)_ is a reference to an equation, but latex2sympy converts it as `e**o*(T)`). Moving forward, the team will either expand the latex2sympy grammar or perhaps intead expand the library that we are already using for tokenizing LaTeX, plasTeX, which has the advantage of more robustly handling LateX (e.g., spacing, etc.).
 
