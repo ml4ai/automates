@@ -1,98 +1,52 @@
 ## Code Summarization
 
-So far, our experiments in code summarization have focused on the ability to
-generate natural language descriptions of source code functions using the
-state-of-the-art `Sequence2Sequence` neural machine translation (NMT) model
-described in [_Effective Approaches to Attention-based Neural Machine
-Translation_](https://arxiv.org/pdf/1508.04025.pdf).
-We were unable to achieve the end goal of generating descriptions for source
-code using this model, but learned some valuable lessons in the process.
-We will review the experiments we ran and discuss the limitations of our neural
-methods in the following sections. In the final section, we will discuss our
-proposed alternative strategy for code summarization.
+Our experiments in code summarization during Phase 1 have focused on the ability to generate natural language descriptions of source code functions using the state-of-the-art `Sequence2Sequence` neural machine translation (NMT) model described in [_Effective Approaches to Attention-based Neural Machine Translation_](https://arxiv.org/pdf/1508.04025.pdf).
+We were unable to achieve the end goal of generating descriptions for source code using this model, but learned some valuable lessons in the process. In this section we review the experiments we have performed and discuss the limitations of the current neural methods. In the final section, we will discuss our proposed alternative strategy for code summarization.
 
 ### Dataset overview
 
-To train a model that could effectively generate docstring-like descriptions
-for our generated Python lambda functions, we needed a large corpus of
-Python function/docstring pairs.
-For this reason, we chose to index the entirety of the
-[awesome-python](https://awesome-python.com) list of Python packages for 
-functions that had associated docstrings.
-In order to locate and control the quality of the source code / docstring pairs
-we created a tool called `CodeCrawler`.
-The pipeline for `CodeCrawler` is shown in Figure 22 and explained in
-the following section.
+NMT requires a significant amoutn of training data. We extracted a very large corpus of Python function-docstring pairs by scraping the entirety of the [awesome-python](https://awesome-python.com) list of Python packages, extracting function source code and their associated docstrings.
+In order to locate and control the quality of the source code / docstring pairs we created a tool called CodeCrawler. The processing pipeline for CodeCrawler is shown in Figure 22.
 
 ![Code Crawler architecture](figs/code_summ/code-crawler.png)
 
 **Figure 22:** Code Crawler architecture.
 
-- **Function finder**: This component utilized Python's builtin `inspect`
-  module to find all function signatures in a Python module. The `inspect`
-  module also has the ability to grab the docstring associated with a function
-  using the `__doc__` variable.
-- **Paired docstring finder**: This component determined whether the docstring
-  returned from the `__doc__` attribute qualified as a descriptive function
-  comment. To do this, we checked the docstring to see if it conformed to the
-  [PEP 257](https://www.python.org/dev/peps/pep-0257/) standards for
-  docstrings. If the docstring conformed to the formatting standards then we
-  used the function description section as our descriptive docstring.
-- **Source code cleaner**: After identifying a function for our corpus this
-  component cleaned the function code to lower the amount of unique tokens in
-  the code by doing the following:
-  - All identifiers were split based on `snake_case` and `camelCase` rules.
-  - All numbers were separated into digits
-  - All string literals were replaced with the token `<STRING>`
-- **Docstring cleaner**: Our docstring cleaner was responsible for removing all
-  parts of the docstring that were not specified as descriptive by the PEP 257
-  standards. This was accomplished with simple pattern matching on the
-  docstring.
+- **Function finder**: This component uses Python's built-in `inspect` module to find all function signatures in a Python module. The `inspect` module also has the ability to grab the docstring associated with a function using the `__doc__` variable.
 
-Using `CodeCrawler`, we found a total of 76686 Python functions with
-well-formed docstrings.
+- **Paired docstring finder**: This component determines whether the docstring returned from the `__doc__` attribute qualifies as a descriptive function comment. To do this, we check the docstring to see if it conforms to the [PEP 257](https://www.python.org/dev/peps/pep-0257/) standards for docstrings. If the docstring conforms, we then use the function description section as our descriptive docstring.
+
+- **Source code cleaner**: Code summarization methods generally try to learn how to map from source code vocabulary (what terms are used in code) to a natural language description. In general, this task is easier when the source code vocabulary is observed repeatedly under different conditions. In order to reduce the number of unique source code vocabulary terms (and thereby increase the frequency with which each term is observerd), this component "cleans" the function code by the following rules:
+  - All identifiers are split based on `snake_case` and `camelCase` rules.
+  - All numbers are separated into digits (e.g., 103 becomes 1, 0, 3).
+  - All string literals were replaced with the token `<STRING>`.
+
+- **Docstring cleaner**: Following the same intuition as the source code cleaner, the docstring cleaner is responsible for removing all parts of the docstring that are not specified as descriptive, according to PEP 257 standards. This is accomplished with simple pattern matching on the docstring.
+
+Using CodeCrawler, we found a total of 76686 Python functions with well-formed docstrings.
 
 ### Experimental results
 
-After creating our corpus, we proceeded to test its abilities on a
-classification task. Our classification task was to see whether a network
-identify whether a given source code function and docstring were correctly
-paired. We formed two datasets to study our performance on this task. In
-addition to the 76686 positive association examples found using `CodeCrawler`,
-We obtained examples of negative association for our first dataset by randomly
-sampled docstrings from our corpus to associate each function in our corpus
-with a negative match. The combination of these negative examples with our
-positive examples formed a dataset named the `random-draw` dataset. For our
-second dataset, we selected examples of negative association using a Lucene
-index over the docstrings. For a particular function, we selected its negative
-associated docstring to be the docstring with the highest lexical overlap with
-the true docstring. The combination of these negative examples with our positive
-examples formed the _challenge_ dataset. After performing a grid
-search to optimize the hyperparameters of our neural network model, we were able to
-get the following classification results:
+After creating our corpus, we evaluated our code summarization neural model on a classification task, to see whether the model can identify whether a given source code function and docstring should be associated (i.e., whether the docstring is considered to be a relevant description of the source code). We formed two datasets to study our performance on this task. 
+
+For the first dataset, we created a set of _negative_ function/docstring pairs by randomly associating docstrings from our corpus with each function. We then combined these negative examples with the 76686 positive association examples found using CodeCrawler to form a dataset we call the _random-draw_ dataset. 
+
+To construct the negative function/docstring pairs for the second data set, we used a Lucene index over the docstrings to identify docstrings that are _similar_ to the true function/docstring pair, based on lexical overlap. These negative examples are much more difficult to distinguish from positive examples, and when combined with the 76686 positive association examples, we refer to this as the _challenge_ dataset.
+
+We trained the neural network model using both data sets, in both ases performing a grid search to optimize the hyperparameters. The results of the two models are summarized in the following table:
 
 | Dataset       | Accuracy | Precision | Recall | F1   |
 | :---         | ---:     | ---:      | ---:   | ---: |
 | `random-draw` | 89%      | 48%       | 82%    | 60%  |
 | `challenge`   | 64%      | 14%       | 61%    | 23%  |
 
-While our random-draw dataset had high accuracy, the low precision score for
-randomly chosen code/docstring pairs was immediately concerning. The loss in
-performance on the challenge dataset also became a concern for
-our neural model, especially since the precision decreased by a larger
-amount than the recall. This indicates that as the classification problem
-becomes harder, it becomes easier for the model to mistakenly classify a
-mismatched docstring as the correct docstring for a function. This was our first
-indication that the docstrings in our corpus may lack the signal strength
-necessary to distinguish one source code function from another, something that
-would be crucial for creating a useful description of a source code function.
+The model achieves high accuracy on the random-draw dataset, but this is likely a fairly easy baseline given that random code strings will very likely not be relevant to the code they've been randomly paired with. The challenge data set, however, is much more difficult, as reflected in the results. 
 
-Our final experiment with our neural model was to test its generation
-capabilities. We trained our generative model on our initial corpus of
-code/docstring pairs with part of our corpus as a development set to allow us
-to optimize the model's hyperparameters. We then tested our generator's ability
+Our final Phase 1 experiment with the neural model was to test its generation capabilities. We trained a sequence-to-sequence description generation model on the initial corpus of code/docstring pairs, using a portion of our corpus as a development set for optimize the model's hyperparameters, and then using the remaining corpus of function/
+
+testing on the model generator's ability
 to translate unseen source code functions into a descriptive summary
-docstring. The `BLEU-4` score obtained by our method was 1.88, which is far
+docstring. The [BLEU-4](https://en.wikipedia.org/wiki/BLEU) score obtained by our method was 1.88, which is far
 lower than the scores obtained in many contemporary code summarization
 tasks. We will discuss the quality of our generation in the corpus
 quality discussion section.
