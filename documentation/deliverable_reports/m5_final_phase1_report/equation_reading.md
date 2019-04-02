@@ -71,7 +71,7 @@ We also observed that in multiple cases, a 'J' in the original equation was deco
 
 **Figure 13**: Incorrect decoding of 'J' as '$$\Psi$$'.
 
-A likely explanation for the confusion between 'J' and '$$\Psi$$' is that the Deng et al. model was pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, there is a [specific subatomic particle that is refered to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). The model is likely over-fitted to the specific domain it was trained on.
+A likely explanation for the confusion between 'J' and '$$\Psi$$' is that the Deng et al. model was pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, there is a [specific subatomic particle that is referred to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). The model is likely over-fitted to the specific domain it was trained on.
 
 To address these issues, our next steps will use the following strategies:
 
