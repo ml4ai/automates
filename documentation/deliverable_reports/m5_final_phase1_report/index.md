@@ -7,11 +7,7 @@ toc: true
 
 {% include_relative overview.md %}
 
----
-
 {% include_relative webapp.md %}
-
----
 
 {% include_relative components.md %}
 
