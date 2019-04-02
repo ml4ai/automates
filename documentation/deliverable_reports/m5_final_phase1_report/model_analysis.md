@@ -14,9 +14,9 @@ The architecture for the Model Analysis module is shown in Figure 18. The overal
 
 Generating an actual computation graph from a GrFN spec and lambdas requires two phases, a wiring phase and a planning phase. The output from these two phases will be an executable computation graph.
 
-- **Wiring phase**: This phase utilizes the GrFN specification of how variables are associated with function inputs and outputs in order to "wire together" the computation graph. 
+- **Wiring phase**: This phase utilizes the GrFN specification of how variables are associated with function inputs and outputs in order to "wire together" the computation graph.
 
-- **Planning phase**: In this phase, a partial order is imposed over the lambda functions in the call graph of the GrFN, to determine an efficient order of computation and discover sets of functions that can potentially be executed in parallel. The ordering is recovered using `HeapSort` on the function nodes in the computation graph, where the heap invariant is the distance from the function node to an output node. The output of this algorithm is a call stack that can be used to execute the `GrFN` computation graph. After this phase is completed the computation graph can be executed as many times as needed without requiring a graph traversal per computation, allowing for more efficient sampling and sensitivity analysis.
+- **Planning phase**: In this phase, a partial order is imposed over the lambda functions in the call graph of the GrFN, to determine an efficient order of computation and discover sets of functions that can potentially be executed in parallel. The ordering is recovered using `HeapSort` on the function nodes in the computation graph, where the heap invariant is the distance from the function node to an output node. The output of this algorithm is a call stack that can be used to execute the `GrFN` computation graph. After this phase is completed the computation graph can be executed as many times as needed without requiring a call-stack creation per computation, allowing for more efficient sampling and sensitivity analysis.
 
 An example of the `GrFN` computation graph for `PETASCE` (the ASCE Evapotranspiration model) is shown in Figure 19.
 
@@ -28,11 +28,11 @@ In the figure, variables are represented by ovals and functions by boxes. The fu
 
 #### Model comparison
 
-Computation graphs can be used as the basis to compare models. First, we identify what variables are shared by the two models. We can then explore how the models are make similar (or different) assertions about the functional relationships between the variables. 
+Computation graphs can be used as the basis to compare models. First, we identify what variables are shared by the two models. We can then explore how the models make similar (or different) assertions about the functional relationships between the variables.
 
 Of course, the functions between the variables may be different, and other variables that are not shared might directly affect the functional relationships between the shared variables.
 
-Given the computation graphs for two models, we first identify the overlap in their variable nodes. In the examples we consider here, this is done using variable base-name string matching, since we are comparing two models from DSSAT, and the variables have standardized names in the code; more generally, we will rely on variable linking using information recovered from Text and Equation Reading. Once we have a set of shared variables, we then identify the subgraphs of each model that contain all directed paths from input shared variables to output shared variables. As part of this, we also identify any other variables in the model that serve as direct inputs to the functions along the paths between input and output shared varaibles. These additional, direct input variables that are not shared are referred to as the _cover set_ of the subgraph. These are variables whose state will affect how the shared variables relate.
+Given the computation graphs for two models, we first identify the overlap in their variable nodes. In the examples we consider here, this is done using variable base-name string matching, since we are comparing two models from DSSAT, and the variables have standardized names in the code; more generally, we will rely on variable linking using information recovered from Text and Equation Reading. Once we have a set of shared variables, we then identify the subgraphs of each model that contain all directed paths from input shared variables to output shared variables. As part of this, we also identify any other variables in the model that serve as direct inputs to the functions along the paths between input and output shared variables. These additional, direct input variables that are not shared are referred to as the _cover set_ of the subgraph. These are variables whose state will affect how the shared variables relate.
 
 As a final step, we look to see if any variables in the cover set are assigned values by a literal function node. We remove these variable nodes from the cover set, and add them and their literal assignment function node directly to the subgraph. The combination of shared variable input nodes, cover set variable nodes, and additional wiring forms a `Forward Influence Blanket` or `FIB` for short. An example of the `FIB` for the `PETASCE` model is shown in Figure 20. Here we can see the shared input variables colored in blue, while the _cover set_ variables are colored green.
 
@@ -44,8 +44,8 @@ The identified `FIB` of each model then forms the basis for directly comparing t
 
 #### Sensitivity analysis and model reporting
 
-[Sensitivity analysis](https://en.wikipedia.org/wiki/Sensitivity_analysis) identifies the relative contribution of uncertainty in input variables (or variable pairs, in second order analysis) to uncertainty in model output. 
-In the current AutoMATES Prototype, we use use the [SALib](https://github.com/SALib/SALib) python package to perform several types of sensitivity analsyis. The package provides the functionality to sample from our input variable space(s) and estimate output sensitivity over an input space.
+[Sensitivity analysis](https://en.wikipedia.org/wiki/Sensitivity_analysis) identifies the relative contribution of uncertainty in input variables (or variable pairs, in second order analysis) to uncertainty in model output.
+In the current AutoMATES Prototype, we use use the [SALib](https://github.com/SALib/SALib) python package to perform several types of sensitivity analysis. The package provides the functionality to sample from our input variable space(s) and estimate output sensitivity over an input space.
 We have created a simple API that takes a `GrFN` computation graph along with a set of search bounds for all model inputs and computes the sensitivity indices associated with each input or pairs of inputs.
 
 The sensitivity indices that are returned from a call to the sensitivity analysis API can be used to determine what information about a model is worth including in the model report.
