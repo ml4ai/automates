@@ -50,7 +50,6 @@ def build_report(report_name):
             "pandoc",
             "--template",
             "../pandoc_report_template.tex",
-            "--listings",
             "--pdf-engine",
             "lualatex",
             "-V",

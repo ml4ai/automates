@@ -12,8 +12,29 @@ The architecture for the model analysis module is presented below. The overall s
 
 #### Computation graph generation
 Generating an actual computation graph from a GrFN spec and lambdas requires two phases, a wiring phase and a planning phase. The output from these two phases will be an executable computation graph.
-- **Wiring phase**: This phases utilizes the container representation of scopes in the GrFN specification to wire together the functions and variables of a GrFN into a computation graph that has a set of input and output variables. While wiring a given scope, a set of input variables is maintained for the scope, as well as a set of live variables. This allows the function nodes to receive the proper variable inputs and is used for passing live variables as inputs into a contained scope for further wiring. The output of this phase is a fully wired computation graph with both variable and function nodes. A variable node includes a reference to a storage location to store the value of the variable during computation, and a function node stores both a reference to the lambda function represented by the node and a list specifying an ordering on the variable inputs to the function node.
-- **Planning phase**: In this phase, a partial order is imposed over the lambda functions in the call graph of the GrFN, to determine an efficient order of computation and discover sets functions that can potentially be executed in parallel. The ordering is recovered using `HeapSort` on the function nodes in the computation graph, where the heap invariant is the distance from the function node to an output node. The output of this algorithm is a call stack that can be used to execute the `GrFN` computation graph. After this phase is completed the computation graph can be executed as many times as needed without requiring a graph traversal per computation, allowing for more efficient sampling and sensitivity analysis.
+
+- **Wiring phase**: This phases utilizes the container representation of scopes
+ in the GrFN specification to wire together the functions and variables of a
+ GrFN into a computation graph that has a set of input and output variables.
+ While wiring a given scope, a set of input variables is maintained for the
+ scope, as well as a set of live variables. This allows the function nodes to
+ receive the proper variable inputs and is used for passing live variables as
+ inputs into a contained scope for further wiring. The output of this phase is
+ a fully wired computation graph with both variable and function nodes. A
+ variable node includes a reference to a storage location to store the value
+ of the variable during computation, and a function node stores both a
+ reference to the lambda function represented by the node and a list
+ specifying an ordering on the variable inputs to the function node.
+- **Planning phase**: In this phase, a partial order is imposed over the lambda
+ functions in the call graph of the GrFN, to determine an efficient order of
+ computation and discover sets functions that can potentially be executed in
+ parallel. The ordering is recovered using `HeapSort` on the function nodes in
+ the computation graph, where the heap invariant is the distance from the
+ function node to an output node. The output of this algorithm is a call stack
+ that can be used to execute the `GrFN` computation graph. After this phase is
+ completed the computation graph can be executed as many times as needed
+ without requiring a graph traversal per computation, allowing for more
+ efficient sampling and sensitivity analysis.
 
 An example of the `GrFN` computation graph for `PETASCE` (the ASCE Evapotranspiration model) is shown below.
 
