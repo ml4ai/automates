@@ -12,3 +12,11 @@ Each section in this report generally includes (where appropriate) the following
 - Updates: summary of changes over the past two months, since the previous [Month 3 Report](https://ml4ai.github.io/automates/documentation/deliverable_reports/m3_report_prototype_system/).
 
 All code comprising the AutoMATES Prototype is open-source and available at the [AutoMATES](https://github.com/ml4ai/automates) and [Delphi](https://github.com/ml4ai/delphi/) Github repositories.
+
+To clone the tagged version of automates that corresponds to the Month 5 Phase 1 Final Prototype release, run the following commands from a *nix command-line (with git installed):
+
+```
+git clone https://github.com/ml4ai/automates
+git fetch && git fetch --tags
+git checkout v0.1.0
+```
