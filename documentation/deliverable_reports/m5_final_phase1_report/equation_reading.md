@@ -71,53 +71,48 @@ We also observed that in multiple cases, a 'J' in the original equation was deco
 
 **Figure 13**: Incorrect decoding of 'J' as '$$\Psi$$'.
 
-A likely explanation for this common confusion between 'J' and '$$\Psi$$' is that the Deng et al. model was pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, there is a [specific subatomic particle that is refered to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). The model is likely over-fitted to the specific domain it was trained on.
+A likely explanation for the confusion between 'J' and '$$\Psi$$' is that the Deng et al. model was pre-trained on a subset of arXiv that contains only articles on particle physics. In this domain, there is a [specific subatomic particle that is refered to as J/$$\Psi$$](https://en.m.wikipedia.org/wiki/J/psi_meson). The model is likely over-fitted to the specific domain it was trained on.
 
-To address these limitations of poorly handling variations in the input, we will 
+To address these issues, our next steps will use the following strategies:
 
-1. re-train the model using the much larger set of equations from arXiv. The collected data represents a much wider set of domains and has orders of magnitude more data, which will help with the issue of overfitting. 
+1. First, we will retrain the model using a much larger portion of arXiv. This
+represents a much wider set of equation styles (from different disciplines) and has orders of magnitude more data. We anticipate that this will help address the issue of overfitting. 
 
-2. Additionally, to ensure robustness to different image sizes, fonts, typesettings, etc. we will augment the training data using techniques that have been proven to improve generality in machine vision systems (e.g., Baird, 1993; Wong et al., 2016; Wang & Perez, 2017, _inter alia_). Specifically, by manipulating the image size, text font, blurriness, rotation, etc. we can generate additional training data to help the model to better generalize to unseen examples which come from a variety of sources.
+2. Second, in order to make the model more robust to differences in image size, font, typesetting, etc., we will augment the training data by taking the source latex and rendering the equations under different conditions, such as keepin the same base equation but changing the font, image size, rotating, adding blurring, etc. This kind of data augmentation is a standard technique for improving model generalization in machine vision systems (e.g., Baird, 1993; Wong et al., 2016; Wang & Perez, 2017, _inter alia_). 
 
-3. Further, we found several mistakes that are likely influenced by the unconstrained nature of the sequence decoder. In each set of images, there are examples where the pre-trained model generates a sequence of tokens which cannot be compiled in LaTeX (10% of the _transcribed_ images and 35% of the _cropped_ images). As an example, in one of the equations the generated LaTeX cannot be compiled because the decoder produced a left bracket without producing the corresponding right bracket. Similarly, even when images compile, we still see this phenomenon as demonstrated in this example where the model mis-matches the braces.
+3. And third, we will use methods for post-processing the sequent-to-sequence decoder output. This will address several kinds of errors that appear to be a result of the unconstrained nature of the sequence decoder. Decoder errors are manifested in several ways. In some cases, the pre-trained model generates a sequence of tokens which cannot be compiled in LaTeX (10% of the _transcribed_ images and 35% of the _cropped_ images). For example, the generated LaTeX cannot be compiled because the decoder produced a left bracket without producing the corresponding right bracket. This mismatch may occur even when the generated LaTeX _can_ be compiled, as in the example in Figure 14, where an open brace is generated followed by a close parenthesis.
 
-	![Example with mismatched braces.](figs/mismatched_braces.png)
+	![Example with mistmatched brace and parenthesis.](figs/mismatched_braces.png)
 
-	**Figure 14**: 
+	**Figure 14**: Example with mistmatched brace and parenthesis.
 
-	Also, we often found that multiple mentions of a single variable in an equation are decoded differently, as shown in the examples below.
+	Another example of decoding that may benefit from post-processing is when multiple mentions of a single variable in an equation are decoded differently, as shown in Figure 15.
 
-	![Example with multiple mentions.](figs/mult_mentions_wrong.png)
+	![Multiple variable mentions with inconsistent decoding.](figs/mult_mentions_wrong.png)
 
-	**Figure 15**: 
+	**Figure 15**: Multiple variable mentions with inconsistent decoding.
 
-	In the left-most example (a), the problem is minor, as the wrongly decoded variable is where the equation is being _stored_. In the right-most equation (b), the semantics of the formula are completely lost. In both cases, the problem will be exacerbated when converting the equations to executable code and especially when the extracted information needs to be assembled for model analysis.
+	In the left-most example (a) of Fig 15, the problem is minor, as the wrongly decoded variable is where the equation is being _stored_. In the right-most equation (b), the semantics of the formula are completely lost when 'T' is incorrectly decoded as '$$\Gamma$$'. In both cases, the problem will be exacerbated when converting the equations to executable code and especially when the extracted information needs to be assembled for model analysis.
 
-	To address issues such as these, the team will explore methods for enforcing syntactic constraints on the decoded sequence. For example, one solution is to change from making local decoding decisions to finding the global best decoding for the image. That is, currently at a given time-step during decoding, the decision about what token should be produced next is made by greedily choosing the output token with the highest liklihood, given the input encoding and the previously decoded tokens. Instead, when the decisions are made to find the best _global_ sequence, then the model is unlikely to produce certain token combinations that never occured in training (e.g., an left bracket without a matching right bracket). This could be done through the addition of a conditional random field layer on top of the decoder or perhaps through an implementation of the Viterbi algorithm which utilizes domain-specific constraints. Additionally, a grammar can be used with the decoder (as was done by Krishnamurthy et al. (2017) for generating a well-formed logical forms for use in querying a knowledge base) to ensure generating valid LaTeX. To facilitate this exploration, the team will begin reimplementing the model (likely in pytorch) to be able to have more control over the format of the inputs as well as the model architecture itself. Additionally, the current library we're using assumes the availability of a GPU, which limits the usabilility of a final model (as not all users have easy access to a GPU). During reimplementation, we can intentionally ensure that a final model can be run on either a GPU or a CPU.
+	To address decoding errors like these, the team will explore methods for enforcing syntactic constraints on the decoded sequence. For example, one solution is to shift from making local decoding decisions to finding the global best decoding for the image. Currently, at a given point in the sequence during decoding, the decision about what token should be produced next is made by greedily choosing the output token with the highest likelihood, given the input encoding and the previously decoded tokens. Instead, when the decisions are made to find the best _global_ sequence, then the model is unlikely to produce certain token combinations that never occured in training (e.g., a left bracket without a matching right bracket). We will explore several strategies, including using a conditional random field layer on top of the decoder as well as using the Viterbi algorithm with domain-specific constraints. Additionally, a grammar can be used with the decoder (as was done by Krishnamurthy et al. (2017) for generating well-formed logical forms for use in querying a knowledge base) to ensure valid LaTeX is generated.
 
 ### Conversion to executable representation
 
-The final stage in the pipeline is the conversion of the equation to an executable representation. We chose to use [SymPy](https://www.sympy.org) for two reasons. First, and primarily, SymPy provides a symbolic representation of the equation so that while it is executable, variables can remain unassigned. Second, the program analysis team is using python as the intermediate language for model analysis. There is an available open-source library called [latex2sympy](https://github.com/augustt198/latex2sympy) (which has been [experimentally incorporated into sympy](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing)) for converting LaTeX expressions into SymPy expressions. The conversion makes use of a manually crafted [antlr4](https://www.antlr.org/) grammar.
+The final stage in the pipeline is the conversion of the equation to an executable representation. We chose to use [SymPy](https://www.sympy.org) for two reasons. First, and primarily, SymPy provides a symbolic representation of the equation so that while it is executable, variables can remain unassigned. Second, the Program and Model Analysis uses python as the intermediate language. There is an available open-source library called [latex2sympy](https://github.com/augustt198/latex2sympy) (which has been [experimentally incorporated into sympy](https://docs.sympy.org/latest/modules/parsing.html#experimental-latex-parsing)) for converting LaTeX expressions into SymPy expressions. The conversion makes use of a manually crafted [antlr4](https://www.antlr.org/) grammar.
 
-To determine to what extent we can use this library out of the box, we used it to convert the decoded equations from the _transcribed_ equation images. We restricted this analysis to this subset because (a) we won't have access to the gold data, only model decoded LaTeX and (b) the decoded LaTeX from the _cropped_ images was of too low quality to provide meaningful library evaluation. The first thing we noted, was that the model output has to be pre-processed to use the library. Minimally, the model generates the tokens with spaces in between, but these need to be removed to use latex2sympy.
+After some small post-processing (e.g., removing spaces introduced between characters in the generated LaTeX), we found that simple expressions were correctly converted, such as in Figure 16:
 
-![with spaces stack trace](figs/stack_trace.png)
+![Example of LaTeX to SymPy conversion.](figs/good_sympy.png)
 
-**Figure 16**: 
+**Figure 17**: Example of LaTeX to SymPy conversion.
 
-After removing spaces, we found that simple expressions were correctly converted, as in the example shown here:
+However, more complex equations may not be handled due to additional LaTeX font specification and specialized grouping symbols, as demonstrated in Figure 18. Removing these additional annotations improves equation SymPy conversion.
 
-![](figs/good_sympy.png)
+![Improving SymPy conversion by removing additional LaTeX notation.](figs/bad_sympy.png)
 
-**Figure 17**: 
+**Figure 18**: Improving SymPy conversion by removing additional LaTeX notation.
 
-However, equations which are slightly more complex are not properly handled. As demonstrated below, we found that it conversion is improved if we remove the typesetting (e.g., the font specifications and specialized grouping symbols).
-
-![sympy with more complex eqn](figs/bad_sympy.png)
-
-**Figure 18**: 
-
-That said, even after taking these steps, it is clear that we will need to extend the antlr4 grammar in order to handle the decided equations. In particular, we need to inform the splitting of characters into distinct variables (e.g., subscripts such as _max_ should not be considered as three variables multiplied together, _e<sup>o</sup>_ should not be considered as an exponential if we have previously seen it defined as a variable, etc.). Also, equations which contain other equations need to be represented with function calls, rather than multipication (i.e., _e<sup>o</sup>(T)_ is a reference to an equation, but latex2sympy converts it as `e**o*(T)`). Moving forward, the team will either expand the latex2sympy grammar or perhaps intead expand the library that we are already using for tokenizing LaTeX, plasTeX, which has the advantage of more robustly handling LateX (e.g., spacing, etc.).
+That said, even after taking these steps, it is clear that we will need to extend the antlr4 grammar in order to handle the decided equations. In particular, we need to inform the splitting of characters into distinct variables (e.g., subscripts such as _max_ should not be considered as three variables multiplied together, _e<sup>o</sup>_ should not be considered as an exponential if we have previously seen it defined as a variable, etc.). Also, equations that contain other equations need to be represented with function calls, rather than multipication (e.g., _e<sup>o</sup>(T)_ is a reference to an equation so needs to be interpreted as a single symbol, but latex2sympy converts it as `e**o*(T)`). Moving forward, our strategy is to expand the latex2sympy grammar and also consider expanding the plasTeX library that we are using for LaTeX tokenizing LaTeX (which will improve LaTeX code handling, such as spacing, etc.).
 
 ### Instructions for running components
 
@@ -129,20 +124,21 @@ We have separate README files for the individual components of the equation read
 
 ### Updates
 
-Since the last report, progress hass been made on several fronts. Here are the highlights, though more detail is provided in the sections above.
+Since the last report, progress has been made in the following four areas, with many of the details described in the sections above.
 
 - **Data collection**:
 
-  - Since the last report, the team has [added the LaTeX macro expansion](https://github.com/ml4ai/automates/blob/master/equation_extraction/latex.py), accomplished through a recursively applied lookup table. This allows for the critical normalization of tokens for training the equation decoder.
-  - Additionally, the team incorporated template rescaling to better match the rendered equation against the original pdf. This resulted in significantly more accurate axis-aligned bounding boxes.
+  - Since the last report, the team [added LaTeX macro expansion](https://github.com/ml4ai/automates/blob/master/equation_extraction/latex.py), accomplished through a recursively applied lookup table. This allows for the normalization of tokens for training the equation decoder.
+  - The team also incorporated template rescaling to better match the rendered equation against the original PDF image. This resulted in significantly more accurate axis-aligned bounding boxes.
 
 - **Equation detection**:
 
-  - The team has downloaded the current SOA model and processed the training data to fit the required format and begun the training procedure.
+  - The team installed the current SOA [Mask-RCNN](https://github.com/matterport/Mask_RCNN) model, processed the training data to fit the required model format, and evaluated the model with our corpus.
 
 - **Equation decoding**:
 
-  - The team has succesfully reproduced equation decoding results from original paper using the pre-trained model and the provided evaluation data. We have additionally successfully run the training procedure with a small toy dataset. While we could now train with additional data, we will instead reimplement the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU) in response to the found limitations of the SOA model.
+  - The team succesfully reproduced equation decoding results from Deng et al. (2017) paper using their pre-trained model and the provided evaluation data. We have additionally successfully run the training procedure with a small toy dataset. We are in the process of reimplementing the model to allow for greater control of the inputs, architecture, and computation resource requirements (CPU in additional to GPU) to address the limitations found in the original Deng et al. implementation.
+
 - **Conversion to executable representation**:
 
-  - The team has chosen a library for converting the generated LaTeX to SymPy and evaluated the output. Based on this output, we will consider either expanding the corresponding antlr4 grammar or extend the plasTeX library, as the current SOA is not well-suited to the equations of interest.
+  - The team has chosen a library for converting the generated LaTeX to SymPy and evaluated the output. Based on the our evaluation, the team is working on expanding the antlr4 grammar and also looking into extending the plasTeX library.
