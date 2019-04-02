@@ -1,3 +1,7 @@
+---
+title: README for the equation decoder
+---
+
 # Running the equation decoder
 
 ### Getting set-up

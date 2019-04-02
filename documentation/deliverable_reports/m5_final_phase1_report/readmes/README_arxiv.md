@@ -1,3 +1,7 @@
+---
+title: "ArXiv processing README"
+---
+
 # Re-creating equation dataset
 
 1. Download the complete set of arXiv PDFs and their corresponding source files from Amazon S3 as described [here](https://arxiv.org/help/bulk_data_s3).  Our dataset contains papers up through December 2018.

@@ -1,3 +1,7 @@
+---
+title: README for the equation detection module
+---
+
 # Running the equation detection module
 
 1. Clones the [AutoMATES repo](https://github.com/ml4ai/automates) 

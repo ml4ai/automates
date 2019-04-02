@@ -1,3 +1,7 @@
+---
+title: README for the ExtractAndAlign entrypoint
+---
+
 # Running text reading pipeline to generate GrFN with Alignments
 
 1. Install [docker](https://docs.docker.com/install/)

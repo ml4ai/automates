@@ -322,9 +322,9 @@ as spacing, etc.).
 
 We have separate README files for the individual components of the equation reading pipeline:
 
-- [Downloading and processing arXiv](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_arxiv.md)
-- [Detecting equations in a pdf](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_equation_detection.md)
-- [Decoding equation images into LaTeX](https://github.com/ml4ai/automates/blob/m5_phase1_report/documentation/deliverable_reports/m5_final_phase1_report/readmes/README_equation_decoding.md) (requires gpu)
+- [Downloading and processing arXiv](readmes/README_arxiv)
+- [Detecting equations in a pdf](readmes/README_equation_detection)
+- [Decoding equation images into LaTeX](readmes/README_equation_decoding) (requires a GPU)
 
 ### Updates
 
