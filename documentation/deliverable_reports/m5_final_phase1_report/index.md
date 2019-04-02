@@ -7,13 +7,9 @@ toc: true
 
 {% include_relative overview.md %}
 
----
-
 {% include_relative webapp.md %}
 
----
-
-# AutoMATES Components
+{% include_relative components.md %}
 
 {% include_relative grfn.md %}
 
@@ -26,3 +22,5 @@ toc: true
 {% include_relative model_analysis.md %}
 
 {% include_relative code_summarization.md %}
+
+{% include_relative references.md %}

@@ -1,11 +1,15 @@
+---
+title: README for the equation detection module
+---
+
 # Running the equation detection module
 
 1. Clones the [AutoMATES repo](https://github.com/ml4ai/automates) 
 
-2. Clone the [matterport Mask-RCNN](https://github.com/matterport/Mask_RCNN) repo inside the maskrcnn subdirectory
+2. Clone the [matterport Mask-RCNN](https://github.com/matterport/Mask_RCNN) repo inside the detection subdirectory
 
    ```
-   cd automates/maskrcnn
+   cd automates/equation_extraction/detection
    git clone https://github.com/matterport/Mask_RCNN.git
    ```
 
@@ -38,5 +42,5 @@
      sudo ./docker.sh python3 equation.py detect --dataset=dataset --subset=test --weights=last
      ```
 
-     > TODO: update after we try
+     Note: updates with corresponding timestamps will be added with more information regarding the detection model training and evaluation. 
 

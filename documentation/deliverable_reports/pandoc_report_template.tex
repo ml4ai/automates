@@ -8,7 +8,12 @@
 \usepackage{xspace}
 \usepackage{hyperref}
 \usepackage{longtable}
-
+\usepackage{fancyvrb}
+\usepackage{listings}
+$if(highlighting-macros)$
+$highlighting-macros$
+$endif$
+\newcommand{\passthrough}[1]{\lstset{mathescape=false}#1\lstset{mathescape=true}}
 \usepackage[tracking, protrusion]{microtype}
 
 \usepackage{fontspec}
