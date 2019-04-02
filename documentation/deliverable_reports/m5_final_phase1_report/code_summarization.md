@@ -21,12 +21,12 @@ For this reason, we chose to index the entirety of the
 functions that had associated docstrings.
 In order to locate and control the quality of the source code / docstring pairs
 we created a tool called `CodeCrawler`.
-The pipeline for `CodeCrawler` is shown in the figure below and explained in
+The pipeline for `CodeCrawler` is shown in Figure 22 and explained in
 the following section.
 
 ![Code Crawler architecture](figs/code_summ/code-crawler.png)
 
-**Figure 23:** Code Crawler architecture.
+**Figure 22:** Code Crawler architecture.
 
 - **Function finder**: This component utilized Python's builtin `inspect`
   module to find all function signatures in a Python module. The `inspect`

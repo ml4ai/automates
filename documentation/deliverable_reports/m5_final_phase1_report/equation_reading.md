@@ -104,13 +104,13 @@ After some small post-processing (e.g., removing spaces introduced between chara
 
 ![Example of LaTeX to SymPy conversion.](figs/good_sympy.png)
 
-**Figure 17**: Example of LaTeX to SymPy conversion.
+**Figure 16**: Example of LaTeX to SymPy conversion.
 
 However, more complex equations may not be handled due to additional LaTeX font specification and specialized grouping symbols, as demonstrated in Figure 18. Removing these additional annotations improves equation SymPy conversion.
 
 ![Improving SymPy conversion by removing additional LaTeX notation.](figs/bad_sympy.png)
 
-**Figure 18**: Improving SymPy conversion by removing additional LaTeX notation.
+**Figure 17**: Improving SymPy conversion by removing additional LaTeX notation.
 
 That said, even after taking these steps, it is clear that we will need to extend the antlr4 grammar in order to handle the decided equations. In particular, we need to inform the splitting of characters into distinct variables (e.g., subscripts such as _max_ should not be considered as three variables multiplied together, _e<sup>o</sup>_ should not be considered as an exponential if we have previously seen it defined as a variable, etc.). Also, equations that contain other equations need to be represented with function calls, rather than multipication (e.g., _e<sup>o</sup>(T)_ is a reference to an equation so needs to be interpreted as a single symbol, but latex2sympy converts it as `e**o*(T)`). Moving forward, our strategy is to expand the latex2sympy grammar and also consider expanding the plasTeX library that we are using for LaTeX tokenizing LaTeX (which will improve LaTeX code handling, such as spacing, etc.).
 
