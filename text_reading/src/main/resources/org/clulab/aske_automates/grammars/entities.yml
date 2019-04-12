@@ -83,11 +83,12 @@ rules:
       [word=/^DSSAT|^CSM/]
 
   - name: per_unit
-    label: Unit # should this be a Model instead?
+    label: Unit
     priority: ${priority}
     type: token
     example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
-    Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)"
+    Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
     pattern: |
       (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word="-LRB-"]) @unit:Concept (?=[word="-RRB-"])
+      #Doesn't work for this [%/(dS m-1)]
 

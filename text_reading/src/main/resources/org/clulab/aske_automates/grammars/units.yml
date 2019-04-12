@@ -1,0 +1,15 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  ####UNIT RELATIONS####
+
+  - name: var_unit_rel #needed bc of bad parse
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "T = daily mean air temperature [°C]"
+    #action: variableArguments
+    pattern: |
+      @variable:Variable [word=/.*/]+ [word=/-LRB-|-LSB-/] (?<unit> [word = /.*/]) (?=[word=/-RRB-|-RSB-/])
+      #false positive: "then the calibration or operation of the Rn device (radiometer) should be scrutinized"
