@@ -74,11 +74,20 @@ rules:
     pattern: |
       (?<=product of|values for) @variable:Concept and @variable:Concept
 
-  - name: var_dssat_model
-    label: Variable # should this be a Model instead?
+  - name: var_model
+    label: Model # should this be a Model instead?
     priority: ${priority}
     type: token
-    example: ""
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
       [word=/^DSSAT|^CSM/]
+
+  - name: per_unit
+    label: Unit # should this be a Model instead?
+    priority: ${priority}
+    type: token
+    example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
+    Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)"
+    pattern: |
+      (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word="-LRB-"]) @unit:Concept (?=[word="-RRB-"])
 
