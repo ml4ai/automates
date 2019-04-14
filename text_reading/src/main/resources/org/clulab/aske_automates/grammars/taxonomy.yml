@@ -1,7 +1,7 @@
 - Entity:
   - Concept:
-      - Variable:
-        - Model
+      - Variable
+      - Model
   - Measurement:
     - Value:
       - ValueAndUnit

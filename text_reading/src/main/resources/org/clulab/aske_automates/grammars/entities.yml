@@ -91,4 +91,13 @@ rules:
     pattern: |
       (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word="-LRB-"]) @unit:Concept (?=[word="-RRB-"])
       #Doesn't work for this [%/(dS m-1)]
+      #helps with non-standard units
 
+  - name: number_unit
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23"
+    pattern: |
+      (?<= [entity = "NUMBER"]) [chunk = "I-NP"]+
+      #required for non-standard units, e.g., s m-1

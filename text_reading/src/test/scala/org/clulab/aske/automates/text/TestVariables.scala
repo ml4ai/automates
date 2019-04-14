@@ -268,3 +268,5 @@ class TestVariables extends ExtractionTest {
 //  }
 
 }
+
+//todo: The procedure, first presented in the FAO Irrigation and Drainage Paper No. 24 'Crop Water Requirements' - negative example for vars

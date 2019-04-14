@@ -45,3 +45,14 @@ rules:
       variable:Concept+ = <cop /${agents}/
       definition: Concept = <cop (?! case) nmod_for?
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+  - name: sort_of_appos
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration
+     ETo and the effect of the crop by the crop coefficient Kc."
+    #action: variableArguments
+    pattern: |
+      (?<= [word = 'the']) (?<definition> [word = /.*/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+

@@ -4,7 +4,7 @@ rules:
 
   ####UNIT RELATIONS####
 
-  - name: var_unit_rel #needed bc of bad parse
+  - name: var_unit_rel
     label: Unit
     priority: ${priority}
     type: token
@@ -13,3 +13,4 @@ rules:
     pattern: |
       @variable:Variable [word=/.*/]+ [word=/-LRB-|-LSB-/] (?<unit> [word = /.*/]) (?=[word=/-RRB-|-RSB-/])
       #false positive: "then the calibration or operation of the Rn device (radiometer) should be scrutinized"
+      #false positive: "In the second approach, Kc is split into two factors that separately describe the evaporation (Ke) and transpiration (Kcb) components."
