@@ -101,3 +101,4 @@ rules:
     pattern: |
       (?<= [entity = "NUMBER"]) [chunk = "I-NP"]+
       #required for non-standard units, e.g., s m-1
+      #false positive: "Need for a standard ETo method 17 Formulation of the Penman-Monteith equation"
