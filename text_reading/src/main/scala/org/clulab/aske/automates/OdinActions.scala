@@ -129,6 +129,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield m
   }
 
+  def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      m <- mentions
+      unitArgs = mentions.head.arguments.getOrElse("unit", Seq())
+      unitTextSplit = unitArgs.head.text.split(" ")
+      pattern = "[-/\\[\\]\\d+]".r
+      if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || !pattern.findFirstIn(unitArgs.head.text).isEmpty)
+    } yield m
+  }
+
   def changeLabel(orig: Mention, label: String): Mention = {
     orig match {
       case tb: TextBoundMention => tb.copy(labels = taxonomy.hypernymsFor(label))
