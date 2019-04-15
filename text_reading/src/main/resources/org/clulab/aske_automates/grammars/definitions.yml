@@ -54,5 +54,5 @@ rules:
      ETo and the effect of the crop by the crop coefficient Kc."
     #action: variableArguments
     pattern: |
-      (?<= [word = 'the']) (?<definition> [word = /.*/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+      (?<= [word = 'the']) (?<definition> [word = /.*/ & !chunk = /PP$/]{2,5}) @variable:Variable (?! [chunk = I-NP])
 

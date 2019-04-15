@@ -84,7 +84,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [entity=/PERSON|ORGANIZATION/] [entity=/PERSON|ORGANIZATION/] [entity=/PERSON|ORGANIZATION/]
+      [entity=/PERSON|ORGANIZATION|LOCATION/] [entity=/PERSON|ORGANIZATION|LOCATION/] [entity=/PERSON|ORGANIZATION|LOCATION/]
 
 
   - name: "proper_noun_2"
@@ -92,7 +92,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [entity=/PERSON|ORGANIZATION/] [entity=/PERSON|ORGANIZATION/]
+      [entity=/PERSON|ORGANIZATION|LOCATION/] [entity=/PERSON|ORGANIZATION|LOCATION/]
 
   - name: "person_2authors"
     label: Avoid

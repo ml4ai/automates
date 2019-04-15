@@ -95,7 +95,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // The longest mention (i.e., the definition) should be at least 3 characters, else it's likely a false positive
       // todo: tune
       // todo: should we constrain on the length of the variable name??
-      if (sorted.last.text.length < 3 || looksLikeAVariable(Seq(sorted.last), state).isEmpty) {
+      if (sorted.last.text.length < 3 || looksLikeAVariable(Seq(sorted.head), state).isEmpty) {
         return Seq.empty
       }
       val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
