@@ -84,15 +84,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [entity=/PERSON|ORGANIZATION|LOCATION/] [entity=/PERSON|ORGANIZATION|LOCATION/] [entity=/PERSON|ORGANIZATION|LOCATION/]
-
-
-  - name: "proper_noun_2"
-    label: Avoid
-    priority: 2
-    type: token
-    pattern: |
-      [entity=/PERSON|ORGANIZATION|LOCATION/] [entity=/PERSON|ORGANIZATION|LOCATION/]
+      [entity=/PERSON|ORGANIZATION|LOCATION/]{2,3}
 
   - name: "person_2authors"
     label: Avoid
