@@ -1,0 +1,15 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  ####UNIT RELATIONS####
+
+  - name: var_unit_rel
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "T = daily mean air temperature [°C]"
+    action: looksLikeAUnit
+    pattern: |
+      @variable:Variable [word=/.*/]+ [word=/-LRB-|-LSB-/] (?<unit> [word = /.*/]+) (?=[word=/-RRB-|-RSB-/])
+      #false positive: "In the second approach, Kc is split into two factors that separately describe the evaporation (Ke) and transpiration (Kcb) components."

@@ -74,11 +74,31 @@ rules:
     pattern: |
       (?<=product of|values for) @variable:Concept and @variable:Concept
 
-  - name: var_dssat_model
-    label: Variable # should this be a Model instead?
+  - name: var_model
+    label: Model # should this be a Model instead?
     priority: ${priority}
     type: token
-    example: ""
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
       [word=/^DSSAT|^CSM/]
 
+  - name: per_unit
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
+    Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
+    pattern: |
+      (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word="-LRB-"]) @unit:Concept (?=[word="-RRB-"])
+      #Doesn't work for this [%/(dS m-1)]
+      #helps with non-standard units
+
+  - name: number_unit
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23"
+    pattern: |
+      (?<= [entity = "NUMBER"]) [chunk = "I-NP"]+
+      #required for non-standard units, e.g., s m-1
+      #false positive: "Need for a standard ETo method 17 Formulation of the Penman-Monteith equation"

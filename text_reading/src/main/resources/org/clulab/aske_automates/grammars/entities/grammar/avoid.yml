@@ -79,20 +79,12 @@ rules:
     pattern: |
       [word="i.e"]
 
-  - name: "person" #doesn't work bc Kcbmin is found as PERSON
+  - name: "proper_noun" #eliminating a stand-alone 'person' doesn't work bc Kcbmin is found as PERSON
     label: Avoid
     priority: 2
     type: token
     pattern: |
-      [entity="PERSON"] [entity="PERSON"] [entity="PERSON"]
-
-
-  - name: "person_2" #doesn't work bc Kcbmin is found as PERSON
-    label: Avoid
-    priority: 2
-    type: token
-    pattern: |
-      [entity="PERSON"] [entity="PERSON"]
+      [entity=/PERSON|ORGANIZATION|LOCATION/]{2,3}
 
   - name: "person_2authors"
     label: Avoid

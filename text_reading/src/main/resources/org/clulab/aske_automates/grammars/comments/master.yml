@@ -8,23 +8,11 @@ rules:
   - import: "org/clulab/aske_automates/grammars/comments/entities.yml"
     vars:
       priority: 1
-
-#  - import: "org/clulab/aske_automates/grammars/intervalVariables.yml"
-#    vars:
-#      priority: 2
 #
   - import: "org/clulab/aske_automates/grammars/comments/definitions.yml"
     vars:
       priority: 2
 
-#  - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
-#    vars:
-#      priority: 4 # fixme -- likely not the # you want
-#
-#
-#  - import: "org/clulab/aske_automates/grammars/template.yml"
-#    vars:
-#      rulepriority: "6"
-#      addlabel: "Cause"
-#      label: Causal
-#      trigger: ${cause_triggers}
+  - import: "org/clulab/aske_automates/grammars/comments/units.yml"
+    vars:
+      priority: 3

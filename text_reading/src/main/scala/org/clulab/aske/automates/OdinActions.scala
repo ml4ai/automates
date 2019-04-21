@@ -95,7 +95,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // The longest mention (i.e., the definition) should be at least 3 characters, else it's likely a false positive
       // todo: tune
       // todo: should we constrain on the length of the variable name??
-      if (sorted.last.text.length < 3) {
+      // looksLikeAVariable is there to eliminate some false negatives, e.g., 'radiometer' in 'the Rn device (radiometer)':
+      // might need to revisit
+      if (sorted.last.text.length < 3 || looksLikeAVariable(Seq(sorted.head), state).isEmpty) {
         return Seq.empty
       }
       val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
@@ -126,6 +128,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       word = m.words.head
       if word.length <= 5
       if word.toLowerCase != word // mixed case or all UPPER
+    } yield m
+  }
+
+  def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      m <- mentions
+      unitArgs = mentions.head.arguments.getOrElse("unit", Seq())
+      unitTextSplit = unitArgs.head.text.split(" ")
+      pattern = "[-/\\[\\]]".r //didn't add digits bc that resulted in more false positives (e.g., for years)
+      if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || !pattern.findFirstIn(unitArgs.head.text).isEmpty)
     } yield m
   }
 

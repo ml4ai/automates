@@ -386,3 +386,10 @@ class TestDefinitions extends ExtractionTest {
 //  }
 
 }
+
+
+//todo:
+//where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux.
+//neg example: The only factors affecting ETo are climatic parameters.
+//The crop evapotranspiration under standard conditions, denoted as ETc, is the evapotranspiration from disease-free, well-fertilized crops, grown in large fields, under optimum soil water conditions, and achieving full production under the given climatic conditions.
+

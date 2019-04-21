@@ -268,3 +268,6 @@ class TestVariables extends ExtractionTest {
 //  }
 
 }
+
+//todo: The procedure, first presented in the FAO Irrigation and Drainage Paper No. 24 'Crop Water Requirements' - negative example for vars
+//todo: Hourly dewpoint from four irrigated regions of southeast Idaho and from a desert weather station ( Flint Creek ) on July 6 , 2000 . - Flint Creek is the neg example for vars
