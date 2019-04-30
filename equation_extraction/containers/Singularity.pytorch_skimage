@@ -9,4 +9,4 @@ From: ml4ai/UA-hpc-containers:cuda9_py36
   mkdir -p /extra /rsgrps /xdisk /uaopt /cm/shared /cm/local
   pip install torch torchvision torchtext
   pip install tqdm scikit-learn
-  pip install skikit-image
+  pip install scikit-image
