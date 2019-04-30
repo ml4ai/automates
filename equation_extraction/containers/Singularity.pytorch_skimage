@@ -1,0 +1,12 @@
+Bootstrap: shub
+From: ml4ai/UA-hpc-containers:cuda9_py36
+
+%help
+  This recipe builds a singularity container from an Nividia Docker container for the PyTorch neural network framework.
+
+%post
+  # in-container bind points for shared filesystems
+  mkdir -p /extra /rsgrps /xdisk /uaopt /cm/shared /cm/local
+  pip install torch torchvision torchtext
+  pip install tqdm scikit-learn
+  pip install skikit-image
