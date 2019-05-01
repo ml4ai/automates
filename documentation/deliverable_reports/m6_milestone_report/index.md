@@ -21,3 +21,9 @@ Phase 1 milestones:
 - 4a: Deliver initial unified CAG-JSON spec
 - 4b: Deliver CAG-JSON spec including associated comments with variables
 - 5a: Evaluate on benchmark dataset using BLEU.
+
+
+{% include_relative model_analysis.md %}
+
+
+{% include_relative code_summarization.md %}
