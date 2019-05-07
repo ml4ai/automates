@@ -152,7 +152,7 @@ object OdinEngine {
     } else Seq.empty[EntityFinder]
 
     // LexiconNER: Used to annotate the documents with info from a gazetteer
-    val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(false)
+    val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(true)
     val lexiconNER = if(enableLexiconNER) {
       val lexiconNERConfig = odinConfig[Config]("lexiconNER")
       val lexicons = lexiconNERConfig[List[String]]("lexicons")
