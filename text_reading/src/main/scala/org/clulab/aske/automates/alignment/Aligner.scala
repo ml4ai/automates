@@ -96,7 +96,10 @@ object Aligner {
   }
 
   // Helper methods for handling mentions
-  def mkTextFromArgs(argMap: Map[String, Seq[Mention]]): String = argMap.values.flatten.map(_.text).mkString(" ")
+  def mkTextFromArgs(argMap: Map[String, Seq[Mention]]): String = {
+    val stopwords = Set("the", "in", "on", "from") // fixme: this is a hack, should be more robust
+    argMap.values.flatten.map(_.text).filter(!stopwords.contains(_)).mkString(" ")
+  }
   // Get the text from the arguments of the mention, but only the previously specified arguments
   def getRelevantText(m: Mention, relevantArgs: Set[String]): String = {
     m match {
