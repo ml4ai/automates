@@ -35,6 +35,25 @@ class VariableEditDistanceAligner {
   }
 }
 
+class MentionEditDistanceAligner {
+  val relevantArgs = Set("definition")
+  def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
+    alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs)), dstMentions.map(Aligner.getRelevantText(_, relevantArgs)))
+  }
+  def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
+    val exhaustiveScores = for {
+      (src, i) <- srcTexts.zipWithIndex
+      (dst, j) <- dstTexts.zipWithIndex
+      score = 1.0 / (editDistance(src, dst) + 1.0) // todo: is this good for long-term?
+    } yield Alignment(i, j, score)
+    // redundant but good for debugging
+    exhaustiveScores
+  }
+
+  def editDistance(s1: String, s2: String): Double = {
+    LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
+  }
+}
 
 /**
   * Performs an exhaustive pairwise alignment, comparing each src item with each dst item independently of the others.

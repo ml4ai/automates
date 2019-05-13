@@ -5,7 +5,7 @@ import java.io.{File, PrintWriter}
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
+import org.clulab.aske.automates.alignment.{Aligner, Alignment, MentionEditDistanceAligner, VariableEditDistanceAligner}
 import org.clulab.aske.automates.entities.StringMatchEntityFinder
 import org.clulab.aske.automates.grfn._
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
@@ -146,8 +146,9 @@ object ExtractAndAlign {
 //    }
 //    pw.close()
     // ----------------------------------
-
-    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    val defEditAligner = new MentionEditDistanceAligner
+    val commentToTextAlignments = defEditAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+//    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
     val topKAlignments = Aligner.topKBySrc(commentToTextAlignments, 3)
 
     // ----------------------------------
