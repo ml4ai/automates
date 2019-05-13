@@ -17,6 +17,7 @@ object EntityFinder {
       case "rulebased" => RuleBasedEntityFinder.fromConfig(config)
       case "grobidquantities" => GrobidEntityFinder.fromConfig(config)
       case "gazetteer" => GazetteerEntityFinder.fromConfig(config)
+      case "grfn" => GrFNEntityFinder.fromConfig(config)
       case _ => throw new RuntimeException(s"Unexpected entity finder type")
     }
   }
