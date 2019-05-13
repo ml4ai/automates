@@ -1,9 +1,9 @@
-package org.clulab.aske.automates
+package org.clulab.aske.automates.data
 
 import java.io.File
-import ai.lum.common.FileUtils._
-import org.clulab.utils.FileUtils.{findFiles, getTextFromFile}
+
 import org.clulab.aske.automates.scienceparse.ScienceParseClient.mkDocument
+import org.clulab.utils.FileUtils.getTextFromFile
 
 
 /**
