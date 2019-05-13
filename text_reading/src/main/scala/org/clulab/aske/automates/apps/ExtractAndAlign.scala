@@ -5,10 +5,11 @@ import java.io.{File, PrintWriter}
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.aske.automates.data.{DataLoader, TextRouter}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
 import org.clulab.aske.automates.entities.StringMatchEntityFinder
 import org.clulab.aske.automates.grfn._
-import org.clulab.aske.automates.{DataLoader, OdinEngine}
+import org.clulab.aske.automates.OdinEngine
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
@@ -62,6 +63,9 @@ object ExtractAndAlign {
     // Instantiate the text reader
     val textconfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textconfig)
+    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
+    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
+    val textRouter = new TextRouter(Seq.empty[(String, OdinEngine)])
 
     // Load text input from directory
     val inputDir = config[String]("apps.inputDirectory")
@@ -74,10 +78,25 @@ object ExtractAndAlign {
       // Open corresponding output file and make all desired exporters
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
-      val texts = dataLoader.loadFile(file)
-      texts.flatMap(textReader.extractFromText(_, filename = Some(file.getName)))
+      val texts: Seq[String] = dataLoader.loadFile(file)
+//      texts.flatMap(textRouter.route(text).extractFromText()
+      // Route the text based on stuff TODO (Masha): add comment of what you finally do
+      texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
     }
     println(s"Extracted ${textMentions.length} text mentions")
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Instantiate the comment reader
     val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
@@ -123,6 +142,19 @@ object ExtractAndAlign {
 
       mentions.flatten
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Align the comment definitions to the GrFN variables
     val commentDefinitionMentions = commentMentions.filter(_ matches "Definition")
