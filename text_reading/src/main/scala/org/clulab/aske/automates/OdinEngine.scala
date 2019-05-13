@@ -65,8 +65,8 @@ class OdinEngine(
   }
 
 
-  def extractFrom(doc: Document, initialMentions: Seq[Mention] = Seq.empty): Vector[Mention] = {
-    var initialState = State(initialMentions)
+  def extractFrom(doc: Document): Vector[Mention] = {
+    var initialState = new State()
     // Add any mentions from the entityFinders to the initial state
     if (entityFinders.nonEmpty) {
       initialState = initialState.updated(entityFinders.flatMap(ef => ef.extract(doc)))

@@ -120,15 +120,12 @@ object ExtractAndAlign {
 
 
     // Read the comments
-    // todo: not parallel because I am resetting the initial state... I could have one reader per thread though...?
-    val commentMentions = commentFiles.flatMap { file =>
+    val commentMentions = commentFiles.par.flatMap { file =>
       // Open corresponding output file and make all desired exporters
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
       val texts = commentDataLoader.loadFile(file)
-      //println("TEXTS: " + texts.length)
       // Parse the comment texts
-      // todo!!
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
       // Iterate through the docs and find the mentions
       val mentions = for {
@@ -157,7 +154,8 @@ object ExtractAndAlign {
 
 
     // Align the comment definitions to the GrFN variables
-    val commentDefinitionMentions = commentMentions.filter(_ matches "Definition")
+    val numAlignments = config[Int]("apps.numAlignments")
+    val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
     val variableNameAligner = new VariableEditDistanceAligner
     val varNameAlignments = variableNameAligner.alignTexts(variableNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
     val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
@@ -179,8 +177,10 @@ object ExtractAndAlign {
 //    pw.close()
     // ----------------------------------
 
-    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
-    val topKAlignments = Aligner.topKBySrc(commentToTextAlignments, 3)
+    // Generates (src idx, dst idx, score tuples) -- exhaustive
+    val commentToTextAlignments: Seq[Alignment] = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    // group by src idx, and keep only top k (src, dst, score) for each src idx
+    val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments)
 
     // ----------------------------------
     // Debug:
@@ -200,6 +200,7 @@ object ExtractAndAlign {
 
     // Export alignment:
     val outputDir = config[String]("apps.outputDirectory")
+
     // Map the Comment Variables (from Definition Mentions) to a Seq[GrFNVariable]
     val commentGrFNVars = commentDefinitionMentions.map{ commentDef =>
       val name = commentDef.arguments("variable").head.text + "_COMMENT"
@@ -216,6 +217,7 @@ object ExtractAndAlign {
       val provenance = GrFNProvenance(definition, textDef.document.id.getOrElse("TEXT-UNK"), textDef.sentence)
       GrFNVariable(name, domain, Some(provenance))
     }
+    // All final GrFN variables
     val topLevelVariables = grfnVars ++ commentGrFNVars ++ textGrFNVars
 
     // Gather the alignments from src variable to comment definition
@@ -228,6 +230,7 @@ object ExtractAndAlign {
     val commentToTextGrFNAlignments = topKAlignments.flatMap { srcSet =>
       srcSet.map(a => mkGrFNAlignment(a, commentGrFNVars, textGrFNVars))
     }
+    // All final alignments
     val topLevelAlignments = srcVarToCommentGrFNAlignments ++ commentToTextGrFNAlignments
 
     val grfnToExport = GrFNDocument(grfn.functions, grfn.start, grfn.name, grfn.dateCreated, Some(topLevelVariables), Some(topLevelAlignments))
