@@ -18,7 +18,6 @@ class OdinEngine(
   masterRulesPath: String,
   taxonomyPath: String,
   val entityFinders: Seq[EntityFinder],
-  val lexiconNER: Option[LexiconNER],
   enableExpansion: Boolean,
   filterType: Option[String]) {
 
@@ -89,22 +88,8 @@ class OdinEngine(
     val tokenized = proc.mkDocument(text, keepText = true)  // Formerly keepText, must now be true
     val filtered = documentFilter.filter(tokenized)         // Filter noise from document if enabled (else "pass through")
     val doc = proc.annotate(filtered)
-    if (lexiconNER.nonEmpty) {           // Add any lexicon/gazetteer tags
-      doc.sentences.foreach(addLexiconNER)
-    }
     doc.id = filename
     doc
-  }
-
-  // Add tags to flag tokens that are found in the provided lexicons/gazetteers
-  protected def addLexiconNER(s: Sentence) = {
-    // Not all parsers generate entities (e.g., Portuguese clulab processor), so we want to create an empty list here
-    // for further processing and filtering operations that expect to be able to query the entities
-    if (s.entities.isEmpty) s.entities = Some(Array.fill[String](s.words.length)("O"))
-    for {
-      (lexiconNERTag, i) <- lexiconNER.get.find(s).zipWithIndex
-      if lexiconNERTag != OdinEngine.NER_OUTSIDE
-    } s.entities.get(i) = lexiconNERTag
   }
 
 }
@@ -152,17 +137,17 @@ object OdinEngine {
     } else Seq.empty[EntityFinder]
 
     // LexiconNER: Used to annotate the documents with info from a gazetteer
-    val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(true)
-    val lexiconNER = if(enableLexiconNER) {
-      val lexiconNERConfig = odinConfig[Config]("lexiconNER")
-      val lexicons = lexiconNERConfig[List[String]]("lexicons")
-      Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
-    } else None
+//    val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(false)
+//    val lexiconNER = if(enableLexiconNER) {
+//      val lexiconNERConfig = odinConfig[Config]("lexiconNER")
+//      val lexicons = lexiconNERConfig[List[String]]("lexicons")
+//      Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
+//    } else None
 
     // expansion: used to optionally expand mentions in certain situations to get more complete text spans
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
-    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, lexiconNER, enableExpansion, filterType)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, filterType)
   }
 
 }
