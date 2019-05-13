@@ -121,6 +121,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentions.flatMap(mkDefinitionMention)
   }
 
+  def lookLikeAVariableInAnyRel(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      m <- mentions
+      variable = m.arguments.getOrElse("variable", Seq())
+      if variable.head.words.length == 1
+      word = m.words.head
+      if word.length <= 5
+      if word.toLowerCase != word
+    } yield m
+  }
+
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
       m <- mentions

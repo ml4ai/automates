@@ -39,12 +39,12 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    example: ""
+    action: lookLikeAVariableInAnyRel
     pattern: |
       trigger = [lemma="be"]
       variable:Concept+ = <cop /${agents}/
       definition: Concept = <cop (?! case) nmod_for?
-      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
   - name: sort_of_appos
     label: Definition
