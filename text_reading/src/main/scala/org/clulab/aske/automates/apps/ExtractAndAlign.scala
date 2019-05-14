@@ -5,7 +5,7 @@ import java.io.{File, PrintWriter}
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.alignment.{Aligner, Alignment, MentionEditDistanceAligner, VariableEditDistanceAligner}
+import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
 import org.clulab.aske.automates.entities.StringMatchEntityFinder
 import org.clulab.aske.automates.grfn._
 import org.clulab.aske.automates.{DataLoader, OdinEngine}
@@ -126,7 +126,7 @@ object ExtractAndAlign {
 
     // Align the comment definitions to the GrFN variables
     val commentDefinitionMentions = commentMentions.filter(_ matches "Definition")
-    val variableNameAligner = new VariableEditDistanceAligner
+    val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
     val varNameAlignments = variableNameAligner.alignTexts(variableNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
     val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
 
@@ -146,7 +146,7 @@ object ExtractAndAlign {
 //    }
 //    pw.close()
     // ----------------------------------
-    val defEditAligner = new MentionEditDistanceAligner
+    val defEditAligner = new VariableEditDistanceAligner(Set("definition"))
     val commentToTextAlignments = defEditAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
 //    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
     val topKAlignments = Aligner.topKBySrc(commentToTextAlignments, 3)
@@ -160,6 +160,8 @@ object ExtractAndAlign {
       aa.foreach { topK =>
         val v1Text = commentDefinitionMentions(topK.src).text
         val v2Text = textDefinitionMentions(topK.dst).text
+        println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text}")
+        println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
         println(s"comment: ${v1Text}")
         println(s"text: ${v2Text}")
         println(s"score: ${topK.score}\n")
