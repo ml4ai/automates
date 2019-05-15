@@ -133,7 +133,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
       if words.length == 1
       word = m.words.head
-      if word.length <= 5
+      if word.length <= 6
       if word.toLowerCase != word // mixed case or all UPPER
     } yield m
   }
