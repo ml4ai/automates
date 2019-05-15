@@ -49,10 +49,14 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
-      score = compare(src, dst)
+      score = compare(src, dst) + 2 * (1.0 / (editDistance(src, dst) + 1.0))
     } yield Alignment(i, j, score)
     // redundant but good for debugging
     exhaustiveScores
+  }
+
+  def editDistance(s1: String, s2: String): Double = {
+    LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
   }
 
   // fixme - pick something more intentional

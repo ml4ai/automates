@@ -146,9 +146,7 @@ object ExtractAndAlign {
 //    }
 //    pw.close()
     // ----------------------------------
-    val defEditAligner = new VariableEditDistanceAligner(Set("definition"))
-    val commentToTextAlignments = defEditAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
-//    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
     val topKAlignments = Aligner.topKBySrc(commentToTextAlignments, 3)
 
     // ----------------------------------
