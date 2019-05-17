@@ -7,7 +7,6 @@ trait Router {
 }
 
 // todo: Masha/Andrew make some Routers
-
 class TextRouter(val engines: Seq[(String, OdinEngine)]) extends Router {
-  def route(text: String): OdinEngine = ???
+  def route(text: String): OdinEngine = engines.head._2
 }
