@@ -11,5 +11,16 @@ rules:
     priority: 1
     type: token
     example: "E0 is calculated as the product of Kcd and ETpm."
+#    action: looksLikeAVariable
     pattern: |
       ^[chunk="B-NP" & !tag="CD"]
+
+#  - name: var-duck-rule
+#    label: Variable
+#    priority: ${priority}
+#    type: token
+#    example: ""
+##    action: looksLikeAVariable
+#    pattern: |
+#      (?<! equation) [mention=Concept]
+
