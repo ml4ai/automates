@@ -7,13 +7,14 @@ rules:
   - name: var_equals_def #needed bc of bad parse
     label: Definition
     priority: ${priority}
-    type: token
-    example: "T = daily mean air temperature [°C]"
+    type: dependency
+    example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
     #action: variableArguments
     pattern: |
-      @variable:Variable "=" (an|a|the)? (?! [tag=CD]) @definition:Concept
+      trigger = [word = "="]
+      variable: Variable = <dep | "nmod:npmod"
+      definition: Concept = dobj | dep
 
-#
   - name: var_definition_appos_bidir
     label: Definition
     priority: ${priority}
@@ -29,30 +30,42 @@ rules:
     priority: ${priority}
     type: dependency
     example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    action: looksLikeAVariable
     pattern: |
       trigger = [word=/(?i)^defin|represent|=/]
       variable:Concept = /${agents}/
       definition: Concept+ = /nmod_as|nmod_by|nmod_with|dobj/ nmod_of?
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
+
   - name: var_cop_definition
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    example: "LAI is the actual leaf area index"
+    action: looksLikeAVariable
     pattern: |
       trigger = [lemma="be"]
       variable:Concept+ = <cop /${agents}/
       definition: Concept = <cop (?! case) nmod_for?
-      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
   - name: sort_of_appos
     label: Definition
     priority: ${priority}
     type: token
-    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration
-     ETo and the effect of the crop by the crop coefficient Kc."
-    #action: variableArguments
+    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc."
+    action: looksLikeAVariable #TODO:check why the action filters these out
     pattern: |
       (?<= [word = 'the']) (?<definition> [word = /.*/ & !chunk = /PP$/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+
+#  - name: def_is_known_as_var
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "TThe fraction, α, of the solar radiation reflected by the surface is known as the albedo."
+#    #action: looksLikeAVariable
+#    pattern: |
+#      trigger = [word=/known/]
+#      variable:Concept = nmod_as
+#      definition: Concept = nsubjpass
 

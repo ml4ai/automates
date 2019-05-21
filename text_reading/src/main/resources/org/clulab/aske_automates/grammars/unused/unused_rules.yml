@@ -104,3 +104,13 @@
 #    example: "but simulated yield decreased rapidly for Kcbmax < 1.15 (fig. 6a)."
 #    pattern: |
 #      (?<variable> [word = /.*/ & !tag="CD"]) "<" (value:Value [tag = "CD"])
+
+#substituted this rule with a dependency one
+#  - name: var_equals_def #needed bc of bad parse
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "T = daily mean air temperature [°C]"
+#    #action: variableArguments
+#    pattern: |
+#      (?<variable> [word = /.*/]{1}) (?<trigger> [word = "=" ]) (an|a|the)? (?! [tag=CD]) @definition:Concept
