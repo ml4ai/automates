@@ -22,7 +22,8 @@ rules:
     #action: variableArguments
     action: selectShorterAsVariable
     pattern: |
-      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
+      @c1:Concept "(" @c2:Concept  # ")"
+      #todo: check why -LRB- stopped working; maybe try to have both in the rule?
 
   - name: var_verb
     label: Definition
