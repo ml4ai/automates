@@ -22,33 +22,33 @@ class TextRouter(val engines: Seq[(String, OdinEngine)]) extends Router {
     val numberOfDigits = text.filter(c => digits.contains(c)).length
     val periodThreshold = 0.01 //for regular text, numberOfPeriods should be above the threshold
     val digitThreshold = 0.4
-    println("Text --> " + text)
+//    println("Text --> " + text)
     text match {
       case text if (numberOfPeriods.toDouble / text.split(" ").length > periodThreshold) => {
         println("\n")
-        println("USING TEXT ENGINE")
-        println(text + "\n")
+        //println("USING TEXT ENGINE")
+        //println(text + "\n")
         val engine = OdinEngine.fromConfig()
         engine
       }
       case text if text.matches("\\d+\\..*") => {
         println("\n")
-        println("USING TEXT ENGINE for weird numbered cases")
-        println(text + "\n")
+        //println("USING TEXT ENGINE for weird numbered cases")
+        //println(text + "\n")
         val engine = OdinEngine.fromConfig()
         engine
       }
       case text if (numberOfPeriods.toDouble / text.split(" ").length < periodThreshold && numberOfDigits.toDouble / text.split(" ").length < digitThreshold) => {
         println("\n")
-        println("USING COMMENT ENGINE")
-        println(text + "\n")
+        //println("USING COMMENT ENGINE")
+        //println(text + "\n")
         val engine = OdinEngine.fromConfig(ConfigFactory.load("automates")[Config]("CommentEngine"))
         engine
       }
       case _ => {
         println("\n")
-        println("USING TEXT ENGINE for lack of better option")
-        println(text + "\n")
+        //println("USING TEXT ENGINE for lack of better option")
+        //println(text + "\n")
         val engine = OdinEngine.fromConfig()
         engine}
     }

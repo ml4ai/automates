@@ -29,9 +29,9 @@ class OdinEngine(
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
   }
 
-  val edgeCasePreprocessor(text: String): String = enablePreprocessor match {
-    case false => val filteredText = PassThroughPreprocessor()
-    case true => EdgeCasePreprocessor(text)
+  def edgeCaseFilter(text: String): Preprocessor = enablePreprocessor match {
+    case false => PassThroughPreprocessor()
+    case true => EdgeCaseParagraphPreprocessor(text)
   }
 
   class LoadableAttributes(
@@ -64,7 +64,9 @@ class OdinEngine(
 
   // MAIN PIPELINE METHOD
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
-    val filteredText = edgeCasePreprocessor(text)
+    val filteredText = edgeCaseFilter(text).cleanUp(text)
+    println("unfiltered text: " + text)
+    println("filtered text: " + filteredText)
     val doc = annotate(filteredText, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
     val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
     //println(s"\nodinMentions() -- entities : \n\t${odinMentions.map(m => m.text).sorted.mkString("\n\t")}")
@@ -131,7 +133,7 @@ object OdinEngine {
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
     val filterType = odinConfig.get[String]("documentFilter")
-    val preprocessor = odinConfig.get[String](path = "EdgeCaseParagraphPreprocessor")
+    val enablePreprocessor = odinConfig.get[Boolean](path = "EdgeCaseParagraphPreprocessor").getOrElse(false)
 
     // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
@@ -156,7 +158,7 @@ object OdinEngine {
     // expansion: used to optionally expand mentions in certain situations to get more complete text spans
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
-    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, filterType)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, filterType, enablePreprocessor)
   }
 
 }
