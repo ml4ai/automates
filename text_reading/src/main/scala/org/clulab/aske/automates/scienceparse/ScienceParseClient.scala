@@ -2,6 +2,7 @@ package org.clulab.aske.automates.scienceparse
 
 import java.io.File
 import java.nio.file.Path
+
 import com.typesafe.config.Config
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
@@ -42,7 +43,8 @@ object ScienceParseClient {
   def mkSection(json: ujson.Js): Section = {
     val heading = json.obj.get("heading").map(_.str)
     val text = json("text").str
-    Section(heading, text)
+    val headingAndText = heading.getOrElse("") + "\n" + text
+    Section(headingAndText)
   }
 
   def mkReference(json: ujson.Js): Reference = {

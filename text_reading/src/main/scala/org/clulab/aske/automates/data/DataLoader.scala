@@ -42,7 +42,7 @@ class ScienceParsedDataLoader extends DataLoader {
   def loadFile(f: File): Seq[String] = {
     // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
     val scienceParseDoc = mkDocument(f)
-    scienceParseDoc.sections.map(_.text)
+    scienceParseDoc.sections.map(_.headingAndText)
   }
   override val extension: String = "json"
 }
