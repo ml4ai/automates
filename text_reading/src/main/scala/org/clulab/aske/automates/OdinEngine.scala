@@ -11,6 +11,7 @@ import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughF
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.actions.ExpansionHandler
+import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, Preprocessor, PassThroughPreprocessor}
 
 
 class OdinEngine(
@@ -19,12 +20,18 @@ class OdinEngine(
   taxonomyPath: String,
   val entityFinders: Seq[EntityFinder],
   enableExpansion: Boolean,
-  filterType: Option[String]) {
+  filterType: Option[String],
+  enablePreprocessor: Boolean) {
 
   val documentFilter: DocumentFilter = filterType match {
     case None => PassThroughFilter()
     case Some("length") => FilterByLength(proc, cutoff = 150)
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
+  }
+
+  val edgeCasePreprocessor(text: String): String = enablePreprocessor match {
+    case false => val filteredText = PassThroughPreprocessor()
+    case true => EdgeCasePreprocessor(text)
   }
 
   class LoadableAttributes(
@@ -57,7 +64,8 @@ class OdinEngine(
 
   // MAIN PIPELINE METHOD
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
-    val doc = annotate(text, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
+    val filteredText = edgeCasePreprocessor(text)
+    val doc = annotate(filteredText, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
     val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
     //println(s"\nodinMentions() -- entities : \n\t${odinMentions.map(m => m.text).sorted.mkString("\n\t")}")
 
@@ -123,6 +131,7 @@ object OdinEngine {
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
     val filterType = odinConfig.get[String]("documentFilter")
+    val preprocessor = odinConfig.get[String](path = "EdgeCaseParagraphPreprocessor")
 
     // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
