@@ -40,10 +40,12 @@ object ScienceParseClient {
     Author(name, affiliations)
   }
 
+  //fixme: in some cases, heading and text of the section make up the same sentence;
+  //for those cases, concat them with a space
   def mkSection(json: ujson.Js): Section = {
     val heading = json.obj.get("heading").map(_.str)
     val text = json("text").str
-    val headingAndText = heading.getOrElse("") + "\n" + text
+    val headingAndText = heading.getOrElse("") + "." + text
     Section(headingAndText)
   }
 
