@@ -4,7 +4,7 @@ trait Preprocessor {
   def cleanUp(text: String): String
 }
 
-class EdgeCaseParagraphPreprocessor(text: String) extends Preprocessor {
+class EdgeCaseParagraphPreprocessor() extends Preprocessor {
   def cleanUp(text: String): String = {
     val digits = "0123456789"
     val numberOfDigits = text.filter(c => digits.contains(c)).length
@@ -23,7 +23,7 @@ class EdgeCaseParagraphPreprocessor(text: String) extends Preprocessor {
 }
 
 object EdgeCaseParagraphPreprocessor {
-  def apply(text: String): EdgeCaseParagraphPreprocessor = new EdgeCaseParagraphPreprocessor(text)
+  def apply(): EdgeCaseParagraphPreprocessor = new EdgeCaseParagraphPreprocessor()
 
 }
 

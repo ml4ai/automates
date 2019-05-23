@@ -12,45 +12,47 @@ trait Router {
 }
 
 // todo: Masha/Andrew make some Routers
-class TextRouter(val engines: Seq[(String, OdinEngine)]) extends Router {
+class TextRouter(val engines: Map[String, OdinEngine]) extends Router {
 //  def route(text: String): OdinEngine = engines.head._2
   def route(text:String): OdinEngine = {
     val config: Config = ConfigFactory.load("automates")
     val period = "."
     val digits = "0123456789"
     val numberOfPeriods = text.filter(c => period.contains(c)).length
-    val numberOfDigits = text.filter(c => digits.contains(c)).length
+    val numberOfDigits = text.split(" ").filter(t => t.forall(_.isDigit)).length //checking if the token is a number
     val periodThreshold = 0.01 //for regular text, numberOfPeriods should be above the threshold
     val digitThreshold = 0.4
 //    println("Text --> " + text)
     text match {
       case text if (numberOfPeriods.toDouble / text.split(" ").length > periodThreshold) => {
         println("\n")
-        //println("USING TEXT ENGINE")
+        println("USING TEXT ENGINE")
         //println(text + "\n")
-        val engine = OdinEngine.fromConfig()
-        engine
+        val engine = engines.get(TextRouter.TEXT_ENGINE)
+        if (engine.isEmpty) throw new RuntimeException("You tried to use a text engine but the router doesn't have one")
+        engine.get
       }
       case text if text.matches("\\d+\\..*") => {
         println("\n")
-        //println("USING TEXT ENGINE for weird numbered cases")
+        println("USING TEXT ENGINE for weird numbered cases")
         //println(text + "\n")
-        val engine = OdinEngine.fromConfig()
-        engine
+        val engine = engines.get(TextRouter.TEXT_ENGINE)
+        engine.get
       }
       case text if (numberOfPeriods.toDouble / text.split(" ").length < periodThreshold && numberOfDigits.toDouble / text.split(" ").length < digitThreshold) => {
         println("\n")
-        //println("USING COMMENT ENGINE")
+        println("USING COMMENT ENGINE")
         //println(text + "\n")
-        val engine = OdinEngine.fromConfig(ConfigFactory.load("automates")[Config]("CommentEngine"))
-        engine
+        val engine = engines.get(TextRouter.COMMENT_ENGINE)
+        engine.get
       }
       case _ => {
         println("\n")
-        //println("USING TEXT ENGINE for lack of better option")
+        println("USING TEXT ENGINE for lack of better option")
         //println(text + "\n")
-        val engine = OdinEngine.fromConfig()
-        engine}
+        val engine = engines.get(TextRouter.TEXT_ENGINE)
+        engine.get
+      }
     }
 
 
@@ -75,4 +77,9 @@ class TextRouter(val engines: Seq[(String, OdinEngine)]) extends Router {
     ///////END OF VAGUELY WORKING VERSION///////
 
   }
+}
+
+object TextRouter {
+  val TEXT_ENGINE = "text"
+  val COMMENT_ENGINE = "comment"
 }

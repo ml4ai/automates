@@ -63,10 +63,13 @@ object ExtractAndAlign {
     // Instantiate the text reader
     val textconfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textconfig)
+    // Instantiate the comment reader
+    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
     // todo: future readers
 //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
 //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
-    val textRouter = new TextRouter(Seq(("", textReader)))
+    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
+    // todo add commnt engine
 
     // Load text input from directory
     val inputDir = config[String]("apps.inputDirectory")
@@ -88,8 +91,7 @@ object ExtractAndAlign {
 
     // todo: We probably want a separate comment reader for each model....? i.e. PETPT vs PETASCE
 
-    // Instantiate the comment reader
-    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+
 
     // Load the comment input from directory/file
     val commentInputDir = config[String]("apps.commentInputDirectory")
