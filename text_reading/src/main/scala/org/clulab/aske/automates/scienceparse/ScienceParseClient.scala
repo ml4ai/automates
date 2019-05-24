@@ -40,12 +40,16 @@ object ScienceParseClient {
     Author(name, affiliations)
   }
 
-  //fixme: in some cases, heading and text of the section make up the same sentence;
-  //for those cases, concat them with a space
+  //new line is there to make sure comment-like sections are not concatenated into sentences
+  //textEnginePreprocessor substitutes \n with a period or space downstream
   def mkSection(json: ujson.Js): Section = {
     val heading = json.obj.get("heading").map(_.str)
     val text = json("text").str
-    val headingAndText = heading.getOrElse("") + "." + text
+    val headingAndText = {
+      if (heading == None) text
+      else if (heading != None & text.isEmpty == true) heading.get
+      else heading.get + "\n" + text
+    }
     Section(headingAndText)
   }
 
