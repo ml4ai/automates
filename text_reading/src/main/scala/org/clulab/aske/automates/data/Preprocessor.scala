@@ -6,18 +6,22 @@ trait Preprocessor {
 
 class EdgeCaseParagraphPreprocessor() extends Preprocessor {
   def cleanUp(text: String): String = {
-    val digits = "0123456789"
-    val numberOfDigits = text.filter(c => digits.contains(c)).length
-    val digitThreshold = 0.25
-    text match {
-      case text if numberOfDigits.toDouble / text.split(" ").length > digitThreshold => {
-        println("Filtering bc the value is: " + numberOfDigits.toDouble / text.split(" ").length )
-        val cleanedUpText = text.replaceAll(" \\d+", ".")
-        cleanedUpText
+//    val digits = "0123456789"
+    val cleanerText = text.replaceAll("\n(?=[A-Z])", ". ").replaceAll("\n", " ")
+    val numberOfDigits = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).length
+    val numbers = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).mkString(" ")
+    //println("TOKENS: " + cleanerText.split(" ").mkString("-S-"))
+    println("NUMBERS: " + numbers)
+    val digitThreshold = 0.12
+    cleanerText match {
+      case cleanerText if numberOfDigits.toFloat / cleanerText.split(" ").length > digitThreshold => {
+        println("Filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
+        val cleanedUpText = cleanerText.replaceAll("\\d+\\.?", ". ")
+        cleanedUpText.replaceAll("\\d+$", ".")
       }
       case _ => {
-        println("NOT filtering bc the value is: " + numberOfDigits.toDouble / text.split(" ").length )
-        text} //todo: add other clean up, e.g., in-paragraph tables
+        println("NOT filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
+        cleanerText.replaceAll("\\d+$", ".")} //todo: add other clean up, e.g., in-paragraph tables
     }
   }
 }

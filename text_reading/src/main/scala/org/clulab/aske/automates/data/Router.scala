@@ -16,15 +16,19 @@ class TextRouter(val engines: Map[String, OdinEngine]) extends Router {
 //  def route(text: String): OdinEngine = engines.head._2
   def route(text:String): OdinEngine = {
     val config: Config = ConfigFactory.load("automates")
-    val period = "."
-    val digits = "0123456789"
-    val numberOfPeriods = text.filter(c => period.contains(c)).length
+    val period = "(\\.\\s|,\\s|\\.$)".r
+//    val digits = "0123456789"
+    //val numberOfPeriods = text.filter(c => period.contains(c)).length
+    val numberOfPeriods = period.findAllIn(text).length
+    println("Number of Periods: " + numberOfPeriods)
     val numberOfDigits = text.split(" ").filter(t => t.forall(_.isDigit)).length //checking if the token is a number
-    val periodThreshold = 0.01 //for regular text, numberOfPeriods should be above the threshold
-    val digitThreshold = 0.4
+    val digitThreshold = 0.12
+    val periodThreshold = 0.03 //for regular text, numberOfPeriods should be above the threshold
+
+    println("PERIODS / LEN: " + numberOfPeriods.toFloat / text.split(" ").length)
 //    println("Text --> " + text)
     text match {
-      case text if (numberOfPeriods.toDouble / text.split(" ").length > periodThreshold) => {
+      case text if (numberOfPeriods.toFloat / text.split(" ").length > periodThreshold) => {
         println("\n")
         println("USING TEXT ENGINE")
         //println(text + "\n")
@@ -35,11 +39,11 @@ class TextRouter(val engines: Map[String, OdinEngine]) extends Router {
       case text if text.matches("\\d+\\..*") => {
         println("\n")
         println("USING TEXT ENGINE for weird numbered cases")
-        //println(text + "\n")
+        println(text + "\n")
         val engine = engines.get(TextRouter.TEXT_ENGINE)
         engine.get
       }
-      case text if (numberOfPeriods.toDouble / text.split(" ").length < periodThreshold && numberOfDigits.toDouble / text.split(" ").length < digitThreshold) => {
+      case text if (numberOfPeriods.toFloat / text.split(" ").length < periodThreshold && numberOfDigits.toFloat / text.split(" ").length < digitThreshold) => {
         println("\n")
         println("USING COMMENT ENGINE")
         //println(text + "\n")
