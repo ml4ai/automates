@@ -11,16 +11,16 @@ class EdgeCaseParagraphPreprocessor() extends Preprocessor {
     val numberOfDigits = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).length
     val numbers = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).mkString(" ")
     //println("TOKENS: " + cleanerText.split(" ").mkString("-S-"))
-    println("NUMBERS: " + numbers)
+    //println("NUMBERS: " + numbers)
     val digitThreshold = 0.12
     cleanerText match {
-      case cleanerText if numberOfDigits.toFloat / cleanerText.split(" ").length > digitThreshold => {
-        println("Filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
+      case cleanerText if (numberOfDigits.toFloat / cleanerText.split(" ").length > digitThreshold && cleanerText.split(" ").length > 10 ) => {
+        //println("Filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
         val cleanedUpText = cleanerText.replaceAll("\\d+\\.?", ". ")
-        cleanedUpText.replaceAll("\\d+$", ".")
+        cleanedUpText.replaceAll("\\s\\d+$", ".")
       }
       case _ => {
-        println("NOT filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
+        //println("NOT filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
         cleanerText.replaceAll("\\d+$", ".")} //todo: add other clean up, e.g., in-paragraph tables
     }
   }

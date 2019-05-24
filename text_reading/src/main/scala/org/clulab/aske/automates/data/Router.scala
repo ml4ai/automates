@@ -20,16 +20,16 @@ class TextRouter(val engines: Map[String, OdinEngine]) extends Router {
 //    val digits = "0123456789"
     //val numberOfPeriods = text.filter(c => period.contains(c)).length
     val numberOfPeriods = period.findAllIn(text).length
-    println("Number of Periods: " + numberOfPeriods)
+
+    //println("\nNumber of Periods: " + numberOfPeriods)
     val numberOfDigits = text.split(" ").filter(t => t.forall(_.isDigit)).length //checking if the token is a number
     val digitThreshold = 0.12
-    val periodThreshold = 0.03 //for regular text, numberOfPeriods should be above the threshold
+    val periodThreshold = 0.02 //for regular text, numberOfPeriods should be above the threshold
 
-    println("PERIODS / LEN: " + numberOfPeriods.toFloat / text.split(" ").length)
+    //println("PERIODS / LEN: " + numberOfPeriods.toFloat / text.split(" ").length)
 //    println("Text --> " + text)
     text match {
       case text if (numberOfPeriods.toFloat / text.split(" ").length > periodThreshold) => {
-        println("\n")
         println("USING TEXT ENGINE")
         //println(text + "\n")
         val engine = engines.get(TextRouter.TEXT_ENGINE)
@@ -37,21 +37,18 @@ class TextRouter(val engines: Map[String, OdinEngine]) extends Router {
         engine.get
       }
       case text if text.matches("\\d+\\..*") => {
-        println("\n")
         println("USING TEXT ENGINE for weird numbered cases")
         println(text + "\n")
         val engine = engines.get(TextRouter.TEXT_ENGINE)
         engine.get
       }
       case text if (numberOfPeriods.toFloat / text.split(" ").length < periodThreshold && numberOfDigits.toFloat / text.split(" ").length < digitThreshold) => {
-        println("\n")
         println("USING COMMENT ENGINE")
         //println(text + "\n")
         val engine = engines.get(TextRouter.COMMENT_ENGINE)
         engine.get
       }
       case _ => {
-        println("\n")
         println("USING TEXT ENGINE for lack of better option")
         //println(text + "\n")
         val engine = engines.get(TextRouter.TEXT_ENGINE)
