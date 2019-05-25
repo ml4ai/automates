@@ -41,6 +41,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    action: looksLikeAVariable
     pattern: |
       trigger = [lemma="be"]
       variable:Concept+ = <cop /${agents}/
