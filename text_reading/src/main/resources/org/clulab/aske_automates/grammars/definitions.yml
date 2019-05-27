@@ -46,7 +46,6 @@ rules:
       trigger = [lemma="be"]
       variable:Concept+ = <cop /${agents}/
       definition: Concept = <cop (?! case) nmod_for?
-      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
   - name: sort_of_appos
     label: Definition
