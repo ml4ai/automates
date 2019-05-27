@@ -5,23 +5,22 @@ trait Preprocessor {
 }
 
 class EdgeCaseParagraphPreprocessor() extends Preprocessor {
-  def cleanUp(text: String): String = {
-//    val digits = "0123456789"
+  //processes the text based on whether it is composed of sentences or phrases (i.e., prose vs. table of contents/figures, etc):
+  //if a paragraph has too many numbers per token (#numbers/tokens in text > threshold), assume it's not prose and the numbers are page numbers; in that case, replace numbers with periods to create "sentences" instead of one long block of text to make it processable by the text engine; only do this for texts over 10 tokens long (heuristic).
+    def cleanUp(text: String): String = {
+    //follow up on combining the heading and the body of each section in the paper with "\n" in the DataLoader:
+    //the heading and the body should be connected with a period if the body starts with a capital letter and space otherwise:
     val cleanerText = text.replaceAll("\n(?=[A-Z])", ". ").replaceAll("\n", " ")
-    val numberOfDigits = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).length
-    val numbers = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).mkString(" ")
-    //println("TOKENS: " + cleanerText.split(" ").mkString("-S-"))
-    //println("NUMBERS: " + numbers)
+    val numberOfNumbers = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).length
     val digitThreshold = 0.12
     cleanerText match {
-      case cleanerText if (numberOfDigits.toFloat / cleanerText.split(" ").length > digitThreshold && cleanerText.split(" ").length > 10 ) => {
-        //println("Filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
+      case cleanerText if (numberOfNumbers.toFloat / cleanerText.split(" ").length > digitThreshold && cleanerText.split(" ").length > 10 ) => {
         val cleanedUpText = cleanerText.replaceAll("\\d+\\.?", ". ")
-        cleanedUpText.replaceAll("\\s\\d+$", ".")
+        cleanedUpText.replaceAll("\\s\\d+$", ".") //if the text ends in a number and not period, that tends to be a page number
       }
       case _ => {
-        //println("NOT filtering bc the value is: " + numberOfDigits.toFloat / cleanerText.split(" ").length )
-        cleanerText.replaceAll("\\d+$", ".")} //todo: add other clean up, e.g., in-paragraph tables
+        //todo: add other clean up, e.g., in-paragraph tables
+        cleanerText.replaceAll("\\d+$", ".")} //if the text ends in a number and not period, that tends to be a page number; same as the last step for the non-prose texts above
     }
   }
 }

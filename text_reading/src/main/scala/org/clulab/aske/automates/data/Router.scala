@@ -11,72 +11,45 @@ trait Router {
   def route(text: String): OdinEngine
 }
 
-// todo: Masha/Andrew make some Routers
+
 class TextRouter(val engines: Map[String, OdinEngine]) extends Router {
-//  def route(text: String): OdinEngine = engines.head._2
+  //returns the appropriate OdinEngine (currently either TextEngine or CommentEngine) for the given text based on the amount of sentence punctuation (commas and end-of-sentence-like periods---with the assumption that those will be indicative of prose) and the amount of numbers in the text (the texts with a high # of numbers are likely non-prose, e.g., a table of contents, and are to be processed with a textEngine with additional preprocessing).
   def route(text:String): OdinEngine = {
     val config: Config = ConfigFactory.load("automates")
-    val period = "(\\.\\s|,\\s|\\.$)".r
-//    val digits = "0123456789"
-    //val numberOfPeriods = text.filter(c => period.contains(c)).length
-    val numberOfPeriods = period.findAllIn(text).length
-
-    //println("\nNumber of Periods: " + numberOfPeriods)
-    val numberOfDigits = text.split(" ").filter(t => t.forall(_.isDigit)).length //checking if the token is a number
+    val sentencePunct = "(\\.\\s|,\\s|\\.$)".r
+    val amountOfPunct = sentencePunct.findAllIn(text).length
+    val numberOfNumbers = text.split(" ").filter(t => t.forall(_.isDigit)).length //checking if the token is a number
     val digitThreshold = 0.12
-    val periodThreshold = 0.02 //for regular text, numberOfPeriods should be above the threshold
+    val periodThreshold = 0.02 //for regular text, amountOfPunct should be above the threshold
+    val punctProportion = amountOfPunct.toFloat / text.split(" ").length
+    val numberProportion = numberOfNumbers.toFloat / text.split(" ").length
 
-    //println("PERIODS / LEN: " + numberOfPeriods.toFloat / text.split(" ").length)
-//    println("Text --> " + text)
     text match {
-      case text if (numberOfPeriods.toFloat / text.split(" ").length > periodThreshold) => {
-        println("USING TEXT ENGINE")
-        //println(text + "\n")
+      case text if (punctProportion > periodThreshold) => {
+        //sentence-like punctuation present --> TextEngine
         val engine = engines.get(TextRouter.TEXT_ENGINE)
         if (engine.isEmpty) throw new RuntimeException("You tried to use a text engine but the router doesn't have one")
         engine.get
       }
       case text if text.matches("\\d+\\..*") => {
-        println("USING TEXT ENGINE for weird numbered cases")
-        println(text + "\n")
+        //use TextEngine for texts starting with \d\. --- the periods in numbered lists successfully break the text into "sentences". This case might be redundant.
         val engine = engines.get(TextRouter.TEXT_ENGINE)
+        if (engine.isEmpty) throw new RuntimeException("You tried to use a text engine but the router doesn't have one")
         engine.get
       }
-      case text if (numberOfPeriods.toFloat / text.split(" ").length < periodThreshold && numberOfDigits.toFloat / text.split(" ").length < digitThreshold) => {
-        println("USING COMMENT ENGINE")
-        //println(text + "\n")
+      case text if (punctProportion < periodThreshold && numberProportion < digitThreshold) => {
+        //not much punctuation and not too many numbers --> CommentEngine
         val engine = engines.get(TextRouter.COMMENT_ENGINE)
+        if (engine.isEmpty) throw new RuntimeException("You tried to use a text engine but the router doesn't have one")
         engine.get
       }
       case _ => {
-        println("USING TEXT ENGINE for lack of better option")
-        //println(text + "\n")
+        //use TextEngine for all other cases (more cases may come up)
         val engine = engines.get(TextRouter.TEXT_ENGINE)
+        if (engine.isEmpty) throw new RuntimeException("You tried to use a text engine but the router doesn't have one")
         engine.get
       }
     }
-
-
-
-    ///////START OF VAGUELY WORKING VERSION///////
-//    if (numberOfPeriods.toDouble / text.split(" ").length > threshold) {
-//      println("USING TEXT ENGINE")
-//      println(text + "\n")
-//      //val config: Config = ConfigFactory.load("automates")
-//
-//      //val textconfig: Config = config[Config]("TextEngine")
-//      val engine = OdinEngine.fromConfig()
-//      engine
-//    } else {
-//      println("USING COMMENT ENGINE")
-//      println(text + "\n")
-////      def this(config: Config = ConfigFactory.load("test")) = this(newOdinSystem(config[Config]("CommentEngine")))
-//
-//      val engine = OdinEngine.fromConfig(ConfigFactory.load("automates")[Config]("CommentEngine"))
-//      engine
-//    }
-    ///////END OF VAGUELY WORKING VERSION///////
-
   }
 }
 
