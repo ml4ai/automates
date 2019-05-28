@@ -69,7 +69,6 @@ object ExtractAndAlign {
 //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
 //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
     val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
-    // todo add commnt engine
 
     // Load text input from directory
     val inputDir = config[String]("apps.inputDirectory")
@@ -83,7 +82,7 @@ object ExtractAndAlign {
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
       val texts: Seq[String] = dataLoader.loadFile(file)
-      // Route the text based on stuff TODO (Masha): add comment of what you finally do
+      // Route text based on the amount of sentence punctuation and the # of numbers (too many numbers = non-prose from the paper)
       texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
     }
     println(s"Extracted ${textMentions.length} text mentions")
