@@ -11,18 +11,25 @@ class EdgeCaseParagraphPreprocessor() extends Preprocessor {
     //follow up on combining the heading and the body of each section in the paper with "\n" in the DataLoader:
     //the heading and the body should be connected with a period if the body starts with a capital letter and space otherwise:
     val cleanerText = text.replaceAll("\n(?=[A-Z])", ". ").replaceAll("\n", " ")
-    val numberOfNumbers = cleanerText.split(" ").filter(t => t.forall(_.isDigit)).length
-    val digitThreshold = 0.12
+    val cleanerTextTokenized = cleanerText.split(" ")
+    val numberOfNumbers = cleanerTextTokenized.filter(t => t.forall(_.isDigit)).length
+    val numberProportion = numberOfNumbers.toFloat / cleanerTextTokenized.length
+    val numberThreshold = 0.12
     cleanerText match {
-      case cleanerText if (numberOfNumbers.toFloat / cleanerText.split(" ").length > digitThreshold && cleanerText.split(" ").length > 10 ) => {
-        val cleanedUpText = cleanerText.replaceAll("\\d+\\.?", ". ")
-        cleanedUpText.replaceAll("\\s\\d+$", ".") //if the text ends in a number and not period, that tends to be a page number
+      case cleanerText if (numberProportion > numberThreshold && cleanerTextTokenized.length > 10) => {
+        val cleanedUpText = replaceSuspectedPageNumbers(cleanerText)
+        cleanedUpText
       }
       case _ => {
         //todo: add other clean up, e.g., in-paragraph tables
-        cleanerText.replaceAll("\\d+$", ".")} //if the text ends in a number and not period, that tends to be a page number; same as the last step for the non-prose texts above
+        replaceEndOfTextPageNumber(cleanerText)}
     }
   }
+  //replace on numbers in suspected non-prose sections
+  def replaceSuspectedPageNumbers(text: String): String = text.replaceAll("\\d+\\.?", ". ")
+
+  //if the text ends in a number and not period, that tends to be a page number
+  def replaceEndOfTextPageNumber(text: String): String = text.replaceAll("\\d+$", ".")
 }
 
 object EdgeCaseParagraphPreprocessor {
