@@ -22,7 +22,8 @@ rules:
     #action: variableArguments
     action: selectShorterAsVariable
     pattern: |
-      @c1:Concept "-LRB-" @c2:Concept  # "-RRB-"
+      @c1:Concept "(" @c2:Concept  # ")"
+      #todo: check why -LRB- stopped working; maybe try to have both in the rule?
 
   - name: var_verb
     label: Definition
@@ -40,11 +41,11 @@ rules:
     priority: ${priority}
     type: dependency
     example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    action: looksLikeAVariable
     pattern: |
       trigger = [lemma="be"]
       variable:Concept+ = <cop /${agents}/
       definition: Concept = <cop (?! case) nmod_for?
-      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
   - name: sort_of_appos
     label: Definition

@@ -16,8 +16,7 @@ case class Author(
 )
 
 case class Section(
-  heading: Option[String],
-  text: String
+  headingAndText: String
 )
 
 case class Reference(

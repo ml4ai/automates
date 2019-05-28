@@ -30,7 +30,7 @@ class ExpansionHandler() extends LazyLogging {
   }
 
   def expandArgs(mention: Mention, state: State): Seq[Mention] = {
-    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
     val sentLength: Double = mention.sentenceObj.getSentenceText.length
     val normalChars: Double = mention.sentenceObj.getSentenceText.filter(c => valid contains c).length
     val proportion = normalChars / sentLength
@@ -432,6 +432,7 @@ object ExpansionHandler {
 //    "^amod$".r,
 //    "^compound$".r//,
     //"^nmod_of".r
+    "nmod_under".r
   )
 
   def apply() = new ExpansionHandler()
