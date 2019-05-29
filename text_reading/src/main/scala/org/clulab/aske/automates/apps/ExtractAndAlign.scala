@@ -121,7 +121,7 @@ object ExtractAndAlign {
     // Align the comment definitions to the GrFN variables
     val numAlignments = config[Int]("apps.numAlignments")
     val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
-    val variableNameAligner = new VariableEditDistanceAligner
+    val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
 
     val varNameAlignments = variableNameAligner.alignTexts(variableNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
     val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
