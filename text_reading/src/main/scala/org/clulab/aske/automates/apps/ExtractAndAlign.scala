@@ -122,6 +122,7 @@ object ExtractAndAlign {
     val numAlignments = config[Int]("apps.numAlignments")
     val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
     val variableNameAligner = new VariableEditDistanceAligner
+
     val varNameAlignments = variableNameAligner.alignTexts(variableNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
     val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
 
@@ -141,11 +142,11 @@ object ExtractAndAlign {
 //    }
 //    pw.close()
     // ----------------------------------
-
     // Generates (src idx, dst idx, score tuples) -- exhaustive
     val commentToTextAlignments: Seq[Alignment] = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
     // group by src idx, and keep only top k (src, dst, score) for each src idx
     val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments)
+
 
     // ----------------------------------
     // Debug:
@@ -156,6 +157,8 @@ object ExtractAndAlign {
       aa.foreach { topK =>
         val v1Text = commentDefinitionMentions(topK.src).text
         val v2Text = textDefinitionMentions(topK.dst).text
+        println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text}")
+        println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
         println(s"comment: ${v1Text}")
         println(s"text: ${v2Text}")
         println(s"score: ${topK.score}\n")

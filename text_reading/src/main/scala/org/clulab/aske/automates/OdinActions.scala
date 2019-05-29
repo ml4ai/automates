@@ -121,10 +121,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentions.flatMap(mkDefinitionMention)
   }
 
+
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
       m <- mentions
-      if m.words.length == 1
+      words = m match {
+      case tb: TextBoundMention => m.words
+      case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head.words
+      case em: EventMention => m.arguments.getOrElse("variable", Seq()).head.words
+      case _ => ???
+    }
+      if words.length == 1
       word = m.words.head
       if word.length <= 6
       if word.toLowerCase != word // mixed case or all UPPER
