@@ -1,6 +1,11 @@
 package org.clulab.aske.automates.entities
 
+import java.io.File
+
+import ai.lum.common.ConfigUtils._
 import ai.lum.regextools.RegexBuilder
+import com.typesafe.config.Config
+import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
 
@@ -49,5 +54,17 @@ object StringMatchEntityFinder {
   }
 
   def fromStrings(ss: Seq[String], label: String): StringMatchEntityFinder = new StringMatchEntityFinder(ss.toSet, label)
-
 }
+
+object GrFNEntityFinder {
+  def fromConfig(config: Config) = {
+    val grfnFile: String = config[String]("grfnFile") // fixme (Becky): extend to a dir later
+    val grfn = GrFNParser.mkDocument(new File(grfnFile))
+    val grfnVars = GrFNDocument.getVariables(grfn)
+    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
+
+    // Make a StringMatchEF based on the variable names
+    StringMatchEntityFinder.fromStrings(variableNames, "Variable") // todo: GrFNVariable?
+  }
+}
+

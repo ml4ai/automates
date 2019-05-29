@@ -6,7 +6,8 @@ import java.io.BufferedWriter
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.{DataLoader, OdinEngine}
+import org.clulab.aske.automates.data.DataLoader
+import org.clulab.aske.automates.OdinEngine
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer

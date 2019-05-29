@@ -11,6 +11,7 @@ import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughF
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.actions.ExpansionHandler
+import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, Preprocessor, PassThroughPreprocessor}
 
 
 class OdinEngine(
@@ -18,14 +19,19 @@ class OdinEngine(
   masterRulesPath: String,
   taxonomyPath: String,
   val entityFinders: Seq[EntityFinder],
-  val lexiconNER: Option[LexiconNER],
   enableExpansion: Boolean,
-  filterType: Option[String]) {
+  filterType: Option[String],
+  enablePreprocessor: Boolean) {
 
   val documentFilter: DocumentFilter = filterType match {
     case None => PassThroughFilter()
     case Some("length") => FilterByLength(proc, cutoff = 150)
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
+  }
+
+  val edgeCaseFilter: Preprocessor = enablePreprocessor match {
+    case false => PassThroughPreprocessor()
+    case true => EdgeCaseParagraphPreprocessor()
   }
 
   class LoadableAttributes(
@@ -58,7 +64,8 @@ class OdinEngine(
 
   // MAIN PIPELINE METHOD
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
-    val doc = annotate(text, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
+    val filteredText = edgeCaseFilter.cleanUp(text)
+    val doc = annotate(filteredText, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
     val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
     //println(s"\nodinMentions() -- entities : \n\t${odinMentions.map(m => m.text).sorted.mkString("\n\t")}")
 
@@ -66,8 +73,8 @@ class OdinEngine(
   }
 
 
-  def extractFrom(doc: Document, initialMentions: Seq[Mention] = Seq.empty): Vector[Mention] = {
-    var initialState = State(initialMentions)
+  def extractFrom(doc: Document): Vector[Mention] = {
+    var initialState = new State()
     // Add any mentions from the entityFinders to the initial state
     if (entityFinders.nonEmpty) {
       initialState = initialState.updated(entityFinders.flatMap(ef => ef.extract(doc)))
@@ -89,22 +96,8 @@ class OdinEngine(
     val tokenized = proc.mkDocument(text, keepText = true)  // Formerly keepText, must now be true
     val filtered = documentFilter.filter(tokenized)         // Filter noise from document if enabled (else "pass through")
     val doc = proc.annotate(filtered)
-    if (lexiconNER.nonEmpty) {           // Add any lexicon/gazetteer tags
-      doc.sentences.foreach(addLexiconNER)
-    }
     doc.id = filename
     doc
-  }
-
-  // Add tags to flag tokens that are found in the provided lexicons/gazetteers
-  protected def addLexiconNER(s: Sentence) = {
-    // Not all parsers generate entities (e.g., Portuguese clulab processor), so we want to create an empty list here
-    // for further processing and filtering operations that expect to be able to query the entities
-    if (s.entities.isEmpty) s.entities = Some(Array.fill[String](s.words.length)("O"))
-    for {
-      (lexiconNERTag, i) <- lexiconNER.get.find(s).zipWithIndex
-      if lexiconNERTag != OdinEngine.NER_OUTSIDE
-    } s.entities.get(i) = lexiconNERTag
   }
 
 }
@@ -138,6 +131,7 @@ object OdinEngine {
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
     val filterType = odinConfig.get[String]("documentFilter")
+    val enablePreprocessor = odinConfig.get[Boolean](path = "EdgeCaseParagraphPreprocessor").getOrElse(false)
 
     // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
@@ -152,17 +146,17 @@ object OdinEngine {
     } else Seq.empty[EntityFinder]
 
     // LexiconNER: Used to annotate the documents with info from a gazetteer
-    val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(true)
-    val lexiconNER = if(enableLexiconNER) {
-      val lexiconNERConfig = odinConfig[Config]("lexiconNER")
-      val lexicons = lexiconNERConfig[List[String]]("lexicons")
-      Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
-    } else None
+//    val enableLexiconNER: Boolean = odinConfig.get[Boolean]("lexiconNER.enable").getOrElse(false)
+//    val lexiconNER = if(enableLexiconNER) {
+//      val lexiconNERConfig = odinConfig[Config]("lexiconNER")
+//      val lexicons = lexiconNERConfig[List[String]]("lexicons")
+//      Some(LexiconNER(lexicons, caseInsensitiveMatching = true))
+//    } else None
 
     // expansion: used to optionally expand mentions in certain situations to get more complete text spans
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
-    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, lexiconNER, enableExpansion, filterType)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, filterType, enablePreprocessor)
   }
 
 }

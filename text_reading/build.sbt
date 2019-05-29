@@ -8,7 +8,7 @@ val json4sVersion = "3.5.2"
 //EclipseKeys.withSource := true
 
 libraryDependencies ++= {
-  val procVer = "7.4.2"
+  val procVer = "7.5.1"
 
   Seq(
     "org.clulab"    %% "processors-main"          % procVer,

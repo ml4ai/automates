@@ -5,10 +5,11 @@ import java.io.{File, PrintWriter}
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.aske.automates.data.{DataLoader, TextRouter}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
 import org.clulab.aske.automates.entities.StringMatchEntityFinder
 import org.clulab.aske.automates.grfn._
-import org.clulab.aske.automates.{DataLoader, OdinEngine}
+import org.clulab.aske.automates.OdinEngine
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
@@ -62,6 +63,12 @@ object ExtractAndAlign {
     // Instantiate the text reader
     val textconfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textconfig)
+    // Instantiate the comment reader
+    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+    // todo: future readers
+//    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
+//    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
+    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
 
     // Load text input from directory
     val inputDir = config[String]("apps.inputDirectory")
@@ -74,13 +81,16 @@ object ExtractAndAlign {
       // Open corresponding output file and make all desired exporters
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
-      val texts = dataLoader.loadFile(file)
-      texts.flatMap(textReader.extractFromText(_, filename = Some(file.getName)))
+      val texts: Seq[String] = dataLoader.loadFile(file)
+      // Route text based on the amount of sentence punctuation and the # of numbers (too many numbers = non-prose from the paper)
+      texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
     }
     println(s"Extracted ${textMentions.length} text mentions")
 
-    // Instantiate the comment reader
-    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+
+    // todo: We probably want a separate comment reader for each model....? i.e. PETPT vs PETASCE
+
+
 
     // Load the comment input from directory/file
     val commentInputDir = config[String]("apps.commentInputDirectory")
@@ -88,45 +98,31 @@ object ExtractAndAlign {
     val commentDataLoader = DataLoader.selectLoader(commentInputType) // txt, json (science parse) supported
     val commentFiles = FileUtils.findFiles(commentInputDir, commentDataLoader.extension)
 
-
-    // Get the Variable names from the GrFn
-    val grfnFile: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later
-    val grfn = GrFNParser.mkDocument(new File(grfnFile))
-    val grfnVars = GrFNDocument.getVariables(grfn)
-    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
-    logger.info(s"Found GrFN Variables: ${variableNames.mkString(", ")}")
-
-    // Make a StringMatchEF based on the variable names
-    val stringMatcher = StringMatchEntityFinder.fromStrings(variableNames, "Variable") // todo: GrFNVariable?
-
-
     // Read the comments
-    // todo: not parallel because I am resetting the initial state... I could have one reader per thread though...?
-    val commentMentions = commentFiles.flatMap { file =>
+    val commentMentions = commentFiles.par.flatMap { file =>
       // Open corresponding output file and make all desired exporters
       println(s"Extracting from ${file.getName}")
       // Get the input file contents, note: for science parse format, each text is a section
       val texts = commentDataLoader.loadFile(file)
-      //println("TEXTS: " + texts.length)
       // Parse the comment texts
-      // todo!!
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
       // Iterate through the docs and find the mentions
-      val mentions = for {
-        doc <- docs
-        // Find occurrences of the GrFN Variables
-        foundGrFNVars = stringMatcher.extract(doc)
-      } yield commentReader.extractFrom(doc, foundGrFNVars)
-//      for (m <- mentions) {
-//        println("-->", m.mkString(" "))
-//      }
+      val mentions = docs.map(doc => commentReader.extractFrom(doc))
 
       mentions.flatten
     }
 
+    // Grfn
+    val grfnFile: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later?
+    val grfn = GrFNParser.mkDocument(new File(grfnFile))
+    val grfnVars = GrFNDocument.getVariables(grfn)
+    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
+
     // Align the comment definitions to the GrFN variables
-    val commentDefinitionMentions = commentMentions.filter(_ matches "Definition")
-    val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
+    val numAlignments = config[Int]("apps.numAlignments")
+    val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
+    val variableNameAligner = new VariableEditDistanceAligner
+
     val varNameAlignments = variableNameAligner.alignTexts(variableNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
     val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
 
@@ -146,8 +142,11 @@ object ExtractAndAlign {
 //    }
 //    pw.close()
     // ----------------------------------
-    val commentToTextAlignments = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
-    val topKAlignments = Aligner.topKBySrc(commentToTextAlignments, 3)
+    // Generates (src idx, dst idx, score tuples) -- exhaustive
+    val commentToTextAlignments: Seq[Alignment] = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    // group by src idx, and keep only top k (src, dst, score) for each src idx
+    val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments)
+
 
     // ----------------------------------
     // Debug:
@@ -169,6 +168,7 @@ object ExtractAndAlign {
 
     // Export alignment:
     val outputDir = config[String]("apps.outputDirectory")
+
     // Map the Comment Variables (from Definition Mentions) to a Seq[GrFNVariable]
     val commentGrFNVars = commentDefinitionMentions.map{ commentDef =>
       val name = commentDef.arguments("variable").head.text + "_COMMENT"
@@ -185,6 +185,7 @@ object ExtractAndAlign {
       val provenance = GrFNProvenance(definition, textDef.document.id.getOrElse("TEXT-UNK"), textDef.sentence)
       GrFNVariable(name, domain, Some(provenance))
     }
+    // All final GrFN variables
     val topLevelVariables = grfnVars ++ commentGrFNVars ++ textGrFNVars
 
     // Gather the alignments from src variable to comment definition
@@ -197,6 +198,7 @@ object ExtractAndAlign {
     val commentToTextGrFNAlignments = topKAlignments.flatMap { srcSet =>
       srcSet.map(a => mkGrFNAlignment(a, commentGrFNVars, textGrFNVars))
     }
+    // All final alignments
     val topLevelAlignments = srcVarToCommentGrFNAlignments ++ commentToTextGrFNAlignments
 
     val grfnToExport = GrFNDocument(grfn.functions, grfn.start, grfn.name, grfn.dateCreated, Some(topLevelVariables), Some(topLevelAlignments))

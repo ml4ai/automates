@@ -432,6 +432,7 @@ object ExpansionHandler {
 //    "^amod$".r,
 //    "^compound$".r//,
     //"^nmod_of".r
+    "nmod_under".r
   )
 
   def apply() = new ExpansionHandler()

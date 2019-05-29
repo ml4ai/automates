@@ -92,7 +92,14 @@ rules:
     type: token
     pattern: |
       [entity="PERSON"] [word="and"] [entity="PERSON"]
-
+      
+  - name: "person_titles"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [word = /Ms|Mrs?/] (?=[entity="PERSON"])   
+      
 
   - name: "pronouns"
     label: Avoid
@@ -100,4 +107,5 @@ rules:
     type: token
     pattern: |
       [lemma = "this"]
+
 

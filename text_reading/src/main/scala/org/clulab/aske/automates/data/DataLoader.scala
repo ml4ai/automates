@@ -1,9 +1,9 @@
-package org.clulab.aske.automates
+package org.clulab.aske.automates.data
 
 import java.io.File
-import ai.lum.common.FileUtils._
-import org.clulab.utils.FileUtils.{findFiles, getTextFromFile}
+
 import org.clulab.aske.automates.scienceparse.ScienceParseClient.mkDocument
+import org.clulab.utils.FileUtils.getTextFromFile
 
 
 /**
@@ -41,8 +41,9 @@ class ScienceParsedDataLoader extends DataLoader {
     */
   def loadFile(f: File): Seq[String] = {
     // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
+    //the heading and the text of the section are currently combined; might need to be revisted
     val scienceParseDoc = mkDocument(f)
-    scienceParseDoc.sections.map(_.text)
+    scienceParseDoc.sections.map(_.headingAndText)
   }
   override val extension: String = "json"
 }
