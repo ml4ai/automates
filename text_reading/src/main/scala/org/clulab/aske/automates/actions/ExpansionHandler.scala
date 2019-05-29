@@ -428,7 +428,7 @@ object ExpansionHandler {
   )
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
-    "^nmod_for".r
+//    "^nmod_for".r
 //    "^amod$".r,
 //    "^compound$".r//,
     //"^nmod_of".r
