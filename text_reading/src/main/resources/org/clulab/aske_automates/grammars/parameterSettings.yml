@@ -83,5 +83,5 @@ rules:
     type: token
     example: "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from DSSAT-CSM version 4.5 for Arizona conditions."
     pattern: |
-      /(?i)with/ (an|a|the) @variable:Variable of @value:ValueAndUnit
+      /(?i)with/ (an|a|the) @variable:Variable of @value:Value
 

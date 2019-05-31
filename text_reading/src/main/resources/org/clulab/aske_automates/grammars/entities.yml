@@ -12,13 +12,13 @@ rules:
     pattern: |
       (?<! equation) [mention=Concept]
 
-  - name: var-noun_of
-    label: Variable
-    priority: ${priority}
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    pattern: |
-      (?<=calculation of|value of) (@Concept [word = /.*/])
+#  - name: var-noun_of
+#    label: Variable
+#    priority: ${priority}
+#    type: token
+#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+#    pattern: |
+#      (?<=calculation of|value of) (@Concept [word = /.*/])
 
   - name: var-calculation
     label: Variable

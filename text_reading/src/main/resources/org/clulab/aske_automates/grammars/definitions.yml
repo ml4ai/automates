@@ -23,19 +23,19 @@ rules:
     #action: variableArguments
     action: selectShorterAsVariable
     pattern: |
-      @c1:Concept "(" @c2:Concept  # ")"
+      @c1:Concept "(" @c2:Concept ")"
       #todo: check why -LRB- stopped working; maybe try to have both in the rule?
 
   - name: var_verb
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+    example: "and W represents the soil limitation to water uptake of each layer."
     action: looksLikeAVariable
     pattern: |
       trigger = [word=/(?i)^defin|represent|=/]
       variable:Concept = /${agents}/
-      definition: Concept+ = /nmod_as|nmod_by|nmod_with|dobj/ nmod_of?
+      definition: Concept = /nmod_as|nmod_by|nmod_with|dobj/ nmod_of?
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
 
@@ -47,7 +47,7 @@ rules:
     action: looksLikeAVariable
     pattern: |
       trigger = [lemma="be"]
-      variable:Concept+ = <cop /${agents}/
+      variable:Concept = <cop /${agents}/
       definition: Concept = <cop (?! case) nmod_for?
 
   - name: sort_of_appos
@@ -55,9 +55,10 @@ rules:
     priority: ${priority}
     type: token
     example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc."
-    action: looksLikeAVariable #TODO:check why the action filters these out
+#    action: looksLikeAVariable #TODO:check why the action filters these out
     pattern: |
-      (?<= [word = 'the']) (?<definition> [word = /.*/ & !chunk = /PP$/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+      (?<= [word = 'the']) (?<definition> [word = /.*/ & tag = /^NN/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+#      (?<= [word = 'the']) (?<definition> [word = /.*/ & !chunk = /PP$/ & !word = /,/ & !tag = /CC/]{2,5}) @variable:Variable (?! [chunk = I-NP])
 
 #  - name: def_is_known_as_var
 #    label: Definition
