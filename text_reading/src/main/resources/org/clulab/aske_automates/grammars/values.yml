@@ -2,6 +2,14 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
+  - name: value_entity
+    label: Value
+    priority: ${priority}
+    type: token
+    #action: variableArguments
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    pattern: |
+      [entity = /NUMBER|PERCENT/ & tag = /CD/]
 
   #fixme - move somewhere else - done
   # todo: can we have a tag specification here? like tag=/CD/ ?
