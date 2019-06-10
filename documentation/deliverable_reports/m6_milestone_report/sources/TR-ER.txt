@@ -1,0 +1,39 @@
+() Text Reading
+
+The team has been working on the following tasks (all in progress):
+
+Analyzing the relevant scientific publications with two goals in mind:
+finding additional relations to include in the taxonomy, e.g., calculations (E0 is calculated as the product of Kcd and ETpm.), non-precise parameter settings (Rns and Rnl are generally positive or zero in value.); this work will help increase extraction coverage and will be done in close collaboration with the Model Analysis team to make sure the relations included in the taxonomy are relevant to the project needs; 
+finding additional test cases to include in the test set for the existing relations (including both positive and negative examples); this work will help increase precision and recall;
+      
+      2) Working on the rules used for extraction:
+analyzing the output of the system for false positives and adding constraints on rules and actions used for extraction to eliminate the false positives; this work will help increase precision;
+writing additional rules; this work will help increase recall;
+	
+      3) Implementing the functionality to extract units; this work is needed to substitute the grobid-quantities unit extractor, which has shown to be inadequate for our needs---with grobid-quantities, units are only extracted when preceded by a value; the units we need to extract are frequently compound (multi-word) and are not consistently extracted by grobid-quantities (e.g., kg ha-1 mm-1):
+To this end we are including an entity finder based on a gazetteer in the current extraction system; 
+Building a gazetteer (a lexicon) of units based on the Guide for the Use of the International System of Units (SI)* (2008) to be used with the gazetteer entity finder.
+
+In the following weeks, the team will continue to work on the current tasks. The work on having the tests pass has been put on hold temporarily to make sure the tests reflect the needs of the downstream consumers (e.g., the Model Analysis team). After a meeting with the Model Analysis team, the potential test cases will be added to the current set of tests and the team will continue the work on having the tests pass. 
+
+
+
+*Citation for the units document:
+@techreport{thompson2008guide,
+  title={Guide for the Use of the International System of Units (SI)},
+  author={Thompson, Ambler and Taylor, Barry N},
+  year={2008}
+}
+
+
+
+() Equation Reading
+
+The UA team began the task of equation reading using the open-source im2markup model [1].  However, while the pre-trained model performed well on the authors’ data, when used on data from other sources, even after using the same preprocessing pipeline, the decoded equations were not usable (please see detailed results in the month 5 report).  Additionally, because of the way the code was written, any model trained on a GPU (which is necessary due to the complexity of the model and the amount of training) would require a GPU for inference as well.  Finally, when trying to re-train the model on our data, version conflicts with library dependencies are continually causing the model to crash.  
+
+For these reasons, and also because we ultimately want to extend the model, the UA team has reimplemented the model in pytorch, which allows for trained models to be used on either a CPU or a GPU.   Additionally, the reimplementation was intentionally done in a modular way, such that components can be replaced/extended easily.  The team plans to make use of this modularity in the near future to add online data augmentation (to reduce sensitivity to exact input format) and a final layer to the equation decoder which will choose the globally optimal equation, rather than greedily making decoding decisions at each time step.  
+
+The UA team is in the process of building a singularity container to train the model on the UA HPC.  Once that is completed, the team will ensure that their reimplementation can approximately reproduce the results of the original, and will then begin working on the needed extensions to improve model performance for our use case. 
+
+[1] https://arxiv.org/pdf/1609.04938v1.pdf
+
