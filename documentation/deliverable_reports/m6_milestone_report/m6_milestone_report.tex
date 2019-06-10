@@ -1,0 +1,395 @@
+% !TEX TS-program = lualatex
+% !TEX encoding = UTF-8 Unicode
+% !BIB program = biber 
+
+\documentclass[article, 12pt, oneside]{memoir}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{amsmath, amssymb}
+\usepackage{xspace}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{fancyvrb}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\passthrough}[1]{\lstset{mathescape=false}#1\lstset{mathescape=true}}
+\usepackage[tracking, protrusion]{microtype}
+
+\usepackage{fontspec}
+\setmainfont{Alegreya}
+\setsansfont{Alegreya Sans}
+\setmonofont[Scale=MatchLowercase]{Menlo}
+\linespread{1.1}
+
+\hypersetup{
+  unicode=true,
+  linktocpage=true,
+  linkcolor=NavyBlue,
+  colorlinks=true,
+  urlcolor=NavyBlue,
+  citecolor=RoyalBlue,
+  breaklinks=true,
+}
+
+\def\sectionautorefname{§}
+\def\subsectionautorefname{§}
+
+\renewcommand{\bf}{\bfseries}
+\renewcommand{\it}{\itshape}
+
+% ======================================================================
+% Graphics
+% ======================================================================
+% ======================================================================
+% Memoir layout and formatting specifications
+% ======================================================================
+%\setlrmarginsandblock{1.91in}{*}{*}
+%\setulmarginsandblock{1in}{*}{*}
+\setsecnumdepth{subsection}
+\settocdepth{subsection}
+\setsecheadstyle{\color{Maroon}\large\sffamily\bfseries}
+\setsubsecheadstyle{\bfseries}
+\setparaheadstyle{\bfseries\sffamily}
+\tightlists
+
+\counterwithout{section}{chapter}
+\captionstyle[\centering]{\sffamily\small}
+\captionnamefont{\color{Maroon}\sffamily\small}
+\captionwidth{0.95\textwidth}
+\changecaptionwidth
+
+
+\checkandfixthelayout
+
+
+\title{Month 6 Milestone Report}
+\author{\href{https://ml4ai.github.io/automates/team/}{The AutoMATES Team}}
+\date{2019-04-31}
+
+\begin{document}
+\maketitle
+\tableofcontents*
+
+\bigskip
+\bigskip
+
+\noindent \emph{Note: This PDF has been automatically generated from a web
+  version, available here:}
+
+  {
+  \small
+\noindent
+\url{https://ml4ai.github.io/automates/documentation/deliverable_reports/m6_milestone_report}
+}
+\emph{Please visit the web version for the best experience.}
+
+Link to the PDF version of this report. (TODO - insert link to PDF)
+
+\hypertarget{overview}{%
+\section{Overview}\label{overview}}
+
+This report summarizes progress towards AutoMATES milestones at the six
+month mark, emphasizing changes since the m5 report.
+
+\hypertarget{codeexplorer-webapp}{%
+\section{CodeExplorer Webapp}\label{codeexplorer-webapp}}
+
+The webapp has been Dockerized and is available from Dockerhub. To pull
+the image and run the webapp locally, do the following commands:
+
+\begin{verbatim}
+docker pull adarshp/codex
+docker run -p 4000:80 adarshp/codex:latest
+\end{verbatim}
+
+Then navigate to http://127.0.0.1:4000 in your web browser.
+
+\hypertarget{program-analysis}{%
+\section{Program Analysis}\label{program-analysis}}
+
+\hypertarget{refactoring-of-front-end}{%
+\subsection{Refactoring of front-end:}\label{refactoring-of-front-end}}
+
+The focus of work in the past month was on refactoring the ``Fortran
+code -\textgreater{} XML AST -\textgreater{} Python Code'' generation
+process. The refactoring was done in order address issues with the Open
+Fortran Parser (OFP) AST XML generation that impacted aspects of
+\texttt{translate.py} and \texttt{pyTranslate.py} (inefficiency and
+inconsistencies). The new program \texttt{rectify.py} fixes these
+issues, relieving \texttt{translate.py} from having to handle variations
+in OFP-derived AST representaiton, and focus on generating the pickle
+file for \texttt{pyTranslate.py}. \texttt{rectify.py} reduces size of
+the generated AST XML by 30\% to 40\% comared to the original XML. For
+example, the original \texttt{PETASCE\_markup.xml} is 4,177 lines
+whereas the new XML is only 2,858 lines. This also speeds up AST
+processing, reducing the number of special cases required.
+
+\hypertarget{enhancement-of-grfn-specifications-and-added-support-for-new-fortran-language-features-in-grfn}{%
+\subsection{Enhancement of GrFN Specifications and added support for new
+FORTRAN language features in
+GrFN}\label{enhancement-of-grfn-specifications-and-added-support-for-new-fortran-language-features-in-grfn}}
+
+\begin{itemize}
+\tightlist
+\item
+  Continued progress in generating GrFN specification and associated
+  lambda files; this includes abstracting the multi-module structure of
+  the original FORTRAN code into a multi-file GrFN JSON data structure.
+  This phase we developed a strategy for representing modules and this
+  is being implemented in the GrFN spec.
+\item
+  The Python-to-GrFN converter now handles multi-module files more
+  elegantly with a separate GrFN and lambda file for each FORTRAN
+  module.
+\item
+  Began refactoring and cleanup of the code-base of the Python-to-GrFN
+  converter. This will allow for more seamless integration of newer
+  FORTRAN language features to the GrFN JSON and lambda file.
+\item
+  Laid groundwork for the automatic support for inline comments. This
+  will not necessarily be integrated in the GrFN file and might be
+  provided through other means as required.
+\item
+  Started integration of \href{https://pytorch.org/}{PyTorch} with the
+  automatically generated lambda files. This integration permits much
+  faster code execution.
+\item
+  Continued discussion and brainstorming about how arrays and
+  multidimensional data structures can be represented in GrFN among
+  other features such as \texttt{DELETE}, \texttt{SAVE} and
+  \texttt{GOTO}.
+\end{itemize}
+
+\hypertarget{text-reading}{%
+\section{Text Reading}\label{text-reading}}
+
+The team has been working on the following tasks (all in progress):
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Analyzing the relevant scientific publications with two goals in mind:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    finding additional relations to include in the taxonomy, e.g.,
+    calculations (``E0 is calculated as the product of Kcd and ETpm.'')
+    and non-precise parameter settings (``Rns and Rnl are generally
+    positive or zero in value.''); this work will help increase
+    extraction coverage and will be done in close collaboration with the
+    Model Analysis team to make sure the relations included in the
+    taxonomy are relevant to the project needs;
+  \item
+    finding additional test cases to include in the test set for the
+    existing relations (including both positive and negative examples);
+    this work will help increase precision and recall.
+  \end{itemize}
+\item
+  Working on the rules used for extraction: analyzing the output of the
+  system for false positives and adding constraints on rules and actions
+  used for extraction to eliminate the false positives; this work will
+  help increase precision; writing additional rules; this work will help
+  increase recall;
+\item
+  Implementing the functionality to extract units; this work is needed
+  to substitute the
+  \href{https://github.com/kermitt2/grobid}{grobid}-quantities unit
+  extractor, which has shown to be inadequate for our needs---with
+  grobid-quantities, units are only extracted when preceded by a value;
+  the units we need to extract are frequently compound (multi-word) and
+  are not consistently extracted by grobid-quantities (e.g., ``kg ha-1
+  mm-1''). To this end we are including an entity finder based on a
+  gazetteer in the current extraction system; Building a gazetteer (a
+  lexicon) of units based on the Guide for the Use of the International
+  System of Units (SI) (Thompson and Taylor, 2008) to be used with the
+  gazetteer entity finder.
+\end{enumerate}
+
+In the following weeks, the team will continue to work on the current
+tasks. The work on having the tests pass has been put on hold
+temporarily to make sure the tests reflect the needs of the downstream
+consumers (e.g., the Model Analysis team). After a meeting with the
+Model Analysis team, the potential test cases will be added to the
+current set of tests and the team will continue the work on having the
+tests pass.
+
+\hypertarget{equation-reading}{%
+\section{Equation Reading}\label{equation-reading}}
+
+The UA team began the task of equation reading using the open-source
+\texttt{im2markup} model (Deng, Kanervisto \& Rush, 2016). However,
+while the pre-trained model performed well on the authors' data, when
+used on data from other sources, even after using the same preprocessing
+pipeline, the decoded equations were not usable (please see detailed
+results in the month 5 report). Additionally, because of the way the
+code was written, any model trained on a GPU (which is necessary due to
+the complexity of the model and the amount of training) would require a
+GPU for inference as well. Finally, when trying to re-train the model on
+our data, version conflicts with library dependencies are continually
+causing the model to crash.
+
+For these reasons, and also because we ultimately want to extend the
+model, the UA team has reimplemented the model in
+\href{https://pytorch.org/}{PyTorch}, which allows for trained models to
+be used on either a CPU or a GPU. Additionally, the reimplementation was
+intentionally done in a modular way, such that components can be
+replaced/extended easily. The team plans to make use of this modularity
+in the near future to add online data augmentation (to reduce
+sensitivity to exact input format) and a final layer to the equation
+decoder which will choose the globally optimal equation, rather than
+greedily making decoding decisions at each time step.
+
+The UA team is in the process of building a
+\href{https://singularityhub.com/}{Singularity} container to train the
+model on the
+\href{https://it.arizona.edu/service/high-performance-computing}{UA
+HPC}. Once that is completed, the team will ensure that their
+reimplementation can approximately reproduce the results of the
+original, and will then begin working on the needed extensions to
+improve model performance for our use case.
+
+\hypertarget{model-analysis}{%
+\section{Model Analysis}\label{model-analysis}}
+
+\hypertarget{variable-domain-constraint-propagation}{%
+\subsection{Variable Domain Constraint
+Propagation}\label{variable-domain-constraint-propagation}}
+
+During phase 1 the model analysis team identified instances of input
+sets to the PETASCE Evapo-transpiration model that caused bound errors
+during evaluation. This is due to the bound constraints of certain
+mathematical functions used in PETASCE, such as \texttt{arccos} and
+\texttt{log}. These constraints can be buried deep within the model
+architecture and commonly place shared constraints on more than one
+variable value. Some examples of constraints found in the PETASCE model
+are shared below.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{RHMIN }\KeywordTok{=} \BuiltInTok{MAX}\NormalTok{(}\FloatTok{20.0}\NormalTok{, }\BuiltInTok{MIN}\NormalTok{(}\FloatTok{80.0}\NormalTok{, EA}\KeywordTok{/}\NormalTok{EMAX}\KeywordTok{*}\FloatTok{100.0}\NormalTok{))   }\CommentTok{! EMAX must not be 0}
+\NormalTok{RNL }\KeywordTok{=} \FloatTok{4.901E-9}\KeywordTok{*}\NormalTok{FCD}\KeywordTok{*}\NormalTok{(}\FloatTok{0.34}\KeywordTok{-}\FloatTok{0.14}\KeywordTok{*}\BuiltInTok{SQRT}\NormalTok{(EA))}\KeywordTok{*}\NormalTok{TK4   }\CommentTok{! EA must be non-negative}
+
+\CommentTok{! The inner expression is bounded by [-1, 1] and this bound propagates to}
+\CommentTok{! expression of three variables.}
+\NormalTok{WS }\KeywordTok{=} \BuiltInTok{ACOS}\NormalTok{(}\KeywordTok{-}\FloatTok{1.0}\KeywordTok{*}\BuiltInTok{TAN}\NormalTok{(XLAT}\KeywordTok{*}\NormalTok{PIE}\KeywordTok{/}\FloatTok{180.0}\NormalTok{)}\KeywordTok{*}\BuiltInTok{TAN}\NormalTok{(LDELTA))}
+\end{Highlighting}
+\end{Shaded}
+
+Automating the process of sensitivity analysis for any input set will
+require static analysis to determine the set of domain constraints that
+can be used to validate an input. Then when running a model the first
+step will be to validate the input set to ensure that the inputs fit
+within the domains. For sensitivity analysis that includes a sampling
+step over a set of bounds this will require validation of the runtime
+bounds and possibly amending the sampling process for different
+sensitivity methods to ensure that samples are not taken from areas out
+of the constrained domain. Currently the MA team is working on a method
+to determine the bounds for a model by doing a forward/backward pass of
+bounds over the model, starting with calculating the range value
+interval constraints of variables in a forward pass and then using this
+information to calculate the variable domain value interval constraints
+of variables during the backward pass.
+
+\hypertarget{senstivity-analysis-of-petpt-priestley-taylor-model}{%
+\subsection{Senstivity Analysis of PETPT (Priestley-Taylor)
+model}\label{senstivity-analysis-of-petpt-priestley-taylor-model}}
+
+Model analysis currently uses the computation of Sobol indices to
+measure the variance in the output as a function of the fluctuations in
+the input parameters.
+
+The AutoMATES MA pipeline current uses the
+\href{https://salib.readthedocs.io/en/latest/}{SALib} python library,
+which provides functionality for three different sensitivity methods,
+Sobol, Fourier Amplitude Sensitivity Test (FAST), and Random Balance
+Design-Fourier Amplitude Sensitivity Test (RBD-FAST). This phase we
+explored using these models for sensitivity analysis. We compared the
+first order indices (S\(_i\); \(i\) is the variable) across the PETPT
+and ASCE models.
+
+(The Priestley-Taylor (PETPT) model is an example of an
+evapotranspiration (EO) model where the daily EO rate of a crop depends
+on the following independent variables - the maximum (TMAX) and minimum
+(TMIN) observable temperatures within a given day, daily solar radiation
+(SRAD), leaf area index (XHLAI), and soil albedo coefficient (MSALB).)
+
+Our results indicate that for reasonable approximations of the input
+parameter bounds, \(S_i\) values are maximum for TMAX and minimum (zero)
+for XHLAI in all three methods. SRAD followed by MSALB have the most
+significant \(S_i\)'s after TMAX while the sobol index for TMIN in the
+PETPT model is negligible. The Sobol method can compute the second order
+index (\(S_{ij}\); for the variables \(i\) and \(j\)) as well.
+Interestingly, we find that while \(S_{XHLAI}\) is vanishingly small,
+the second order index of XHLAI and TMAX is significantly large. Again,
+\(S_{ij}\) for \((i, j)=\) (TMAX, SRAD) is non-negligible. In addition,
+the runtime for each of the sensitivity analysis methods is computed and
+compared for different sample sizes. It becomes evident that for large
+sample sizes (\(\sim\) \(10^6\)), Sobol is two orders of magnitude
+slower than both FAST and RBD-FAST methods. In summary, TMAX is the most
+significant parameter and any significant change in its value will have
+the maximum effect on the EO rate. Our future goal is to extend our
+discussion of sensitivity analysis to the PETASCE model in which the EO
+rate depends on the independent variables discussed above as well as a
+new set of input parameters.
+
+\hypertarget{code-summarization}{%
+\section{Code Summarization}\label{code-summarization}}
+
+The code summarization team has begun focusing our attention on
+templated generation for summarizing the computations and structure of
+our extracted scientific models from GrFN. To meet this end we have
+begun investigating an architecture proposed in recent NLP literature
+that deals with (Wiseman, Shieber \& Rush, 2018). The idea behind using
+a templated generation method is that the source code we wish to
+summarize has well-specified control-flow structures that can be easily
+summarized via rules. Such structures as conditional statements, loops,
+indexed loops, and function calls are all well-defined components of the
+GrFN structure that allow for the construction of a skeletal summary.
+The neural generation methods can then be used to create a brief
+description of the actual computations being carried out in the function
+nodes that are contained within a GrFN structure. We are currently in
+the process of investigating what rule-based methods would be best for
+summarizing whole models or portions of models. Once we have developed
+templates from these rule-based methods we will begin experimenting with
+neural generation methods to fill function node computation descriptions
+within the templates.
+
+\end{document}
