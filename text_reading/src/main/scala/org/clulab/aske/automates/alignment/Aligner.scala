@@ -15,8 +15,7 @@ trait Aligner {
 }
 
 
-class VariableEditDistanceAligner {
-  val relevantArgs = Set("variable")
+class VariableEditDistanceAligner(relevantArgs: Set[String]) {
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
     alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs)), dstMentions.map(Aligner.getRelevantText(_, relevantArgs)))
   }
@@ -35,7 +34,6 @@ class VariableEditDistanceAligner {
   }
 }
 
-
 /**
   * Performs an exhaustive pairwise alignment, comparing each src item with each dst item independently of the others.
   * @param w2v
@@ -51,10 +49,14 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
-      score = compare(src, dst)
+      score = compare(src, dst) + 2 * (1.0 / (editDistance(src, dst) + 1.0))
     } yield Alignment(i, j, score)
     // redundant but good for debugging
     exhaustiveScores
+  }
+
+  def editDistance(s1: String, s2: String): Double = {
+    LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
   }
 
   // fixme - pick something more intentional
@@ -96,7 +98,10 @@ object Aligner {
   }
 
   // Helper methods for handling mentions
-  def mkTextFromArgs(argMap: Map[String, Seq[Mention]]): String = argMap.values.flatten.map(_.text).mkString(" ")
+  def mkTextFromArgs(argMap: Map[String, Seq[Mention]]): String = {
+    val stopwords = Set("the", "in", "on", "from") // fixme: this is a hack, should be more robust
+    argMap.values.flatten.map(_.text).filter(!stopwords.contains(_)).mkString(" ")
+  }
   // Get the text from the arguments of the mention, but only the previously specified arguments
   def getRelevantText(m: Mention, relevantArgs: Set[String]): String = {
     m match {

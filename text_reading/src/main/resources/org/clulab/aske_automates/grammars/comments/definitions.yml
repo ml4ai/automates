@@ -9,7 +9,8 @@ rules:
     priority: ${priority}
     type: token
     example: "EEQ Equilibrium evaporation (mm/d)"
-    #action: variableArguments
+#    action: looksLikeAVariable #don't use this action here---the illegal "vars" should have been
+    #filtered out in the entity rule
     pattern: |
-       @variable:Variable (?<definition> [word = /.*/ & !word="-LRB-"]+)
+       @variable:Variable (?<definition> [word = /.*/ & !tag="-LRB-"]+)
 

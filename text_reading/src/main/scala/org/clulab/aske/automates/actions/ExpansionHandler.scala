@@ -21,7 +21,6 @@ class ExpansionHandler() extends LazyLogging {
     // Yields not only the mention with newly expanded arguments, but also yields the expanded argument mentions
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
-
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
     val res = mentions.flatMap(expandArgs(_, state))
 
@@ -30,7 +29,7 @@ class ExpansionHandler() extends LazyLogging {
   }
 
   def expandArgs(mention: Mention, state: State): Seq[Mention] = {
-    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
     val sentLength: Double = mention.sentenceObj.getSentenceText.length
     val normalChars: Double = mention.sentenceObj.getSentenceText.filter(c => valid contains c).length
     val proportion = normalChars / sentLength
@@ -429,9 +428,11 @@ object ExpansionHandler {
   )
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
+//    "^nmod_for".r
 //    "^amod$".r,
 //    "^compound$".r//,
     //"^nmod_of".r
+    "nmod_under".r
   )
 
   def apply() = new ExpansionHandler()

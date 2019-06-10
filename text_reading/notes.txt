@@ -1,0 +1,3 @@
+1. Add Greek letter lexicon (to be used both for text and comment engines); add rule to the CommentEngine to capture instances where the greek letter is a variable in parens, e.g. "Psychrometric constant (γ)"---if this is in the heading, it will not be captured by the coment rule. This still doesn't help with cases where the var is not a greek letter (e.g., "Atmospheric pressure (P)"), but adding a rule for this might interfere with the comment rule.
+2. False pos in comments: Solar or shortwave radiation (Rs ) - limit the rule with smth like (!tag == cc)
+3. Account for multiword variables, e.g., "Crop coefficient at the end of the late season stage (Kc end)"
