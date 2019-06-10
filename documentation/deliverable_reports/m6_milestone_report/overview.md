@@ -1,4 +1,4 @@
-Link to the PDF version of this report. (TODO - insert link to PDF)
+Link to the [PDF version of this report](ASKE_M6Report_UA-AutoMATES-20190501.pdf).
 
 ## Overview
 
