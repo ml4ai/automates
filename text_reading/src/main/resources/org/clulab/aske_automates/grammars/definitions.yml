@@ -57,8 +57,18 @@ rules:
     example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc."
 #    action: looksLikeAVariable #TODO:check why the action filters these out
     pattern: |
-      (?<= [word = 'the']) (?<definition> [word = /.*/ & tag = /^NN/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN/]{2,5}) @variable:Variable (?! [chunk = I-NP])
 #      (?<= [word = 'the']) (?<definition> [word = /.*/ & !chunk = /PP$/ & !word = /,/ & !tag = /CC/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+
+  - name: comma_appos_var
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "Susceptible individuals, S, are infected by infected individuals, I..."
+    pattern: |
+      @definition: Concept "," @variable:Variable
+#
+
 
 #  - name: def_is_known_as_var
 #    label: Definition
