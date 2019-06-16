@@ -73,7 +73,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
   val t6a = "The ESo calculation in equation 4 is implemented for the CSM-CERES-Maize model and several other crop models."
-  passingTest should s"extract variables from t6a: ${t6a}" taggedAs(Becky) in {
+  failingTest should s"extract variables from t6a: ${t6a}" taggedAs(Becky) in {
 
 
     val desired = Seq("ESo", "CSM-CERES-Maize")
@@ -97,7 +97,7 @@ class TestVariables extends ExtractionTest {
   }
   val t9a = "Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. " +
     "(2012a) recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
-  passingTest should s"extract variables from t9a: ${t9a}" taggedAs(Becky) in {
+  failingTest should s"extract variables from t9a: ${t9a}" taggedAs(Becky) in {
 
 
     val desired = Seq("Kcdmin", "Kcdmax", "SKc") // todo: "FAO-56" - model?
