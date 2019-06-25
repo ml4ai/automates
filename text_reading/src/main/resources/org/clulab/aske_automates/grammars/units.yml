@@ -20,9 +20,43 @@ rules:
     action: looksLikeAUnit
     example: "a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23"
     pattern: |
-      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = "CD" & !word = /\(|\)|-LRB-|-RRB-|to/]+
-
+      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = "CD" & !word = /\(|\)|-LRB-|-RRB-|to|and/]+
       #required for non-standard units, e.g., s m-1
+      #todo: check if can just add 'to' and 'and' to avoids
+
+
+  - name: unit_from_fragments
+    label: Unit
+    priority: ${priority}
+    type: token
+    action: looksLikeAUnit
+    example: "In one type, water uptake is a function of the difference in water potentials ( , J kg−1) and the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
+    pattern: |
+      [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+ [word = /.*/] [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+
+      #the condition that has the [word = /.*/] between two groups of units is precarious; it's there to account for `kg s m−4`, where 's' is not found as a unit
+
+
+  - name: unit_from_fragments2
+    label: Unit
+    priority: ${priority}
+    type: token
+    action: looksLikeAUnit
+    example: "The unit we use is MJ/kg."
+    pattern: |
+      [chunk = /B-NP|I-NP/ & !tag = "CD" & !tag = "-LRB-"]* [word = "/"]? [entity = /(?i)unit/] [word = "/"]? [chunk = /I-NP/ & !tag = "-RRB-"]*
+      #a unit is a concept that overlaps with a unit (excludes parentheses, which means this pattern does not work for `[%/(dS m-1)]` )
+      #the !tag="CD" part helps ensure the value is not included in the unit
+
+
+##todo: does not work yet
+#  - name: unit_from_fragments3
+#    label: Unit
+#    priority: ${priority}
+#    type: token
+##    action: looksLikeAUnit
+#    example: "The unit we use is [%/(dS m-1)]."
+#    pattern: |
+#      [entity = "Concept"] [word = "/"] [entity = "Concept"] [word = ")"] [word = "]"]
 
 
   ####UNIT RELATIONS####
@@ -35,6 +69,6 @@ rules:
     action: looksLikeAUnit
     pattern: |
       @variable:Variable [word=/.*/]+ [word="["] (?<unit> [word = /.*/]+) (?=[word="]"])
-      #false positive: "In the second approach, Kc is split into two factors that separately describe the evaporation (Ke) and transpiration (Kcb) components."
+
 
 
