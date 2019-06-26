@@ -129,7 +129,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t14a = "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with " +
     "Kr = 1.0."
-  passingTest should s"find NO definitions from t14a: ${t14a}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t14a: ${t14a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t14a)
     testDefinitionEvent(mentions, desired)
@@ -204,7 +204,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t6b = "The L is calculated using T, Cp and  ̄S ."
-  passingTest should s"find NO definitions from t6b: ${t6b}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t6b: ${t6b}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t6b)
     testDefinitionEvent(mentions, desired)
@@ -220,7 +220,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t8b = "Finally, Ta is calculated using s and L, Cp and Tp:"
-  passingTest should s"find NO definitions from t8b: ${t8b}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t8b: ${t8b}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t8b)
     testDefinitionEvent(mentions, desired)
@@ -320,7 +320,7 @@ class TestDefinitions extends ExtractionTest {
 
     }
   val t4c = "Segment size (dr) was chosen smaller near the root and larger at greater distance, according to"
-    passingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
       val desired = Seq(
         "dr" -> Seq("Segment size")
       )

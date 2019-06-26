@@ -140,11 +140,29 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
+      //every mention in array...
       m <- mentions
-      unitArgs = mentions.head.arguments.getOrElse("unit", Seq())
-      unitTextSplit = unitArgs.head.text.split(" ")
-      pattern = "[-/\\[\\]]".r //didn't add digits bc that resulted in more false positives (e.g., for years)
-      if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || !pattern.findFirstIn(unitArgs.head.text).isEmpty)
+      //get the split text of the suspected unit
+      unitTextSplit = m match {
+          //for tbs, the text of the unit, is the text of the whole mention
+        case tb: TextBoundMention => m.text.split(" ")
+          //for relation and event mentions, the unit is the value of the arg with the argName "unit"
+        case _ => {
+          val unitArgs = m.arguments.getOrElse("unit", Seq())
+          if (unitArgs.nonEmpty) {
+            unitArgs.head.text.split(" ")
+          }
+          unitArgs.head.text.split(" ")
+        }
+
+      }
+      //the pattern to check if the suspected unit contains dashes (e.g., m-1), slashes (e.g., MJ/kg, or square brackets
+      //didn't add digits bc that resulted in more false positives (e.g., for years)
+      pattern = "[-/\\[\\]]".r
+      //negative pattern checks if the suspected unit contains char-s that should not be present in a unit
+      negPattern = "[<>=]".r
+      //the length constraints: the unit should consist of no more than 5 words and the first word of the unit should be no longer than 3 characters long (heuristics)
+      if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || pattern.findFirstIn(unitTextSplit.mkString(" ")).nonEmpty ) && negPattern.findFirstIn(unitTextSplit.mkString(" ")).isEmpty
     } yield m
   }
 

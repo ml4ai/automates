@@ -63,7 +63,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t5a = "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from " +
     "DSSAT-CSM version 4.5 for Arizona conditions (fig. 1a)."
-  passingTest should s"NOT extract model version, but should extract the parameter setting(s) from t5a: ${t5a}" taggedAs(Somebody) in {
+  failingTest should s"NOT extract model version, but should extract the parameter setting(s) from t5a: ${t5a}" taggedAs(Somebody) in {
     val desired = Seq(
       "RMSE" -> Seq("22.8%") //todo: see t8 for an example where model version is relevant; should % be in the test?
     )

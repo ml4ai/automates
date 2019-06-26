@@ -9,7 +9,7 @@ rules:
     vars:
       priority: 1
 
-  - import: "org/clulab/aske_automates/grammars/intervalVariables.yml"
+  - import: "org/clulab/aske_automates/grammars/values.yml"
     vars:
       priority: 2
 
