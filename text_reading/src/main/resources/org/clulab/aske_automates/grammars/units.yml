@@ -12,6 +12,7 @@ rules:
       (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word=/-LRB-|\(/]) @unit:Concept (?=[word=/-RRB-|\)/])
       #Doesn't work for this [%/(dS m-1)]
       #helps with non-standard units
+      #todo: soil layer thickness ($z, m)
 
   - name: number_unit
     label: Unit
@@ -24,7 +25,6 @@ rules:
       #required for non-standard units, e.g., s m-1
       #todo: check if can just add 'to' and 'and' to avoids
 
-
   - name: unit_from_fragments
     label: Unit
     priority: ${priority}
@@ -32,7 +32,7 @@ rules:
     action: looksLikeAUnit
     example: "In one type, water uptake is a function of the difference in water potentials ( , J kg−1) and the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
     pattern: |
-      [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+ [word = /.*/] [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+
+      [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+ [word = /.*/] [entity = /(?i)unit/]? [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+
       #the condition that has the [word = /.*/] between two groups of units is precarious; it's there to account for `kg s m−4`, where 's' is not found as a unit
 
 
@@ -59,16 +59,10 @@ rules:
 #      [entity = "Concept"] [word = "/"] [entity = "Concept"] [word = ")"] [word = "]"]
 
 
-  ####UNIT RELATIONS####
 
-  - name: var_unit_rel
-    label: Unit
-    priority: ${priority}
-    type: token
-    example: "T = daily mean air temperature [°C]"
-    action: looksLikeAUnit
-    pattern: |
-      @variable:Variable [word=/.*/]+ [word="["] (?<unit> [word = /.*/]+) (?=[word="]"])
+
+
+
 
 
 
