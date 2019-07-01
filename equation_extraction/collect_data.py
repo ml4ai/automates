@@ -10,6 +10,7 @@ import argparse
 import subprocess
 import cv2
 import jinja2
+import itertools
 import numpy as np
 from skimage import img_as_ubyte
 from pdf2image import convert_from_path
@@ -28,10 +29,37 @@ def parse_args():
     parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
     parser.add_argument('--pdfdir', help='directory with precompiled whole paper pdfs, if provided we will not regenerate them')
+    parser.add_argument('--num-paragraphs', type=int, default=3, help='size of window above and below the eqn to save')
     args = parser.parse_args()
     return args
 
 
+def mk_paragraphs(tokens):
+    delim = 'par'
+    # the string version of the token for a paragraph boundary is `par`, and we couldn't easily find
+    # another attribute of a plasTeX token that had the same string
+    paragraphs = [list(y) for x, y in itertools.groupby(tokens, lambda z: str(z) == delim) if not x]
+    return paragraphs
+
+# from https://stackoverflow.com/questions/33392219/how-to-check-subsequence-exists-in-a-list
+def x_in_y(query, base):
+    try:
+        l = len(query)
+    except TypeError:
+        l = 1
+        query = type(base)((query,))
+
+    for i in range(len(base)):
+        if base[i:i+l] == query:
+            return True
+    return False
+
+def find_equation_in_paragraphs(paragraphs, eq_toks):
+    for (i, para) in enumerate(paragraphs):
+        if x_in_y(eq_toks, para):
+            return i
+    # If it fails, return -1
+    return -1
 
 def render_tex(filename, outdir, keep_intermediate):
     """render latex document"""
@@ -70,7 +98,7 @@ def render_equation(equation, template, filename, keep_intermediate):
         f.write(equation_tex)
     pdf_name = render_tex(filename, dirname, keep_intermediate)
     if pdf_name:
-        image = get_pages(pdf_name)[0]
+        image = get_pages(pdf_name, dump_pages=False, outdir="")[0]
     else:
         image = None
     return image
@@ -168,6 +196,11 @@ def generate_aabb(outdir, eq_name, pages, equation, rescale_factor):
         values = [match, scale, p, x1, y1, x2, y2]
         tsv = '\t'.join(map(str, values))
         print(tsv, file=f)
+    # crop the equation from the image
+    cropped = pages[p]
+    cropped = cropped[int(start[1]):int(end[1]+1), int(start[0]):int(end[0]+1)]
+    fname = os.path.join(outdir, eq_name, 'cropped_equation.png')
+    cv2.imwrite(fname, cropped)
 
 def write_env_name(outdir, eq_name, environment_name):
     fname = os.path.join(outdir, eq_name, 'environment.txt')
@@ -180,6 +213,22 @@ def write_tex_tokens(outdir, eq_name, tokens):
         tokens = [dict(type=t.__class__.__name__, value=t.source) for t in tokens]
         json.dump(tokens, f)
 
+def write_surrounding(outdir, eq_name, paragraphs, paragraph_idx, num_paragraphs):
+    # Check to make sure that the equation was found within the paragraphs
+    if paragraph_idx != -1:
+        # if it was found --
+        fname = os.path.join(outdir, eq_name, 'context_k{0}.json'.format(num_paragraphs))
+        # Find the window of context
+        start = max(0, paragraph_idx - num_paragraphs)
+        end = min(len(paragraphs), paragraph_idx + num_paragraphs + 1) # account for exclusive
+        context = paragraphs[start:end]
+        # flatten the list of lists
+        context = [token for sublist in context for token in sublist]
+        # save
+        with open(fname, 'w') as f:
+            tokens = [dict(type=t.__class__.__name__, value=t.source) for t in context]
+            json.dump(tokens, f)
+
 # used to format error msgs for the poor man's log in process_paper()
 def error_msg(paper_name, msg, equations=[]):
     eqns_failed = ', '.join(equations)
@@ -188,7 +237,7 @@ def error_msg(paper_name, msg, equations=[]):
 def get_paper_id(dirname):
     return os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
 
-def process_paper(dirname, template, template_im2markup, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir):
+def process_paper(dirname, template, template_im2markup, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir, num_paragraphs):
     # keep a poor man's log of what failed, if anything
     info_log = ''
 
@@ -204,13 +253,16 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
         os.makedirs(outdir)
     # read latex tokens from document
     tokenizer = LatexTokenizer(texfile)
+    # get all latex tokens from paper
+    all_tokens = tokenizer.tokens
+    paragraphs = mk_paragraphs(all_tokens)
     # extract equations from token stream
     equations = tokenizer.equations()
     # compile pdf from document or retrieve already compiled one, returns None if didn't compile
     pdf_name = get_pdf(pdfdir, paper_id, texfile, outdir, keep_intermediate)
     # if the pdf is there (rendered OR provided)
     if pdf_name:
-        # retrieve pdf pages as images
+        # retrieve pdf pages as images (png)
         pages = get_pages(pdf_name, dump_pages, outdir)
         # load jinja2 templates
         template = mk_template(template)
@@ -231,6 +283,10 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
             write_tex_tokens(outdir, eq_name, eq_toks)
             # render equation if possible
             if environment_name in ('equation', 'equation*'):
+                # locate which tex paragraph has this equation
+                paragraph_idx = find_equation_in_paragraphs(paragraphs, eq_toks)
+                write_surrounding(outdir, eq_name, paragraphs, paragraph_idx, num_paragraphs)
+                # save tokens for surrounding context
                 # make pdf
                 fname = os.path.join(outdir, eq_name, 'equation.tex')
                 equation = render_equation(eq_tex, template, fname, keep_intermediate)
@@ -262,7 +318,7 @@ if __name__ == '__main__':
     with open(args.logfile, 'a') as logfile:
         print('processing', args.indir, '...')
         try:
-            paper_errors = process_paper(args.indir, args.template, args.template_im2markup, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir)
+            paper_errors = process_paper(args.indir, args.template, args.template_im2markup, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir, args.num_paragraphs)
         except KeyboardInterrupt:
             raise
         except:
