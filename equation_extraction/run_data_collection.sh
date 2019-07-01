@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # read options
-OPTIONS=$(getopt -o i:o:l:t:r:dkp:n: -l indir:,outdir:,logfile:,template:,rescale-factor:,dump-pages,keep-intermediate-files,pdfdir:,nproc: -- "$@")
+OPTIONS=$(getopt -o i:o:l:t:r:dkp:n:c: -l indir:,outdir:,logfile:,template:,rescale-factor:,dump-pages,keep-intermediate-files,pdfdir:,nproc:,num-paragraphs: -- "$@")
 
 # report errors
 if [ $? != 0 ]; then
@@ -54,6 +54,10 @@ while true; do
             ;;
         -n|--nproc)
             NPROC=$2
+            shift 2
+            ;;
+        -c|--num-paragraphs)
+            ARGS="$ARGS --num-paragraphs=$2"
             shift 2
             ;;
         --)
