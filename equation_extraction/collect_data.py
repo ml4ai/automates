@@ -53,14 +53,12 @@ def render_tex(filename, outdir, keep_intermediate):
     return pdf_name
 
 
-
 def run_command(cmd, dirname, log_fn):
     with open(log_fn, 'w') as logfile:
         p = subprocess.Popen(cmd, stdout=logfile, stderr=subprocess.STDOUT, cwd=dirname)
         p.communicate()
         return_code = p.wait()
         return return_code
-
 
 
 def render_equation(equation, template, filename, keep_intermediate):
@@ -77,19 +75,40 @@ def render_equation(equation, template, filename, keep_intermediate):
         image = None
     return image
 
+
 def mk_template(template):
     template_loader = jinja2.FileSystemLoader(searchpath='.')
     template_env = jinja2.Environment(loader=template_loader)
     return template_env.get_template(template)
 
-def get_pages(pdf_name):
+
+def get_pages(pdf_name, dump_pages, outdir):
     pages = []
     for img in convert_from_path(pdf_name):
         page = np.array(img)
         page = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
         pages.append(page)
+    # optionally, store them
+    if dump_pages:
+        dump_pages(outdir, pages)
     return pages
 
+
+def get_pdf(pdfdir, paper_id, texfile, outdir, keep_intermediate):
+    if pdfdir:
+        # if given dir for pre-compiled pdfs, use that
+        pdf_name = os.path.join(pdfdir, paper_id[:4], paper_id + ".pdf")
+    else:
+        # otherwise, render it from source
+        pdf_name = render_tex(texfile, outdir, keep_intermediate)
+    return pdf_name
+
+
+def dump_pages(outdir, pages):
+    os.makedirs(os.path.join(outdir, 'pages'))
+    for i, p in enumerate(pages):
+        img_name = os.path.join(outdir, 'pages', '%03d.png' % i)
+        cv2.imwrite(img_name, p)
 
 
 def match_template(pages, template, rescale_factor):
@@ -129,6 +148,38 @@ def match_template(pages, template, rescale_factor):
     return best_val, best_scale, best_page, upper_left, lower_right
 
 
+def generate_aabb(outdir, eq_name, pages, equation, rescale_factor):
+    # Find the location of the image in the page
+    match, scale, p, start, end = match_template(pages, equation, rescale_factor)
+    # write image with aabb
+    image = pages[p].copy()
+    image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+    cv2.rectangle(image, start, end, (0, 0, 255), 2)
+    img_name = os.path.join(outdir, eq_name, 'aabb.png')
+    cv2.imwrite(img_name, image)
+    # write aabb to file (using relative coordinates)
+    fname = os.path.join(outdir, eq_name, 'aabb.tsv')
+    h, w = image.shape[:2]
+    x1 = start[0] / w
+    y1 = start[1] / h
+    x2 = end[0] / w
+    y2 = end[1] / h
+    with open(fname, 'w') as f:
+        values = [match, scale, p, x1, y1, x2, y2]
+        tsv = '\t'.join(map(str, values))
+        print(tsv, file=f)
+
+def write_env_name(outdir, eq_name, environment_name):
+    fname = os.path.join(outdir, eq_name, 'environment.txt')
+    with open(fname, 'w') as f:
+        f.write(environment_name)
+
+def write_tex_tokens(outdir, eq_name, tokens):
+    fname = os.path.join(outdir, eq_name, 'tokens.json')
+    with open(fname, 'w') as f:
+        tokens = [dict(type=t.__class__.__name__, value=t.source) for t in tokens]
+        json.dump(tokens, f)
+
 # used to format error msgs for the poor man's log in process_paper()
 def error_msg(paper_name, msg, equations=[]):
     eqns_failed = ', '.join(equations)
@@ -155,27 +206,15 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
     tokenizer = LatexTokenizer(texfile)
     # extract equations from token stream
     equations = tokenizer.equations()
-    # compile pdf from document
-    if pdfdir:
-        # if given dir for pre-compiled pdfs, use that
-        pdf_name = os.path.join(pdfdir, paper_id[:4], paper_id + ".pdf")
-        print("pdf_name:", pdf_name)
-    else:
-        # otherwise, render it from source
-        pdf_name = render_tex(texfile, outdir, keep_intermediate)
+    # compile pdf from document or retrieve already compiled one, returns None if didn't compile
+    pdf_name = get_pdf(pdfdir, paper_id, texfile, outdir, keep_intermediate)
     # if the pdf is there (rendered OR provided)
     if pdf_name:
         # retrieve pdf pages as images
-        pages = get_pages(pdf_name)
-        if dump_pages:
-            os.makedirs(os.path.join(outdir, 'pages'))
-            for i,p in enumerate(pages):
-                img_name = os.path.join(outdir, 'pages', '%03d.png' % i)
-                cv2.imwrite(img_name, p)
-        # load jinja2 template
+        pages = get_pages(pdf_name, dump_pages, outdir)
+        # load jinja2 templates
         template = mk_template(template)
         template_im2markup = mk_template(template_im2markup)
-
         # keep track of which eqns failed or were skipped, to hopefully later recover
         failed_eqns = []
         skipped_eqns = []
@@ -186,46 +225,24 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
             dirname = os.path.join(outdir, eq_name)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
-            # write environment name
-            fname = os.path.join(outdir, eq_name, 'environment.txt')
-            with open(fname, 'w') as f:
-                f.write(environment_name)
-            # write tex tokens
-            fname = os.path.join(outdir, eq_name, 'tokens.json')
-            with open(fname, 'w') as f:
-                tokens = [dict(type=t.__class__.__name__, value=t.source) for t in eq_toks]
-                json.dump(tokens, f)
+            # write environment name in a separate file
+            write_env_name(outdir, eq_name, environment_name)
+            # write tex tokens for the equation in a separate file
+            write_tex_tokens(outdir, eq_name, eq_toks)
             # render equation if possible
             if environment_name in ('equation', 'equation*'):
                 # make pdf
                 fname = os.path.join(outdir, eq_name, 'equation.tex')
-                fname_im2markup = os.path.join(outdir, eq_name, 'equation_im2markup.tex')
                 equation = render_equation(eq_tex, template, fname, keep_intermediate)
                 # also render using the template from im2markup
+                fname_im2markup = os.path.join(outdir, eq_name, 'equation_im2markup.tex')
                 render_equation(eq_tex, template_im2markup, fname_im2markup, keep_intermediate)
                 if equation is None:
                     # equation couldn't be rendered
                     failed_eqns.append(eq_name)
                     continue
                 # find page and aabb where equation appears
-                match, scale, p, start, end = match_template(pages, equation, rescale_factor)
-                # write image with aabb
-                image = pages[p].copy()
-                image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-                cv2.rectangle(image, start, end, (0, 0, 255), 2)
-                img_name = os.path.join(outdir, eq_name, 'aabb.png')
-                cv2.imwrite(img_name, image)
-                # write aabb to file (using relative coordinates)
-                fname = os.path.join(outdir, eq_name, 'aabb.tsv')
-                h, w = image.shape[:2]
-                x1 = start[0] / w
-                y1 = start[1] / h
-                x2 = end[0] / w
-                y2 = end[1] / h
-                with open(fname, 'w') as f:
-                    values = [match, scale, p, x1, y1, x2, y2]
-                    tsv = '\t'.join(map(str, values))
-                    print(tsv, file=f)
+                generate_aabb(outdir, eq_name, pages, equation, rescale_factor)
             else:
                 # we skipped bc wasn't an equation environment
                 skipped_eqns.append(eq_name)
