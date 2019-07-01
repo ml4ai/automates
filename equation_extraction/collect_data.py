@@ -77,7 +77,10 @@ def render_equation(equation, template, filename, keep_intermediate):
         image = None
     return image
 
-
+def mk_template(template):
+    template_loader = jinja2.FileSystemLoader(searchpath='.')
+    template_env = jinja2.Environment(loader=template_loader)
+    return template_env.get_template(template)
 
 def get_pages(pdf_name):
     pages = []
@@ -116,7 +119,7 @@ def match_template(pages, template, rescale_factor):
                 best_loc = max_loc
                 best_page = i
                 best_h, best_w = resized.shape[:2]
-		best_scale = scale
+                best_scale = scale
     # Note that we are adding the margin described above
     upper_left = (best_loc[0] - margin, best_loc[1] - margin)
     lower_right = (best_loc[0] + best_w + margin, best_loc[1] + best_h + margin)
@@ -170,11 +173,8 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
                 img_name = os.path.join(outdir, 'pages', '%03d.png' % i)
                 cv2.imwrite(img_name, p)
         # load jinja2 template
-        template_loader = jinja2.FileSystemLoader(searchpath='.')
-        template_env = jinja2.Environment(loader=template_loader)
-
-        template = template_env.get_template(template)
-        template_im2markup = template_env.get_template(template_im2markup)
+        template = mk_template(template)
+        template_im2markup = mk_template(template_im2markup)
 
         # keep track of which eqns failed or were skipped, to hopefully later recover
         failed_eqns = []
