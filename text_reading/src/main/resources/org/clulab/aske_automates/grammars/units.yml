@@ -14,6 +14,15 @@ rules:
       #helps with non-standard units
       #todo: soil layer thickness ($z, m)
 
+  - name: dash_digit_unit
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
+    Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
+    pattern: |
+      [word = /.*/] [word = "-"] [tag = "CD"]
+
   - name: number_unit
     label: Unit
     priority: ${priority}
@@ -32,7 +41,7 @@ rules:
     action: looksLikeAUnit
     example: "In one type, water uptake is a function of the difference in water potentials ( , J kg−1) and the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
     pattern: |
-      [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+ [word = /.*/] [entity = /(?i)unit/]? [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+
+      [entity = /(?i)unit/]+ [word = "-"] [tag = "CD"] #| [entity = /(?i)unit/]+ [word = /.*/] [entity = /(?i)unit/]? [word = "-"] [tag = "CD"] | [entity = /(?i)unit/]+
       #the condition that has the [word = /.*/] between two groups of units is precarious; it's there to account for `kg s m−4`, where 's' is not found as a unit
 
 
@@ -43,9 +52,28 @@ rules:
     action: looksLikeAUnit
     example: "The unit we use is MJ/kg."
     pattern: |
-      [chunk = /B-NP|I-NP/ & !tag = "CD" & !tag = "-LRB-"]* [word = "/"]? [entity = /(?i)unit/] [word = "/"]? [chunk = /I-NP/ & !tag = "-RRB-"]*
+      [chunk = /B-NP|I-NP/ & !tag = "CD" & !tag = "-LRB-" & !word = ","]* [word = "/"]? [entity = /(?i)unit/] [word = "/"]? [chunk = /I-NP/ & !tag = "-RRB-"]*
       #a unit is a concept that overlaps with a unit (excludes parentheses, which means this pattern does not work for `[%/(dS m-1)]` )
       #the !tag="CD" part helps ensure the value is not included in the unit
+
+
+  - name: unit_from_fragments3
+    label: Unit
+    priority: ${priority}
+    type: token
+    action: looksLikeAUnit
+    example: "soil layer thickness ($z, m), the water uptake from previous soil layers (uk, mm d−1)"
+    pattern: |
+      [entity = "B-unit"] [word = /.*/] [word = "-"] [tag = CD]
+
+  - name: unit_from_fragments4
+    label: Unit
+    priority: ${priority}
+    type: token
+    action: looksLikeAUnit
+    example: "soil layer thickness ($z, m), the water uptake from previous soil layers (uk, mm d−1)"
+    pattern: |
+      [entity = "B-unit"] [word = /.*/] [entity = "B-unit"] [word = "-"] [tag = CD]
 
 
 ##todo: does not work yet

@@ -13,7 +13,7 @@ rules:
     action: looksLikeAUnit
     pattern: |
       @variable:Variable [word=/.*/]+ [word="["] (?<unit> [word = /.*/]+) (?=[word="]"])
-
+#
   - name: concept_paren_unit
     label: Unit
     priority: ${priority}
@@ -48,3 +48,15 @@ rules:
       trigger = [tag = "CD"]
       variable: Concept = <nummod </nmod_of|nmod_between/
       unit: Unit = <nummod
+
+
+  - name: var_equals_value_unit
+    label: Unit
+    priority: ${priority}
+    type: dependency
+    example: "For example for a soil with pwp = 0.1 m3 m-3..."
+    action: looksLikeAUnit
+    pattern: |
+      trigger = [word = "="]
+      variable: Variable = <amod
+      unit: Unit = dep
