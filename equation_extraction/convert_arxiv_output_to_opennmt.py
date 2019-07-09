@@ -33,6 +33,7 @@ def gather_opennmt_data(parent_dir, outdir):
     img_names = []
     eqn_strings = []
     for month in month_dirs:
+        print("processing month:", month)
         # make output dir for month
         imgs_month_out = os.path.join(imgs_dir, month)
         mkdir(imgs_month_out)
@@ -42,6 +43,7 @@ def gather_opennmt_data(parent_dir, outdir):
             paper_dirs = os.listdir(month_path)
             for paper in paper_dirs:
                 # keep an absolute path
+                print("processing paper:", paper)
                 paper_path = os.path.join(month_path, paper)
                 if os.path.isdir(paper_path):
                     equation_dirs = glob.glob(os.path.join(paper_path, "equation*"))
