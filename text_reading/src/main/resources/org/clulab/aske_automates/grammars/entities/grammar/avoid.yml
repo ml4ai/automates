@@ -101,11 +101,11 @@ rules:
       [word = /Ms|Mrs?/] (?=[entity="PERSON"])   
       
 
-  - name: "pronouns"
+  - name: "determiners"
     label: Avoid
     priority: 2
     type: token
     pattern: |
-      [lemma = "this"]
+      [lemma = /this|the/]
 
 

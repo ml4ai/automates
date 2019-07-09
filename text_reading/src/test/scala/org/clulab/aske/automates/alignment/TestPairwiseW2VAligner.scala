@@ -35,7 +35,7 @@ class TestPairwiseW2VAligner extends FlatSpec with Matchers {
     mapping.length should be (4)
   }
 
-  it should "compare the texts with w2v properly" in {
+  ignore should "compare the texts with w2v properly" in {
     val scores = mapping.map(a => ((a.src, a.dst), a.score)).toMap
     val catKitten = scores((0,0))
     val catcondo = scores((0,1))
