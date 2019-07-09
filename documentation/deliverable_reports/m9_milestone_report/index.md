@@ -7,7 +7,11 @@ toc: true
 
 {% include_relative overview.md %}
 
+{% include_relative grfn.md %}
+
 {% include_relative program_analysis.md %}
+
+{% include_relative linking.md %}
 
 {% include_relative text_reading.md %}
 
