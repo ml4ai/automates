@@ -111,5 +111,6 @@ if __name__ == '__main__':
 
     mkdir(logsdir)
     mkdir(outdir)
-    gather_opennmt_data(parent_dir, outdir, imgs_dir, os.path.join(logsdir, 'formatting_for_opennmt_stdout.log'))
+    month = os.path.basename(parent_dir)
+    gather_opennmt_data(parent_dir, outdir, imgs_dir, os.path.join(logsdir, month + '_formatting_for_opennmt_stdout.log'))
  
