@@ -1,5 +1,6 @@
 import argparse
 import os
+from itertools import izip
 from utils import run_command
 
 def parse_args():
@@ -42,20 +43,19 @@ def prune_failed_formulas(src_files, normed_tgt_files, logfile):
     assert len(src_files) == len(normed_tgt_files)
     for i in range(len(src_files)):
         src_file = src_files[i]
-        tgt_file = tgt_files[i]
+        tgt_file = normed_tgt_files[i]
         # assumes a `.***` extension
         src_out_name = src_file[:-4] + "-pruned.txt"
         tgt_out_name = tgt_file[:-4] + "-pruned.txt"
+        print "writing tgt to:", tgt_out_name
         with open(src_file, 'r') as src, open(tgt_file, 'r') as tgt, open(logfile, 'a') as log:
             with open(src_out_name, 'w') as src_out, open(tgt_out_name, 'w') as tgt_out:
-                src_line = src.readline()
-                tgt_line = tgt.readline()
-                while src_line and tgt_line:
+                for src_line, tgt_line in izip(src, tgt):
                     if not tgt_line.strip() == 'XXXXXXXXXX':
                         src_out.write(src_line)
                         tgt_out.write(tgt_line)
                     else:
-                        log.write("EQN failed and removed:\t", src_line.strip(), "\t", tgt_line)
+                        log.write("EQN failed and removed:\t" + src_line.strip() + "\t" + tgt_line)
 
 
 if __name__ == '__main__':
@@ -68,10 +68,11 @@ if __name__ == '__main__':
     # 2) replace the `\label ` with `\label` for the normalization
     repair_label_spacing(tgt_files, args.logfile)
     print "Repaired label spacing"
-    sys.exit()
+    
     # 3) call the im2markup normalization script
     print "Norming tgt files..."
     normed_tgt_files = norm_files(tgt_files, args.im2markupdir, args.logfile)
+    print "Normed files:", normed_tgt_files
 
     # 4) prune images/equations that katex (in the normalization script) couldn't handle
     print "pruning failed formulas..."
