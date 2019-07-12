@@ -20,7 +20,8 @@ def mk_file_paths(indir):
 
 def repair_label_spacing(files, logfile):
     for f in files:
-        cmd = ['sed', '-i', "'s/\\label /\\label/g'", f]
+        cmd = ['sed', '-i', """s/\\\label /\\\label/g""", f]
+        print "Running command:", ' '.join(cmd)
         run_command(cmd, '.', logfile)
 
 def norm_files(files, im2latex_dir, logfile):
@@ -33,6 +34,7 @@ def norm_files(files, im2latex_dir, logfile):
         pruned_files.append(outfile)
         cmd = ['python', 'scripts/preprocessing/preprocess_formulas.py', '--mode',
                'normalize', '--input-file', f, '--output-file', outfile]
+        print "Running command:", ' '.join(cmd)
         run_command(cmd, im2latex_dir, logfile)
     return pruned_files
 
@@ -60,12 +62,18 @@ if __name__ == '__main__':
     args = parse_args()
     # 1) get the files, in order (train, val, test) for src and tgt
     src_files, tgt_files = mk_file_paths(args.indir)
+    print "src files:", src_files
+    print "tgt files:", tgt_files
 
     # 2) replace the `\label ` with `\label` for the normalization
     repair_label_spacing(tgt_files, args.logfile)
-
+    print "Repaired label spacing"
+    sys.exit()
     # 3) call the im2markup normalization script
+    print "Norming tgt files..."
     normed_tgt_files = norm_files(tgt_files, args.im2markupdir, args.logfile)
 
     # 4) prune images/equations that katex (in the normalization script) couldn't handle
-    prune_failed_formulas(src_files, normed_tgt_files)
+    print "pruning failed formulas..."
+    prune_failed_formulas(src_files, normed_tgt_files, args.logfile)
+    print "Finished."
