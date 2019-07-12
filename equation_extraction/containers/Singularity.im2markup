@@ -1,0 +1,29 @@
+Bootstrap: shub
+From: ml4ai/UA-hpc-containers:torch
+
+%help
+  This container is built on top of the ML4AI Torch container. It includes additional pre-reqs needed to preprocess/train/evaluate using Harvards im2markup tool
+
+%setup
+  # Place any commands here that need to be executed on the host OS (i.e. the HPC shell) after the base of the container is made, but before the post section.
+
+%files
+  # Use this section to copy any files from the host OS to the container during the build (don't use this if building on singularity-hub)
+
+%labels
+  Maintainer ML4AI Lab
+  Version v0.1
+
+%environment
+  # Use this section to add any environment variables that will be needed in the container. (Be sure to add an export {<var-name>}* command for any environment variables defined here so they are seen by the container)
+
+%post
+  apt-get -y update
+
+  # Installing some Python packages that are needed for pre-processing
+  apt-get -y install python3 python3-pip python3-matplotlib python3-numpy
+  pip3 install pillow numpy python-Levenshtein
+  wget http://lstm.seas.harvard.edu/latex/third_party/Distance-0.1.3.tar.gz
+  tar zxf Distance-0.1.3.tar.gz
+  cd /distance
+  python3 setup.py install

@@ -1,7 +1,7 @@
 - Entity:
   - Concept:
       - Variable
-
+      - Model
   - Measurement:
     - Value:
       - ValueAndUnit
@@ -11,3 +11,4 @@
   - Causal
   - Definition
   - ParameterSetting
+  - IntervalParameterSetting

@@ -8,7 +8,7 @@ val json4sVersion = "3.5.2"
 //EclipseKeys.withSource := true
 
 libraryDependencies ++= {
-  val procVer = "7.4.2"
+  val procVer = "7.5.1"
 
   Seq(
     "org.clulab"    %% "processors-main"          % procVer,
@@ -17,14 +17,15 @@ libraryDependencies ++= {
     "org.clulab"    %% "processors-modelsmain"    % procVer,
     "org.clulab"    %% "processors-modelscorenlp" % procVer,
     "ai.lum"        %% "common"                   % "0.0.8",
+    "ai.lum"        %% "regextools"               % "0.1.0-SNAPSHOT",
     "com.lihaoyi"   %% "ujson"                    % "0.7.1",
     "com.lihaoyi"   %% "requests"                 % "0.1.4",
-    // "com.lihaoyi" %% "upickle" % "0.7.1",
+    "com.lihaoyi"   %% "upickle"                  % "0.7.1",
     "org.scalatest" %% "scalatest"                % "3.0.4" % "test",
     "com.typesafe"  %  "config"                   % "1.3.1",
-    "org.json4s"              %%  "json4s-core"               % json4sVersion,
-
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2"
+    "org.json4s"    %%  "json4s-core"             % json4sVersion,
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+    "org.apache.commons" % "commons-text" % "1.6"
   )
 }
 

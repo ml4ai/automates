@@ -2,6 +2,7 @@ package org.clulab.aske.automates.scienceparse
 
 import java.io.File
 import java.nio.file.Path
+
 import com.typesafe.config.Config
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
@@ -27,7 +28,7 @@ object ScienceParseClient {
     val title = json.obj.get("title").map(_.str)
     val year = json("year").num.toInt
     val authors = json("authors").arr.map(mkAuthor).toVector
-    val abstractText = json("abstractText").str
+    val abstractText = json.obj.get("abstractText").map(_.str)
     val sections = json("sections").arr.map(mkSection).toVector
     val references = json("references").arr.map(mkReference).toVector
     ScienceParseDocument(id, title, year, authors, abstractText, sections, references)
@@ -39,10 +40,17 @@ object ScienceParseClient {
     Author(name, affiliations)
   }
 
+  //new line is there to make sure comment-like sections are not concatenated into sentences
+  //textEnginePreprocessor substitutes \n with a period or space downstream
   def mkSection(json: ujson.Js): Section = {
     val heading = json.obj.get("heading").map(_.str)
     val text = json("text").str
-    Section(heading, text)
+    val headingAndText = {
+      if (heading == None) text
+      else if (heading != None & text.isEmpty == true) heading.get
+      else heading.get + "\n" + text
+    }
+    Section(headingAndText)
   }
 
   def mkReference(json: ujson.Js): Reference = {

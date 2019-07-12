@@ -8,6 +8,7 @@ import org.clulab.odin._
 import org.clulab.processors.Sentence
 import org.clulab.struct.Interval
 import org.clulab.aske.automates.actions.ExpansionHandler._
+import org.clulab.utils.DisplayUtils
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -20,13 +21,33 @@ class ExpansionHandler() extends LazyLogging {
     // Yields not only the mention with newly expanded arguments, but also yields the expanded argument mentions
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
+    // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
     val res = mentions.flatMap(expandArgs(_, state))
 
     // Useful for debug
     res
   }
 
-  def expandArgs(m: Mention, state: State): Seq[Mention] = {
+  def expandArgs(mention: Mention, state: State): Seq[Mention] = {
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+    val sentLength: Double = mention.sentenceObj.getSentenceText.length
+    val normalChars: Double = mention.sentenceObj.getSentenceText.filter(c => valid contains c).length
+    val proportion = normalChars / sentLength
+    val threshold = 0.8 // fixme: tune
+//    println(s"$proportion --> ${mention.sentenceObj.getSentenceText}")
+    if (proportion > threshold) {
+      expandArgsWithSyntax(mention, state)
+    } else {
+      expandArgsWithSurface(mention, state)
+    }
+  }
+
+  // fixme: not expanding!
+  def expandArgsWithSurface(m: Mention, state: State): Seq[Mention] = {
+    Seq(m)
+  }
+
+  def expandArgsWithSyntax(m: Mention, state: State): Seq[Mention] = {
     // Helper method to figure out which mentions are the closest to the trigger
     def distToTrigger(trigger: Option[TextBoundMention], m: Mention): Int = {
       if (trigger.isDefined) {
@@ -39,9 +60,9 @@ class ExpansionHandler() extends LazyLogging {
           // mention to the right of the trigger
           math.abs(m.start - t.end)
         } else {
-          logger.debug(s"Unexpected overlap of trigger and argument: \n\t" +
+          logger.debug(s"distToTrigger: Unexpected overlap of trigger and argument: \n\t" +
             s"sent: [${m.sentenceObj.getSentenceText}]\n\tRULE: " +
-            s"${t.foundBy}\n\ttrigger: ${t.text}\torig: [${m.text}]\n")
+            s"${m.foundBy}\n\ttrigger: ${t.text}\torig: [${m.text}]\n")
           m.start
         }
       } else {
@@ -64,7 +85,7 @@ class ExpansionHandler() extends LazyLogging {
       val expandedArgs = new ArrayBuffer[Mention]
       // Expand each one, updating the state as we go
       for (argToExpand <- sortedClosestFirst) {
-        val expanded = expandIfNotAvoid(argToExpand, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
+        val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m)
         expandedArgs.append(expanded)
         // Add the mention to the ones to avoid so we don't suck it up
         stateToAvoid = stateToAvoid.updated(Seq(expanded))
@@ -91,8 +112,13 @@ class ExpansionHandler() extends LazyLogging {
 
   // Do the expansion, but if the expansion causes you to suck up something we wanted to avoid, split at the
   // avoided thing and keep the half containing the original (pre-expansion) entity.
-  def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State): Mention = {
-    val expanded = expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
+  // todo: Currently we are only expanding TextBound Mentions, if another type is passed we return it un-expanded
+  // we should perhaps revisit this
+  def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention): Mention = {
+    val expanded = orig match {
+      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
+      case _ => orig
+    }
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
 
     // split expanded at trigger (only thing in state to avoid)
@@ -112,9 +138,13 @@ class ExpansionHandler() extends LazyLogging {
             //throw new RuntimeException("original mention overlaps trigger")
             // This shouldn't happen, but Odin seems to handle this situation gracefully (by not extracting anything),
             // I guess here we'll do the same (i.e., not throw an exception)
-            logger.debug(s"Unexpected overlap of trigger and argument: \n\t" +
+            logger.debug(s"ExpandIfNotAvoid: Unexpected overlap of trigger and argument: \n\t" +
               s"sent: [${orig.sentenceObj.getSentenceText}]\n\tRULE: " +
               s"${trigger.foundBy}\n\ttrigger: ${trigger.text}\torig: [${orig.text}]\n")
+            logger.debug(s"Trigger sent: [${trigger.sentenceObj.getSentenceText}]")
+            logger.debug(DisplayUtils.mentionToDisplayString(m))
+            println("STATETOAVOID:")
+            stateToAvoid.allMentions.foreach(DisplayUtils.displayMention)
             orig
           }
         } else {
@@ -223,10 +253,10 @@ class ExpansionHandler() extends LazyLogging {
     (
       VALID_OUTGOING.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
         ! INVALID_OUTGOING.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
-      ) || (
-      // Allow exception to close parens, etc.
-      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
-      )
+      ) // || (
+//      // Allow exception to close parens, etc.
+//      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
+//      )
   }
 
   /** Ensure incoming dependency may be safely traversed */
@@ -368,7 +398,10 @@ object ExpansionHandler {
     "^nmod_since".r,
     "^nmod_without$".r,
     "^punct".r,
-    "^ref$".r
+    "^ref$".r,
+    "appos".r,
+    //"nmod_for".r,
+    "nmod".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
@@ -388,16 +421,18 @@ object ExpansionHandler {
     //    "^acl_to".r, // replaces vmod
     //    "xcomp".r, // replaces vmod
     //    // Changed from processors......
-    //    "^nmod".r, // replaces prep_
+//        "^nmod_at".r, // replaces prep_
     //    //    "case".r
     //    "^ccomp".r
     ".+".r
   )
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
-    "^amod$".r,
-    "^compound$".r,
-    "^nmod_of".r
+//    "^nmod_for".r
+//    "^amod$".r,
+//    "^compound$".r//,
+    //"^nmod_of".r
+    "nmod_under".r
   )
 
   def apply() = new ExpansionHandler()

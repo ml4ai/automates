@@ -1,0 +1,116 @@
+###ENTITIES###
+
+
+#  - name: var_is_defined
+#    label: Variable
+#    priority: ${priority}
+#    type: token
+#    example: "E0 is calculated as the product of Kcd and ETpm."
+#    pattern: |
+#      @Concept (?= [lemma = "be"] /correlated|defined|calculated|obtained/ /with|as|from/)
+#
+#  - name: var_calculate
+#    label: Variable
+#    priority: ${priority}
+#    type: token
+#    example: "The approach uses model-simulated LAI to calculate the Kcb."
+#    pattern: |
+#      (?<= calculate) @Concept
+
+#  - name: var_indices
+#    label: Variable
+#    priority: ${priority}
+#    type: token
+#    example: "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
+#    pattern: |
+#      (?<= indexed by) @Concept
+
+
+# - name: var_verb
+#   label: Variable
+#   priority: 4
+#   type: dependency
+#   example: "The approach uses model-simulated LAI to calculate the Kcb. E0 is calculated as the product of Kcd and ETpm."
+#   pattern: |
+#     trigger = [lemma=/calculate|define/]
+#     Variable:Concept+ = (dobj | nsubjpass) appos?
+#     #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+
+# - name: where-value_is
+#   label: Variable
+#   priority: 2
+#   type: token
+#   pattern: |
+#     (?<=where) @Concept (?=is)
+
+
+###DEFINITIONS###
+
+
+#  - name: var_from_appendix #todo need the engine manager for long sentences where this rule can work
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "We achieve the above by learning the transformation matrix as follows: W = UtBU ⊤ s , where Ut and Us are the orthogonal transformations for target and source language embeddings, respectively, and B is a positive definite matrix representing the Mahalanobis metric."
+#    pattern: |
+#      @variable:Variable (?<definition> [word = /.*/ & !word="-LRB-"]+)
+#      #@variable:Variable (?<defintion> [word = /.*/] (@Concept[!word="-LRB-" & !tag=/^VB/])+)
+
+
+#todo changing the var_def_appos_bidir rule to a dependency version seemed to help with some cases, but broke downstream; would like to revisit
+#  - name: var_def_appos_bidir_dep
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+#    action: selectShorterAsVariable
+#    pattern: |
+#      trigger = [word="-LRB-"]
+#      c1:Concept = <punct
+#      c2:Concept = <punct <appos
+
+
+
+#  - name: var_definition_appos
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+#    #action: variableArguments
+#    pattern: |
+#        @variable:Variable "-LRB-" @definition:Concept "-RRB-"
+
+
+###VALUES###
+
+#  - name: var-more_than_symbol
+#    label: ParameterSetting
+#    priority: ${priority}
+#    type: token
+#    #action: variableArguments
+#    example: "but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
+#    pattern: |
+#      (?<variable> [word = /.*/ & !tag="CD"]) ">" (value:Value [tag = "CD"])
+
+
+
+
+#  - name: var-less_than_symbol
+#    label: ParameterSetting
+#    priority: ${priority}
+#    type: dependency
+#    #action: variableArguments
+#    example: "but simulated yield decreased rapidly for Kcbmax < 1.15 (fig. 6a)."
+#    pattern: |
+#      (?<variable> [word = /.*/ & !tag="CD"]) "<" (value:Value [tag = "CD"])
+
+#substituted this rule with a dependency one
+#  - name: var_equals_def #needed bc of bad parse
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "T = daily mean air temperature [°C]"
+#    #action: variableArguments
+#    pattern: |
+#      (?<variable> [word = /.*/]{1}) (?<trigger> [word = "=" ]) (an|a|the)? (?! [tag=CD]) @definition:Concept

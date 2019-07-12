@@ -5,7 +5,7 @@ case class ScienceParseDocument(
   title: Option[String],
   year: Int,
   authors: Vector[Author],
-  abstractText: String,
+  abstractText: Option[String],
   sections: Vector[Section],
   references: Vector[Reference]
 )
@@ -16,8 +16,7 @@ case class Author(
 )
 
 case class Section(
-  heading: Option[String],
-  text: String
+  headingAndText: String
 )
 
 case class Reference(

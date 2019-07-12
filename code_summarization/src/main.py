@@ -17,17 +17,13 @@ def main(args):
     torch.manual_seed(17)   # Randomly seed PyTorch
 
     # Load train, dev, test iterators with auto-batching and pretrained vectors
-    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size)
+    (train, dev, test, code_vecs, comm_vecs) = utils.load_all_data(args.batch_size, args.corpus)
 
-    # Pick a model to train
-    if args.model == "both":
-        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu)
-    elif args.model == "code":
-        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_comm=False)
-    elif args.model == "comm":
-        model = cl.CodeCommClassifier(code_vecs, comm_vecs, gpu=args.use_gpu, use_code=False)
-    else:
-        raise RuntimeError("Unidentified model type selected")
+    # Create model
+    model = cl.CodeCommClassifier(code_vecs,
+                                  comm_vecs,
+                                  gpu=args.use_gpu,
+                                  model_type=args.model)
 
     # Load a saved model
     if args.load != "":
@@ -36,7 +32,8 @@ def main(args):
     # Discover available CUDA devices and use DataParallelism if possible
     devices = list(range(torch.cuda.device_count()))
     if len(devices) > 1:
-        model = nn.DataParallel(model, device_ids=devices)
+        print("Using {} GPUs!!".format(len(devices)))
+        model = nn.DataParallel(model)
 
     # Send model to GPU for processing
     if args.use_gpu:
@@ -44,11 +41,16 @@ def main(args):
 
     # Do training
     if args.epochs > 0:
+        print("Training {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         # Adam optimizer works, SGD fails to train the network for any batch size
         optimizer = optim.Adam(model.parameters(), args.learning_rate)
+        class_weights = torch.tensor([10.])
+        if args.use_gpu:
+            class_weights = class_weights.cuda()
         for epoch in range(args.epochs):
             model.train()           # Set the model to training mode
             with tqdm(total=len(train), desc="Epoch {}/{}".format(epoch+1, args.epochs)) as pbar:
+                total_loss = 0
                 for b_idx, batch in enumerate(train):
                     # model.zero_grad()
                     optimizer.zero_grad()   # Clear current gradient
@@ -63,12 +65,15 @@ def main(args):
 
                     # Get loss from log(softmax())
                     loss = F.binary_cross_entropy_with_logits(outputs.view(-1),
-                                                              truth.view(-1))
+                                                              truth.view(-1),
+                                                              pos_weight=class_weights)
 
                     loss.backward()                         # Propagate loss
                     optimizer.step()                        # Update the optimizer
 
-                    curr_loss = loss.item()
+                    new_loss = loss.item()
+                    total_loss += new_loss
+                    curr_loss = total_loss / (b_idx + 1)
                     pbar.set_postfix(batch_loss=curr_loss)
                     pbar.update()
 
@@ -83,13 +88,17 @@ def main(args):
 
     # Save the DEV set evaluations
     if args.eval_dev:
+        print("Evaluating Dev for {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         scores = score_dataset(model, dev)
-        utils.save_scores(scores, "../data/scores_dev.pkl")
+        dev_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_{}_gpus_scores_dev.pkl".format(args.model, args.batch_size, args.corpus, len(devices))
+        utils.save_scores(scores, dev_score_path)
 
     # Save the TEST set evaluations
     if args.eval_test:
+        print("Evaluating Dev for {} model w/ batch_sz={} on {} dataset".format(args.model, args.batch_size, args.corpus))
         scores = score_dataset(model, test)
-        utils.save_scores(scores, "../data/scores_test.pkl")
+        test_score_path = utils.CODE_CORPUS / "results" / "{}_{}_{}_{}_gpus_scores_test.pkl".format(args.model, args.batch_size, args.corpus, len(devices))
+        utils.save_scores(scores, test_score_path)
 
 
 def score_dataset(model, dataset):
@@ -145,11 +154,15 @@ if __name__ == '__main__':
 
     parser.add_argument("-b", "--batch_size", type=int,
                         help="size of batch",
-                        default=50)
+                        default=30)
 
     parser.add_argument("-r", "--learning-rate", type=float,
                         help="learning rate",
                         default=1e-3)
+
+    parser.add_argument("-c", "--corpus", type=str,
+                        help="Dataset to use for classification",
+                        default="random_draw")
 
     parser.add_argument("-g", "--use_gpu", dest="use_gpu", action="store_true",
                         help="indicate whether to use CPU or GPU")

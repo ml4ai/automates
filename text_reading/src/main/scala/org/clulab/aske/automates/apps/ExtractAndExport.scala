@@ -4,9 +4,11 @@ import java.io.File
 import java.io.FileWriter
 import java.io.BufferedWriter
 
+import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.{DataLoader, OdinEngine}
-import org.clulab.utils.{Configured, DisplayUtils, FileUtils, Serializer}
+import org.clulab.aske.automates.data.DataLoader
+import org.clulab.aske.automates.OdinEngine
+import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s.jackson.JsonMethods._
@@ -17,7 +19,7 @@ import org.json4s.jackson.JsonMethods._
   * formats are specified in the config file (located in src/main/resources).
   * This makes ONE output file for each of the input files.
   */
-object ExtractAndExport extends App with Configured {
+object ExtractAndExport extends App {
 
   def getExporter(exporterString: String, filename: String): Exporter = {
     exporterString match {
@@ -28,15 +30,15 @@ object ExtractAndExport extends App with Configured {
   }
 
   val config = ConfigFactory.load("automates")
-  override def getConf: Config = config
 
-  val inputDir = getArgString("apps.inputDirectory", None)
-  val outputDir = getArgString("apps.outputDirectory", None)
-  val inputExtension = getArgString("apps.inputFileExtension", None)
-  val dataLoader = DataLoader.selectLoader(inputExtension) // txt or json are supported, and we assume json == science parse json
-  val exportAs = getArgStrings("apps.exportAs", None)
-  val files = FileUtils.findFiles(inputDir, inputExtension)
-  val reader = new OdinEngine()
+
+  val inputDir = config[String]("apps.inputDirectory")
+  val outputDir = config[String]("apps.outputDirectory")
+  val inputType = config[String]("apps.inputType")
+  val dataLoader = DataLoader.selectLoader(inputType) // txt or json are supported, and we assume json == science parse json
+  val exportAs: List[String] = config[List[String]]("apps.exportAs")
+  val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+  val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
 
   // For each file in the input directory:
   files.par.foreach { file =>

@@ -7,6 +7,9 @@ import org.clulab.odin.impl.Taxonomy
 import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
+import org.clulab.aske.automates.OdinEngine._
+import org.clulab.aske.automates.entities.EntityHelper
+import org.clulab.struct.Interval
 
 
 
@@ -16,9 +19,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     if (expansionHandler.nonEmpty) {
       // expand arguments
-      val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
+      //val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
+      //val expanded = expansionHandler.get.expandArguments(expandable, state)
+      //keepLongest(expanded) ++ textBounds
+
+      val (expandable, other) = mentions.partition(m => m matches "Definition")
       val expanded = expansionHandler.get.expandArguments(expandable, state)
-      keepLongest(expanded) ++ textBounds
+      keepLongest(expanded) ++ other
+
+
       //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
       //val result = mostComplete ++ textBounds
     } else {
@@ -74,6 +83,95 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield copyWithLabel(arg, "Variable")
 
     mentionsDisplayOnlyArgs
+  }
+
+  def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    def foundBy(base: String) = s"$base++selectShorter"
+
+    def mkDefinitionMention(m: Mention): Seq[Mention] = {
+      val outer = m.arguments("c1").head
+      val inner = m.arguments("c2").head
+      val sorted = Seq(outer, inner).sortBy(_.text.length)
+      // The longest mention (i.e., the definition) should be at least 3 characters, else it's likely a false positive
+      // todo: tune
+      // todo: should we constrain on the length of the variable name??
+      // looksLikeAVariable is there to eliminate some false negatives, e.g., 'radiometer' in 'the Rn device (radiometer)':
+      // might need to revisit
+      if (sorted.last.text.length < 3 || looksLikeAVariable(Seq(sorted.head), state).isEmpty) {
+        return Seq.empty
+      }
+      val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
+      val definition = changeLabel(sorted.last, DEFINITION_LABEL) // the longest if the definition
+      val defMention = m match {
+        case rm: RelationMention => rm.copy(
+          arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
+          foundBy=foundBy(rm.foundBy),
+          tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
+//         case em: EventMention => em.copy(//alexeeva wrote this to try to try to fix an appos. dependency rule todo: what seems to need don
+        //is changing the keys in 'paths' to variable and defintion bc as of now they show up downstream (in the expansion handler) as c1 and c2
+//           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
+//           foundBy=foundBy(em.foundBy),
+//           tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
+        case _ => ???
+      }
+      Seq(variable, defMention)
+//      Seq(defMention)
+    }
+
+    mentions.flatMap(mkDefinitionMention)
+  }
+
+
+  def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      m <- mentions
+      words = m match {
+      case tb: TextBoundMention => m.words
+      case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head.words
+      case em: EventMention => m.arguments.getOrElse("variable", Seq()).head.words
+      case _ => ???
+    }
+      if words.length == 1
+      word = m.words.head
+      if word.length <= 6
+      if word.toLowerCase != word // mixed case or all UPPER
+    } yield m
+  }
+
+  def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      //every mention in array...
+      m <- mentions
+      //get the split text of the suspected unit
+      unitTextSplit = m match {
+          //for tbs, the text of the unit, is the text of the whole mention
+        case tb: TextBoundMention => m.text.split(" ")
+          //for relation and event mentions, the unit is the value of the arg with the argName "unit"
+        case _ => {
+          val unitArgs = m.arguments.getOrElse("unit", Seq())
+          if (unitArgs.nonEmpty) {
+            unitArgs.head.text.split(" ")
+          }
+          unitArgs.head.text.split(" ")
+        }
+
+      }
+      //the pattern to check if the suspected unit contains dashes (e.g., m-1), slashes (e.g., MJ/kg, or square brackets
+      //didn't add digits bc that resulted in more false positives (e.g., for years)
+      pattern = "[-/\\[\\]]".r
+      //negative pattern checks if the suspected unit contains char-s that should not be present in a unit
+      negPattern = "[<>=]".r
+      //the length constraints: the unit should consist of no more than 5 words and the first word of the unit should be no longer than 3 characters long (heuristics)
+      if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || pattern.findFirstIn(unitTextSplit.mkString(" ")).nonEmpty ) && negPattern.findFirstIn(unitTextSplit.mkString(" ")).isEmpty
+    } yield m
+  }
+
+  def changeLabel(orig: Mention, label: String): Mention = {
+    orig match {
+      case tb: TextBoundMention => tb.copy(labels = taxonomy.hypernymsFor(label))
+      case rm: RelationMention => rm.copy(labels = taxonomy.hypernymsFor(label))
+      case em: EventMention => em.copy(labels = taxonomy.hypernymsFor(label))
+    }
   }
 
 }
