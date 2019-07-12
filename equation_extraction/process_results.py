@@ -12,7 +12,8 @@ import random
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
-from collect_data import render_equation, mk_template, run_command
+from collect_data import render_equation, mk_template
+from utils import run_command
 from image_utils import remove_background, resize, pixel_is_white
 
 def parse_args():
