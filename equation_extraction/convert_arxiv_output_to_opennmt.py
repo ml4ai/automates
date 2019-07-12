@@ -4,7 +4,7 @@ import sys
 import json
 import numpy as np
 # from sklearn.model_selection import train_test_split
-from collect_data import run_command
+from utils import run_command
 
 def mkdir(dir):
     if not os.path.exists(dir):

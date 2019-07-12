@@ -15,6 +15,7 @@ import numpy as np
 from skimage import img_as_ubyte
 from pdf2image import convert_from_path
 from latex import LatexTokenizer, find_main_tex_file
+from utils import run_command
 from datetime import datetime
 
 
@@ -79,14 +80,6 @@ def render_tex(filename, outdir, keep_intermediate):
     else:
         pdf_name = None
     return pdf_name
-
-
-def run_command(cmd, dirname, log_fn):
-    with open(log_fn, 'w') as logfile:
-        p = subprocess.Popen(cmd, stdout=logfile, stderr=subprocess.STDOUT, cwd=dirname)
-        p.communicate()
-        return_code = p.wait()
-        return return_code
 
 
 def render_equation(equation, template, filename, keep_intermediate):
