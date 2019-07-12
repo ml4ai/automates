@@ -1,6 +1,6 @@
 import argparse
 import os
-from collect_data import run_command
+from utils import run_command
 
 def parse_args():
     parser = argparse.ArgumentParser()
