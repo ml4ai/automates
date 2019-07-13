@@ -8,7 +8,7 @@ The work on program analysis has focused on extending the set of Fortran languag
 
 In addition to these items, we also worked on handling a number of other language constructs in Fortran, including derived types and SAVE statements.
 
-As an estimate of the extent to which we can handle the DSSAT code base: of the 162,290 lines of Fortran source code in the 669 source files in DSSAT (not counting comments, which we handle separately), we are able to cover 143,743 lines, which works out to a coverage of 88.6%.  An analysis of the constructs that are currently not handled shows two conclusions:
+As an estimate of the extent to which we can handle the DSSAT code base: of the 162,290 lines of Fortran source code in the 669 source files in DSSAT (not counting comments, which we handle separately), we are able to cover 144,370 lines, which works out to a coverage of 89.0%.  An analysis of the constructs that are currently not handled shows two conclusions:
 
-1) The number of remaining unhandled language constructs is not very large (24 keywords).
+1) The number of remaining unhandled language constructs is not very large (22 keywords).
 2) A small number specific coding patterns, e.g., the mixing of single- and double-quotes in strings, together account for a large fraction of the remaining unhandled lines (i.e., other than the unhandled language constructs mentioned above).  The issues raised do not seem to be particularly difficult technically, and we expect to address them as we work down our prioritized list of goals.
