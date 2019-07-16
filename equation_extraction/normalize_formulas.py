@@ -2,19 +2,23 @@ import argparse
 import os
 from itertools import izip
 from utils import run_command
+from PIL import Image
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--indir', default='.', help='directory with the src and tgt train, val, and test files')
     parser.add_argument('--logfile', default='normalize_formulas.log')
     parser.add_argument('--im2markupdir', default='im2markup', help='path to the im2markup repo, assumes our edits to the repo')
+    parser.add_argument('--folds', default='train,val,test', help='folds to process')
+    parser.add_argument('--ignore_size', action='store_true')
     args = parser.parse_args()
     return args
 
-def mk_file_paths(indir):
+# folds by default is ['train', 'val', 'test']
+def mk_file_paths(indir, folds):
     srcs = []
     tgts = []
-    for fold in ['train', 'val', 'test']:
+    for fold in folds:
         srcs.append(os.path.join(indir, 'src_{0}.txt'.format(fold)))
         tgts.append(os.path.join(indir, 'tgt_{0}.txt'.format(fold)))
     return srcs, tgts
@@ -39,11 +43,12 @@ def norm_files(files, im2latex_dir, logfile):
         run_command(cmd, im2latex_dir, logfile)
     return pruned_files
 
-def prune_failed_formulas(src_files, normed_tgt_files, logfile):
+def prune_failed_formulas(src_files, normed_tgt_files, logfile, ignore_size):
     assert len(src_files) == len(normed_tgt_files)
     for i in range(len(src_files)):
         src_file = src_files[i]
         tgt_file = normed_tgt_files[i]
+        imgdir = os.path.join(os.path.dirname(src_file), 'images')
         # assumes a `.***` extension
         src_out_name = src_file[:-4] + "-pruned.txt"
         tgt_out_name = tgt_file[:-4] + "-pruned.txt"
@@ -51,17 +56,32 @@ def prune_failed_formulas(src_files, normed_tgt_files, logfile):
         with open(src_file, 'r') as src, open(tgt_file, 'r') as tgt, open(logfile, 'a') as log:
             with open(src_out_name, 'w') as src_out, open(tgt_out_name, 'w') as tgt_out:
                 for src_line, tgt_line in izip(src, tgt):
-                    if not tgt_line.strip() == 'XXXXXXXXXX':
-                        src_out.write(src_line)
-                        tgt_out.write(tgt_line)
-                    else:
-                        log.write("EQN failed and removed:\t" + src_line.strip() + "\t" + tgt_line)
+                    tgt_line_stripped = tgt_line.strip()
+                    image_path = os.path.join(imgdir, src_line.strip())
+                    print image_path
+                    if os.path.exists(image_path):
+                        keep = False
+                        if ignore_size:
+                            keep = True
+                        else:
+                            img = Image.open(image_path)
+                            w, h = img.size
+                            if w < 900 and h < 200:
+                                keep = True
+                        if keep:
+                            if not tgt_line_stripped == 'XXXXXXXXXX' and not tgt_line_stripped == '':
+                                src_out.write(src_line)
+                                tgt_out.write(tgt_line)
+                            else:
+                                log.write("EQN failed and removed:\t" + src_line.strip() + "\t" + tgt_line)
+                        else:
+                            print "image too large, removed", w, h
 
 
 if __name__ == '__main__':
     args = parse_args()
     # 1) get the files, in order (train, val, test) for src and tgt
-    src_files, tgt_files = mk_file_paths(args.indir)
+    src_files, tgt_files = mk_file_paths(args.indir, args.folds.split(","))
     print "src files:", src_files
     print "tgt files:", tgt_files
 
@@ -76,5 +96,5 @@ if __name__ == '__main__':
 
     # 4) prune images/equations that katex (in the normalization script) couldn't handle
     print "pruning failed formulas..."
-    prune_failed_formulas(src_files, normed_tgt_files, args.logfile)
+    prune_failed_formulas(src_files, normed_tgt_files, args.logfile, args.ignore_size)
     print "Finished."
