@@ -86,7 +86,8 @@ def skeletonize(img):
 augmenters = [blur, downsample, closing, skeletonize]
 
 def select_random_augmentation(img):
-    return np.random.choice(augmenters)
+    f = np.random.choice(augmenters)
+    return f(img)
 
 if __name__ == '__main__':
 
