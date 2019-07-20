@@ -123,4 +123,4 @@ def augment_randomly(src, tgt, imgdir, src_out_name, tgt_out_name, img_out):
 
 if __name__ == '__main__':
     args = parse_args()
-    augment_randomly(args.src, args.tgt, args.imdir, args.src_out, args.tgt_out, args.img_out)
+    augment_randomly(args.src, args.tgt, args.imgdir, args.src_out, args.tgt_out, args.img_out)
