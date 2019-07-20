@@ -39,21 +39,13 @@ def downsample_func(rescale_factor):
     def func_images_downsample(images, random_state, parents, hooks):
         results = []
         for img in images:
-            print(img.dtype)
-            print(img.shape)
             img = np.squeeze(img)
-            print(img.shape)
             height, width = img.shape[:2]
-            # img = gray2rgb(img)
             new_img = Image.fromarray(img)
             height = int(height * rescale_factor)
             width = int(width * rescale_factor)
             downsampled = new_img.resize((width, height), Image.LANCZOS)
             downsampled = np.array(downsampled)
-            # print(height, width)
-    # downsampled = cv2.resize(img, None, fx=rescale_factor, fy=rescale_factor, interpolation=cv2.INTER_LANCZOS4)
-            # downsampled = cv2.resize(img, (width, height), interpolation=cv2.INTER_LANCZOS4)
-            # downsampled = rgb2gray(downsampled)
             downsampled = np.expand_dims(downsampled, axis=2)
             results.append(downsampled)
         return results
