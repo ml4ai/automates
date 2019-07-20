@@ -5,7 +5,8 @@ build-essential python-pip cython texlive-full latexmk biber graphviz \
 chktex dot2tex imagemagick python-opencv python-plastex python-jinja2 \
 python-skimage poppler-utils python-pypdf2 python-poppler \
 && rm -rf /var/lib/apt/lists/*
-RUN pip install pdf2image
+RUN pip install pdf2image imgaug
+RUN pip install -U scikit-image
 # replace imagemagick's policy with our own to enable PDF support
 COPY misc/policy.xml /etc/ImageMagick-6/policy.xml
 RUN mkdir -p /equation_extraction/misc
