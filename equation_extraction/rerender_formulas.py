@@ -101,23 +101,26 @@ def augment_randomly(src, tgt, imgdir, src_out_name, tgt_out_name, img_out):
 
             # Load the image
             orig_image = io.imread(orig_image_abs_path)
+            # The skeleton augmentation requires for there to be more than one color in the image,
+            # but more broadly, if the image is all one color, it doesn't make sense to augment it
+            if orig_image.min() != orig_image.max():
 
-            # Choose an augmentation (flip a coin)
-            augmented_image, augmentation_string = select_random_augmentation(orig_image)
+                # Choose an augmentation (flip a coin)
+                augmented_image, augmentation_string = select_random_augmentation(orig_image)
 
-            # Augmented image name and paths
-            img_out_subdir = os.path.basename(img_out)
-            augmented_img_rel_path = orig_image_base + "_{0}.png".format(augmentation_string)
-            augmented_img_abs_path = os.path.join(img_out, augmented_img_rel_path)
-            # The augmented images will be in a subdir, so include that subdir in the line written to src file
-            augmented_im_src_line = os.path.join(img_out_subdir, augmented_img_rel_path) + "\n"
+                # Augmented image name and paths
+                img_out_subdir = os.path.basename(img_out)
+                augmented_img_rel_path = orig_image_base + "_{0}.png".format(augmentation_string)
+                augmented_img_abs_path = os.path.join(img_out, augmented_img_rel_path)
+                # The augmented images will be in a subdir, so include that subdir in the line written to src file
+                augmented_im_src_line = os.path.join(img_out_subdir, augmented_img_rel_path) + "\n"
 
-            # Save
-            io.imsave(augmented_img_abs_path, augmented_image)
+                # Save
+                io.imsave(augmented_img_abs_path, augmented_image)
 
-            # Save the relative img path and the tokens to the data augmentation src and tgt files
-            src_out.write(augmented_im_src_line)
-            tgt_out.write(tgt_line)
+                # Save the relative img path and the tokens to the data augmentation src and tgt files
+                src_out.write(augmented_im_src_line)
+                tgt_out.write(tgt_line)
 
 
 
