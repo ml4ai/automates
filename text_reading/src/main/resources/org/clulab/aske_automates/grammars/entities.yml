@@ -82,3 +82,12 @@ rules:
     pattern: |
       [word=/^DSSAT|^CSM/]
 
+
+  - name: var_greek
+    label: Variable
+    priority: ${priority}
+    type: token
+    example: "a per-capita rate γ"
+    pattern: |
+      [entity=/B-variable/]
+
