@@ -1,0 +1,47 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{natbib}
+\usepackage{amssymb,amsmath}
+
+\begin{document}
+
+\title{Simple Epidemiological Models.}
+
+\maketitle
+
+\section{SIR model}
+
+The susceptible-infected-recovered (SIR) model in a closed population was
+proposed by~\cite{kermack1927contribution} as a special case of a more general
+model, and forms the framework of many compartmental models.  Susceptible
+individuals, $S$, are infected by infected individuals, $I$, at a per-capita
+rate $\beta I$, and infected individuals recover at a per-capita rate $\gamma$
+to become recovered individuals, $R$.
+
+\begin{align}
+\frac{dS(t)}{dt} &= -\beta S(t) I(t)\\
+\frac{dI(t)}{dt} &= \beta S(t) I(t)- \gamma I(t)\\
+\frac{dR(t)}{dt} &= \gamma I(t)
+\end{align}
+
+\section{SEIR model}
+
+The susceptible-exposed-infected-recovered (SEIR) model extends the SIR model
+to include an exposed but non-infectious class. The implementation in this
+section considers proportions of susceptibles, exposed, infectious individuals
+in an open population, with no additional mortality associated with infection
+(such that the population size remains constant and $R$ is not modelled
+explicitly).
+
+\begin{align}
+\frac{dS(t)}{dt} &= \mu-\beta S(t) I(t) - \mu S(t)\\
+\frac{dE(t)}{dt} &= \beta S(t) I(t)- (\sigma + \mu) E(t)\\
+\frac{dI(t)}{dt} &= \sigma E(t)- (\gamma + \mu) I(t)\\
+\frac{dR(t)}{dt} &= \gamma I(t) = \mu R
+\end{align}
+
+\bibliographystyle{plain}
+\bibliography{main}
+
+\end{document}
