@@ -21,8 +21,10 @@ import scala.io.Source
 object ExtractAndAlign {
 
   val logger = LoggerFactory.getLogger(this.getClass())
-
-  def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
+  //version for petpt
+//  def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
+  //version for sir
+  def ltrim(s: String): String = s.replaceAll("^C\\s{0,5}", "")
 
   def parseCommentText(text: String, filename: Option[String] = None): Document = {
     val proc = new FastNLPProcessor()
@@ -51,7 +53,7 @@ object ExtractAndAlign {
       println(line)
     }
     println("-->" + lines_combined.length)
-    val doc = proc.annotate(lines_combined.mkString(". "), keepText = true)
+    val doc = proc.annotateFromSentences(lines_combined, keepText = true)
     doc.id = filename
     doc
   }
@@ -106,6 +108,7 @@ object ExtractAndAlign {
       val texts = commentDataLoader.loadFile(file)
       // Parse the comment texts
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
+
       // Iterate through the docs and find the mentions
       val mentions = docs.map(doc => commentReader.extractFrom(doc))
 
