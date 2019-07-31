@@ -27,13 +27,16 @@ object ExtractAndAlign {
   def parseCommentText(text: String, filename: Option[String] = None): Document = {
     val proc = new FastNLPProcessor()
     //val Docs = Source.fromFile(filename).getLines().mkString("\n")
+
+    //todo: check why comments that start with "!" are filtered out (e.g., !      do i = 0, Tmax).
     val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1 //makes sure the line is not empty
       && sent.replaceAll("\\s*[C!]", "!") //getting rid of space before the C or ! to make it easier to check in the next line if the line is a comment
       .startsWith("!")) //in the previous line we made sure all comment lines now start with a "!"---now making sure only these are kept for reading.   todo: is there a regex version of startsWith? Needed to get rid of the previous line.
       yield ltrim(sent)
+
     var lines_combined = Array[String]()
     // which lines we want to ignore (for now, may change later)
-    val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES)".r
+    val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES|Variables|State variables)".r
 
     for (line <- lines if ignoredLines.findAllIn(line).isEmpty) {
       if (line.startsWith(" ")) {
