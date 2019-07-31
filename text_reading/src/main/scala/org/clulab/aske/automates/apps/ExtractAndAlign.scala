@@ -147,8 +147,9 @@ object ExtractAndAlign {
     // ----------------------------------
     // Generates (src idx, dst idx, score tuples) -- exhaustive
     val commentToTextAlignments: Seq[Alignment] = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     // group by src idx, and keep only top k (src, dst, score) for each src idx
-    val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments)
+    val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold)
 
 
     // ----------------------------------
