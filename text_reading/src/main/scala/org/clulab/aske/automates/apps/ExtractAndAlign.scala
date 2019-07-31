@@ -21,10 +21,8 @@ import scala.io.Source
 object ExtractAndAlign {
 
   val logger = LoggerFactory.getLogger(this.getClass())
-  //version for petpt
-//  def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
-  //version for sir
-  def ltrim(s: String): String = s.replaceAll("^C\\s{0,5}", "")
+
+  def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
 
   def parseCommentText(text: String, filename: Option[String] = None): Document = {
     val proc = new FastNLPProcessor()
