@@ -17,18 +17,18 @@ import scala.collection.mutable.ArrayBuffer
 // things diff for diff languages
 class ExpansionHandler() extends LazyLogging {
 
-  def expandArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def expandArguments(mentions: Seq[Mention], state: State, validArgs: Array[String]): Seq[Mention] = {
     // Yields not only the mention with newly expanded arguments, but also yields the expanded argument mentions
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
-    val res = mentions.flatMap(expandArgs(_, state))
+    val res = mentions.flatMap(expandArgs(_, state, validArgs: Array[String]))
 
     // Useful for debug
     res
   }
 
-  def expandArgs(mention: Mention, state: State): Seq[Mention] = {
+  def expandArgs(mention: Mention, state: State, validArgs: Array[String]): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
     val sentLength: Double = mention.sentenceObj.getSentenceText.length
     val normalChars: Double = mention.sentenceObj.getSentenceText.filter(c => valid contains c).length
@@ -36,18 +36,18 @@ class ExpansionHandler() extends LazyLogging {
     val threshold = 0.8 // fixme: tune
 //    println(s"$proportion --> ${mention.sentenceObj.getSentenceText}")
     if (proportion > threshold) {
-      expandArgsWithSyntax(mention, state)
+      expandArgsWithSyntax(mention, state, validArgs: Array[String])
     } else {
-      expandArgsWithSurface(mention, state)
+      expandArgsWithSurface(mention, state, validArgs: Array[String])
     }
   }
 
   // fixme: not expanding!
-  def expandArgsWithSurface(m: Mention, state: State): Seq[Mention] = {
+  def expandArgsWithSurface(m: Mention, state: State, validArgs: Array[String]): Seq[Mention] = {
     Seq(m)
   }
 
-  def expandArgsWithSyntax(m: Mention, state: State): Seq[Mention] = {
+  def expandArgsWithSyntax(m: Mention, state: State, validArgs: Array[String]): Seq[Mention] = {
     // Helper method to figure out which mentions are the closest to the trigger
     def distToTrigger(trigger: Option[TextBoundMention], m: Mention): Int = {
       if (trigger.isDefined) {
@@ -85,7 +85,7 @@ class ExpansionHandler() extends LazyLogging {
       val expandedArgs = new ArrayBuffer[Mention]
       // Expand each one, updating the state as we go
       for (argToExpand <- sortedClosestFirst) {
-        val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m)
+        val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m, validArgs)
         expandedArgs.append(expanded)
         // Add the mention to the ones to avoid so we don't suck it up
         stateToAvoid = stateToAvoid.updated(Seq(expanded))
@@ -114,9 +114,9 @@ class ExpansionHandler() extends LazyLogging {
   // avoided thing and keep the half containing the original (pre-expansion) entity.
   // todo: Currently we are only expanding TextBound Mentions, if another type is passed we return it un-expanded
   // we should perhaps revisit this
-  def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention): Mention = {
+  def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention, validArgs: Array[String]): Mention = {
     val expanded = orig match {
-      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
+      case tbm: TextBoundMention if (validArgs.contains(tbm.label)) => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
       case _ => orig
     }
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")

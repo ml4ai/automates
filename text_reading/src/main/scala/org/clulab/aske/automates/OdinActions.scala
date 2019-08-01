@@ -24,7 +24,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       //keepLongest(expanded) ++ textBounds
 
       val (expandable, other) = mentions.partition(m => m matches "Definition")
-      val expanded = expansionHandler.get.expandArguments(expandable, state)
+      val validArgs = Array("definition") //todo: get from configs
+      val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepLongest(expanded) ++ other
 
 
@@ -132,6 +133,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val greek = Array("beta", "gamma") //todo: add more or read from tsv
     for {
       m <- mentions
       words = m match {
@@ -143,7 +145,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if words.length == 1
       word = m.words.head
       if word.length <= 6
-      if word.toLowerCase != word // mixed case or all UPPER
+      if (word.toLowerCase != word | greek.contains(word)) // mixed case or all UPPER or is a greek letter
     } yield m
   }
 
