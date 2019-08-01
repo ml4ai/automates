@@ -51,21 +51,11 @@ rules:
       definition: Concept = <cop (?! case) nmod_for?
 
 
-  - name: sort_of_appos_with_coefficient
-    label: Definition
-    priority: ${priority}
-    type: token
-    example: "Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
-    #    action: looksLikeAVariable #TODO:check why the action filters these out
-    pattern: |
-      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN|JJ/]{2,5}) (?<variable> [entity = B-GreekLetter])
-
-
   - name: sort_of_appos
     label: Definition
     priority: ${priority}
     type: token
-    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc."
+    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
     #    action: looksLikeAVariable #TODO:check why the action filters these out
     pattern: |
       (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN|JJ/ & !entity = "B-GreekLetter"]{2,5}) @variable:Variable #(?! [chunk = I-NP])

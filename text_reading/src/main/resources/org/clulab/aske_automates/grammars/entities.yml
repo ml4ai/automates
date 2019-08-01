@@ -89,5 +89,5 @@ rules:
     type: token
     example: "a per-capita rate γ"
     pattern: |
-      [entity=/B-GreekLetter/]
+      [entity="B-GreekLetter"]
 
