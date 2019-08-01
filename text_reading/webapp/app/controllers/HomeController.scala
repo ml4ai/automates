@@ -139,15 +139,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def mkGroundedObj(mentions: Vector[Mention]): String = {
     var objectToReturn = ""
 
-    // Entities
-    val entities = mentions.filter(_ matches "Entity")
-    if (entities.nonEmpty){
-      objectToReturn += "<h2>Found Entities:</h2>"
-      for (entity <- entities) {
-        objectToReturn += s"${DisplayUtils.webAppMention(entity)}"
-      }
-    }
-
+    //return events and relations first---those tend to be the ones we are most interested in and having them come first will help avoid scrolling through the entities first
     // collect relation mentions for display
     val relations = mentions.flatMap {
       case m: RelationMention => Some(m)
@@ -159,6 +151,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       objectToReturn += s"<h2>Found Events:</h2>"
       for (event <- events) {
         objectToReturn += s"${DisplayUtils.webAppMention(event)}"
+      }
+    }
+
+    // Entities
+    val entities = mentions.filter(_ matches "Entity")
+    if (entities.nonEmpty){
+      objectToReturn += "<h2>Found Entities:</h2>"
+      for (entity <- entities) {
+        objectToReturn += s"${DisplayUtils.webAppMention(entity)}"
       }
     }
 
