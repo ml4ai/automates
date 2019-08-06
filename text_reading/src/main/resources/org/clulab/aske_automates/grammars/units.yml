@@ -30,7 +30,7 @@ rules:
     action: looksLikeAUnit
     example: "a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23"
     pattern: |
-      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = "CD" & !word = /\(|\)|-LRB-|-RRB-|to|and/]+
+      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = "CD" & !word = /\(|\)|-LRB-|-RRB-|to|and|\]/]+
       #required for non-standard units, e.g., s m-1
       #todo: check if can just add 'to' and 'and' to avoids
 

@@ -12,7 +12,7 @@ rules:
     example: "T = daily mean air temperature [°C]"
     action: looksLikeAUnit
     pattern: |
-      @variable:Variable [word=/.*/]+ [word="["] (?<unit> [word = /.*/]+) (?=[word="]"])
+      @variable:Variable [word=/.*/]+ [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
 #
   - name: concept_paren_unit
     label: Unit
