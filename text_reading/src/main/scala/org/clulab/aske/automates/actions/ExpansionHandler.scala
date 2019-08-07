@@ -115,8 +115,9 @@ class ExpansionHandler() extends LazyLogging {
   // todo: Currently we are only expanding TextBound Mentions, if another type is passed we return it un-expanded
   // we should perhaps revisit this
   def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention, validArgs: Array[String]): Mention = {
+    print("===>" + validArgs + " " + orig.label)
     val expanded = orig match {
-      case tbm: TextBoundMention if (validArgs.contains(tbm.label)) => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
+      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid) //todo: the valid arg check was originally here, but didn't work (args didn't get labeled as 'definitions' here, so couldn't match that as a valid arg)
       case _ => orig
     }
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
@@ -399,9 +400,9 @@ object ExpansionHandler {
     "^nmod_without$".r,
     "^punct".r,
     "^ref$".r,
-    "appos".r,
+    "appos".r
     //"nmod_for".r,
-    "nmod".r
+//    "nmod".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
