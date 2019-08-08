@@ -13,7 +13,7 @@ import org.clulab.struct.Interval
 
 
 
-class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler]) extends Actions with LazyLogging {
+class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler], validArgs: List[String]) extends Actions with LazyLogging {
 
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
@@ -24,7 +24,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       //keepLongest(expanded) ++ textBounds
 
       val (expandable, other) = mentions.partition(m => m matches "Definition")
-      val validArgs = Array("definition") //todo: get from configs
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepLongest(expanded) ++ other
 
@@ -180,12 +179,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 object OdinActions {
 
-  def apply(taxonomyPath: String, enableExpansion: Boolean) =
+  def apply(taxonomyPath: String, enableExpansion: Boolean, validArgs: List[String]) =
     {
       val expansionHandler = if(enableExpansion) {
       Some(ExpansionHandler())
       } else None
-      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler)
+      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler, validArgs)
     }
 
   def readTaxonomy(path: String): Taxonomy = {

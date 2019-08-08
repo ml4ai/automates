@@ -17,18 +17,18 @@ import scala.collection.mutable.ArrayBuffer
 // things diff for diff languages
 class ExpansionHandler() extends LazyLogging {
 
-  def expandArguments(mentions: Seq[Mention], state: State, validArgs: Array[String]): Seq[Mention] = {
+  def expandArguments(mentions: Seq[Mention], state: State, validArgs: List[String]): Seq[Mention] = {
     // Yields not only the mention with newly expanded arguments, but also yields the expanded argument mentions
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
-    val res = mentions.flatMap(expandArgs(_, state, validArgs: Array[String]))
+    val res = mentions.flatMap(expandArgs(_, state, validArgs))
 
     // Useful for debug
     res
   }
 
-  def expandArgs(mention: Mention, state: State, validArgs: Array[String]): Seq[Mention] = {
+  def expandArgs(mention: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
     val sentLength: Double = mention.sentenceObj.getSentenceText.length
     val normalChars: Double = mention.sentenceObj.getSentenceText.filter(c => valid contains c).length
@@ -36,18 +36,18 @@ class ExpansionHandler() extends LazyLogging {
     val threshold = 0.8 // fixme: tune
 //    println(s"$proportion --> ${mention.sentenceObj.getSentenceText}")
     if (proportion > threshold) {
-      expandArgsWithSyntax(mention, state, validArgs: Array[String])
+      expandArgsWithSyntax(mention, state, validArgs)
     } else {
-      expandArgsWithSurface(mention, state, validArgs: Array[String])
+      expandArgsWithSurface(mention, state, validArgs)
     }
   }
 
   // fixme: not expanding!
-  def expandArgsWithSurface(m: Mention, state: State, validArgs: Array[String]): Seq[Mention] = {
+  def expandArgsWithSurface(m: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
     Seq(m)
   }
 
-  def expandArgsWithSyntax(m: Mention, state: State, validArgs: Array[String]): Seq[Mention] = {
+  def expandArgsWithSyntax(m: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
     // Helper method to figure out which mentions are the closest to the trigger
     def distToTrigger(trigger: Option[TextBoundMention], m: Mention): Int = {
       if (trigger.isDefined) {
