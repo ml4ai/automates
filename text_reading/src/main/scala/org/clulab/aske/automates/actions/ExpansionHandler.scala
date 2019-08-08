@@ -80,25 +80,30 @@ class ExpansionHandler() extends LazyLogging {
     // Make the new arguments
     val newArgs = scala.collection.mutable.HashMap[String, Seq[Mention]]()
     for ((argType, argMentions) <- m.arguments) {
-      // Sort, because we want to expand the closest first so they don't get subsumed
-      val sortedClosestFirst = argMentions.sortBy(distToTrigger(trigger, _))
-      val expandedArgs = new ArrayBuffer[Mention]
-      // Expand each one, updating the state as we go
-      for (argToExpand <- sortedClosestFirst) {
-        val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m, validArgs)
-        expandedArgs.append(expanded)
-        // Add the mention to the ones to avoid so we don't suck it up
-        stateToAvoid = stateToAvoid.updated(Seq(expanded))
+      if (validArgs.contains(argType)) {
+        // Sort, because we want to expand the closest first so they don't get subsumed
+        val sortedClosestFirst = argMentions.sortBy(distToTrigger(trigger, _))
+        val expandedArgs = new ArrayBuffer[Mention]
+        // Expand each one, updating the state as we go
+        for (argToExpand <- sortedClosestFirst) {
+          val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m)
+          expandedArgs.append(expanded)
+          // Add the mention to the ones to avoid so we don't suck it up
+          stateToAvoid = stateToAvoid.updated(Seq(expanded))
+        }
+        // Handle attachments
+        // todo: here we aren't really using attachments, but we can add them back in as needed
+        val attached = expandedArgs
+          //.map(addSubsumedAttachments(_, state))
+          //.map(attachDCT(_, state))
+          //.map(addOverlappingAttachmentsTextBounds(_, state))
+          .map(EntityHelper.trimEntityEdges)
+        // Store
+        newArgs.put(argType, attached)
+      } else {
+        newArgs.put(argType, argMentions)
       }
-      // Handle attachments
-      // todo: here we aren't really using attachments, but we can add them back in as needed
-      val attached = expandedArgs
-        //.map(addSubsumedAttachments(_, state))
-        //.map(attachDCT(_, state))
-        //.map(addOverlappingAttachmentsTextBounds(_, state))
-        .map(EntityHelper.trimEntityEdges)
-      // Store
-      newArgs.put(argType, attached)
+
     }
     // Return the event with the expanded args as well as the arg mentions themselves
     Seq(copyWithNewArgs(m, newArgs.toMap)) ++ newArgs.values.toSeq.flatten
@@ -114,10 +119,9 @@ class ExpansionHandler() extends LazyLogging {
   // avoided thing and keep the half containing the original (pre-expansion) entity.
   // todo: Currently we are only expanding TextBound Mentions, if another type is passed we return it un-expanded
   // we should perhaps revisit this
-  def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention, validArgs: Array[String]): Mention = {
-    print("===>" + validArgs + " " + orig.label)
+  def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention): Mention = {
     val expanded = orig match {
-      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid) //todo: the valid arg check was originally here, but didn't work (args didn't get labeled as 'definitions' here, so couldn't match that as a valid arg)
+      case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid)
       case _ => orig
     }
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")

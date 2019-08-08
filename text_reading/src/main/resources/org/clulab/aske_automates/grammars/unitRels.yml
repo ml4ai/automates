@@ -2,7 +2,6 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-
   ####UNIT RELATIONS####
 
   - name: var_unit_rel
@@ -48,7 +47,6 @@ rules:
       trigger = [tag = "CD"]
       variable: Concept = <nummod </nmod_of|nmod_between/
       unit: Unit = <nummod
-
 
   - name: var_equals_value_unit
     label: Unit

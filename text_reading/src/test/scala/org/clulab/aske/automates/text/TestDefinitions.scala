@@ -7,7 +7,7 @@ class TestDefinitions extends ExtractionTest {
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
 
   val t1a = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-  passingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
+  failingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
       "Kcs" -> Seq("Crop coefficients")
     )

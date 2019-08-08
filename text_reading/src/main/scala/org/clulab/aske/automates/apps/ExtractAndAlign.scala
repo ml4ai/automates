@@ -109,7 +109,6 @@ object ExtractAndAlign {
       val texts = commentDataLoader.loadFile(file)
       // Parse the comment texts
       val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
-
       // Iterate through the docs and find the mentions
       val mentions = docs.map(doc => commentReader.extractFrom(doc))
 

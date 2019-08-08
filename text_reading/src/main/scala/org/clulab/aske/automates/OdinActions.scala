@@ -86,15 +86,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentionsDisplayOnlyArgs
   }
 
-  def unitArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val mentionsDisplayOnlyArgs = for {
-      m <- mentions
-      arg <- m.arguments.values.flatten
-    } yield copyWithLabel(arg, "Unit")
-
-    mentionsDisplayOnlyArgs
-  }
-
   def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
 
@@ -133,7 +124,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val greek = Array("beta", "gamma") //todo: add more or read from tsv
+    val greek = Array("alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega") //todo: read from tsv?
     for {
       m <- mentions
       words = m match {
