@@ -9,6 +9,6 @@ rules:
     priority: ${priority}
     type: token
     example: "EEQ Equilibrium evaporation (mm/d)"
-    #action: variableArguments
+    action: looksLikeAUnit
     pattern: |
-      @variable:Variable ([word = /.*/ & !word="-LRB-"]+) ([word="-LRB-"]) (?<Unit> [word=/.*/]+) ([word="-RRB-"])
+      @variable:Variable ([word = /.*/ & !word=/-LRB-|\(/]+) ([word=/-LRB-|\(/]) (?<unit> [word=/.*/]+) ([word=/\)|-RRB-/])

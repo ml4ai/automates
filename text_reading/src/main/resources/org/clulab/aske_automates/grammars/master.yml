@@ -25,6 +25,10 @@ rules:
     vars:
       priority: 5 # fixme -- likely not the # you want
 
+  - import: "org/clulab/aske_automates/grammars/unitRels.yml"
+    vars:
+      priority: 6 # fixme -- likely not the # you want
+
 
   - import: "org/clulab/aske_automates/grammars/template.yml"
     vars:

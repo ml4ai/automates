@@ -20,6 +20,7 @@ class OdinEngine(
   taxonomyPath: String,
   val entityFinders: Seq[EntityFinder],
   enableExpansion: Boolean,
+  validArgs: List[String],
   filterType: Option[String],
   enablePreprocessor: Boolean) {
 
@@ -38,6 +39,7 @@ class OdinEngine(
     // These are the values which can be reloaded.  Query them for current assignments.
     val actions: OdinActions,
     val engine: ExtractorEngine,
+
   )
 
   object LoadableAttributes {
@@ -45,9 +47,8 @@ class OdinEngine(
     def apply(): LoadableAttributes = {
       // Reread these values from their files/resources each time based on paths in the config file.
       val masterRules = FileUtils.getTextFromResource(masterRulesPath)
-      val actions = OdinActions(taxonomyPath, enableExpansion)
+      val actions = OdinActions(taxonomyPath, enableExpansion, validArgs)
       val extractorEngine = ExtractorEngine(masterRules, actions, actions.globalAction)
-
       new LoadableAttributes(
         actions,
         extractorEngine
@@ -113,12 +114,14 @@ object OdinEngine {
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
   val VARIABLE_LABEL: String = "Variable"
+  val UNIT_LABEL: String = "Unit"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
-  val VALUE_LEAST_ARG: String = "ValueLeast"
-  val VALUE_MOST_ARG: String = "ValueMost"
+  val VALUE_LEAST_ARG: String = "valueLeast"
+  val VALUE_MOST_ARG: String = "valueMost"
   val DEFINITION_ARG: String = "definition"
   val VALUE_ARG: String = "value"
+  val UNIT_ARG: String = "unit"
 
   val logger = LoggerFactory.getLogger(this.getClass())
   // Used by LexiconNER
@@ -154,9 +157,10 @@ object OdinEngine {
 //    } else None
 
     // expansion: used to optionally expand mentions in certain situations to get more complete text spans
+    val validArgs: List[String] = odinConfig[List[String]]("validArgs")
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
 
-    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, filterType, enablePreprocessor)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, validArgs, filterType, enablePreprocessor)
   }
 
 }

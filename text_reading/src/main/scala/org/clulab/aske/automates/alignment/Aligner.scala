@@ -89,11 +89,12 @@ object Aligner {
     }
   }
 
-  def topKBySrc(alignments: Seq[Alignment], k: Int): Seq[Seq[Alignment]] = {
+  def topKBySrc(alignments: Seq[Alignment], k: Int, scoreThreshold: Double = 0.0): Seq[Seq[Alignment]] = {
     val grouped = alignments.groupBy(_.src).toSeq
     for {
       (srcIdx, aa) <- grouped
-      topK = aa.sortBy(-_.score).slice(0,k)
+      topK = aa.sortBy(-_.score).slice(0,k).filter(_.score > scoreThreshold) //filter out those with the score below the threshold; threshold is 0 by default
+      if topK.nonEmpty
     } yield topK
   }
 

@@ -11,7 +11,7 @@ rules:
     priority: 1
     type: token
     example: "E0 is calculated as the product of Kcd and ETpm."
-#    action: looksLikeAVariable
+    action: looksLikeAVariable
     pattern: |
       ^[chunk="B-NP" & !tag="CD"]
 

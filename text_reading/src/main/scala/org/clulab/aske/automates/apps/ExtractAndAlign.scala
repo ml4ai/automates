@@ -27,13 +27,16 @@ object ExtractAndAlign {
   def parseCommentText(text: String, filename: Option[String] = None): Document = {
     val proc = new FastNLPProcessor()
     //val Docs = Source.fromFile(filename).getLines().mkString("\n")
-    val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1) yield ltrim(sent)
+    val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1 //make sure line is not empty
+        && sent.stripMargin.replaceAll("^\\s*[C!]", "!") //switch two different comment start symbols to just one
+        .startsWith("!")) //check if the line is a comment based on the comment start symbol (todo: is there a regex version of startWith to avoide prev line?
+          yield ltrim(sent)
     var lines_combined = Array[String]()
     // which lines we want to ignore (for now, may change later)
-    val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES)".r
+    val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES|Variables|State variables)".r
 
     for (line <- lines if ignoredLines.findAllIn(line).isEmpty) {
-      if (line.startsWith(" ")) {
+      if (line.startsWith(" ") && lines.indexOf(line)!=0) { //todo: this does not work if there happens to be more than five spaces between the comment symbol and the comment itself---will probably not happen too frequently. We shouldn't make it much more than 5---that can effect the lines that are indented because they are continuations of previous lines---that extra indentation is what helps us know it's not a complete line.
         var prevLine = lines(lines.indexOf(line)-1)
         if (lines_combined.contains(prevLine)) {
           prevLine = prevLine + " " + ltrim(line)
@@ -47,11 +50,11 @@ object ExtractAndAlign {
         }
       }
     }
-    for (line <- lines_combined) {
-      println(line)
-    }
-    println("-->" + lines_combined.length)
-    val doc = proc.annotate(lines_combined.mkString(". "), keepText = true)
+
+    for (line <- lines_combined) println(line)
+    println("Number of lines passed to the comment reader: " + lines_combined.length)
+
+    val doc = proc.annotateFromSentences(lines_combined, keepText = true)
     doc.id = filename
     doc
   }
@@ -144,8 +147,9 @@ object ExtractAndAlign {
     // ----------------------------------
     // Generates (src idx, dst idx, score tuples) -- exhaustive
     val commentToTextAlignments: Seq[Alignment] = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     // group by src idx, and keep only top k (src, dst, score) for each src idx
-    val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments)
+    val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold)
 
 
     // ----------------------------------

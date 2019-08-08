@@ -38,7 +38,6 @@ rules:
       definition: Concept = /nmod_as|nmod_by|nmod_with|dobj/ nmod_of?
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
-
   - name: var_cop_definition
     label: Definition
     priority: ${priority}
@@ -54,11 +53,11 @@ rules:
     label: Definition
     priority: ${priority}
     type: token
-    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc."
-#    action: looksLikeAVariable #TODO:check why the action filters these out
+    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
+    #    action: looksLikeAVariable #TODO:check why the action filters these out
     pattern: |
-      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN/]{2,5}) @variable:Variable (?! [chunk = I-NP])
-#      (?<= [word = 'the']) (?<definition> [word = /.*/ & !chunk = /PP$/ & !word = /,/ & !tag = /CC/]{2,5}) @variable:Variable (?! [chunk = I-NP])
+      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN|JJ/ & !entity = "B-GreekLetter"]{2,5}) @variable:Variable #(?! [chunk = I-NP])
+      #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
 
   - name: comma_appos_var
     label: Definition

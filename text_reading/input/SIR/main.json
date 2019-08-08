@@ -1,0 +1,21 @@
+{
+  "sections": [{
+    "text": "Simple Deterministic Models\nJuly 24, 2019"
+  }, {
+    "heading": "1 SIR model",
+    "text": "The susceptible-infected-recovered (SIR) model in a closed population was proposed by [1] as a special case of a more general model, and forms the framework of many compartmental models. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βI, and infected individuals recover at a per-capita rate γ to become recovered individuals, R.\ndS(t)\ndt = −βS(t)I(t) (1)\ndI(t)\ndt = βS(t)I(t)− γI(t) (2)\ndR(t)\ndt = γI(t) (3)"
+  }, {
+    "heading": "2 SEIR model",
+    "text": "The susceptible-exposed-infected-recovered (SEIR) model extends the SIR model to include an exposed but non-infectious class. The implementation in this section considers proportions of susceptibles, exposed, infectious individuals in an open population, with no additional mortality associated with infection (such that the population size remains constant and R is not modelled explicitly).\ndS(t)\ndt = µ− βS(t)I(t)− µS(t) (4)\ndE(t)\ndt = βS(t)I(t)− (σ + µ)E(t) (5)\ndI(t)\ndt = σE(t)− (γ + µ)I(t) (6)\ndR(t)\ndt = γI(t) = µR (7)"
+  }],
+  "year": 2019,
+  "references": [{
+    "title": "A contribution to the mathematical theory of epidemics",
+    "authors": ["William Ogilvy Kermack", "Anderson G McKendrick"],
+    "venue": "Proceedings of the royal society of london. Series A, Containing papers of a mathematical and physical character,",
+    "year": 1927
+  }],
+  "id": "SP:b169b7042d5ab65b67472e59c859903cee477324",
+  "authors": [],
+  "title": "Simple Deterministic Models"
+}
