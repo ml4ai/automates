@@ -13,8 +13,9 @@ import cv2
 from matplotlib import pyplot as plt
 import numpy as np
 from collect_data import render_equation, mk_template
-from utils import run_command
+from utils import run_command, load_segments
 from image_utils import remove_background, resize, pixel_is_white
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -27,12 +28,6 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def load_segments(filename):
-    with open(filename) as infile:
-        lines = infile.readlines()
-        lines = [line.strip() for line in lines]
-        return lines
-
 def save_text(filename, texts):
     with open(filename, 'w') as outfile:
         for t in texts:
@@ -43,11 +38,15 @@ def save_text(filename, texts):
 # and return a list of images.  Note, if the latex doesn't compile, the image will be None.
 # Currently we're not keeping intermediate files.
 def mk_images(equations, template, dir, prefix):
+    print(f"making {prefix} images...")
     mkdir(dir)
     imgs = []
     for idx, eqn in enumerate(equations):
         tex_filename = os.path.join(dir, "{0}_{1}.tex".format(prefix, idx))
-        eqn_image = render_equation(eqn, template, filename=tex_filename, keep_intermediate=False)
+        print(f"making image: {tex_filename}")
+        eqn_image = render_equation(dict(equation=eqn), template, filename=tex_filename, keep_intermediate=False)
+        if eqn_image is None:
+            eqn_image = np.zeros(shape=[50, 100, 3], dtype=np.uint8)
         eqn_image = cv2.cvtColor(eqn_image, cv2.COLOR_BGR2RGBA)
         imgs.append(eqn_image)
     return imgs
@@ -63,7 +62,7 @@ def score(predicted, predicted_imgs, gold, gold_imgs):
 
 def mk_score_report(scores):
     print(scores)
-    return str(scores) #fixme
+    return str([(k,v) for k,v in scores.items()]) #fixme
 
 def mkdir(dir):
     if not os.path.exists(dir):
@@ -84,23 +83,27 @@ def save_results(outdir, report, side_by_side, overlapping, pred, gold):
     save_text(os.path.join(inputdir, "gold.txt"), gold)
     # Save the reports
     # TODO this isn't a string yet
-    save_text(os.path.join(reportsdir, "score_report.txt"), report)
-    overlapping.savefig(os.path.join(reportsdir, "overlap_and_diff.pdf"))
-    side_by_side.savefig(os.path.join(reportsdir, "side_by_side.pdf"))
+    save_text(os.path.join(reportsdir, "score_report.txt"), [report])
+    overlapping.savefig(os.path.join(reportsdir, "overlap_and_diff.pdf"), format='pdf', dpi=1200)
+    side_by_side.savefig(os.path.join(reportsdir, "side_by_side.pdf"), format='pdf', dpi=1200)
 
 def generate_side_by_side(predicted_imgs, gold_imgs, indices):
     interleaved = [img for pair in zip(gold_imgs, predicted_imgs) for img in pair]
     # TODO: revisit -- temporary
-    fig = plt.figure(figsize=(8, 8))
     columns = 2
     rows = len(gold_imgs)
+
+    fig = plt.figure(figsize=(8, 0.8*rows))
+
     # add images as subplots
     for i in range(0, min(columns * rows, len(interleaved))):
         img = interleaved[i]
         fig.add_subplot(rows, columns, i+1)
         plt.imshow(img)
         if i%2==0:
-            plt.ylabel(str(indices[int(i/2)]), rotation=0)
+            # plt.title(str(indices[int(i / 2)]))
+            plt.ylabel(str(indices[int(i/2)]), rotation=90)
+            plt.tight_layout()
         plt.xticks([])
         plt.yticks([])
     fig.suptitle("Side-by-Side comparison of gold (left) and predicted (right)")
@@ -146,16 +149,29 @@ if __name__ == '__main__':
     # Set the random seed, used for the image downsampling
     if args.img_sample > 0:
         random.seed(args.seed)
+        np.random.seed(args.seed)
 
     # Load the predicted and gold equations
     predicted = load_segments(args.pred)
     gold = load_segments(args.gold)
 
-    # sys.exit()
     # render the latex equations, returning None if compilation failed
     template = mk_template(args.template)
-    predicted_imgs = mk_images(predicted, template, '/Users/bsharp/tmp', "pred") #fixme with qqc with full path
-    gold_imgs = mk_images(gold, template, '/Users/bsharp/tmp', "gold")
+
+    selected_indices = range(len(gold))
+    if args.img_sample > 0:
+        indices = np.arange(0,len(predicted))
+        np.random.shuffle(indices)
+        selected_indices = sorted(indices[:args.img_sample])
+        predicted_sample = np.array(predicted)[selected_indices]
+        gold_sample = np.array(gold)[selected_indices]
+    else:
+        predicted_sample = predicted
+        gold_sample = gold
+
+    # todo: option to load the images already made?
+    predicted_imgs = mk_images(predicted_sample, template, '/Users/bsharp/tmp', "pred") #fixme with qqc with full path
+    gold_imgs = mk_images(gold_sample, template, '/Users/bsharp/tmp', "gold")
 
 
     # Calculate all scores, where scores: Dict[String, Float]
@@ -164,15 +180,10 @@ if __name__ == '__main__':
     # Output the various score reports and analysis documents
     report = mk_score_report(scores)
 
-    selected_indices = range(len(gold_imgs))
-    if args.img_sample > 0:
-        selected_indices = sorted(np.random.shuffle(range(len(predicted_imgs)))[:args.img_sample])
-        predicted_imgs = np.array(predicted_imgs)[selected_indices]
-        gold_imgs = np.array(gold_imgs)[selected_indices]
-
-    # Make the images the same size
     predicted_imgs, gold_imgs, _, _ = resize(predicted_imgs, gold_imgs, num_channels=4)
+
     side_by_side = generate_side_by_side(predicted_imgs, gold_imgs, selected_indices)
-    overlapping = generate_overlapping(predicted_imgs, gold_imgs, selected_indices)
+    # overlapping = generate_overlapping(predicted_imgs, gold_imgs, selected_indices)
+    overlapping = side_by_side
 
     save_results(args.outdir, report, side_by_side, overlapping, predicted, gold)
