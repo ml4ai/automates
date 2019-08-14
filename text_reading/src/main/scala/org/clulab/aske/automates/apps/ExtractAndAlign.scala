@@ -116,17 +116,23 @@ object ExtractAndAlign {
     }
 
     // Grfn
-    val grfnFile: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later?
-    val grfn = GrFNParser.mkDocument(new File(grfnFile))
-    val grfnVars = GrFNDocument.getVariables(grfn)
-    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
+    val grfnPath: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later?
+    val grfnFile = new File(grfnPath)
+    //    val grfn = GrFNParser.mkDocument(new File(grfnFile))
+//    val grfnVars = GrFNDocument.getVariables(grfn)
+//    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
+
+    val grfn = ujson.read(grfnFile.readString())
+    val variableNames = grfn("variables").arr.map(_.obj("name").str)
+    val variableShortNames = ???
+
 
     // Align the comment definitions to the GrFN variables
     val numAlignments = config[Int]("apps.numAlignments")
     val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
     val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
 
-    val varNameAlignments = variableNameAligner.alignTexts(variableNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
+    val varNameAlignments = variableNameAligner.alignTexts(variableShortNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
     val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
 
 
@@ -173,6 +179,34 @@ object ExtractAndAlign {
     // Export alignment:
     val outputDir = config[String]("apps.outputDirectory")
 
+    // Make Comment Spans from the comment variable mentions
+    val commentLinkElems = commentDefinitionMentions.map{ commentMention =>
+      val elemType = "comment_span"
+      val source = ""
+      val content = ""
+      val contentType = ""
+      mkLinkElement(elemType, source, content, contentType)
+    }
+
+    // Repeat for src code variables
+
+    // Repeat for text variables
+
+    // Repeat for Eqn Variables
+
+    // Make Link Hypotheses
+    val hypotheses =
+    for (topk <- topKAlignments) {
+      for (alignment <- topk) {
+        val commentLinkElement = commentLinkElems(alignment.src)
+        val textLinkElement = textLinkElems(alignment.dst)
+        val score = alignment.score
+        val hypothesis = mkHypothesis(commentLinkElement, textLinkElement, score)
+      }
+    }
+
+
+
     // Map the Comment Variables (from Definition Mentions) to a Seq[GrFNVariable]
     val commentGrFNVars = commentDefinitionMentions.map{ commentDef =>
       val name = commentDef.arguments("variable").head.text + "_COMMENT"
@@ -218,4 +252,18 @@ object ExtractAndAlign {
     val score = a.score
     GrFNAlignment(srcVar, dstVar, score)
   }
+
+  def mkLinkElement(elemType: String, source: String, content: String, contentType: String): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> elemType,
+      "source" -> source,
+      "content" -> content,
+      "content_type" -> contentType
+    )
+    linkElement
+  }
+
+  def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = ???
 }
+
+
