@@ -13,7 +13,7 @@ rules:
     pattern: |
       trigger = [word = "="]
       variable: Variable = <dep | "nmod:npmod"
-      definition: Concept = dobj | dep
+      definition: Concept = (dobj | dep) [!entity = "NUMBER"]
 
   - name: var_definition_appos_bidir
     label: Definition
@@ -35,7 +35,7 @@ rules:
     pattern: |
       trigger = [word=/(?i)^defin|represent|=/]
       variable:Concept = /${agents}/
-      definition: Concept = /nmod_as|nmod_by|nmod_with|dobj/ nmod_of?
+      definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
   - name: var_cop_definition
@@ -47,7 +47,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Concept = <cop /${agents}/
-      definition: Concept = <cop (?! case) nmod_for?
+      definition: Concept = <cop (?! case) nmod_for? [!entity = "NUMBER"]
 
   - name: sort_of_appos
     label: Definition
@@ -65,7 +65,7 @@ rules:
     type: token
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      @definition: Concept "," @variable:Variable
+      (@definition: Concept [!entity = "NUMBER"]) "," @variable:Variable (?! [lemma = "be"])
 #
 
 

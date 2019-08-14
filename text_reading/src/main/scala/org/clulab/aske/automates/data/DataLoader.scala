@@ -43,7 +43,7 @@ class ScienceParsedDataLoader extends DataLoader {
     // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
     //the heading and the text of the section are currently combined; might need to be revisted
     val scienceParseDoc = mkDocument(f)
-    scienceParseDoc.sections.map(_.headingAndText)
+    scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
   }
   override val extension: String = "json"
 }
