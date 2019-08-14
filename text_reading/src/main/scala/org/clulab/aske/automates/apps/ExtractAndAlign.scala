@@ -16,6 +16,7 @@ import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import upickle.default._
 
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 object ExtractAndAlign {
@@ -28,19 +29,19 @@ object ExtractAndAlign {
     val proc = new FastNLPProcessor()
     //val Docs = Source.fromFile(filename).getLines().mkString("\n")
     val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1 //make sure line is not empty
-        && sent.stripMargin.replaceAll("^\\s*[C!]", "!") //switch two different comment start symbols to just one
-        .startsWith("!")) //check if the line is a comment based on the comment start symbol (todo: is there a regex version of startWith to avoide prev line?
-          yield ltrim(sent)
+      && sent.stripMargin.replaceAll("^\\s*[C!]", "!") //switch two different comment start symbols to just one
+      .startsWith("!")) //check if the line is a comment based on the comment start symbol (todo: is there a regex version of startWith to avoide prev line?
+      yield ltrim(sent)
     var lines_combined = Array[String]()
     // which lines we want to ignore (for now, may change later)
     val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES|Variables|State variables)".r
 
     for (line <- lines if ignoredLines.findAllIn(line).isEmpty) {
-      if (line.startsWith(" ") && lines.indexOf(line)!=0) { //todo: this does not work if there happens to be more than five spaces between the comment symbol and the comment itself---will probably not happen too frequently. We shouldn't make it much more than 5---that can effect the lines that are indented because they are continuations of previous lines---that extra indentation is what helps us know it's not a complete line.
-        var prevLine = lines(lines.indexOf(line)-1)
+      if (line.startsWith(" ") && lines.indexOf(line) != 0) { //todo: this does not work if there happens to be more than five spaces between the comment symbol and the comment itself---will probably not happen too frequently. We shouldn't make it much more than 5---that can effect the lines that are indented because they are continuations of previous lines---that extra indentation is what helps us know it's not a complete line.
+        var prevLine = lines(lines.indexOf(line) - 1)
         if (lines_combined.contains(prevLine)) {
           prevLine = prevLine + " " + ltrim(line)
-          lines_combined = lines_combined.slice(0, lines_combined.length-1)
+          lines_combined = lines_combined.slice(0, lines_combined.length - 1)
           lines_combined = lines_combined :+ prevLine
         }
       }
@@ -69,8 +70,8 @@ object ExtractAndAlign {
     // Instantiate the comment reader
     val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
     // todo: future readers
-//    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
-//    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
+    //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
+    //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
     val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
 
     // Load text input from directory
@@ -92,7 +93,6 @@ object ExtractAndAlign {
 
 
     // todo: We probably want a separate comment reader for each model....? i.e. PETPT vs PETASCE
-
 
 
     // Load the comment input from directory/file
@@ -119,12 +119,14 @@ object ExtractAndAlign {
     val grfnPath: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later?
     val grfnFile = new File(grfnPath)
     //    val grfn = GrFNParser.mkDocument(new File(grfnFile))
-//    val grfnVars = GrFNDocument.getVariables(grfn)
-//    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
+    //    val grfnVars = GrFNDocument.getVariables(grfn)
+    //    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
 
     val grfn = ujson.read(grfnFile.readString())
     val variableNames = grfn("variables").arr.map(_.obj("name").str)
-    val variableShortNames = ???
+    val variableShortNames = for (
+      name <- variableNames
+    ) yield name.split("::").reverse.slice(1, 2).mkString("")
 
 
     // Align the comment definitions to the GrFN variables
@@ -142,14 +144,14 @@ object ExtractAndAlign {
 
     // ----------------------------------
     // Debug:
-//    val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
-//    for (m <- textDefinitionMentions) {
-//      pw.println("**************************************************")
-//      pw.println(m.sentenceObj.getSentenceText)
-//      DisplayUtils.printMention(m, pw)
-//      pw.println("")
-//    }
-//    pw.close()
+    //    val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
+    //    for (m <- textDefinitionMentions) {
+    //      pw.println("**************************************************")
+    //      pw.println(m.sentenceObj.getSentenceText)
+    //      DisplayUtils.printMention(m, pw)
+    //      pw.println("")
+    //    }
+    //    pw.close()
     // ----------------------------------
     // Generates (src idx, dst idx, score tuples) -- exhaustive
     val commentToTextAlignments: Seq[Alignment] = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
@@ -180,77 +182,64 @@ object ExtractAndAlign {
     val outputDir = config[String]("apps.outputDirectory")
 
     // Make Comment Spans from the comment variable mentions
-    val commentLinkElems = commentDefinitionMentions.map{ commentMention =>
+    val commentLinkElems = commentDefinitionMentions.map { commentMention =>
       val elemType = "comment_span"
-      val source = ""
-      val content = ""
-      val contentType = ""
+      val source = grfn("source").arr.head.str
+      val content = commentMention.text
+      val contentType = "null"
       mkLinkElement(elemType, source, content, contentType)
     }
 
     // Repeat for src code variables
+    val sourceLinkElements = variableNames.map { varName =>
+      val elemType = "identifier"
+      val source = grfn("source").arr.head.str
+      val content = varName
+      val contentType = "null"
+      mkLinkElement(elemType, source, content, contentType)
+    }
 
     // Repeat for text variables
 
+    val textLinkElements = textDefinitionMentions.map { mention =>
+      val elemType = "text_span"
+      val source = mention.document.id.getOrElse("unk_text_file") // fixme
+    val content = mention.text //todo add the relevant parts of the metnion var + def as a string --> smth readable
+    val contentType = "null"
+      mkLinkElement(elemType, source, content, contentType)
+    }
+
     // Repeat for Eqn Variables
 
-    // Make Link Hypotheses
-    val hypotheses =
+    // Make Link Hypotheses (text/comment)
+    val hypotheses = new ArrayBuffer[ujson.Obj]()
     for (topk <- topKAlignments) {
       for (alignment <- topk) {
         val commentLinkElement = commentLinkElems(alignment.src)
-        val textLinkElement = textLinkElems(alignment.dst)
+        val textLinkElement = textLinkElements(alignment.dst)
         val score = alignment.score
         val hypothesis = mkHypothesis(commentLinkElement, textLinkElement, score)
+        hypotheses.append(hypothesis)
       }
     }
 
-
-
-    // Map the Comment Variables (from Definition Mentions) to a Seq[GrFNVariable]
-    val commentGrFNVars = commentDefinitionMentions.map{ commentDef =>
-      val name = commentDef.arguments("variable").head.text + "_COMMENT"
-      val domain = "COMMENT"
-      val definition = commentDef.arguments("definition").head.text
-      val provenance = GrFNProvenance(definition, commentDef.document.id.getOrElse("COMMENT-UNK"), commentDef.sentence)
-      GrFNVariable(name, domain, Some(provenance))
+    for (topk <- top1ByVariableName) {
+      for (alignment <- topk) {
+        val variableLinkElement = sourceLinkElements(alignment.src)
+        val commentLinkElement = commentLinkElems(alignment.dst)
+        val score = alignment.score
+        val hypothesis = mkHypothesis(variableLinkElement, commentLinkElement, score)
+        hypotheses.append(hypothesis)
+      }
     }
-    // Map the Text Variables (from Definition Mentions) to a Seq[GrFNVariable]
-    val textGrFNVars = textDefinitionMentions.map{ textDef =>
-      val name = textDef.arguments("variable").head.text + "_TEXT"
-      val domain = "TEXT"
-      val definition = textDef.arguments("definition").head.text
-      val provenance = GrFNProvenance(definition, textDef.document.id.getOrElse("TEXT-UNK"), textDef.sentence)
-      GrFNVariable(name, domain, Some(provenance))
-    }
-    // All final GrFN variables
-    val topLevelVariables = grfnVars ++ commentGrFNVars ++ textGrFNVars
 
-    // Gather the alignments from src variable to comment definition
-    // srcSet is the sorted group of alignments for a particular src variable
-    val srcVarToCommentGrFNAlignments = top1ByVariableName.flatMap { srcSet =>
-      srcSet.map(a => mkGrFNAlignment(a, grfnVars, commentGrFNVars))
-    }
-    // Gather the alignments from comment definition to text definition
-    // srcSet is the sorted group of alignments for a particular src variable
-    val commentToTextGrFNAlignments = topKAlignments.flatMap { srcSet =>
-      srcSet.map(a => mkGrFNAlignment(a, commentGrFNVars, textGrFNVars))
-    }
-    // All final alignments
-    val topLevelAlignments = srcVarToCommentGrFNAlignments ++ commentToTextGrFNAlignments
-
-    val grfnToExport = GrFNDocument(grfn.functions, grfn.start, grfn.name, grfn.dateCreated, Some(topLevelVariables), Some(topLevelAlignments))
-    val grfnBaseName = new File(grfnFile).getBaseName()
-    val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_alignments.json")
-    grfnWriter.println(write(grfnToExport))
+    grfn("grounding") = hypotheses.toList
+    val grfnBaseName = new File(grfnPath).getBaseName()
+    val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_groundings.json")
+    ujson.writeTo(grfn, grfnWriter)
+//    grfnWriter.println(write(grfn.render()))
     grfnWriter.close()
-  }
 
-  def mkGrFNAlignment(a: Alignment, srcs: Seq[GrFNVariable], dsts: Seq[GrFNVariable]): GrFNAlignment = {
-    val srcVar = srcs(a.src).name
-    val dstVar = dsts(a.dst).name
-    val score = a.score
-    GrFNAlignment(srcVar, dstVar, score)
   }
 
   def mkLinkElement(elemType: String, source: String, content: String, contentType: String): ujson.Obj = {
@@ -263,7 +252,16 @@ object ExtractAndAlign {
     linkElement
   }
 
-  def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = ???
+  def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = {
+    val hypothesis = ujson.Obj(
+      "element_1" -> elem1,
+      "element_2" -> elem2,
+      "score" -> score
+    )
+    hypothesis
+  }
+
+
 }
 
 
