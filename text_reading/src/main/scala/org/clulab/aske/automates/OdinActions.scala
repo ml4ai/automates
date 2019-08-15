@@ -135,7 +135,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if words.length == 1
       word = m.words.head
       if word.length <= 6
-      if (word.toLowerCase != word | greek.contains(word)) // mixed case or all UPPER or is a greek letter
+      if (word.toLowerCase != word | greek.contains(word) | (word.length == 1 && word != "a")) // mixed case or all UPPER or is a greek letter or is one letter long and does not match the indefinite article "a" (todo: try to check tag != DT)
     } yield m
   }
 
