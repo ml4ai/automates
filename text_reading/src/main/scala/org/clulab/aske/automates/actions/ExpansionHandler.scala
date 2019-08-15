@@ -17,18 +17,18 @@ import scala.collection.mutable.ArrayBuffer
 // things diff for diff languages
 class ExpansionHandler() extends LazyLogging {
 
-  def expandArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def expandArguments(mentions: Seq[Mention], state: State, validArgs: List[String]): Seq[Mention] = {
     // Yields not only the mention with newly expanded arguments, but also yields the expanded argument mentions
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
-    val res = mentions.flatMap(expandArgs(_, state))
+    val res = mentions.flatMap(expandArgs(_, state, validArgs))
 
     // Useful for debug
     res
   }
 
-  def expandArgs(mention: Mention, state: State): Seq[Mention] = {
+  def expandArgs(mention: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
     val sentLength: Double = mention.sentenceObj.getSentenceText.length
     val normalChars: Double = mention.sentenceObj.getSentenceText.filter(c => valid contains c).length
@@ -36,18 +36,18 @@ class ExpansionHandler() extends LazyLogging {
     val threshold = 0.8 // fixme: tune
 //    println(s"$proportion --> ${mention.sentenceObj.getSentenceText}")
     if (proportion > threshold) {
-      expandArgsWithSyntax(mention, state)
+      expandArgsWithSyntax(mention, state, validArgs)
     } else {
-      expandArgsWithSurface(mention, state)
+      expandArgsWithSurface(mention, state, validArgs)
     }
   }
 
   // fixme: not expanding!
-  def expandArgsWithSurface(m: Mention, state: State): Seq[Mention] = {
+  def expandArgsWithSurface(m: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
     Seq(m)
   }
 
-  def expandArgsWithSyntax(m: Mention, state: State): Seq[Mention] = {
+  def expandArgsWithSyntax(m: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
     // Helper method to figure out which mentions are the closest to the trigger
     def distToTrigger(trigger: Option[TextBoundMention], m: Mention): Int = {
       if (trigger.isDefined) {
@@ -80,25 +80,30 @@ class ExpansionHandler() extends LazyLogging {
     // Make the new arguments
     val newArgs = scala.collection.mutable.HashMap[String, Seq[Mention]]()
     for ((argType, argMentions) <- m.arguments) {
-      // Sort, because we want to expand the closest first so they don't get subsumed
-      val sortedClosestFirst = argMentions.sortBy(distToTrigger(trigger, _))
-      val expandedArgs = new ArrayBuffer[Mention]
-      // Expand each one, updating the state as we go
-      for (argToExpand <- sortedClosestFirst) {
-        val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m)
-        expandedArgs.append(expanded)
-        // Add the mention to the ones to avoid so we don't suck it up
-        stateToAvoid = stateToAvoid.updated(Seq(expanded))
+      if (validArgs.contains(argType)) {
+        // Sort, because we want to expand the closest first so they don't get subsumed
+        val sortedClosestFirst = argMentions.sortBy(distToTrigger(trigger, _))
+        val expandedArgs = new ArrayBuffer[Mention]
+        // Expand each one, updating the state as we go
+        for (argToExpand <- sortedClosestFirst) {
+          val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m)
+          expandedArgs.append(expanded)
+          // Add the mention to the ones to avoid so we don't suck it up
+          stateToAvoid = stateToAvoid.updated(Seq(expanded))
+        }
+        // Handle attachments
+        // todo: here we aren't really using attachments, but we can add them back in as needed
+        val attached = expandedArgs
+          //.map(addSubsumedAttachments(_, state))
+          //.map(attachDCT(_, state))
+          //.map(addOverlappingAttachmentsTextBounds(_, state))
+          .map(EntityHelper.trimEntityEdges)
+        // Store
+        newArgs.put(argType, attached)
+      } else {
+        newArgs.put(argType, argMentions)
       }
-      // Handle attachments
-      // todo: here we aren't really using attachments, but we can add them back in as needed
-      val attached = expandedArgs
-        //.map(addSubsumedAttachments(_, state))
-        //.map(attachDCT(_, state))
-        //.map(addOverlappingAttachmentsTextBounds(_, state))
-        .map(EntityHelper.trimEntityEdges)
-      // Store
-      newArgs.put(argType, attached)
+
     }
     // Return the event with the expanded args as well as the arg mentions themselves
     Seq(copyWithNewArgs(m, newArgs.toMap)) ++ newArgs.values.toSeq.flatten
@@ -399,9 +404,9 @@ object ExpansionHandler {
     "^nmod_without$".r,
     "^punct".r,
     "^ref$".r,
-    "appos".r,
+    "appos".r
     //"nmod_for".r,
-    "nmod".r
+//    "nmod".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](

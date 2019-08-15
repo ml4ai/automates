@@ -13,7 +13,7 @@ import org.clulab.struct.Interval
 
 
 
-class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler]) extends Actions with LazyLogging {
+class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler], validArgs: List[String]) extends Actions with LazyLogging {
 
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
@@ -24,7 +24,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       //keepLongest(expanded) ++ textBounds
 
       val (expandable, other) = mentions.partition(m => m matches "Definition")
-      val expanded = expansionHandler.get.expandArguments(expandable, state)
+      val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepLongest(expanded) ++ other
 
 
@@ -123,6 +123,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val greek = Array("alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega") //todo: read from tsv?
     for {
       m <- mentions
       words = m match {
@@ -134,7 +135,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if words.length == 1
       word = m.words.head
       if word.length <= 6
-      if word.toLowerCase != word // mixed case or all UPPER
+      if (word.toLowerCase != word | greek.contains(word)) // mixed case or all UPPER or is a greek letter
     } yield m
   }
 
@@ -178,12 +179,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 object OdinActions {
 
-  def apply(taxonomyPath: String, enableExpansion: Boolean) =
+  def apply(taxonomyPath: String, enableExpansion: Boolean, validArgs: List[String]) =
     {
       val expansionHandler = if(enableExpansion) {
       Some(ExpansionHandler())
       } else None
-      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler)
+      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler, validArgs)
     }
 
   def readTaxonomy(path: String): Taxonomy = {
