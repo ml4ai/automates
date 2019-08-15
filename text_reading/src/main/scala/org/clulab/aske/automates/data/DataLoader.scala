@@ -1,9 +1,13 @@
 package org.clulab.aske.automates.data
 
 import java.io.File
+import java.util.regex.Pattern
 
+import ai.lum.common.StringUtils._
 import org.clulab.aske.automates.scienceparse.ScienceParseClient.mkDocument
 import org.clulab.utils.FileUtils.getTextFromFile
+
+import scala.util.matching.Regex
 
 
 /**
@@ -26,6 +30,7 @@ object DataLoader {
     s match {
       case "txt" => new PlainTextDataLoader
       case "json" => new ScienceParsedDataLoader
+      case "tokenized_latex" => new TokenizedLatexDataLoader
     }
   }
 }
@@ -60,6 +65,53 @@ class PlainTextDataLoader extends DataLoader {
   override val extension: String = "txt"
 }
 
+class TokenizedLatexDataLoader extends DataLoader {
+  /**
+    * Loader for tokenized latex files, in the format given as predictions by the opennmt seq2seq model.
+    * Here we will return the content of the file as a Seq[String], where each equation is a single string,
+    * and the equation "chunks" are separated by whitespace.
+    *
+    * @param f the File being loaded
+    * @return chunked latex tokens from equations
+    */
+  def loadFile(f: File): Seq[String] = {
+    getTextFromFile(f).split("\n")
+  }
+  override val extension: String = "txt"
+
+  def chunkLatex(equation: String): Seq[String] = {
+    // Used to merge derivatives, e.g., ("d", "S", ...) => ("dS", ...)
+    // from https://stackoverflow.com/a/2427603
+    def collapseDerivs(in: List[String], accum: List[String]): List[String] = in match {
+      case x :: y :: ys if x == "d" => collapseDerivs( s"$x$y" :: ys, accum )
+      case x :: xs => collapseDerivs( xs, x :: accum )
+      case Nil => accum
+    }
+
+    def replacePattern(pattern: Regex, s: String): String = {
+      var equation = s
+      val matches = pattern.findAllMatchIn(equation)
+      matches foreach { m =>
+        val full = m.group(0).escapeRegex
+        val inside = m.group(1).replaceAll(" ", "").escapeRegex
+        equation = equation.replaceFirst(full, inside)
+      }
+      equation
+    }
+
+    // chunk
+    val mathrmPattern = "\\\\mathrm \\{(.+)\\}".r
+    val equation1 = replacePattern(mathrmPattern, equation)
+
+    val oneArgFunctionPattern = "([a-zA-Z] \\( . \\))".r
+    val equation2 = replacePattern(oneArgFunctionPattern, equation1)
+
+    val tokens = equation2.split(" ")
+
+    // keep the ones with alpha chars
+    tokens.filter(_.exists(char => char.isLetter))
+  }
+}
 
 
 //object Testy {
@@ -75,3 +127,4 @@ class PlainTextDataLoader extends DataLoader {
 //    }
 //  }
 //}
+
