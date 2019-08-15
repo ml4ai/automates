@@ -94,27 +94,6 @@ object ExtractAndAlign {
 
     // todo: We probably want a separate comment reader for each model....? i.e. PETPT vs PETASCE
 
-
-    // Load the comment input from directory/file
-    val commentInputDir = config[String]("apps.commentInputDirectory")
-    val commentInputType = config[String]("apps.commentInputType")
-    val commentDataLoader = DataLoader.selectLoader(commentInputType) // txt, json (science parse) supported
-    val commentFiles = FileUtils.findFiles(commentInputDir, commentDataLoader.extension)
-
-    // Read the comments
-    val commentMentions = commentFiles.par.flatMap { file =>
-      // Open corresponding output file and make all desired exporters
-      println(s"Extracting from ${file.getName}")
-      // Get the input file contents, note: for science parse format, each text is a section
-      val texts = commentDataLoader.loadFile(file)
-      // Parse the comment texts
-      val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
-      // Iterate through the docs and find the mentions
-      val mentions = docs.map(doc => commentReader.extractFrom(doc))
-
-      mentions.flatten
-    }
-
     // Grfn
     val grfnPath: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later?
     val grfnFile = new File(grfnPath)
@@ -123,6 +102,32 @@ object ExtractAndAlign {
     //    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
 
     val grfn = ujson.read(grfnFile.readString())
+
+    //Getting comments from grfn
+    //the source_comments section of the json contains comments for multiple containers; get the container names to look up the comments for that container in the source_comments section
+    //todo: do we want to include "$file_head" and "$file_foot"?
+    val containerNames = grfn("containers").arr.map(_.obj("name").str)
+    val sourceCommentObject = grfn("source_comments").obj
+    //store comment strings here
+    val commentTexts = new ArrayBuffer[String]()
+    //for each container, the comment section has these three components
+    val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
+    for (name <- containerNames) if (sourceCommentObject.contains(name)) {
+      val commentObject = sourceCommentObject(name).obj
+      for (cc <- commentComponents) if (commentObject.contains(cc)) {
+        val text = commentObject(cc).arr.map(_.str).mkString("")
+        if (text.length > 0) {
+          commentTexts.append(text)
+        }
+      }
+    }
+
+    // Parse the comment texts
+    val docs = commentTexts.map(parseCommentText(_, filename = Some(grfn("source").arr.head.str)))
+    // Iterate through the docs and find the mentions; eliminate duplicates
+    val commentMentions = docs.map(doc => commentReader.extractFrom(doc)).flatten.distinct
+
+    //Getting Variables from Grfn
     val variableNames = grfn("variables").arr.map(_.obj("name").str)
     val variableShortNames = for (
       name <- variableNames
@@ -132,6 +137,9 @@ object ExtractAndAlign {
     // Align the comment definitions to the GrFN variables
     val numAlignments = config[Int]("apps.numAlignments")
     val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
+    println("length "+ commentDefinitionMentions.length)
+
+
     val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
 
     val varNameAlignments = variableNameAligner.alignTexts(variableShortNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
