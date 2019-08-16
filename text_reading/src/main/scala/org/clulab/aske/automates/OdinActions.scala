@@ -123,19 +123,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val greek = Array("alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega") //todo: read from tsv?
     for {
       m <- mentions
       words = m match {
-      case tb: TextBoundMention => m.words
-      case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head.words
-      case em: EventMention => m.arguments.getOrElse("variable", Seq()).head.words
-      case _ => ???
-    }
+        case tb: TextBoundMention => m.words
+        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head.words
+        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head.words
+        case _ => ???
+      }
       if words.length == 1
       word = m.words.head
       if word.length <= 6
-      if (word.toLowerCase != word | greek.contains(word)) // mixed case or all UPPER or is a greek letter
+      if (word.toLowerCase != word | m.entities.exists(ent => ent.exists(e => e== "B-GreekLetter"))) // mixed case or all UPPER or is a greek letter todo: try this constraint--- the word is one letter long and tag != CD/DT
     } yield m
   }
 
