@@ -111,8 +111,8 @@ object ExtractAndAlign {
     //todo: do we want to include "$file_head" and "$file_foot"?
     val containerNames = grfn("containers").arr.map(_.obj("name").str)
     val sourceCommentObject = grfn("source_comments").obj
-    //store comment strings here
-    val commentTexts = new ArrayBuffer[Obj]()
+    //store comment text objects here; the comment text objects include the source file, the container, and the location in the container (head/neck/foot)
+    val commentTextObjects = new ArrayBuffer[Obj]()
     //for each container, the comment section has these three components
     val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
     for (containerName <- containerNames) if (sourceCommentObject.contains(containerName)) {
@@ -120,13 +120,13 @@ object ExtractAndAlign {
       for (cc <- commentComponents) if (commentObject.contains(cc)) {
         val text = commentObject(cc).arr.map(_.str).mkString("")
         if (text.length > 0) {
-          commentTexts.append(mkCommentTextElement(text, grfn("source").arr.head.str, containerName, cc))
+          commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, containerName, cc))
         }
       }
     }
 
     // Parse the comment texts
-    val docs = commentTexts.map(parseCommentText(_))
+    val docs = commentTextObjects.map(parseCommentText(_))
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = docs.map(doc => commentReader.extractFrom(doc)).flatten.distinct
 
