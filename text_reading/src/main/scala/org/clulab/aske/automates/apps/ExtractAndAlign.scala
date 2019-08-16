@@ -14,6 +14,7 @@ import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
+import ujson.Obj
 import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
@@ -25,9 +26,10 @@ object ExtractAndAlign {
 
   def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
 
-  def parseCommentText(text: String, filename: Option[String] = None): Document = {
+  def parseCommentText(textObj: Obj): Document = {
     val proc = new FastNLPProcessor()
     //val Docs = Source.fromFile(filename).getLines().mkString("\n")
+    val text = textObj("text").str
     val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1 //make sure line is not empty
       && sent.stripMargin.replaceAll("^\\s*[C!]", "!") //switch two different comment start symbols to just one
       .startsWith("!")) //check if the line is a comment based on the comment start symbol (todo: is there a regex version of startWith to avoide prev line?
@@ -56,7 +58,8 @@ object ExtractAndAlign {
     println("Number of lines passed to the comment reader: " + lines_combined.length)
 
     val doc = proc.annotateFromSentences(lines_combined, keepText = true)
-    doc.id = filename
+    //include more detailed info about the source of the comment: the container and the location in the container (head/neck/foot)
+    doc.id = Option(textObj("source").str + "; " + textObj("container").str + "; " + textObj("location").str)
     doc
   }
 
@@ -109,21 +112,21 @@ object ExtractAndAlign {
     val containerNames = grfn("containers").arr.map(_.obj("name").str)
     val sourceCommentObject = grfn("source_comments").obj
     //store comment strings here
-    val commentTexts = new ArrayBuffer[String]()
+    val commentTexts = new ArrayBuffer[Obj]()
     //for each container, the comment section has these three components
     val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
-    for (name <- containerNames) if (sourceCommentObject.contains(name)) {
-      val commentObject = sourceCommentObject(name).obj
+    for (containerName <- containerNames) if (sourceCommentObject.contains(containerName)) {
+      val commentObject = sourceCommentObject(containerName).obj
       for (cc <- commentComponents) if (commentObject.contains(cc)) {
         val text = commentObject(cc).arr.map(_.str).mkString("")
         if (text.length > 0) {
-          commentTexts.append(text)
+          commentTexts.append(mkCommentTextElement(text, grfn("source").arr.head.str, containerName, cc))
         }
       }
     }
 
     // Parse the comment texts
-    val docs = commentTexts.map(parseCommentText(_, filename = Some(grfn("source").arr.head.str)))
+    val docs = commentTexts.map(parseCommentText(_))
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = docs.map(doc => commentReader.extractFrom(doc)).flatten.distinct
 
@@ -192,7 +195,7 @@ object ExtractAndAlign {
     // Make Comment Spans from the comment variable mentions
     val commentLinkElems = commentDefinitionMentions.map { commentMention =>
       val elemType = "comment_span"
-      val source = grfn("source").arr.head.str
+      val source = commentMention.document.id.getOrElse("unk_file")
       val content = commentMention.text
       val contentType = "null"
       mkLinkElement(elemType, source, content, contentType)
@@ -267,6 +270,16 @@ object ExtractAndAlign {
       "score" -> score
     )
     hypothesis
+  }
+
+  def mkCommentTextElement(text: String, source: String, container: String, location: String): ujson.Obj = {
+    val commentTextElement = ujson.Obj(
+      "text" -> text,
+      "source" -> source,
+      "container" -> container,
+      "location" -> location
+    )
+    commentTextElement
   }
 
 
