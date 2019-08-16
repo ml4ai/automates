@@ -125,16 +125,21 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
       m <- mentions
-      words = m match {
-        case tb: TextBoundMention => m.words
-        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head.words
-        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head.words
+      varMention = m match {
+        case tb: TextBoundMention => m
+        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head
+        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head
         case _ => ???
       }
-      if words.length == 1
-      word = m.words.head
+      if varMention.words.length == 1
+      word = varMention.words.head
       if word.length <= 6
-      if (word.toLowerCase != word | m.entities.exists(ent => ent.exists(e => e== "B-GreekLetter"))) // mixed case or all UPPER or is a greek letter todo: try this constraint--- the word is one letter long and tag != CD/DT
+      if (word.toLowerCase != word // mixed case or all UPPER
+        |
+        varMention.entities.exists(ent => ent.exists(e => e== "B-GreekLetter")) //or is a greek letter
+        |
+        word.length == 1 && m.tags.exists(tags => tags.head matches "NN")) //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+      //todo: still need a way to not avoid short lower-case vars
     } yield m
   }
 
