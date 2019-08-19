@@ -16,7 +16,7 @@ libraryDependencies ++= {
     "org.clulab"    %% "processors-odin"          % procVer,
     "org.clulab"    %% "processors-modelsmain"    % procVer,
     "org.clulab"    %% "processors-modelscorenlp" % procVer,
-    "ai.lum"        %% "common"                   % "0.0.8",
+    "ai.lum"        %% "common"                   % "0.0.9-SNAPSHOT",
     "ai.lum"        %% "regextools"               % "0.1.0-SNAPSHOT",
     "com.lihaoyi"   %% "ujson"                    % "0.7.1",
     "com.lihaoyi"   %% "requests"                 % "0.1.4",

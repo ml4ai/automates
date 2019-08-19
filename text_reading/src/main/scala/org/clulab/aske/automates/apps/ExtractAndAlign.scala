@@ -5,10 +5,10 @@ import java.io.{File, PrintWriter}
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.{DataLoader, TextRouter}
+import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
 import org.clulab.aske.automates.entities.StringMatchEntityFinder
-import org.clulab.aske.automates.grfn._
+import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkCommentTextElement}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -93,18 +93,29 @@ object ExtractAndAlign {
       texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
     }
     println(s"Extracted ${textMentions.length} text mentions")
-
+    // Get out the variable/definition mentions
+    val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
+    // ----------------------------------
+    // Debug:
+    //    val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
+    //    for (m <- textDefinitionMentions) {
+    //      pw.println("**************************************************")
+    //      pw.println(m.sentenceObj.getSentenceText)
+    //      DisplayUtils.printMention(m, pw)
+    //      pw.println("")
+    //    }
+    //    pw.close()
+    // ----------------------------------
 
     // todo: We probably want a separate comment reader for each model....? i.e. PETPT vs PETASCE
+
 
     // Grfn
     val grfnPath: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later?
     val grfnFile = new File(grfnPath)
-    //    val grfn = GrFNParser.mkDocument(new File(grfnFile))
-    //    val grfnVars = GrFNDocument.getVariables(grfn)
-    //    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
 
     val grfn = ujson.read(grfnFile.readString())
+
 
     //Getting comments from grfn
     //the source_comments section of the json contains comments for multiple containers; get the container names to look up the comments for that container in the source_comments section
@@ -130,12 +141,25 @@ object ExtractAndAlign {
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = docs.map(doc => commentReader.extractFrom(doc)).flatten.distinct
 
-    //Getting Variables from Grfn
+    //Get the source code variables from the GrFN
+
+    // Full variable identifiers
     val variableNames = grfn("variables").arr.map(_.obj("name").str)
+    // The variable names only (excluding the scope info)
     val variableShortNames = for (
       name <- variableNames
     ) yield name.split("::").reverse.slice(1, 2).mkString("")
 
+
+    // Get the equation tokens
+    val equationFile: String = config[String]("apps.predictedEquations")
+    val equationDataLoader = new TokenizedLatexDataLoader
+    val equations = equationDataLoader.loadFile(new File(equationFile))
+    val equationChunksAndSource = for {
+      (sourceEq, i) <- equations.zipWithIndex
+      eqChunk <- equationDataLoader.chunkLatex(sourceEq)
+    } yield (eqChunk, sourceEq)
+    val (equationChunks, equationSources) = equationChunksAndSource.unzip
 
     // Align the comment definitions to the GrFN variables
     val numAlignments = config[Int]("apps.numAlignments")
@@ -146,34 +170,24 @@ object ExtractAndAlign {
     val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
 
     val varNameAlignments = variableNameAligner.alignTexts(variableShortNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
-    val top1ByVariableName = Aligner.topKBySrc(varNameAlignments, 1)
+    val top1SourceToComment = Aligner.topKBySrc(varNameAlignments, 1)
 
+    // Align the equation chunks to the text definitions
+    val equationToTextAlignments = variableNameAligner.alignTexts(equationChunks, textDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
+    val topKEquationToText = Aligner.topKBySrc(equationToTextAlignments, numAlignments)
 
     // Align the comment definitions to the text definitions
     val w2vAligner = Aligner.fromConfig(config[Config]("alignment"))
-    val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
-
-    // ----------------------------------
-    // Debug:
-    //    val pw = new PrintWriter("./output/definitions.txt")  ///../../../../../../../../ExtractAndAlign.scala
-    //    for (m <- textDefinitionMentions) {
-    //      pw.println("**************************************************")
-    //      pw.println(m.sentenceObj.getSentenceText)
-    //      DisplayUtils.printMention(m, pw)
-    //      pw.println("")
-    //    }
-    //    pw.close()
-    // ----------------------------------
     // Generates (src idx, dst idx, score tuples) -- exhaustive
     val commentToTextAlignments: Seq[Alignment] = w2vAligner.alignMentions(commentDefinitionMentions, textDefinitionMentions)
     val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     // group by src idx, and keep only top k (src, dst, score) for each src idx
-    val topKAlignments: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold)
+    val topKCommentToText: Seq[Seq[Alignment]] = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold)
 
 
     // ----------------------------------
     // Debug:
-    topKAlignments.foreach { aa =>
+    topKCommentToText.foreach { aa =>
       println("====================================================================")
       println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
       println("====================================================================")
@@ -211,21 +225,27 @@ object ExtractAndAlign {
     }
 
     // Repeat for text variables
-
     val textLinkElements = textDefinitionMentions.map { mention =>
       val elemType = "text_span"
       val source = mention.document.id.getOrElse("unk_text_file") // fixme
-    val content = mention.text //todo add the relevant parts of the metnion var + def as a string --> smth readable
-    val contentType = "null"
+      val content = mention.text //todo add the relevant parts of the metnion var + def as a string --> smth readable
+      val contentType = "null"
       mkLinkElement(elemType, source, content, contentType)
     }
 
     // Repeat for Eqn Variables
+    val equationLinkElements = equationChunksAndSource.map { case (chunk, orig) =>
+      val elemType = "equation_span"
+      val source = orig
+      val content = chunk
+      val contentType = "null"
+      mkLinkElement(elemType, source, content, contentType)
+    }
 
     // Make Link Hypotheses (text/comment)
     val hypotheses = new ArrayBuffer[ujson.Obj]()
-    for (topk <- topKAlignments) {
-      for (alignment <- topk) {
+    for (topK <- topKCommentToText) {
+      for (alignment <- topK) {
         val commentLinkElement = commentLinkElems(alignment.src)
         val textLinkElement = textLinkElements(alignment.dst)
         val score = alignment.score
@@ -234,8 +254,8 @@ object ExtractAndAlign {
       }
     }
 
-    for (topk <- top1ByVariableName) {
-      for (alignment <- topk) {
+    for (topK <- top1SourceToComment) {
+      for (alignment <- topK) {
         val variableLinkElement = sourceLinkElements(alignment.src)
         val commentLinkElement = commentLinkElems(alignment.dst)
         val score = alignment.score
@@ -244,42 +264,22 @@ object ExtractAndAlign {
       }
     }
 
+    for (topK <- topKEquationToText) {
+      for (alignment <- topK) {
+        val equationLinkElement = equationLinkElements(alignment.src)
+        val textLinkElement = textLinkElements(alignment.dst)
+        val score = alignment.score
+        val hypothesis = mkHypothesis(equationLinkElement, textLinkElement, score)
+        hypotheses.append(hypothesis)
+      }
+    }
+
     grfn("grounding") = hypotheses.toList
     val grfnBaseName = new File(grfnPath).getBaseName()
     val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_groundings.json")
     ujson.writeTo(grfn, grfnWriter)
-//    grfnWriter.println(write(grfn.render()))
     grfnWriter.close()
 
-  }
-
-  def mkLinkElement(elemType: String, source: String, content: String, contentType: String): ujson.Obj = {
-    val linkElement = ujson.Obj(
-      "type" -> elemType,
-      "source" -> source,
-      "content" -> content,
-      "content_type" -> contentType
-    )
-    linkElement
-  }
-
-  def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = {
-    val hypothesis = ujson.Obj(
-      "element_1" -> elem1,
-      "element_2" -> elem2,
-      "score" -> score
-    )
-    hypothesis
-  }
-
-  def mkCommentTextElement(text: String, source: String, container: String, location: String): ujson.Obj = {
-    val commentTextElement = ujson.Obj(
-      "text" -> text,
-      "source" -> source,
-      "container" -> container,
-      "location" -> location
-    )
-    commentTextElement
   }
 
 
