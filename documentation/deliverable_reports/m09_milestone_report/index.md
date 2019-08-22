@@ -18,4 +18,3 @@ toc: true
 {% include_relative equation_reading.md %}
 
 {% include_relative model_analysis.md %}
-
