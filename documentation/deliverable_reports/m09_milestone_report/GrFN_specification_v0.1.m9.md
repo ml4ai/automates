@@ -1,4 +1,9 @@
-## Grounded Function Network (GrFN) JSON Specification
+---
+title: "Grounded Function Network (GrFN) JSON Specification"
+layout: post
+date: 2019-07-01
+toc: true
+---
 
 **Version 0.1.m9**
 
