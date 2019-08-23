@@ -7,6 +7,8 @@ toc: true
 
 {% include_relative overview.md %}
 
+{% include_relative demo.md %}
+
 {% include_relative grfn.md %}
 
 {% include_relative program_analysis.md %}
