@@ -1,10 +1,9 @@
 package org.clulab.aske.automates.data
 
 import java.io.File
-import java.util.regex.Pattern
 
 import ai.lum.common.StringUtils._
-import org.clulab.aske.automates.scienceparse.ScienceParseClient.mkDocument
+import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.utils.FileUtils.getTextFromFile
 
 import scala.util.matching.Regex
@@ -30,6 +29,7 @@ object DataLoader {
     s match {
       case "txt" => new PlainTextDataLoader
       case "json" => new ScienceParsedDataLoader
+      case "pdf" => new PDFDataLoader
       case "tokenized_latex" => new TokenizedLatexDataLoader
     }
   }
@@ -47,10 +47,38 @@ class ScienceParsedDataLoader extends DataLoader {
   def loadFile(f: File): Seq[String] = {
     // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
     //the heading and the text of the section are currently combined; might need to be revisted
-    val scienceParseDoc = mkDocument(f)
+    val scienceParseDoc = ScienceParseClient.mkDocument(f)
     scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
   }
   override val extension: String = "json"
+}
+
+
+class PDFDataLoader extends DataLoader {
+
+  // FIXME read from somewhere
+  val domain = "localhost"
+  val port = "8080"
+
+  // connect to science-parse server
+  val client = new ScienceParseClient(domain, port)
+
+  /**
+    * Loader for pdf documents, will pre-processed with science parse (v1).  Each file
+    * is parsed into a json representation of the paper sections, here we will return the strings from
+    * each section as a Seq[String].
+    *
+    * @param f the File being loaded
+    * @return string content of each section in the parsed pdf paper (as determined by science parse)
+    */
+  def loadFile(f: File): Seq[String] = {
+    // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
+    //the heading and the text of the section are currently combined; might need to be revisted
+    val json = client.parsePdfToJson(f)
+    val scienceParseDoc = ScienceParseClient.mkDocument(json)
+    scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
+  }
+  override val extension: String = "pdf"
 }
 
 
@@ -64,6 +92,7 @@ class PlainTextDataLoader extends DataLoader {
   def loadFile(f: File): Seq[String] = Seq(getTextFromFile(f))
   override val extension: String = "txt"
 }
+
 
 class TokenizedLatexDataLoader extends DataLoader {
   /**

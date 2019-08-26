@@ -7,17 +7,15 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
-import org.clulab.aske.automates.entities.StringMatchEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
-import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
+
 
 object ExtractAndAlign {
 
@@ -77,7 +75,7 @@ object ExtractAndAlign {
     // Load text input from directory
     val inputDir = config[String]("apps.inputDirectory")
     val inputType = config[String]("apps.inputType")
-    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (science parse) supported
+    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
     val files = FileUtils.findFiles(inputDir, dataLoader.extension)
 
     // Read the text
