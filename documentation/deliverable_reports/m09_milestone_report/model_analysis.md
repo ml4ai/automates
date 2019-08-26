@@ -1,7 +1,7 @@
 ## Model Analysis
 
-#### Domain Constraint Propagation
-###### Task Overview
+### Domain Constraint Propagation
+#### Task Overview
 The overall goal of the domain constraint propagation task is to find the minimum functional bounds on each of the inputs for a GrFN such that no set of input values will fail to evaluate due to a mathematical error.
 Concretely, minimal functional bounds are bounds that arise upon the inputs to a given computation because of the functions computed in the course of that computation.
 An example of this would be the `arcsine` function, whose domain is `[-1, 1]`.
@@ -28,7 +28,7 @@ But, as mentioned by fact `4`, the presence of conditionals adds complications t
 Now the domain constraint must be based on the conditional evaluation in cases where two separate mathematical functions make use of a variable in a constrained manner as governed by a conditional.
 Since our plan is to use the domain constraints discovered during the propagation process to validate input sets, we will use the most restrictive case for conditionals which will be to require any variable domains found under conditionals to fulfill the constraints of all branches of the conditional.
 
-###### Algorithmic Solver Approach
+#### Algorithmic Solver Approach
 Our approach to solving the domain constraint propagation problem will be to create an algorithmic solver that uses the structure of the source code that we extract our models from in order to create a graph of the constraints upon the domains of different variables.
 The algorithmic solver will perform a line-by-line walk through the code, and will perform a tree-walk at each line of the code, generating and updating variable constraints upon visiting operators on each line.
 To visualized the tree-walk that will occur for each line of code, consider the example complex mathematical equation shown below.
@@ -36,6 +36,7 @@ To visualized the tree-walk that will occur for each line of code, consider the 
 a = arccosine(logarithm((x*y)/5)) * square_root(z)
 ```
 This can be rewritten in the following form with only one mathematical operation per-line to show how a tree-walk will occur:
+
 ```python
 (1) n0 = x * y
 (2) n1 = n0 / 5
@@ -44,6 +45,7 @@ This can be rewritten in the following form with only one mathematical operation
 (5) n4 = square_root(z)
 (6) a = n3 * n4
 ```
+
 If we evaluate, in a similar manner as the tree-walk will occur, from line 6 backwards to line 1 we can see how the domain constraints will propagate to the input variables, such as how the domain constraint introduced by `arccosine` is propagated from `n2 --> n1 --> n0 --> x & y`.
 Just as this process has been carried out for a single line mathematical function, the same tree-walk can be done across lines to propagate variable constraints backwards to all the input variables of a scientific model.
 Using this method works very well for straight-line code; however there are atleast two questions that still need to be answered:
@@ -55,9 +57,3 @@ If we cannot observe the code for a function call, but we do know it's domain/ra
 However, if we cannot observe the functions code and we do not have any information of its inputs or outputs then we will be unable to determine the validity of solutions to the domain constraint problem.
 For problem `2`, if we know the number of times we are expected to loop then we can guarantee whether input sets satisfy the domain constraints; otherwise, we can perform this analysis on the loop as though it is straight-line code with a conditional.
 
-#### Model Output Space Analysis
-###### Task Overview
-
-###### Ibex and dReal Satisfiability Tools
-
-###### Current Status

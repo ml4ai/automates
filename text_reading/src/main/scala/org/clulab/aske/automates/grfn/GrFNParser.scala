@@ -19,6 +19,17 @@ object GrFNParser {
     linkElement
   }
 
+
+  def mkCommentTextElement(text: String, source: String, container: String, location: String): ujson.Obj = {
+    val commentTextElement = ujson.Obj(
+      "text" -> text,
+      "source" -> source,
+      "container" -> container,
+      "location" -> location
+    )
+    commentTextElement
+  }
+
   def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = {
     val hypothesis = ujson.Obj(
       "element_1" -> elem1,

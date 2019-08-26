@@ -7,12 +7,13 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement}
+import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkCommentTextElement}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
+import ujson.Obj
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -23,9 +24,10 @@ object ExtractAndAlign {
 
   def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
 
-  def parseCommentText(text: String, filename: Option[String] = None): Document = {
+  def parseCommentText(textObj: Obj): Document = {
     val proc = new FastNLPProcessor()
     //val Docs = Source.fromFile(filename).getLines().mkString("\n")
+    val text = textObj("text").str
     val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1 //make sure line is not empty
       && sent.stripMargin.replaceAll("^\\s*[C!]", "!") //switch two different comment start symbols to just one
       .startsWith("!")) //check if the line is a comment based on the comment start symbol (todo: is there a regex version of startWith to avoide prev line?
@@ -54,7 +56,8 @@ object ExtractAndAlign {
     println("Number of lines passed to the comment reader: " + lines_combined.length)
 
     val doc = proc.annotateFromSentences(lines_combined, keepText = true)
-    doc.id = filename
+    //include more detailed info about the source of the comment: the container and the location in the container (head/neck/foot)
+    doc.id = Option(textObj("source").str + "; " + textObj("container").str + "; " + textObj("location").str)
     doc
   }
 
@@ -105,31 +108,41 @@ object ExtractAndAlign {
     // todo: We probably want a separate comment reader for each model....? i.e. PETPT vs PETASCE
 
 
-    // Load the comment input from directory/file
-    val commentInputDir = config[String]("apps.commentInputDirectory")
-    val commentInputType = config[String]("apps.commentInputType")
-    val commentDataLoader = DataLoader.selectLoader(commentInputType) // txt, json (science parse) supported
-    val commentFiles = FileUtils.findFiles(commentInputDir, commentDataLoader.extension)
-
-    // Read the comments
-    val commentMentions = commentFiles.par.flatMap { file =>
-      // Open corresponding output file and make all desired exporters
-      println(s"Extracting from ${file.getName}")
-      // Get the input file contents, note: for science parse format, each text is a section
-      val texts = commentDataLoader.loadFile(file)
-      // Parse the comment texts
-      val docs = texts.map(parseCommentText(_, filename = Some(file.getName)))
-      // Iterate through the docs and find the mentions
-      val mentions = docs.map(doc => commentReader.extractFrom(doc))
-
-      mentions.flatten
-    }
-
-    // Get the source code variables from the GrFN
+    // Grfn
     val grfnPath: String = config[String]("apps.grfnFile") // fixme (Becky): extend to a dir later?
     val grfnFile = new File(grfnPath)
 
     val grfn = ujson.read(grfnFile.readString())
+
+
+    //Getting comments from grfn
+    //the source_comments section of the json contains comments for multiple containers;
+    // get the container names to look up the comments for that container in the source_comments section
+    //todo: do we want to include "$file_head" and "$file_foot"?
+    val containerNames = grfn("containers").arr.map(_.obj("name").str)
+    val sourceCommentObject = grfn("source_comments").obj
+    //store comment text objects here; the comment text objects include the source file, the container,
+    // and the location in the container (head/neck/foot)
+    val commentTextObjects = new ArrayBuffer[Obj]()
+    //for each container, the comment section has these three components
+    val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
+    for (containerName <- containerNames) if (sourceCommentObject.contains(containerName)) {
+      val commentObject = sourceCommentObject(containerName).obj
+      for (cc <- commentComponents) if (commentObject.contains(cc)) {
+        val text = commentObject(cc).arr.map(_.str).mkString("")
+        if (text.length > 0) {
+          commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, containerName, cc))
+        }
+      }
+    }
+
+    // Parse the comment texts
+    val docs = commentTextObjects.map(parseCommentText(_))
+    // Iterate through the docs and find the mentions; eliminate duplicates
+    val commentMentions = docs.map(doc => commentReader.extractFrom(doc)).flatten.distinct
+
+    //Get the source code variables from the GrFN
+
     // Full variable identifiers
     val variableNames = grfn("variables").arr.map(_.obj("name").str)
     // The variable names only (excluding the scope info)
@@ -151,6 +164,9 @@ object ExtractAndAlign {
     // Align the comment definitions to the GrFN variables
     val numAlignments = config[Int]("apps.numAlignments")
     val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
+    println("length "+ commentDefinitionMentions.length)
+
+
     val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
 
     val varNameAlignments = variableNameAligner.alignTexts(variableShortNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
@@ -193,7 +209,7 @@ object ExtractAndAlign {
     // Make Comment Spans from the comment variable mentions
     val commentLinkElems = commentDefinitionMentions.map { commentMention =>
       val elemType = "comment_span"
-      val source = grfn("source").arr.head.str
+      val source = commentMention.document.id.getOrElse("unk_file")
       val content = commentMention.text
       val contentType = "null"
       mkLinkElement(elemType, source, content, contentType)
@@ -265,8 +281,6 @@ object ExtractAndAlign {
     grfnWriter.close()
 
   }
-
-
 
 
 }

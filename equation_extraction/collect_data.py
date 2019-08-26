@@ -81,12 +81,11 @@ def render_tex(filename, outdir, keep_intermediate):
         pdf_name = None
     return pdf_name
 
-
-def render_equation(equation, template, filename, keep_intermediate):
+def render_equation(template_args, template, filename, keep_intermediate):
     dirname = os.path.dirname(filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    equation_tex = template.render(equation=equation)
+    equation_tex = template.render(**template_args)
     with open(filename, 'w') as f:
         f.write(equation_tex)
     pdf_name = render_tex(filename, dirname, keep_intermediate)
@@ -95,6 +94,21 @@ def render_equation(equation, template, filename, keep_intermediate):
     else:
         image = None
     return image
+
+
+# def render_equation(equation, template, filename, keep_intermediate):
+#     dirname = os.path.dirname(filename)
+#     if not os.path.exists(dirname):
+#         os.makedirs(dirname)
+#     equation_tex = template.render(equation=equation)
+#     with open(filename, 'w') as f:
+#         f.write(equation_tex)
+#     pdf_name = render_tex(filename, dirname, keep_intermediate)
+#     if pdf_name:
+#         image = get_pages(pdf_name, dump_pages=False, outdir="")[0]
+#     else:
+#         image = None
+#     return image
 
 
 def mk_template(template):
@@ -282,10 +296,10 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
                 # save tokens for surrounding context
                 # make pdf
                 fname = os.path.join(outdir, eq_name, 'equation.tex')
-                equation = render_equation(eq_tex, template, fname, keep_intermediate)
+                equation = render_equation(dict(equation=eq_tex), template, fname, keep_intermediate)
                 # also render using the template from im2markup
                 fname_im2markup = os.path.join(outdir, eq_name, 'equation_im2markup.tex')
-                render_equation(eq_tex, template_im2markup, fname_im2markup, keep_intermediate)
+                render_equation(dict(equation=eq_tex), template_im2markup, fname_im2markup, keep_intermediate)
                 if equation is None:
                     # equation couldn't be rendered
                     failed_eqns.append(eq_name)
