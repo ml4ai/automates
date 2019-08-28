@@ -6,7 +6,7 @@ In prior reporting periods, program analysis had focused on front end processing
 
 * In SIR model, arrays are used as containers to store the computed means and variances of susceptible, infected, and recovered population from the disease. Thus, for this reporting period, implementing GrFN for arrays has been one of the main focuses, so the SIR model can be translated from Fortran to Python to GrFN.
 * The structure (i.e. name, scope function, dimension, and data type, etc) of an array is represented in JSON while actual data values are retrieved via lambda functions.
-* Arrays require accessors to set (setter) and get (getter) the data values. Depends on which accessor is needed (this can be extracted from the Python IR), GrFN generators (genPGM and genCode) generates relevant lambda functions to set and/or get the data. For example,
+* Arrays require accessors to get and set the data values. Depending on which accessor is needed -- which can be extracted from the Python IR -- we generate lambda functions in the GrFN to access the data appropriately. For example,
     * Fortran: means(k) = means(k) + (n - means(k))/(runs+1)
     * Python: means.set_((k[0]), (means.get_((k[0])) + ((n[0] - means.get_((k[0]))) / (runs[0] + 1))))
     * GrFN lambda:
