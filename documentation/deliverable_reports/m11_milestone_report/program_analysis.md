@@ -20,7 +20,7 @@ In prior reporting periods, program analysis had focused on front end processing
 
 * As we started handling more complex models with higher code complexity, a more comprehensive GrFN schema was required. In this context, the representation of loops in GrFN changed significantly.
 * Moving from loops being represented as `loop_plates` in the old GrFN schema, we represent them as `containers`, similar to how functions are represented in the new GrFN schema. Hence, loops are viewed as a block having `arguments`, `outputs` and a `body`.
-	* The core difference between a `function` container and a `loop` container is that a `loop` container executes                 indefinitely until an `EXIT` criteria is met.
+	* The core difference between a `function` container and a `loop` container is that a `loop` container executes                 indefinitely until an `EXIT` criterion is met.
 	* The `argument` to a loop container is all variables that are used as inputs inside the loop body.
 	* Any loop `argument` that is updated inside the loop body will appear in the `updated` field of the container.
 	* The `body` of a loop container now contains functions that check for the `EXIT` conditions of the loop. With the 	     help of `IF` condition functions to check for the loop conditionals and `EXIT` decision functions to decide whether           or not a loop should break its flow, loops can now be represented as repeating containers.
