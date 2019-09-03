@@ -8,12 +8,13 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
+    action: looksLikeAVariable
     example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
     #action: variableArguments
     pattern: |
       trigger = [word = "="]
       variable: Variable = <dep | "nmod:npmod"
-      definition: Concept = (dobj | dep) [!entity = "NUMBER"]
+      definition: Concept = (dobj | dep) [!entity = "NUMBER" & !word = "="]
 
   - name: var_definition_appos_bidir
     label: Definition
@@ -63,6 +64,7 @@ rules:
     label: Definition
     priority: ${priority}
     type: token
+    action: looksLikeAVariable
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
       (@definition: Concept [!entity = "NUMBER"]) "," @variable:Variable (?! [lemma = "be"])
