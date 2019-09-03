@@ -1,0 +1,65 @@
+\documentclass{article}
+
+\begin{document}
+
+\section{Senstivity Analysis of PETPT (Priestley-Taylor) model}
+
+Sensitivity analysis of any theoretical model involves the computation of Sobol indices which measures the variance in the output as a
+result of the fluctuations in the input parameters. 
+%has been performed for the
+The Priestley-Taylor (PETPT) model is an example of an
+evapotranspiration (EO) model where the daily EO rate of a crop depends on the following independent
+variables - the maximum (TMAX) and minimum (TMIN) observable temperatures within a
+given day, daily solar radiation (SRAD), leaf area index (XHLAI), and soil
+albedo coefficient (MSALB). For computational purposes, 
+the SALib library in python allows one to perform a
+sensitivity analysis for a given model. In our work, we have implemented three
+different sensitivity methods, namely, Sobol, Fourier Amplitude Sensitivity Test or
+FAST, and finally, Random Balance Design-Fourier Amplitude Sensitivity Test or
+RBD-FAST and compared the first order indices (S$_i$; $i$ is the variable) across the different models.
+Our results indicate that for reasonable approximations of the input parameter
+bounds, S$_i$ values are maximum for TMAX and minimum (zero) for
+XHLAI in all three methods. SRAD followed by MSALB have the most significant
+S$_i$'s after TMAX while the sobol index for TMIN in the PETPT model is
+negligible. The Sobol method can compute the second order index (S$_{ij}$; for
+the variables $i$ and $j$) as
+well. Interestingly, we find that while S$_{XHLAI}$ is vanishingly small,
+the second order index of XHLAI and TMAX is significantly large. Again,
+S$_{ij}$ for $(i, j)=$ (TMAX, SRAD) is non-negligible. In addition, the runtime for each of
+the sensitivity analysis methods is computed and compared for different sample
+sizes. It becomes evident that for large sample sizes ($\sim$ 10$^6$), Sobol is
+two orders of magnitude slower than both FAST and RBD-FAST methods. In summary,
+TMAX is the most significant parameter and any significant change in its value will
+have the maximum effect on the EO rate. Our future goal is to extend our
+discussion of sensitivity analysis to the PETASCE model in which the EO rate
+depends on the
+independent variables discussed above as well as a new set of input parameters.
+
+\section{Parameter Estimation}
+
+A necessary question that arises from the previous section is how reliable are
+the bounds of our input variables that have been used in estimating the Sobol
+indices. While such an
+information can be extracted after having parsed through hundreds of documents on
+various evapotranspiration models and other experimental data, we would like to
+adopt a more fundamental approach to determine the domain of a high
+dimensional space spanned by our input
+parameters. Given our previous choice of the bounds imposed on the input parameters, it is easy
+to see that there exist a subset of parameter sets which yield similar
+evapotranspiration rates in both PETPT and PETASCE models. However, such an
+{\it ad-hoc} choice generates only a slice of a larger domain of possible values in
+the configuration space of our parameters. A more rigorous approach then
+requires us to minimize the square of the difference between the EO rates of the PETPT and
+PETASCE models which is defined as the Loss. 
+Typically, the Loss is a non-convex, non-linear, non-separable function with
+multiple minima and hence any optimizaiton procedure is non-trivial. 
+We invoke the standard gradient descent algorithm that is ideal for
+convex optimzation problems and apply it over here. Moreover, the mathematical
+expression for the EO rates vary based on the domains of the input variables.
+Hence, domain constraints need to be imposed while minimizing the Loss.
+This work is currently  ongoing and we hope to develop a more efficient
+algorithm that can precisely identify a list of parameter sets that optimize
+the output in both models. 
+
+
+\end{document}

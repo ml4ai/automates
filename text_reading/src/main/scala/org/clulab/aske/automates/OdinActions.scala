@@ -140,6 +140,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         |
         word.length == 1 && m.tags.exists(tags => tags.head matches "NN")) //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
       //todo: still need a way to not avoid short lower-case vars
+
     } yield m
   }
 
