@@ -7,7 +7,6 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
-import org.clulab.aske.automates.entities.StringMatchEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkCommentTextElement}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.processors.Document
@@ -15,10 +14,9 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.Obj
-import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
+
 
 object ExtractAndAlign {
 
@@ -54,8 +52,8 @@ object ExtractAndAlign {
       }
     }
 
-    for (line <- lines_combined) println(line)
-    println("Number of lines passed to the comment reader: " + lines_combined.length)
+//    for (line <- lines_combined) println(line)
+//    println("Number of lines passed to the comment reader: " + lines_combined.length)
 
     val doc = proc.annotateFromSentences(lines_combined, keepText = true)
     //include more detailed info about the source of the comment: the container and the location in the container (head/neck/foot)
@@ -80,7 +78,7 @@ object ExtractAndAlign {
     // Load text input from directory
     val inputDir = config[String]("apps.inputDirectory")
     val inputType = config[String]("apps.inputType")
-    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (science parse) supported
+    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
     val files = FileUtils.findFiles(inputDir, dataLoader.extension)
 
     // Read the text
@@ -118,11 +116,13 @@ object ExtractAndAlign {
 
 
     //Getting comments from grfn
-    //the source_comments section of the json contains comments for multiple containers; get the container names to look up the comments for that container in the source_comments section
+    //the source_comments section of the json contains comments for multiple containers;
+    // get the container names to look up the comments for that container in the source_comments section
     //todo: do we want to include "$file_head" and "$file_foot"?
     val containerNames = grfn("containers").arr.map(_.obj("name").str)
     val sourceCommentObject = grfn("source_comments").obj
-    //store comment text objects here; the comment text objects include the source file, the container, and the location in the container (head/neck/foot)
+    //store comment text objects here; the comment text objects include the source file, the container,
+    // and the location in the container (head/neck/foot)
     val commentTextObjects = new ArrayBuffer[Obj]()
     //for each container, the comment section has these three components
     val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
