@@ -136,9 +136,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if word.length <= 6
       if (word.toLowerCase != word // mixed case or all UPPER
         |
-        varMention.entities.exists(ent => ent.exists(e => e== "B-GreekLetter")) //or is a greek letter
+        varMention.entities.exists(ent => ent.exists(_ == "B-GreekLetter")) //or is a greek letter
         |
-        word.length == 1 && m.tags.exists(tags => tags.head matches "NN")) //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+        word.length == 1 && m.tags.exists(_.head matches "NN")) //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
       //todo: still need a way to not avoid short lower-case vars
 
     } yield m
