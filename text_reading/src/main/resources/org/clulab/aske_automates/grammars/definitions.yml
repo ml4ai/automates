@@ -68,6 +68,10 @@ rules:
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
       (@definition: Concept [!entity = "NUMBER"]) "," @variable:Variable (?! [lemma = "be"])
+      |
+      @definition: Concept "," @variable:Variable ","
+      |
+      @definition: Concept "," @variable:Variable (?! /.*/)
 #
 
 
