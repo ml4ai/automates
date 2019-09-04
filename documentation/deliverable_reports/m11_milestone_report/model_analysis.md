@@ -29,6 +29,10 @@ As mentioned in the MA introduction, much of our work since the last report has 
 ![Gillespie SIR GrFN CAG Model/Solver Separation](figs/SIR-gillespie-CAG_alt.png)
 
 ### Translating GrFN to WiringDiagrams for SemanticModels.jl
+The GTRI team, which produces `SemanticModels.jl` utilizes a graph-based structure called a WiringDiagram that they use to represent knowledge graphs of scientific models for the purposes of model augmentation. In an effort to provide them access to models that are extracted from source code and grounded using information from texts and equations we have created a translator, called `GrFN2WD`, capable of producing a WiringDiagram for a scientific model extracted from source code from a GrFN. While the graph-based structure of a GrFN is very similar to that of a WiringDiagram, there are a few key differences. One big difference is that a WiringDiagram is created through explicit rules that govern the concatenation and composition of the functions in a WiringDiagram based on the functions domain and codomain. In this section we will discuss the manipulations that are conducted on a GrFN in order to produce a WiringDiagram using a simple version of the SIR model as an example.
+
+We begin the discussion by showing the block of Fortran code below that defines the simple SIR model in a similar way that we would expect of models that already exist in source code. Some important notes about this source code is that our model inputs consist of `S, I, R, beta, gamma, dt`, the outputs of the model are `S, I, R`, and the wiring of the model mainly deals with the calculations of two intermediate variables `infected, recovered` as well as the update of the output variables using the intermediate variables.
+
 ```Fortran
 subroutine sir(S, I, R, beta, gamma, dt)
   implicit none
@@ -44,7 +48,15 @@ subroutine sir(S, I, R, beta, gamma, dt)
 end subroutine sir
 ```
 
+Our PA/MA pipeline can easily represent this model as a GrFN and the computation graph for the GrFN is shown below. As we noted above there are three lambda functions computed at the function nodes in this model as we see in the GrFN CG below. As shown by the layout of the CG, the two lambda function nodes that compute the intermediate variables must be computed before the final three lambda functions that update the output variables, since the three update computations rely on the results of the computations of the two intermediate variables.
+
 ![Simplified SIR Model GrFN](figs/SIR-simple--GrFN.png)
+
+The finding mentioned above, of some function nodes needing to be computed before others, is nothing new for GrFN. In order to efficiently execute a GrFN a function stack is created where functions that can be executed in parallel are placed at the same level in the function stack. We can utilize this information in order to group the function nodes in a GrFN into levels that will be concatenated to form level domains and codomains for a set of function nodes in a WiringDiagram.
+
+At this point, it is necessary to note some terminology used when developing WiringDiagrams. A function node in a GrFN translates to a Hom in a WiringDiagram where a Hom represents a computation with a domain and codomain. Each Hom is placed into a WiringDiagram that creates a box-and-wire representation of the computation with it's domain and codomain variables. In a WiringDiagram the box represents the computation and the wires leading to the box represent the domain variables, while the wires going from the box represent codomain variables. WiringDiagrams can be concatenated and composed and the result of each of these operations is a new WiringDiagram. The composition rule of diagrams requires that WiringDiagrams whose results are input to other WiringDiagrams must all be computed jointly. Another important rule for WiringDiagrams is that wires in the domain and codomain at any level in a WiringDiagram are prevented from crossing.
+
+The two restrictions mentioned above do not formally exist in GrFN models and therefore require some massaging of the GrFN during translation. To facilitate both of these rules we add a new Hom for each stack level of function nodes in a GrFN that we call the level-rewiring Homs. Utilizing level-rewiring Homs allows any wire crossings in a model to be encapsulated inside a computation as opposed to being present in the domain/codomain of a WiringDiagram. The use of level-rewirings also ensures that all function computations at the same stack level are transformed into WiringDiagrams and then their domains/codomains are concatenated together to be sent to accept variables from the previous level-rewiring and to send variables to the next level-rewiring. An example of the Julia WiringDiagram code produced by `GrFN2WD` for the simple SIR model is shown below.
 
 ```julia
 using Catlab
@@ -65,17 +77,22 @@ id_I_0 = id(Ports([I_0]))
 id_R_0 = id(Ports([R_0]))
 id_S_0 = id(Ports([S_0]))
 
+# BLOCK 0
 IN_1 = WiringDiagram(Hom(:L0_REWIRE, beta_0 ⊗ S_0 ⊗ I_0 ⊗ R_0 ⊗ dt_0 ⊗ gamma_0, gamma_0 ⊗ I_0 ⊗ dt_0 ⊗ beta_0 ⊗ S_0 ⊗ I_0 ⊗ R_0 ⊗ dt_0 ⊗ I_0 ⊗ R_0 ⊗ S_0))
 WD_infected_1 = WiringDiagram(Hom(A__infected_1, beta_0 ⊗ S_0 ⊗ I_0 ⊗ R_0 ⊗ dt_0, infected_1))
 WD_recovered_1 = WiringDiagram(Hom(A__recovered_1, gamma_0 ⊗ I_0 ⊗ dt_0, recovered_1))
 OUT_1 = IN_1 ⊚ (WD_recovered_1 ⊗ WD_infected_1 ⊗ id_I_0 ⊗ id_R_0 ⊗ id_S_0)
 
+# BLOCK 1
 IN_1 = WiringDiagram(Hom(:L1_REWIRE, recovered_1 ⊗ infected_1 ⊗ I_0 ⊗ R_0 ⊗ S_0, S_0 ⊗ infected_1 ⊗ R_0 ⊗ recovered_1 ⊗ I_0 ⊗ infected_1 ⊗ recovered_1))
 WD_I_1 = WiringDiagram(Hom(A__I_1, I_0 ⊗ infected_1 ⊗ recovered_1, I_1))
 WD_R_1 = WiringDiagram(Hom(A__R_1, R_0 ⊗ recovered_1, R_1))
 WD_S_1 = WiringDiagram(Hom(A__S_1, S_0 ⊗ infected_1, S_1))
 OUT_2 = OUT_1 ⊚ IN_1 ⊚ (WD_S_1 ⊗ WD_R_1 ⊗ WD_I_1)
 ```
+
+This code includes two large blocks of WiringDiagram definitions that mirror the two stack levels found in GrFN. We can observe that each of these blocks begins with a `L*_REWIRE` Hom and then ends with a composition/concatenation line for the block. Not only can this code be manipulated directly by GTRI, but we can also render the code into a graphical representation of the overall WiringDiagram described. Below we show this rendering for the above code. Inspecting this visual rendering allows us to clearly see the role of the level-rewire Homs in solving the wire-crossing problem and enforcing the ordering of Hom evaluations.
+
 ![Simplified SIR Model WiringDiagram](figs/translated-WD.png)
 
 ### Domain Constraint Propagation
