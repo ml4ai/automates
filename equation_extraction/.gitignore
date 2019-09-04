@@ -1,6 +1,8 @@
 *tar.gz
 arxiv/
-output/
+output*
+results/
+test*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
