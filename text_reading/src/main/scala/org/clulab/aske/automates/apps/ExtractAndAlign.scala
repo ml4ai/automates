@@ -52,8 +52,8 @@ object ExtractAndAlign {
       }
     }
 
-    for (line <- lines_combined) println(line)
-    println("Number of lines passed to the comment reader: " + lines_combined.length)
+//    for (line <- lines_combined) println(line)
+//    println("Number of lines passed to the comment reader: " + lines_combined.length)
 
     val doc = proc.annotateFromSentences(lines_combined, keepText = true)
     //include more detailed info about the source of the comment: the container and the location in the container (head/neck/foot)

@@ -74,8 +74,9 @@ class PDFDataLoader extends DataLoader {
   def loadFile(f: File): Seq[String] = {
     // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
     //the heading and the text of the section are currently combined; might need to be revisted
-    val json = client.parsePdfToJson(f)
-    val scienceParseDoc = ScienceParseClient.mkDocument(json)
+    val jsonString = client.parsePdfToJson(f)
+    val uJson = ujson.read(jsonString) //make a ujson value out of the json string we get from scienceParse; mkDocument does not work on plain string.
+    val scienceParseDoc = ScienceParseClient.mkDocument(uJson)
     scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
   }
   override val extension: String = "pdf"
