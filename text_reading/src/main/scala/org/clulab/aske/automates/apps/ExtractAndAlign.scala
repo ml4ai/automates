@@ -52,9 +52,6 @@ object ExtractAndAlign {
       }
     }
 
-//    for (line <- lines_combined) println(line)
-//    println("Number of lines passed to the comment reader: " + lines_combined.length)
-
     val doc = proc.annotateFromSentences(lines_combined, keepText = true)
     //include more detailed info about the source of the comment: the container and the location in the container (head/neck/foot)
     doc.id = Option(textObj("source").str + "; " + textObj("container").str + "; " + textObj("location").str)
@@ -63,11 +60,12 @@ object ExtractAndAlign {
 
 
   def main(args: Array[String]): Unit = {
-    val config: Config = ConfigFactory.load("automates")
+    val config: Config = ConfigFactory.load()
 
     // Instantiate the text reader
     val textconfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textconfig)
+
     // Instantiate the comment reader
     val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
     // todo: future readers
@@ -115,16 +113,16 @@ object ExtractAndAlign {
     val grfn = ujson.read(grfnFile.readString())
 
 
-    //Getting comments from grfn
-    //the source_comments section of the json contains comments for multiple containers;
+    // Getting comments from grfn
+    // the source_comments section of the json contains comments for multiple containers;
     // get the container names to look up the comments for that container in the source_comments section
     //todo: do we want to include "$file_head" and "$file_foot"?
     val containerNames = grfn("containers").arr.map(_.obj("name").str)
     val sourceCommentObject = grfn("source_comments").obj
-    //store comment text objects here; the comment text objects include the source file, the container,
+    // store comment text objects here; the comment text objects include the source file, the container,
     // and the location in the container (head/neck/foot)
     val commentTextObjects = new ArrayBuffer[Obj]()
-    //for each container, the comment section has these three components
+    // for each container, the comment section has these three components
     val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
     for (containerName <- containerNames) if (sourceCommentObject.contains(containerName)) {
       val commentObject = sourceCommentObject(containerName).obj
@@ -250,6 +248,7 @@ object ExtractAndAlign {
         val textLinkElement = textLinkElements(alignment.dst)
         val score = alignment.score
         val hypothesis = mkHypothesis(commentLinkElement, textLinkElement, score)
+        println(s"Appending: ${hypothesis}")
         hypotheses.append(hypothesis)
       }
     }
