@@ -29,7 +29,7 @@ object ExtractAndExport extends App {
     }
   }
 
-  val config = ConfigFactory.load("automates")
+  val config = ConfigFactory.load()
 
 
   val inputDir = config[String]("apps.inputDirectory")

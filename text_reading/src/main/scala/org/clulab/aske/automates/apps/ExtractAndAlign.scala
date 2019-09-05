@@ -162,7 +162,7 @@ object ExtractAndAlign {
     // Align the comment definitions to the GrFN variables
     val numAlignments = config[Int]("apps.numAlignments")
     val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
-    println("length "+ commentDefinitionMentions.length)
+//    println("length "+ commentDefinitionMentions.length)
 
 
     val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
@@ -185,20 +185,20 @@ object ExtractAndAlign {
 
     // ----------------------------------
     // Debug:
-    topKCommentToText.foreach { aa =>
-      println("====================================================================")
-      println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
-      println("====================================================================")
-      aa.foreach { topK =>
-        val v1Text = commentDefinitionMentions(topK.src).text
-        val v2Text = textDefinitionMentions(topK.dst).text
-        println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text}")
-        println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
-        println(s"comment: ${v1Text}")
-        println(s"text: ${v2Text}")
-        println(s"score: ${topK.score}\n")
-      }
-    }
+//    topKCommentToText.foreach { aa =>
+//      println("====================================================================")
+//      println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
+//      println("====================================================================")
+//      aa.foreach { topK =>
+//        val v1Text = commentDefinitionMentions(topK.src).text
+//        val v2Text = textDefinitionMentions(topK.dst).text
+//        println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text}")
+//        println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
+//        println(s"comment: ${v1Text}")
+//        println(s"text: ${v2Text}")
+//        println(s"score: ${topK.score}\n")
+//      }
+//    }
     // ----------------------------------
 
     // Export alignment:
@@ -248,7 +248,6 @@ object ExtractAndAlign {
         val textLinkElement = textLinkElements(alignment.dst)
         val score = alignment.score
         val hypothesis = mkHypothesis(commentLinkElement, textLinkElement, score)
-        println(s"Appending: ${hypothesis}")
         hypotheses.append(hypothesis)
       }
     }
