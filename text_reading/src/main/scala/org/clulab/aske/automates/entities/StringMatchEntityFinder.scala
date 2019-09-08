@@ -1,8 +1,10 @@
 package org.clulab.aske.automates.entities
 
+
 import java.io.File
 
 import ai.lum.common.ConfigUtils._
+import ai.lum.common.FileUtils._
 import ai.lum.regextools.RegexBuilder
 import com.typesafe.config.Config
 import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
@@ -57,14 +59,21 @@ object StringMatchEntityFinder {
 }
 
 object GrFNEntityFinder {
+  def getVariableShortNames(variableNames: Seq[String]): Seq[String] = for (
+    name <- variableNames
+  ) yield name.split("::").reverse.slice(1, 2).mkString("")
+
   def fromConfig(config: Config) = {
-    val grfnFile: String = config[String]("grfnFile") // fixme (Becky): extend to a dir later
-    val grfn = GrFNParser.mkDocument(new File(grfnFile))
-    val grfnVars = GrFNDocument.getVariables(grfn)
-    val variableNames = grfnVars.map(_.name.toUpperCase) // fixme: are all the variables uppercase?
+    val grfnPath: String = config[String]("grfnFile") // fixme (Becky): extend to a dir later
+    val grfnFile = new File(grfnPath)
+    val grfn = ujson.read(grfnFile.readString())
+    // Full variable identifiers
+    val variableNames = grfn("variables").arr.map(_.obj("name").str)
+    // The variable names only (excluding the scope info)
+    val variableShortNames = getVariableShortNames(variableNames)
 
     // Make a StringMatchEF based on the variable names
-    StringMatchEntityFinder.fromStrings(variableNames, "Variable") // todo: GrFNVariable?
+    StringMatchEntityFinder.fromStrings(variableShortNames, "Variable") // todo: GrFNVariable?
   }
 }
 

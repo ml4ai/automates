@@ -7,8 +7,9 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkCommentTextElement}
+import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, mkHypothesis, mkLinkElement}
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
@@ -144,9 +145,7 @@ object ExtractAndAlign {
     // Full variable identifiers
     val variableNames = grfn("variables").arr.map(_.obj("name").str)
     // The variable names only (excluding the scope info)
-    val variableShortNames = for (
-      name <- variableNames
-    ) yield name.split("::").reverse.slice(1, 2).mkString("")
+    val variableShortNames = GrFNEntityFinder.getVariableShortNames(variableNames)
 
 
     // Get the equation tokens
