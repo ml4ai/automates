@@ -118,14 +118,14 @@ def mk_template(template):
     return template_env.get_template(template)
 
 
-def get_pages(pdf_name, dump_pages, outdir):
+def get_pages(pdf_name, dump, outdir):
     pages = []
     for img in convert_from_path(pdf_name):
         page = np.array(img)
         page = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
         pages.append(page)
     # optionally, store them
-    if dump_pages:
+    if dump:
         dump_pages(outdir, pages)
     return pages
 
