@@ -91,7 +91,7 @@ def render_equation(template_args, template, filename, keep_intermediate):
         f.write(equation_tex)
     pdf_name = render_tex(filename, dirname, keep_intermediate)
     if pdf_name:
-        image = get_pages(pdf_name, dump_pages=False, outdir="")[0]
+        image = get_pages(pdf_name, dump=False, outdir="")[0]
     else:
         image = None
     return image
@@ -106,7 +106,7 @@ def render_equation(template_args, template, filename, keep_intermediate):
 #         f.write(equation_tex)
 #     pdf_name = render_tex(filename, dirname, keep_intermediate)
 #     if pdf_name:
-#         image = get_pages(pdf_name, dump_pages=False, outdir="")[0]
+#         image = get_pages(pdf_name, dump=False, outdir="")[0]
 #     else:
 #         image = None
 #     return image
@@ -273,7 +273,7 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
     # if the pdf is there (rendered OR provided)
     if pdf_name:
         # retrieve pdf pages as images (png)
-        pages = get_pages(pdf_name, dump_pages, outdir)
+        pages = get_pages(pdf_name, dump, outdir)
         # load jinja2 templates
         template = mk_template(template)
         template_im2markup = mk_template(template_im2markup)
