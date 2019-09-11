@@ -247,7 +247,7 @@ def error_msg(paper_name, msg, equations=[]):
 def get_paper_id(dirname):
     return os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
 
-def process_paper(dirname, template, template_im2markup, outdir, rescale_factor, dump_pages, keep_intermediate, pdfdir, num_paragraphs):
+def process_paper(dirname, template, template_im2markup, outdir, rescale_factor, dump, keep_intermediate, pdfdir, num_paragraphs):
     # keep a poor man's log of what failed, if anything
     info_log = ''
 
