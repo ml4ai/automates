@@ -662,14 +662,14 @@ def main(annot_dir    = 'tp_annotation/1805',
 
 if __name__ == "__main__":
     
-    main(annot_dir    = 'tp_annotation/1805',
-         pdf_dir      = 'test_playground/1805',
+    main(annot_dir    = '/data/annotation/1805',
+         pdf_dir      = '/data/output/1805',
          paper_prefix = '',
-         plot_dir     = 'brat_plots/',
-         brat_dir     = 'tp_final',
-         max_eqn_ppr     = 50,
-         max_eqn_context = 10,
-         max_eqn_intext  = 500,
-         max_eqn_token   = 2000,
-         max_eqn_chars   = 5000,
+         plot_dir     = '/data/brat_plots/',
+         brat_dir     = '/data/brat_final',
+         max_eqn_ppr     = 5,
+         max_eqn_context = 1,
+         max_eqn_intext  = 50,
+         max_eqn_token   = 200,
+         max_eqn_chars   = 500,
          excluded_fields = ['math'])
