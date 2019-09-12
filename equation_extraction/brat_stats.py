@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 import argparse
-from collections import Counter, ChainMap
+from collections import Counter
 import csv
 import errno
 import json
@@ -16,6 +16,11 @@ from PIL import Image
 import re
 import shutil
 import glob as g
+
+try:
+    from collections import ChainMap
+except ImportError:
+    from chainmap import ChainMap
 
 ################################################################################
 
