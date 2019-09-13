@@ -18,9 +18,13 @@ import shutil
 import glob as g
 
 try:
+    # Python 3
     from collections import ChainMap
+    mode = 0o755
 except ImportError:
+    # Python 2
     from chainmap import ChainMap
+    mode = 0755
 
 ################################################################################
 
@@ -38,7 +42,7 @@ OBJECTIVE:
 
 ################################################################################
 
-def create_directory(path):
+def create_directory(path, mode=0755):
     
     """
     Creates a new directory if one does not exist.
@@ -50,13 +54,15 @@ def create_directory(path):
     
     # Tries to Create a New Directory
     try:
-        os.makedirs(path)
+        original_umask = os.umask(0)
+        os.makedirs(path, mode=mode)
     
     # Raises an Exception if Directory Already Exists
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
-
+    finally:
+        os.umask(original_umask)
 
 ################################################################################
 
@@ -385,7 +391,7 @@ def filter(eqn_stats, excluded_fields = ['math'],
     """
     #
     if dst_dir:
-        create_directory(dst_dir)
+        create_directory(dst_dir, mode=mode)
     #
     eqn_filter_stats = []
     for eqn in eqn_stats:
@@ -427,7 +433,7 @@ def main(annot_dir    = 'tp_annotation/1805',
          max_eqn_chars   = 500,
          excluded_fields = ['math']):
 
-    create_directory(plot_dir)
+    create_directory(plot_dir, mode=mode)
     begin_eqnmarkers = ['begin{equation}',  'begin{align}',  'begin{eqnarray}',
                         'begin{equation*}', 'begin{align*}', 'begin{eqnarray*}',
                         '\[', ' $$']
@@ -636,7 +642,7 @@ def main(annot_dir    = 'tp_annotation/1805',
                      fname.replace(plot_dir, os.path.join(plot_dir, 'filter_')))
 
 
-    create_directory(brat_dir)
+    create_directory(brat_dir, mode=mode)
 
     # Consolidates Relevant BRAT & PNG Files from Filtered Equations into a Single Directory
     for eqn in eqn_filter_stats:
