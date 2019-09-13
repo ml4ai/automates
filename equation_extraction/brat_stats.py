@@ -671,11 +671,11 @@ def main(annot_dir    = 'tp_annotation/1805',
 
 if __name__ == "__main__":
     
-    main(annot_dir    = '/data/annotation/1805',
-         pdf_dir      = '/data/output/1805',
+    main(annot_dir    = '/data/data_20190910/annotation/1805',
+         pdf_dir      = '/data/data_20190910/output/1805',
          paper_prefix = '',
-         plot_dir     = '/data/brat_plots/',
-         brat_dir     = '/data/brat_final',
+         plot_dir     = '/data/data_20190910/brat_plots/',
+         brat_dir     = '/data/data_20190910/brat_final',
          max_eqn_ppr     = 5,
          max_eqn_context = 1,
          max_eqn_intext  = 50,
