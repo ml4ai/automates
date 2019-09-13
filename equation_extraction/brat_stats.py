@@ -20,11 +20,11 @@ import glob as g
 try:
     # Python 3
     from collections import ChainMap
-    mode = 0o755
+    mode = 0o777
 except ImportError:
     # Python 2
     from chainmap import ChainMap
-    mode = 0755
+    mode = 0777
 
 ################################################################################
 
@@ -54,15 +54,13 @@ def create_directory(path, mode=0755):
     
     # Tries to Create a New Directory
     try:
-        original_umask = os.umask(0)
+        original_umask = os.umask(000)
         os.makedirs(path, mode=mode)
-    
+        os.umask(original_umask)
     # Raises an Exception if Directory Already Exists
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
-    finally:
-        os.umask(original_umask)
 
 ################################################################################
 
