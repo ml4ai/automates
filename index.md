@@ -40,4 +40,4 @@ composition and reasoning in context to directly support the development of
 ‘third wave’ artificial intelligence.
 
 For more information, see our [paper from the Modeling the World's Systems 2019
-conference](https://vanga.sista.arizona.edu/automates/MWS-2019-AutoMATES.pdf).
+conference](http://vanga.sista.arizona.edu/automates_data/MWS-2019-AutoMATES.pdf).
