@@ -432,6 +432,15 @@ def main(arxiv_id     = '1805',
          max_eqn_chars   = 500,
          excluded_fields = ['math']):
 
+    """
+    ARGS:
+        arxiv_id (str): Directory name demarking the year & month (i.e., 'YYMM')
+        plot_dir (str): Directory to save plots
+                        If empty string, script will not generate plots
+    RETURNS:
+
+    """
+
     create_directory(os.path.join(plot_dir, arxiv_id), mode=mode)
     begin_eqnmarkers = ['begin{equation}',  'begin{align}',  'begin{eqnarray}',
                         'begin{equation*}', 'begin{align*}', 'begin{eqnarray*}',
@@ -442,25 +451,27 @@ def main(arxiv_id     = '1805',
     
     id2spec_all = get_metadata('harvest_arxiv.json', paper_prefix)
     spec_all    = spec_stats(id2spec_all,
-                             plot_name=os.path.join(plot_dir, arxiv_id, 'spec_all.pdf'))
+                             plot_name=os.path.join(plot_dir, arxiv_id, 'spec_all.pdf')
+                                       if plot_dir else '')
 
     annot_iter      = os.walk(os.path.join(annot_dir, arxiv_id))
     proc_paper_list = annot_iter.__next__()[1]
     id2spec_proc    = dict(ChainMap(*[{paper:id2spec_all.get(paper)} for paper in proc_paper_list]))
     spec_proc       = spec_stats(id2spec_proc,
-                                 plot_name=os.path.join(plot_dir, arxiv_id, 'spec_proc.pdf'))
+                                 plot_name=os.path.join(plot_dir, arxiv_id, 'spec_proc.pdf')
+                                           if plot_dir else '')
 
-
-    recovery_rate = dict(ChainMap(*[{spec:spec_proc.get(spec)/spec_all.get(spec)}
-                                    if spec_proc.get(spec)
-                                    else {spec:0} for spec in spec_all.keys()]))
-    fig, ax = plt.subplots(figsize=(8,5))
-    rects = ax.barh(range(len(spec_all.keys())), [recovery_rate.get(spec) for spec in spec_all.keys()],
-                    align='center',
-                    height=0.5,
-                    tick_label=list(spec_all.keys()))
-    plt.savefig(os.path.join(plot_dir, arxiv_id, 'recovery_rate.pdf'), bbox_inches='tight')
-    plt.close()
+    if plot_dir:
+        recovery_rate = dict(ChainMap(*[{spec:spec_proc.get(spec)/spec_all.get(spec)}
+                                        if spec_proc.get(spec)
+                                        else {spec:0} for spec in spec_all.keys()]))
+        fig, ax = plt.subplots(figsize=(8,5))
+        rects = ax.barh(range(len(spec_all.keys())), [recovery_rate.get(spec) for spec in spec_all.keys()],
+                        align='center',
+                        height=0.5,
+                        tick_label=list(spec_all.keys()))
+        plt.savefig(os.path.join(plot_dir, arxiv_id, 'recovery_rate.pdf'), bbox_inches='tight')
+        plt.close()
 
 
     annot_iter      = os.walk(os.path.join(annot_dir, arxiv_id))
@@ -616,8 +627,9 @@ def main(arxiv_id     = '1805',
             np.arange(0,500,20),     # char_eqn
             np.arange(0,500,20)]     # num_tokens
             
-    for idx, (feature, xlabel, ylabel, fname) in enumerate(features_prop):
-        plot_feature(feature, bins[idx], xlabel, ylabel, "No Filtering", spec_proc, eqn_stats, fname)
+    if plot_dir:
+        for idx, (feature, xlabel, ylabel, fname) in enumerate(features_prop):
+            plot_feature(feature, bins[idx], xlabel, ylabel, "No Filtering", spec_proc, eqn_stats, fname)
 
     eqn_filter_stats = filter(eqn_stats, excluded_fields = excluded_fields,
                                          max_eqn_ppr     = max_eqn_ppr,
@@ -637,11 +649,12 @@ def main(arxiv_id     = '1805',
             np.arange(0,max_eqn_chars,20),  # char_eqn
             np.arange(0,max_eqn_token,20)]  # num_tokens
 
-    for idx, (feature, xlabel, ylabel, fname) in enumerate(features_prop):
-        plot_feature(feature, bins[idx], xlabel, ylabel, "With Filtering",
-                     spec_proc, eqn_filter_stats,
-                     fname.replace(os.path.join(plot_dir, arxiv_id) + "/",
-                                   os.path.join(plot_dir,  arxiv_id, 'filter_')))
+    if plot_dir:
+        for idx, (feature, xlabel, ylabel, fname) in enumerate(features_prop):
+            plot_feature(feature, bins[idx], xlabel, ylabel, "With Filtering",
+                         spec_proc, eqn_filter_stats,
+                         fname.replace(os.path.join(plot_dir, arxiv_id) + "/",
+                                       os.path.join(plot_dir,  arxiv_id, 'filter_')))
 
 
     create_directory(brat_dir, mode=mode)
@@ -679,7 +692,7 @@ if __name__ == "__main__":
          annot_dir    = '/data/data_20190910/annotation',
          pdf_dir      = '/data/data_20190910/output',
          paper_prefix = '',
-         plot_dir     = '/data/data_20190910/brat_plots',
+         plot_dir     = '', #'/data/data_20190910/brat_plots',
          brat_dir     = '/data/data_20190910/brat_final',
          max_eqn_ppr     = 20, #5,
          max_eqn_context = 3, #1,
