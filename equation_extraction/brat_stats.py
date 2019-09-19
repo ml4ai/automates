@@ -511,13 +511,15 @@ def main(annot_dir    = 'tp_annotation/1805',
             for match in re.finditer('\$', context):
                 intext_eqn_idx.append(match.start())
             #
-            # Number of In-Text Equations in Context
-            num_intext_eqn = int(len(intext_eqn_idx)/2)
-            #
             # Number of Characters in Each In-Text Equations in Context (incl. $$s)
-            char_intext_eqn = [intext_eqn_idx[2*i+1] - intext_eqn_idx[2*i] + 1
-                               for i in range(num_intext_eqn)]
+            char_intext_eqn = [ x for x in 
+                                [ intext_eqn_idx[2*i+1] - intext_eqn_idx[2*i] - 1
+                                  for i in range(int(len(intext_eqn_idx)/2)) ]
+                                if x > 0 ]
                                #
+            # Number of In-Text Equations in Context
+            num_intext_eqn = int(len(char_intext_eqn))
+
             # Fraction of Total Context in In-Text Equations
             frac_intext_eqn = sum(char_intext_eqn) / num_char
             #
@@ -526,19 +528,19 @@ def main(annot_dir    = 'tp_annotation/1805',
             end_eqn_idx = []
             for mark in begin_eqnmarkers:
                 for match in re.finditer(mark, context):
-                    start_eqn_idx.append(match.start()-1)
+                    start_eqn_idx.append(match.end())
                 
             for mark in end_eqnmarkers:
                 for match in re.finditer(mark, context):
-                    end_eqn_idx.append(match.end())
+                    end_eqn_idx.append(match.start()-1)
             
             # Number of Stand Alone Equations in Context
             num_eqn = int(len(end_eqn_idx))
             #
             # Number of Characters in Each Stand Alone Equations in Context
-            # (incl. \begin{} and \end{})
+            # (excl. \begin{} and \end{})
             if len(start_eqn_idx) == len(end_eqn_idx):
-                char_eqn = [end_eqn_idx[i] - start_eqn_idx[i] for i in range(num_eqn)]
+                char_eqn = [ len(context[start_eqn_idx[i]:end_eqn_idx[i]].strip()) for i in range(num_eqn)]
                 #
                 # Fraction of Total Context in In-Text Equations
                 frac_eqn = sum(char_eqn) / num_char
