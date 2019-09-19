@@ -419,8 +419,9 @@ def filter(eqn_stats, excluded_fields = ['math'],
 
 ################################################################################
 
-def main(annot_dir    = 'tp_annotation/1805',
-         pdf_dir      = 'test_playground/1805',
+def main(arxiv_id     = '1805',
+         annot_dir    = 'tp_annotation',
+         pdf_dir      = 'test_playground',
          paper_prefix = '',
          plot_dir     = 'brat_plots',
          brat_dir     = 'tp_final',
@@ -431,7 +432,7 @@ def main(annot_dir    = 'tp_annotation/1805',
          max_eqn_chars   = 500,
          excluded_fields = ['math']):
 
-    create_directory(plot_dir, mode=mode)
+    create_directory(os.path.join(plot_dir, arxiv_id), mode=mode)
     begin_eqnmarkers = ['begin{equation}',  'begin{align}',  'begin{eqnarray}',
                         'begin{equation*}', 'begin{align*}', 'begin{eqnarray*}',
                         '\[', ' $$']
@@ -441,13 +442,13 @@ def main(annot_dir    = 'tp_annotation/1805',
     
     id2spec_all = get_metadata('harvest_arxiv.json', paper_prefix)
     spec_all    = spec_stats(id2spec_all,
-                             plot_name=os.path.join(plot_dir, 'spec_all.pdf'))
+                             plot_name=os.path.join(plot_dir, arxiv_id, 'spec_all.pdf'))
 
-    annot_iter      = os.walk(annot_dir)
+    annot_iter      = os.walk(os.path.join(annot_dir, arxiv_id))
     proc_paper_list = annot_iter.__next__()[1]
     id2spec_proc    = dict(ChainMap(*[{paper:id2spec_all.get(paper)} for paper in proc_paper_list]))
     spec_proc       = spec_stats(id2spec_proc,
-                                 plot_name=os.path.join(plot_dir, 'spec_proc.pdf'))
+                                 plot_name=os.path.join(plot_dir, arxiv_id, 'spec_proc.pdf'))
 
 
     recovery_rate = dict(ChainMap(*[{spec:spec_proc.get(spec)/spec_all.get(spec)}
@@ -458,11 +459,11 @@ def main(annot_dir    = 'tp_annotation/1805',
                     align='center',
                     height=0.5,
                     tick_label=list(spec_all.keys()))
-    plt.savefig(os.path.join(plot_dir, 'recovery_rate.pdf'), bbox_inches='tight')
+    plt.savefig(os.path.join(plot_dir, arxiv_id, 'recovery_rate.pdf'), bbox_inches='tight')
     plt.close()
 
 
-    annot_iter = os.walk(annot_dir)
+    annot_iter      = os.walk(os.path.join(annot_dir, arxiv_id))
     proc_paper_list = annot_iter.__next__()[1]
 
     spec2eqncount  = {}  # Stores Equation Counts Per Subject
@@ -564,47 +565,47 @@ def main(annot_dir    = 'tp_annotation/1805',
                 #pass
 
     # Save Equation Statistics Data to File
-    write_dictlist(eqn_stats, os.path.join(plot_dir, 'eqn_stats.csv'))
+    write_dictlist(eqn_stats, os.path.join(plot_dir, arxiv_id, 'eqn_stats_{0}.csv'.format(arxiv_id)))
     
     features_prop = [("num_ppr_eqn",
                       r"Number of Extracted Equations Environments in Paper",
                       r"Number of Papers",
-                      os.path.join(plot_dir, "eqn_count.png")),
+                      os.path.join(plot_dir, arxiv_id, "eqn_count.png")),
                      
                      ("context_length",
                       r"Number of Characters in Equation Context",
                       r"Number of Extracted Equation Contexts",
-                      os.path.join(plot_dir, "context_length.png")),
+                      os.path.join(plot_dir, arxiv_id, "context_length.png")),
                      
                      ("num_intext_eqn",
                       r"Number of In-Text Equations in Context",
                       r"Number of Extracted Equation Contexts",
-                      os.path.join(plot_dir, "num_intext_eqn.png")),
+                      os.path.join(plot_dir, arxiv_id, "num_intext_eqn.png")),
                      
                      ("frac_intext_eqn",
                       r"Fraction of Context Allocated to In-Text Equations",
                       r"Number of Extracted Equation Contexts",
-                      os.path.join(plot_dir, "frac_intext_eqn.png")),
+                      os.path.join(plot_dir, arxiv_id, "frac_intext_eqn.png")),
                      
                      ("num_eqn",
                       r"Number of Equations Environments w/in Extracted Context",
                       r"Number of Extracted Equation Contexts",
-                      os.path.join(plot_dir, "num_eqn.png")),
+                      os.path.join(plot_dir, arxiv_id, "num_eqn.png")),
                      
                      ("frac_eqn",
                       r"Fraction of Context Allocated to Equation Environments",
                       r"Number of Extracted Equation Contexts",
-                      os.path.join(plot_dir, "frac_eqn.png")),
+                      os.path.join(plot_dir, arxiv_id, "frac_eqn.png")),
                      
                      ("char_eqn",
                       r"Number of Characters in Context Equation Environments",
                       r"Number of Extracted Equation Contexts",
-                      os.path.join(plot_dir, "char_eqn.png")),
+                      os.path.join(plot_dir, arxiv_id, "char_eqn.png")),
                      
                      ("avg_num_tokens",
                       r"Number of Tokens within Context Equation Environments",
                       r"Number of Extracted Equation Contexts",
-                      os.path.join(plot_dir, "num_tokens.png")) ]
+                      os.path.join(plot_dir, arxiv_id, "num_tokens.png")) ]
     
     bins = [np.arange(0,75,5),       # num_ppr_eqn
             np.arange(0,20000,1000), # context_length
@@ -639,7 +640,8 @@ def main(annot_dir    = 'tp_annotation/1805',
     for idx, (feature, xlabel, ylabel, fname) in enumerate(features_prop):
         plot_feature(feature, bins[idx], xlabel, ylabel, "With Filtering",
                      spec_proc, eqn_filter_stats,
-                     fname.replace(plot_dir, os.path.join(plot_dir, 'filter_')))
+                     fname.replace(os.path.join(plot_dir, arxiv_id) + "/",
+                                   os.path.join(plot_dir,  arxiv_id, 'filter_')))
 
 
     create_directory(brat_dir, mode=mode)
@@ -650,7 +652,7 @@ def main(annot_dir    = 'tp_annotation/1805',
         for file in ["context_k3.txt", "aabb.png"]:
             # Move File if it Exists.
             # Name Change for Convenience:  orig ---> new
-            orig = os.path.join(annot_dir, eqn.get("paper"), eqn.get("eqn_dir"), file)
+            orig = os.path.join(annot_dir, arxiv_id, eqn.get("paper"), eqn.get("eqn_dir"), file)
             new  = os.path.join(brat_dir,
                     eqn.get("paper") + "_" +  eqn.get("eqn_dir") + os.path.splitext(file)[1])
             try:
@@ -662,7 +664,7 @@ def main(annot_dir    = 'tp_annotation/1805',
         try:
             pdf_new = os.path.join(brat_dir, eqn.get("paper") + ".pdf")
             if not os.path.isfile(pdf_new):
-                pdf_loc = g.glob(os.path.join(pdf_dir, eqn.get("paper"), "build", "*.pdf"))[0]
+                pdf_loc = g.glob(os.path.join(pdf_dir, arxiv_id, eqn.get("paper"), "build", "*.pdf"))[0]
                 shutil.copy2(pdf_loc, pdf_new)
         except:
             print("PDF does not exist for", eqn.get("paper"))
@@ -673,14 +675,15 @@ def main(annot_dir    = 'tp_annotation/1805',
 
 if __name__ == "__main__":
     
-    main(annot_dir    = '/data/data_20190910/annotation/1805',
-         pdf_dir      = '/data/data_20190910/output/1805',
+    main(arxiv_id     = '1805',
+         annot_dir    = '/data/data_20190910/annotation',
+         pdf_dir      = '/data/data_20190910/output',
          paper_prefix = '',
-         plot_dir     = '/data/data_20190910/brat_plots/',
+         plot_dir     = '/data/data_20190910/brat_plots',
          brat_dir     = '/data/data_20190910/brat_final',
-         max_eqn_ppr     = 5,
-         max_eqn_context = 1,
-         max_eqn_intext  = 50,
-         max_eqn_token   = 200,
-         max_eqn_chars   = 500,
+         max_eqn_ppr     = 20, #5,
+         max_eqn_context = 3, #1,
+         max_eqn_intext  = 50, #50,
+         max_eqn_token   = 500, #200,
+         max_eqn_chars   = 1000, #500,
          excluded_fields = ['math'])
