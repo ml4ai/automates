@@ -223,39 +223,6 @@ def get_tokens(json_file, context_brat_file,
 
     return tex
 
-################################################################################
-
-"""
-eqn_tags = ["equation", "equation*", "eqnarray", "eqnarray*", "align",   "align*",
-            "gather",   "gather*",   "multline", "multline*", "flalign", "flalign*",
-            "alignat",  "alignat*"]
-
-def find_between( s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
-
-def find_all_eqn(tex):
-    eqn_list = []
-
-    for eqn_tag in eqn_tags:
-        start_idx = begin.format(eqn_tags[0])
-        end_idx   = end.format(eqn_tags[0])
-    
-        eqn = d[d.find(start_idx):d.find(end_idx)+14]
-
-        if eqn:
-            eqn_list.append(eqn)
-
-
-def read_txt(fname):
-    with open(fname, 'r') as f:
-        data = f.read()
-    return data
-"""
 
 ################################################################################
 
@@ -303,11 +270,11 @@ def main(annot_dir="annotation_data",
 ################################################################################
 
 if __name__ == "__main__":
-    main(annot_dir="/data/data_20190910/annotation", #"/projects/automates/data_20190910/annotation",
-         paper_dir="/data/data_20190910/output", #"/projects/automates/data_20190910/output",
+    main(annot_dir="/projects/automates/collect_2019SEPT19/annotation/1801",
+         paper_dir="/projects/automates/collect_2019SEPT19/output/1801",
          context_file="context_k3.json",
          brat_ext=".txt",
          add_lines=True,
-         clobber=True,
+         clobber=False,
          verbose=False,
          num_threads=8)
