@@ -13,8 +13,9 @@ rules:
     #action: variableArguments
     pattern: |
       trigger = [word = "="]
-      variable: Variable = <dep | "nmod:npmod"
-      definition: Concept = (dobj | dep) [!entity = "NUMBER" & !word = "="]
+      variable: Variable = <dep | "nmod:npmod" | <amod compound?
+      definition: Concept = (dobj | dep | <amod) [!entity = "NUMBER" & !word = "="]
+      #<amod results in a definition where var and def are the same entity in this example: "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with "
 
   - name: var_definition_appos_bidir
     label: Definition
@@ -27,12 +28,23 @@ rules:
       @c1:Concept "(" @c2:Concept ")"
       #todo: check why -LRB- stopped working; maybe try to have both in the rule?
 
+
+  - name: definition_var_appos
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "In APSIM, water uptake (Ta, mm d−1) is determined from..."
+    #action: variableArguments
+    pattern: |
+      @definition:Concept "(" (@variable:Variable [!entity = /B-unit/])
+
+
   - name: var_verb
     label: Definition
     priority: ${priority}
     type: dependency
     example: "and W represents the soil limitation to water uptake of each layer."
-    action: looksLikeAVariable
+#    action: looksLikeAVariable //whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
     pattern: |
       trigger = [word=/(?i)^defin|represent|=/]
       variable:Concept = /${agents}/
@@ -48,7 +60,8 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Concept = <cop /${agents}/
-      definition: Concept = <cop (?! case) nmod_for? [!entity = "NUMBER"]
+      definition: Concept = <cop (?! case) nmod_for? [!entity = /NUMBER|B-unit/]
+
 
   - name: sort_of_appos
     label: Definition
