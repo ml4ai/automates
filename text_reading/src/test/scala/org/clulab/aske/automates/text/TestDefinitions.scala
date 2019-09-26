@@ -186,8 +186,8 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-  val t5b = "The average soil water potential ( ̄S , J kg−1) is calculated based on a representative root length " +
-    "fraction for each soil layer (fr,j):"
+  val t5b = "The average soil water potential (S, J kg−1) is calculated based on a representative root length " +
+    "fraction for each soil layer (fr,j):" //fixme: allow commas in var in the lookslikeavar rule? r,j are two comma-separated subscripts here.
   failingTest should s"find definitions from t5b: ${t5b}" taggedAs(Somebody) in {
     val desired = Seq(
       "S" -> Seq("average soil water potential"),
@@ -238,7 +238,7 @@ class TestDefinitions extends ExtractionTest {
     "exponential function that depends on:"
   failingTest should s"find definitions from t11b: ${t11b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Url" -> Seq("water uptake per unit of root length") // todo: is this right ??
+      "Url" -> Seq("water uptake per unit of root length") // todo: add a rule?
     )
     val mentions = extractMentions(t11b)
     testDefinitionEvent(mentions, desired)
@@ -316,7 +316,7 @@ class TestDefinitions extends ExtractionTest {
   val t4c = "Segment size (dr) was chosen smaller near the root and larger at greater distance, according to"
   failingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "dr" -> Seq("Segment size")
+        "dr" -> Seq("Segment size") //fixme: filtered out by looksLikeAVar action
       )
       val mentions = extractMentions(t4c)
       testDefinitionEvent(mentions, desired)
@@ -327,25 +327,29 @@ class TestDefinitions extends ExtractionTest {
     failingTest should s"find definitions from t5c: ${t5c}" taggedAs(Somebody) in {
       val desired = Seq(
         "L" -> Seq("root length"),
-        "z" -> Seq("total rooted soil depth"),
+        "z" -> Seq("total rooted soil depth"), //z is not found as concept bc it's found as B-VP: need a surface rule where var is any word but use a looksLikeAVar on it?
         "Ap" -> Seq("surface area"),
-        "Ar" -> Seq("root surface area")
+        "Ar" -> Seq("root surface area") //todo: bad parse; have to have a surface rule
       )
       val mentions = extractMentions(t5c)
       testDefinitionEvent(mentions, desired)
     }
 
-  val t6c = "where: T = daily mean air temperature [°C] Tmax = daily maximum air temperature [°C] Tmin = daily " +
-    "minimum air temperature [°C]"
-    failingTest should s"find definitions from t6c: ${t6c}" taggedAs(Somebody) in {
-      val desired = Seq(
-        "T" -> Seq("daily mean air temperature"), // [C] is caught as part of the concept
-        "Tmax" -> Seq("daily maximum air temperature"),
-        "Tmin" -> Seq("daily minimum air temperature")
-      )
-      val mentions = extractMentions(t6c)
-      testDefinitionEvent(mentions, desired)
-    }
+//  val t6c = "where: T = daily mean air temperature [°C] Tmax = daily maximum air temperature [°C] Tmin = daily " +
+//    "minimum air temperature [°C]"
+
+
+  //fixme: this test should not be here; it would be processed with the edge case preprocessor before rule application
+
+//    failingTest should s"find definitions from t6c: ${t6c}" taggedAs(Somebody) in {
+//      val desired = Seq(
+//        "T" -> Seq("daily mean air temperature"), // [C] is caught as part of the concept
+//        "Tmax" -> Seq("daily maximum air temperature"),
+//        "Tmin" -> Seq("daily minimum air temperature")
+//      )
+//      val mentions = extractMentions(t6c)
+//      testDefinitionEvent(mentions, desired)
+//    }
 
   val t7c = "with dr,min = 1028 m, dr,max = 5.1024 m, S = 0.5, r0 (m) is the root radius and rm (m) is the radius of " +
     "the root extraction zone, equal to the half-distance between roots (rm), which relates to the root density " +
