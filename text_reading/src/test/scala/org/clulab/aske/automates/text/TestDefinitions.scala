@@ -9,7 +9,7 @@ class TestDefinitions extends ExtractionTest {
   val t1a = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
   failingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Kcs" -> Seq("Crop coefficients")
+      "Kcs" -> Seq("Crop coefficients") //fixme: finds "current Penman-Monteith ET" as a def; filter out.
     )
     val mentions = extractMentions(t1a)
     testDefinitionEvent(mentions, desired)
@@ -35,11 +35,12 @@ class TestDefinitions extends ExtractionTest {
     "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
   failingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Kcdmin" -> Seq("minimum crop coefficient"),
+      "Kcdmin" -> Seq("minimum crop coefficient or Kcd at LAI = 0"),
       "Kcdmax" -> Seq("maximum crop coefficient at high LAI"),
-      "SKc" -> Seq("shaping parameter")
+      "SKc" -> Seq("shaping parameter") //todo: should this be expanded?
     )
     val mentions = extractMentions(t3a)
+
     testDefinitionEvent(mentions, desired)
   }
 
@@ -81,58 +82,51 @@ class TestDefinitions extends ExtractionTest {
   val t8a = "where Kcbmin is the minimum basal crop coefficient representing a dry, bare, or nearly bare soil surface."
     failingTest should s"find definitions from t8a: ${t8a}" taggedAs(Somebody) in {
       val desired = Seq(
-        "Kcbmin" -> Seq("minimum basal crop coefficient")
+        "Kcbmin" -> Seq("minimum basal crop coefficient representing a dry, bare, or nearly bare soil surface") //fixme: is this expanding too far?
       )
       val mentions = extractMentions(t8a)
       testDefinitionEvent(mentions, desired)
     }
 
-  val t9a = "where Kcbmin is the minimum basal crop coefficient representing a dry, bare, or nearly bare soil surface."
-    failingTest should s"find definitions from t9a: ${t9a}" taggedAs(Somebody) in {
-      val desired = Seq(
-        "Kcbmin" -> Seq("minimum basal crop coefficient")
-      )
-      val mentions = extractMentions(t9a)
-      testDefinitionEvent(mentions, desired)
-    }
 
-  val t10a = " The primary factor causing an increase in the crop coefficient is an increase in plant cover or leaf " +
+  val t9a = " The primary factor causing an increase in the crop coefficient is an increase in plant cover or leaf " +
     "area (Jensen and Allen, 2016); thus, Kc is correlated with LAI."
-  failingTest should s"find NO definitions from t10a: ${t10a}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t9a: ${t9a}" taggedAs(Somebody) in {
+    val desired =  Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t9a)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t10a = "Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. (2012a) " +
+    "recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
+  passingTest should s"find NO definitions from t11a: ${t10a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t10a)
     testDefinitionEvent(mentions, desired)
   }
 
-  val t11a = "Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. (2012a) " +
-    "recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
-  passingTest should s"find NO definitions from t11a: ${t11a}" taggedAs(Somebody) in {
+  val t11a = "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
+  passingTest should s"find NO definitions from t12a: ${t11a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t11a)
     testDefinitionEvent(mentions, desired)
   }
 
-  val t12a = "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
+  val t12a = "The approach uses model-simulated LAI to calculate the Kcb, which means Kcb is more dynamic and " +
+    "responsive to cultivar, weather, and soil variability, as simulated by the model"
   passingTest should s"find NO definitions from t12a: ${t12a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t12a)
     testDefinitionEvent(mentions, desired)
   }
 
-  val t13a = "The approach uses model-simulated LAI to calculate the Kcb, which means Kcb is more dynamic and " +
-    "responsive to cultivar, weather, and soil variability, as simulated by the model"
-  passingTest should s"find NO definitions from t13a: ${t13a}" taggedAs(Somebody) in {
+  val t13a = "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with " +
+    "Kr = 1.0."
+  failingTest should s"find NO definitions from t13a: ${t13a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t13a)
     testDefinitionEvent(mentions, desired)
-  }
-
-  val t14a = "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with " +
-    "Kr = 1.0."
-  failingTest should s"find NO definitions from t14a: ${t14a}" taggedAs(Somebody) in {
-    val desired =  Seq.empty[(String, Seq[String])]
-    val mentions = extractMentions(t14a)
-    testDefinitionEvent(mentions, desired)
+    //fixme: wrong extraction Kr = , whith Kr found as both var and def; adjust rule var_equals_def or write an action that makes sure two args in a two arg events are not the same mention
   }
 
 
@@ -152,14 +146,14 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t2b = "where fi is the daily fractional light interception, ETo is the daily reference evapotranspiration (mm d−1)," +
-    " \\\"pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
+    "pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
     "is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be " +
     "supplied to the plant from each rooted soil layer."
   failingTest should s"find definitions from t2b: ${t2b}" taggedAs(Somebody) in {
     val desired = Seq(
       "fi" -> Seq("daily fractional light interception"),
-      "ETo" -> Seq("daily reference evapotranspiration"),
-      "pwp" -> Seq("water content at permanent wilting point"),
+      "ETo" -> Seq("daily reference evapotranspiration"), //fixme: expansion is too extreme; limit
+      "pwp" -> Seq("water content at permanent wilting point"),//fixme: modify lookslikeavar to accommodate lower-case letters as vars
       "$z" -> Seq("soil layer thickness"),
       "kl" -> Seq("water extraction rate", "empiric soil–root factor for the fraction of available water that can " +
         "be supplied to the plant from each rooted soil layer")
@@ -168,11 +162,11 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-  val t3b = "This means that kl represents a maximum supply determined by !r and the resistance to water flow " +
+  val t3b = "This means that kl represents a maximum supply determined by r and the resistance to water flow " +
     "(Passioura, 1983; Monteith, 1986)"
   failingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "kl" -> Seq("maximum supply determined by !r and the resistance to water flow")
+      "kl" -> Seq("maximum supply determined by r and the resistance to water flow")
     )
     val mentions = extractMentions(t3b)
     testDefinitionEvent(mentions, desired)

@@ -27,10 +27,11 @@ class TestUnits extends ExtractionTest {
   val t3a = "a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23"
   failingTest should s"extract variables and units from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "assumed height" -> Seq("MJ/m2/d"), //todo: `exclude assumed'?
+      "assumed height" -> Seq("m"), //todo: `exclude assumed'?
       "surface resistance" -> Seq("s m-1")
     )
     val mentions = extractMentions(t3a)
+    for (m <- mentions) println (m.text + " " + m.label)
     testUnitEvent(mentions, desired)
   }
 

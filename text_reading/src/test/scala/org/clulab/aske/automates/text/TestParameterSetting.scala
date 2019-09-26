@@ -47,6 +47,8 @@ class TestParameterSetting  extends ExtractionTest {
     val desired = Seq(
       "SKc" -> Seq("0.4", "0.9", "0.5", "0.6") // the last two need to come with modifiers (e.g., for maize)
     )
+
+    //fixme: change the test --- part should be in param setting interval + need a better rule to capture 0.5 and 0.6
     val mentions = extractMentions(t3a)
     testParameterSettingEvent(mentions, desired)
   }
@@ -65,17 +67,17 @@ class TestParameterSetting  extends ExtractionTest {
     "DSSAT-CSM version 4.5 for Arizona conditions (fig. 1a)."
   failingTest should s"NOT extract model version, but should extract the parameter setting(s) from t5a: ${t5a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "RMSE" -> Seq("22.8%") //todo: see t8 for an example where model version is relevant; should % be in the test?
+      "RMSE" -> Seq("22.8") //todo: see t8 for an example where model version is relevant; need a rule for % as a unit
     )
     val mentions = extractMentions(t5a)
     testParameterSettingEvent(mentions, desired)
   }
 
   val t6a = "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed " +
-    "measurements to a standard height of 2.0 m."
-  toDiscuss should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
+    "measurements to a standard height of 2.0 m"
+  passingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "wind speed measurements" -> Seq("2.0 m") //todo: attaching value and unit? finding variables when they are spelled out?
+      "wind speed measurements" -> Seq("2.0 m") //todo: attaching value and unit? - finding variables when they are spelled out? - yes.
     )
     val mentions = extractMentions(t6a)
     testParameterSettingEvent(mentions, desired)
@@ -97,7 +99,7 @@ class TestParameterSetting  extends ExtractionTest {
   passingTest should s"extract the parameter setting(s) from t8a: ${t8a}" taggedAs(Somebody) in {
     val desired = Seq(
       "α" -> Seq("2.0"),
-      "α" -> Seq("0.2") // todo: we get 0.2 in here tragically
+      "α" -> Seq("0.2")
       // (TestUtils.scala:70)), where the first two is the number of mentions found (I think)
     )
     val mentions = extractMentions(t8a)
@@ -109,11 +111,12 @@ class TestParameterSetting  extends ExtractionTest {
     "networks with anemometers at 2.0 m, such as CoAgMet in Colorado."
   toDiscuss should s"extract the parameter setting(s) from t9a: ${t9a}" taggedAs(Somebody, DiscussWithModelers) in {
     val desired = Seq(
-      "???" -> Seq("2.0 m"), //todo what will be the variable?
+      "anometers" -> Seq("2.0 m"), //todo what will be the variable?
       "???" -> Seq("2.0 m")
     )
     val mentions = extractMentions(t9a)
     testParameterSettingEvent(mentions, desired)
+    //todo: rule for 'other than'? need to store "not equal" constraint
   }
 
   val t10a = "Thus, differences between ETpm (figs. 1b and 1e) and ETo (figs. 1c and 1f) calculations in DSSAT-CSM " +
@@ -127,7 +130,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t11a = "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation " +
     "portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
-  failingTest should s"extract the parameter setting(s) from t11a: ${t11a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t11a: ${t11a}" taggedAs(Somebody) in {
     val desired = Seq(
       "DOY" -> Seq("165"),
       "DOY" -> Seq("175") // todo: see t8
@@ -140,8 +143,8 @@ class TestParameterSetting  extends ExtractionTest {
     "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
   failingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
-      "Kcbmax" -> Seq("0.9", "1.5"), //todo: how do we extract intervals like this?
-      "Kcbmax" -> Seq("1.15") //todo: see t8
+//      "Kcbmax" -> Seq("0.9", "1.5"), //todo: this should be in the interval test set
+      "Kcbmax" -> Seq("1.15") //todo: need to have some mechanism to preserve ><=. some sort of attachment? similar to count in wm or use 'valueMin'/'valueMax' for the var
     )
     val mentions = extractMentions(t12a)
     testParameterSettingEvent(mentions, desired)
@@ -163,6 +166,7 @@ class TestParameterSetting  extends ExtractionTest {
     val desired = Seq(
       "Kcs" -> Seq("0.1"),
       "Kcs" -> Seq("1.0") //todo: do we want to account for "close" in "close to 1.0"?
+      //fixme: need to extract more info e.g., for maize', 'for cotton'
     )
     val mentions = extractMentions(t14a)
     testParameterSettingEvent(mentions, desired)
