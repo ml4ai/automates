@@ -20,11 +20,9 @@ import glob as g
 try:
     # Python 3
     from collections import ChainMap
-    mode = 0o777
 except ImportError:
     # Python 2
     from chainmap import ChainMap
-    mode = 0777
 
 ################################################################################
 
@@ -42,7 +40,7 @@ OBJECTIVE:
 
 ################################################################################
 
-def create_directory(path, mode=0755):
+def create_directory(path, mode=0o755):
     
     """
     Creates a new directory if one does not exist.
@@ -250,35 +248,7 @@ def get_paper_id(id2spec_dict, spec):
 def read_txt(fname, add_lines=True, remove_misc=True):
     with open(fname, 'r') as f:
         data = f.read()
-    
-    """
-    data = data.replace("\n", "")
-    # Add Line Breaks between Equations
-    if add_lines:
-        for content in ["equation", "eqnarray", "align", "itemize", "enumerate",
-                        "equation*", "eqnarray*", "align*",
-                        "figure", "figure*", "table", "table*"]:
-            data = data.replace("\\begin{{{}}}".format(content),
-                                "\n\n\\begin{{{}}}".format(content))
-            data = data.replace("\\end{{{}}}".format(content),
-                                "\n\\end{{{}}}\n\n".format(content))
-        data = data.replace("\[", "\n\n\[")
-        data = data.replace("\]", "\]\n\n")
-        data = data.replace(" $$", "\n\n$$\n")
-        data = data.replace("$$ ", "\n$$\n\n")
-        data = data.replace("\\section{", "\n\n\\section{")
-        data = data.replace("\\subsection{", "\n\n\\subsection{")
-        data = data.replace("\\item", "\n\t\\item ")
-        data = data.replace("\\label{", "\n\\label{")
-    data = data.replace("\\ ",        "\\ \n")
-    data = data.replace(" \n",       "\n")
-    data = data.replace("\n\n\n\n",  "\n\n")
-    data = data.replace("\n\n\n",    "\n\n")
-    #if remove_misc:
-        #for content in ["figure", "figure*", "table", "table*"]:
-    """
     return data
-
 
 
 ################################################################################
@@ -374,9 +344,15 @@ def read_dictlist(csv_file):
 
 ################################################################################
 
-def filter(eqn_stats, excluded_fields = ['math'],
-           max_eqn_ppr=5, max_eqn_context=1, max_eqn_intext=50, max_eqn_token=200,
-           src_dir='1805_01_annot', dst_dir='final'):
+def filter( eqn_stats,
+            excluded_fields=['math'],
+            min_eqn_context=1,
+            max_eqn_ppr=5,
+            max_eqn_context=1,
+            max_eqn_intext=50,
+            max_eqn_token=200,
+            src_dir='annotation',
+            dst_dir='final'):
     #
     """
     Filters to Apply:
@@ -389,13 +365,14 @@ def filter(eqn_stats, excluded_fields = ['math'],
     """
     #
     if dst_dir:
-        create_directory(dst_dir, mode=mode)
+        create_directory(dst_dir)
     #
     eqn_filter_stats = []
     for eqn in eqn_stats:
         try:
             if eqn.get("spec") not in excluded_fields and \
                eqn.get("num_ppr_eqn") <= max_eqn_ppr  and \
+               eqn.get("num_eqn") >= min_eqn_context  and \
                eqn.get("num_eqn") <= max_eqn_context  and \
                eqn.get("num_intext_eqn") <= max_eqn_intext and \
                np.mean(eqn.get("avg_num_tokens")) <= max_eqn_token:
@@ -419,12 +396,13 @@ def filter(eqn_stats, excluded_fields = ['math'],
 
 ################################################################################
 
-def main(arxiv_id     = '1805',
-         annot_dir    = 'tp_annotation',
-         pdf_dir      = 'test_playground',
-         paper_prefix = '',
-         plot_dir     = 'brat_plots',
-         brat_dir     = 'tp_final',
+def main(arxiv_id        = '1801',
+         annot_dir       = 'annotation',
+         pdf_dir         = 'output',
+         paper_prefix    = '',
+         plot_dir        = 'plots',
+         brat_dir        = 'final',
+         meta_data       = 'harvest_arxiv.json',
          max_eqn_ppr     = 5,
          max_eqn_context = 1,
          max_eqn_intext  = 50,
@@ -441,15 +419,24 @@ def main(arxiv_id     = '1805',
 
     """
 
-    create_directory(os.path.join(plot_dir, arxiv_id), mode=mode)
-    begin_eqnmarkers = ['begin{equation}',  'begin{align}',  'begin{eqnarray}',
-                        'begin{equation*}', 'begin{align*}', 'begin{eqnarray*}',
-                        '\[', ' $$']
-    end_eqnmarkers   = ['end{equation}',  'end{align}',  'end{eqnarray}',
-                        'end{equation*}', 'end{align*}', 'end{eqnarray*}',
-                        '\]', '$$ ']
+    create_directory(os.path.join(plot_dir, arxiv_id))
+    begin_eqnmarkers = ['begin{equation}', 'begin{equation*}', 
+                        'begin{align}',    'begin{align*}', 
+                        'begin{eqnarray}', 'begin{eqnarray*}'
+                        'begin{gather}',   'begin{gather*}',
+                        'begin{multline}', 'begin{multline*}',
+                        'begin{flalign}',  'begin{flalign*}',
+                        'begin{alignat}',  'begin{alignat*}',  '\[' ]
+
+    end_eqnmarkers   = ['end{equation}',   'end{equation*}',
+                        'end{align}',      'end{align*}',
+                        'end{eqnarray}',   'end{eqnarray*}'
+                        'end{gather}',     'end{gather*}',
+                        'end{multline}',   'end{multline*}',
+                        'end{flalign}',    'end{flalign*}',
+                        'end{alignat}',    'end{alignat*}',  '\]' ]
     
-    id2spec_all = get_metadata('harvest_arxiv.json', paper_prefix)
+    id2spec_all = get_metadata(meta_data, paper_prefix)
     spec_all    = spec_stats(id2spec_all,
                              plot_name=os.path.join(plot_dir, arxiv_id, 'spec_all.pdf')
                                        if plot_dir else '')
@@ -568,7 +555,7 @@ def main(arxiv_id     = '1805',
                             "num_eqn":num_eqn,
                             "char_eqn":char_eqn,
                             "frac_eqn":round(frac_eqn,3),
-                            "avg_num_tokens":round(num_tokens,3)
+                            "avg_num_tokens":num_tokens
                            }
                 eqn_stats.append(eqn_dict)
             #else:
@@ -657,7 +644,7 @@ def main(arxiv_id     = '1805',
                                        os.path.join(plot_dir,  arxiv_id, 'filter_')))
 
 
-    create_directory(brat_dir, mode=mode)
+    create_directory(brat_dir)
 
     # Consolidates Relevant BRAT & PNG Files from Filtered Equations into a Single Directory
     for eqn in eqn_filter_stats:
@@ -688,15 +675,16 @@ def main(arxiv_id     = '1805',
 
 if __name__ == "__main__":
     
-    main(arxiv_id     = '1805',
-         annot_dir    = '/data/data_20190910/annotation',
-         pdf_dir      = '/data/data_20190910/output',
-         paper_prefix = '',
-         plot_dir     = '', #'/data/data_20190910/brat_plots',
-         brat_dir     = '/data/data_20190910/brat_final',
-         max_eqn_ppr     = 20, #5,
-         max_eqn_context = 3, #1,
-         max_eqn_intext  = 50, #50,
-         max_eqn_token   = 500, #200,
-         max_eqn_chars   = 1000, #500,
+    main(arxiv_id        = '1805',
+         annot_dir       = '/projects/automates/collect_2019SEPT19/annotation',
+         pdf_dir         = '/projects/automates/collect_2019SEPT19/output',
+         paper_prefix    = '',
+         plot_dir        = '',
+         brat_dir        = '/projects/automates/collect_2019SEPT19/final',
+         meta_data       = '/projects/automates/collect_2019SEPT19/harvest_arxiv.json',
+         max_eqn_ppr     = 10,     #5,
+         max_eqn_context = 2,      #1,
+         max_eqn_intext  = 100,    #50,
+         max_eqn_token   = 500,    #200,
+         max_eqn_chars   = 1000,   #500,
          excluded_fields = ['math'])
