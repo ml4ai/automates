@@ -1167,12 +1167,13 @@ class PdfAlign(Frame):
         for node in tree.findall('.//text'):
             text = node.text
             if len(text.strip()) == 0:
-                # the current token ended
-                curr_token_aabb.page = page
-                curr_token_aabb.id = len(self.all_tokens)
-                self.all_tokens.append(curr_token_aabb)
-                token_boxes.append(curr_token_aabb)
-                curr_token_aabb = None
+                if curr_token_aabb is not None:
+                    # the current token ended
+                    curr_token_aabb.page = page
+                    curr_token_aabb.id = len(self.all_tokens)
+                    self.all_tokens.append(curr_token_aabb)
+                    token_boxes.append(curr_token_aabb)
+                    curr_token_aabb = None
 
             else:
                 # "576.926,76.722,581.357,86.733"
