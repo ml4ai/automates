@@ -1075,8 +1075,9 @@ class PdfAlign(Frame):
 
     def export_annotations(self):
         self.maybe_save_unsaved()
-        initialdir, filename = os.path.split(self.filename)
-        suggested_filename = os.path.splitext(filename)[0] + '.json'
+        initialdir, _ = os.path.split(self.filename)
+        _, paperdir = os.path.split(initialdir)
+        suggested_filename = paperdir + '.json'
         f = filedialog.asksaveasfile(filetypes=[('json files', '*.json'), ('all files', '*.*')], initialdir=initialdir, initialfile=suggested_filename)
         if f is not None:
             annotations = [a.serialize(self.token_char_lut, self.all_tokens) for a in self.saved_annotations]
