@@ -123,6 +123,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    //returns mentions that look like a variable
     for {
       m <- mentions
       varMention = m match {
@@ -143,6 +144,28 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     } yield m
   }
+
+  def defIsNotVar(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    //returns mentions in which definitions are not also variables
+    //and the variable and the definition don't overlap
+    for {
+      m <- mentions
+      variableMention = m.arguments.getOrElse("variable", Seq())
+      defMention = m.arguments.getOrElse("definition", Seq())
+      if (
+        looksLikeAVariable(defMention, state).isEmpty //makes sure the definition is not another variable (or does not look like what could be a variable
+        &&
+        defMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the definition don't overlap
+        )
+    } yield m
+  }
+
+
+  def definitionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = defIsNotVar(looksLikeAVariable(mentions, state), state)
+    toReturn
+  }
+
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
