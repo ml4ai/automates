@@ -8,12 +8,23 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
-    #action: variableArguments
     pattern: |
       trigger = [word = "="]
-      variable: Variable = <dep | "nmod:npmod"
-      definition: Concept = (dobj | dep) [!entity = "NUMBER"]
+      variable: Variable = <dep | "nmod:npmod" | <amod compound?
+      definition: Concept = (dobj | dep | <amod) appos? [!entity = /NUMBER|B-unit/ & !word = "="]
+      #<amod results in a definition where var and def are the same entity in this example: "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with "
+
+  - name: sort_of_appos
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
+    action: ${action}
+    pattern: |
+      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN|JJ/ & !entity = "B-GreekLetter"]{2,5}) @variable:Variable #(?! [chunk = I-NP])
+      #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
 
   - name: var_definition_appos_bidir
     label: Definition
@@ -26,12 +37,24 @@ rules:
       @c1:Concept "(" @c2:Concept ")"
       #todo: check why -LRB- stopped working; maybe try to have both in the rule?
 
+
+  - name: definition_var_appos
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "In APSIM, water uptake (Ta, mm d−1) is determined from..."
+    action: ${action}
+    pattern: |
+      @definition:Concept "(" (@variable:Variable [!entity = /B-unit/])
+
+
   - name: var_verb
     label: Definition
     priority: ${priority}
     type: dependency
     example: "and W represents the soil limitation to water uptake of each layer."
-    action: looksLikeAVariable
+#    action: looksLikeAVariable #//whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
+#    action: ${action}
     pattern: |
       trigger = [word=/(?i)^defin|represent|=/]
       variable:Concept = /${agents}/
@@ -43,31 +66,39 @@ rules:
     priority: ${priority}
     type: dependency
     example: "LAI is the actual leaf area index"
-    action: looksLikeAVariable
+    action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      variable:Concept = <cop /${agents}/
-      definition: Concept = <cop (?! case) nmod_for? [!entity = "NUMBER"]
-
-  - name: sort_of_appos
-    label: Definition
-    priority: ${priority}
-    type: token
-    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
-    #    action: looksLikeAVariable #TODO:check why the action filters these out
-    pattern: |
-      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN|JJ/ & !entity = "B-GreekLetter"]{2,5}) @variable:Variable #(?! [chunk = I-NP])
-      #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
+      variable:Concept = <cop /${agents}/ | <cop <dep appos
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
 
   - name: comma_appos_var
     label: Definition
     priority: ${priority}
     type: token
+    action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
       (@definition: Concept [!entity = "NUMBER"]) "," @variable:Variable (?! [lemma = "be"])
+      |
+      @definition: Concept "," @variable:Variable ","
+      |
+      @definition: Concept "," @variable:Variable (?! /.*/)
 #
-
+#todo: revisit
+#  - name: where_var_def
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the soil limitation to water uptake of each layer."
+##    action: looksLikeAVariable
+#    pattern: |
+#      trigger = [word = /[Ww]here/]
+#      variable: Variable = <advmod nsubj conj_and?
+#      definition: Concept = <advmod
+#      #fixme: does not catch the second var ("s2")
+      #todo: why does definition_var_appos trump this rule in "where t is time (d)"?
+      #is that bc of 'keep longest'?
 
 #  - name: def_is_known_as_var
 #    label: Definition

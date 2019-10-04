@@ -195,6 +195,7 @@ object ExtractAndAlign {
 //        println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
 //        println(s"comment: ${v1Text}")
 //        println(s"text: ${v2Text}")
+//          println(s"text: ${v2Text} ${textDefinitionMentions(topK.dst).label} ${textDefinitionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
 //        println(s"score: ${topK.score}\n")
 //      }
 //    }

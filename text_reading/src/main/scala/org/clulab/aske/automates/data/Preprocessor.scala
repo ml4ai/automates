@@ -40,7 +40,8 @@ object EdgeCaseParagraphPreprocessor {
 
 class PassThroughPreprocessor() extends Preprocessor {
   def cleanUp(text: String): String = {
-    text
+    val cleanerText = text.replaceAll("\n", " ")
+    cleanerText
   }
 }
 
