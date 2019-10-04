@@ -38,3 +38,6 @@ mechanisms that span multiple domains. By exposing the implicit domain knowledge
 baked into computational models, this effort will enable automated model
 composition and reasoning in context to directly support the development of
 ‘third wave’ artificial intelligence.
+
+For more information, see our [paper from the Modeling the World's Systems 2019
+conference](http://vanga.sista.arizona.edu/automates_data/MWS-2019-AutoMATES.pdf).

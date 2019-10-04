@@ -7,11 +7,13 @@ The team has been working on grounding the information coming from two sources (
 ![Grounding concepts and elements by linking](figs/grounding.png)
 
 Currently, the following elements are linked:
+
 - (Document) equation -> document text span (Link type 1):
-`- This link requires a two step approach: linking the in-text variable to its description (previously implemented) and linking the variables in the equation to the associated in-text variables (prototyped).
-- Source code identifier -> comment text span (Link type 2): the variable comments in DSSAT typically follow a specific format of the variable (verbatim) followed by the description.  We currently take advantage of this, and use Levenstein (string edit) distance, for now.
+	- This link requires a two step approach: linking the in-text variable to its description (previously implemented) and linking the variables in the equation to the associated in-text variables (prototyped).
+- Source code identifier -> comment text span (Link type 2): 
+	- the variable comments in DSSAT typically follow a specific format of the variable (verbatim) followed by the description.  We currently take advantage of this, and use Levenstein (string edit) distance, for now.
 - Source code comment text span -> document text span (Link type 3):
-`- We link the elements using a score which combines the Levenshtein distance and text word embedding distance, and filter out the link hypotheses with the score below a threshold.
+	- We link the elements using a score which combines the Levenshtein distance and text word embedding distance, and filter out the link hypotheses with the score below a threshold.
 
 ### Evaluation Update (Annotation exercise):
 

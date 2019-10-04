@@ -7,8 +7,9 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkCommentTextElement}
+import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, mkHypothesis, mkLinkElement}
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils}
@@ -52,9 +53,6 @@ object ExtractAndAlign {
       }
     }
 
-//    for (line <- lines_combined) println(line)
-//    println("Number of lines passed to the comment reader: " + lines_combined.length)
-
     val doc = proc.annotateFromSentences(lines_combined, keepText = true)
     //include more detailed info about the source of the comment: the container and the location in the container (head/neck/foot)
     doc.id = Option(textObj("source").str + "; " + textObj("container").str + "; " + textObj("location").str)
@@ -63,11 +61,12 @@ object ExtractAndAlign {
 
 
   def main(args: Array[String]): Unit = {
-    val config: Config = ConfigFactory.load("automates")
+    val config: Config = ConfigFactory.load()
 
     // Instantiate the text reader
     val textconfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textconfig)
+
     // Instantiate the comment reader
     val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
     // todo: future readers
@@ -115,16 +114,16 @@ object ExtractAndAlign {
     val grfn = ujson.read(grfnFile.readString())
 
 
-    //Getting comments from grfn
-    //the source_comments section of the json contains comments for multiple containers;
+    // Getting comments from grfn
+    // the source_comments section of the json contains comments for multiple containers;
     // get the container names to look up the comments for that container in the source_comments section
     //todo: do we want to include "$file_head" and "$file_foot"?
     val containerNames = grfn("containers").arr.map(_.obj("name").str)
     val sourceCommentObject = grfn("source_comments").obj
-    //store comment text objects here; the comment text objects include the source file, the container,
+    // store comment text objects here; the comment text objects include the source file, the container,
     // and the location in the container (head/neck/foot)
     val commentTextObjects = new ArrayBuffer[Obj]()
-    //for each container, the comment section has these three components
+    // for each container, the comment section has these three components
     val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
     for (containerName <- containerNames) if (sourceCommentObject.contains(containerName)) {
       val commentObject = sourceCommentObject(containerName).obj
@@ -146,9 +145,7 @@ object ExtractAndAlign {
     // Full variable identifiers
     val variableNames = grfn("variables").arr.map(_.obj("name").str)
     // The variable names only (excluding the scope info)
-    val variableShortNames = for (
-      name <- variableNames
-    ) yield name.split("::").reverse.slice(1, 2).mkString("")
+    val variableShortNames = GrFNEntityFinder.getVariableShortNames(variableNames)
 
 
     // Get the equation tokens
@@ -164,7 +161,7 @@ object ExtractAndAlign {
     // Align the comment definitions to the GrFN variables
     val numAlignments = config[Int]("apps.numAlignments")
     val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
-    println("length "+ commentDefinitionMentions.length)
+//    println("length "+ commentDefinitionMentions.length)
 
 
     val variableNameAligner = new VariableEditDistanceAligner(Set("variable"))
@@ -187,21 +184,21 @@ object ExtractAndAlign {
 
     // ----------------------------------
     // Debug:
-    topKCommentToText.foreach { aa =>
-      println("====================================================================")
-      println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
-      println("====================================================================")
-      aa.foreach { topK =>
-        val v1Text = commentDefinitionMentions(topK.src).text
-        val v2Text = textDefinitionMentions(topK.dst).text
-        println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text}")
-        println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
-        println(s"comment: ${v1Text}")
-        println(s"text: ${v2Text}")
-//        println(s"text: ${v2Text} ${textDefinitionMentions(topK.dst).label} ${textDefinitionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
-        println(s"score: ${topK.score}\n")
-      }
-    }
+//    topKCommentToText.foreach { aa =>
+//      println("====================================================================")
+//      println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
+//      println("====================================================================")
+//      aa.foreach { topK =>
+//        val v1Text = commentDefinitionMentions(topK.src).text
+//        val v2Text = textDefinitionMentions(topK.dst).text
+//        println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text}")
+//        println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
+//        println(s"comment: ${v1Text}")
+//        println(s"text: ${v2Text}")
+//          println(s"text: ${v2Text} ${textDefinitionMentions(topK.dst).label} ${textDefinitionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
+//        println(s"score: ${topK.score}\n")
+//      }
+//    }
     // ----------------------------------
 
     // Export alignment:
