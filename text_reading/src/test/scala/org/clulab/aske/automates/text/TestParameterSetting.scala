@@ -65,7 +65,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t5a = "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from " +
     "DSSAT-CSM version 4.5 for Arizona conditions (fig. 1a)."
-  failingTest should s"NOT extract model version, but should extract the parameter setting(s) from t5a: ${t5a}" taggedAs(Somebody) in {
+  passingTest should s"NOT extract model version, but should extract the parameter setting(s) from t5a: ${t5a}" taggedAs(Somebody) in {
     val desired = Seq(
       "RMSE" -> Seq("22.8") //todo: see t8 for an example where model version is relevant; need a rule for % as a unit
     )
@@ -141,7 +141,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t12a = "Under full irrigation, Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield " +
     "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
-  failingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
 //      "Kcbmax" -> Seq("0.9", "1.5"), //todo: this should be in the interval test set
       "Kcbmax" -> Seq("1.15") //todo: need to have some mechanism to preserve ><=. some sort of attachment? similar to count in wm or use 'valueMin'/'valueMax' for the var

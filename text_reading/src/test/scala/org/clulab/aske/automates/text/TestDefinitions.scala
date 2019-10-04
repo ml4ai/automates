@@ -17,7 +17,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t2a = "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 " +
     "(Sau et al., 2004; Thorp et al., 2010), and Kcs is the DSSAT-CSM crop coefficient."
-  failingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
+  passingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "LAI" -> Seq("simulated leaf area index"),
       "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"),
@@ -25,15 +25,12 @@ class TestDefinitions extends ExtractionTest {
     )
     val mentions = extractMentions(t2a)
     val defMentions = mentions.seq.filter(_ matches "Definition")
-    for (dm <- defMentions) {
-      dm.arguments.keys.foreach(key => println("-->" + key))
-    }
     testDefinitionEvent(mentions, desired)
   }
 
   val t3a = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
     "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
-  failingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
       "Kcdmin" -> Seq("minimum crop coefficient or Kcd at LAI = 0"),
       "Kcdmax" -> Seq("maximum crop coefficient at high LAI"),
@@ -61,7 +58,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t6a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-  failingTest should s"find NO definitions from t6a: ${t6a}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t6a: ${t6a}" taggedAs(Somebody) in {
 //    val desired = Seq(
 //      "E0" -> Seq("product of Kcd and ETpm")
 //    )
@@ -80,7 +77,7 @@ class TestDefinitions extends ExtractionTest {
     }
 
   val t8a = "where Kcbmin is the minimum basal crop coefficient representing a dry, bare, or nearly bare soil surface."
-    failingTest should s"find definitions from t8a: ${t8a}" taggedAs(Somebody) in {
+    passingTest should s"find definitions from t8a: ${t8a}" taggedAs(Somebody) in {
       val desired = Seq(
         "Kcbmin" -> Seq("minimum basal crop coefficient representing a dry, bare, or nearly bare soil surface") //fixme: is this expanding too far?
       )
@@ -91,7 +88,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t9a = " The primary factor causing an increase in the crop coefficient is an increase in plant cover or leaf " +
     "area (Jensen and Allen, 2016); thus, Kc is correlated with LAI."
-  failingTest should s"find NO definitions from t9a: ${t9a}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t9a: ${t9a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t9a)
     testDefinitionEvent(mentions, desired)
@@ -122,11 +119,11 @@ class TestDefinitions extends ExtractionTest {
 
   val t13a = "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with " +
     "Kr = 1.0."
-  failingTest should s"find NO definitions from t13a: ${t13a}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t13a: ${t13a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t13a)
     testDefinitionEvent(mentions, desired)
-    //fixme: wrong extraction Kr = , whith Kr found as both var and def; adjust rule var_equals_def or write an action that makes sure two args in a two arg events are not the same mention
+
   }
 
 
@@ -164,7 +161,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t3b = "This means that kl represents a maximum supply determined by r and the resistance to water flow " +
     "(Passioura, 1983; Monteith, 1986)"
-  failingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
     val desired = Seq(
       "kl" -> Seq("maximum supply determined by r and the resistance to water flow")
     )
@@ -198,7 +195,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t6b = "The L is calculated using T, Cp and  ̄S ."
-  failingTest should s"find NO definitions from t6b: ${t6b}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t6b: ${t6b}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t6b)
     testDefinitionEvent(mentions, desired)
@@ -214,7 +211,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t8b = "Finally, Ta is calculated using s and L, Cp and Tp:"
-  failingTest should s"find NO definitions from t8b: ${t8b}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t8b: ${t8b}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t8b)
     testDefinitionEvent(mentions, desired)
@@ -225,6 +222,7 @@ class TestDefinitions extends ExtractionTest {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t9b)
     testDefinitionEvent(mentions, desired)
+
   }
 
   val t10b = "In DSSAT, root water uptake is calculated in two steps."
@@ -270,7 +268,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t1c = "A convenient soil hydraulic property that will be used in this study is the matric flux potential " +
     "Mh0 (m2 d-1)"
-    failingTest should s"find definitions from t1c: ${t1c}" taggedAs(Somebody) in {
+    passingTest should s"find definitions from t1c: ${t1c}" taggedAs(Somebody) in {
       val desired = Seq(
         "Mh0" -> Seq("matric flux potential")
       )
@@ -335,10 +333,6 @@ class TestDefinitions extends ExtractionTest {
       testDefinitionEvent(mentions, desired)
     }
 
-//  val t6c = "where: T = daily mean air temperature [°C] Tmax = daily maximum air temperature [°C] Tmin = daily " +
-//    "minimum air temperature [°C]"
-
-
   //fixme: this test should not be here; it would be processed with the edge case preprocessor before rule application
 
 //    failingTest should s"find definitions from t6c: ${t6c}" taggedAs(Somebody) in {
@@ -366,7 +360,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t8c = "where p is the iteration level."
-  failingTest should s"find definitions from t8c: ${t8c}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t8c: ${t8c}" taggedAs(Somebody) in {
     val desired = Seq(
       "p" -> Seq("iteration level")
     )
