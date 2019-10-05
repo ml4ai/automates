@@ -7,6 +7,7 @@ import subprocess
 from collections import defaultdict
 from copy import deepcopy
 from tkinter import *
+from tkinter import ttk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 from pdf2image import convert_from_path
@@ -14,6 +15,15 @@ from lxml import etree
 from webcolors import name_to_rgb
 
 
+
+style = ttk.Style()
+style.configure("TButton", font=("TkDefaultFont", 12))
+style.configure("InEquation.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "olivedrab", padx=10)
+style.configure("InText.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "steelblue", padx=10)
+style.configure("Unit.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "coral", padx=10)
+style.configure("Description.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "purple", padx=10)
+style.configure("Default.TLabel", font=("TkDefaultFont", 14, "bold"),
+        background = "gainsboro")
 
 class Point:
 
@@ -493,7 +503,7 @@ class Annotation:
             self.convert_component_to_chars(c, token_lut)
 
 
-class PdfAlign(Frame):
+class PdfAlign(ttk.Frame):
 
     def __init__(self, master=None):
         super().__init__(master)
@@ -534,31 +544,31 @@ class PdfAlign(Frame):
         self.active_annotation = None
         self.token_mode = True
 
-        toolbar = Frame(self)
-        Button(toolbar, text='open', font=('TkDefaultFont', 12), command=self.open).pack(side=LEFT)
-        Button(toolbar, text='import', font=('TkDefaultFont', 12), command=self.import_annotations).pack(side=LEFT)
-        Button(toolbar, text='prev', font=('TkDefaultFont', 12), command=self.prev).pack(side=LEFT)
-        Button(toolbar, text='next', font=('TkDefaultFont', 12), command=self.next).pack(side=LEFT)
-        Button(toolbar, text='zoom in', font=('TkDefaultFont', 12), command=self.zoom_in).pack(side=LEFT)
-        Button(toolbar, text='zoom out', font=('TkDefaultFont', 12), command=self.zoom_out).pack(side=LEFT)
-        Label(toolbar, textvariable=self.num_page_tv).pack(side=LEFT)
+        toolbar = ttk.Frame(self)
+        ttk.Button(toolbar, text='open', command=self.open).pack(side=LEFT)
+        ttk.Button(toolbar, text='import', command=self.import_annotations).pack(side=LEFT)
+        ttk.Button(toolbar, text='prev', command=self.prev).pack(side=LEFT)
+        ttk.Button(toolbar, text='next', command=self.next).pack(side=LEFT)
+        ttk.Button(toolbar, text='zoom in', command=self.zoom_in).pack(side=LEFT)
+        ttk.Button(toolbar, text='zoom out', command=self.zoom_out).pack(side=LEFT)
+        ttk.Label(toolbar, textvariable=self.num_page_tv).pack(side=LEFT)
         # Buttons for the annotations
-        Label(toolbar, textvariable=self.annotation_mode_tv, bg=self.color["default"], font=('TkDefaultFont', 14, "bold")).pack(side=LEFT)
-        Button(toolbar, text='toggle boxes', font=('TkDefaultFont', 12), command=self.toggle_boxes, padx=10).pack(side=LEFT)
-        Button(toolbar, text='new annotation', font=('TkDefaultFont', 12), command=self.new_annotation).pack(side=LEFT)
-        Button(toolbar, text='add component', font=('TkDefaultFont', 12), command=self.add_component).pack(side=LEFT)
-        Button(toolbar, text='in equation', font=('TkDefaultFont', 14, "bold"), fg=self.color['equation'], command=self.select_equation, padx=10).pack(side=LEFT)
-        Button(toolbar, text='in text', font=('TkDefaultFont', 14, "bold"), fg=self.color['text'], command=self.select_text, padx=10).pack(side=LEFT)
-        Button(toolbar, text='description', font=('TkDefaultFont', 14, "bold"), fg=self.color['description'], command=self.select_description, padx=10).pack(side=LEFT)
-        Button(toolbar, text='unit', font=('TkDefaultFont', 14, "bold"), fg=self.color['unit'], command=self.select_unit, padx=10).pack(side=LEFT)
-        Button(toolbar, text='save', font=('TkDefaultFont', 12), command=self.save_annotation).pack(side=LEFT)
-        Button(toolbar, text='export', font=('TkDefaultFont', 12), command=self.export_annotations).pack(side=LEFT)
+        ttk.Label(toolbar, textvariable=self.annotation_mode_tv, style="Default.TLabel").pack(side=LEFT)
+        ttk.Button(toolbar, text='toggle boxes', command=self.toggle_boxes).pack(side=LEFT)
+        ttk.Button(toolbar, text='new annotation', command=self.new_annotation).pack(side=LEFT)
+        ttk.Button(toolbar, text='add component', command=self.add_component).pack(side=LEFT)
+        ttk.Button(toolbar, text='in equation', style="InEquation.TButton", command=self.select_equation).pack(side=LEFT)
+        ttk.Button(toolbar, text='in text', style="InText.TButton", command=self.select_text).pack(side=LEFT)
+        ttk.Button(toolbar, text='description', style="Description.TButton", command=self.select_description,).pack(side=LEFT)
+        ttk.Button(toolbar, text='unit', style="Unit.TButton", command=self.select_unit).pack(side=LEFT)
+        ttk.Button(toolbar, text='save', command=self.save_annotation).pack(side=LEFT)
+        ttk.Button(toolbar, text='export', command=self.export_annotations).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
 
-        viewer = Frame(self)
+        viewer = ttk.Frame(self)
         self.canvas = Canvas(viewer, width=500, height=500)
-        viewer_sbarV = Scrollbar(viewer, orient=VERTICAL, command=self.canvas.yview)
-        viewer_sbarH = Scrollbar(viewer, orient=HORIZONTAL, command=self.canvas.xview)
+        viewer_sbarV = ttk.Scrollbar(viewer, orient=VERTICAL, command=self.canvas.yview)
+        viewer_sbarH = ttk.Scrollbar(viewer, orient=HORIZONTAL, command=self.canvas.xview)
         viewer_sbarV.pack(side=RIGHT, fill=Y)
         viewer_sbarH.pack(side=BOTTOM, fill=X)
         self.canvas.config(yscrollcommand=viewer_sbarV.set, xscrollcommand=viewer_sbarH.set)
@@ -568,95 +578,95 @@ class PdfAlign(Frame):
 
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
-        right_side = Frame(self)
+        right_side = ttk.Frame(self)
 
         # Saved Annotations List
-        history = Frame(right_side)
-        history_toolbar = Frame(history)
+        history = ttk.Frame(right_side)
+        history_toolbar = ttk.Frame(history)
         # Set exportselection=0 to be able to select things in multiple list boxes without automatically deselecting
         # see: https://stackoverflow.com/a/756875
         self.annotation_list = Listbox(history, exportselection=0)
-        hist_sbarV = Scrollbar(history, orient=VERTICAL, command=self.annotation_list.yview)
-        hist_sbarH = Scrollbar(history, orient=HORIZONTAL, command=self.annotation_list.xview)
+        hist_sbarV = ttk.Scrollbar(history, orient=VERTICAL, command=self.annotation_list.yview)
+        hist_sbarH = ttk.Scrollbar(history, orient=HORIZONTAL, command=self.annotation_list.xview)
         hist_sbarV.pack(side=RIGHT, fill=Y)
         hist_sbarH.pack(side=BOTTOM, fill=X)
-        Label(history, text="Saved Annotations (snippets)", bg=self.color["default"]).pack(side=TOP, fill=X)
+        ttk.Label(history, text="Saved Annotations (snippets)").pack(side=TOP, fill=X)
         self.annotation_list.config(yscrollcommand=hist_sbarV.set, xscrollcommand=hist_sbarH.set)
         # pack and buttons
         self.annotation_list.pack(side=TOP, fill=BOTH, expand=YES)
-        Button(history_toolbar, text='show', command=self.show_annotation).pack(side=LEFT)
-        Button(history_toolbar, text='edit', command=self.edit_annotation).pack(side=LEFT)
-        Button(history_toolbar, text='delete', command=self.delete_annotation).pack(side=LEFT)
+        ttk.Button(history_toolbar, text='show', command=self.show_annotation).pack(side=LEFT)
+        ttk.Button(history_toolbar, text='edit', command=self.edit_annotation).pack(side=LEFT)
+        ttk.Button(history_toolbar, text='delete', command=self.delete_annotation).pack(side=LEFT)
         history_toolbar.pack(side=BOTTOM, fill=BOTH)
         history.pack(side=TOP, expand=YES, fill=BOTH)
 
-        annotation_detail = Frame(right_side)
+        annotation_detail = ttk.Frame(right_side)
 
         # equation
-        eq_frame = Frame(annotation_detail)
-        eq_toolbar = Frame(eq_frame)
+        eq_frame = ttk.Frame(annotation_detail)
+        eq_toolbar = ttk.Frame(eq_frame)
         self.equation_list = Listbox(eq_frame, exportselection=0)
-        eq_sbarV = Scrollbar(eq_frame, orient=VERTICAL, command=self.equation_list.yview)
-        eq_sbarH = Scrollbar(eq_frame, orient=HORIZONTAL, command=self.equation_list.xview)
+        eq_sbarV = ttk.Scrollbar(eq_frame, orient=VERTICAL, command=self.equation_list.yview)
+        eq_sbarH = ttk.Scrollbar(eq_frame, orient=HORIZONTAL, command=self.equation_list.xview)
         eq_sbarV.pack(side=RIGHT, fill=Y)
         eq_sbarH.pack(side=BOTTOM, fill=X)
         Label(eq_frame, text="In-Equation Components", bg=self.color["equation"], fg="white").pack(side=TOP, fill=X)
         self.equation_list.config(yscrollcommand=eq_sbarV.set, xscrollcommand=eq_sbarH.set, height=7, width=40)
         self.equation_list.pack(side=TOP, fill=X)
-        Button(eq_toolbar, text='delete', command=self.delete_equation_component).pack(side=BOTTOM)
+        ttk.Button(eq_toolbar, text='delete', command=self.delete_equation_component).pack(side=BOTTOM)
         eq_toolbar.pack(side=BOTTOM, fill=BOTH)
         eq_frame.pack(side=TOP, fill=X)
 
         # text
-        text_frame = Frame(annotation_detail)
-        text_toolbar = Frame(text_frame)
+        text_frame = ttk.Frame(annotation_detail)
+        text_toolbar = ttk.Frame(text_frame)
         self.text_list = Listbox(text_frame, exportselection=0)
-        text_sbarV = Scrollbar(text_frame, orient=VERTICAL, command=self.text_list.yview)
-        text_sbarH = Scrollbar(text_frame, orient=HORIZONTAL, command=self.text_list.xview)
+        text_sbarV = ttk.Scrollbar(text_frame, orient=VERTICAL, command=self.text_list.yview)
+        text_sbarH = ttk.Scrollbar(text_frame, orient=HORIZONTAL, command=self.text_list.xview)
         text_sbarV.pack(side=RIGHT, fill=Y)
         text_sbarH.pack(side=BOTTOM, fill=X)
         Label(text_frame, text="In-Text Components", bg=self.color["text"], fg="white").pack(side=TOP, fill=X)
         self.text_list.config(yscrollcommand=text_sbarV.set, xscrollcommand=text_sbarH.set, height=7, width=40)
         self.text_list.pack(side=TOP, fill=X)
-        Button(text_toolbar, text='delete', command=self.delete_text_component).pack(side=BOTTOM)
+        ttk.Button(text_toolbar, text='delete', command=self.delete_text_component).pack(side=BOTTOM)
         text_toolbar.pack(side=BOTTOM, fill=BOTH)
         text_frame.pack(side=TOP, fill=X)
 
         # description
-        desc_frame = Frame(annotation_detail)
-        desc_toolbar = Frame(desc_frame)
+        desc_frame = ttk.Frame(annotation_detail)
+        desc_toolbar = ttk.Frame(desc_frame)
         self.description_list = Listbox(desc_frame, exportselection=0)
-        desc_sbarV = Scrollbar(desc_frame, orient=VERTICAL, command=self.description_list.yview)
-        desc_sbarH = Scrollbar(desc_frame, orient=HORIZONTAL, command=self.description_list.xview)
+        desc_sbarV = ttk.Scrollbar(desc_frame, orient=VERTICAL, command=self.description_list.yview)
+        desc_sbarH = ttk.Scrollbar(desc_frame, orient=HORIZONTAL, command=self.description_list.xview)
         desc_sbarV.pack(side=RIGHT, fill=Y)
         desc_sbarH.pack(side=BOTTOM, fill=X)
         Label(desc_frame, text="Description Components", bg=self.color["description"], fg="white").pack(side=TOP, fill=X)
         self.description_list.config(yscrollcommand=desc_sbarV.set, xscrollcommand=desc_sbarH.set, height=7, width=40)
         self.description_list.pack(side=TOP, fill=X)
-        Button(desc_toolbar, text='delete', command=self.delete_description_component).pack(side=BOTTOM)
+        ttk.Button(desc_toolbar, text='delete', command=self.delete_description_component).pack(side=BOTTOM)
         desc_toolbar.pack(side=BOTTOM, fill=BOTH)
         desc_frame.pack(side=TOP, fill=X)
 
         # unit
-        unit_frame = Frame(annotation_detail)
-        unit_toolbar = Frame(unit_frame)
+        unit_frame = ttk.Frame(annotation_detail)
+        unit_toolbar = ttk.Frame(unit_frame)
         self.unit_list = Listbox(unit_frame, exportselection=0)
-        unit_sbarV = Scrollbar(unit_frame, orient=VERTICAL, command=self.unit_list.yview)
-        unit_sbarH = Scrollbar(unit_frame, orient=HORIZONTAL, command=self.unit_list.xview)
+        unit_sbarV = ttk.Scrollbar(unit_frame, orient=VERTICAL, command=self.unit_list.yview)
+        unit_sbarH = ttk.Scrollbar(unit_frame, orient=HORIZONTAL, command=self.unit_list.xview)
         unit_sbarV.pack(side=RIGHT, fill=Y)
         unit_sbarH.pack(side=BOTTOM, fill=X)
         Label(unit_frame, text="Unit Components", bg=self.color["unit"], fg="white").pack(side=TOP, fill=X)
         self.unit_list.config(yscrollcommand=unit_sbarV.set, xscrollcommand=unit_sbarH.set, height=7, width=40)
         self.unit_list.pack(side=TOP, fill=BOTH)
-        Button(unit_toolbar, text='delete', command=self.delete_unit_component).pack(side=BOTTOM)
+        ttk.Button(unit_toolbar, text='delete', command=self.delete_unit_component).pack(side=BOTTOM)
         unit_toolbar.pack(side=BOTTOM, fill=X)
         unit_frame.pack(side=TOP, fill=X)
 
 
         # self.component_list = Listbox(annotation_detail)
         # scrollbar
-        # detail_sbarV = Scrollbar(annotation_detail, orient=VERTICAL, command=self.component_list.yview)
-        # detail_sbarH = Scrollbar(annotation_detail, orient=HORIZONTAL, command=self.component_list.xview)
+        # detail_sbarV = ttk.Scrollbar(annotation_detail, orient=VERTICAL, command=self.component_list.yview)
+        # detail_sbarH = ttk.Scrollbar(annotation_detail, orient=HORIZONTAL, command=self.component_list.xview)
         # detail_sbarV.pack(side=RIGHT, fill=Y)
         # detail_sbarH.pack(side=BOTTOM, fill=X)
         # self.component_list.config(yscrollcommand=detail_sbarV.set, xscrollcommand=detail_sbarH.set)
@@ -672,8 +682,8 @@ class PdfAlign(Frame):
 
         # textarea = Frame(self)
         # self.text = Text(textarea)
-        # text_sbarV = Scrollbar(textarea, orient=VERTICAL, command=self.text.yview)
-        # text_sbarH = Scrollbar(textarea, orient=HORIZONTAL, command=self.text.xview)
+        # text_sbarV = ttk.Scrollbar(textarea, orient=VERTICAL, command=self.text.yview)
+        # text_sbarH = ttk.Scrollbar(textarea, orient=HORIZONTAL, command=self.text.xview)
         # text_sbarV.pack(side=RIGHT, fill=Y)
         # text_sbarH.pack(side=BOTTOM, fill=X)
         # self.text.config(yscrollcommand=text_sbarV.set, xscrollcommand=text_sbarH.set)
@@ -1249,8 +1259,6 @@ class PdfAlign(Frame):
         selected = listbox.curselection()
         return len(selected) > 0 or listbox.size() == 0
 
-
- 
 
 def parse_args():
     parser = argparse.ArgumentParser()
