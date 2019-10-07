@@ -1167,54 +1167,55 @@ class PdfAlign(Frame):
         # .//text
         for node in tree.findall('.//text'):
             text = node.text
-            if len(text.strip()) == 0:
-                if curr_token_aabb is not None:
-                    # the current token ended
-                    curr_token_aabb.page = page
-                    curr_token_aabb.id = len(self.all_tokens)
-                    self.all_tokens.append(curr_token_aabb)
-                    token_boxes.append(curr_token_aabb)
-                    curr_token_aabb = None
+            if text is not None:
+                if len(text.strip()) == 0:
+                    if curr_token_aabb is not None:
+                        # the current token ended
+                        curr_token_aabb.page = page
+                        curr_token_aabb.id = len(self.all_tokens)
+                        self.all_tokens.append(curr_token_aabb)
+                        token_boxes.append(curr_token_aabb)
+                        curr_token_aabb = None
 
-            else:
-                # "576.926,76.722,581.357,86.733"
-                bbox = node.attrib.get('bbox')
-                if bbox is not None:
-                    # The bboxes from pdf2txt are a little diff:
-                    # per https: // github.com / euske / pdfminer / issues / 171
-                    # The bbox value is (x0,y0,x1,y1).
-                    # x0: the distance from the left of the page to the left edge of the box.
-                    # y0: the distance from the bottom of the page to the lower edge of the box.
-                    # x1: the distance from the left of the page to the right edge of the box.
-                    # y1: the distance from the bottom of the page to the upper edge of the box.
-                    # so here we flip the ys
-                    xmin, ymax, xmax, ymin = bbox.split(',')
-                    xmin = float(xmin) / dpi
-                    ymin = (-1 * float(ymin) + page_height) / dpi
-                    xmax = float(xmax) / dpi
-                    ymax = (-1 * float(ymax) + page_height) / dpi
-                    aabb = AABB(xmin, ymin, xmax, ymax)
-                    # store metadata
-                    aabb.value = text
-                    aabb.page = page
-                    aabb.font = node.attrib.get('font')
-                    aabb.font_size = node.attrib.get('size')
-                    # Token info
-                    if curr_token_aabb is None:
-                        curr_token_aabb = AABB(xmin, ymin, xmax, ymax)
-                        curr_token_aabb.value = text
-                    else:
-                        new_value = curr_token_aabb.value + text
-                        curr_token_aabb = AABB.merge(curr_token_aabb, aabb)
-                        curr_token_aabb.value = new_value
-                    aabb.tokenid = len(self.all_tokens)
-                    aabb.id = self.charid
-                    self.charid += 1
-                    # Update the bbox luts
-                    self.char_token_lut[aabb] = aabb.tokenid
-                    self.token_char_lut[aabb.tokenid].append(aabb)
-                    # add the current box
-                    char_boxes.append(aabb)
+                else:
+                    # "576.926,76.722,581.357,86.733"
+                    bbox = node.attrib.get('bbox')
+                    if bbox is not None:
+                        # The bboxes from pdf2txt are a little diff:
+                        # per https: // github.com / euske / pdfminer / issues / 171
+                        # The bbox value is (x0,y0,x1,y1).
+                        # x0: the distance from the left of the page to the left edge of the box.
+                        # y0: the distance from the bottom of the page to the lower edge of the box.
+                        # x1: the distance from the left of the page to the right edge of the box.
+                        # y1: the distance from the bottom of the page to the upper edge of the box.
+                        # so here we flip the ys
+                        xmin, ymax, xmax, ymin = bbox.split(',')
+                        xmin = float(xmin) / dpi
+                        ymin = (-1 * float(ymin) + page_height) / dpi
+                        xmax = float(xmax) / dpi
+                        ymax = (-1 * float(ymax) + page_height) / dpi
+                        aabb = AABB(xmin, ymin, xmax, ymax)
+                        # store metadata
+                        aabb.value = text
+                        aabb.page = page
+                        aabb.font = node.attrib.get('font')
+                        aabb.font_size = node.attrib.get('size')
+                        # Token info
+                        if curr_token_aabb is None:
+                            curr_token_aabb = AABB(xmin, ymin, xmax, ymax)
+                            curr_token_aabb.value = text
+                        else:
+                            new_value = curr_token_aabb.value + text
+                            curr_token_aabb = AABB.merge(curr_token_aabb, aabb)
+                            curr_token_aabb.value = new_value
+                        aabb.tokenid = len(self.all_tokens)
+                        aabb.id = self.charid
+                        self.charid += 1
+                        # Update the bbox luts
+                        self.char_token_lut[aabb] = aabb.tokenid
+                        self.token_char_lut[aabb.tokenid].append(aabb)
+                        # add the current box
+                        char_boxes.append(aabb)
         self.page_boxes['token'].append(token_boxes)
         self.page_boxes['char'].append(char_boxes)
 
