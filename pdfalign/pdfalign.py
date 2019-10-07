@@ -1081,7 +1081,7 @@ class PdfAlign(Frame):
         f = filedialog.asksaveasfile(filetypes=[('json files', '*.json'), ('all files', '*.*')], initialdir=initialdir, initialfile=suggested_filename)
         if f is not None:
             annotations = [a.serialize(self.token_char_lut, self.all_tokens) for a in self.saved_annotations]
-            json.dump(annotations, f, indent=4)
+            json.dump(annotations, f, indent=4, ensure_ascii=False)
             f.close()
         # FIXME: buggy on mac -- doesn't always close...?
 
