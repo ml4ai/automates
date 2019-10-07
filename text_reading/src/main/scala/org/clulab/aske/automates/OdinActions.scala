@@ -123,21 +123,49 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val greek = Array("alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega") //todo: read from tsv?
+    //returns mentions that look like a variable
     for {
       m <- mentions
-      words = m match {
-      case tb: TextBoundMention => m.words
-      case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head.words
-      case em: EventMention => m.arguments.getOrElse("variable", Seq()).head.words
-      case _ => ???
-    }
-      if words.length == 1
-      word = m.words.head
+      varMention = m match {
+        case tb: TextBoundMention => m
+        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head
+        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head
+        case _ => ???
+      }
+      if varMention.words.length == 1
+      word = varMention.words.head
       if word.length <= 6
-      if (word.toLowerCase != word | greek.contains(word) ) // mixed case or all UPPER or is a greek letter todo: try this constraint--- the word is one letter long and tag != CD/DT
+      if (word.toLowerCase != word // mixed case or all UPPER
+        |
+        varMention.entities.exists(ent => ent.exists(_ == "B-GreekLetter")) //or is a greek letter
+        |
+        word.length == 1 && m.tags.exists(_.head matches "NN")) //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+      //todo: still need a way to not avoid short lower-case vars
+
     } yield m
   }
+
+  def defIsNotVar(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    //returns mentions in which definitions are not also variables
+    //and the variable and the definition don't overlap
+    for {
+      m <- mentions
+      variableMention = m.arguments.getOrElse("variable", Seq())
+      defMention = m.arguments.getOrElse("definition", Seq())
+      if (
+        looksLikeAVariable(defMention, state).isEmpty //makes sure the definition is not another variable (or does not look like what could be a variable
+        &&
+        defMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the definition don't overlap
+        )
+    } yield m
+  }
+
+
+  def definitionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = defIsNotVar(looksLikeAVariable(mentions, state), state)
+    toReturn
+  }
+
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {

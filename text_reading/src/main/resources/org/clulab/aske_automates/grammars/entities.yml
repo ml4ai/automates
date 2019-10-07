@@ -24,7 +24,7 @@ rules:
     label: Variable
     priority: ${priority}
     type: token
-    action: variableArguments
+    action: looksLikeAVariable
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
     pattern: |
       (?<variable> [word = /.*/]) calculation
