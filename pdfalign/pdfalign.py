@@ -877,21 +877,25 @@ class PdfAlign(Frame):
     def select_equation(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'equation'
+            self.token_mode = False
             self.redraw()
 
     def select_text(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'text'
+            self.token_mode = True
             self.redraw()
 
     def select_description(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'description'
+            self.token_mode = True
             self.redraw()
 
     def select_unit(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'unit'
+            self.token_mode = True
             self.redraw()
 
     def add_component(self):
