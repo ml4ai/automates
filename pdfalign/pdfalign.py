@@ -536,7 +536,7 @@ class PdfAlign(Frame):
         self.active_annotation = None
         self.token_mode = True
         self.ann_mode_index = 0
-        self.ann_mode_dict = {0:'eqn', 1:'text', 2:'desc', 3:'unit'}
+        self.ann_mode_dict = ['eqn', 'text', 'desc', 'unit']
 
         toolbar = Frame(self)
         Button(toolbar, text='open', font=('TkDefaultFont', 12), command=self.open).pack(side=LEFT)
