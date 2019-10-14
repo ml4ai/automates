@@ -319,7 +319,7 @@ class Annotation:
                 messagebox.showinfo('pdfalign', 'There is nothing to add.')
                 return False
             return True
- 
+
         if not something_to_add(annotation_type):
             return
         if annotation_type == 'equation':
@@ -374,7 +374,7 @@ class Annotation:
         if len(boxes) > 3 or len(s) > 3:
             summary += ", ..."
         return summary
-        
+
 
     def toggle_annotations(self, annotation_type, boxes):
         if annotation_type in ['equation', 'text', 'description', 'unit']:
@@ -557,6 +557,7 @@ class PdfAlign(Frame):
         Button(toolbar, text='unit', font=('TkDefaultFont', 14, "bold"), fg=self.color['unit'], command=self.select_unit, padx=10).pack(side=LEFT)
         Button(toolbar, text='save', font=('TkDefaultFont', 12), command=self.save_annotation).pack(side=LEFT)
         Button(toolbar, text='export', font=('TkDefaultFont', 12), command=self.export_annotations).pack(side=LEFT)
+        Button(toolbar, text='quit', font=('TkDefaultFont', 12), command=self.client_exit).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
 
         self.bind_all("o", lambda e: self.open())
@@ -731,6 +732,14 @@ class PdfAlign(Frame):
                 self.annotation_aabb = annotation_aabb
             self.redraw()
 
+    def client_exit(self):
+        already_exported = messagebox.askyesno("pdfalign", "Did you export your annotations?")
+        if already_exported:
+            exit()
+        else:
+            messagebox.showinfo('pdfalign', "Click Export to export and then Quit to exit.")
+
+
     def get_fill_color(self, box, default_color=None):
         if self.active_annotation:
             annotation_type = self.active_annotation.get_type(box)
@@ -857,7 +866,7 @@ class PdfAlign(Frame):
         y = canvas.canvasy(event.y) / self.scale / self.dpi
         # query synctex
         result = synctex(self.num_page, x, y, self.filename)
-        
+
         # display synctex results
         # with open(result['input']) as f:
         #     text = f.read()
@@ -901,21 +910,25 @@ class PdfAlign(Frame):
     def select_equation(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'equation'
+            self.token_mode = False
             self.redraw()
 
     def select_text(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'text'
+            self.token_mode = True
             self.redraw()
 
     def select_description(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'description'
+            self.token_mode = True
             self.redraw()
 
     def select_unit(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'unit'
+            self.token_mode = True
             self.redraw()
 
     def add_component(self):
@@ -1260,13 +1273,12 @@ class PdfAlign(Frame):
     #                Utils
     # ---------------------------------------
 
-    def maybe_save_unsaved(self): 
+    def maybe_save_unsaved(self):
         if self.active_annotation is not None:
-            if not self.active_annotation.is_empty():
-                # warn the user that they have unsaved annotations
-                save_unsaved = messagebox.askyesno("pdfalign", "You have unsaved annotations which will be lost, would you like to save them first?")
-                if save_unsaved:
-                    self.save_annotation()
+            # warn the user that they have unsaved annotations
+            save_unsaved = messagebox.askyesno("pdfalign", "You have unsaved annotations which will be lost, would you like to save them first?")
+            if save_unsaved:
+                self.save_annotation()
 
     # There is either something selected or nothing to select
     def check_selection(self, component_type):
@@ -1275,7 +1287,7 @@ class PdfAlign(Frame):
         return len(selected) > 0 or listbox.size() == 0
 
 
- 
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
