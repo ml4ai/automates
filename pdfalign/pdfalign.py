@@ -554,7 +554,8 @@ class PdfAlign(Frame):
         Button(toolbar, text='save', font=('TkDefaultFont', 12), command=self.save_annotation).pack(side=LEFT)
         Button(toolbar, text='export', font=('TkDefaultFont', 12), command=self.export_annotations).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
-
+        Button(toolbar, text='quit', font=('TkDefaultFont', 12), command=self.client_exit).pack(side=LEFT)
+        toolbar.pack(side=TOP, fill=BOTH)
         viewer = Frame(self)
         self.canvas = Canvas(viewer, width=500, height=500)
         viewer_sbarV = Scrollbar(viewer, orient=VERTICAL, command=self.canvas.yview)
@@ -706,6 +707,14 @@ class PdfAlign(Frame):
                 annotation_aabb.page = int(eqn_page)
                 self.annotation_aabb = annotation_aabb
             self.redraw()
+
+    def client_exit(self):
+        already_exported = messagebox.askyesno("pdfalign", "Did you export your annotations?")
+        if already_exported:
+            exit()
+        else:
+            messagebox.showinfo('pdfalign', "Click Export to export and then Quit to exit.")
+
 
     def get_fill_color(self, box, default_color=None):
         if self.active_annotation:
