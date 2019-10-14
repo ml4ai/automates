@@ -1251,7 +1251,6 @@ class PdfAlign(Frame):
 
     def maybe_save_unsaved(self):
         if self.active_annotation is not None:
-            # if not self.active_annotation.is_empty(): fixme: this line prevents the warning
             # warn the user that they have unsaved annotations
             save_unsaved = messagebox.askyesno("pdfalign", "You have unsaved annotations which will be lost, would you like to save them first?")
             if save_unsaved:
