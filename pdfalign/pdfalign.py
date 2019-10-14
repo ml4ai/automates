@@ -32,6 +32,7 @@ class AABB:
         self.ymin = ymin
         self.xmax = xmax
         self.ymax = ymax
+        self.area = self.width * self.height
         self.id = None
         # content
         self.value = None
@@ -64,9 +65,9 @@ class AABB:
     def perimeter(self):
         return 2 * (self.width + self.height)
 
-    @property
-    def area(self):
-        return self.width * self.height
+    # @property
+    # def area(self):
+    #     return self.width * self.height
 
     def contains(self, point):
         return self.xmin < point.x < self.xmax and self.ymin < point.y < self.ymax
@@ -160,6 +161,7 @@ class AABBTree:
             self.aabb = AABB.merge(self.left.aabb, self.right.aabb)
         else:
             # merged AABBs
+            # hypothetcical area instead
             merged_self  = AABB.merge(aabb, self.aabb)
             merged_left  = AABB.merge(aabb, self.left.aabb)
             merged_right = AABB.merge(aabb, self.right.aabb)
@@ -533,6 +535,8 @@ class PdfAlign(Frame):
         self.annotation_mode = 'default'
         self.active_annotation = None
         self.token_mode = True
+        self.ann_mode_index = 0
+        self.ann_mode_dict = {0:'eqn', 1:'text', 2:'desc', 3:'unit'}
 
         toolbar = Frame(self)
         Button(toolbar, text='open', font=('TkDefaultFont', 12), command=self.open).pack(side=LEFT)
@@ -554,6 +558,11 @@ class PdfAlign(Frame):
         Button(toolbar, text='save', font=('TkDefaultFont', 12), command=self.save_annotation).pack(side=LEFT)
         Button(toolbar, text='export', font=('TkDefaultFont', 12), command=self.export_annotations).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
+
+        self.bind_all("o", lambda e: self.open())
+        self.bind_all("a", lambda e: self.add_component())
+        self.bind_all("<Tab>", lambda e: self.next_mode())
+
 
         viewer = Frame(self)
         self.canvas = Canvas(viewer, width=500, height=500)
@@ -684,6 +693,21 @@ class PdfAlign(Frame):
 
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(-1*(event.delta), "units")
+
+    def next_mode(self):
+        self.ann_mode_index += 1
+        self.ann_mode_index = self.ann_mode_index % 4
+        next_mode = self.ann_mode_dict[self.ann_mode_index]
+        if next_mode == 'eqn':
+            self.select_equation()
+        elif next_mode == 'text':
+            self.select_text()
+        elif next_mode == 'desc':
+            self.select_description()
+        elif next_mode == 'unit':
+            self.select_unit()
+        else:
+            raise ValueError(f"Invalid value for next_mode: {next_mode}")
 
     def open(self, filename=None):
         if filename is None:
