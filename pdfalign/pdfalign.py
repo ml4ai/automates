@@ -14,8 +14,6 @@ from pdf2image import convert_from_path
 from lxml import etree
 from webcolors import name_to_rgb
 
-
-
 style = ttk.Style()
 style.configure("TButton", font=("TkDefaultFont", 12))
 style.configure("InEquation.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "olivedrab", padx=10)
@@ -42,6 +40,7 @@ class AABB:
         self.ymin = ymin
         self.xmax = xmax
         self.ymax = ymax
+        self.area = self.width * self.height
         self.id = None
         # content
         self.value = None
@@ -74,9 +73,9 @@ class AABB:
     def perimeter(self):
         return 2 * (self.width + self.height)
 
-    @property
-    def area(self):
-        return self.width * self.height
+    # @property
+    # def area(self):
+    #     return self.width * self.height
 
     def contains(self, point):
         return self.xmin < point.x < self.xmax and self.ymin < point.y < self.ymax
@@ -170,6 +169,7 @@ class AABBTree:
             self.aabb = AABB.merge(self.left.aabb, self.right.aabb)
         else:
             # merged AABBs
+            # hypothetical area instead
             merged_self  = AABB.merge(aabb, self.aabb)
             merged_left  = AABB.merge(aabb, self.left.aabb)
             merged_right = AABB.merge(aabb, self.right.aabb)
@@ -327,7 +327,7 @@ class Annotation:
                 messagebox.showinfo('pdfalign', 'There is nothing to add.')
                 return False
             return True
- 
+
         if not something_to_add(annotation_type):
             return
         if annotation_type == 'equation':
@@ -382,7 +382,7 @@ class Annotation:
         if len(boxes) > 3 or len(s) > 3:
             summary += ", ..."
         return summary
-        
+
 
     def toggle_annotations(self, annotation_type, boxes):
         if annotation_type in ['equation', 'text', 'description', 'unit']:
@@ -543,6 +543,8 @@ class PdfAlign(ttk.Frame):
         self.annotation_mode = 'default'
         self.active_annotation = None
         self.token_mode = True
+        self.ann_mode_index = 0
+        self.ann_mode_dict = {0:'eqn', 1:'text', 2:'desc', 3:'unit'}
 
         toolbar = ttk.Frame(self)
         ttk.Button(toolbar, text='open', command=self.open).pack(side=LEFT)
@@ -563,9 +565,15 @@ class PdfAlign(ttk.Frame):
         ttk.Button(toolbar, text='unit', style="Unit.TButton", command=self.select_unit).pack(side=LEFT)
         ttk.Button(toolbar, text='save', command=self.save_annotation).pack(side=LEFT)
         ttk.Button(toolbar, text='export', command=self.export_annotations).pack(side=LEFT)
+        ttk.Button(toolbar, text='quit', command=self.client_exit).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
 
+        self.bind_all("o", lambda e: self.open())
+        self.bind_all("a", lambda e: self.add_component())
+        self.bind_all("<Tab>", lambda e: self.next_mode())
+
         viewer = ttk.Frame(self)
+
         self.canvas = Canvas(viewer, width=500, height=500)
         viewer_sbarV = ttk.Scrollbar(viewer, orient=VERTICAL, command=self.canvas.yview)
         viewer_sbarH = ttk.Scrollbar(viewer, orient=HORIZONTAL, command=self.canvas.xview)
@@ -695,6 +703,21 @@ class PdfAlign(ttk.Frame):
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(-1*(event.delta), "units")
 
+    def next_mode(self):
+        self.ann_mode_index += 1
+        self.ann_mode_index = self.ann_mode_index % 4
+        next_mode = self.ann_mode_dict[self.ann_mode_index]
+        if next_mode == 'eqn':
+            self.select_equation()
+        elif next_mode == 'text':
+            self.select_text()
+        elif next_mode == 'desc':
+            self.select_description()
+        elif next_mode == 'unit':
+            self.select_unit()
+        else:
+            raise ValueError(f"Invalid value for next_mode: {next_mode}")
+
     def open(self, filename=None):
         if filename is None:
             filename = filedialog.askopenfilename(filetypes=[('pdf files', '*.pdf'), ('all files', '*.*')])
@@ -716,6 +739,14 @@ class PdfAlign(ttk.Frame):
                 annotation_aabb.page = int(eqn_page)
                 self.annotation_aabb = annotation_aabb
             self.redraw()
+
+    def client_exit(self):
+        already_exported = messagebox.askyesno("pdfalign", "Did you export your annotations?")
+        if already_exported:
+            exit()
+        else:
+            messagebox.showinfo('pdfalign', "Click Export to export and then Quit to exit.")
+
 
     def get_fill_color(self, box, default_color=None):
         if self.active_annotation:
@@ -843,7 +874,7 @@ class PdfAlign(ttk.Frame):
         y = canvas.canvasy(event.y) / self.scale / self.dpi
         # query synctex
         result = synctex(self.num_page, x, y, self.filename)
-        
+
         # display synctex results
         # with open(result['input']) as f:
         #     text = f.read()
@@ -887,21 +918,25 @@ class PdfAlign(ttk.Frame):
     def select_equation(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'equation'
+            self.token_mode = False
             self.redraw()
 
     def select_text(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'text'
+            self.token_mode = True
             self.redraw()
 
     def select_description(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'description'
+            self.token_mode = True
             self.redraw()
 
     def select_unit(self):
         if self.active_annotation is not None:
             self.annotation_mode = 'unit'
+            self.token_mode = True
             self.redraw()
 
     def add_component(self):
@@ -1091,7 +1126,7 @@ class PdfAlign(ttk.Frame):
         f = filedialog.asksaveasfile(filetypes=[('json files', '*.json'), ('all files', '*.*')], initialdir=initialdir, initialfile=suggested_filename)
         if f is not None:
             annotations = [a.serialize(self.token_char_lut, self.all_tokens) for a in self.saved_annotations]
-            json.dump(annotations, f, indent=4)
+            json.dump(annotations, f, indent=4, ensure_ascii=False)
             f.close()
         # FIXME: buggy on mac -- doesn't always close...?
 
@@ -1177,54 +1212,55 @@ class PdfAlign(ttk.Frame):
         # .//text
         for node in tree.findall('.//text'):
             text = node.text
-            if len(text.strip()) == 0:
-                if curr_token_aabb is not None:
-                    # the current token ended
-                    curr_token_aabb.page = page
-                    curr_token_aabb.id = len(self.all_tokens)
-                    self.all_tokens.append(curr_token_aabb)
-                    token_boxes.append(curr_token_aabb)
-                    curr_token_aabb = None
+            if text is not None:
+                if len(text.strip()) == 0:
+                    if curr_token_aabb is not None:
+                        # the current token ended
+                        curr_token_aabb.page = page
+                        curr_token_aabb.id = len(self.all_tokens)
+                        self.all_tokens.append(curr_token_aabb)
+                        token_boxes.append(curr_token_aabb)
+                        curr_token_aabb = None
 
-            else:
-                # "576.926,76.722,581.357,86.733"
-                bbox = node.attrib.get('bbox')
-                if bbox is not None:
-                    # The bboxes from pdf2txt are a little diff:
-                    # per https: // github.com / euske / pdfminer / issues / 171
-                    # The bbox value is (x0,y0,x1,y1).
-                    # x0: the distance from the left of the page to the left edge of the box.
-                    # y0: the distance from the bottom of the page to the lower edge of the box.
-                    # x1: the distance from the left of the page to the right edge of the box.
-                    # y1: the distance from the bottom of the page to the upper edge of the box.
-                    # so here we flip the ys
-                    xmin, ymax, xmax, ymin = bbox.split(',')
-                    xmin = float(xmin) / dpi
-                    ymin = (-1 * float(ymin) + page_height) / dpi
-                    xmax = float(xmax) / dpi
-                    ymax = (-1 * float(ymax) + page_height) / dpi
-                    aabb = AABB(xmin, ymin, xmax, ymax)
-                    # store metadata
-                    aabb.value = text
-                    aabb.page = page
-                    aabb.font = node.attrib.get('font')
-                    aabb.font_size = node.attrib.get('size')
-                    # Token info
-                    if curr_token_aabb is None:
-                        curr_token_aabb = AABB(xmin, ymin, xmax, ymax)
-                        curr_token_aabb.value = text
-                    else:
-                        new_value = curr_token_aabb.value + text
-                        curr_token_aabb = AABB.merge(curr_token_aabb, aabb)
-                        curr_token_aabb.value = new_value
-                    aabb.tokenid = len(self.all_tokens)
-                    aabb.id = self.charid
-                    self.charid += 1
-                    # Update the bbox luts
-                    self.char_token_lut[aabb] = aabb.tokenid
-                    self.token_char_lut[aabb.tokenid].append(aabb)
-                    # add the current box
-                    char_boxes.append(aabb)
+                else:
+                    # "576.926,76.722,581.357,86.733"
+                    bbox = node.attrib.get('bbox')
+                    if bbox is not None:
+                        # The bboxes from pdf2txt are a little diff:
+                        # per https: // github.com / euske / pdfminer / issues / 171
+                        # The bbox value is (x0,y0,x1,y1).
+                        # x0: the distance from the left of the page to the left edge of the box.
+                        # y0: the distance from the bottom of the page to the lower edge of the box.
+                        # x1: the distance from the left of the page to the right edge of the box.
+                        # y1: the distance from the bottom of the page to the upper edge of the box.
+                        # so here we flip the ys
+                        xmin, ymax, xmax, ymin = bbox.split(',')
+                        xmin = float(xmin) / dpi
+                        ymin = (-1 * float(ymin) + page_height) / dpi
+                        xmax = float(xmax) / dpi
+                        ymax = (-1 * float(ymax) + page_height) / dpi
+                        aabb = AABB(xmin, ymin, xmax, ymax)
+                        # store metadata
+                        aabb.value = text
+                        aabb.page = page
+                        aabb.font = node.attrib.get('font')
+                        aabb.font_size = node.attrib.get('size')
+                        # Token info
+                        if curr_token_aabb is None:
+                            curr_token_aabb = AABB(xmin, ymin, xmax, ymax)
+                            curr_token_aabb.value = text
+                        else:
+                            new_value = curr_token_aabb.value + text
+                            curr_token_aabb = AABB.merge(curr_token_aabb, aabb)
+                            curr_token_aabb.value = new_value
+                        aabb.tokenid = len(self.all_tokens)
+                        aabb.id = self.charid
+                        self.charid += 1
+                        # Update the bbox luts
+                        self.char_token_lut[aabb] = aabb.tokenid
+                        self.token_char_lut[aabb.tokenid].append(aabb)
+                        # add the current box
+                        char_boxes.append(aabb)
         self.page_boxes['token'].append(token_boxes)
         self.page_boxes['char'].append(char_boxes)
 
@@ -1245,13 +1281,12 @@ class PdfAlign(ttk.Frame):
     #                Utils
     # ---------------------------------------
 
-    def maybe_save_unsaved(self): 
+    def maybe_save_unsaved(self):
         if self.active_annotation is not None:
-            if not self.active_annotation.is_empty():
-                # warn the user that they have unsaved annotations
-                save_unsaved = messagebox.askyesno("pdfalign", "You have unsaved annotations which will be lost, would you like to save them first?")
-                if save_unsaved:
-                    self.save_annotation()
+            # warn the user that they have unsaved annotations
+            save_unsaved = messagebox.askyesno("pdfalign", "You have unsaved annotations which will be lost, would you like to save them first?")
+            if save_unsaved:
+                self.save_annotation()
 
     # There is either something selected or nothing to select
     def check_selection(self, component_type):
