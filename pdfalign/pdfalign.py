@@ -536,7 +536,7 @@ class PdfAlign(Frame):
         self.active_annotation = None
         self.token_mode = True
         self.ann_mode_index = 0
-        self.ann_mode_dict = ['eqn', 'text', 'desc', 'unit']
+        self.ann_mode_list = ['eqn', 'text', 'desc', 'unit']
 
         toolbar = Frame(self)
         Button(toolbar, text='open', font=('TkDefaultFont', 12), command=self.open).pack(side=LEFT)
@@ -697,8 +697,8 @@ class PdfAlign(Frame):
 
     def next_mode(self):
         self.ann_mode_index += 1
-        self.ann_mode_index = self.ann_mode_index % 4
-        next_mode = self.ann_mode_dict[self.ann_mode_index]
+        self.ann_mode_index = self.ann_mode_index % len(self.annotation_list)
+        next_mode = self.ann_mode_list[self.ann_mode_index]
         if next_mode == 'eqn':
             self.select_equation()
         elif next_mode == 'text':
