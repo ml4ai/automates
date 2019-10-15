@@ -9,6 +9,7 @@ from copy import deepcopy
 from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import Button, Frame, Style, Scrollbar, Radiobutton
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 from pdf2image import convert_from_path
 from lxml import etree
