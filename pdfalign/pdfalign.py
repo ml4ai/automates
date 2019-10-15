@@ -556,6 +556,15 @@ class PdfAlign(ttk.Frame):
         ttk.Label(toolbar, textvariable=self.num_page_tv).pack(side=LEFT)
         # Buttons for the annotations
         ttk.Label(toolbar, textvariable=self.annotation_mode_tv, style="Default.TLabel").pack(side=LEFT)
+
+        ttk.Label(toolbar, text="Token mode").pack(side=LEFT)
+        self.token_mode_on_rb = ttk.Radiobutton(toolbar, text='on', variable = self.token_mode, value =
+                True, command=self.activate_token_mode)
+        self.token_mode_on_rb.invoke()
+        self.token_mode_on_rb.pack(side=LEFT)
+        ttk.Radiobutton(toolbar, text='off', variable =self.token_mode, value =
+                False, command=self.deactivate_token_mode).pack(side=LEFT)
+
         ttk.Button(toolbar, text='toggle boxes', command=self.toggle_boxes).pack(side=LEFT)
         ttk.Button(toolbar, text='new annotation', command=self.new_annotation).pack(side=LEFT)
         ttk.Button(toolbar, text='add component', command=self.add_component).pack(side=LEFT)
@@ -958,6 +967,14 @@ class PdfAlign(ttk.Frame):
 
     def toggle_boxes(self):
         self.token_mode = not self.token_mode
+        self.redraw()
+
+    def activate_token_mode(self):
+        self.token_mode = True
+        self.redraw()
+
+    def deactivate_token_mode(self):
+        self.token_mode = False
         self.redraw()
 
 
