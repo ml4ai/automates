@@ -559,20 +559,18 @@ class PdfAlign(ttk.Frame):
 
         ttk.Label(toolbar, text="Token mode").pack(side=LEFT)
         self.token_mode_on_rb = ttk.Radiobutton(toolbar, text='on', variable = self.token_mode, value =
-                True, command=self.activate_token_mode)
-        self.token_mode_on_rb.invoke()
+                True, command=lambda: self.activate_token_mode)
         self.token_mode_on_rb.pack(side=LEFT)
+        self.token_mode_on_rb.invoke()
         ttk.Radiobutton(toolbar, text='off', variable =self.token_mode, value =
-                False, command=self.deactivate_token_mode).pack(side=LEFT)
+                False, command=lambda: self.deactivate_token_mode).pack(side=LEFT)
 
-        ttk.Button(toolbar, text='toggle boxes', command=self.toggle_boxes).pack(side=LEFT)
         ttk.Button(toolbar, text='new annotation', command=self.new_annotation).pack(side=LEFT)
         ttk.Button(toolbar, text='add component', command=self.add_component).pack(side=LEFT)
         self.in_equation_radiobutton = ttk.Radiobutton(toolbar, text='in equation', value = 'equation',
                 variable = self.annotation_mode, command=self.select_equation,
                 style="InEquation.TRadiobutton")
         self.in_equation_radiobutton.pack(side=LEFT)
-        self.in_equation_radiobutton.invoke()
         ttk.Radiobutton(toolbar, text='in text', value = 'text', variable =
                 self.annotation_mode, command=self.select_text,
                 style="InText.TRadiobutton").pack(side=LEFT)
