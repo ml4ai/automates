@@ -54,12 +54,6 @@ style.configure(
     font=("TkDefaultFont", 14, "bold"),
     background="gainsboro",
 )
-style.configure(
-    "InEquationComponents.TLabel",
-    background=COLOR_DICT["equation"],
-    foreground="white",
-)
-
 
 class Point:
     def __init__(self, x, y):
