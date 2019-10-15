@@ -690,7 +690,7 @@ class PdfAlign(Frame):
         )
         self.in_equation_radiobutton = Radiobutton(
             toolbar,
-            text="in equation",
+            text="In equation",
             value="equation",
             variable=self.annotation_mode,
             command=lambda: self.select_equation,
@@ -700,7 +700,7 @@ class PdfAlign(Frame):
         self.in_equation_radiobutton.invoke()
         Radiobutton(
             toolbar,
-            text="in text",
+            text="In text",
             value="text",
             variable=self.annotation_mode,
             command=lambda: self.select_text,
@@ -708,7 +708,7 @@ class PdfAlign(Frame):
         ).pack(side=LEFT)
         Radiobutton(
             toolbar,
-            text="description",
+            text="Description",
             value="description",
             variable=self.annotation_mode,
             command=lambda: self.select_description,
@@ -716,7 +716,7 @@ class PdfAlign(Frame):
         ).pack(side=LEFT)
         Radiobutton(
             toolbar,
-            text="unit",
+            text="Unit",
             value="unit",
             variable=self.annotation_mode,
             command=lambda: self.select_unit,
