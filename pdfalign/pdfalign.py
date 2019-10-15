@@ -16,10 +16,10 @@ from webcolors import name_to_rgb
 
 style = ttk.Style()
 style.configure("TButton", font=("TkDefaultFont", 12))
-style.configure("InEquation.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "olivedrab", padx=10)
-style.configure("InText.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "steelblue", padx=10)
-style.configure("Unit.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "coral", padx=10)
-style.configure("Description.TButton", font=("TkDefaultFont", 14, "bold"), foreground = "purple", padx=10)
+style.configure("InEquation.TRadiobutton", font=("TkDefaultFont", 14, "bold"), foreground = "olivedrab", padx=10)
+style.configure("InText.TRadiobutton", font=("TkDefaultFont", 14, "bold"), foreground = "steelblue", padx=10)
+style.configure("Unit.TRadiobutton", font=("TkDefaultFont", 14, "bold"), foreground = "coral", padx=10)
+style.configure("Description.TRadiobutton", font=("TkDefaultFont", 14, "bold"), foreground = "purple", padx=10)
 style.configure("Default.TLabel", font=("TkDefaultFont", 14, "bold"),
         background = "gainsboro")
 
@@ -559,10 +559,20 @@ class PdfAlign(ttk.Frame):
         ttk.Button(toolbar, text='toggle boxes', command=self.toggle_boxes).pack(side=LEFT)
         ttk.Button(toolbar, text='new annotation', command=self.new_annotation).pack(side=LEFT)
         ttk.Button(toolbar, text='add component', command=self.add_component).pack(side=LEFT)
-        ttk.Button(toolbar, text='in equation', style="InEquation.TButton", command=self.select_equation).pack(side=LEFT)
-        ttk.Button(toolbar, text='in text', style="InText.TButton", command=self.select_text).pack(side=LEFT)
-        ttk.Button(toolbar, text='description', style="Description.TButton", command=self.select_description,).pack(side=LEFT)
-        ttk.Button(toolbar, text='unit', style="Unit.TButton", command=self.select_unit).pack(side=LEFT)
+        self.in_equation_radiobutton = ttk.Radiobutton(toolbar, text='in equation', value = 'equation',
+                variable = self.annotation_mode, command=self.select_equation,
+                style="InEquation.TRadiobutton")
+        self.in_equation_radiobutton.pack(side=LEFT)
+        self.in_equation_radiobutton.invoke()
+        ttk.Radiobutton(toolbar, text='in text', value = 'text', variable =
+                self.annotation_mode, command=self.select_text,
+                style="InText.TRadiobutton").pack(side=LEFT)
+        ttk.Radiobutton(toolbar, text='description', value = 'description',
+                variable = self.annotation_mode,
+                command=self.select_description,style="Description.TRadiobutton").pack(side=LEFT)
+        ttk.Radiobutton(toolbar, text='unit', value = 'unit', variable =
+                self.annotation_mode, command=self.select_unit,
+                style="Unit.TRadiobutton").pack(side=LEFT)
         ttk.Button(toolbar, text='save', command=self.save_annotation).pack(side=LEFT)
         ttk.Button(toolbar, text='export', command=self.export_annotations).pack(side=LEFT)
         ttk.Button(toolbar, text='quit', command=self.client_exit).pack(side=LEFT)
