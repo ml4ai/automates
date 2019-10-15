@@ -14,6 +14,15 @@ from pdf2image import convert_from_path
 from lxml import etree
 from webcolors import name_to_rgb
 
+COLOR_DICT = {
+    'equation': 'olivedrab',
+    'text': 'steelblue',
+    'description': 'purple',
+    'unit': 'coral',
+    'default': 'gainsboro',
+    'unselected': 'gainsboro',
+}
+
 style = ttk.Style()
 style.configure("TButton", font=("TkDefaultFont", 12))
 style.configure("InEquation.TRadiobutton", font=("TkDefaultFont", 14, "bold"), foreground = "olivedrab", padx=10)
@@ -22,6 +31,8 @@ style.configure("Unit.TRadiobutton", font=("TkDefaultFont", 14, "bold"), foregro
 style.configure("Description.TRadiobutton", font=("TkDefaultFont", 14, "bold"), foreground = "purple", padx=10)
 style.configure("Default.TLabel", font=("TkDefaultFont", 14, "bold"),
         background = "gainsboro")
+style.configure("InEquationComponents.TLabel", background =
+        COLOR_DICT['equation'], foreground='white')
 
 class Point:
 
@@ -532,14 +543,6 @@ class PdfAlign(ttk.Frame):
 
         # The properties/attributes of the tool itself
         # annotation colors
-        self.color = {
-            'equation': 'olivedrab',
-            'text': 'steelblue',
-            'description': 'purple',
-            'unit': 'coral',
-            'default': 'gainsboro',
-            'unselected': 'gainsboro',
-        }
         self.annotation_mode = 'default'
         self.active_annotation = None
         self.token_mode = True
@@ -547,12 +550,12 @@ class PdfAlign(ttk.Frame):
         self.ann_mode_dict = {0:'eqn', 1:'text', 2:'desc', 3:'unit'}
 
         toolbar = ttk.Frame(self)
-        ttk.Button(toolbar, text='open', command=self.open).pack(side=LEFT)
-        ttk.Button(toolbar, text='import', command=self.import_annotations).pack(side=LEFT)
-        ttk.Button(toolbar, text='prev', command=self.prev).pack(side=LEFT)
-        ttk.Button(toolbar, text='next', command=self.next).pack(side=LEFT)
-        ttk.Button(toolbar, text='zoom in', command=self.zoom_in).pack(side=LEFT)
-        ttk.Button(toolbar, text='zoom out', command=self.zoom_out).pack(side=LEFT)
+        ttk.Button(toolbar, text='Open', command=self.open).pack(side=LEFT)
+        ttk.Button(toolbar, text='Import', command=self.import_annotations).pack(side=LEFT)
+        ttk.Button(toolbar, text='Previous page', command=self.prev).pack(side=LEFT)
+        ttk.Button(toolbar, text='Next page', command=self.next).pack(side=LEFT)
+        ttk.Button(toolbar, text='Zoom in', command=self.zoom_in).pack(side=LEFT)
+        ttk.Button(toolbar, text='Zoom out', command=self.zoom_out).pack(side=LEFT)
         ttk.Label(toolbar, textvariable=self.num_page_tv).pack(side=LEFT)
         # Buttons for the annotations
         ttk.Label(toolbar, textvariable=self.annotation_mode_tv, style="Default.TLabel").pack(side=LEFT)
@@ -562,27 +565,28 @@ class PdfAlign(ttk.Frame):
                 True, command=lambda: self.activate_token_mode)
         self.token_mode_on_rb.pack(side=LEFT)
         self.token_mode_on_rb.invoke()
-        ttk.Radiobutton(toolbar, text='off', variable =self.token_mode, value =
+        ttk.Radiobutton(toolbar, text='Off', variable =self.token_mode, value =
                 False, command=lambda: self.deactivate_token_mode).pack(side=LEFT)
 
-        ttk.Button(toolbar, text='new annotation', command=self.new_annotation).pack(side=LEFT)
-        ttk.Button(toolbar, text='add component', command=self.add_component).pack(side=LEFT)
+        ttk.Button(toolbar, text='New annotation', command=self.new_annotation).pack(side=LEFT)
+        ttk.Button(toolbar, text='Add component', command=self.add_component).pack(side=LEFT)
         self.in_equation_radiobutton = ttk.Radiobutton(toolbar, text='in equation', value = 'equation',
-                variable = self.annotation_mode, command=self.select_equation,
+                variable = self.annotation_mode, command=lambda: self.select_equation,
                 style="InEquation.TRadiobutton")
         self.in_equation_radiobutton.pack(side=LEFT)
+        self.in_equation_radiobutton.invoke()
         ttk.Radiobutton(toolbar, text='in text', value = 'text', variable =
-                self.annotation_mode, command=self.select_text,
+                self.annotation_mode, command=lambda: self.select_text,
                 style="InText.TRadiobutton").pack(side=LEFT)
         ttk.Radiobutton(toolbar, text='description', value = 'description',
                 variable = self.annotation_mode,
-                command=self.select_description,style="Description.TRadiobutton").pack(side=LEFT)
+                command=lambda: self.select_description,style="Description.TRadiobutton").pack(side=LEFT)
         ttk.Radiobutton(toolbar, text='unit', value = 'unit', variable =
-                self.annotation_mode, command=self.select_unit,
+                self.annotation_mode, command=lambda: self.select_unit,
                 style="Unit.TRadiobutton").pack(side=LEFT)
-        ttk.Button(toolbar, text='save', command=self.save_annotation).pack(side=LEFT)
-        ttk.Button(toolbar, text='export', command=self.export_annotations).pack(side=LEFT)
-        ttk.Button(toolbar, text='quit', command=self.client_exit).pack(side=LEFT)
+        ttk.Button(toolbar, text='Save', command=self.save_annotation).pack(side=LEFT)
+        ttk.Button(toolbar, text='Export', command=self.export_annotations).pack(side=LEFT)
+        ttk.Button(toolbar, text='Quit', command=self.client_exit).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
 
         self.bind_all("o", lambda e: self.open())
@@ -619,9 +623,9 @@ class PdfAlign(ttk.Frame):
         self.annotation_list.config(yscrollcommand=hist_sbarV.set, xscrollcommand=hist_sbarH.set)
         # pack and buttons
         self.annotation_list.pack(side=TOP, fill=BOTH, expand=YES)
-        ttk.Button(history_toolbar, text='show', command=self.show_annotation).pack(side=LEFT)
-        ttk.Button(history_toolbar, text='edit', command=self.edit_annotation).pack(side=LEFT)
-        ttk.Button(history_toolbar, text='delete', command=self.delete_annotation).pack(side=LEFT)
+        ttk.Button(history_toolbar, text='Show', command=self.show_annotation).pack(side=LEFT)
+        ttk.Button(history_toolbar, text='Edit', command=self.edit_annotation).pack(side=LEFT)
+        ttk.Button(history_toolbar, text='Delete', command=self.delete_annotation).pack(side=LEFT)
         history_toolbar.pack(side=BOTTOM, fill=BOTH)
         history.pack(side=TOP, expand=YES, fill=BOTH)
 
@@ -635,10 +639,10 @@ class PdfAlign(ttk.Frame):
         eq_sbarH = ttk.Scrollbar(eq_frame, orient=HORIZONTAL, command=self.equation_list.xview)
         eq_sbarV.pack(side=RIGHT, fill=Y)
         eq_sbarH.pack(side=BOTTOM, fill=X)
-        Label(eq_frame, text="In-Equation Components", bg=self.color["equation"], fg="white").pack(side=TOP, fill=X)
+        Label(eq_frame, text="In-Equation Components", bg=COLOR_DICT["equation"], fg="white").pack(side=TOP, fill=X)
         self.equation_list.config(yscrollcommand=eq_sbarV.set, xscrollcommand=eq_sbarH.set, height=7, width=40)
         self.equation_list.pack(side=TOP, fill=X)
-        ttk.Button(eq_toolbar, text='delete', command=self.delete_equation_component).pack(side=BOTTOM)
+        ttk.Button(eq_toolbar, text='Delete', command=self.delete_equation_component).pack(side=BOTTOM)
         eq_toolbar.pack(side=BOTTOM, fill=BOTH)
         eq_frame.pack(side=TOP, fill=X)
 
@@ -650,10 +654,10 @@ class PdfAlign(ttk.Frame):
         text_sbarH = ttk.Scrollbar(text_frame, orient=HORIZONTAL, command=self.text_list.xview)
         text_sbarV.pack(side=RIGHT, fill=Y)
         text_sbarH.pack(side=BOTTOM, fill=X)
-        Label(text_frame, text="In-Text Components", bg=self.color["text"], fg="white").pack(side=TOP, fill=X)
+        Label(text_frame, text="In-Text Components", bg=COLOR_DICT["text"], fg="white").pack(side=TOP, fill=X)
         self.text_list.config(yscrollcommand=text_sbarV.set, xscrollcommand=text_sbarH.set, height=7, width=40)
         self.text_list.pack(side=TOP, fill=X)
-        ttk.Button(text_toolbar, text='delete', command=self.delete_text_component).pack(side=BOTTOM)
+        ttk.Button(text_toolbar, text='Delete', command=self.delete_text_component).pack(side=BOTTOM)
         text_toolbar.pack(side=BOTTOM, fill=BOTH)
         text_frame.pack(side=TOP, fill=X)
 
@@ -665,10 +669,10 @@ class PdfAlign(ttk.Frame):
         desc_sbarH = ttk.Scrollbar(desc_frame, orient=HORIZONTAL, command=self.description_list.xview)
         desc_sbarV.pack(side=RIGHT, fill=Y)
         desc_sbarH.pack(side=BOTTOM, fill=X)
-        Label(desc_frame, text="Description Components", bg=self.color["description"], fg="white").pack(side=TOP, fill=X)
+        Label(desc_frame, text="Description Components", bg=COLOR_DICT["description"], fg="white").pack(side=TOP, fill=X)
         self.description_list.config(yscrollcommand=desc_sbarV.set, xscrollcommand=desc_sbarH.set, height=7, width=40)
         self.description_list.pack(side=TOP, fill=X)
-        ttk.Button(desc_toolbar, text='delete', command=self.delete_description_component).pack(side=BOTTOM)
+        ttk.Button(desc_toolbar, text='Delete', command=self.delete_description_component).pack(side=BOTTOM)
         desc_toolbar.pack(side=BOTTOM, fill=BOTH)
         desc_frame.pack(side=TOP, fill=X)
 
@@ -680,10 +684,10 @@ class PdfAlign(ttk.Frame):
         unit_sbarH = ttk.Scrollbar(unit_frame, orient=HORIZONTAL, command=self.unit_list.xview)
         unit_sbarV.pack(side=RIGHT, fill=Y)
         unit_sbarH.pack(side=BOTTOM, fill=X)
-        Label(unit_frame, text="Unit Components", bg=self.color["unit"], fg="white").pack(side=TOP, fill=X)
+        Label(unit_frame, text="Unit Components", bg=COLOR_DICT["unit"], fg="white").pack(side=TOP, fill=X)
         self.unit_list.config(yscrollcommand=unit_sbarV.set, xscrollcommand=unit_sbarH.set, height=7, width=40)
         self.unit_list.pack(side=TOP, fill=BOTH)
-        ttk.Button(unit_toolbar, text='delete', command=self.delete_unit_component).pack(side=BOTTOM)
+        ttk.Button(unit_toolbar, text='Delete', command=self.delete_unit_component).pack(side=BOTTOM)
         unit_toolbar.pack(side=BOTTOM, fill=X)
         unit_frame.pack(side=TOP, fill=X)
 
@@ -769,9 +773,9 @@ class PdfAlign(ttk.Frame):
         if self.active_annotation:
             annotation_type = self.active_annotation.get_type(box)
             if annotation_type is not None:
-                return self.color[annotation_type]
+                return COLOR_DICT[annotation_type]
         if default_color is not None:
-            return self.color[default_color]
+            return COLOR_DICT[default_color]
         return ''
 
     def box_mode(self):
@@ -804,7 +808,7 @@ class PdfAlign(ttk.Frame):
                 ymin = box.ymin * self.scale * self.dpi
                 xmax = box.xmax * self.scale * self.dpi
                 ymax = box.ymax * self.scale * self.dpi
-                active_color = self.color[self.annotation_mode]
+                active_color = COLOR_DICT[self.annotation_mode]
                 # if it's in the annotations, make a rectangle, color defined by annotation type
                 box_type = None
                 transparency = 0
@@ -822,7 +826,7 @@ class PdfAlign(ttk.Frame):
                         else:
                             transparency = 60
                 if box_type is not None:
-                    rect = self.mk_rectangle(box, self.color[box_type], transparency)
+                    rect = self.mk_rectangle(box, COLOR_DICT[box_type], transparency)
                     self.canvas.create_image(xmin, ymin, image=rect, anchor=NW)
                 # else mk rectangle with outline so we still have the hover
                 # here only show the outlines of the boxes that correspond to our current view mode (token/char)
