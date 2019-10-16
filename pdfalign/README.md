@@ -27,7 +27,7 @@ pip and a package manager.
 
 #### XQuartz
 
-Install XQuartz from https://www.xquartz.org
+If you don't already have it, install XQuartz from https://www.xquartz.org
 
 If you don't have a package manager, get one. Homebrew and MacPorts are the
 most popular ones.
