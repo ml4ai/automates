@@ -673,7 +673,8 @@ class PdfAlign(Frame):
             variable=self.token_mode,
             value=False,
             command=self.deactivate_token_mode,
-        ).pack(side=LEFT)
+        )
+        self.token_mode_off_rb.pack(side=LEFT)
 
         Button(
             toolbar, text="New annotation", command=self.new_annotation
@@ -734,6 +735,7 @@ class PdfAlign(Frame):
         self.bind_all("d", lambda e: self.description_rb.invoke())
         self.bind_all("u", lambda e: self.unit_rb.invoke())
         self.bind_all("s", lambda e: self.save_annotation())
+        self.bind_all("k", lambda e: self.toggle_boxes())
         self.bind_all("<Tab>", lambda e: self.next_mode())
 
         viewer = Frame(self)
@@ -1225,7 +1227,10 @@ class PdfAlign(Frame):
         self.redraw()
 
     def toggle_boxes(self):
-        self.token_mode = not self.token_mode
+        if self.token_mode:
+            self.token_mode_off_rb.invoke()
+        else:
+            self.token_mode_on_rb.invoke()
         self.redraw()
 
     def activate_token_mode(self):
