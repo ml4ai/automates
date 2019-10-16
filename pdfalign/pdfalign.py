@@ -1658,7 +1658,7 @@ def parse_args():
     return args
 
 
-if __name__ == "__main__":
+def main():
     # parse command line arguments
     # TODO: add colors as command line args, and transparencies etc.
     args = parse_args()
@@ -1669,3 +1669,6 @@ if __name__ == "__main__":
         app.open(args.filename)
     # start app
     app.mainloop()
+
+if __name__ == "__main__":
+    main()
