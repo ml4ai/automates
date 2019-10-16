@@ -958,13 +958,13 @@ class PdfAlign(Frame):
         self.ann_mode_index = self.ann_mode_index % len(self.ann_mode_list)
         next_mode = self.ann_mode_list[self.ann_mode_index]
         if next_mode == "eqn":
-            self.select_equation()
+            self.in_equation_rb.invoke()
         elif next_mode == "text":
-            self.select_text()
+            self.in_text_rb.invoke()
         elif next_mode == "desc":
-            self.select_description()
+            self.description_rb.invoke()
         elif next_mode == "unit":
-            self.select_unit()
+            self.unit_rb.invoke()
         else:
             raise ValueError(f"Invalid value for next_mode: {next_mode}")
 
