@@ -736,6 +736,10 @@ class PdfAlign(Frame):
         self.bind_all("u", lambda e: self.unit_rb.invoke())
         self.bind_all("s", lambda e: self.save_annotation())
         self.bind_all("k", lambda e: self.toggle_boxes())
+        self.bind_all("x", lambda e: self.export_annotations())
+        self.bind_all("c", lambda e: self.add_component())
+        self.bind_all("+", lambda e: self.zoom_in())
+        self.bind_all("-", lambda e: self.zoom_out())
         self.bind_all("<Tab>", lambda e: self.next_mode())
 
         viewer = Frame(self)
