@@ -951,7 +951,7 @@ class PdfAlign(Frame):
 
     def next_mode(self):
         self.ann_mode_index += 1
-        self.ann_mode_index = self.ann_mode_index % len(self.annotation_list)
+        self.ann_mode_index = self.ann_mode_index % len(self.ann_mode_list)
         next_mode = self.ann_mode_list[self.ann_mode_index]
         if next_mode == "eqn":
             self.select_equation()
