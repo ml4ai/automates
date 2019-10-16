@@ -740,6 +740,8 @@ class PdfAlign(Frame):
         self.bind_all("c", lambda e: self.add_component())
         self.bind_all("+", lambda e: self.zoom_in())
         self.bind_all("-", lambda e: self.zoom_out())
+        self.bind_all("<Left>", lambda e: self.prev())
+        self.bind_all("<Right>", lambda e: self.next())
         self.bind_all("<Tab>", lambda e: self.next_mode())
 
         viewer = Frame(self)
