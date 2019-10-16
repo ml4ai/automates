@@ -1,6 +1,6 @@
 # pdfalign annotation tool 
 
-## Setup instructions (using the Anaconda Python distribution)
+## 1. Setup instructions (using the Anaconda Python distribution)
 
     conda create -n pdfalign python=3 --yes
     conda activate pdfalign
@@ -18,35 +18,37 @@ If you need to remove the conda environment:
 
     conda remove -n pdfalign --all
 
-## Setup instructions (without Anaconda)
+## 2. Setup instructions (without Anaconda)
 
 Here we give instructions for installing pdfalign without Anaconda, just using
 pip and a package manager.
 
-### MacOS
+### 2.1 MacOS
 
-#### XQuartz
+#### 2.1.1 XQuartz
 
 If you don't already have it, install XQuartz from https://www.xquartz.org
 
 If you don't have a package manager, get one. Homebrew and MacPorts are the
 most popular ones.
 
-#### MacPorts
+#### 2.1.2 Installing dependencies using package manager
+
+##### 2.1.2.1 MacPorts
 
     sudo port install tk +quartz
     sudo port install poppler
 
-#### Homebrew
+##### 2.1.2.2 Homebrew
 
     brew install tcl-tk
     brew install poppler
 
-#### Creating and activating a virtual environment for pdfalign
+#### 2.1.3 Creating and activating a virtual environment for pdfalign
 
 Create and activate a virtual environment for pdfalign.
 
-##### Using venv
+##### 2.1.3.1 Using venv
 
 You may want to create a directory for your virtual environments, let's say
 `~/.venvs` - and if you wanted to create a virtual environment named `pdfalign`
@@ -62,7 +64,7 @@ Then activate the virtual environment with:
 
     source ~/.venvs/pdfalign/bin/activate
 
-##### Using virtualenvwrapper
+##### 2.1.3.2 Using virtualenvwrapper
 
     # Create new python venv (the name venv_pdfalign is arbitrary):
     python3 -m venv venv_pdfalign
@@ -71,7 +73,7 @@ Then activate the virtual environment with:
     workon venv_pdfalign
 
 
-#### Installing pdfalign dependencies
+#### 2.1.4 Installing pdfalign dependencies
 
 Once the virtual environment is activated, then in this directory, run the
 following commands to install the package and its dependencies.
@@ -79,26 +81,20 @@ following commands to install the package and its dependencies.
     pip install -e git+ssh://git@github.com/ml4ai/pdfminer.six.git#egg=pdfminer.six
     pip install lxml webcolors pdf2image
 
-#### Installing pdfalign
+#### 2.1.5 Installing and launching pdfalign
+
+##### 2.1.5.1 Using curl
 
 You can either just get the pdfalign script using 
   
     curl -O https://raw.githubusercontent.com/ml4ai/automates/master/pdfalign/pdfalign.py
+    python pdfalign.py
+
+##### 2.1.5.2 Installing pdfalign as a package
 
 Or install it as a package within the virtual environment, with an entry point
   
     git clone https://github.com/ml4ai/automates
     cd automates/pdfalign
     pip install -e .
-
-#### Running pdfalign
-
-If you just downloaded the script using `curl`, you can launch `pdfalign` with
-
-    python pdfalign.py
-
-If you installed the package, you can instead just type
-  
     pdfalign
-
-to launch the program.
