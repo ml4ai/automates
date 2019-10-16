@@ -673,7 +673,8 @@ class PdfAlign(Frame):
             variable=self.token_mode,
             value=False,
             command=self.deactivate_token_mode,
-        ).pack(side=LEFT)
+        )
+        self.token_mode_off_rb.pack(side=LEFT)
 
         Button(
             toolbar, text="New annotation", command=self.new_annotation
@@ -734,6 +735,7 @@ class PdfAlign(Frame):
         self.bind_all("d", lambda e: self.description_rb.invoke())
         self.bind_all("u", lambda e: self.unit_rb.invoke())
         self.bind_all("s", lambda e: self.save_annotation())
+        self.bind_all("k", lambda e: self.toggle_boxes())
         self.bind_all("<Tab>", lambda e: self.next_mode())
 
         viewer = Frame(self)
@@ -956,13 +958,13 @@ class PdfAlign(Frame):
         self.ann_mode_index = self.ann_mode_index % len(self.ann_mode_list)
         next_mode = self.ann_mode_list[self.ann_mode_index]
         if next_mode == "eqn":
-            self.select_equation()
+            self.in_equation_rb.invoke()
         elif next_mode == "text":
-            self.select_text()
+            self.in_text_rb.invoke()
         elif next_mode == "desc":
-            self.select_description()
+            self.description_rb.invoke()
         elif next_mode == "unit":
-            self.select_unit()
+            self.unit_rb.invoke()
         else:
             raise ValueError(f"Invalid value for next_mode: {next_mode}")
 
@@ -1225,7 +1227,10 @@ class PdfAlign(Frame):
         self.redraw()
 
     def toggle_boxes(self):
-        self.token_mode = not self.token_mode
+        if self.token_mode:
+            self.token_mode_off_rb.invoke()
+        else:
+            self.token_mode_on_rb.invoke()
         self.redraw()
 
     def activate_token_mode(self):
@@ -1653,7 +1658,7 @@ def parse_args():
     return args
 
 
-if __name__ == "__main__":
+def main():
     # parse command line arguments
     # TODO: add colors as command line args, and transparencies etc.
     args = parse_args()
@@ -1664,3 +1669,6 @@ if __name__ == "__main__":
         app.open(args.filename)
     # start app
     app.mainloop()
+
+if __name__ == "__main__":
+    main()
