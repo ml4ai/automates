@@ -677,7 +677,7 @@ class PdfAlign(Frame):
         self.token_mode_off_rb.pack(side=LEFT)
 
         Button(
-            toolbar, text="New annotation", command=self.new_annotation
+            toolbar, text="Annotate new variable", command=self.new_annotation
         ).pack(side=LEFT)
         Button(toolbar, text="Add component", command=self.add_component).pack(
             side=LEFT
