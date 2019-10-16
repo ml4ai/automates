@@ -671,16 +671,15 @@ class PdfAlign(Frame):
             text="on",
             variable=self.token_mode,
             value=True,
-            command=lambda: self.activate_token_mode,
+            command=self.activate_token_mode,
         )
         self.token_mode_on_rb.pack(side=LEFT)
-        self.token_mode_on_rb.invoke()
-        Radiobutton(
+        self.token_mode_off_rb = Radiobutton(
             toolbar,
             text="Off",
             variable=self.token_mode,
             value=False,
-            command=lambda: self.deactivate_token_mode,
+            command=self.deactivate_token_mode,
         ).pack(side=LEFT)
 
         Button(
@@ -689,38 +688,37 @@ class PdfAlign(Frame):
         Button(toolbar, text="Add component", command=self.add_component).pack(
             side=LEFT
         )
-        self.in_equation_radiobutton = Radiobutton(
+        self.in_equation_rb = Radiobutton(
             toolbar,
             text="In equation",
             value="equation",
             variable=self.annotation_mode,
-            command=lambda: self.select_equation,
+            command=self.select_equation,
             style="InEquation.TRadiobutton",
         )
-        self.in_equation_radiobutton.pack(side=LEFT)
-        self.in_equation_radiobutton.invoke()
-        Radiobutton(
+        self.in_equation_rb.pack(side=LEFT)
+        self.in_text_rb = Radiobutton(
             toolbar,
             text="In text",
             value="text",
             variable=self.annotation_mode,
-            command=lambda: self.select_text,
+            command=self.select_text,
             style="InText.TRadiobutton",
         ).pack(side=LEFT)
-        Radiobutton(
+        self.description_rb = Radiobutton(
             toolbar,
             text="Description",
             value="description",
             variable=self.annotation_mode,
-            command=lambda: self.select_description,
+            command=self.select_description,
             style="Description.TRadiobutton",
         ).pack(side=LEFT)
-        Radiobutton(
+        self.unit_rb = Radiobutton(
             toolbar,
             text="Unit",
             value="unit",
             variable=self.annotation_mode,
-            command=lambda: self.select_unit,
+            command=self.select_unit,
             style="Unit.TRadiobutton",
         ).pack(side=LEFT)
         Button(toolbar, text="Save", command=self.save_annotation).pack(
