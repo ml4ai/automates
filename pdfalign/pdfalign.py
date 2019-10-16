@@ -639,7 +639,7 @@ class PdfAlign(Frame):
 
         # The properties/attributes of the tool itself
         # annotation colors
-        self.annotation_mode = "default"
+        self.annotation_mode = "equation"
         self.active_annotation = None
         self.token_mode = True
         self.ann_mode_index = 0
@@ -736,6 +736,7 @@ class PdfAlign(Frame):
         self.bind_all("u", lambda e: self.unit_rb.invoke())
         self.bind_all("s", lambda e: self.save_annotation())
         self.bind_all("k", lambda e: self.toggle_boxes())
+        self.bind_all("n", lambda e: self.new_annotation())
         self.bind_all("x", lambda e: self.export_annotations())
         self.bind_all("c", lambda e: self.add_component())
         self.bind_all("+", lambda e: self.zoom_in())
@@ -1195,7 +1196,7 @@ class PdfAlign(Frame):
     def new_annotation(self):
         self.maybe_save_unsaved()
         self.active_annotation = Annotation()
-        self.annotation_mode = "default"
+        self.in_equation_rb.invoke()
         self.redraw()
 
     def select_equation(self):
@@ -1456,7 +1457,7 @@ class PdfAlign(Frame):
             self.saved_annotations.append(annotation)
             self.annotation_list.insert(END, annotation.snippet())
             self.active_annotation = None
-            self.annotation_mode = "default"
+            self.in_equation_rb.invoke()
             # remove shown components from the annotation details list
             self.equation_list.delete(0, END)
             self.text_list.delete(0, END)
