@@ -34,13 +34,13 @@ most popular ones.
 
 #### MacPorts
 
-  sudo port install tk +quartz
-  sudo port install poppler
+    sudo port install tk +quartz
+    sudo port install poppler
 
 #### Homebrew
 
-  brew install tcl-tk
-  brew install poppler
+    brew install tcl-tk
+    brew install poppler
 
 #### Creating and activating a virtual environment for pdfalign
 
@@ -52,15 +52,15 @@ You may want to create a directory for your virtual environments, let's say
 `~/.venvs` - and if you wanted to create a virtual environment named `pdfalign`
 within that directory, you could do:
 
-  mkdir -p ~/.venvs
-  python -m venv ~/.venvs/pdfalign pdfalign --system-site-packages
+    mkdir -p ~/.venvs
+    python -m venv ~/.venvs/pdfalign pdfalign --system-site-packages
 
 (The `--system-site-packages` flag is required when using MacPorts to give the
 virtual environment access to the `_tkinter.so` extension.)
 
 Then activate the virtual environment with:
 
-  source ~/.venvs/pdfalign/bin/activate
+    source ~/.venvs/pdfalign/bin/activate
 
 ##### Using virtualenvwrapper
 
@@ -76,29 +76,29 @@ Then activate the virtual environment with:
 Once the virtual environment is activated, then in this directory, run the
 following commands to install the package and its dependencies.
 
-  pip install -e git+ssh://git@github.com/ml4ai/pdfminer.six.git#egg=pdfminer.six
-  pip install lxml webcolors pdf2image
+    pip install -e git+ssh://git@github.com/ml4ai/pdfminer.six.git#egg=pdfminer.six
+    pip install lxml webcolors pdf2image
 
 #### Installing pdfalign
 
 You can either just get the pdfalign script using 
   
-  curl -O https://raw.githubusercontent.com/ml4ai/automates/master/pdfalign/pdfalign.py
+    curl -O https://raw.githubusercontent.com/ml4ai/automates/master/pdfalign/pdfalign.py
 
 Or install it as a package within the virtual environment, with an entry point
   
-  git clone https://github.com/ml4ai/automates
-  cd automates/pdfalign
-  pip install -e .
+    git clone https://github.com/ml4ai/automates
+    cd automates/pdfalign
+    pip install -e .
 
 #### Running pdfalign
 
 If you just downloaded the script using `curl`, you can launch `pdfalign` with
 
-  python pdfalign.py
+    python pdfalign.py
 
 If you installed the package, you can instead just type
   
-  pdfalign
+    pdfalign
 
 to launch the program.
