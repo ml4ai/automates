@@ -34,6 +34,9 @@ most popular ones.
 
 #### 2.1.2 Installing dependencies using package manager
 
+Install non-Python dependencies using your package manager - the commands for
+MacPorts and Homebrew are given below.
+
 ##### 2.1.2.1 MacPorts
 
     sudo port install tk +quartz
@@ -46,7 +49,8 @@ most popular ones.
 
 #### 2.1.3 Creating and activating a virtual environment for pdfalign
 
-Create and activate a virtual environment for pdfalign.
+Create and activate a virtual environment for pdfalign, using one of the two
+methods below.
 
 ##### 2.1.3.1 Using venv
 
@@ -66,6 +70,8 @@ Then activate the virtual environment with:
 
 ##### 2.1.3.2 Using virtualenvwrapper
 
+If you instead use virtualenvwrapper, do:
+
     # Create new python venv (the name venv_pdfalign is arbitrary):
     python3 -m venv venv_pdfalign
 
@@ -82,19 +88,28 @@ following commands to install the pdfminer package:
 
 #### 2.1.5 Installing and launching pdfalign
 
+Install additional Python dependencies and launch `pdfalign` using one of the two
+methods below.
+
 ##### 2.1.5.1 Using curl
 
-You can either just get the pdfalign script and its dependencies using 
+You can either just get the `pdfalign` script and its dependencies using 
   
     pip install lxml webcolors pdf2image
     curl -O https://raw.githubusercontent.com/ml4ai/automates/master/pdfalign/pdfalign.py
+
+Then, launch it with:
+
     python pdfalign.py
 
 ##### 2.1.5.2 Installing pdfalign as a package
 
-Or install it as a package within the virtual environment, with an entry point
+Or install it as a package within the virtual environment, with an 'entry point'.
   
     git clone https://github.com/ml4ai/automates
     cd automates/pdfalign
     pip install -e .
+
+Then, launch it with:
+
     pdfalign
