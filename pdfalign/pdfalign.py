@@ -622,7 +622,6 @@ class PdfAlign(Frame):
         self.scale = 1.0
         self.num_page = 0
         self.num_page_tv = StringVar()
-        self.annotation_mode_tv = StringVar()
         # bounding boxes
         self.charid = 0
         self.page_boxes = dict(token=[], char=[])
@@ -658,12 +657,6 @@ class PdfAlign(Frame):
         Button(toolbar, text="Zoom in", command=self.zoom_in).pack(side=LEFT)
         Button(toolbar, text="Zoom out", command=self.zoom_out).pack(side=LEFT)
         ttk.Label(toolbar, textvariable=self.num_page_tv).pack(side=LEFT)
-        # Buttons for the annotations
-        ttk.Label(
-            toolbar,
-            textvariable=self.annotation_mode_tv,
-            style="Default.TLabel",
-        ).pack(side=LEFT)
 
         ttk.Label(toolbar, text="Token mode").pack(side=LEFT)
         self.token_mode_on_rb = Radiobutton(
@@ -704,7 +697,8 @@ class PdfAlign(Frame):
             variable=self.annotation_mode,
             command=self.select_text,
             style="InText.TRadiobutton",
-        ).pack(side=LEFT)
+        )
+        self.in_text_rb.pack(side=LEFT)
         self.description_rb = Radiobutton(
             toolbar,
             text="Description",
@@ -712,7 +706,8 @@ class PdfAlign(Frame):
             variable=self.annotation_mode,
             command=self.select_description,
             style="Description.TRadiobutton",
-        ).pack(side=LEFT)
+        )
+        self.description_rb.pack(side=LEFT)
         self.unit_rb = Radiobutton(
             toolbar,
             text="Unit",
@@ -720,7 +715,8 @@ class PdfAlign(Frame):
             variable=self.annotation_mode,
             command=self.select_unit,
             style="Unit.TRadiobutton",
-        ).pack(side=LEFT)
+        )
+        self.unit_rb.pack(side=LEFT)
         Button(toolbar, text="Save", command=self.save_annotation).pack(
             side=LEFT
         )
@@ -730,8 +726,14 @@ class PdfAlign(Frame):
         Button(toolbar, text="Quit", command=self.client_exit).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
 
+        # Keyboard shortcuts
         self.bind_all("o", lambda e: self.open())
         self.bind_all("a", lambda e: self.add_component())
+        self.bind_all("e", lambda e: self.in_equation_rb.invoke())
+        self.bind_all("t", lambda e: self.in_text_rb.invoke())
+        self.bind_all("d", lambda e: self.description_rb.invoke())
+        self.bind_all("u", lambda e: self.unit_rb.invoke())
+        self.bind_all("s", lambda e: self.save_annotation())
         self.bind_all("<Tab>", lambda e: self.next_mode())
 
         viewer = Frame(self)
@@ -1099,9 +1101,6 @@ class PdfAlign(Frame):
         self.update()
         self.canvas.config(scrollregion=self.canvas.bbox(ALL))
         self.num_page_tv.set(f"{self.num_page+1}/{len(self.pages)}")
-        self.annotation_mode_tv.set(
-            f"currently annotating: {self.get_mode_tv()}"
-        )
 
     def get_mode_tv(self):
         if self.annotation_mode == "equation":
