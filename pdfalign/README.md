@@ -73,20 +73,20 @@ Then activate the virtual environment with:
     workon venv_pdfalign
 
 
-#### 2.1.4 Installing pdfalign dependencies
+#### 2.1.4 Installing pdfminer
 
 Once the virtual environment is activated, then in this directory, run the
-following commands to install the package and its dependencies.
+following commands to install the pdfminer package:
 
     pip install -e git+ssh://git@github.com/ml4ai/pdfminer.six.git#egg=pdfminer.six
-    pip install lxml webcolors pdf2image
 
 #### 2.1.5 Installing and launching pdfalign
 
 ##### 2.1.5.1 Using curl
 
-You can either just get the pdfalign script using 
+You can either just get the pdfalign script and its dependencies using 
   
+    pip install lxml webcolors pdf2image
     curl -O https://raw.githubusercontent.com/ml4ai/automates/master/pdfalign/pdfalign.py
     python pdfalign.py
 
