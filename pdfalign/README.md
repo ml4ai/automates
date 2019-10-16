@@ -5,7 +5,7 @@
     conda create -n pdfalign python=3 --yes
     conda activate pdfalign
 
-    conda install lxml pillow chardet pycryptodome sortedcontainers six poppler --yes
+    conda install lxml pillow chardet pycryptodome sortedcontainers six poppler texlive-core --yes
     pip install webcolors pdf2image
 
     # install the ml4ai fork of pdfminer
