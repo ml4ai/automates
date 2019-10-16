@@ -697,7 +697,8 @@ class PdfAlign(Frame):
             variable=self.annotation_mode,
             command=self.select_text,
             style="InText.TRadiobutton",
-        ).pack(side=LEFT)
+        )
+        self.in_text_rb.pack(side=LEFT)
         self.description_rb = Radiobutton(
             toolbar,
             text="Description",
@@ -705,7 +706,8 @@ class PdfAlign(Frame):
             variable=self.annotation_mode,
             command=self.select_description,
             style="Description.TRadiobutton",
-        ).pack(side=LEFT)
+        )
+        self.description_rb.pack(side=LEFT)
         self.unit_rb = Radiobutton(
             toolbar,
             text="Unit",
@@ -713,7 +715,8 @@ class PdfAlign(Frame):
             variable=self.annotation_mode,
             command=self.select_unit,
             style="Unit.TRadiobutton",
-        ).pack(side=LEFT)
+        )
+        self.unit_rb.pack(side=LEFT)
         Button(toolbar, text="Save", command=self.save_annotation).pack(
             side=LEFT
         )
@@ -726,6 +729,11 @@ class PdfAlign(Frame):
         # Keyboard shortcuts
         self.bind_all("o", lambda e: self.open())
         self.bind_all("a", lambda e: self.add_component())
+        self.bind_all("e", lambda e: self.in_equation_rb.invoke())
+        self.bind_all("t", lambda e: self.in_text_rb.invoke())
+        self.bind_all("d", lambda e: self.description_rb.invoke())
+        self.bind_all("u", lambda e: self.unit_rb.invoke())
+        self.bind_all("s", lambda e: self.save_annotation())
         self.bind_all("<Tab>", lambda e: self.next_mode())
 
         viewer = Frame(self)
