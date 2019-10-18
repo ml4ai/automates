@@ -7,6 +7,7 @@ setup(
     author="ML4AI",
     version="0.0.1",
     install_requires=[
+        "tqdm",
         "lxml",
         "webcolors",
         "pdf2image",

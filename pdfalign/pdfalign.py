@@ -14,6 +14,7 @@ from PIL import Image, ImageTk
 from pdf2image import convert_from_path
 from lxml import etree
 from webcolors import name_to_rgb
+from tqdm import tqdm
 
 COLOR_DICT = {
     "equation": "olivedrab",
@@ -313,6 +314,7 @@ class AABBTree:
 
 
 def split_pages(filename):
+    print("Separating pages for file {}".format(filename))
     dirname = os.path.dirname(filename)
     page_pattern = os.path.join(dirname, "page-%03d.pdf")
     command = ["pdfseparate", filename, page_pattern]
@@ -983,14 +985,15 @@ class PdfAlign(Frame):
         if filename != "":
             self.saved_annotations = []
             self.filename = os.path.abspath(filename)
+            print("Converting PDF pages to images...")
             self.pages = convert_from_path(filename, dpi=self.dpi)
             self.populate_bboxes(filename)
-            # self.page_boxes = dict(token=self.get_token_bboxes(filename), char=self.get_char_bboxes(filename))
             self.aabb_trees = dict(
-                token=self.make_trees_from_boxes(self.page_boxes["token"]),
-                char=self.make_trees_from_boxes(self.page_boxes["char"]),
+                token=self.make_trees_from_boxes(self.page_boxes, "token"),
+                char=self.make_trees_from_boxes(self.page_boxes, "char"),
             )
             self.num_page = 0
+
             # Add the box around the equation to annotate
             paper_dir, _ = os.path.split(self.filename)
             aabb_file = os.path.join(paper_dir, "aabb.tsv")
@@ -1624,18 +1627,30 @@ class PdfAlign(Frame):
         self.page_boxes["token"].append(token_boxes)
         self.page_boxes["char"].append(char_boxes)
 
-    # def get_token_bboxes(self, filename):
-    #     return [list(self.iter_token_bboxes(p, i)) for i, p in enumerate(split_pages(filename))]
-
     def populate_bboxes(self, filename):
-        for i, p in enumerate(split_pages(filename)):
+        for i, p in enumerate(
+            tqdm(
+                split_pages(filename),
+                desc="Populating page bboxes",
+                unit="page",
+                ncols=80,
+            )
+        ):
             self.populate_page_bboxes(p, i)
         for page in self.page_boxes["char"]:
             for box in page:
                 box.token = self.all_tokens[box.tokenid].value
 
-    def make_trees_from_boxes(self, page_boxes):
-        return [AABBTree.from_boxes(page) for page in page_boxes]
+    def make_trees_from_boxes(self, page_boxes, box_type):
+        return [
+            AABBTree.from_boxes(page)
+            for page in tqdm(
+                page_boxes[box_type],
+                desc="Making binary trees from {} boxes".format(box_type),
+                unit="page",
+                ncols=80,
+            )
+        ]
 
     # ---------------------------------------
     #                Utils
@@ -1676,6 +1691,7 @@ def main():
         app.open(args.filename)
     # start app
     app.mainloop()
+
 
 if __name__ == "__main__":
     main()

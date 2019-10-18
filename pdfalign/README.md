@@ -6,7 +6,7 @@
     conda activate pdfalign
 
     conda install lxml pillow chardet pycryptodome sortedcontainers six poppler texlive-core --yes
-    pip install webcolors pdf2image
+    pip install webcolors pdf2image tqdm
 
     # install the ml4ai fork of pdfminer
     pip install -e git+https://github.com/ml4ai/pdfminer.six.git#egg=pdfminer.six
@@ -95,7 +95,7 @@ methods below.
 
 You can either just get the `pdfalign` script and its dependencies using 
   
-    pip install lxml webcolors pdf2image
+    pip install lxml webcolors pdf2image tqdm
     curl -O https://raw.githubusercontent.com/ml4ai/automates/master/pdfalign/pdfalign.py
 
 Then, launch it with:
