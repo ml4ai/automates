@@ -182,8 +182,8 @@ class AABBTree:
     @classmethod
     def from_boxes(cls, boxes):
         tree = cls()
-        for b in boxes:
-            tree.add(b)
+        for box in sorted(boxes, key=lambda box: box.area):
+            tree.add(box)
         return tree
 
     @property
@@ -195,20 +195,19 @@ class AABBTree:
         return self.left is None and self.right is None
 
     @property
-    def is_balanced(self):
-        return self.is_leaf or abs(self.left.depth - self.right.depth) <= 1
-
-    @property
     def depth(self):
         """Returns the tree depth"""
         # FIXME this is inefficient, don't compute it on-the-fly
-        if self.is_leaf:
-            return 0
-        else:
-            return 1 + max(self.left.depth, self.right.depth)
+        return (
+            0 if self.is_leaf else 1 + max(self.left.depth, self.right.depth)
+        )
+
+    @property
+    def is_balanced(self):
+        return self.is_leaf or abs(self.left.depth - self.right.depth) <= 1
 
     def add(self, aabb):
-        """add AABB leaf to the tree"""
+        """Add AABB leaf to the tree"""
         if self.is_empty:
             self.aabb = aabb
         elif self.is_leaf:
@@ -988,6 +987,7 @@ class PdfAlign(Frame):
                 )
                 annotation_aabb.page = int(eqn_page)
                 self.annotation_aabb = annotation_aabb
+            self.num_page = self.annotation_aabb.page
             self.redraw()
 
     def client_exit(self):
@@ -1522,14 +1522,13 @@ class PdfAlign(Frame):
         for node in tree.findall(".//text"):
             text = node.text
             if text is not None:
-                if len(text.strip()) == 0:
-                    if curr_token_aabb is not None:
-                        # The current token ended
-                        curr_token_aabb.page = page
-                        curr_token_aabb.id = len(self.all_tokens)
-                        self.all_tokens.append(curr_token_aabb)
-                        token_boxes.append(curr_token_aabb)
-                        curr_token_aabb = None
+                if len(text.strip()) == 0 and curr_token_aabb is not None:
+                    # The current token ended
+                    curr_token_aabb.page = page
+                    curr_token_aabb.id = len(self.all_tokens)
+                    self.all_tokens.append(curr_token_aabb)
+                    token_boxes.append(curr_token_aabb)
+                    curr_token_aabb = None
 
                 else:
                     # "576.926,76.722,581.357,86.733"
@@ -1543,11 +1542,13 @@ class PdfAlign(Frame):
                         # x1: the distance from the left of the page to the right edge of the box.
                         # y1: the distance from the bottom of the page to the upper edge of the box.
                         # so here we flip the ys
-                        xmin, ymax, xmax, ymin = bbox.split(",")
-                        xmin = float(xmin) / dpi
-                        ymin = (-1 * float(ymin) + page_height) / dpi
-                        xmax = float(xmax) / dpi
-                        ymax = (-1 * float(ymax) + page_height) / dpi
+                        xmin, ymax, xmax, ymin = [
+                            float(x) for x in bbox.split(",")
+                        ]
+                        xmin /= dpi
+                        ymin = (page_height - ymin) / dpi
+                        xmax /= dpi
+                        ymax = (page_height - ymax) / dpi
                         aabb = AABB(xmin, ymin, xmax, ymax)
                         # Store metadata
                         aabb.value = text
@@ -1570,8 +1571,8 @@ class PdfAlign(Frame):
                         self.token_char_lut[aabb.tokenid].append(aabb)
                         # Add the current box
                         char_boxes.append(aabb)
-        self.page_boxes["token"].append(sorted(token_boxes, key=lambda x: x.area))
-        self.page_boxes["char"].append(sorted(char_boxes, key=lambda x: x.area))
+        self.page_boxes["token"].append(token_boxes)
+        self.page_boxes["char"].append(char_boxes)
 
     def populate_bboxes(self, filename):
         for i, p in enumerate(
