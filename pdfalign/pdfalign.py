@@ -266,7 +266,7 @@ class AABBTree:
         return collisions
 
     def contains(self, point):
-        """return AABBs that contain a given point"""
+        """Return AABBs that contain a given point"""
 
         def detect_collision(node):
             return node.aabb.contains(point)
@@ -274,7 +274,7 @@ class AABBTree:
         return self.get_collisions(detect_collision)
 
     def intersects(self, aabb):
-        """return AABBs that intersect a given AABB"""
+        """Return AABBs that intersect a given AABB"""
 
         def detect_collision(node):
             return node.aabb.intersects(aabb)
@@ -283,7 +283,7 @@ class AABBTree:
 
 
 def split_pages(filename):
-    print("Separating pages for file {}".format(filename))
+    print(f"Separating pages for file {filename}")
     dirname = os.path.dirname(filename)
     page_pattern = os.path.join(dirname, "page-%03d.pdf")
     command = ["pdfseparate", filename, page_pattern]
@@ -597,19 +597,20 @@ class PdfAlign(Frame):
         self.charid = 0
         self.page_boxes = dict(token=[], char=[])
         self.aabb_trees = None
-        # the bounding box around the equation to be annotated
+        # The bounding box around the equation to be annotated
         self.annotation_aabb = None
-        # holder to display the transparent rectangles
+        # Holder to display the transparent rectangles
         self.rectangles = []
-        # history
+        # History
         self.history_boxes = []
-        # the lookup for the token that corresponds to the bounding box
+        # The lookup for the token that corresponds to the bounding box
         self.all_tokens = []
         self.char_token_lut = dict()
         self.token_char_lut = defaultdict(list)
 
         # The properties/attributes of the tool itself
-        # annotation colors
+
+        # Annotation colors
         self.annotation_mode = "equation"
         self.active_annotation = None
         self.token_mode = True
@@ -618,15 +619,17 @@ class PdfAlign(Frame):
 
         toolbar = Frame(self)
         Button(toolbar, text="Open (o)", command=self.open).pack(side=LEFT)
-        Button(toolbar, text="Import (i)", command=self.import_annotations).pack(
-            side=LEFT
-        )
-        Button(toolbar, text="◀", command=self.prev).pack(
-            side=LEFT
-        )
+        Button(
+            toolbar, text="Import (i)", command=self.import_annotations
+        ).pack(side=LEFT)
+        Button(toolbar, text="◀", command=self.prev).pack(side=LEFT)
         Button(toolbar, text="▶", command=self.next).pack(side=LEFT)
-        Button(toolbar, text="Zoom in (+)", command=self.zoom_in).pack(side=LEFT)
-        Button(toolbar, text="Zoom out (-)", command=self.zoom_out).pack(side=LEFT)
+        Button(toolbar, text="Zoom in (+)", command=self.zoom_in).pack(
+            side=LEFT
+        )
+        Button(toolbar, text="Zoom out (-)", command=self.zoom_out).pack(
+            side=LEFT
+        )
         ttk.Label(toolbar, textvariable=self.num_page_tv).pack(side=LEFT)
 
         ttk.Label(toolbar, text="Token mode (k)").pack(side=LEFT)
@@ -648,11 +651,13 @@ class PdfAlign(Frame):
         self.token_mode_off_rb.pack(side=LEFT)
 
         Button(
-            toolbar, text="Annotate new variable (n)", command=self.new_annotation
+            toolbar,
+            text="Annotate new variable (n)",
+            command=self.new_annotation,
         ).pack(side=LEFT)
-        Button(toolbar, text="Add component (c)", command=self.add_component).pack(
-            side=LEFT
-        )
+        Button(
+            toolbar, text="Add component (c)", command=self.add_component
+        ).pack(side=LEFT)
         self.in_equation_rb = Radiobutton(
             toolbar,
             text="In equation (e)",
@@ -692,10 +697,12 @@ class PdfAlign(Frame):
         Button(toolbar, text="Save (s)", command=self.save_annotation).pack(
             side=LEFT
         )
-        Button(toolbar, text="Export (x)", command=self.export_annotations).pack(
+        Button(
+            toolbar, text="Export (x)", command=self.export_annotations
+        ).pack(side=LEFT)
+        Button(toolbar, text="Quit (q)", command=self.client_exit).pack(
             side=LEFT
         )
-        Button(toolbar, text="Quit (q)", command=self.client_exit).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
 
         # Keyboard shortcuts
@@ -1126,26 +1133,13 @@ class PdfAlign(Frame):
 
     def click(self, event):
         canvas = event.widget
-        # normalize coordinates
+        # Normalize coordinates
         x = canvas.canvasx(event.x) / self.scale / self.dpi
         y = canvas.canvasy(event.y) / self.scale / self.dpi
-        # query synctex
+        # Query synctex
         result = synctex(self.num_page, x, y, self.filename)
 
-        # display synctex results
-        # with open(result['input']) as f:
-        #     text = f.read()
-        #     self.text.focus()
-        #     # set text
-        #     self.text.delete(1.0, END)
-        #     self.text.insert(1.0, text)
-        #     # select line
-        #     self.text.see(f"{result['line']}.0")
-        #     self.text.mark_set('insert', f"{result['line']}.0")
-        #     self.text.tag_remove('highlight', 1.0, 'end')
-        #     self.text.tag_add('highlight', f"{result['line']}.0", f"{result['line']}.end+1c")
-
-        # get annotation
+        # Get annotation
         if self.active_annotation and self.annotation_mode:
             tree = self.aabb_trees[self.box_mode()][self.num_page]
             collisions = tree.contains(Point(x, y))
@@ -1511,28 +1505,6 @@ class PdfAlign(Frame):
     # NOTE pdftotext -bbox-layout returns the bounding boxes of the first page only
     # so we need to split the paper into pages and call this for each page
 
-    # def iter_token_bboxes(self, filename, page):
-    #     dpi = 72  # educated guess
-    #     command = ['pdftotext', '-bbox-layout', filename, '-']
-    #     result = subprocess.run(command, capture_output=True)
-    #     namespaces = dict(html='http://www.w3.org/1999/xhtml')
-    #     x = remove_bad_chars(result.stdout)
-    #     tree = etree.fromstring(x)
-    #     # .//text
-    #     for node in tree.findall('.//html:word', namespaces=namespaces):
-    #         text = node.text
-    #         # node.attrib['bbox'] -- split etc
-    #         xmin = float(node.attrib['xMin']) / dpi
-    #         ymin = float(node.attrib['yMin']) / dpi
-    #         xmax = float(node.attrib['xMax']) / dpi
-    #         ymax = float(node.attrib['yMax']) / dpi
-    #         aabb = AABB(xmin, ymin, xmax, ymax)
-    #         # just attach metadata
-    #         aabb.value = text
-    #         aabb.page = page
-    #         yield aabb
-
-    # make this not an iterator and return the char and token aabbs
     def populate_page_bboxes(self, filename, page):
         dpi = 72  # educated guess
         command = ["pdf2txt.py", "-t", "xml", filename]
@@ -1552,7 +1524,7 @@ class PdfAlign(Frame):
             if text is not None:
                 if len(text.strip()) == 0:
                     if curr_token_aabb is not None:
-                        # the current token ended
+                        # The current token ended
                         curr_token_aabb.page = page
                         curr_token_aabb.id = len(self.all_tokens)
                         self.all_tokens.append(curr_token_aabb)
@@ -1564,7 +1536,7 @@ class PdfAlign(Frame):
                     bbox = node.attrib.get("bbox")
                     if bbox is not None:
                         # The bboxes from pdf2txt are a little diff:
-                        # per https: // github.com / euske / pdfminer / issues / 171
+                        # per https://github.com/euske/pdfminer/issues/171
                         # The bbox value is (x0,y0,x1,y1).
                         # x0: the distance from the left of the page to the left edge of the box.
                         # y0: the distance from the bottom of the page to the lower edge of the box.
@@ -1577,7 +1549,7 @@ class PdfAlign(Frame):
                         xmax = float(xmax) / dpi
                         ymax = (-1 * float(ymax) + page_height) / dpi
                         aabb = AABB(xmin, ymin, xmax, ymax)
-                        # store metadata
+                        # Store metadata
                         aabb.value = text
                         aabb.page = page
                         aabb.font = node.attrib.get("font")
@@ -1596,10 +1568,10 @@ class PdfAlign(Frame):
                         # Update the bbox luts
                         self.char_token_lut[aabb] = aabb.tokenid
                         self.token_char_lut[aabb.tokenid].append(aabb)
-                        # add the current box
+                        # Add the current box
                         char_boxes.append(aabb)
-        self.page_boxes["token"].append(token_boxes)
-        self.page_boxes["char"].append(char_boxes)
+        self.page_boxes["token"].append(sorted(token_boxes, key=lambda x: x.area))
+        self.page_boxes["char"].append(sorted(char_boxes, key=lambda x: x.area))
 
     def populate_bboxes(self, filename):
         for i, p in enumerate(
@@ -1620,7 +1592,7 @@ class PdfAlign(Frame):
             AABBTree.from_boxes(page)
             for page in tqdm(
                 page_boxes[box_type],
-                desc="Making binary trees from {} boxes".format(box_type),
+                desc=f"Making binary trees from {box_type} boxes",
                 unit="page",
                 ncols=80,
             )
