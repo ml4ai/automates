@@ -655,7 +655,7 @@ class PdfAlign(Frame):
             command=self.new_annotation,
         ).pack(side=LEFT)
         Button(
-            toolbar, text="Add component (c)", command=self.add_component
+            toolbar, text="Add component (a)", command=self.add_component
         ).pack(side=LEFT)
         self.in_equation_rb = Radiobutton(
             toolbar,
