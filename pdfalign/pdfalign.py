@@ -69,21 +69,24 @@ class Point:
 
 class AABB:
     def __init__(self, xmin, ymin, xmax, ymax):
-        # position
+        # Position
         self.xmin = xmin
         self.ymin = ymin
         self.xmax = xmax
         self.ymax = ymax
         self.area = self.width * self.height
         self.id = None
-        # content
+
+        # Content
         self.value = None
         self.font = None
         self.font_size = None
-        # the corresponding token from pdfminer lines
+
+        # The corresponding token from pdfminer lines
         self.token = None
         self.tokenid = None
-        # synctex
+
+        # Synctex
         self.synctex = None
 
     def __repr__(self):
@@ -111,10 +114,6 @@ class AABB:
     @property
     def perimeter(self):
         return 2 * (self.width + self.height)
-
-    # @property
-    # def area(self):
-    #     return self.width * self.height
 
     def contains(self, point):
         return (
@@ -201,7 +200,7 @@ class AABBTree:
 
     @property
     def depth(self):
-        """returns the tree depth"""
+        """Returns the tree depth"""
         # FIXME this is inefficient, don't compute it on-the-fly
         if self.is_leaf:
             return 0
@@ -213,73 +212,43 @@ class AABBTree:
         if self.is_empty:
             self.aabb = aabb
         elif self.is_leaf:
-            # set children
+            # Set children
             self.left = deepcopy(self)
             self.right = AABBTree(aabb)
-            # set fat aabb
+            # Set fat aabb
             self.aabb = AABB.merge(self.left.aabb, self.right.aabb)
         else:
-            # merged AABBs
-            # hypothetical area instead
+            # Merged AABBs
+            # Hypothetical area instead
             merged_self = AABB.merge(aabb, self.aabb)
             merged_left = AABB.merge(aabb, self.left.aabb)
             merged_right = AABB.merge(aabb, self.right.aabb)
-            # cost of creating a new parent for this node and the new leaf
+            # Cost of creating a new parent for this node and the new leaf
             self_cost = 2 * merged_self.area
-            # minimum cost of pushing the leaf further down the tree
+            # Minimum cost of pushing the leaf further down the tree
             inheritance_cost = 2 * (merged_self.area - self.aabb.area)
-            # cost of descending left
+            # Cost of descending left
             left_cost = (
                 merged_left.area - self.left.aabb.area + inheritance_cost
             )
-            # cost of descending right
+            # Cost of descending right
             right_cost = (
                 merged_right.area - self.right.aabb.area + inheritance_cost
             )
-            # descend
+            # Descend
             if self_cost < left_cost and self_cost < right_cost:
-                # set children
+                # Set children
                 self.left = deepcopy(self)
                 self.right = AABBTree(aabb)
             elif left_cost < right_cost:
                 self.left.add(aabb)
             else:
                 self.right.add(aabb)
-            # set fat aabb
+            # Set fat aabb
             self.aabb = AABB.merge(self.left.aabb, self.right.aabb)
 
-    #     def balance(self):
-    #         """balance binary tree"""
-    #         if self.is_leaf:
-    #             return
-    #         # balance children
-    #         self.left.balance()
-    #         self.right.balance()
-    #         # balance self
-    #         diff = self.left.depth - self.right.depth
-    #         while abs(diff) > 1:
-    #             root = deepcopy(self)
-    #             # rotate
-    #             if diff > 1:
-    #                 pivot = self.left
-    #                 root.left = pivot.right
-    #                 pivot.right = root
-    #             elif diff < -1:
-    #                 pivot = self.right
-    #                 root.right = pivot.left
-    #                 pivot.left = root
-    #             # update fat AABBs (order is important)
-    #             root.aabb = AABB.merge(root.left.aabb, root.right.aabb)
-    #             pivot.aabb = AABB.merge(pivot.left.aabb, pivot.right.aabb)
-    #             # update self
-    #             self.left  = pivot.left
-    #             self.right = pivot.right
-    #             self.aabb  = pivot.aabb
-    #             # new depth difference
-    #             diff = self.left.depth - self.right.depth
-
     def get_collisions(self, detect_collision):
-        """return collisions according to provided function"""
+        """Return collisions according to provided function"""
         collisions = []
         stack = [self]
         while stack:
@@ -648,19 +617,19 @@ class PdfAlign(Frame):
         self.ann_mode_list = ["eqn", "text", "desc", "unit"]
 
         toolbar = Frame(self)
-        Button(toolbar, text="Open", command=self.open).pack(side=LEFT)
-        Button(toolbar, text="Import", command=self.import_annotations).pack(
+        Button(toolbar, text="Open (o)", command=self.open).pack(side=LEFT)
+        Button(toolbar, text="Import (i)", command=self.import_annotations).pack(
             side=LEFT
         )
-        Button(toolbar, text="Previous page", command=self.prev).pack(
+        Button(toolbar, text="◀", command=self.prev).pack(
             side=LEFT
         )
-        Button(toolbar, text="Next page", command=self.next).pack(side=LEFT)
-        Button(toolbar, text="Zoom in", command=self.zoom_in).pack(side=LEFT)
-        Button(toolbar, text="Zoom out", command=self.zoom_out).pack(side=LEFT)
+        Button(toolbar, text="▶", command=self.next).pack(side=LEFT)
+        Button(toolbar, text="Zoom in (+)", command=self.zoom_in).pack(side=LEFT)
+        Button(toolbar, text="Zoom out (-)", command=self.zoom_out).pack(side=LEFT)
         ttk.Label(toolbar, textvariable=self.num_page_tv).pack(side=LEFT)
 
-        ttk.Label(toolbar, text="Token mode").pack(side=LEFT)
+        ttk.Label(toolbar, text="Token mode (k)").pack(side=LEFT)
         self.token_mode_on_rb = Radiobutton(
             toolbar,
             text="on",
@@ -679,14 +648,14 @@ class PdfAlign(Frame):
         self.token_mode_off_rb.pack(side=LEFT)
 
         Button(
-            toolbar, text="Annotate new variable", command=self.new_annotation
+            toolbar, text="Annotate new variable (n)", command=self.new_annotation
         ).pack(side=LEFT)
-        Button(toolbar, text="Add component", command=self.add_component).pack(
+        Button(toolbar, text="Add component (c)", command=self.add_component).pack(
             side=LEFT
         )
         self.in_equation_rb = Radiobutton(
             toolbar,
-            text="In equation",
+            text="In equation (e)",
             value="equation",
             variable=self.annotation_mode,
             command=self.select_equation,
@@ -695,7 +664,7 @@ class PdfAlign(Frame):
         self.in_equation_rb.pack(side=LEFT)
         self.in_text_rb = Radiobutton(
             toolbar,
-            text="In text",
+            text="In text (t)",
             value="text",
             variable=self.annotation_mode,
             command=self.select_text,
@@ -704,7 +673,7 @@ class PdfAlign(Frame):
         self.in_text_rb.pack(side=LEFT)
         self.description_rb = Radiobutton(
             toolbar,
-            text="Description",
+            text="Description (d)",
             value="description",
             variable=self.annotation_mode,
             command=self.select_description,
@@ -713,38 +682,43 @@ class PdfAlign(Frame):
         self.description_rb.pack(side=LEFT)
         self.unit_rb = Radiobutton(
             toolbar,
-            text="Unit",
+            text="Unit (u)",
             value="unit",
             variable=self.annotation_mode,
             command=self.select_unit,
             style="Unit.TRadiobutton",
         )
         self.unit_rb.pack(side=LEFT)
-        Button(toolbar, text="Save", command=self.save_annotation).pack(
+        Button(toolbar, text="Save (s)", command=self.save_annotation).pack(
             side=LEFT
         )
-        Button(toolbar, text="Export", command=self.export_annotations).pack(
+        Button(toolbar, text="Export (x)", command=self.export_annotations).pack(
             side=LEFT
         )
-        Button(toolbar, text="Quit", command=self.client_exit).pack(side=LEFT)
+        Button(toolbar, text="Quit (q)", command=self.client_exit).pack(side=LEFT)
         toolbar.pack(side=TOP, fill=BOTH)
 
         # Keyboard shortcuts
         self.bind_all("o", lambda e: self.open())
-        self.bind_all("a", lambda e: self.add_component())
-        self.bind_all("e", lambda e: self.in_equation_rb.invoke())
-        self.bind_all("t", lambda e: self.in_text_rb.invoke())
-        self.bind_all("d", lambda e: self.description_rb.invoke())
-        self.bind_all("u", lambda e: self.unit_rb.invoke())
-        self.bind_all("s", lambda e: self.save_annotation())
-        self.bind_all("k", lambda e: self.toggle_boxes())
-        self.bind_all("n", lambda e: self.new_annotation())
-        self.bind_all("x", lambda e: self.export_annotations())
-        self.bind_all("c", lambda e: self.add_component())
+        self.bind_all("i", lambda e: self.import_annotations())
         self.bind_all("+", lambda e: self.zoom_in())
         self.bind_all("-", lambda e: self.zoom_out())
         self.bind_all("<Left>", lambda e: self.prev())
         self.bind_all("<Right>", lambda e: self.next())
+
+        self.bind_all("n", lambda e: self.new_annotation())
+        self.bind_all("c", lambda e: self.add_component())
+
+        self.bind_all("k", lambda e: self.toggle_boxes())
+
+        self.bind_all("e", lambda e: self.in_equation_rb.invoke())
+        self.bind_all("t", lambda e: self.in_text_rb.invoke())
+        self.bind_all("d", lambda e: self.description_rb.invoke())
+        self.bind_all("u", lambda e: self.unit_rb.invoke())
+
+        self.bind_all("s", lambda e: self.save_annotation())
+        self.bind_all("x", lambda e: self.export_annotations())
+        self.bind_all("q", lambda e: self.client_exit())
         self.bind_all("<Tab>", lambda e: self.next_mode())
 
         viewer = Frame(self)
