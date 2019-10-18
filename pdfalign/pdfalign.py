@@ -713,7 +713,7 @@ class PdfAlign(Frame):
         self.bind_all("<Right>", lambda e: self.next())
 
         self.bind_all("n", lambda e: self.new_annotation())
-        self.bind_all("c", lambda e: self.add_component())
+        self.bind_all("a", lambda e: self.add_component())
 
         self.bind_all("k", lambda e: self.toggle_boxes())
 
