@@ -86,7 +86,10 @@ if __name__ == '__main__':
             'zip the <dst> directory as <dst>.zip, then delete the temporary\n' \
             '<dst> directory.\n\n' \
             'Use -t to run in TEST mode: searches for .json in <root> and\n' \
-            'shows where files would be copied but without copying.'
+            'shows where files would be copied but without copying.\n\n' \
+            'NOTE: if there are multiple instances of the same source .json\n' \
+            'file, the most recent read while walking the <root> tree will\n' \
+            'overwrite any others.'
     parser = argparse.ArgumentParser(usage=usage)
     parser.add_argument('root', help='Source root directory')
     parser.add_argument('dst', help='Destination root (will create)')
