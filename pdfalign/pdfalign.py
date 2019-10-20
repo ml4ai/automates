@@ -752,8 +752,9 @@ class PdfAlign(Frame):
         # Saved Annotations List
         history = Frame(right_side)
         history_toolbar = Frame(history)
-        # Set exportselection=0 to be able to select things in multiple list boxes without automatically deselecting
-        # see: https://stackoverflow.com/a/756875
+        # Set exportselection=0 to be able to select things in multiple list
+        # boxes without automatically deselecting
+        # See: https://stackoverflow.com/a/756875
         self.annotation_list = Listbox(history, exportselection=0)
         hist_sbarV = Scrollbar(
             history, orient=VERTICAL, command=self.annotation_list.yview
@@ -771,9 +772,7 @@ class PdfAlign(Frame):
         )
         # pack and buttons
         self.annotation_list.pack(side=TOP, fill=BOTH, expand=YES)
-        Button(
-            history_toolbar, text="Show", command=self.show_annotation
-        ).pack(side=LEFT)
+        self.annotation_list.bind('<<ListboxSelect>>', lambda e: self.show_annotation())
         Button(
             history_toolbar, text="Edit", command=self.edit_annotation
         ).pack(side=LEFT)
