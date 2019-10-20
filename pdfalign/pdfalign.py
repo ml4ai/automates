@@ -752,8 +752,9 @@ class PdfAlign(Frame):
         # Saved Annotations List
         history = Frame(right_side)
         history_toolbar = Frame(history)
-        # Set exportselection=0 to be able to select things in multiple list boxes without automatically deselecting
-        # see: https://stackoverflow.com/a/756875
+        # Set exportselection=0 to be able to select things in multiple list
+        # boxes without automatically deselecting
+        # See: https://stackoverflow.com/a/756875
         self.annotation_list = Listbox(history, exportselection=0)
         hist_sbarV = Scrollbar(
             history, orient=VERTICAL, command=self.annotation_list.yview
@@ -771,9 +772,7 @@ class PdfAlign(Frame):
         )
         # pack and buttons
         self.annotation_list.pack(side=TOP, fill=BOTH, expand=YES)
-        Button(
-            history_toolbar, text="Show", command=self.show_annotation
-        ).pack(side=LEFT)
+        self.annotation_list.bind('<<ListboxSelect>>', lambda e: self.show_annotation())
         Button(
             history_toolbar, text="Edit", command=self.edit_annotation
         ).pack(side=LEFT)
@@ -911,33 +910,9 @@ class PdfAlign(Frame):
         unit_toolbar.pack(side=BOTTOM, fill=X)
         unit_frame.pack(side=TOP, fill=X)
 
-        # self.component_list = Listbox(annotation_detail)
-        # scrollbar
-        # detail_sbarV = Scrollbar(annotation_detail, orient=VERTICAL, command=self.component_list.yview)
-        # detail_sbarH = Scrollbar(annotation_detail, orient=HORIZONTAL, command=self.component_list.xview)
-        # detail_sbarV.pack(side=RIGHT, fill=Y)
-        # detail_sbarH.pack(side=BOTTOM, fill=X)
-        # self.component_list.config(yscrollcommand=detail_sbarV.set, xscrollcommand=detail_sbarH.set)
-        # pack and buttons
-        # self.component_list.pack(side=BOTTOM, fill=BOTH, expand=YES)
-
-        # Button(annotation_toolbar, text='edit', command=self.edit_component).pack(side=LEFT)
-        # Button(annotation_toolbar, text='delete', command=self.delete_component).pack(side=LEFT)
-        # annotation_toolbar.pack(side=BOTTOM, fill=BOTH)
         annotation_detail.pack(side=TOP, fill=X)
 
         right_side.pack(side=LEFT, fill=BOTH)
-
-        # textarea = Frame(self)
-        # self.text = Text(textarea)
-        # text_sbarV = Scrollbar(textarea, orient=VERTICAL, command=self.text.yview)
-        # text_sbarH = Scrollbar(textarea, orient=HORIZONTAL, command=self.text.xview)
-        # text_sbarV.pack(side=RIGHT, fill=Y)
-        # text_sbarH.pack(side=BOTTOM, fill=X)
-        # self.text.config(yscrollcommand=text_sbarV.set, xscrollcommand=text_sbarH.set)
-        # self.text.tag_configure('highlight', background='yellow')
-        # self.text.pack(expand=YES, fill=BOTH)
-        # textarea.pack(side=LEFT, expand=YES, fill=BOTH)
 
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(-1 * (event.delta), "units")
