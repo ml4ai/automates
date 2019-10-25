@@ -3,7 +3,81 @@ package org.clulab.aske.automates.grfn
 import ai.lum.common.FileUtils._
 import java.io.File
 
+import org.clulab.processors.Document
+import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.json4s.jackson.Json
+import ujson.{Obj, Value}
+
+import scala.collection.mutable.ArrayBuffer
+
 object GrFNParser {
+
+
+
+  def getCommentDocs(grfn: Value): Seq[Document] = {
+    // the source_comments section of the json contains comments for multiple containers;
+    // get the container names to look up the comments for that container in the source_comments section
+    //todo: do we want to include "$file_head" and "$file_foot"?
+    val containerNames = grfn("containers").arr.map(_.obj("name").str)
+    val sourceCommentObject = grfn("source_comments").obj
+
+    // store comment text objects here; the comment text objects include the source file, the container,
+    // and the location in the container (head/neck/foot)
+    val commentTextObjects = new ArrayBuffer[Obj]()
+
+    // for each container, the comment section has these three components
+    val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
+    for (containerName <- containerNames) if (sourceCommentObject.contains(containerName)) {
+      val commentObject = sourceCommentObject(containerName).obj
+      for (cc <- commentComponents) if (commentObject.contains(cc)) {
+        val text = commentObject(cc).arr.map(_.str).mkString("")
+        if (text.length > 0) {
+          commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, containerName, cc))
+        }
+      }
+    }
+
+    // Parse the comment texts
+    commentTextObjects.map(parseCommentText(_))
+  }
+
+  def parseCommentText(textObj: Obj): Document = {
+    val proc = new FastNLPProcessor()
+    //val Docs = Source.fromFile(filename).getLines().mkString("\n")
+    val text = textObj("text").str
+    val lines = for (sent <- text.split("\n") if ltrim(sent).length > 1 //make sure line is not empty
+      && sent.stripMargin.replaceAll("^\\s*[C!]", "!") //switch two different comment start symbols to just one
+      .startsWith("!")) //check if the line is a comment based on the comment start symbol (todo: is there a regex version of startWith to avoide prev line?
+      yield ltrim(sent)
+    var lines_combined = Array[String]()
+    // which lines we want to ignore (for now, may change later)
+    val ignoredLines = "(^Function:|^Calculates|^Calls:|^Called by:|([\\d\\?]{1,2}\\/[\\d\\?]{1,2}\\/[\\d\\?]{4})|REVISION|head:|neck:|foot:|SUBROUTINE|Subroutine|VARIABLES|Variables|State variables)".r
+
+    for (line <- lines if ignoredLines.findAllIn(line).isEmpty) {
+      if (line.startsWith(" ") && lines.indexOf(line) != 0) { //todo: this does not work if there happens to be more than five spaces between the comment symbol and the comment itself---will probably not happen too frequently. We shouldn't make it much more than 5---that can effect the lines that are indented because they are continuations of previous lines---that extra indentation is what helps us know it's not a complete line.
+        var prevLine = lines(lines.indexOf(line) - 1)
+        if (lines_combined.contains(prevLine)) {
+          prevLine = prevLine + " " + ltrim(line)
+          lines_combined = lines_combined.slice(0, lines_combined.length - 1)
+          lines_combined = lines_combined :+ prevLine
+        }
+      }
+      else {
+        if (!lines_combined.contains(line)) {
+          lines_combined = lines_combined :+ line
+        }
+      }
+    }
+
+    val doc = proc.annotateFromSentences(lines_combined, keepText = true)
+    //include more detailed info about the source of the comment: the container and the location in the container (head/neck/foot)
+    doc.id = Option(textObj("source").str + "; " + textObj("container").str + "; " + textObj("location").str)
+    doc
+  }
+
+  def ltrim(s: String): String = s.replaceAll("^\\s*[C!]?[-=]*\\s{0,5}", "")
+
+
 
   //------------------------------------------------------
   //     Methods for creating GrFNDocuments
