@@ -15,24 +15,28 @@ object GrFNParser {
 
 
   def getCommentDocs(grfn: Value): Seq[Document] = {
-    // the source_comments section of the json contains comments for multiple containers;
-    // get the container names to look up the comments for that container in the source_comments section
-    //todo: do we want to include "$file_head" and "$file_foot"?
-    val containerNames = grfn("containers").arr.map(_.obj("name").str)
+
     val sourceCommentObject = grfn("source_comments").obj
-
-    // store comment text objects here; the comment text objects include the source file, the container,
-    // and the location in the container (head/neck/foot)
     val commentTextObjects = new ArrayBuffer[Obj]()
-
-    // for each container, the comment section has these three components
-    val commentComponents = List("head", "neck", "foot") //todo: a better way to read these in?
-    for (containerName <- containerNames) if (sourceCommentObject.contains(containerName)) {
-      val commentObject = sourceCommentObject(containerName).obj
-      for (cc <- commentComponents) if (commentObject.contains(cc)) {
-        val text = commentObject(cc).arr.map(_.str).mkString("")
+//
+    val keys = sourceCommentObject.keys
+    for (k <- keys) {
+      if (sourceCommentObject(k).isInstanceOf[Value.Arr]) {
+//        println("TRUE")
+        val text = sourceCommentObject(k).arr.map(_.str).mkString("")
         if (text.length > 0) {
-          commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, containerName, cc))
+          commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, ""))
+        }
+      } else {
+        for (item <- sourceCommentObject(k).obj) if (item._2.isInstanceOf[Value.Arr]) {
+          val value = item._2
+          for (str <- value.arr) if (value.arr.length > 0) {
+            val text = str.str
+//            println("HERE " + text)
+            if (text.length > 0) {
+              commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, item._1))
+            }
+          }
         }
       }
     }
@@ -40,6 +44,7 @@ object GrFNParser {
     // Parse the comment texts
     commentTextObjects.map(parseCommentText(_))
   }
+
 
   def parseCommentText(textObj: Obj): Document = {
     val proc = new FastNLPProcessor()
