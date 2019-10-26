@@ -81,20 +81,21 @@ object ExtractAndAlign {
     logger.info(s"Extracted ${textMentions.length} text mentions")
     val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
 
-
-    // ---- COMMENTS -----
-
-    val commentDocs = GrFNParser.getCommentDocs(grfn)
-    // Iterate through the docs and find the mentions; eliminate duplicates
-    val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
-    val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition")
-
-
     // ---- SRC CODE VARIABLES -----
 
     val variableNames = grfn("variables").arr.map(_.obj("name").str)
     // The variable names only (excluding the scope info)
     val variableShortNames = GrFNEntityFinder.getVariableShortNames(variableNames)
+
+    // ---- COMMENTS -----
+
+    val commentDocs = GrFNParser.getCommentDocs(grfn)
+
+    // Iterate through the docs and find the mentions; eliminate duplicates
+    val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
+
+    val commentDefinitionMentions = commentMentions.seq.filter(_ matches "Definition").filter(m => variableShortNames.map(string => string.toLowerCase).contains(m.arguments("variable").head.text.toLowerCase))
+
 
     // =============================================
     //                 ALIGNMENT
@@ -222,6 +223,25 @@ object ExtractAndAlign {
     ujson.writeTo(grfn, grfnWriter)
     grfnWriter.close()
 
+
+
+//For debugging:
+//        topKCommentToText.foreach { aa =>
+//          println("====================================================================")
+//          println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
+//          println("====================================================================")
+//          aa.foreach { topK =>
+//            val v1Text = commentDefinitionMentions(topK.src).text
+//            val v2Text = textDefinitionMentions(topK.dst).text
+//            println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text} ${commentDefinitionMentions(topK.src).arguments("variable").head.foundBy}")
+//            println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
+//            println(s"comment: ${v1Text}")
+//            println(s"text: ${v2Text}")
+//              println(s"text: ${v2Text} ${textDefinitionMentions(topK.dst).label} ${textDefinitionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
+//            println(s"score: ${topK.score}\n")
+//          }
+//        }
   }
+
 
 }

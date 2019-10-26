@@ -11,7 +11,7 @@ rules:
     example: "T = daily mean air temperature [°C]"
     action: looksLikeAUnit
     pattern: |
-      @variable:Variable [word=/.*/]+ [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
+      @variable:Variable [word=/.*/ & !word = /,|\]|\./]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
 #
   - name: concept_paren_unit
     label: Unit
@@ -19,9 +19,9 @@ rules:
     type: token
     example: "In one type, water uptake is a function of the difference in water potentials ( , J kg−1) and
     the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
-#    action: looksLikeAUnit
+    action: looksLikeAUnit
     pattern: |
-      @variable: Concept [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
+      @variable:Concept [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
 
   - name: concept_unit
     label: Unit

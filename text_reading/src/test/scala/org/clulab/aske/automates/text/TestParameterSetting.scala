@@ -22,7 +22,7 @@ class TestParameterSetting  extends ExtractionTest {
   //can be done after we have confirmed that the tests look correct
 
   val t1a = "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
-  passingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
+  failingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
       "EORATIO" -> Seq("1.0")
     )
@@ -75,7 +75,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t6a = "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed " +
     "measurements to a standard height of 2.0 m"
-  passingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
+  failingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
     val desired = Seq(
       "wind speed measurements" -> Seq("2.0 m") //todo: attaching value and unit? - finding variables when they are spelled out? - yes.
     )

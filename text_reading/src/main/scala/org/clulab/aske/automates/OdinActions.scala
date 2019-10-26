@@ -139,8 +139,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         |
         varMention.entities.exists(ent => ent.exists(_ == "B-GreekLetter")) //or is a greek letter
         |
-        word.length == 1 && m.tags.exists(_.head matches "NN")) //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+        word.length == 1 && m.tags.exists(_.head matches "NN") //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+        |
+        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0//this is too specific; trying to get to single-letter vars with a subscript (e.g., u2) without getting units like m-2
       //todo: still need a way to not avoid short lower-case vars
+
+        )
 
     } yield m
   }
