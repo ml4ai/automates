@@ -396,7 +396,8 @@ object ExpansionHandler {
     "^cc$".r,
     "^conj".r,
     "cop".r,
-//    "dep"r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing
+    "dep"r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
+    "nmod_at".r,
     "^nmod_as".r,
     "^nmod_because".r,
     "^nmod_due_to".r,
@@ -404,7 +405,8 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
-    "nsubj".r,
+    "nummod".r,
+//    "^nsubj".r,
     "^punct".r,
     "^ref$".r,
     "appos".r

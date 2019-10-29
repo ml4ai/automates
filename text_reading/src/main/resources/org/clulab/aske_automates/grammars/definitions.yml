@@ -4,6 +4,19 @@ rules:
 
 ####DEFINITIONS####
 
+
+  - name: var_equals_def_token #needed bc of bad parse
+    label: Definition
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
+    pattern: |
+      @variable:Variable "=" (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter"]{1,5})
+      |
+      @variable:Variable "(" [word = /[\w\d]*/]{1,5} ")" "=" (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter"]{1,5})
+#
+
   - name: var_equals_def #needed bc of bad parse
     label: Definition
     priority: ${priority}
@@ -12,9 +25,23 @@ rules:
     example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
     pattern: |
       trigger = [word = "="]
-      variable: Variable = <dep | "nmod:npmod" | <amod compound?
-      definition: Concept = (dobj | dep | <amod) appos? [!entity = /NUMBER|B-unit/ & !word = "="]
+      variable: Variable = ("nmod:npmod" | <amod compound?)?
+      definition: Concept = (dobj | <amod)? [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       #<amod results in a definition where var and def are the same entity in this example: "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with "
+      #don't add 'dep' here---too unpredictable
+
+#  - name: var_equals_def #needed bc of bad parse
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
+#    pattern: |
+#      trigger = [word = "="]
+#      variable: Variable = (<dep | "nmod:npmod" | <amod compound?)?
+#      definition: Concept = (dobj | dep | <amod) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+#      #<amod results in a definition where var and def are the same entity in this example: "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with "
+##
 
   - name: sort_of_appos
     label: Definition
@@ -45,7 +72,7 @@ rules:
     example: "In APSIM, water uptake (Ta, mm d−1) is determined from..."
     action: ${action}
     pattern: |
-      @definition:Concept "(" (@variable:Variable [!entity = /B-unit/])
+      @definition:Concept [word = "("] (@variable:Variable [!entity = /B-unit/]) [word = /,|\)/]
 
 
   - name: var_verb
@@ -56,7 +83,7 @@ rules:
 #    action: looksLikeAVariable #//whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
 #    action: ${action}
     pattern: |
-      trigger = [word=/(?i)^defin|represent|=/]
+      trigger = [word=/(?i)represent/]
       variable:Concept = /${agents}/
       definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
@@ -69,7 +96,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      variable:Concept = <cop /${agents}/ | <cop <dep appos
+      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
 
   - name: comma_appos_var
@@ -79,11 +106,11 @@ rules:
     action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      (@definition: Concept [!entity = "NUMBER"]) "," @variable:Variable (?! [lemma = "be"])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"])
       |
-      @definition: Concept "," @variable:Variable ","
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  "," @variable:Variable ","
       |
-      @definition: Concept "," @variable:Variable (?! /.*/)
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/)
 #
 #todo: revisit
 #  - name: where_var_def

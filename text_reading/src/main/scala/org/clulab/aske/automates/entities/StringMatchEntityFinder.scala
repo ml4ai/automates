@@ -13,7 +13,7 @@ import org.clulab.processors.Document
 
 class StringMatchEntityFinder(strings: Set[String], label: String) extends EntityFinder {
   val regexBuilder = new RegexBuilder()
-  regexBuilder.add(strings.toSeq:_*)
+  regexBuilder.add(strings.toSeq.map(s => s"""\\b${s}\\b"""):_*)
   val regex = regexBuilder.mkPattern
   // alexeeva: added neg lookbehind to avoid equation # to be found as a variable
   //           |     (?<! [word = equation]) /\\Q${stringToMatch}\\E/
@@ -21,14 +21,14 @@ class StringMatchEntityFinder(strings: Set[String], label: String) extends Entit
     val mentions = for {
       stringToMatch <- strings
       ruleTemplate =
-        s"""
-           | - name: stringmatch
-           |   label: ${label}
-           |   priority: 1
-           |   type: token
-           |   pattern: |
-           |       (?<! [word = equation]) /${regex}/
-           |
+      s"""
+         | - name: stringmatch
+         |   label: ${label}
+         |   priority: 1
+         |   type: token
+         |   pattern: |
+         |       (?<! [word = equation]) /${regex}/
+         |
         """.stripMargin
       engine = ExtractorEngine(ruleTemplate)
     } yield engine.extractFrom(doc)

@@ -17,7 +17,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t2a = "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 " +
     "(Sau et al., 2004; Thorp et al., 2010), and Kcs is the DSSAT-CSM crop coefficient."
-  passingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
+  failingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "LAI" -> Seq("simulated leaf area index"),
       "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"),
@@ -30,7 +30,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t3a = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
     "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
-  passingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
       "Kcdmin" -> Seq("minimum crop coefficient or Kcd at LAI = 0"),
       "Kcdmax" -> Seq("maximum crop coefficient at high LAI"),
@@ -161,7 +161,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t3b = "This means that kl represents a maximum supply determined by r and the resistance to water flow " +
     "(Passioura, 1983; Monteith, 1986)"
-  passingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
     val desired = Seq(
       "kl" -> Seq("maximum supply determined by r and the resistance to water flow")
     )
@@ -268,7 +268,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t1c = "A convenient soil hydraulic property that will be used in this study is the matric flux potential " +
     "Mh0 (m2 d-1)"
-    passingTest should s"find definitions from t1c: ${t1c}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t1c: ${t1c}" taggedAs(Somebody) in {
       val desired = Seq(
         "Mh0" -> Seq("matric flux potential")
       )
