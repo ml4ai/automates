@@ -1,21 +1,12 @@
 package org.clulab.aske.automates.apps
 
 
-import java.io.{File, PrintWriter}
-
 import ai.lum.common.ConfigUtils._
-import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
-import org.clulab.aske.automates.alignment.{Aligner, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement}
+import org.clulab.aske.automates.data.DataLoader
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.entities.GrFNEntityFinder
-import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
-import org.clulab.utils.{DisplayUtils, FileUtils}
-import org.slf4j.LoggerFactory
-
+import org.clulab.utils.FileUtils
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -28,6 +19,7 @@ class AlignmentBaseline() {
     //mathsymbols:
     val mathSymbols = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/src/main/resources/AlignmentBaseline/mathSymbols.tsv").getLines().toArray.filter(_.length > 0).sortBy(_.length).reverse
 
+
     val greekLetterLines = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/src/main/resources/AlignmentBaseline/greek2words.tsv").getLines()
 
     val greek2wordDict = mutable.Map[String,String]()
@@ -35,12 +27,6 @@ class AlignmentBaseline() {
       val splitLine = line.split("\t")
       greek2wordDict += (splitLine.head -> splitLine.last)
     }
-
-//    for (k <- greek2wordDict.keys) println("KEY: " + k)
-
-//    println("HERE: " + greek2wordDict("δ"))
-
-//    for (ms <- mathSymbols) println(ms)
 
     val textConfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textConfig)
@@ -52,22 +38,6 @@ class AlignmentBaseline() {
     val eqFileDir = config[String]("apps.baselineEquationDir")
 
     //todo: this is just one equation; need to have things such that text files are read in parallel with the corresponding equation latexes
-
-    //    for (eqCand <- allEqVarCandidates) println(eqCand)
-
-//    val longestCand = allEqVarCandidates.sortBy(_.length).reverse.head
-//    println("-->" + longestCand)
-
-
-
-
-//    //todo: same as above---need to have this one file by one in parallel with the equation latex
-//    val textMentions = files.par.flatMap { file =>
-//      val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
-//      val texts: Seq[String] = dataLoader.loadFile(file)
-//      // Route text based on the amount of sentence punctuation and the # of numbers (too many numbers = non-prose from the paper)
-//      texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
-//    }
 
     val file2FoundMatches = files.par.flatMap { file =>  //should return sth like Map[fileId, (equation candidate, text candidate) ]
       //for every file, get the text of the file
@@ -92,7 +62,6 @@ class AlignmentBaseline() {
       latexTextMatches
     }
 
-//    for (f2fm <- file2FoundMatches) println("==>" + f2fm)
 
     for (m <- file2FoundMatches) println(s"Matches: ${m._1}, ${m._2}")
   }
@@ -114,7 +83,6 @@ class AlignmentBaseline() {
         //the result of matching for now is either the good candidate returned or the string "None"
         //todo: this None thing is not pretty---redo with an option or sth
         if (resultOfMatching != "None") {
-          //println("-->" + "text mention: " + m.text + " " + findMatchingVar(m, cand, mathSymbols))
           //if the candidate is returned (instead of None), it's good and thus added to best candidates
           bestCandidates.append(resultOfMatching)
         }
@@ -139,12 +107,11 @@ class AlignmentBaseline() {
         //      println(pattern)
 
         val anotherReplacement = replacements.last.replaceAll(pattern, "")
-        //      if (replacements.last.length != anotherReplacement.length) println("another replacement: " + anotherReplacement)
         replacements.append(anotherReplacement)
       }
-      //
+
       val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","")
-      //println(maxReplacement)
+
       val toReturn = if (maxReplacement == replaceGreekWithWord(textMention.arguments("variable").head.text, greek2wordDict)) latexCandidateVar else "None"
       //
       return toReturn
@@ -202,14 +169,10 @@ class AlignmentBaseline() {
     }
     eqCandidates
   }
-
-
-
 }
 
-// store your static methods/fields in the "object" construct
+
 object AlignmentBaseline {
-  // this is just like main() in Java
   def main(args:Array[String]) {
     val fs = new AlignmentBaseline()//(args(0))
     fs.process()
