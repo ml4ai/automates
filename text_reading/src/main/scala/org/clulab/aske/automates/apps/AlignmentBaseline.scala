@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
-class AlignmentBaseline(val equationLatex:String) {
+class AlignmentBaseline() {
   def process() {
     //getting configs and such (borrowed from ExtractAndAlign):
 
@@ -36,11 +36,10 @@ class AlignmentBaseline(val equationLatex:String) {
     val inputType = config[String]("apps.inputType")
     val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
     val files = FileUtils.findFiles(inputDir, dataLoader.extension)
-
+    val eqFileDir = config[String]("apps.baselineEquationDir")
 
     //todo: this is just one equation; need to have things such that text files are read in parallel with the corresponding equation latexes
-    val equationStr = getEquationString(equationLatex)
-    val allEqVarCandidates = getAllEqVarCandidates(equationStr)
+
     //    for (eqCand <- allEqVarCandidates) println(eqCand)
 
 //    val longestCand = allEqVarCandidates.sortBy(_.length).reverse.head
@@ -50,45 +49,68 @@ class AlignmentBaseline(val equationLatex:String) {
 
 
 //    //todo: same as above---need to have this one file by one in parallel with the equation latex
-    val textMentions = files.par.flatMap { file =>
-      val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
-      val texts: Seq[String] = dataLoader.loadFile(file)
-      // Route text based on the amount of sentence punctuation and the # of numbers (too many numbers = non-prose from the paper)
-      texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
-    }
-
-//    val file2FoundMatches = files.par.flatMap { file =>  //should return sth like Map[fileId, (equation candidate, text candidate) ]
-//
+//    val textMentions = files.par.flatMap { file =>
+//      val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
 //      val texts: Seq[String] = dataLoader.loadFile(file)
-    //todo: change greek letter in mentions to full words
-//      val textMentions = texts.flatMap(text => textReader.extractFromText(text, filename = Some(file.getName)))
-//
-//
-//      None
+//      // Route text based on the amount of sentence punctuation and the # of numbers (too many numbers = non-prose from the paper)
+//      texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
 //    }
 
-    val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
+    val file2FoundMatches = files.par.flatMap { file =>  //should return sth like Map[fileId, (equation candidate, text candidate) ]
+      //for every file, get the text of the file
+      val texts: Seq[String] = dataLoader.loadFile(file)
+    //todo: change greek letter in mentions to full words
+      //extract the mentions
+      val textMentions = texts.flatMap(text => textReader.extractFromText(text, filename = Some(file.getName)))
+      //only get the definition mentions
+      val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
 
-//    for (tdm <- textDefinitionMentions) println(s"Mention!!: ${tdm.text}, ${tdm.label}")
+      val equationName = eqFileDir.toString + file.toString.split("/").last.replace("json","txt")
+      println(equationName + "<--")
+      val equationStr = getEquationString(equationName)
+      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
+      //get the name of the equation file
+      //for now let's just use our old one
 
-    //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up---choose the candidate that had to go through fewest replacements?
+      val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols)
+
+      latexTextMatches
+    }
+
+//    for (f2fm <- file2FoundMatches) println("==>" + f2fm)
+
+    for (m <- file2FoundMatches) println(s"Matches: ${m._1}, ${m._2}")
+  }
+
+  def getLatexTextMatches(textDefinitionMentions: Seq[Mention], allEqVarCandidates: Seq[String], mathSymbols: Seq[String]): Seq[(String, String)] = {
+
+    //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
+
+    //all the matches from one file name will go here:
     val latexTextMatches = new ArrayBuffer[(String, String)]()
+    //for every extracted mention
     for (m <- textDefinitionMentions) {
+      //best candidates, out of which we'll take the max (to account for some font info
       val bestCandidates = new ArrayBuffer[String]()
+      //for every candidate eq var
       for (cand <- allEqVarCandidates) {
+        //check if the candidate matches the var extracted from text
         val resultOfMatching = findMatchingVar(m, cand, mathSymbols)
+        //the result of matching for now is either the good candidate returned or the string "None"
+        //todo: this None thing is not pretty---redo with an option or sth
         if (resultOfMatching != "None") {
           //println("-->" + "text mention: " + m.text + " " + findMatchingVar(m, cand, mathSymbols))
+          //if the candidate is returned (instead of None), it's good and thus added to best candidates
           bestCandidates.append(resultOfMatching)
         }
       }
+
+      //when did all the looping, choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
         latexTextMatches.append((bestCandidates.sortBy(_.length).reverse.head, m.text))
       }
-
     }
-
-    for (m <- latexTextMatches) println(s"Matches: ${m._1}, ${m._2}")
+    latexTextMatches
   }
 
   def findMatchingVar(textMention: Mention, latexCandidateVar: String, mathSymbols: Seq[String]): String = {
@@ -163,7 +185,7 @@ class AlignmentBaseline(val equationLatex:String) {
 object AlignmentBaseline {
   // this is just like main() in Java
   def main(args:Array[String]) {
-    val fs = new AlignmentBaseline("/home/alexeeva/Repos/LRECBaseline/AlignmentBaseline/AlignmentBaseline/src/main/resources/1801.00077_equation0004.txt")//(args(0))
+    val fs = new AlignmentBaseline()//(args(0))
     fs.process()
   }
 }
