@@ -16,6 +16,7 @@ import org.clulab.odin.Mention
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
@@ -26,6 +27,18 @@ class AlignmentBaseline() {
     val config: Config = ConfigFactory.load()
     //mathsymbols:
     val mathSymbols = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/src/main/resources/AlignmentBaseline/mathSymbols.tsv").getLines().toArray.filter(_.length > 0).sortBy(_.length).reverse
+
+    val greekLetterLines = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/src/main/resources/AlignmentBaseline/greek2words.tsv").getLines()
+
+    val greek2wordDict = mutable.Map[String,String]()
+    for (line <- greekLetterLines) {
+      val splitLine = line.split("\t")
+      greek2wordDict += (splitLine.head -> splitLine.last)
+    }
+
+//    for (k <- greek2wordDict.keys) println("KEY: " + k)
+
+//    println("HERE: " + greek2wordDict("δ"))
 
 //    for (ms <- mathSymbols) println(ms)
 
@@ -65,6 +78,8 @@ class AlignmentBaseline() {
       //only get the definition mentions
       val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
 
+      for (td <- textDefinitionMentions) println(td.text)
+
       val equationName = eqFileDir.toString + file.toString.split("/").last.replace("json","txt")
       println(equationName + "<--")
       val equationStr = getEquationString(equationName)
@@ -72,7 +87,7 @@ class AlignmentBaseline() {
       //get the name of the equation file
       //for now let's just use our old one
 
-      val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols)
+      val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols, greek2wordDict.toMap)
 
       latexTextMatches
     }
@@ -82,7 +97,7 @@ class AlignmentBaseline() {
     for (m <- file2FoundMatches) println(s"Matches: ${m._1}, ${m._2}")
   }
 
-  def getLatexTextMatches(textDefinitionMentions: Seq[Mention], allEqVarCandidates: Seq[String], mathSymbols: Seq[String]): Seq[(String, String)] = {
+  def getLatexTextMatches(textDefinitionMentions: Seq[Mention], allEqVarCandidates: Seq[String], mathSymbols: Seq[String], greek2wordDict: Map[String, String]): Seq[(String, String)] = {
 
     //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
 
@@ -95,7 +110,7 @@ class AlignmentBaseline() {
       //for every candidate eq var
       for (cand <- allEqVarCandidates) {
         //check if the candidate matches the var extracted from text
-        val resultOfMatching = findMatchingVar(m, cand, mathSymbols)
+        val resultOfMatching = findMatchingVar(m, cand, mathSymbols, greek2wordDict)
         //the result of matching for now is either the good candidate returned or the string "None"
         //todo: this None thing is not pretty---redo with an option or sth
         if (resultOfMatching != "None") {
@@ -113,7 +128,7 @@ class AlignmentBaseline() {
     latexTextMatches
   }
 
-  def findMatchingVar(textMention: Mention, latexCandidateVar: String, mathSymbols: Seq[String]): String = {
+  def findMatchingVar(textMention: Mention, latexCandidateVar: String, mathSymbols: Seq[String], greek2wordDict: Map[String, String]): String = {
     //only proceed if the latex candidate does not have unmatched braces
     if (!checkIfUnmatchedCurlyBraces(latexCandidateVar)) {
       //good candidates will go here
@@ -130,7 +145,7 @@ class AlignmentBaseline() {
       //
       val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","")
       //println(maxReplacement)
-      val toReturn = if (maxReplacement == textMention.arguments("variable").head.text) latexCandidateVar else "None"
+      val toReturn = if (maxReplacement == replaceGreekWithWord(textMention.arguments("variable").head.text, greek2wordDict)) latexCandidateVar else "None"
       //
       return toReturn
     }
@@ -156,11 +171,22 @@ class AlignmentBaseline() {
   def getEquationString(latexFile: String): String = {
     val latexLines = Source.fromFile(latexFile).getLines().toArray
     val equationCandidates = for (
-      i <- 0 to latexLines.length - 1
-      if (latexLines(i).contains("begin{equation}"))
+      i <- 0 until latexLines.length - 1
+      if latexLines(i).contains("begin{equation}")
 
     ) yield latexLines(i+1).replaceAll("\\\\label\\{.*?\\}","")
     equationCandidates.head
+  }
+
+  def replaceGreekWithWord(varName: String, greek2wordDict: Map[String, String]): String = {
+    var toReturn = varName
+    for (k <- greek2wordDict.keys) {
+      if (varName.contains(k)) {
+        toReturn = toReturn.replace(k, greek2wordDict(k))
+      }
+    }
+
+    toReturn
   }
 
   def getAllEqVarCandidates(equation: String): Seq[String] = {
