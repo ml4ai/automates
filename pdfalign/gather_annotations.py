@@ -102,7 +102,7 @@ if __name__ == '__main__':
     if args.verbose and args.test:
         print(f'Reading from root: {args.root}')
     paths = findfiles(args.root, json_p)
-    if args.verbose and args.text:
+    if args.verbose and args.test:
         print('found:')
         print(paths)
     if paths:
