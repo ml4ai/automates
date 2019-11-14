@@ -1,6 +1,7 @@
 package org.clulab.aske.automates.apps
 import ai.lum.common.FileUtils._
 import java.io.{File, PrintWriter}
+import java.nio.file.{Files, Paths}
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -16,6 +17,11 @@ import scala.io.Source
 
 
 //todo: add eval:
+//crop - done
+//run through eq to latex
+//read those equations in
+//deal with not all gold files being actually there (unlikely but possible)--- should be fine if indices in json dir are correct/correspond to order/indices of equationFromTranslator.txt
+//need to get gold files
 
 
 class AlignmentBaseline() {
@@ -61,12 +67,30 @@ class AlignmentBaseline() {
     val goldDir = config[String]("apps.baselineGoldDir")
 
 
+
+
+    val eqFile = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/equations/equationsFromTranslator.txt")
+    val eqLines = eqFile.getLines().toArray
+    eqFile.close()
+
+//    println("ZEROth " + eqLines(0))
+
+
+//    for (e <- eqLines) println(e)
+    //Use this to copy the pdfs for which we have the gold annotation (supposedly have)
+//    val goldFileNames = getAnnotatedFileNamesFromTSV("input/LREC/Baseline/progressTSV/AnnotationProgressNov13.tsv")
+
+//    for (name <- goldFileNames) copyPdfsAndTSVs(name)
+
     val file2FoundMatches = files.par.flatMap { file =>  //should return sth like Map[fileId, (equation candidate, text candidate) ]
 
+      print("Index of file " + files.indexOf(file) + file.toString() +"\n")
+      println("equation" + eqLines(files.indexOf(file)).replace(" ", "") + "\n")
       println("filename " +  file.toString())
 
       //gold:
-      val goldMap = processOneAnnotatedEquation(file)
+      //fixme: for now, it's a random gold file; switch to real gold files
+      val goldMap = processOneAnnotatedEquation(new File("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/gold/sample/1801.00077_equation0004.json"))
 
       println("+++++++++++++")
       println("Gold data:")
@@ -91,15 +115,18 @@ class AlignmentBaseline() {
       for (td <- textDefinitionMentions) println(td.text)
       println("============================")
 
-      val equationName = eqFileDir.toString + file.toString.split("/").last.replace("json","txt")
+//      val equationName = eqFileDir.toString + file.toString.split("/").last.replace("json","txt")
 //      println("Equation fequationName + "<--")
-      val equationStr = getEquationString(equationName, word2greekDict.toMap)
+//      val equationStr = getEquationString(equationName, word2greekDict.toMap)
+
+      val equationStr = eqLines(files.indexOf(file)).replace(" ", "")
       println("EQ STRING: " + equationStr)
       val allEqVarCandidates = getAllEqVarCandidates(equationStr)
 
 
       val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, goldMap)
 
+      for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2)
       latexTextMatches
     }
     println("==================")
@@ -160,7 +187,7 @@ class AlignmentBaseline() {
         //the result of matching for now is either the good candidate returned or the string "None"
         //todo: this None thing is not pretty---redo with an option or sth
         if (resultOfMatching != "None") {
-          println("result of matching: " + resultOfMatching)
+          //println("result of matching: " + resultOfMatching)
           //if the candidate is returned (instead of None), it's good and thus added to best candidates
           bestCandidates.append(resultOfMatching)
         }
@@ -300,6 +327,31 @@ class AlignmentBaseline() {
     }
 
     entries.toMap
+  }
+
+  def getAnnotatedFileNamesFromTSV(tsv: String): Seq[String] = {
+    val equationFileNames = new ArrayBuffer[String]()
+    val bufferedSource = Source.fromFile(tsv)
+    for (line <- bufferedSource.getLines()) {
+      if ((line.split("\t").length > 10 && line.split("\t")(10)=="y" )|| ( line.split("\t").length > 11 && line.split("\t")(11) == "y")) {
+        equationFileNames.append(line.split("\t")(0))
+      }
+    }
+    bufferedSource.close()
+    equationFileNames
+  }
+
+  def copyPdfsAndTSVs(equationName: String): Unit = {
+    val srcDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/final_output/" + equationName + "/"
+    val destDir = "input/LREC/Baseline/pdfsOfAnnotatedEquations/" + equationName + ".pdf"
+    val destAabb = "input/LREC/Baseline/aabbs/" + equationName + ".tsv"
+    val srcDirFile = new File(srcDir)
+    val pdf = srcDirFile.listFiles().filter(_.toString.endsWith("pdf")).head
+    println(pdf)
+    val aabb = srcDirFile.listFiles().filter(_.toString.endsWith("aabb.tsv")).head
+    Files.copy(Paths.get(pdf.toString), Paths.get(destDir))
+    Files.copy(Paths.get(aabb.toString), Paths.get(destAabb))
+
   }
 
 
