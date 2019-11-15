@@ -60,7 +60,7 @@ class AlignmentBaseline() {
     val inputDir = config[String]("apps.baslineInputDirectory")
     val inputType = config[String]("apps.inputType")
     val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
-    val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+    val files = FileUtils.findFiles(inputDir, dataLoader.extension).sorted
     //this is where the latex equation files are
     val eqFileDir = config[String]("apps.baselineEquationDir")
     //this is where the gold data is stored
@@ -84,18 +84,18 @@ class AlignmentBaseline() {
 
     val file2FoundMatches = files.par.flatMap { file =>  //should return sth like Map[fileId, (equation candidate, text candidate) ]
 
-      print("Index of file " + files.indexOf(file) + file.toString() +"\n")
-      println("equation" + eqLines(files.indexOf(file)).replace(" ", "") + "\n")
+      print("============\n" + "Index of file " + files.indexOf(file) + file.toString() +"\n")
+      println("equation: " + eqLines(files.indexOf(file)).replace(" ", "") + "\n")
       println("filename " +  file.toString())
 
       //gold:
       //fixme: for now, it's a random gold file; switch to real gold files
       val goldMap = processOneAnnotatedEquation(new File("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/gold/sample/1801.00077_equation0004.json"))
 
-      println("+++++++++++++")
-      println("Gold data:")
-      for (k <- goldMap) println(k)
-      println("+++++++++++++")
+//      println("+++++++++++++")
+//      println("Gold data:")
+//      for (k <- goldMap) println(k)
+//      println("+++++++++++++")
 
 
 
@@ -111,9 +111,9 @@ class AlignmentBaseline() {
       //this is in case we extract from the text we get from pdfMiner
 //      val textDefinitionMentions = textReader.extractFromText(fullText, true, Some("somefile")).filter(_ matches("Definition"))
 
-      println("=====all definition mentions from text=====")
-      for (td <- textDefinitionMentions) println(td.text)
-      println("============================")
+//      println("=====all definition mentions from text=====")
+//      for (td <- textDefinitionMentions) println(td.text)
+//      println("============================")
 
 //      val equationName = eqFileDir.toString + file.toString.split("/").last.replace("json","txt")
 //      println("Equation fequationName + "<--")
@@ -125,14 +125,15 @@ class AlignmentBaseline() {
 
 
       val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, goldMap)
-
+      println("+++++++++")
       for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2)
+      println("++++++++++++\n")
       latexTextMatches
     }
-    println("==================")
-    println("MATCHES:")
-    for (m <- file2FoundMatches) println(s"${m._1}, ${m._2}")
-    println("==================")
+//    println("==================")
+//    println("MATCHES:")
+//    for (m <- file2FoundMatches) println(s"${m._1}, ${m._2}")
+//    println("==================")
   }
 
   def readInPdfMinedText(path2File: String): String = {
@@ -171,7 +172,7 @@ class AlignmentBaseline() {
     for (m <- textDefinitionMentions) {
       if (goldMap.keys.toList.contains(m.arguments("variable").head.text)) {
         goldTextVarMatch += 1
-        println("-->" + m.text)
+       // println("-->" + m.text)
 
         if (goldMap(m.arguments("variable").head.text).contains(m.arguments("definition").head.text)) goldTextDefMatch += 1
       }
@@ -198,9 +199,9 @@ class AlignmentBaseline() {
         latexTextMatches.append((bestCandidates.sortBy(_.length).reverse.head, m.text))
       }
     }
-    for (l <- latexTextMatches) println("match: " + l)
-    println("varMatch: " + goldTextVarMatch)
-    println("defMatch: " + goldTextDefMatch)
+    //for (l <- latexTextMatches) println("match: " + l)
+    //println("varMatch: " + goldTextVarMatch)
+    //println("defMatch: " + goldTextDefMatch)
     latexTextMatches
   }
 
@@ -347,7 +348,7 @@ class AlignmentBaseline() {
     val destAabb = "input/LREC/Baseline/aabbs/" + equationName + ".tsv"
     val srcDirFile = new File(srcDir)
     val pdf = srcDirFile.listFiles().filter(_.toString.endsWith("pdf")).head
-    println(pdf)
+    //println(pdf)
     val aabb = srcDirFile.listFiles().filter(_.toString.endsWith("aabb.tsv")).head
     Files.copy(Paths.get(pdf.toString), Paths.get(destDir))
     Files.copy(Paths.get(aabb.toString), Paths.get(destAabb))
