@@ -126,7 +126,7 @@ class AlignmentBaseline() {
 
       val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, goldMap)
       println("+++++++++")
-      for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2)
+      for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2 + " " + file.toString)
       println("++++++++++++\n")
       latexTextMatches
     }
@@ -170,12 +170,13 @@ class AlignmentBaseline() {
     val latexTextMatches = new ArrayBuffer[(String, String)]()
     //for every extracted mention
     for (m <- textDefinitionMentions) {
-      if (goldMap.keys.toList.contains(m.arguments("variable").head.text)) {
-        goldTextVarMatch += 1
-       // println("-->" + m.text)
-
-        if (goldMap(m.arguments("variable").head.text).contains(m.arguments("definition").head.text)) goldTextDefMatch += 1
-      }
+      //rudimentary eval, just comparing extracted text mention and the values in gold data
+//      if (goldMap.keys.toList.contains(m.arguments("variable").head.text)) {
+//        goldTextVarMatch += 1
+//       // println("-->" + m.text)
+//
+//        if (goldMap(m.arguments("variable").head.text).contains(m.arguments("definition").head.text)) goldTextDefMatch += 1
+//      }
 
       //best candidates, out of which we'll take the max (to account for some font info
       val bestCandidates = new ArrayBuffer[String]()
@@ -213,7 +214,7 @@ class AlignmentBaseline() {
   def findMatchingVar(textMention: Mention, latexCandidateVar: String, mathSymbols: Seq[String], greek2wordDict: Map[String, String]): String = {
     //only proceed if the latex candidate does not have unmatched braces
     //replace all the math symbols in the latex candidate variable
-    if (!checkIfUnmatchedCurlyBraces(latexCandidateVar)) {
+    if (!checkIfUnmatchedCurlyBraces(latexCandidateVar) && !latexCandidateVar.endsWith("_") && !latexCandidateVar.startsWith("_")) {
       val replacements = new ArrayBuffer[String]()
       replacements.append(latexCandidateVar)
       for (ms <- mathSymbols) {
