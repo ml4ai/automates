@@ -940,6 +940,7 @@ class PdfAlign(Frame):
         if filename != "":
             self.saved_annotations = []
             self.filename = os.path.abspath(filename)
+            self.master.title(f"pdfalign: {self.filename}")
             print("Converting PDF pages to images...")
             self.pages = convert_from_path(filename, dpi=self.dpi)
             self.populate_bboxes(filename)
@@ -1143,6 +1144,7 @@ class PdfAlign(Frame):
         self.maybe_save_unsaved()
         self.active_annotation = Annotation()
         self.in_equation_rb.invoke()
+        self.ann_mode_index = 0
         self.redraw()
 
     def select_equation(self):
@@ -1430,7 +1432,7 @@ class PdfAlign(Frame):
             f.close()
         # FIXME: buggy on mac -- doesn't always close...?
 
-    def import_annotations(self):
+    def import_annotations(self, filename=None):
         # Warn if there are unsaved annotations
         really_import = True
         if (
@@ -1451,9 +1453,10 @@ class PdfAlign(Frame):
             self.description_list.delete(0, END)
             self.unit_list.delete(0, END)
             # Import
-            filename = filedialog.askopenfilename(
-                filetypes=[("json files", "*.json"), ("all files", "*.*")]
-            )
+            if filename is None:
+                filename = filedialog.askopenfilename(
+                    filetypes=[("json files", "*.json"), ("all files", "*.*")]
+                )
             if filename != "":
                 with open(filename) as js:
                     json_annotations = json.load(js)
@@ -1598,6 +1601,7 @@ class PdfAlign(Frame):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", dest="filename")
+    parser.add_argument("-i", dest="json")
     args = parser.parse_args()
     return args
 
@@ -1611,6 +1615,8 @@ def main():
     # if a filename was provided then use it
     if args.filename:
         app.open(args.filename)
+    if args.json:
+        app.import_annotations(args.json)
     # start app
     app.mainloop()
 
