@@ -11,18 +11,18 @@ from pdf2image import convert_from_path, convert_from_bytes
 from lxml import etree
 from webcolors import name_to_rgb
 from tqdm import tqdm
-from aabb_tree import AABB, AABBTree
 
-class PdfAlign(Frame):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.master.title("pdfalign")
-        self.pack(expand=YES, fill=BOTH)
+from .aabb_tree import AABB, AABBTree
+
+class PdfAlign():
+    def __init__(self):
+        # super().__init__(master)
+        # self.master.title("pdfalign")
+        # self.pack(expand=YES, fill=BOTH)
 
         self.dpi = 200
         self.scale = 1.0
         self.num_page = 0
-        self.num_page_tv = StringVar()
         # bounding boxes
         self.charid = 0
         self.page_boxes = dict(token=[], char=[])
@@ -46,7 +46,7 @@ class PdfAlign(Frame):
         # if filename != "":
         self.saved_annotations = []
 
-        filename = "../resources/test"
+        filename = "/Users/daniel/Documents/dev/research/automates/pdfalign-webapp/api/app/main/resources/test"
         self.filename = os.path.abspath(filename)
         print("Converting PDF pages to images...")
 
@@ -233,9 +233,9 @@ def remove_bad_chars(text):
     return text
 
 
-def main():
-    file = open("../resources/temp.pdf", 'rb')
-    temp = PdfAlign()
-    temp.open(file.read())
-
-main()
+# def main():
+#     file = open("../resources/temp.pdf", 'rb')
+#     temp = PdfAlign()
+#     temp.open(file.read())
+#
+# main()
