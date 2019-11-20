@@ -940,6 +940,7 @@ class PdfAlign(Frame):
         if filename != "":
             self.saved_annotations = []
             self.filename = os.path.abspath(filename)
+            self.master.title(f"pdfalign: {self.filename}")
             print("Converting PDF pages to images...")
             self.pages = convert_from_path(filename, dpi=self.dpi)
             self.populate_bboxes(filename)
