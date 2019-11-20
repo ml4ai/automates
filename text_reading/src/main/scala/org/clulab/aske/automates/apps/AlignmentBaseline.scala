@@ -26,11 +26,32 @@ import scala.io.Source
 
 class AlignmentBaseline() {
   def process() {
+
+
     //getting configs and such (borrowed from ExtractAndAlign):
 
     val config: Config = ConfigFactory.load()
     //in case we use the text from pdfMiner
     //val fullText = readInPdfMinedText("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/pdfMined/mined.txt")
+
+
+
+    //this is where the latex equation files are
+    val eqFileDir = config[String]("apps.baselineEquationDir")
+
+    val eqFile = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/equations/equationsFromTranslator.txt")
+    val eqLines = eqFile.getLines().toArray //all equations from file
+    eqFile.close()
+
+
+    val testEq = eqLines.head
+    println(testEq.replace(" ", "") + "<<<")
+
+
+
+
+
+
 
     //latex symbols/fonts (todo: add more):
     //these will be deleted from the latex equation to get to the values
@@ -61,17 +82,14 @@ class AlignmentBaseline() {
     val inputType = config[String]("apps.inputType")
     val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
     val files = FileUtils.findFiles(inputDir, dataLoader.extension).sorted
-    //this is where the latex equation files are
-    val eqFileDir = config[String]("apps.baselineEquationDir")
+
     //this is where the gold data is stored
     val goldDir = config[String]("apps.baselineGoldDir")
 
 
 
 
-    val eqFile = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/equations/equationsFromTranslator.txt")
-    val eqLines = eqFile.getLines().toArray
-    eqFile.close()
+
 
 //    println("ZEROth " + eqLines(0))
 
