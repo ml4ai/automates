@@ -23,8 +23,8 @@ for filename in glob.glob(os.path.join(annotation_dir, '*.json')):
     n_anns.append(len(data))
     for ann in data:
         n_comps.append(len(ann['equation']))
-        n_desc.append(len(ann['description']))
-        for desc in ann['description']:
+        n_desc.append(len(ann.get('description', [])))
+        for desc in ann.get('description', []):
             desc_len.append(len(desc))
 
 print(len(set(paper_ids)), 'total papers')
