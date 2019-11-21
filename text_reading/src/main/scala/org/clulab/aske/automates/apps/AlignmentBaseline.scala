@@ -366,6 +366,7 @@ class AlignmentBaseline() {
     val destDir = "input/LREC/Baseline/pdfsOfAnnotatedEquations/" + equationName + ".pdf"
     val destAabb = "input/LREC/Baseline/aabbs/" + equationName + ".tsv"
     val srcDirFile = new File(srcDir)
+    print(srcDirFile.toString)
     val pdf = srcDirFile.listFiles().filter(_.toString.endsWith("pdf")).head
     //println(pdf)
     val aabb = srcDirFile.listFiles().filter(_.toString.endsWith("aabb.tsv")).head
@@ -374,7 +375,14 @@ class AlignmentBaseline() {
 
   }
 
-
+  def runCopyPdfAndTsvs(): Unit = {
+    val file = new File ("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/gold")
+    val files = file.listFiles()
+    for (f <- files) {
+      copyPdfsAndTSVs(f.toString.split("/").last.replace(".json", ""))
+//      print(f.toString.split("/").last)
+    }
+  }
 
 }
 
@@ -382,6 +390,9 @@ class AlignmentBaseline() {
 object AlignmentBaseline {
   def main(args:Array[String]) {
     val fs = new AlignmentBaseline()//(args(0))
+    //    fs.runCopyPdfAndTsvs()
     fs.process()
+
+
   }
 }
