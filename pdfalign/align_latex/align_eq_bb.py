@@ -11,6 +11,7 @@ import numpy as np
 from lxml import etree
 from pdf2image import convert_from_path
 from latex_tokenizer import LatexTokenizer, CategoryCode
+from latex_expansion import build_macro_lut, expand_tokens
 from arxiv_utils import find_main_tex_file
 
 
@@ -141,16 +142,24 @@ def make_relative_path(filename):
 
 
 
-def find_equation(filename, line):
-    pattern = r'\\begin\{(equation\*?)\}(.+?)\\end\{\1\}'
+def find_equation(filename, line, macro_lut={}):
+    line -= 1 # line provided is one-based but we want zero-based
+    pattern = r'\\begin\s*\{(equation\*?)\}(.+?)\\end\s*\{\1\}'
     with open(filename) as f:
         text = f.read()
         for m in re.finditer(pattern, text, re.MULTILINE | re.DOTALL):
-            # the one-based line numbers where the match starts and ends
-            start = 1 + text[:m.start()].count('\n')
-            end = 1 + text[:m.end()].count('\n')
+            start = text[:m.start()].count('\n')
+            end = text[:m.end()].count('\n')
             if start <= line <= end:
                 return m.group(2).strip()
+        # if we're here it means the regex failed
+        # let's try the macro expansion approach
+        orig_line = text.splitlines()[line]
+        expanded_line = tokens_to_string(expand_tokens(LatexTokenizer(orig_line), macro_lut))
+        match = re.search(pattern, expanded_line, re.MULTILINE | re.DOTALL)
+        if match:
+            return match.group(2).strip()
+        # if we're here then we didn't found an equation
 
 
 
@@ -285,13 +294,21 @@ def make_equation_bbox(pages, eq_aabb):
 
 
 
+def make_macro_lut(filename):
+    with open(filename) as f:
+        return build_macro_lut(LatexTokenizer(f.read()))
+
+
+
 def main(args):
     src = args.src
+    main_file = find_main_tex_file(src)
+    macro_lut = make_macro_lut(main_file)
     annotations = read_equation_annotations(args.annotations)
     (filename, line) = get_equation_approx_location(annotations)
     src_filename = os.path.join(src, filename)
-    raw_equation = find_equation(src_filename, line)
-    tokens = list(LatexTokenizer(raw_equation))
+    raw_equation = find_equation(src_filename, line, macro_lut)
+    tokens = expand_tokens(LatexTokenizer(raw_equation), macro_lut)
     for i, (fragment, color_equation) in enumerate(all_colorizations(tokens)):
         print('colorization', i)
         dst = os.path.join(args.dst, os.path.basename(src) + f'_{i}')
