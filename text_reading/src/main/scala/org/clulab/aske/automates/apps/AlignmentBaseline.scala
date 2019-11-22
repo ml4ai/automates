@@ -75,8 +75,9 @@ class AlignmentBaseline() {
 
     for ((eqn_id, eqnIndex) <- eqn_ids.zipWithIndex) {
       val split = eqn_id.split("_")
-      val paper = s"$inputDir/${split(0)}.json"
       val eq = split(1)
+      val paper = s"$inputDir/${eqn_id}.json"
+
 
       //for every file, get the text of the file
       val texts: Seq[String] = dataLoader.loadFile(paper)
@@ -183,7 +184,9 @@ class AlignmentBaseline() {
 //      }
       //take the last item from 'replacements' and replace the braces---that should get us to the value
 //      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
+    println("candidate: " + latexCandidateVar)
       val rendered = render(latexCandidateVar).replace("'","")
+    println("rendered: " + rendered)
 
       //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
     if (rendered == variable) {
