@@ -14,6 +14,7 @@ import org.clulab.utils.FileUtils
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import sys.process._
 
 
 //todo: add eval:
@@ -102,13 +103,13 @@ class AlignmentBaseline() {
 
     val file2FoundMatches = files.par.flatMap { file =>  //should return sth like Map[fileId, (equation candidate, text candidate) ]
 
-      print("============\n" + "Index of file " + files.indexOf(file) + file.toString() +"\n")
-      println("equation: " + eqLines(files.indexOf(file)).replace(" ", "") + "\n")
-      println("filename " +  file.toString())
+//      print("============\n" + "Index of file " + files.indexOf(file) + file.toString() +"\n")
+//      println("equation: " + eqLines(files.indexOf(file)).replace(" ", "") + "\n")
+//      println("filename " +  file.toString())
 
       //gold:
       //fixme: for now, it's a random gold file; switch to real gold files
-      val goldMap = processOneAnnotatedEquation(new File("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/gold/sample/1801.00077_equation0004.json"))
+      val goldMap = processOneAnnotatedEquation(new File("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/gold/1801.00077_equation0004.json"))
 
 //      println("+++++++++++++")
 //      println("Gold data:")
@@ -138,8 +139,9 @@ class AlignmentBaseline() {
 //      val equationStr = getEquationString(equationName, word2greekDict.toMap)
 
       val equationStr = eqLines(files.indexOf(file)).replace(" ", "")
-      println("EQ STRING: " + equationStr)
-      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
+//      println("EQ STRING: " + equationStr)
+//      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
+      val allEqVarCandidates = getFrags(equationStr).split("\n")
 
 
       val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, goldMap)
@@ -233,19 +235,20 @@ class AlignmentBaseline() {
     //only proceed if the latex candidate does not have unmatched braces
     //replace all the math symbols in the latex candidate variable
     if (!checkIfUnmatchedCurlyBraces(latexCandidateVar) && !latexCandidateVar.endsWith("_") && !latexCandidateVar.startsWith("_")) {
-      val replacements = new ArrayBuffer[String]()
-      replacements.append(latexCandidateVar)
-      for (ms <- mathSymbols) {
-        //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
-        val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
-
-        val anotherReplacement = replacements.last.replaceAll(pattern, "")
-        replacements.append(anotherReplacement)
-      }
-      //take the last item from 'replacements' and replace the braces---that should get us to the value
-      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","")
+//      val replacements = new ArrayBuffer[String]()
+//      replacements.append(latexCandidateVar)
+//      for (ms <- mathSymbols) {
+//        //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
+//        val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
+//
+//        val anotherReplacement = replacements.last.replaceAll(pattern, "")
+//        replacements.append(anotherReplacement)
+//      }
+//      //take the last item from 'replacements' and replace the braces---that should get us to the value
+//      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","")
+      val rendered = render(latexCandidateVar)
       //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
-      val toReturn = if (maxReplacement == textMention.arguments("variable").head.text) replaceGreekWithWord(latexCandidateVar, greek2wordDict) else "None"
+      val toReturn = if (rendered == textMention.arguments("variable").head.text) replaceGreekWithWord(latexCandidateVar, greek2wordDict) else "None"
       //
       return toReturn
     }
@@ -348,6 +351,22 @@ class AlignmentBaseline() {
 
     entries.toMap
   }
+
+  def render(formula: String): String = {
+    val command = s"python /home/alexeeva/Repos/automates/pdfalign/align_latex/normalize.py render '$formula'"
+    val process = Process(command, new File("automates/pdfalign/align_latex"))
+    process.!!.trim
+  }
+
+  def getFrags(formula: String): String = {
+    val command = s"python /home/alexeeva/Repos/automates/pdfalign/align_latex/tokenize_and_fragment.py get_fragments '$formula'"
+    val process = Process(command, new File("automates/pdfalign/align_latex"))
+    process.!!.trim
+  }
+
+
+
+
 
   def getAnnotatedFileNamesFromTSV(tsv: String): Seq[String] = {
     val equationFileNames = new ArrayBuffer[String]()
