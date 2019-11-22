@@ -73,5 +73,12 @@ object FileUtils {
 
     yaml.load(input).asInstanceOf[Collection[Any]]
   }
+
+  def loadStrings(path: String): Array[String] = {
+    val source = Source.fromFile(path)
+    val lines = source.getLines().toArray
+    source.close()
+    lines
+  }
 }
 
