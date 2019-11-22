@@ -109,7 +109,8 @@ class AlignmentBaseline() {
 
       //gold:
       //fixme: for now, it's a random gold file; switch to real gold files
-      val goldMap = processOneAnnotatedEquation(new File("/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/gold/1801.00077_equation0004.json"))
+      val goldMap = processOneAnnotatedEquation(file)
+      println(goldMap)
 
 //      println("+++++++++++++")
 //      println("Gold data:")
@@ -126,6 +127,55 @@ class AlignmentBaseline() {
       val textMentions = texts.flatMap(text => textReader.extractFromText(text, filename = Some(file.getName)))
       //only get the definition mentions
       val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
+      val vars = for (
+        m <- textDefinitionMentions
+
+        ) yield m.arguments("variable").head.text
+
+//      val varsWithCounts = vars.groupBy(identity).mapValues(_.size)
+
+      val groupedByCommonVar = textDefinitionMentions.groupBy(_.arguments("variable").head.text)
+
+      val var2Defs = mutable.Map[String, Seq[String]] ()
+
+      for (vwc <- groupedByCommonVar) {
+
+          //          for (mention <- sth(vwc._1)) println("LOOK HERE: " + mention.text)
+          val defs = for (
+            m <- vwc._2
+          ) yield m.arguments("definition").head.text
+          var2Defs += (vwc._1 -> defs.sortWith(_.length > _.length))
+          //for (d <- defs) println("Look Here: " + vwc._1 + " " + d)
+
+
+      }
+//      for (vwc <- varsWithCounts) {
+//        if (vwc._2 > 1) {
+////          for (mention <- sth(vwc._1)) println("LOOK HERE: " + mention.text)
+//          val defs = for (
+//            m <- sth(vwc._1)
+//          ) yield m.arguments("definition").head.text
+//          var2Defs += (vwc._1 -> defs.sortWith(_.length > _.length))
+//          //for (d <- defs) println("Look Here: " + vwc._1 + " " + d)
+//
+//        }
+//      }
+//
+//      for (v2d <- var2Defs) {
+//        print("=>=>=>" + v2d._1 + "\n")
+//        for (d <- v2d._2) println(d + "\n")
+//        print("-------")
+//      }
+
+
+
+
+//      for (tdm <- textDefinitionMentions) {
+//        if (varsWithCounts(tdm.arguments("variable").head.text) > 1) {
+//          moreLanguagey()
+//        }
+//      }
+//      for (tdm <- textDefinitionMentions) println("MENTION: " + tdm.text)
 
       //this is in case we extract from the text we get from pdfMiner
 //      val textDefinitionMentions = textReader.extractFromText(fullText, true, Some("somefile")).filter(_ matches("Definition"))
@@ -140,14 +190,26 @@ class AlignmentBaseline() {
 
       val equationStr = eqLines(files.indexOf(file)).replace(" ", "")
 //      println("EQ STRING: " + equationStr)
-//      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
-      val allEqVarCandidates = getFrags(equationStr).split("\n")
+      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
+//      val allEqVarCandidates = getFrags(equationStr).split("\n")
 
 
       val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, goldMap)
       println("+++++++++")
-      for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2 + " " + file.toString)
+      for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2.text + " " + file.toString)
       println("++++++++++++\n")
+
+//      //get just the vars
+//      val vars = for (
+//        m <- latexTextMatches
+//
+//      ) yield m.
+//
+//      val toReturn = new ArrayBuffer[(String, Mention)]()
+//
+//      val varsWithCounts = vars.groupBy(identity).mapValues(_.size)
+//
+
       latexTextMatches
     }
 //    println("==================")
@@ -178,7 +240,7 @@ class AlignmentBaseline() {
 
   }
 
-  def getLatexTextMatches(textDefinitionMentions: Seq[Mention], allEqVarCandidates: Seq[String], mathSymbols: Seq[String], greek2wordDict: Map[String, String], goldMap: Map[String, Seq[String]]): Seq[(String, String)] = {
+  def getLatexTextMatches(textDefinitionMentions: Seq[Mention], allEqVarCandidates: Seq[String], mathSymbols: Seq[String], greek2wordDict: Map[String, String], goldMap: Map[String, Seq[String]]): Seq[(String, Mention)] = {
 
     //this is just a match between the extracted var/def and the gold string--no boxes, no latex
     var goldTextVarMatch = 0
@@ -187,7 +249,7 @@ class AlignmentBaseline() {
     //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
 
     //all the matches from one file name will go here:1
-    val latexTextMatches = new ArrayBuffer[(String, String)]()
+    val latexTextMatches = new ArrayBuffer[(String, Mention)]()
     //for every extracted mention
     for (m <- textDefinitionMentions) {
       //rudimentary eval, just comparing extracted text mention and the values in gold data
@@ -203,7 +265,7 @@ class AlignmentBaseline() {
       //for every candidate eq var
       for (cand <- allEqVarCandidates) {
 //        println(cand)
-        //check if the candidate matches the var extracted from text
+        //check if the candidate matches the var extracted from text and return the good candidate or str "None"
         val resultOfMatching = findMatchingVar(m, cand, mathSymbols, greek2wordDict)
 
         //the result of matching for now is either the good candidate returned or the string "None"
@@ -217,7 +279,7 @@ class AlignmentBaseline() {
 
       //when did all the looping, choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
-        latexTextMatches.append((bestCandidates.sortBy(_.length).reverse.head, m.text))
+        latexTextMatches.append((bestCandidates.sortBy(_.length).reverse.head, m))
       }
     }
     //for (l <- latexTextMatches) println("match: " + l)
@@ -235,20 +297,22 @@ class AlignmentBaseline() {
     //only proceed if the latex candidate does not have unmatched braces
     //replace all the math symbols in the latex candidate variable
     if (!checkIfUnmatchedCurlyBraces(latexCandidateVar) && !latexCandidateVar.endsWith("_") && !latexCandidateVar.startsWith("_")) {
-//      val replacements = new ArrayBuffer[String]()
-//      replacements.append(latexCandidateVar)
-//      for (ms <- mathSymbols) {
-//        //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
-//        val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
-//
-//        val anotherReplacement = replacements.last.replaceAll(pattern, "")
-//        replacements.append(anotherReplacement)
-//      }
-//      //take the last item from 'replacements' and replace the braces---that should get us to the value
-//      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","")
-      val rendered = render(latexCandidateVar)
+      val replacements = new ArrayBuffer[String]()
+      replacements.append(latexCandidateVar)
+      for (ms <- mathSymbols) {
+        //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
+        val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
+
+        val anotherReplacement = replacements.last.replaceAll(pattern, "")
+        replacements.append(anotherReplacement)
+      }
+      //take the last item from 'replacements' and replace the braces---that should get us to the value
+      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
+      //val rendered = render(latexCandidateVar).replace("'","")
+//      println("candidate" + latexCandidateVar)
+//      println("rendered: " + rendered + "\n")
       //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
-      val toReturn = if (rendered == textMention.arguments("variable").head.text) replaceGreekWithWord(latexCandidateVar, greek2wordDict) else "None"
+      val toReturn = if (maxReplacement == textMention.arguments("variable").head.text) replaceGreekWithWord(latexCandidateVar, greek2wordDict) else "None"
       //
       return toReturn
     }
@@ -320,7 +384,7 @@ class AlignmentBaseline() {
 
   def processOneAnnotatedEquation(fileName: File): Map[String, Seq[String]] = {
     //for now just a seq of (eq-var, def) tuples
-    val goldFile = new File(fileName.toString.replace("jsons", "gold"))
+    val goldFile = new File(fileName.toString.replace("ParsedJsons", "gold"))
 
     val file = ujson.read(goldFile.readString())
     val entries = mutable.Map[String, Seq[String]]() //append var -> Seq[def] here
@@ -354,13 +418,13 @@ class AlignmentBaseline() {
 
   def render(formula: String): String = {
     val command = s"python /home/alexeeva/Repos/automates/pdfalign/align_latex/normalize.py render '$formula'"
-    val process = Process(command, new File("automates/pdfalign/align_latex"))
+    val process = Process(command, new File("/home/alexeeva/Repos/automates/pdfalign/align_latex"))
     process.!!.trim
   }
 
   def getFrags(formula: String): String = {
     val command = s"python /home/alexeeva/Repos/automates/pdfalign/align_latex/tokenize_and_fragment.py get_fragments '$formula'"
-    val process = Process(command, new File("automates/pdfalign/align_latex"))
+    val process = Process(command, new File("/home/alexeeva/Repos/automates/pdfalign/align_latex"))
     process.!!.trim
   }
 
@@ -378,6 +442,38 @@ class AlignmentBaseline() {
     }
     bufferedSource.close()
     equationFileNames
+  }
+
+  def moreLanguagey(mentions: Seq[Mention]): Unit = {
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+    val defsWithLengthOfLangChars = for (
+      m <- mentions
+
+    ) yield (m, m.arguments("definition").head.text.filter(c => valid contains c).length / m.arguments("definition").head.text.length)
+
+    val betterDefinedMentions = defsWithLengthOfLangChars.sortBy(_._2)
+//    for (b <- betterDefinedMentions) println("better def " + b._1.text)
+    println("++++++++++++++++")
+    for (b <- betterDefinedMentions) println("better def " + b._1.text)
+    println("best" + betterDefinedMentions.head._1.text)
+    println("-+-+-+-+-+")
+
+  }
+
+  def moreLanguagey(string: String): Float = {
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    var counter = 0
+
+    for (c <- string) {
+      if (valid contains c) {
+        counter += 1
+      }
+    }
+
+    counter/string.length
+
   }
 
   def copyPdfsAndTSVs(equationName: String): Unit = {
