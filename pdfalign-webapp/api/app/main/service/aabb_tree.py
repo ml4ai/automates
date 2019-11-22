@@ -8,7 +8,6 @@ class Point:
     def __repr__(self):
         return f"Point({self.x}, {self.y})"
 
-
 class AABB:
     def __init__(self, xmin, ymin, xmax, ymax):
         # Position
@@ -16,8 +15,6 @@ class AABB:
         self.ymin = ymin
         self.xmax = xmax
         self.ymax = ymax
-        self.width = self.xmax - self.xmin
-        self.height = self.ymax - self.ymin
         self.area = self.width * self.height
         self.id = None
 
@@ -47,17 +44,17 @@ class AABB:
             and self.ymax == other.ymax
         )
 
-    # @property
-    # def width(self):
-    #     return self.xmax - self.xmin
-    #
-    # @property
-    # def height(self):
-    #     return self.ymax - self.ymin
-    #
-    # @property
-    # def perimeter(self):
-    #     return 2 * (self.width + self.height)
+    @property
+    def width(self):
+        return self.xmax - self.xmin
+
+    @property
+    def height(self):
+        return self.ymax - self.ymin
+
+    @property
+    def perimeter(self):
+        return 2 * (self.width + self.height)
 
     def contains(self, point):
         return (
@@ -130,31 +127,31 @@ class AABBTree:
             tree.add(box)
         return tree
 
-    # @property
+    @property
     def is_empty(self):
         return self.aabb is None
-    #
-    # @property
+
+    @property
     def is_leaf(self):
         return self.left is None and self.right is None
-    #
-    # @property
-    # def depth(self):
-    #     """Returns the tree depth"""
-    #     # FIXME this is inefficient, don't compute it on-the-fly
-    #     return (
-    #         0 if self.is_leaf else 1 + max(self.left.depth, self.right.depth)
-    #     )
-    #
-    # @property
-    # def is_balanced(self):
-    #     return self.is_leaf or abs(self.left.depth - self.right.depth) <= 1
+
+    @property
+    def depth(self):
+        """Returns the tree depth"""
+        # FIXME this is inefficient, don't compute it on-the-fly
+        return (
+            0 if self.is_leaf else 1 + max(self.left.depth, self.right.depth)
+        )
+
+    @property
+    def is_balanced(self):
+        return self.is_leaf or abs(self.left.depth - self.right.depth) <= 1
 
     def add(self, aabb):
         """Add AABB leaf to the tree"""
-        if self.is_empty():
+        if self.is_empty:
             self.aabb = aabb
-        elif self.is_leaf():
+        elif self.is_leaf:
             # Set children
             self.left = deepcopy(self)
             self.right = AABBTree(aabb)
@@ -196,10 +193,10 @@ class AABBTree:
         stack = [self]
         while stack:
             node = stack.pop()
-            if node.is_empty():
+            if node.is_empty:
                 continue
             elif detect_collision(node):
-                if node.is_leaf():
+                if node.is_leaf:
                     collisions.append(node.aabb)
                 else:
                     if node.left is not None:

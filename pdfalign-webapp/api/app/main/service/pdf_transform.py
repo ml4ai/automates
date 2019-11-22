@@ -14,24 +14,17 @@ from tqdm import tqdm
 
 from .aabb_tree import AABB, AABBTree
 
+from ..util.utils import remove_bad_chars
+
 class PdfAlign():
     def __init__(self):
-        # super().__init__(master)
-        # self.master.title("pdfalign")
-        # self.pack(expand=YES, fill=BOTH)
-
         self.dpi = 200
-        self.scale = 1.0
         # bounding boxes
         self.charid = 0
         self.page_boxes = dict(token=[], char=[])
         self.aabb_trees = None
         # The bounding box around the equation to be annotated
         self.annotation_aabb = None
-        # Holder to display the transparent rectangles
-        self.rectangles = []
-        # History
-        self.history_boxes = []
         # The lookup for the token that corresponds to the bounding box
         self.all_tokens = []
         self.char_token_lut = dict()
@@ -41,7 +34,10 @@ class PdfAlign():
         print("Converting PDF pages to images...")
 
         self.saved_annotations = []
-        self.pages = convert_from_bytes(bytes, dpi=self.dpi)
+
+        # We actually shouldnt have to convert pdf to images on backend ?
+        # self.pages = convert_from_bytes(bytes, dpi=self.dpi)
+
         self.populate_bboxes(bytes)
         self.aabb_trees = dict(
             token=self.make_trees_from_boxes(self.page_boxes, "token"),
@@ -196,50 +192,6 @@ def split_pages(filename):
         if re.search(r"page-\d+\.pdf$", f)
     ]
     return sorted(pages)
-
-def remove_bad_chars(text):
-    # NOTE 9 (tab), 10 (line feed), and 13 (carriage return) are not bad
-    bad_codes = [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        11,
-        12,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-    ]
-    bad_chars = [chr(c) for c in bad_codes]
-    bad_bytes = [bytes([c]) for c in bad_codes]
-    if isinstance(text, bytes):
-        for byte in bad_bytes:
-            text = text.replace(byte, b"")
-    elif isinstance(text, str):
-        for char in bad_chars:
-            text = text.replace(char, "")
-    return text
-
 
 # def main():
 #     file = open("../resources/temp.pdf", 'rb')
