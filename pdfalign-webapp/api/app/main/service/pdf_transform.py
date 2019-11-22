@@ -13,7 +13,6 @@ from webcolors import name_to_rgb
 from tqdm import tqdm
 
 from .aabb_tree import AABB, AABBTree
-
 from ..util.utils import remove_bad_chars
 
 class PdfAlign():

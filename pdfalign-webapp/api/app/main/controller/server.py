@@ -17,12 +17,12 @@ class PdfUploadProcess(Resource):
         return handle_upload(request)
 
 
-@api.route('/arxiv/<pdf_id>')
-@api.param('public_id', 'The arxiv pdf identifier')
+@api.route('/arxiv')
+@api.param('pdf_id', 'The arxiv pdf identifier')
 # @api.response(404, 'User not found.')
 class ArxivPdfProcess(Resource):
 
     @api.doc('Process a pdf from arxiv')
     # @api.marshal_with(_user)
-    def post(self, pdf_id):
-        return handle_arxiv_id(pdf_id)
+    def get(self):
+        return handle_arxiv_id(request)
