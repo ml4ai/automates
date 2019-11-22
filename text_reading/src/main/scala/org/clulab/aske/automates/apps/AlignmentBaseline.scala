@@ -194,9 +194,9 @@ class AlignmentBaseline() {
 //      val allEqVarCandidates = getFrags(equationStr).split("\n")
 
 
-      val latexTextMatches = getLatexTextMatches(textDefinitionMentions, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, goldMap)
+      val latexTextMatches = getLatexTextMatches(var2Defs.toMap, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, goldMap)
       println("+++++++++")
-      for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2.text + " " + file.toString)
+      for (m <- latexTextMatches) println("Match: " + m._1 + " " + m._2 + " " + file.toString)
       println("++++++++++++\n")
 
 //      //get just the vars
@@ -240,7 +240,7 @@ class AlignmentBaseline() {
 
   }
 
-  def getLatexTextMatches(textDefinitionMentions: Seq[Mention], allEqVarCandidates: Seq[String], mathSymbols: Seq[String], greek2wordDict: Map[String, String], goldMap: Map[String, Seq[String]]): Seq[(String, Mention)] = {
+  def getLatexTextMatches(var2Defs: Map[String, Seq[String]], allEqVarCandidates: Seq[String], mathSymbols: Seq[String], greek2wordDict: Map[String, String], goldMap: Map[String, Seq[String]]): Seq[(String, Map[String, Seq[String]])] = {
 
     //this is just a match between the extracted var/def and the gold string--no boxes, no latex
     var goldTextVarMatch = 0
@@ -249,9 +249,9 @@ class AlignmentBaseline() {
     //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
 
     //all the matches from one file name will go here:1
-    val latexTextMatches = new ArrayBuffer[(String, Mention)]()
+    val latexTextMatches = new ArrayBuffer[(String, Map[String, Seq[String]])]()
     //for every extracted mention
-    for (m <- textDefinitionMentions) {
+    for (variable <- var2Defs.keys) {
       //rudimentary eval, just comparing extracted text mention and the values in gold data
 //      if (goldMap.keys.toList.contains(m.arguments("variable").head.text)) {
 //        goldTextVarMatch += 1
@@ -266,7 +266,7 @@ class AlignmentBaseline() {
       for (cand <- allEqVarCandidates) {
 //        println(cand)
         //check if the candidate matches the var extracted from text and return the good candidate or str "None"
-        val resultOfMatching = findMatchingVar(m, cand, mathSymbols, greek2wordDict)
+        val resultOfMatching = findMatchingVar(variable, cand, mathSymbols, greek2wordDict)
 
         //the result of matching for now is either the good candidate returned or the string "None"
         //todo: this None thing is not pretty---redo with an option or sth
@@ -279,7 +279,7 @@ class AlignmentBaseline() {
 
       //when did all the looping, choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
-        latexTextMatches.append((bestCandidates.sortBy(_.length).reverse.head, m))
+        latexTextMatches.append((bestCandidates.sortBy(_.length).reverse.head, Map(variable -> var2Defs(variable))))
       }
     }
     //for (l <- latexTextMatches) println("match: " + l)
@@ -293,10 +293,10 @@ class AlignmentBaseline() {
 //  b, ﬁgures (b),
 
 
-  def findMatchingVar(textMention: Mention, latexCandidateVar: String, mathSymbols: Seq[String], greek2wordDict: Map[String, String]): String = {
+  def findMatchingVar(variable: String, latexCandidateVar: String, mathSymbols: Seq[String], greek2wordDict: Map[String, String]): String = {
     //only proceed if the latex candidate does not have unmatched braces
     //replace all the math symbols in the latex candidate variable
-    if (!checkIfUnmatchedCurlyBraces(latexCandidateVar) && !latexCandidateVar.endsWith("_") && !latexCandidateVar.startsWith("_")) {
+
       val replacements = new ArrayBuffer[String]()
       replacements.append(latexCandidateVar)
       for (ms <- mathSymbols) {
@@ -312,11 +312,10 @@ class AlignmentBaseline() {
 //      println("candidate" + latexCandidateVar)
 //      println("rendered: " + rendered + "\n")
       //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
-      val toReturn = if (maxReplacement == textMention.arguments("variable").head.text) replaceGreekWithWord(latexCandidateVar, greek2wordDict) else "None"
+      val toReturn = if (maxReplacement == variable) replaceGreekWithWord(latexCandidateVar, greek2wordDict) else "None"
       //
       return toReturn
-    }
-    else "None"
+
   }
 
 
