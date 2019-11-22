@@ -14,6 +14,6 @@ for tex in $INDIR/*.tex; do
     name=$(basename $tex .tex)
     echo "$name.png $CTR" >> $FILTER_FILE
     echo "x x x" >> $FORMULA_FILE
-    convert -density 200 -quality 100 $OUTDIR/pdf/$name.pdf $OUTDIR/png/$name.png
+    convert -background white -alpha remove -alpha off -density 200 -quality 100 $OUTDIR/pdf/$name.pdf $OUTDIR/png/$name.png
     CTR=$((CTR+1))
 done
