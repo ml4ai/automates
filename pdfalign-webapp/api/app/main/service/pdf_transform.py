@@ -22,7 +22,6 @@ class PdfAlign():
 
         self.dpi = 200
         self.scale = 1.0
-        self.num_page = 0
         # bounding boxes
         self.charid = 0
         self.page_boxes = dict(token=[], char=[])
@@ -38,43 +37,34 @@ class PdfAlign():
         self.char_token_lut = dict()
         self.token_char_lut = defaultdict(list)
 
-    def open(self, bytes=None):
-        # if filename is None:
-        #     filename = filedialog.askopenfilename(
-        #         filetypes=[("pdf files", "*.pdf"), ("all files", "*.*")]
-        #     )
-        # if filename != "":
-        self.saved_annotations = []
-
-        filename = "/Users/daniel/Documents/dev/research/automates/pdfalign-webapp/api/app/main/resources/test"
-        self.filename = os.path.abspath(filename)
+    def process(self, bytes=None):
         print("Converting PDF pages to images...")
 
+        self.saved_annotations = []
         self.pages = convert_from_bytes(bytes, dpi=self.dpi)
-        # self.pages = convert_from_path(filename, dpi=self.dpi)
-
-        self.populate_bboxes(filename)
+        self.populate_bboxes(bytes)
         self.aabb_trees = dict(
             token=self.make_trees_from_boxes(self.page_boxes, "token"),
             char=self.make_trees_from_boxes(self.page_boxes, "char"),
         )
-        self.num_page = 0
 
+        # TODO resolve what we need to do for equation to annotate aabb creation
+        # but for now, ignore this
+        self.annotation_aabb = {}
         # Add the box around the equation to annotate
-        paper_dir, _ = os.path.split(self.filename)
-        aabb_file = os.path.join(paper_dir, "aabb.tsv")
-        with open(aabb_file) as aabb:
-            line = aabb.readline()
-            _, _, eqn_page, xmin, ymin, xmax, ymax = line.strip().split(
-                "\t"
-            )
-            annotation_aabb = AABB(
-                float(xmin), float(ymin), float(xmax), float(ymax)
-            )
-            annotation_aabb.page = int(eqn_page)
-            self.annotation_aabb = annotation_aabb
-        self.num_page = self.annotation_aabb.page
-            # self.redraw()
+        # paper_dir, _ = os.path.split(self.filename)
+        # aabb_file = os.path.join(paper_dir, "aabb.tsv")
+        # with open(aabb_file) as aabb:
+        #     line = aabb.readline()
+        #     _, _, eqn_page, xmin, ymin, xmax, ymax = line.strip().split(
+        #         "\t"
+        #     )
+        #     annotation_aabb = AABB(
+        #         float(xmin), float(ymin), float(xmax), float(ymax)
+        #     )
+        #     annotation_aabb.page = int(eqn_page)
+        #     self.annotation_aabb = annotation_aabb
+        # self.num_page = self.annotation_aabb.page
 
     # ---------------------------------------
     #         Bounding Box Methods
@@ -82,85 +72,103 @@ class PdfAlign():
     # NOTE pdftotext -bbox-layout returns the bounding boxes of the first page only
     # so we need to split the paper into pages and call this for each page
 
-    def populate_page_bboxes(self, filename, page):
+    def retrieve_pdf_text(self, files_bytes):
         dpi = 72  # educated guess
+
+        # This is a poor solution. Someday, call pdf2text directly from code
+        # using bytes rather than writing to a a file and using that
+        filename = "./temp-pdf.pdf"
+        file = open(filename, 'wb')
+        # files_bytes.save(file)
+        file.write(files_bytes)
+        file.close()
+
         command = ["pdf2txt.py", "-t", "xml", filename]
         result = subprocess.run(command, capture_output=True)
+
+        # Remove the file that temporarily holds file bytes
+        os.remove(filename)
+
         x = remove_bad_chars(result.stdout)
         tree = etree.fromstring(x)
-        page_height = None
-        curr_token_aabb = None
-        char_boxes = []
-        token_boxes = []
 
+        # For each page in XML, retrieve its page node
+        max_page = 0
+        pages = defaultdict()
         for node in tree.findall(".//page"):
-            page_height = float(node.attrib["bbox"].split(",")[3])
-        # .//text
-        for node in tree.findall(".//text"):
-            text = node.text
-            if text is not None:
-                if len(text.strip()) == 0 and curr_token_aabb is not None:
-                    # The current token ended
-                    curr_token_aabb.page = page
-                    curr_token_aabb.id = len(self.all_tokens)
-                    self.all_tokens.append(curr_token_aabb)
-                    token_boxes.append(curr_token_aabb)
-                    curr_token_aabb = None
+            cur_page_height = float(node.attrib["bbox"].split(",")[3])
+            max_page = int(node.attrib["id"])
+            pages[max_page] = (node, cur_page_height)
 
-                else:
-                    # "576.926,76.722,581.357,86.733"
-                    bbox = node.attrib.get("bbox")
-                    if bbox is not None:
-                        # The bboxes from pdf2txt are a little diff:
-                        # per https://github.com/euske/pdfminer/issues/171
-                        # The bbox value is (x0,y0,x1,y1).
-                        # x0: the distance from the left of the page to the left edge of the box.
-                        # y0: the distance from the bottom of the page to the lower edge of the box.
-                        # x1: the distance from the left of the page to the right edge of the box.
-                        # y1: the distance from the bottom of the page to the upper edge of the box.
-                        # so here we flip the ys
-                        xmin, ymax, xmax, ymin = [
-                            float(x) for x in bbox.split(",")
-                        ]
-                        xmin /= dpi
-                        ymin = (page_height - ymin) / dpi
-                        xmax /= dpi
-                        ymax = (page_height - ymax) / dpi
-                        aabb = AABB(xmin, ymin, xmax, ymax)
-                        # Store metadata
-                        aabb.value = text
-                        aabb.page = page
-                        aabb.font = node.attrib.get("font")
-                        aabb.font_size = node.attrib.get("size")
-                        # Token info
-                        if curr_token_aabb is None:
-                            curr_token_aabb = AABB(xmin, ymin, xmax, ymax)
-                            curr_token_aabb.value = text
-                        else:
-                            new_value = curr_token_aabb.value + text
-                            curr_token_aabb = AABB.merge(curr_token_aabb, aabb)
-                            curr_token_aabb.value = new_value
-                        aabb.tokenid = len(self.all_tokens)
-                        aabb.id = self.charid
-                        self.charid += 1
-                        # Update the bbox luts
-                        self.char_token_lut[aabb] = aabb.tokenid
-                        self.token_char_lut[aabb.tokenid].append(aabb)
-                        # Add the current box
-                        char_boxes.append(aabb)
-        self.page_boxes["token"].append(token_boxes)
-        self.page_boxes["char"].append(char_boxes)
+        for i in range(1, max_page + 1):
+
+            cur_page_meta = pages[i]
+            cur_page_tree = cur_page_meta[0]
+            page_height = cur_page_meta[1]
+            curr_token_aabb = None
+            char_boxes = []
+            token_boxes = []
+
+            # .//text
+            # Create an annotation per text node in XML
+            for node in cur_page_tree.findall(".//text"):
+                text = node.text
+                if text is not None:
+                    if len(text.strip()) == 0 and curr_token_aabb is not None:
+                        # The current token ended
+                        curr_token_aabb.page = i
+                        curr_token_aabb.id = len(self.all_tokens)
+                        self.all_tokens.append(curr_token_aabb)
+                        token_boxes.append(curr_token_aabb)
+                        curr_token_aabb = None
+
+                    else:
+                        # "576.926,76.722,581.357,86.733"
+                        bbox = node.attrib.get("bbox")
+                        if bbox is not None:
+                            # The bboxes from pdf2txt are a little diff:
+                            # per https://github.com/euske/pdfminer/issues/171
+                            # The bbox value is (x0,y0,x1,y1).
+                            # x0: the distance from the left of the page to the left edge of the box.
+                            # y0: the distance from the bottom of the page to the lower edge of the box.
+                            # x1: the distance from the left of the page to the right edge of the box.
+                            # y1: the distance from the bottom of the page to the upper edge of the box.
+                            # so here we flip the ys
+                            xmin, ymax, xmax, ymin = [
+                                float(x) for x in bbox.split(",")
+                            ]
+                            xmin /= dpi
+                            ymin = (page_height - ymin) / dpi
+                            xmax /= dpi
+                            ymax = (page_height - ymax) / dpi
+                            aabb = AABB(xmin, ymin, xmax, ymax)
+                            # Store metadata
+                            aabb.value = text
+                            aabb.page = i
+                            aabb.font = node.attrib.get("font")
+                            aabb.font_size = node.attrib.get("size")
+                            # Token info
+                            if curr_token_aabb is None:
+                                curr_token_aabb = AABB(xmin, ymin, xmax, ymax)
+                                curr_token_aabb.value = text
+                            else:
+                                new_value = curr_token_aabb.value + text
+                                curr_token_aabb = AABB.merge(curr_token_aabb, aabb)
+                                curr_token_aabb.value = new_value
+                            aabb.tokenid = len(self.all_tokens)
+                            aabb.id = self.charid
+                            self.charid += 1
+                            # Update the bbox luts
+                            self.char_token_lut[aabb] = aabb.tokenid
+                            self.token_char_lut[aabb.tokenid].append(aabb)
+                            # Add the current box
+                            char_boxes.append(aabb)
+
+            self.page_boxes["token"].append(token_boxes)
+            self.page_boxes["char"].append(char_boxes)
 
     def populate_bboxes(self, filename):
-        for i, p in enumerate(
-            tqdm(
-                split_pages(filename),
-                desc="Populating page bboxes",
-                unit="page",
-                ncols=80,
-            )
-        ):
-            self.populate_page_bboxes(p, i)
+        self.retrieve_pdf_text(filename)
         for page in self.page_boxes["char"]:
             for box in page:
                 box.token = self.all_tokens[box.tokenid].value

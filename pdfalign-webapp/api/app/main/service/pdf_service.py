@@ -6,13 +6,7 @@ import os
 
 def handle_bytes(pdf_bytes):
     pdf_align = PdfAlign()
-    pdf_align.open(pdf_bytes)
-
-    from pprint import pprint
-    l = dir(pdf_align)
-    pprint(l)
-
-    pprint(pdf_align.aabb_trees)
+    pdf_align.process(pdf_bytes)
 
     pdf_align_data = { 'aabb_trees' : pdf_align.aabb_trees,
         'annotation_aabb' : pdf_align.annotation_aabb,
