@@ -15,6 +15,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import sys.process._
+import scala.io.StdIn.readLine
 
 
 //todo: add eval:
@@ -31,23 +32,24 @@ class AlignmentBaseline() {
     //getting configs and such (borrowed from ExtractAndAlign)
     val config: Config = ConfigFactory.load()
 
+    val pdfalignDir = config[String]("apps.pdfalignDir")
+
     //this is where the latex equation files are
     val eqFileDir = config[String]("apps.baselineEquationDir")
 
-    val eqSrcFile = "/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/equations/croppedImages.txt"
-    val eqFile = "/home/alexeeva/Repos/automates/text_reading/input/LREC/Baseline/equations/equationsFromTranslator.txt"
+    val eqSrcFile = config[String]("apps.eqnSrcFile")
+    val eqFile = config[String]("apps.eqnPredFile")
     //all equations from file
     val eqn_ids = loadStrings(eqSrcFile).map(_.replace(".png", ""))
     val eqLines = loadStrings(eqFile)
 
     //latex symbols/fonts (todo: add more):
     //these will be deleted from the latex equation to get to the values
-    val mathSymbolsFile = "/home/alexeeva/Repos/automates/text_reading/src/main/resources/AlignmentBaseline/mathSymbols.tsv"
-    val mathSymbols = loadStrings(mathSymbolsFile).filter(_.length > 0).sortBy(_.length).reverse
+    val mathSymbolsFile = loadStringsFromResource("/AlignmentBaseline/mathSymbols.tsv")
+    val mathSymbols = mathSymbolsFile.filter(_.length > 0).sortBy(_.length).reverse
 
     //get the greek letters and their names
-    val greekLetterFile = "/home/alexeeva/Repos/automates/text_reading/src/main/resources/AlignmentBaseline/greek2words.tsv"
-    val greekLetterLines = loadStrings(greekLetterFile)
+    val greekLetterLines = loadStringsFromResource("/AlignmentBaseline/greek2words.tsv")
 
     //these will be used to map greek letters to words and back
     val greek2wordDict = mutable.Map[String, String]()
@@ -72,12 +74,18 @@ class AlignmentBaseline() {
     //    val goldDir = config[String]("apps.baselineGoldDir")
     // todo: eval script
 
-
+    // todo: Becky -- speed this up a bit, and maybe add a backoff? par?
+    // todo: for debug load in the mentions?
     for ((eqn_id, eqnIndex) <- eqn_ids.zipWithIndex) {
       val split = eqn_id.split("_")
       val eq = split(1)
       val paper = s"$inputDir/${eqn_id}.json"
 
+      val equationStr = eqLines(eqnIndex)//.replaceAll("\\s", "")
+      //      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
+      val allEqVarCandidates = getFrags(equationStr, pdfalignDir)
+        .split("\n")
+        .map(replaceWordWithGreek(_, word2greekDict.toMap))
 
       //for every file, get the text of the file
       val texts: Seq[String] = dataLoader.loadFile(paper)
@@ -91,12 +99,8 @@ class AlignmentBaseline() {
         .groupBy(_.arguments("variable").head.text)
         .mapValues(seq => seq.map(m => m.arguments("definition").head.text).sortBy(-_.length))
 
-      val equationStr = eqLines(eqnIndex) //.replace(" ", "")
-      //      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
-      val allEqVarCandidates = getFrags(equationStr).split("\n")
 
-
-      val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, greek2wordDict.toMap)
+      val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, pdfalignDir)
 
       println("+++++++++")
       for (m <- latexTextMatches) println(s"$m\t${paper}")
@@ -118,10 +122,8 @@ class AlignmentBaseline() {
         val char = pattern.findAllIn(line).group(1)
         textArr.append(char)
         //      println(char)
-
       } else {
         textArr.append(" ")
-
       }
     }
 
@@ -129,7 +131,12 @@ class AlignmentBaseline() {
 
   }
 
-  def getLatexTextMatches(var2Defs: Map[String, Seq[String]], allEqVarCandidates: Seq[String], mathSymbols: Seq[String], greek2wordDict: Map[String, String]): Seq[Prediction] = {
+  def getLatexTextMatches(
+    var2Defs: Map[String, Seq[String]],
+    allEqVarCandidates: Seq[String],
+    mathSymbols: Seq[String],
+    greek2wordDict: Map[String, String],
+    pdfalignDir: String): Seq[Prediction] = {
 
     //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
 
@@ -142,7 +149,7 @@ class AlignmentBaseline() {
       //for every candidate eq var
       for (cand <- allEqVarCandidates) {
         //check if the candidate matches the var extracted from text and return the good candidate or str "None"
-        val resultOfMatching = findMatchingVar(variable, cand, mathSymbols, greek2wordDict)
+        val resultOfMatching = findMatchingVar(variable, cand, mathSymbols, greek2wordDict, pdfalignDir)
 
         //the result of matching is either the good candidate returned or None
         if (resultOfMatching.isDefined) {
@@ -155,7 +162,7 @@ class AlignmentBaseline() {
 
       // choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
-        val bestCand = bestCandidates.maxBy(_.length)
+        val bestCand = bestCandidates.maxBy(numLetters)
         val pred = Prediction(bestCand, Some(variable), var2Defs(variable))
         latexTextMatches.append(pred)
       }
@@ -164,33 +171,40 @@ class AlignmentBaseline() {
     latexTextMatches
   }
 
+  def numLetters(s: String): Int = s.count(_.isLetter)
 
   //fixme: how did I get this output? why did 'b' from lambda end up as a valid candidate? instead of matching greek->word in text, match word->greek in equation
 //  b, ﬁgures (b),
 
 
-  def findMatchingVar(variable: String, latexCandidateVar: String, mathSymbols: Seq[String], greek2wordDict: Map[String, String]): Option[String] = {
+  def findMatchingVar(
+                       variable: String,
+                       latexCandidateVar: String,
+                       mathSymbols: Seq[String],
+                       greek2wordDict: Map[String, String],
+                       pdfalignDir: String): Option[String] = {
     //only proceed if the latex candidate does not have unmatched braces
     //replace all the math symbols in the latex candidate variable
 
-//      val replacements = new ArrayBuffer[String]()
-//      replacements.append(latexCandidateVar)
-//      for (ms <- mathSymbols) {
-//        //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
-//        val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
-//
-//        val anotherReplacement = replacements.last.replaceAll(pattern, "")
-//        replacements.append(anotherReplacement)
-//      }
-      //take the last item from 'replacements' and replace the braces---that should get us to the value
-//      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
-    println("candidate: " + latexCandidateVar)
-      val rendered = render(latexCandidateVar).replace("'","")
-    println("rendered: " + rendered)
+    //      val replacements = new ArrayBuffer[String]()
+    //      replacements.append(latexCandidateVar)
+    //      for (ms <- mathSymbols) {
+    //        //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
+    //        val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
+    //
+    //        val anotherReplacement = replacements.last.replaceAll(pattern, "")
+    //        replacements.append(anotherReplacement)
+    //      }
+    ////      take the last item from 'replacements' and replace the braces---that should get us to the value
+    //      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
 
-      //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
+    val rendered = render(latexCandidateVar, pdfalignDir).replaceAll("\\s", "")
+    //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
     if (rendered == variable) {
-      return Some(replaceGreekWithWord(latexCandidateVar, greek2wordDict))
+      println(" --> rendered == variable")
+      val replaced = replaceGreekWithWord(latexCandidateVar, greek2wordDict)
+      println(s" --> replaced = $replaced")
+      return Some(replaced)
     }
 
     None
@@ -227,7 +241,7 @@ class AlignmentBaseline() {
     var toReturn = varName
     for (k <- greek2wordDict.keys) {
       if (varName.contains(k)) {
-        toReturn = toReturn.replace(k, greek2wordDict(k))
+        toReturn = toReturn.replace(k, s"""\${greek2wordDict(k)}""")
       }
     }
     toReturn
@@ -236,8 +250,9 @@ class AlignmentBaseline() {
   def replaceWordWithGreek(varName: String, word2greekDict: Map[String, String]): String = {
     var toReturn = varName
     for (k <- word2greekDict.keys) {
-      if (varName.contains(k)) {
-        toReturn = toReturn.replace(k, word2greekDict(k))
+      val escaped = """\""" + k
+      if (varName.contains(escaped)) {
+        toReturn = toReturn.replace(escaped, word2greekDict(k))
       }
     }
 
@@ -293,15 +308,15 @@ class AlignmentBaseline() {
     entries.toMap
   }
 
-  def render(formula: String): String = {
-    val command = s"python /home/alexeeva/Repos/automates/pdfalign/align_latex/normalize.py render '$formula'"
-    val process = Process(command, new File("/home/alexeeva/Repos/automates/pdfalign/align_latex"))
-    process.!!.trim
+  def render(formula: String, pdfalignDir: String): String = {
+    val command = Seq("python", s"$pdfalignDir/align_latex/normalize.py", "render", formula.trim)
+    val process = Process(command, new File(s"$pdfalignDir/align_latex"))
+    process.!!
   }
 
-  def getFrags(formula: String): String = {
-    val command = s"python /home/alexeeva/Repos/automates/pdfalign/align_latex/tokenize_and_fragment.py get_fragments '$formula'"
-    val process = Process(command, new File("/home/alexeeva/Repos/automates/pdfalign/align_latex"))
+  def getFrags(formula: String, pdfalignDir: String): String = {
+    val command = Seq("python", s"$pdfalignDir/align_latex/tokenize_and_fragment.py", "get_fragments", formula.trim)
+    val process = Process(command, new File(s"$pdfalignDir/align_latex"))
     process.!!.trim
   }
 
@@ -323,7 +338,6 @@ class AlignmentBaseline() {
 
   def moreLanguagey(mentions: Seq[Mention]): Unit = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
 
     val defsWithLengthOfLangChars = for (
       m <- mentions

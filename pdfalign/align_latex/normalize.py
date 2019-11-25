@@ -8,7 +8,7 @@ def normalize(tokens):
     while i < len(tokens):
         if tokens[i].value == r'\label':
             i = drop_group(tokens, i)
-        elif tokens[i].code == CategoryCode.StartOfGroup and tokens[i+1].value == r'\rm':
+        elif i < len(tokens) - 1 and tokens[i].code == CategoryCode.StartOfGroup and tokens[i+1].value == r'\rm':
             yield Token(r'\mathrm', None)
             yield tokens[i]
             i += 2

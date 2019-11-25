@@ -80,5 +80,9 @@ object FileUtils {
     source.close()
     lines
   }
+
+  def loadStringsFromResource(resourcePath: String): Array[String] = {
+    getTextFromResource(resourcePath).split("\n")
+  }
 }
 
