@@ -39,13 +39,6 @@ object Prediction{
 class AlignmentBaseline() {
   def process() {
 
-// how to deserialize
-//    val textMentions = SerializedMentions.load("./input/LREC/Baseline/extractedMentions/1801.00077_equation0004.serialized")
-////
-//    val DefMen =  textMentions.seq.filter(_ matches "Definition")
-//
-//    for (d <- DefMen) println(d.text)
-
     //getting configs and such (borrowed from ExtractAndAlign)
     val config: Config = ConfigFactory.load()
 
@@ -80,11 +73,13 @@ class AlignmentBaseline() {
 
     val greekWords = word2greekDict.keys.toList
     //some configs and files to make sure this runs (borrowed from ExtractAndAlign
-    val textConfig: Config = config[Config]("TextEngine")
+    //uncomment if need to extract mentions
+//    val textConfig: Config = config[Config]("TextEngine")
 //    val textReader = OdinEngine.fromConfig(textConfig)
-    //    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
 //    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
 //    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
+
+
     val inputDir = config[String]("apps.baslineInputDirectory")
     val inputType = config[String]("apps.inputType")
     val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
@@ -113,7 +108,7 @@ class AlignmentBaseline() {
 
 
       //for every file, get the text of the file
-      val texts: Seq[String] = dataLoader.loadFile(paper)
+//      val texts: Seq[String] = dataLoader.loadFile(paper)
 //      //todo: change greek letter in mentions to full words
 
       //IF MENTIONS NOT PREVIOUSLY EXPORTED:
@@ -121,32 +116,27 @@ class AlignmentBaseline() {
 //      val textMentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(eqn_id)))
 ////      //only get the definition mentions
 //      val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
-
+//
 //      //IF WANT TO EXPORT THE MENTIONS FOR EACH FILE:
 //      val exporter = new SerializedExporter("./input/LREC/Baseline/extractedMentions/" + eqn_id)
 //      exporter.export(textDefinitionMentions)
 //      exporter.close()
+//      println("exported ID: " + eqn_id)
 
       //IF HAVE PREVIOUSLY EXPORTED MENTIONS:
 
       val textDefinitionMentions = SerializedMentions.load(s"$extractedMentionsDir/${eqn_id}.serialized")
-      println("ID: " + eqn_id)
 
-      for (tdm <- textDefinitionMentions) println(tdm)
 
-      for (td <- textDefinitionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("definition").head.text)
-      val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+//      for (td <- textDefinitionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("definition").head.text)
+
       val groupedByCommonVar = textDefinitionMentions
         .groupBy(_.arguments("variable").head.text)
         .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("definition").head.text).distinct) //the definitions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
 
-//
-//      println(groupedByCommonVar)
 
-
-//
       val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, word2greekDict.toMap,  pdfalignDir)
-//
+////
       println("+++++++++")
       for (m <- latexTextMatches) println(s"$m\t${paper}")
       println("++++++++++++\n")
@@ -155,8 +145,8 @@ class AlignmentBaseline() {
         writeTo(pred, predictionsFile)
         predictionsFile.flush()
       }
-//
-//
+////
+////
       ////GETTING SIMPLE VARS FROM LATEX
       //which latex identifiers we got from text---used for filtering out the simple variables that have already been found from reading the text
       val latexIdentifiersFromText = latexTextMatches.map(_.latexIdentifier)
@@ -557,7 +547,7 @@ class AlignmentBaseline() {
 object AlignmentBaseline {
   def main(args:Array[String]) {
     val fs = new AlignmentBaseline()//(args(0))
-    //    fs.runCopyPdfAndTsvs()
+//        fs.runCopyPdfAndTsvs()
     fs.process()
 
 
