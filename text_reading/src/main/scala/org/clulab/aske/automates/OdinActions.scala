@@ -157,6 +157,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       variableMention = m.arguments.getOrElse("variable", Seq())
       defMention = m.arguments.getOrElse("definition", Seq())
       if (
+        defMention.head.text.length > 4 && //the def can't be the length of a var
+        !defMention.head.text.contains("=") &&
         looksLikeAVariable(defMention, state).isEmpty //makes sure the definition is not another variable (or does not look like what could be a variable
         &&
         defMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the definition don't overlap

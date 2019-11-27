@@ -83,7 +83,7 @@ rules:
 #    action: looksLikeAVariable #//whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
 #    action: ${action}
     pattern: |
-      trigger = [word=/(?i)represent/]
+      trigger = [word=/(?i)represent|denote/]
       variable:Concept = /${agents}/
       definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
