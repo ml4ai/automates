@@ -23,5 +23,5 @@ case class Reference(
   title: String,
   authors: Vector[String],
   venue: Option[String],
-  year: Int
+  year: Option[Int]
 )
