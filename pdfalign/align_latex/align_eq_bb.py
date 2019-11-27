@@ -74,7 +74,7 @@ def colorize(equation, fragment, colors=DEFAULT_COLORS):
             return m.group()
         else:
             i += 1
-            return '\\mathcolor{' + color + '}{' + match + '}'
+            return '{\\mathcolor{' + color + '}{' + match + '}}'
     pattern = r'((?:\\[a-zA-Z]*)?)(' + re.escape(fragment) + ')'
     return re.sub(pattern, mathcolor, equation)
 
