@@ -143,6 +143,7 @@ class AlignmentBaseline() {
 
       for (pred <- latexTextMatches) {
         writeTo(pred, predictionsFile)
+        predictionsFile.write("\n")
         predictionsFile.flush()
       }
 ////
@@ -168,6 +169,7 @@ class AlignmentBaseline() {
       for (pred <- simpleValsNotFoundInText) {
         println(pred)
         writeTo(pred, predictionsFile)
+        predictionsFile.write("\n")
         predictionsFile.flush()
       }
     }
