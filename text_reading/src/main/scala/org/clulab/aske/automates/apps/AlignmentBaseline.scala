@@ -25,7 +25,12 @@ import scala.io.StdIn.readLine
 //deal with not all gold files being actually there (unlikely but possible)--- should be fine if indices in json dir are correct/correspond to order/indices of equationFromTranslator.txt
 //need to get gold files
 
+import upickle.default._
+
 case class Prediction(latexIdentifier: String, textVariable: Option[String], definitions: Option[Seq[String]])
+object Prediction{
+  implicit val rw: ReadWriter[Prediction] = macroRW
+}
 
 class AlignmentBaseline() {
   def process() {
@@ -71,6 +76,9 @@ class AlignmentBaseline() {
     val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
     //    val paper_jsons = findFiles(inputDir, dataLoader.extension).sorted
 
+    val outDir = config[String]("apps.baselineOutputDirectory")
+    val predictionsFile = new PrintWriter(s"$outDir/predictions.jsonl")
+
     //this is where the gold data is stored
     //    val goldDir = config[String]("apps.baselineGoldDir")
     // todo: eval script
@@ -114,6 +122,11 @@ class AlignmentBaseline() {
       for (m <- latexTextMatches) println(s"$m\t${paper}")
       println("++++++++++++\n")
 
+      for (pred <- latexTextMatches) {
+        writeTo(pred, predictionsFile)
+        predictionsFile.flush()
+      }
+
 
       ////GETTING SIMPLE VARS FROM LATEX
       //which latex identifiers we got from text---used for filtering out the simple variables that have already been found from reading the text
@@ -133,9 +146,14 @@ class AlignmentBaseline() {
 
       }
 
-      for (pred <- simpleValsNotFoundInText) println(pred)
-
+      for (pred <- simpleValsNotFoundInText) {
+        println(pred)
+        writeTo(pred, predictionsFile)
+        predictionsFile.flush()
+      }
     }
+    // housekeeping
+    predictionsFile.close()
   }
   
 
@@ -312,24 +330,24 @@ class AlignmentBaseline() {
     //replace all the math symbols in the latex candidate variable
 //    println("variable: " + variable)
 //    println("candidate: " + latexCandidateVar)
-//          val replacements = new ArrayBuffer[String]()
-//          replacements.append(latexCandidateVar)
-//          for (ms <- mathSymbols) {
-//            //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
-//            val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
-//
-//            val anotherReplacement = replacements.last.replaceAll(pattern, "")
-//            replacements.append(anotherReplacement)
-//          }
-//    //      take the last item from 'replacements' and replace the braces---that should get us to the value
-//          val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
+          val replacements = new ArrayBuffer[String]()
+          replacements.append(latexCandidateVar)
+          for (ms <- mathSymbols) {
+            //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
+            val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
+
+            val anotherReplacement = replacements.last.replaceAll(pattern, "")
+            replacements.append(anotherReplacement)
+          }
+    //      take the last item from 'replacements' and replace the braces---that should get us to the value
+          val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
 
     //render the candidate with the greek letter word replaced with the greek letter
-    val rendered = render(replaceWordWithGreek(latexCandidateVar, word2greekDict), pdfalignDir).replaceAll("\\s", "")
+//    val rendered = render(replaceWordWithGreek(latexCandidateVar, word2greekDict), pdfalignDir).replaceAll("\\s", "")
     //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
-    if (rendered == variable) {
+    if (maxReplacement == variable) {
       println(" --> rendered == variable")
-      println(" --> rendered: " + rendered)
+      println(" --> rendered: " + maxReplacement)
 //      val replaced = replaceGreekWithWord(latexCandidateVar, greek2wordDict)
 //      println(s" --> replaced = $replaced")
       //return the candidate
