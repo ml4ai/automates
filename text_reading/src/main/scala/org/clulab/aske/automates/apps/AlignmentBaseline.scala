@@ -25,7 +25,7 @@ import scala.io.StdIn.readLine
 //deal with not all gold files being actually there (unlikely but possible)--- should be fine if indices in json dir are correct/correspond to order/indices of equationFromTranslator.txt
 //need to get gold files
 
-case class Prediction(latexIdentifier: String, textVariable: Option[String], definitions: Seq[String])
+case class Prediction(latexIdentifier: String, textVariable: Option[String], definitions: Option[Seq[String]])
 
 class AlignmentBaseline() {
   def process() {
@@ -61,6 +61,7 @@ class AlignmentBaseline() {
       word2greekDict += (splitLine.last -> splitLine.head)
     }
 
+    val greekWords = word2greekDict.keys.toList
     //some configs and files to make sure this runs (borrowed from ExtractAndAlign
     val textConfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textConfig)
@@ -77,6 +78,7 @@ class AlignmentBaseline() {
     // todo: Becky -- speed this up a bit, and maybe add a backoff? par?
     // todo: for debug load in the mentions?
     for ((eqn_id, eqnIndex) <- eqn_ids.zipWithIndex) {
+      println(eqn_id)
       val split = eqn_id.split("_")
       val eq = split(1)
       val paper = s"$inputDir/${eqn_id}.json"
@@ -84,8 +86,14 @@ class AlignmentBaseline() {
       val equationStr = eqLines(eqnIndex)//.replaceAll("\\s", "")
       //      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
       val allEqVarCandidates = getFrags(equationStr, pdfalignDir)
-        .split("\n")
-        .map(replaceWordWithGreek(_, word2greekDict.toMap))
+        .split("\n").filter(_.replace(" ", "").length <= 50)
+//        .map(replaceWordWithGreek(_, word2greekDict.toMap))
+
+//      println(equationStr)
+      //val simpleVars = getSimpleVars(equationStr, pdfalignDir, greekWords)
+//      for (m <- simpleVars) println(m)
+
+
 
       //for every file, get the text of the file
       val texts: Seq[String] = dataLoader.loadFile(paper)
@@ -100,13 +108,33 @@ class AlignmentBaseline() {
         .mapValues(seq => seq.map(m => m.arguments("definition").head.text).sortBy(-_.length))
 
 
-      val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, pdfalignDir)
+      val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, greek2wordDict.toMap, word2greekDict.toMap,  pdfalignDir)
 
       println("+++++++++")
       for (m <- latexTextMatches) println(s"$m\t${paper}")
       println("++++++++++++\n")
 
-      latexTextMatches
+
+      ////GETTING SIMPLE VARS FROM LATEX
+      //which latex identifiers we got from text---used for filtering out the simple variables that have already been found from reading the text
+      val latexIdentifiersFromText = latexTextMatches.map(_.latexIdentifier)
+
+
+      //the simple var predictions (for the vars that were not found through reading text) will go here
+      val simpleValsNotFoundInText = new ArrayBuffer[Prediction]()
+      val simpleVars = getSimpleVars(equationStr, pdfalignDir, greekWords)
+
+      for (sv <- simpleVars) {
+        val completeSV = if (checkIfUnmatchedCurlyBraces(sv)) sv + " }" else sv
+        if (!latexIdentifiersFromText.contains(completeSV)) {
+          val newPred = new Prediction(completeSV, None, None)
+          simpleValsNotFoundInText.append(newPred)
+        }
+
+      }
+
+      for (pred <- simpleValsNotFoundInText) println(pred)
+
     }
   }
   
@@ -131,11 +159,107 @@ class AlignmentBaseline() {
 
   }
 
+
+  def getSimpleVars(eqString: String, pdfalignDir: String, greekLetterWords: Seq[String]): Seq[String] = {
+    val simpleVars = new ArrayBuffer[String]()
+    //    val splitOnSpace = eqString.split("\\\\\\w*")
+    //    val splitOnSpace = eqString.split(" ")
+    //    val pattern1 = "\\{.*?\\}".r
+    val fontStrings = "(\\\\mathcal|\\\\mathrm|\\\\mathbf|\\\\mathrm|\\\\pmb|\\\\mathcal|\\\\boldsymbol|\\\\mathbf|\\\\acute|\\\\grave|\\\\ddotv|\\\\tilde|\\\\bar|\\\\breve|\\\\check|\\\\hat|\\\\vec|\\\\dot|\\\\ddot|\\\\textrm|\\\\textsf|\\\\texttt|\\\\textup|\\\\textit|\\\\textsl|\\\\textsc|\\\\uppercase|\\\\textbf|\\\\textmd|\\\\textlf|\\\\mathbb)"
+
+    val greekLetters = "[Aa]lpha|\\\\[Bb]eta|\\\\[Gg]amma|\\\\[Dd]elta|\\\\[Ee]psilon|\\\\[Zz]eta|\\\\[Ee]ta|\\\\[Tt]heta|\\\\[Ii]ota|\\\\[Kk]appa|\\\\[Ll]ambda|\\\\[Mm]u|\\\\[Nn]u|\\\\[Xx]i|\\\\[Oo]mikron|\\\\[Pp]i|\\\\[Rr]ho|\\\\[Ss]igma|\\\\[Tt]au|\\\\[Uu]psilon|\\\\[Pp]hi|\\\\[Cc]hi|\\\\[Pp]si|\\\\[Oo]mega"
+
+    val pattern0 = s"\\\\sum\\s[_^]\\s\\{.*?}(\\s[_^]\\s\\{.*?\\}\\s)?".r //get rid of sum symbol with other stuff on it
+    val pattern1 = s"${fontStrings}?\\s(${greekLetters})\\s[_^]\\s\\{\\s\\D*?\\s\\}(\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\})?".r //lambdas with sub- and super-scripts
+    val pattern2 = s"${fontStrings}?\\s\\w*?\\s[_^]\\s\\{\\s\\D*?\\s\\}(\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\})?".r //non-lambdas with both superscript and subscript
+    //    val pattern2 = "\\s\\w*?\\s[_^]\\s\\{.*?\\}".r //one var + subscript or superscript---patterns 1 and 2 should take care of this
+    val pattern3 = s"${fontStrings}?\\s\\{\\s\\w*?\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\}(\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\})?".r //same as 2, but the main thing is wrapped in curly braces
+    val pattern4 = s"${fontStrings}\\s\\{\\s\\D\\s\\}".r
+
+//    println(eqString)
+
+
+    for (m <- pattern0.findAllIn(eqString)) println("> " + m)
+    val afterPatt0 = pattern0.replaceAllIn(eqString, "") //don't append these to possible vars---we don't care what's in the sum if it's not defined
+
+    //what we find with patt 1:
+    for (m <- pattern1.findAllIn(afterPatt0)) {
+      if (!simpleVars.contains(m)) {
+        simpleVars.append(m.trim)
+      }
+//      println("=> " + m)
+    }
+    val afterPatt1 = pattern1.replaceAllIn(afterPatt0, "")
+//    println(afterPatt1)
+
+    //what we find with patt2:
+    for (m <- pattern2.findAllIn(afterPatt1)) {
+      if (!simpleVars.contains(m)) {
+        simpleVars.append(m.trim)
+      }
+//      println("=> " + m)
+    }
+    val afterPatt2 = pattern2.replaceAllIn(afterPatt1, "")
+//    println(afterPatt2)
+
+    //what we find with patt 3:
+    for (m <- pattern3.findAllIn(afterPatt2)) {
+      if (!simpleVars.contains(m)) {
+        simpleVars.append(m.trim)
+      }
+//      println("=> " + m)
+    }
+    val afterPatt3 = pattern3.replaceAllIn(afterPatt2, "")
+//    println(afterPatt3)
+
+    //what we find with patt 4:
+    for (m <- pattern4.findAllIn(afterPatt3)) {
+      if (!simpleVars.contains(m)) {
+        simpleVars.append(m)
+      }
+//      println("=> " + m)
+    }
+    val afterPatt4 = pattern4.replaceAllIn(afterPatt3, "")
+//    println(afterPatt4)
+
+
+    val finalStringTokenized = afterPatt4.split(" ")
+
+
+
+    for (i <- finalStringTokenized.indices) {
+      if (finalStringTokenized(i).toCharArray.length == 1 && finalStringTokenized(i).toCharArray.head.isLetter) {
+        if ((i == 0 || i == finalStringTokenized.length) && !simpleVars.contains(finalStringTokenized(i))) {
+          simpleVars.append(finalStringTokenized(i).trim)
+        } else {
+          if (i + 1 < finalStringTokenized.length && i - 1 >= 0 && finalStringTokenized(i-1).toCharArray.length > 0 && finalStringTokenized(i+1).toCharArray.length > 0) {
+
+//            println("---->" + finalStringTokenized(i) + "next: " +   finalStringTokenized(i+1))
+            if (!finalStringTokenized(i-1).toCharArray.last.isLetter
+              && !finalStringTokenized(i+1).toCharArray.head.isLetter
+              && !simpleVars.contains(finalStringTokenized(i))) {
+              simpleVars.append(finalStringTokenized(i).trim)
+            }
+          }
+        }
+      } else {
+        //if matches one of greek letters
+        if (greekLetterWords.contains(finalStringTokenized(i).toLowerCase.replace("\\", "")) && !simpleVars.contains(finalStringTokenized(i))) {
+          simpleVars.append(finalStringTokenized(i).trim)
+        }
+      }
+    }
+
+    simpleVars
+
+  }
+
   def getLatexTextMatches(
     var2Defs: Map[String, Seq[String]],
     allEqVarCandidates: Seq[String],
     mathSymbols: Seq[String],
     greek2wordDict: Map[String, String],
+    word2greekDict: Map[String, String],
     pdfalignDir: String): Seq[Prediction] = {
 
     //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
@@ -149,7 +273,7 @@ class AlignmentBaseline() {
       //for every candidate eq var
       for (cand <- allEqVarCandidates) {
         //check if the candidate matches the var extracted from text and return the good candidate or str "None"
-        val resultOfMatching = findMatchingVar(variable, cand, mathSymbols, greek2wordDict, pdfalignDir)
+        val resultOfMatching = findMatchingVar(variable, cand, mathSymbols, greek2wordDict, word2greekDict, pdfalignDir)
 
         //the result of matching is either the good candidate returned or None
         if (resultOfMatching.isDefined) {
@@ -163,11 +287,11 @@ class AlignmentBaseline() {
       // choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
         val bestCand = bestCandidates.maxBy(numLetters)
-        val pred = Prediction(bestCand, Some(variable), var2Defs(variable))
+        val pred = Prediction(bestCand.trim, Some(variable), Some(var2Defs(variable)))
         latexTextMatches.append(pred)
       }
     }
-    //for (l <- latexTextMatches) println("match: " + l)
+    for (l <- latexTextMatches) println("match: " + l)
     latexTextMatches
   }
 
@@ -182,29 +306,34 @@ class AlignmentBaseline() {
                        latexCandidateVar: String,
                        mathSymbols: Seq[String],
                        greek2wordDict: Map[String, String],
+                       word2greekDict: Map[String, String],
                        pdfalignDir: String): Option[String] = {
     //only proceed if the latex candidate does not have unmatched braces
     //replace all the math symbols in the latex candidate variable
+//    println("variable: " + variable)
+//    println("candidate: " + latexCandidateVar)
+//          val replacements = new ArrayBuffer[String]()
+//          replacements.append(latexCandidateVar)
+//          for (ms <- mathSymbols) {
+//            //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
+//            val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
+//
+//            val anotherReplacement = replacements.last.replaceAll(pattern, "")
+//            replacements.append(anotherReplacement)
+//          }
+//    //      take the last item from 'replacements' and replace the braces---that should get us to the value
+//          val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
 
-    //      val replacements = new ArrayBuffer[String]()
-    //      replacements.append(latexCandidateVar)
-    //      for (ms <- mathSymbols) {
-    //        //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
-    //        val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
-    //
-    //        val anotherReplacement = replacements.last.replaceAll(pattern, "")
-    //        replacements.append(anotherReplacement)
-    //      }
-    ////      take the last item from 'replacements' and replace the braces---that should get us to the value
-    //      val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
-
-    val rendered = render(latexCandidateVar, pdfalignDir).replaceAll("\\s", "")
+    //render the candidate with the greek letter word replaced with the greek letter
+    val rendered = render(replaceWordWithGreek(latexCandidateVar, word2greekDict), pdfalignDir).replaceAll("\\s", "")
     //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
     if (rendered == variable) {
       println(" --> rendered == variable")
-      val replaced = replaceGreekWithWord(latexCandidateVar, greek2wordDict)
-      println(s" --> replaced = $replaced")
-      return Some(replaced)
+      println(" --> rendered: " + rendered)
+//      val replaced = replaceGreekWithWord(latexCandidateVar, greek2wordDict)
+//      println(s" --> replaced = $replaced")
+      //return the candidate
+      return Some(latexCandidateVar)
     }
 
     None
