@@ -20,6 +20,8 @@ import scala.io.StdIn.readLine
 import org.clulab.aske.automates.apps.ExtractAndExport.getExporter
 import org.clulab.utils.Serializer._
 
+import scala.collection.parallel.ParSeq
+
 
 
 //todo: add eval:
@@ -31,62 +33,144 @@ import org.clulab.utils.Serializer._
 
 import upickle.default._
 
-case class Prediction(latexIdentifier: String, textVariable: Option[String], definitions: Option[Seq[String]])
+case class Prediction(paperId: String, eqnId:String, latexIdentifier: String, textVariable: Option[String], definitions: Option[Seq[String]])
 object Prediction{
   implicit val rw: ReadWriter[Prediction] = macroRW
 }
 
 class AlignmentBaseline() {
-  def process() {
+  //getting configs and such (borrowed from ExtractAndAlign)
+  val config: Config = ConfigFactory.load()
 
-    //getting configs and such (borrowed from ExtractAndAlign)
-    val config: Config = ConfigFactory.load()
+  val pdfalignDir = config[String]("apps.pdfalignDir")
+  val extractedMentionsDir = config[String]("apps.exportedMentionsDir")
+  //this is where the latex equation files are
+  val eqFileDir = config[String]("apps.baselineEquationDir")
 
-    val pdfalignDir = config[String]("apps.pdfalignDir")
-    val extractedMentionsDir = config[String]("apps.exportedMentionsDir")
-    //this is where the latex equation files are
-    val eqFileDir = config[String]("apps.baselineEquationDir")
+  val eqSrcFile = config[String]("apps.eqnSrcFile")
+  val eqFile = config[String]("apps.eqnPredFile")
 
-    val eqSrcFile = config[String]("apps.eqnSrcFile")
-    val eqFile = config[String]("apps.eqnPredFile")
-    //all equations from file
-    val eqn_ids = loadStrings(eqSrcFile).map(_.replace(".png", ""))
-    val eqLines = loadStrings(eqFile)
+  //these will be deleted from the latex equation to get to the values; not currently used
+  val mathSymbolsFile = loadStringsFromResource("/AlignmentBaseline/mathSymbols.tsv")
+  val mathSymbols = mathSymbolsFile.filter(_.length > 0).sortBy(_.length).reverse
+
+  //get the greek letters and their names
+  val greekLetterLines = loadStringsFromResource("/AlignmentBaseline/greek2words.tsv")
+
+  //these will be used to map greek letters to words and back
+  //    val greek2wordDict = mutable.Map[String, String]()
+  val word2greekDict = mutable.Map[String, String]()
+
+  for (line <- greekLetterLines) {
+    val splitLine = line.split("\t")
+    //      greek2wordDict += (splitLine.head -> splitLine.last)
+    word2greekDict += (splitLine.last -> splitLine.head)
+  }
+
+  val greekWords = word2greekDict.keys.toList
+
+  val inputDir = config[String]("apps.baslineInputDirectory")
+  val inputType = config[String]("apps.inputType")
+  val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
+  //    val paper_jsons = findFiles(inputDir, dataLoader.extension).sorted
+
+  val outDir = config[String]("apps.baselineOutputDirectory")
+
+  //all equations from file
+  val eqn_ids = loadStrings(eqSrcFile).map(_.replace(".png", ""))
+  val eqLines = loadStrings(eqFile)
 
 
-    //these will be deleted from the latex equation to get to the values; not currently used
-    val mathSymbolsFile = loadStringsFromResource("/AlignmentBaseline/mathSymbols.tsv")
-    val mathSymbols = mathSymbolsFile.filter(_.length > 0).sortBy(_.length).reverse
+  def writePredictionsForEqn(eqnIndex: Int, eqn_id: String): Unit = {
 
-    //get the greek letters and their names
-    val greekLetterLines = loadStringsFromResource("/AlignmentBaseline/greek2words.tsv")
+    val split = eqn_id.split("_")
+    val paperId = split(0)
+    val eq = split(1)
+    val paper = s"$inputDir/${eqn_id}.json"
+    val predictionsFile = new PrintWriter(s"$outDir/predictions_${eqn_id}.jsonl")
 
-    //these will be used to map greek letters to words and back
-//    val greek2wordDict = mutable.Map[String, String]()
-    val word2greekDict = mutable.Map[String, String]()
+    val equationStr = eqLines(eqnIndex)//.replaceAll("\\s", "")
+    //      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
+    val allEqVarCandidates = getFrags(equationStr, pdfalignDir)
+      .split("\n")
+      // keep the ones that have less than 50 non-space chars
+      .filter(cand => cand.count(char => !char.isSpaceChar) <= 50)
 
-    for (line <- greekLetterLines) {
-      val splitLine = line.split("\t")
-//      greek2wordDict += (splitLine.head -> splitLine.last)
-      word2greekDict += (splitLine.last -> splitLine.head)
+    //for every file, get the text of the file
+    //      val texts: Seq[String] = dataLoader.loadFile(paper)
+    //      //todo: change greek letter in mentions to full words
+
+    //IF MENTIONS NOT PREVIOUSLY EXPORTED:
+    //extract the mentions
+    //      val textMentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(eqn_id)))
+    ////      //only get the definition mentions
+    //      val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
+    //
+    //      //IF WANT TO EXPORT THE MENTIONS FOR EACH FILE:
+    //      val exporter = new SerializedExporter("./input/LREC/Baseline/extractedMentions/" + eqn_id)
+    //      exporter.export(textDefinitionMentions)
+    //      exporter.close()
+    //      println("exported ID: " + eqn_id)
+
+    //IF HAVE PREVIOUSLY EXPORTED MENTIONS:
+
+    val textDefinitionMentions = SerializedMentions
+      .load(s"$extractedMentionsDir/${eqn_id}.serialized")
+      .filter(mention => mention matches "Definition")
+
+    //      for (td <- textDefinitionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("definition").head.text)
+
+    val groupedByCommonVar = textDefinitionMentions
+      .groupBy(_.arguments("variable").head.text)
+      .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("definition").head.text).distinct) //the definitions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
+
+
+    val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, word2greekDict.toMap, pdfalignDir, paperId, eq).seq
+
+    println("+++++++++")
+    for (m <- latexTextMatches) println(s"$m\t${paper}")
+    println("++++++++++++\n")
+
+    for (pred <- latexTextMatches) {
+      writeTo(pred, predictionsFile)
+      predictionsFile.write("\n")
+      predictionsFile.flush()
     }
 
-    val greekWords = word2greekDict.keys.toList
+    // GETTING SIMPLE VARS FROM LATEX
+    //which latex identifiers we got from text---used for filtering out the simple variables that have already been found from reading the text
+    val latexIdentifiersFromText = latexTextMatches.map(_.latexIdentifier)
+
+    //the simple var predictions (for the vars that were not found through reading text) will go here
+    val simpleVars = getSimpleVars(equationStr, pdfalignDir, greekWords)
+
+    val simpleValsNotFoundInText = for {
+      sv <- simpleVars
+      completeSV = if (checkIfUnmatchedCurlyBraces(sv)) sv + " }" else sv
+      if !latexIdentifiersFromText.contains(completeSV)
+      newPred = new Prediction(paperId, eq, completeSV, None, None)
+    } yield newPred
+
+    for (pred <- simpleValsNotFoundInText) {
+      println(pred)
+      writeTo(pred, predictionsFile)
+      predictionsFile.write("\n")
+      predictionsFile.flush()
+    }
+
+    // housekeeping
+    predictionsFile.close()
+
+  }
+
+  def process() {
+
     //some configs and files to make sure this runs (borrowed from ExtractAndAlign
     //uncomment if need to extract mentions
-//    val textConfig: Config = config[Config]("TextEngine")
-//    val textReader = OdinEngine.fromConfig(textConfig)
-//    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
-//    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
-
-
-    val inputDir = config[String]("apps.baslineInputDirectory")
-    val inputType = config[String]("apps.inputType")
-    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
-    //    val paper_jsons = findFiles(inputDir, dataLoader.extension).sorted
-
-    val outDir = config[String]("apps.baselineOutputDirectory")
-    val predictionsFile = new PrintWriter(s"$outDir/predictions.jsonl")
+    //    val textConfig: Config = config[Config]("TextEngine")
+    //    val textReader = OdinEngine.fromConfig(textConfig)
+    //    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+    //    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
 
     //this is where the gold data is stored
     //    val goldDir = config[String]("apps.baselineGoldDir")
@@ -94,89 +178,12 @@ class AlignmentBaseline() {
 
     // todo: Becky -- speed this up a bit, and maybe add a backoff? par?
     // todo: for debug load in the mentions?
-    for ((eqn_id, eqnIndex) <- eqn_ids.zipWithIndex) {
-      println(eqn_id)
-      val split = eqn_id.split("_")
-      val eq = split(1)
-      val paper = s"$inputDir/${eqn_id}.json"
-
-      val equationStr = eqLines(eqnIndex)//.replaceAll("\\s", "")
-      //      val allEqVarCandidates = getAllEqVarCandidates(equationStr)
-      val allEqVarCandidates = getFrags(equationStr, pdfalignDir)
-        .split("\n").filter(_.replace(" ", "").length <= 50)
-
-
-
-      //for every file, get the text of the file
-//      val texts: Seq[String] = dataLoader.loadFile(paper)
-//      //todo: change greek letter in mentions to full words
-
-      //IF MENTIONS NOT PREVIOUSLY EXPORTED:
-      //extract the mentions
-//      val textMentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(eqn_id)))
-////      //only get the definition mentions
-//      val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
-//
-//      //IF WANT TO EXPORT THE MENTIONS FOR EACH FILE:
-//      val exporter = new SerializedExporter("./input/LREC/Baseline/extractedMentions/" + eqn_id)
-//      exporter.export(textDefinitionMentions)
-//      exporter.close()
-//      println("exported ID: " + eqn_id)
-
-      //IF HAVE PREVIOUSLY EXPORTED MENTIONS:
-
-      val textDefinitionMentions = SerializedMentions.load(s"$extractedMentionsDir/${eqn_id}.serialized")
-
-
-//      for (td <- textDefinitionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("definition").head.text)
-
-      val groupedByCommonVar = textDefinitionMentions
-        .groupBy(_.arguments("variable").head.text)
-        .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("definition").head.text).distinct) //the definitions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
-
-
-      val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, word2greekDict.toMap,  pdfalignDir)
-////
-      println("+++++++++")
-      for (m <- latexTextMatches) println(s"$m\t${paper}")
-      println("++++++++++++\n")
-
-      for (pred <- latexTextMatches) {
-        writeTo(pred, predictionsFile)
-        predictionsFile.write("\n")
-        predictionsFile.flush()
-      }
-////
-////
-      ////GETTING SIMPLE VARS FROM LATEX
-      //which latex identifiers we got from text---used for filtering out the simple variables that have already been found from reading the text
-      val latexIdentifiersFromText = latexTextMatches.map(_.latexIdentifier)
-
-
-      //the simple var predictions (for the vars that were not found through reading text) will go here
-      val simpleValsNotFoundInText = new ArrayBuffer[Prediction]()
-      val simpleVars = getSimpleVars(equationStr, pdfalignDir, greekWords)
-
-      for (sv <- simpleVars) {
-        val completeSV = if (checkIfUnmatchedCurlyBraces(sv)) sv + " }" else sv
-        if (!latexIdentifiersFromText.contains(completeSV)) {
-          val newPred = new Prediction(completeSV, None, None)
-          simpleValsNotFoundInText.append(newPred)
-        }
-
-      }
-
-      for (pred <- simpleValsNotFoundInText) {
-        println(pred)
-        writeTo(pred, predictionsFile)
-        predictionsFile.write("\n")
-        predictionsFile.flush()
-      }
+    for ((eqn_id, eqnIndex) <- eqn_ids.par.zipWithIndex) {
+      println(s"processing $eqn_id")
+      writePredictionsForEqn(eqnIndex, eqn_id)
     }
-    // housekeeping
-    predictionsFile.close()
   }
-  
+
 
   def readInPdfMinedText(path2File: String): String = {
     val textArr = new ArrayBuffer[String]()
@@ -298,7 +305,9 @@ class AlignmentBaseline() {
     allEqVarCandidates: Seq[String],
     mathSymbols: Seq[String],
     word2greekDict: Map[String, String],
-    pdfalignDir: String): Seq[Prediction] = {
+    pdfalignDir: String,
+    paperId: String,
+    eqnId: String): Seq[Prediction] = {
 
     //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
 
@@ -307,25 +316,19 @@ class AlignmentBaseline() {
     //for every extracted mention
     for (variable <- var2Defs.keys) {
       //best Latex candidates, out of which we'll take the max (to account for some font info)
-      val bestCandidates = new ArrayBuffer[String]()
-      //for every candidate eq var
-      for (cand <- allEqVarCandidates) {
-        //check if the candidate matches the var extracted from text and return the good candidate or str "None"
-        val resultOfMatching = findMatchingVar(variable, cand, mathSymbols, word2greekDict, pdfalignDir)
-
-        //the result of matching is either the good candidate returned or None
-        if (resultOfMatching.isDefined) {
-          //if the candidate is returned (instead of None), it's good and thus added to best candidates
-          // todo: return a score too, and sort by the score
-          // todo: add the non-mathiness stuff
-          bestCandidates.append(resultOfMatching.get)
-        }
-      }
+//      val bestCandidates = new ArrayBuffer[String]()
+        //for every candidate eq var
+        val bestCandidates = for {
+          cand <- allEqVarCandidates
+          //check if the candidate matches the var extracted from text and return the good candidate or str "None"
+          resultOfMatching = findMatchingVar(variable, cand, mathSymbols, word2greekDict, pdfalignDir)
+          if resultOfMatching.isDefined
+        } yield resultOfMatching.get
 
       // choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
         val bestCand = bestCandidates.maxBy(numLetters)
-        val pred = Prediction(bestCand.trim, Some(variable), Some(var2Defs(variable)))
+        val pred = Prediction(paperId, eqnId, bestCand.trim, Some(variable), Some(var2Defs(variable)))
         latexTextMatches.append(pred)
       }
     }
@@ -544,6 +547,7 @@ class AlignmentBaseline() {
   }
 
 }
+
 
 
 object AlignmentBaseline {
