@@ -22,7 +22,3 @@ def find_main_tex_file(dirname):
             for token in LatexTokenizer(f.read()):
                 if token.value == '\\documentclass':
                     return filename
-                elif token.code == CategoryCode.Space:
-                    continue
-                else:
-                    break
