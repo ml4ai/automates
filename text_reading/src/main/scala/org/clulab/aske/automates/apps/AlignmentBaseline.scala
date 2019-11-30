@@ -69,7 +69,7 @@ class AlignmentBaseline() {
 
   val greekWords = word2greekDict.keys.toList
 
-  val inputDir = config[String]("apps.baslineInputDirectory")
+  val inputDir = config[String]("apps.baselineTextInputDirectory")
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
   //    val paper_jsons = findFiles(inputDir, dataLoader.extension).sorted
@@ -148,6 +148,7 @@ class AlignmentBaseline() {
       sv <- simpleVars
       completeSV = if (checkIfUnmatchedCurlyBraces(sv)) sv + " }" else sv
       if !latexIdentifiersFromText.contains(completeSV)
+      rendered = render(completeSV, pdfalignDir)
       newPred = new Prediction(paperId, eq, completeSV, None, None)
     } yield newPred
 
