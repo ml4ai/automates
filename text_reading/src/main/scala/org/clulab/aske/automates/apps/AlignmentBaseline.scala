@@ -149,7 +149,7 @@ class AlignmentBaseline() {
       completeSV = if (checkIfUnmatchedCurlyBraces(sv)) sv + " }" else sv
       if !latexIdentifiersFromText.contains(completeSV)
       rendered = render(completeSV, pdfalignDir)
-      newPred = new Prediction(paperId, eq, completeSV, None, None)
+      newPred = new Prediction(paperId, eq, completeSV, Some(rendered), None)
     } yield newPred
 
     for (pred <- simpleValsNotFoundInText) {
