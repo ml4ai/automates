@@ -37,7 +37,7 @@ if __name__ == '__main__':
             # srcdir/1801/1801.00026
             src_paper_dir = os.path.join(os.path.join(args.srcdir, year), paper)
             # outdir/1801.00026_equation0000
-            local_paper_dir = os.path.join(args.outdir, eqn)
+            local_paper_dir = os.path.join(args.outdir, paper)
             mk_dir(local_paper_dir)
             # copy files down
             cmd = f'rsync -rtv {src_paper_dir}/* {local_paper_dir}/.'.split(" ")
