@@ -157,9 +157,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       variableMention = m.arguments.getOrElse("variable", Seq())
       defMention = m.arguments.getOrElse("definition", Seq())
       if (
+        looksLikeADef(defMention, state).nonEmpty && //make sure the def looks like a def
         defMention.head.text.length > 4 && //the def can't be the length of a var
         !defMention.head.text.contains("=") &&
-        looksLikeAVariable(defMention, state).isEmpty //makes sure the definition is not another variable (or does not look like what could be a variable
+        looksLikeAVariable(defMention, state).isEmpty //makes sure the definition is not another variable (or does not look like what could be a variable)
         &&
         defMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the definition don't overlap
         )
@@ -171,6 +172,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val toReturn = defIsNotVar(looksLikeAVariable(mentions, state), state)
     toReturn
   }
+
+  def definitionActionFlowSpecialCase(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    //select shorter as var is only applicable to one rule, so it can't be part of the regular def. action flow
+    val toReturn = definitionActionFlow(selectShorterAsVariable(mentions, state), state)
+    toReturn
+  }
+
 
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -198,6 +206,21 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       negPattern = "[<>=]".r
       //the length constraints: the unit should consist of no more than 5 words and the first word of the unit should be no longer than 3 characters long (heuristics)
       if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || pattern.findFirstIn(unitTextSplit.mkString(" ")).nonEmpty ) && negPattern.findFirstIn(unitTextSplit.mkString(" ")).isEmpty
+    } yield m
+  }
+
+  def looksLikeADef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
+
+    for {
+      m <- mentions
+      definText = m match {
+        case tb: TextBoundMention => m
+        case rm: RelationMention => m.arguments.getOrElse("definition", Seq()).head
+        case em: EventMention => m.arguments.getOrElse("definition", Seq()).head
+        case _ => ???
+      }
+      if (definText.text.filter(c => valid contains c).length.toFloat / definText.text.length > 0.60)
     } yield m
   }
 

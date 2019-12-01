@@ -59,7 +59,7 @@ rules:
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     #action: variableArguments
-    action: selectShorterAsVariable
+    action: definitionActionFlowSpecialCase
     pattern: |
       @c1:Concept "(" @c2:Concept ")"
       #todo: check why -LRB- stopped working; maybe try to have both in the rule?
