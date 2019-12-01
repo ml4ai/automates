@@ -135,6 +135,7 @@ def read_annotations(ann_file, latex_file=None):
             if 'equation' in a:
                 eqn_mentions = a['equation']
                 identifiers = get_values(eqn_mentions)
+                identifiers = [x.replace(' ', '') for x in identifiers]
                 # descriptions
                 if 'description' not in a:
                     descriptions = [NO_DESC]
@@ -317,7 +318,9 @@ greek2word = {'α':'alpha', 'β':'beta', 'γ':'gamma', 'δ':'delta', 'ε':'epsil
 word2greek = {'\\\\alpha': 'α', '\\\\beta': 'β', '\\\\gamma': 'γ', '\\\\delta': 'δ', '\\\\epsilon': 'ε', '\\\\zeta': 'ζ',
               '\\\\eta': 'η', '\\\\theta': 'θ', '\\\\iota': 'ι', '\\\\kappa': 'κ', '\\\\lambda': 'λ','\\\\mu': 'μ',
               '\\\\nu': 'ν','\\\\xi': 'ξ','\\\\omikron': 'ο','\\\\pi': 'π', '\\\\rho': 'ρ','\\\\sigma': 'σ', '\\\\tau': 'τ',
-              '\\\\upsilon': 'υ', '\\\\phi': 'φ', '\\\\chi': 'χ', '\\\\psi': 'ψ', '\\\\omega': 'ω'}
+              '\\\\upsilon': 'υ', '\\\\phi': 'φ', '\\\\chi': 'χ', '\\\\psi': 'ψ', '\\\\omega': 'ω',
+              '\\\\Delta':'∆', '\\\\Gamma':'Γ','\\\\Lambda':'Λ', '\\\\Sigma':'Σ', '\\\\Theta':'Θ', '\\\\Omega':'Ω'}
+
 
 if __name__ == "__main__":
     print("\n------------------ FULL EVAL ------------------\n")
