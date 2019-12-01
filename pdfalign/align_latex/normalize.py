@@ -1,6 +1,6 @@
 import sys
-from latex_tokenizer import *
-from align_eq_bb import tokens_to_string
+from .latex_tokenizer import *
+from .align_eq_bb import tokens_to_string
 
 def normalize(tokens):
     tokens = list(tokens)
