@@ -152,7 +152,6 @@ class AlignmentBaseline() {
     // GETTING SIMPLE VARS FROM LATEX
     //which latex identifiers we got from text---used for filtering out the simple variables that have already been found from reading the text
     val latexIdentifiersFromText = latexTextMatches.map(_.latexIdentifier)
-    val renderedLatexIdentifiersFromText = latexIdentifiersFromText.map(render(_, pdfalignDir))
 
     //the simple var predictions (for the vars that were not found through reading text) will go here
     val simpleVars = getSimpleVars(equationStr, pdfalignDir, greekWords)
@@ -162,7 +161,6 @@ class AlignmentBaseline() {
       completeSV = if (checkIfUnmatchedCurlyBraces(sv)) sv + " }" else sv
       if !latexIdentifiersFromText.contains(completeSV)
       rendered = render(replaceWordWithGreek(completeSV, word2greekDict.toMap), pdfalignDir).replaceAll("\\s", "")
-      if !renderedLatexIdentifiersFromText.contains(rendered)
       newPred = new Prediction(paperId, eq, completeSV, Some(rendered), None)
     } yield newPred
 
