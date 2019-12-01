@@ -22,6 +22,12 @@ DPI = 200
 
 MATHCOLOR_MACRO = r"""
 \usepackage{xcolor}
+\definecolor{myred}{rgb}{1,0,0}
+\definecolor{mygreen}{rgb}{0,1,0}
+\definecolor{myblue}{rgb}{0,0,1}
+\definecolor{mycyan}{rgb}{0,1,1}
+\definecolor{mymagenta}{rgb}{1,0,1}
+\definecolor{myyellow}{rgb}{1,1,0}
 \makeatletter
 \def\mathcolor#1#{\@mathcolor{#1}}
 \def\@mathcolor#1#2#3{%
@@ -36,7 +42,7 @@ MATHCOLOR_MACRO = r"""
 
 
 DEFAULT_COLORS = [
-    'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
+   'myred', 'mygreen', 'myblue', 'mycyan', 'mymagenta', 'myyellow'
     # 'brown', 'lime', 'olive', 'orange', 'pink', 'purple', 'teal', 'violet',
 ]
 
@@ -62,9 +68,15 @@ def colorize(equation, fragment, colors=DEFAULT_COLORS):
     def mathcolor(m):
         nonlocal i
         color = colors[i % len(colors)]
-        i += 1
-        return '\\mathcolor{' + color + '}{' + m.group() + '}'
-    return re.sub(re.escape(fragment), mathcolor, equation)
+        lookbehind = m.group(1)
+        match = m.group(2)
+        if match[0].isalpha() and len(lookbehind) > 0:
+            return m.group()
+        else:
+            i += 1
+            return '{\\mathcolor{' + color + '}{' + match + '}}'
+    pattern = r'((?:\\[a-zA-Z]*)?)(' + re.escape(fragment) + ')'
+    return re.sub(pattern, mathcolor, equation)
 
 
 
@@ -235,13 +247,13 @@ def match_component(page, eq_aabb, comp_aabbs, color_to_match):
     comp_mask = np.zeros(page.shape[:2], dtype=bool)
     for aabb in comp_aabbs:
         comp_mask[aabb.ymin:aabb.ymax+1, aabb.xmin:aabb.xmax+1] = True
+    # make mask for given color
+    color_mask = mask_maker(page, color_to_match)
     # make mask for blackish pixels
     other_mask = mask_maker(page, 'black')
     for c in DEFAULT_COLORS:
-        if c != color_to_match:
-            other_mask = np.logical_or(other_mask, mask_maker(page, c))
-    # make mask for given color
-    color_mask = mask_maker(page, color_to_match)
+        other_mask = np.logical_or(other_mask, mask_maker(page, c))
+    other_mask = np.logical_and(other_mask, np.logical_not(color_mask))
     # calc precision, recall, and f1
     eq_other_mask = np.logical_and(eq_mask, other_mask)
     eq_color_mask = np.logical_and(eq_mask, color_mask)
@@ -265,17 +277,17 @@ def match_component(page, eq_aabb, comp_aabbs, color_to_match):
 def mask_maker(img, color):
     if color == 'black':
         return np.all(img < 50, axis=2)
-    elif color == 'red':
+    elif color == 'myred':
         return np.logical_and(np.logical_and(img[...,0] > 200, img[...,1] < 100), img[...,2] < 100)
-    elif color == 'green':
+    elif color == 'mygreen':
         return np.logical_and(np.logical_and(img[...,0] < 100, img[...,1] > 200), img[...,2] < 100)
-    elif color == 'blue':
+    elif color == 'myblue':
         return np.logical_and(np.logical_and(img[...,0] < 100, img[...,1] < 100), img[...,2] > 200)
-    elif color == 'cyan': # green + blue
+    elif color == 'mycyan': # green + blue
         return np.logical_and(np.logical_and(img[...,0] < 100, img[...,1] > 200), img[...,2] > 200)
-    elif color == 'magenta': # red + blue
+    elif color == 'mymagenta': # red + blue
         return np.logical_and(np.logical_and(img[...,0] > 200, img[...,1] < 100), img[...,2] > 200)
-    elif color == 'yellow': # red + green
+    elif color == 'myyellow': # red + green
         return np.logical_and(np.logical_and(img[...,0] > 200, img[...,1] > 200), img[...,2] < 100)
 
 
@@ -331,7 +343,7 @@ def main(args):
         with open(os.path.join(dst, 'scores.tsv'), 'w') as f:
             for ann_id, ann in enumerate(annotations):
                 for comp_id, comp in enumerate(ann):
-                    comp_aabbs = get_bboxes_from_component(comp, eq_aabb, dpi=DPI)
+                    comp_aabbs = list(get_bboxes_from_component(comp, eq_aabb, dpi=DPI))
                     for color in DEFAULT_COLORS:
                         p, r, f1 = match_component(page, eq_aabb, comp_aabbs, color)
                         print(f'{ann_id}\t{comp_id}\t{color}\t{p}\t{r}\t{f1}', file=f)
