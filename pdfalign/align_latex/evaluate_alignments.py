@@ -5,14 +5,14 @@ import os
 import re
 from pprint import pprint
 from collections import defaultdict
-from normalize import normalize
+from normalize import normalize, render
 from latex_tokenizer import *
 from align_eq_bb import tokens_to_string
 
 NO_DESC = "<<NO_DESC>>"
 NO_LATEX = "<<NO_LATEX>>"
 
-DEBUG = False
+DEBUG = True
 
 class Annotation:
     def __init__(self, paper_id, eqn_id, identifiers, descriptions, latex=None):
@@ -129,7 +129,6 @@ def read_annotations(ann_file, latex_file=None):
     paper_id, eqn_id = basename.split("_")
 
     annotations_latex = list(get_latex(latex_file))
-
     with open(ann_file) as f:
         annotations = json.load(f)
         for i, a in enumerate(annotations):
@@ -147,7 +146,9 @@ def read_annotations(ann_file, latex_file=None):
                     latex = annotations_latex[i]
                 else:
                     latex = [NO_LATEX]
-                yield Annotation(paper_id, eqn_id, identifiers, descriptions, latex)
+                ann = Annotation(paper_id, eqn_id, identifiers, descriptions, latex)
+                # print(ann)
+                yield ann
 
 def get_latex(filename):
     if not os.path.exists(filename):
@@ -159,6 +160,7 @@ def get_latex(filename):
             aid, cid, _, p, r, f, latex = line.split("\t")
             aid = int(aid)
             cid = int(cid)
+            f = float(f)
             if cid in anns[aid]:
                 anns[aid][cid].append((f, latex))
             else:
@@ -167,12 +169,14 @@ def get_latex(filename):
         kept_latex = []
         for cid in anns[aid]:
             max_f = max(anns[aid][cid], key=lambda x: x[0])[0]
-            keep = [x[1] for x in anns[aid][cid] if x[0] == max_f]
-            # print(keep)
-            keep = [format_latex_for_eval(x) for x in keep]
-            # print(keep)
-            # print()
-            kept_latex.extend(keep)
+            if max_f > 0.0:
+                keep = [x[1] for x in anns[aid][cid] if x[0] == max_f]
+                keep = [format_latex_for_eval(x) for x in keep]
+                # print(keep)
+                # print()
+                kept_latex.extend(keep)
+        if len(kept_latex) == 0:
+            kept_latex = [NO_LATEX]
         yield kept_latex
 
 def format_latex_for_eval(latex):
@@ -181,7 +185,7 @@ def format_latex_for_eval(latex):
     return latex.replace(' ', '')
 
 def remove_label(s):
-    return re.sub(re.compile('\\\label \{.+\} *'), '', s)
+    return re.sub(re.compile('\\\label ?\{.+\} *'), '', s)
 
 # list of mentions, each mention is a dict, in the dict['chars'] is
 # a list of glyph bboxes, each bbox has a value -- get these
@@ -202,9 +206,9 @@ def load_gold(gold_dir, latex_dir):
     for fn in gold_files:
         basename = os.path.splitext(os.path.split(fn)[1])[0]
         latex_fn = os.path.join(latex_dir, basename, 'aligned.tsv')
-        # print(latex_fn)
         file_annotations = list(read_annotations(fn, latex_fn))
         for a in file_annotations:
+            # print(a)
             yield a
 
 def load_predictions(pred_dir):
@@ -212,6 +216,7 @@ def load_predictions(pred_dir):
     for fn in pred_files:
         with open(fn) as f:
             for line in f:
+                # print(line)
                 j = json.loads(line)
                 desc = j['definitions']
                 if len(desc) == 0:
@@ -220,12 +225,21 @@ def load_predictions(pred_dir):
                     desc = desc[0]
                 else:
                     raise Exception(f"I expected the len(desc) <= 1 (desc={desc})")
-                latex = j['latexIdentifier'].replace(' ', '')
+                latex = j['latexIdentifier']
+                rendered = latex
+                for greek_word in word2greek:
+                    rendered = re.sub(re.compile(greek_word), word2greek[greek_word], rendered)
+                # rendered = [''.join(list(render(latex))).strip().replace(' ', '')]
+                rendered = [''.join(list(render(rendered))).strip().replace(' ', '')]
+                latex = latex.replace(' ', '')
                 # print("orig:", latex)
-                latex = format_latex_for_eval(latex)
+                latex = [format_latex_for_eval(latex)]
                 # print("normed:", latex)
                 # print()
-                yield Annotation(j['paperId'], j['eqnId'], j['textVariable'], desc, latex)
+                # rendered = ''.join(list(render(latex)))
+                ann = Annotation(j['paperId'], j['eqnId'], rendered, desc, latex)
+                # print(ann)
+                yield ann
 
 def run_evaluation(mode, comparison_field, segmentation_only):
     args = parse_args()
@@ -237,9 +251,11 @@ def run_evaluation(mode, comparison_field, segmentation_only):
     flat_gold = list(load_gold(args.gold_dir, args.latex_dir))
     for ann in flat_gold:
         gold_annotations[ann.key()].append(ann)
-    if DEBUG:
-        print(f"There are {len(flat_gold)} gold annotation identifiers")
-        pprint(flat_gold[:10])
+    # if DEBUG:
+    #     print(f"There are {len(flat_gold)} gold annotation identifiers")
+        # pprint(flat_gold[:100])
+        # relevant = gold_annotations[('1801.01145', 'equation0003')]
+        # pprint(relevant)
 
     # TODO: get the latex alignments for each gold annotation
 
@@ -247,10 +263,22 @@ def run_evaluation(mode, comparison_field, segmentation_only):
     flat_preds = list(load_predictions(args.pred_dir))
     for ann in flat_preds:
         predictions[ann.key()].append(ann)
+    # if DEBUG:
+        # print('\n======================================================\n')
+        # print(f"There are {len(flat_preds)} predicted annotation identifiers")
+        # relevant = predictions[('1801.01145', 'equation0003')]
+        # pprint(relevant)
+        # pprint(flat_preds[:100])
+
     if DEBUG:
-        print('\n======================================================\n')
-        print(f"There are {len(flat_preds)} predicted annotation identifiers")
-        pprint(flat_preds[:10])
+        with open('dev_comparison.txt', 'w') as debug_out:
+            for key in gold_annotations:
+                print("---------------------------------------------------", file=debug_out)
+                print("\n", key, file=debug_out)
+                print("GOLD:", file=debug_out)
+                pprint(gold_annotations[key], stream=debug_out)
+                print("\nPRED:", file=debug_out)
+                pprint(predictions[key], stream=debug_out)
 
     gold_eqns = set([x.paper_id for x in flat_gold])
     pred_eqns = set([x.paper_id for x in flat_preds])
@@ -282,10 +310,20 @@ def run_evaluation(mode, comparison_field, segmentation_only):
 # todo: add the segmentation alone eval
 
 
+greek2word = {'α':'alpha', 'β':'beta', 'γ':'gamma', 'δ':'delta', 'ε':'epsilon', 'ζ':'zeta', 'η':'eta',
+              'θ':'theta','ι':'iota', 'κ':'kappa','λ':'lambda', 'μ':'mu', 'ν':'nu', 'ξ':'xi', 'ο':'omikron',
+              'π':'pi', 'ρ':'rho', 'σ':'sigma', 'τ':'tau', 'υ':'upsilon', 'φ':'phi', 'χ':'chi',
+              'ψ':'psi', 'ω':'omega'}
+word2greek = {'\\\\alpha': 'α', '\\\\beta': 'β', '\\\\gamma': 'γ', '\\\\delta': 'δ', '\\\\epsilon': 'ε', '\\\\zeta': 'ζ',
+              '\\\\eta': 'η', '\\\\theta': 'θ', '\\\\iota': 'ι', '\\\\kappa': 'κ', '\\\\lambda': 'λ','\\\\mu': 'μ',
+              '\\\\nu': 'ν','\\\\xi': 'ξ','\\\\omikron': 'ο','\\\\pi': 'π', '\\\\rho': 'ρ','\\\\sigma': 'σ', '\\\\tau': 'τ',
+              '\\\\upsilon': 'υ', '\\\\phi': 'φ', '\\\\chi': 'χ', '\\\\psi': 'ψ', '\\\\omega': 'ω'}
+
 if __name__ == "__main__":
     print("\n------------------ FULL EVAL ------------------\n")
     print("Identifier Unicode Value Comparison")
     p_strict, r_strict, f1_strict = run_evaluation("strict", "text", segmentation_only=False)
+    # sys.exit()
     print(f"STRICT\tP={p_strict}\tR:{r_strict}\tF1:{f1_strict}")
     p_lenient, r_lenient, f1_lenient = run_evaluation("lenient", "text", segmentation_only=False)
     print(f"LENIENT\tP={p_lenient}\tR:{r_lenient}\tF1:{f1_lenient}")
