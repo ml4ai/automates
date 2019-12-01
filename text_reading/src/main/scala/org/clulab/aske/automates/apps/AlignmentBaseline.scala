@@ -136,14 +136,14 @@ class AlignmentBaseline() {
 
     val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, renderedAll.toMap, mathSymbols, word2greekDict.toMap, pdfalignDir, paperId, eq).seq
 //    latexTextMatches.foreach(println)
-    val filtered = latexTextMatches.filter(p => p.definitions.exists(defs => defs.exists(d => (d.count(_.isLetter)/d.length) > 0.7 )))
+    // val filtered = latexTextMatches.filter(p => p.definitions.exists(defs => defs.exists(d => (d.count(_.isLetter)/d.length) > 0.7 )))
 
 
     println("+++++++++")
     for (m <- latexTextMatches) println(s"$m\t${paper}")
     println("++++++++++++\n")
 
-    for (pred <- filtered) {
+    for (pred <- latexTextMatches) {
       writeTo(pred, predictionsFile)
       predictionsFile.write("\n")
       predictionsFile.flush()
