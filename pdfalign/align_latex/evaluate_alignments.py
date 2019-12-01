@@ -3,6 +3,7 @@ import glob
 import json
 import os
 import re
+from difflib import SequenceMatcher
 from pprint import pprint
 from collections import defaultdict
 from normalize import normalize, render
@@ -13,14 +14,40 @@ NO_DESC = "<<NO_DESC>>"
 NO_LATEX = "<<NO_LATEX>>"
 
 DEBUG = True
+syn_pattern = re.compile(r'(\w+)\(.*\)')
+
+stops = ["a", "about", "above", "after", "again", "against", "ain", "all", "am", "an", "and", "any", "are",
+         "aren", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both",
+         "but", "by", "can", "couldn", "couldn't", "did", "didn", "didn't", "do", "does", "doesn",
+         "doesn't", "doing", "don", "don't", "down", "during", "each", "few", "for", "from", "further",
+         "had", "hadn", "hadn't", "has", "hasn", "hasn't", "have", "haven", "haven't", "having", "he", "her",
+         "here", "hers", "herself", "him", "himself", "his", "how", "if", "in", "into", "is", "isn", "isn't",
+         "it", "it's", "its", "itself", "just", "me", "mightn", "mightn't", "more", "most", "mustn", "mustn't",
+         "my", "myself", "needn", "needn't", "no", "nor", "not", "now", "of", "off", "on", "once", "only", "or",
+         "other", "our", "ours", "ourselves", "out", "over", "own", "re", "same", "shan't", "she", "she's",
+         "should", "should've", "shouldn", "shouldn't", "so", "some", "such", "than", "that", "that'll", "the",
+         "their", "theirs", "them", "themselves", "then", "there", "these", "they", "this", "those", "through",
+         "to", "too", "under", "until", "up", "very", "was", "wasn", "wasn't", "we", "were", "weren", "weren't",
+         "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "won", "won't", "wouldn",
+         "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves",
+         "could", "he'd", "he'll", "he's", "here's", "how's", "i'd", "i'll", "i'm", "i've", "let's", "ought",
+         "she'd", "she'll", "that's", "there's", "they'd", "they'll", "they're", "they've", "we'd", "we'll",
+         "we're", "we've", "what's", "when's", "where's", "who's", "why's", "would"]
 
 class Annotation:
     def __init__(self, paper_id, eqn_id, identifiers, descriptions, latex=None):
         self.paper_id = paper_id
         self.eqn_id = eqn_id
         self.identifiers = set(identifiers) #fixme -- set, but make sure the preds idents are not scrambled
+        self.identifier_synonyms = self.identifiers.union(set(list(self.identifier_synonyms())))
         self.descriptions = set([self.trim_description(d) for d in descriptions])
         self.latex = set(latex)
+
+    def identifier_synonyms(self):
+        for identifier in self.identifiers:
+            formula_outer = re.findall(syn_pattern, identifier)
+            for outer in formula_outer:
+                yield outer
 
     def __repr__(self):
         return f'Annotation(paper_id={self.paper_id}, eqn_id={self.eqn_id}, identifiers={self.identifiers}, latex={self.latex}, descriptions={self.descriptions})'
@@ -39,6 +66,7 @@ class Annotation:
         if d[-1] == ')' and not d[0] == '(':
             d = d[:-1]
         d = d.strip()
+        d = d.replace("- ", "")
         return d
 
 
@@ -61,7 +89,8 @@ class Annotation:
         # one of the pred.identifiers matches one of self.identifiers
         # Here we remain strict bc variables are short and allowing non-exact matches
         # would inflate scores...
-        matched_identifiers = self.match_identifiers(other, comparison_field)
+        # matched_identifiers = self.match_identifiers(other, comparison_field)
+        matched_identifiers = self.match_identifiers_lenient(other, comparison_field)
         if segmentation_only:
             return self.paper_id == other.paper_id and self.eqn_id == other.eqn_id \
                and len(matched_identifiers) > 0
@@ -72,9 +101,35 @@ class Annotation:
         return self.paper_id == other.paper_id and self.eqn_id == other.eqn_id \
                and len(matched_identifiers) > 0 and len(matched_descriptions) > 0
 
+    # Lenient matching
+    def matches_pred_soft(self, other, comparison_field, segmentation_only):
+        # one of the pred.identifiers matches one of self.identifiers
+        # Here we remain strict bc variables are short and allowing non-exact matches
+        # would inflate scores...
+        # matched_identifiers = self.match_identifiers(other, comparison_field)
+        matched_identifiers = self.match_identifiers_lenient(other, comparison_field)
+        if segmentation_only:
+            return self.paper_id == other.paper_id and self.eqn_id == other.eqn_id \
+                   and len(matched_identifiers) > 0
+        # one of the pred.descriptions is a substring of one of self.descriptions
+        # (bidirectional subsumption)
+        matched_descriptions = self.descriptions_that_overlap(other.descriptions) + other.descriptions_that_overlap(
+            self.descriptions)
+        # pprint(matched_descriptions)
+        return self.paper_id == other.paper_id and self.eqn_id == other.eqn_id \
+               and len(matched_identifiers) > 0 and len(matched_descriptions) > 0
+
     def match_identifiers(self, other, comparison_field):
         if comparison_field == 'text':
             return self.identifiers.intersection(other.identifiers)
+        elif comparison_field == 'latex':
+            return self.latex.intersection(other.latex)
+        else:
+            raise Exception(f"Unsupported comparison_field: {comparison_field}")
+
+    def match_identifiers_lenient(self, other, comparison_field):
+        if comparison_field == 'text':
+            return self.identifier_synonyms.intersection(other.identifier_synonyms)
         elif comparison_field == 'latex':
             return self.latex.intersection(other.latex)
         else:
@@ -89,12 +144,39 @@ class Annotation:
     def descriptions_with_substring(self, s):
         return [d for d in self.descriptions if s in d]
 
+    def descriptions_that_overlap(self, other_descriptions):
+        # find common subsequence
+        # filter with lucene stop words
+        # if any survive, then there is overlap
+        desc_that_overlap = []
+        for other_d in other_descriptions:
+            desc_that_overlap.extend(self.descriptions_with_overlap(other_d))
+        return desc_that_overlap
+
+    def descriptions_with_overlap(self, other_d):
+        return [d for d in self.descriptions if len(self.longest_subsequence_filtered(d, other_d)) > 0]
+
+    def longest_subsequence_filtered(self, s1, s2):
+        def lcs(a, b):
+            matcher = SequenceMatcher(None, a, b)
+            match = matcher.find_longest_match(0, len(a), 0, len(b))
+            return a[match.a:match.a + match.size]
+        longest = lcs(s1.split(' '), s2.split(' '))
+        longest_no_stops = [w for w in longest if w not in stops]
+        return longest_no_stops
+        # if len(longest_no_stops) > 0:
+        #     return ' '.join(longest)
+
+
+
     def has_match_in_others(self, others, mode, comparison_field, segmentation_only):
         from_same_eqn = [a for a in others if a.key() == self.key()]
         if mode == 'strict':
             return self.has_strict_match_in_others(from_same_eqn, comparison_field, segmentation_only)
         elif mode == 'lenient':
             return self.has_lenient_match_in_others(from_same_eqn, comparison_field, segmentation_only)
+        elif mode == 'soft':
+            return self.has_soft_match_in_others(from_same_eqn, comparison_field, segmentation_only)
         else:
             raise ValueError(f"Invalid mode: {mode}")
 
@@ -110,6 +192,11 @@ class Annotation:
                 return True
         return False
 
+    def has_soft_match_in_others(self, others, comparison_field, segmentation_only):
+        for other_ann in others:
+            if self.matches_pred_soft(other_ann, comparison_field, segmentation_only):
+                return True
+        return False
 
 
 def parse_args():
@@ -315,11 +402,15 @@ greek2word = {'α':'alpha', 'β':'beta', 'γ':'gamma', 'δ':'delta', 'ε':'epsil
               'θ':'theta','ι':'iota', 'κ':'kappa','λ':'lambda', 'μ':'mu', 'ν':'nu', 'ξ':'xi', 'ο':'omikron',
               'π':'pi', 'ρ':'rho', 'σ':'sigma', 'τ':'tau', 'υ':'upsilon', 'φ':'phi', 'χ':'chi',
               'ψ':'psi', 'ω':'omega'}
-word2greek = {'\\\\alpha': 'α', '\\\\beta': 'β', '\\\\gamma': 'γ', '\\\\delta': 'δ', '\\\\epsilon': 'ε', '\\\\zeta': 'ζ',
-              '\\\\eta': 'η', '\\\\theta': 'θ', '\\\\iota': 'ι', '\\\\kappa': 'κ', '\\\\lambda': 'λ','\\\\mu': 'μ',
-              '\\\\nu': 'ν','\\\\xi': 'ξ','\\\\omikron': 'ο','\\\\pi': 'π', '\\\\rho': 'ρ','\\\\sigma': 'σ', '\\\\tau': 'τ',
-              '\\\\upsilon': 'υ', '\\\\phi': 'φ', '\\\\chi': 'χ', '\\\\psi': 'ψ', '\\\\omega': 'ω',
-              '\\\\Delta':'∆', '\\\\Gamma':'Γ','\\\\Lambda':'Λ', '\\\\Sigma':'Σ', '\\\\Theta':'Θ', '\\\\Omega':'Ω'}
+word2greek = {'\\\\alpha': 'α', '\\\\beta': 'β',    '\\\\gamma': 'γ',   '\\\\delta': 'δ',   '\\\\epsilon': 'ε', '\\\\zeta': 'ζ',
+              '\\\\eta': 'η',   '\\\\theta': 'θ',   '\\\\iota': 'ι',    '\\\\kappa': 'κ',   '\\\\lambda': 'λ',  '\\\\mu': 'μ',
+              '\\\\nu': 'ν',    '\\\\xi': 'ξ',      '\\\\omikron': 'ο', '\\\\pi': 'π',      '\\\\rho': 'ρ',     '\\\\sigma': 'σ',
+              '\\\\tau': 'τ',   '\\\\upsilon': 'υ', '\\\\phi': 'φ',     '\\\\chi': 'χ',     '\\\\psi': 'ψ',     '\\\\omega': 'ω',
+              '\\\\Alpha': 'Α', '\\\\Beta': 'Β',    '\\\\Gamma': 'Γ',   '\\\\Delta': 'Δ',   '\\\\Epsilon': 'Ε', '\\\\Zeta': 'Ζ',
+              '\\\\Eta': 'Η',   '\\\\Theta': 'Θ',   '\\\\Iota': 'Ι',    '\\\\Kappa': 'Κ',   '\\\\Lambda': 'Λ',  '\\\\Mu': 'Μ',
+              '\\\\Nu': 'Ν',    '\\\\Xi': 'Ξ',      '\\\\Omicron': 'Ο', '\\\\Pi': 'Π',      '\\\\Rho': 'Ρ',     '\\\\Sigma': 'Σ',
+              '\\\\Tau': 'Τ',   '\\\\Upsilon': 'Υ', '\\\\Phi': 'Φ',     '\\\\Chi': 'Χ',     '\\\\Psi': 'Ψ',     '\\\\Omega': 'Ω'}
+
 
 
 if __name__ == "__main__":
@@ -330,6 +421,8 @@ if __name__ == "__main__":
     print(f"STRICT\tP={p_strict}\tR:{r_strict}\tF1:{f1_strict}")
     p_lenient, r_lenient, f1_lenient = run_evaluation("lenient", "text", segmentation_only=False)
     print(f"LENIENT\tP={p_lenient}\tR:{r_lenient}\tF1:{f1_lenient}")
+    p_soft, r_soft, f1_soft = run_evaluation("soft", "text", segmentation_only=False)
+    print(f"SOFT\tP={p_soft}\tR:{r_soft}\tF1:{f1_soft}")
 
     print("\nIdentifier Latex Comparison")
     p_strict, r_strict, f1_strict = run_evaluation("strict", "latex", segmentation_only=False)
@@ -341,11 +434,11 @@ if __name__ == "__main__":
     print("Identifier Unicode Value Comparison")
     p_strict, r_strict, f1_strict = run_evaluation("strict", "text", segmentation_only=True)
     print(f"STRICT\tP={p_strict}\tR:{r_strict}\tF1:{f1_strict}")
-    # p_lenient, r_lenient, f1_lenient = run_evaluation("lenient", "text", segmentation_only=True)
-    # print(f"LENIENT\tP={p_lenient}\tR:{r_lenient}\tF1:{f1_lenient}")
+    p_lenient, r_lenient, f1_lenient = run_evaluation("lenient", "text", segmentation_only=True)
+    print(f"LENIENT\tP={p_lenient}\tR:{r_lenient}\tF1:{f1_lenient}")
 
     print("\nIdentifier Latex Comparison")
     p_strict, r_strict, f1_strict = run_evaluation("strict", "latex", segmentation_only=True)
     print(f"STRICT\tP={p_strict}\tR:{r_strict}\tF1:{f1_strict}")
-    # p_lenient, r_lenient, f1_lenient = run_evaluation("lenient", "latex", segmentation_only=True)
-    # print(f"LENIENT\tP={p_lenient}\tR:{r_lenient}\tF1:{f1_lenient}")
+    p_lenient, r_lenient, f1_lenient = run_evaluation("lenient", "latex", segmentation_only=True)
+    print(f"LENIENT\tP={p_lenient}\tR:{r_lenient}\tF1:{f1_lenient}")
