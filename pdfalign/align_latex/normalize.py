@@ -77,6 +77,11 @@ def drop_group(tokens, i):
             return i
 
 
+def render(formula):
+    for t in normalize(LatexTokenizer(formula)):
+        if t.code in (CategoryCode.Letter, CategoryCode.Space, CategoryCode.Other):
+            yield t.value
+
 if __name__ == '__main__':
     command = sys.argv[1]
     formula = sys.argv[2]

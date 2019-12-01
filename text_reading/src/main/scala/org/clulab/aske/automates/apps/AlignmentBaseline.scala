@@ -190,10 +190,10 @@ class AlignmentBaseline() {
     // todo: Becky -- speed this up a bit, and maybe add a backoff? par?
     // todo: for debug load in the mentions?
     for ((eqn_id, eqnIndex) <- eqn_ids.zipWithIndex.par) {
-      if (eqn_id == "1801.00110_equation0002") {
+//      if (eqn_id == "1801.00110_equation0002") {
         println(s"processing $eqn_id")
         writePredictionsForEqn(eqnIndex, eqn_id)
-      }
+//      }
     }
   }
 
@@ -329,7 +329,7 @@ class AlignmentBaseline() {
     val latexTextMatches = new ArrayBuffer[Prediction]()
     //for every extracted mention
     for (variable <- var2Defs.keys) {
-      println(s"checking variable: $variable")
+//      println(s"checking variable: $variable")
       //best Latex candidates, out of which we'll take the max (to account for some font info)
 //      val bestCandidates = new ArrayBuffer[String]()
         //for every candidate eq var
@@ -338,7 +338,7 @@ class AlignmentBaseline() {
           renderedCand = renderedAll(cand)
           //check if the candidate matches the var extracted from text and return the good candidate or str "None"
           resultOfMatching = findMatchingVar(variable, cand, renderedCand, mathSymbols, word2greekDict, pdfalignDir)
-          _ = println(resultOfMatching)
+//          _ = println(resultOfMatching)
           if resultOfMatching.isDefined
         } yield resultOfMatching.get
 
