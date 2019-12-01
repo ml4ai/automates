@@ -5,9 +5,9 @@ import os
 import re
 from pprint import pprint
 from collections import defaultdict
-from align_latex.normalize import normalize
-from align_latex.latex_tokenizer import *
-from align_latex.align_eq_bb import tokens_to_string
+from normalize import normalize
+from latex_tokenizer import *
+from align_eq_bb import tokens_to_string
 
 NO_DESC = "<<NO_DESC>>"
 NO_LATEX = "<<NO_LATEX>>"
@@ -19,7 +19,7 @@ class Annotation:
         self.paper_id = paper_id
         self.eqn_id = eqn_id
         self.identifiers = set(identifiers) #fixme -- set, but make sure the preds idents are not scrambled
-        self.descriptions = set(descriptions)
+        self.descriptions = set([self.trim_description(d) for d in descriptions])
         self.latex = set(latex)
 
     def __repr__(self):
@@ -27,6 +27,20 @@ class Annotation:
 
     def key(self):
         return (self.paper_id, self.eqn_id)
+
+    def trim_description(self, d):
+        d = d.strip()
+        if d[0] == '(' and not d[-1] == ')':
+            d = d[1:]
+        if d[-1] == ')' and '(' not in d:
+            d = d[:-1]
+        if d[-1] in ['.', ',', ';', ':', '|']:
+            d = d[:-1]
+        if d[-1] == ')' and not d[0] == '(':
+            d = d[:-1]
+        d = d.strip()
+        return d
+
 
     # Strict matching
     def matches_pred_strict(self, other, comparison_field, segmentation_only):
@@ -37,6 +51,7 @@ class Annotation:
                and len(matched_identifiers) > 0
         # one of the pred.descriptions matches one of self.descriptions
         matched_descriptions = self.descriptions.intersection(other.descriptions)
+        # pprint(matched_descriptions)
         # and it's the right paper and eqn
         return self.paper_id == other.paper_id and self.eqn_id == other.eqn_id \
                and len(matched_identifiers) > 0 and len(matched_descriptions) > 0
@@ -53,6 +68,7 @@ class Annotation:
         # one of the pred.descriptions is a substring of one of self.descriptions
         # (bidirectional subsumption)
         matched_descriptions = self.descriptions_that_subsume(other.descriptions) + other.descriptions_that_subsume(self.descriptions)
+        # pprint(matched_descriptions)
         return self.paper_id == other.paper_id and self.eqn_id == other.eqn_id \
                and len(matched_identifiers) > 0 and len(matched_descriptions) > 0
 

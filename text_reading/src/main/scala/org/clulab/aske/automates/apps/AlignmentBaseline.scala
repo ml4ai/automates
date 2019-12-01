@@ -18,6 +18,7 @@ import scala.io.Source
 import sys.process._
 import scala.io.StdIn.readLine
 import org.clulab.aske.automates.apps.ExtractAndExport.getExporter
+import org.clulab.utils.DisplayUtils
 import org.clulab.utils.Serializer._
 
 import scala.collection.parallel.ParSeq
@@ -80,6 +81,9 @@ class AlignmentBaseline() {
   val eqn_ids = loadStrings(eqSrcFile).map(_.replace(".png", ""))
   val eqLines = loadStrings(eqFile)
 
+  def customRender(cand: String): String = {
+    render(replaceWordWithGreek(cand, word2greekDict.toMap), pdfalignDir).replaceAll("\\s", "")
+  }
 
   def writePredictionsForEqn(eqnIndex: Int, eqn_id: String): Unit = {
 
@@ -95,7 +99,12 @@ class AlignmentBaseline() {
       .split("\n")
       // keep the ones that have less than 50 non-space chars
       .filter(cand => cand.count(char => !char.isSpaceChar) <= 50)
+//    println("allEqVarCandidates:" + allEqVarCandidates.mkString(", "))
 
+    val renderedAll = mutable.HashMap[String, String]()
+    for (variableCand <- allEqVarCandidates) {
+      renderedAll.put(variableCand, customRender(variableCand))
+    }
     //for every file, get the text of the file
     //      val texts: Seq[String] = dataLoader.loadFile(paper)
     //      //todo: change greek letter in mentions to full words
@@ -117,15 +126,16 @@ class AlignmentBaseline() {
     val textDefinitionMentions = SerializedMentions
       .load(s"$extractedMentionsDir/${eqn_id}.serialized")
       .filter(mention => mention matches "Definition")
-
+//    textDefinitionMentions.foreach(DisplayUtils.displayMention)
     //      for (td <- textDefinitionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("definition").head.text)
 
     val groupedByCommonVar = textDefinitionMentions
       .groupBy(_.arguments("variable").head.text)
       .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("definition").head.text).distinct) //the definitions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
+//    groupedByCommonVar.foreach(println)
 
-
-    val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, mathSymbols, word2greekDict.toMap, pdfalignDir, paperId, eq).seq
+    val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, renderedAll.toMap, mathSymbols, word2greekDict.toMap, pdfalignDir, paperId, eq).seq
+//    latexTextMatches.foreach(println)
 
     println("+++++++++")
     for (m <- latexTextMatches) println(s"$m\t${paper}")
@@ -148,7 +158,7 @@ class AlignmentBaseline() {
       sv <- simpleVars
       completeSV = if (checkIfUnmatchedCurlyBraces(sv)) sv + " }" else sv
       if !latexIdentifiersFromText.contains(completeSV)
-      rendered = render(completeSV, pdfalignDir)
+      rendered = render(replaceWordWithGreek(completeSV, word2greekDict.toMap), pdfalignDir).replaceAll("\\s", "")
       newPred = new Prediction(paperId, eq, completeSV, Some(rendered), None)
     } yield newPred
 
@@ -179,9 +189,11 @@ class AlignmentBaseline() {
 
     // todo: Becky -- speed this up a bit, and maybe add a backoff? par?
     // todo: for debug load in the mentions?
-    for ((eqn_id, eqnIndex) <- eqn_ids.par.zipWithIndex) {
-      println(s"processing $eqn_id")
-      writePredictionsForEqn(eqnIndex, eqn_id)
+    for ((eqn_id, eqnIndex) <- eqn_ids.zipWithIndex.par) {
+      if (eqn_id == "1801.00110_equation0002") {
+        println(s"processing $eqn_id")
+        writePredictionsForEqn(eqnIndex, eqn_id)
+      }
     }
   }
 
@@ -304,6 +316,7 @@ class AlignmentBaseline() {
   def getLatexTextMatches(
     var2Defs: Map[String, Seq[String]],
     allEqVarCandidates: Seq[String],
+    renderedAll: Map[String, String],
     mathSymbols: Seq[String],
     word2greekDict: Map[String, String],
     pdfalignDir: String,
@@ -316,13 +329,16 @@ class AlignmentBaseline() {
     val latexTextMatches = new ArrayBuffer[Prediction]()
     //for every extracted mention
     for (variable <- var2Defs.keys) {
+      println(s"checking variable: $variable")
       //best Latex candidates, out of which we'll take the max (to account for some font info)
 //      val bestCandidates = new ArrayBuffer[String]()
         //for every candidate eq var
         val bestCandidates = for {
           cand <- allEqVarCandidates
+          renderedCand = renderedAll(cand)
           //check if the candidate matches the var extracted from text and return the good candidate or str "None"
-          resultOfMatching = findMatchingVar(variable, cand, mathSymbols, word2greekDict, pdfalignDir)
+          resultOfMatching = findMatchingVar(variable, cand, renderedCand, mathSymbols, word2greekDict, pdfalignDir)
+          _ = println(resultOfMatching)
           if resultOfMatching.isDefined
         } yield resultOfMatching.get
 
@@ -346,6 +362,7 @@ class AlignmentBaseline() {
   def findMatchingVar(
                        variable: String,
                        latexCandidateVar: String,
+                       renderedLatexCandidateVar: String,
                        mathSymbols: Seq[String],
                        word2greekDict: Map[String, String],
                        pdfalignDir: String): Option[String] = {
@@ -366,11 +383,11 @@ class AlignmentBaseline() {
 //          val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
 
     //render the candidate with the greek letter word replaced with the greek letter
-    val rendered = render(replaceWordWithGreek(latexCandidateVar, word2greekDict), pdfalignDir).replaceAll("\\s", "")
+//    val rendered = render(replaceWordWithGreek(latexCandidateVar, word2greekDict), pdfalignDir).replaceAll("\\s", "")
     //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
-    if (rendered == variable) {
+    if (renderedLatexCandidateVar == variable) {
       println(" --> rendered == variable")
-      println(" --> rendered: " + rendered)
+      println(" --> rendered: " + renderedLatexCandidateVar)
       //return the candidate
       return Some(latexCandidateVar)
     }

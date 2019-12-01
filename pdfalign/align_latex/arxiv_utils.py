@@ -1,6 +1,6 @@
 import os
 from glob import glob
-from .latex_tokenizer import LatexTokenizer, CategoryCode
+from latex_tokenizer import LatexTokenizer, CategoryCode
 
 
 

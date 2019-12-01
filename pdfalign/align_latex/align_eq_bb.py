@@ -10,8 +10,8 @@ from shutil import copytree, rmtree
 import numpy as np
 from lxml import etree
 from pdf2image import convert_from_path
-from .latex_tokenizer import LatexTokenizer, CategoryCode
-from .arxiv_utils import find_main_tex_file
+from latex_tokenizer import LatexTokenizer, CategoryCode
+from arxiv_utils import find_main_tex_file
 
 
 
