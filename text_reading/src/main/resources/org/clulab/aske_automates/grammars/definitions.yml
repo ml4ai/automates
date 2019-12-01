@@ -59,7 +59,7 @@ rules:
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     #action: variableArguments
-    action: selectShorterAsVariable
+    action: definitionActionFlowSpecialCase
     pattern: |
       @c1:Concept "(" @c2:Concept ")"
       #todo: check why -LRB- stopped working; maybe try to have both in the rule?
@@ -111,7 +111,19 @@ rules:
       (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  "," @variable:Variable ","
       |
       (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/)
-#
+
+  - name: def_is_given_by
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "The Toomre factor varies with radius and is given by Q(r)."
+    action: ${action}
+    pattern: |
+      trigger = [word=/give/]
+      variable:Variable = nmod_agent
+      definition: Concept = nsubjpass
+
+
 #todo: revisit
 #  - name: where_var_def
 #    label: Definition
