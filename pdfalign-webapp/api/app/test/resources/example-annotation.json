@@ -1,0 +1,3275 @@
+[
+    {
+        "equation": [
+            [
+                {
+                    "token": "γ′",
+                    "chars": [
+                        {
+                            "xmin": 1.9908333333333335,
+                            "ymin": 8.622083333333332,
+                            "xmax": 2.062472222222222,
+                            "ymax": 8.760458333333332,
+                            "value": "γ",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "γ′",
+                            "tokenid": 2666,
+                            "id": 13664,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.005,
+                                "y": 8.725,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.0701527777777775,
+                            "ymin": 8.534319444444444,
+                            "xmax": 2.102055555555556,
+                            "ymax": 8.702180555555556,
+                            "value": "′",
+                            "font": "UPLMDW+CMSY7",
+                            "font_size": "12.086",
+                            "token": "γ′",
+                            "tokenid": 2666,
+                            "id": 13665,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.09,
+                                "y": 8.645,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            [
+                {
+                    "token": ")︄1−γ′",
+                    "chars": [
+                        {
+                            "xmin": 3.5290416666666666,
+                            "ymin": 8.541208333333334,
+                            "xmax": 3.5871666666666666,
+                            "ymax": 8.638069444444445,
+                            "value": "γ",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": ")︄1−γ′",
+                            "tokenid": 2659,
+                            "id": 13650,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.555,
+                                "y": 8.585,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.5931249999999997,
+                            "ymin": 8.470902777777777,
+                            "xmax": 3.623638888888889,
+                            "ymax": 8.590930555555556,
+                            "value": "′",
+                            "font": "EXPITJ+CMSY5",
+                            "font_size": "8.643",
+                            "token": ")︄1−γ′",
+                            "tokenid": 2659,
+                            "id": 13651,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.605,
+                                "y": 8.545,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "text": [
+            [
+                {
+                    "token": "γ′",
+                    "chars": [
+                        {
+                            "xmin": 1.2450694444444443,
+                            "ymin": 9.518180555555555,
+                            "xmax": 1.3167083333333334,
+                            "ymax": 9.656555555555556,
+                            "value": "γ",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "γ′",
+                            "tokenid": 2728,
+                            "id": 13940,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.305,
+                                "y": 9.57,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.3244027777777778,
+                            "ymin": 9.430430555555555,
+                            "xmax": 1.3563055555555554,
+                            "ymax": 9.598291666666666,
+                            "value": "′",
+                            "font": "UPLMDW+CMSY7",
+                            "font_size": "12.086",
+                            "token": "γ′",
+                            "tokenid": 2728,
+                            "id": 13941,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.305,
+                                "y": 9.57,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            [
+                {
+                    "token": "γ′",
+                    "chars": [
+                        {
+                            "xmin": 1.7504305555555557,
+                            "ymin": 9.664305555555556,
+                            "xmax": 1.8220694444444443,
+                            "ymax": 9.802680555555556,
+                            "value": "γ",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "γ′",
+                            "tokenid": 2740,
+                            "id": 14001,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.8150000000000002,
+                                "y": 9.705,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 273,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.8297499999999998,
+                            "ymin": 9.576555555555554,
+                            "xmax": 1.8616527777777776,
+                            "ymax": 9.744416666666666,
+                            "value": "′",
+                            "font": "UPLMDW+CMSY7",
+                            "font_size": "12.086",
+                            "token": "γ′",
+                            "tokenid": 2740,
+                            "id": 14002,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.8150000000000002,
+                                "y": 9.705,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 273,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "description": [
+            [
+                {
+                    "token": "slope",
+                    "chars": [
+                        {
+                            "xmin": 1.7300416666666667,
+                            "ymin": 9.492861111111111,
+                            "xmax": 1.7838749999999999,
+                            "ymax": 9.659597222222223,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "slope",
+                            "tokenid": 2731,
+                            "id": 13947,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.88,
+                                "y": 9.54,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.7838749999999999,
+                            "ymin": 9.492861111111111,
+                            "xmax": 1.8223333333333334,
+                            "ymax": 9.659597222222223,
+                            "value": "l",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "slope",
+                            "tokenid": 2731,
+                            "id": 13948,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.88,
+                                "y": 9.54,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.8223333333333334,
+                            "ymin": 9.492861111111111,
+                            "xmax": 1.8915277777777777,
+                            "ymax": 9.659597222222223,
+                            "value": "o",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "slope",
+                            "tokenid": 2731,
+                            "id": 13949,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.88,
+                                "y": 9.54,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.8915277777777777,
+                            "ymin": 9.492861111111111,
+                            "xmax": 1.9607083333333333,
+                            "ymax": 9.659597222222223,
+                            "value": "p",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "slope",
+                            "tokenid": 2731,
+                            "id": 13950,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.88,
+                                "y": 9.54,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.9607083333333333,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.0221388888888887,
+                            "ymax": 9.659597222222223,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "slope",
+                            "tokenid": 2731,
+                            "id": 13951,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.88,
+                                "y": 9.54,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "of",
+                    "chars": [
+                        {
+                            "xmin": 2.0572916666666665,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.126472222222222,
+                            "ymax": 9.659597222222223,
+                            "value": "o",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "of",
+                            "tokenid": 2732,
+                            "id": 13952,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.075,
+                                "y": 9.53,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.126472222222222,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.172555555555556,
+                            "ymax": 9.659597222222223,
+                            "value": "f",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "of",
+                            "tokenid": 2732,
+                            "id": 13953,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.075,
+                                "y": 9.53,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "the",
+                    "chars": [
+                        {
+                            "xmin": 2.2076944444444444,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.2461666666666664,
+                            "ymax": 9.659597222222223,
+                            "value": "t",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "the",
+                            "tokenid": 2733,
+                            "id": 13954,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.255,
+                                "y": 9.545,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.2461666666666664,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.3153472222222224,
+                            "ymax": 9.659597222222223,
+                            "value": "h",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "the",
+                            "tokenid": 2733,
+                            "id": 13955,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.255,
+                                "y": 9.545,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.3153472222222224,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.3767916666666666,
+                            "ymax": 9.659597222222223,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "the",
+                            "tokenid": 2733,
+                            "id": 13956,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.255,
+                                "y": 9.545,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "power-law",
+                    "chars": [
+                        {
+                            "xmin": 2.4119305555555552,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.481111111111111,
+                            "ymax": 9.659597222222223,
+                            "value": "p",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13957,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.481111111111111,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.5503055555555556,
+                            "ymax": 9.659597222222223,
+                            "value": "o",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13958,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.546847222222222,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.64675,
+                            "ymax": 9.659597222222223,
+                            "value": "w",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13959,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.64675,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.708180555555556,
+                            "ymax": 9.659597222222223,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13960,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.708180555555556,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.7542638888888886,
+                            "ymax": 9.659597222222223,
+                            "value": "r",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13961,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.7514861111111113,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.7975694444444446,
+                            "ymax": 9.659597222222223,
+                            "value": "-",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13962,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.7975694444444446,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.836027777777778,
+                            "ymax": 9.659597222222223,
+                            "value": "l",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13963,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.836027777777778,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.897472222222222,
+                            "ymax": 9.659597222222223,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13964,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.895388888888889,
+                            "ymin": 9.492861111111111,
+                            "xmax": 2.9952916666666667,
+                            "ymax": 9.659597222222223,
+                            "value": "w",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "power-law",
+                            "tokenid": 2734,
+                            "id": 13965,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.475,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "profile,",
+                    "chars": [
+                        {
+                            "xmin": 3.0305833333333334,
+                            "ymin": 9.492861111111111,
+                            "xmax": 3.099763888888889,
+                            "ymax": 9.659597222222223,
+                            "value": "p",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "profile,",
+                            "tokenid": 2735,
+                            "id": 13966,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.07,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.099763888888889,
+                            "ymin": 9.492861111111111,
+                            "xmax": 3.1458472222222222,
+                            "ymax": 9.659597222222223,
+                            "value": "r",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "profile,",
+                            "tokenid": 2735,
+                            "id": 13967,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.07,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.1458472222222222,
+                            "ymin": 9.492861111111111,
+                            "xmax": 3.215027777777778,
+                            "ymax": 9.659597222222223,
+                            "value": "o",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "profile,",
+                            "tokenid": 2735,
+                            "id": 13968,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.07,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.215027777777778,
+                            "ymin": 9.492861111111111,
+                            "xmax": 3.291958333333333,
+                            "ymax": 9.659597222222223,
+                            "value": "fi",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "profile,",
+                            "tokenid": 2735,
+                            "id": 13969,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.07,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.291958333333333,
+                            "ymin": 9.492861111111111,
+                            "xmax": 3.3304305555555556,
+                            "ymax": 9.659597222222223,
+                            "value": "l",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "profile,",
+                            "tokenid": 2735,
+                            "id": 13970,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.07,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.3304305555555556,
+                            "ymin": 9.492861111111111,
+                            "xmax": 3.391861111111111,
+                            "ymax": 9.659597222222223,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "profile,",
+                            "tokenid": 2735,
+                            "id": 13971,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.07,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.391861111111111,
+                            "ymin": 9.492861111111111,
+                            "xmax": 3.4264583333333336,
+                            "ymax": 9.659597222222223,
+                            "value": ",",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "profile,",
+                            "tokenid": 2735,
+                            "id": 13972,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.07,
+                                "y": 9.555,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 272,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    {
+        "equation": [
+            [
+                {
+                    "token": "(︄√︁qmx2",
+                    "chars": [
+                        {
+                            "xmin": 2.4131666666666667,
+                            "ymin": 8.61951388888889,
+                            "xmax": 2.4749305555555554,
+                            "ymax": 8.757888888888889,
+                            "value": "q",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "(︄√︁qmx2",
+                            "tokenid": 2656,
+                            "id": 13637,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.445,
+                                "y": 8.675,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.4749305555555554,
+                            "ymin": 8.673736111111111,
+                            "xmax": 2.5731111111111113,
+                            "ymax": 8.770597222222221,
+                            "value": "m",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "(︄√︁qmx2",
+                            "tokenid": 2656,
+                            "id": 13638,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.505,
+                                "y": 8.7,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            [
+                {
+                    "token": "y2/qm",
+                    "chars": [
+                        {
+                            "xmin": 3.094375,
+                            "ymin": 8.61951388888889,
+                            "xmax": 3.156152777777778,
+                            "ymax": 8.757888888888889,
+                            "value": "q",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "y2/qm",
+                            "tokenid": 2658,
+                            "id": 13645,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.125,
+                                "y": 8.695,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.156152777777778,
+                            "ymin": 8.673736111111111,
+                            "xmax": 3.2543333333333333,
+                            "ymax": 8.770597222222221,
+                            "value": "m",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "y2/qm",
+                            "tokenid": 2658,
+                            "id": 13646,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.225,
+                                "y": 8.715,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "text": [
+            [
+                {
+                    "token": "qm",
+                    "chars": [
+                        {
+                            "xmin": 2.8124305555555558,
+                            "ymin": 9.225944444444444,
+                            "xmax": 2.8741944444444445,
+                            "ymax": 9.364319444444444,
+                            "value": "q",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "qm",
+                            "tokenid": 2711,
+                            "id": 13864,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.91,
+                                "y": 9.27,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.8742083333333337,
+                            "ymin": 9.280166666666666,
+                            "xmax": 2.9723888888888887,
+                            "ymax": 9.377027777777776,
+                            "value": "m",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "qm",
+                            "tokenid": 2711,
+                            "id": 13865,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.91,
+                                "y": 9.27,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            [
+                {
+                    "token": "qm",
+                    "chars": [
+                        {
+                            "xmin": 0.7047222222222222,
+                            "ymin": 9.079833333333333,
+                            "xmax": 0.7664861111111111,
+                            "ymax": 9.218208333333333,
+                            "value": "q",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "qm",
+                            "tokenid": 2695,
+                            "id": 13782,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.76,
+                                "y": 9.105,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 0.7665000000000001,
+                            "ymin": 9.134041666666668,
+                            "xmax": 0.8646805555555556,
+                            "ymax": 9.230902777777779,
+                            "value": "m",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "qm",
+                            "tokenid": 2695,
+                            "id": 13783,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.76,
+                                "y": 9.105,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "description": [
+            [
+                {
+                    "token": "projected",
+                    "chars": [
+                        {
+                            "xmin": 1.6892222222222222,
+                            "ymin": 9.054513888888888,
+                            "xmax": 1.7584027777777778,
+                            "ymax": 9.221250000000001,
+                            "value": "p",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13796,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.7584027777777778,
+                            "ymin": 9.054513888888888,
+                            "xmax": 1.8044861111111112,
+                            "ymax": 9.221250000000001,
+                            "value": "r",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13797,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.8044861111111112,
+                            "ymin": 9.054513888888888,
+                            "xmax": 1.8736666666666666,
+                            "ymax": 9.221250000000001,
+                            "value": "o",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13798,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.8736666666666666,
+                            "ymin": 9.054513888888888,
+                            "xmax": 1.912125,
+                            "ymax": 9.221250000000001,
+                            "value": "j",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13799,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.912125,
+                            "ymin": 9.054513888888888,
+                            "xmax": 1.9735694444444445,
+                            "ymax": 9.221250000000001,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13800,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.9735694444444445,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.035,
+                            "ymax": 9.221250000000001,
+                            "value": "c",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13801,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.035,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.073472222222222,
+                            "ymax": 9.221250000000001,
+                            "value": "t",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13802,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.073472222222222,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.1349027777777776,
+                            "ymax": 9.221250000000001,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13803,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.1349027777777776,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.204083333333333,
+                            "ymax": 9.221250000000001,
+                            "value": "d",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "projected",
+                            "tokenid": 2698,
+                            "id": 13804,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.9349999999999998,
+                                "y": 9.095,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "axis",
+                    "chars": [
+                        {
+                            "xmin": 2.2435277777777776,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.3049583333333334,
+                            "ymax": 9.221250000000001,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "axis",
+                            "tokenid": 2699,
+                            "id": 13805,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.345,
+                                "y": 9.12,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.3049583333333334,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.374152777777778,
+                            "ymax": 9.221250000000001,
+                            "value": "x",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "axis",
+                            "tokenid": 2699,
+                            "id": 13806,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.345,
+                                "y": 9.12,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.374152777777778,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.412611111111111,
+                            "ymax": 9.221250000000001,
+                            "value": "i",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "axis",
+                            "tokenid": 2699,
+                            "id": 13807,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.345,
+                                "y": 9.12,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.412611111111111,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.4664444444444444,
+                            "ymax": 9.221250000000001,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "axis",
+                            "tokenid": 2699,
+                            "id": 13808,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.345,
+                                "y": 9.12,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "ratio.",
+                    "chars": [
+                        {
+                            "xmin": 2.505736111111111,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.5518194444444444,
+                            "ymax": 9.221250000000001,
+                            "value": "r",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "ratio.",
+                            "tokenid": 2700,
+                            "id": 13809,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.595,
+                                "y": 9.085,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.5518194444444444,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.61325,
+                            "ymax": 9.221250000000001,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "ratio.",
+                            "tokenid": 2700,
+                            "id": 13810,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.595,
+                                "y": 9.085,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.61325,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.6517222222222223,
+                            "ymax": 9.221250000000001,
+                            "value": "t",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "ratio.",
+                            "tokenid": 2700,
+                            "id": 13811,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.595,
+                                "y": 9.085,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.6517222222222223,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.6901805555555556,
+                            "ymax": 9.221250000000001,
+                            "value": "i",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "ratio.",
+                            "tokenid": 2700,
+                            "id": 13812,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.595,
+                                "y": 9.085,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.6901805555555556,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.759361111111111,
+                            "ymax": 9.221250000000001,
+                            "value": "o",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "ratio.",
+                            "tokenid": 2700,
+                            "id": 13813,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.595,
+                                "y": 9.085,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.759361111111111,
+                            "ymin": 9.054513888888888,
+                            "xmax": 2.7939583333333333,
+                            "ymax": 9.221250000000001,
+                            "value": ".",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "ratio.",
+                            "tokenid": 2700,
+                            "id": 13814,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.595,
+                                "y": 9.085,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 267,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    {
+        "equation": [
+            [
+                {
+                    "token": "Σ(x,",
+                    "chars": [
+                        {
+                            "xmin": 1.0735833333333333,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.1526666666666667,
+                            "ymax": 8.854055555555554,
+                            "value": "x",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "Σ(x,",
+                            "tokenid": 2660,
+                            "id": 13654,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.105,
+                                "y": 8.775,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            [
+                {
+                    "token": "(︄√︁qmx2",
+                    "chars": [
+                        {
+                            "xmin": 2.580041666666667,
+                            "ymin": 8.61951388888889,
+                            "xmax": 2.659125,
+                            "ymax": 8.757888888888889,
+                            "value": "x",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "(︄√︁qmx2",
+                            "tokenid": 2656,
+                            "id": 13639,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.615,
+                                "y": 8.7,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    {
+        "equation": [
+            [
+                {
+                    "token": "y)",
+                    "chars": [
+                        {
+                            "xmin": 1.2142083333333333,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.2820555555555557,
+                            "ymax": 8.854055555555554,
+                            "value": "y",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "y)",
+                            "tokenid": 2661,
+                            "id": 13656,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.235,
+                                "y": 8.77,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            [
+                {
+                    "token": "y2/qm",
+                    "chars": [
+                        {
+                            "xmin": 2.8903194444444447,
+                            "ymin": 8.61951388888889,
+                            "xmax": 2.9581666666666666,
+                            "ymax": 8.757888888888889,
+                            "value": "y",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "y2/qm",
+                            "tokenid": 2658,
+                            "id": 13642,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.905,
+                                "y": 8.68,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    {
+        "equation": [
+            [
+                {
+                    "token": "Σcr",
+                    "chars": [
+                        {
+                            "xmin": 1.5252083333333333,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.625138888888889,
+                            "ymax": 8.854055555555554,
+                            "value": "Σ",
+                            "font": "FAXQSU+CMR10",
+                            "font_size": "9.963",
+                            "token": "Σcr",
+                            "tokenid": 2663,
+                            "id": 13659,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.59,
+                                "y": 8.815,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.6252083333333334,
+                            "ymin": 8.769902777777778,
+                            "xmax": 1.6746527777777778,
+                            "ymax": 8.86676388888889,
+                            "value": "c",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "Σcr",
+                            "tokenid": 2663,
+                            "id": 13660,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.645,
+                                "y": 8.815,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.6746527777777778,
+                            "ymin": 8.769902777777778,
+                            "xmax": 1.7260277777777777,
+                            "ymax": 8.86676388888889,
+                            "value": "r",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "Σcr",
+                            "tokenid": 2663,
+                            "id": 13661,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.695,
+                                "y": 8.815,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "text": [
+            [
+                {
+                    "token": "Σcr.",
+                    "chars": [
+                        {
+                            "xmin": 3.5870138888888885,
+                            "ymin": 9.372069444444444,
+                            "xmax": 3.6869444444444444,
+                            "ymax": 9.510444444444444,
+                            "value": "Σ",
+                            "font": "FAXQSU+CMR10",
+                            "font_size": "9.963",
+                            "token": "Σcr.",
+                            "tokenid": 2725,
+                            "id": 13925,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.645,
+                                "y": 9.42,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 270,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.6869444444444444,
+                            "ymin": 9.426277777777777,
+                            "xmax": 3.7363888888888885,
+                            "ymax": 9.523138888888887,
+                            "value": "c",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "Σcr.",
+                            "tokenid": 2725,
+                            "id": 13926,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7150000000000003,
+                                "y": 9.465,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 270,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.7363888888888885,
+                            "ymin": 9.426277777777777,
+                            "xmax": 3.7877638888888887,
+                            "ymax": 9.523138888888887,
+                            "value": "r",
+                            "font": "SHEVLG+CMMI7",
+                            "font_size": "6.974",
+                            "token": "Σcr.",
+                            "tokenid": 2725,
+                            "id": 13927,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.76,
+                                "y": 9.465,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 270,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "description": [
+            [
+                {
+                    "token": "mean",
+                    "chars": [
+                        {
+                            "xmin": 1.846,
+                            "ymin": 9.34675,
+                            "xmax": 1.953638888888889,
+                            "ymax": 9.513486111111112,
+                            "value": "m",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mean",
+                            "tokenid": 2720,
+                            "id": 13900,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.99,
+                                "y": 9.43,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.953638888888889,
+                            "ymin": 9.34675,
+                            "xmax": 2.0150833333333336,
+                            "ymax": 9.513486111111112,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mean",
+                            "tokenid": 2720,
+                            "id": 13901,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.99,
+                                "y": 9.43,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.0150833333333336,
+                            "ymin": 9.34675,
+                            "xmax": 2.0765138888888885,
+                            "ymax": 9.513486111111112,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mean",
+                            "tokenid": 2720,
+                            "id": 13902,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.99,
+                                "y": 9.43,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.0765138888888885,
+                            "ymin": 9.34675,
+                            "xmax": 2.1457083333333333,
+                            "ymax": 9.513486111111112,
+                            "value": "n",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mean",
+                            "tokenid": 2720,
+                            "id": 13903,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.99,
+                                "y": 9.43,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "surface",
+                    "chars": [
+                        {
+                            "xmin": 2.1930277777777776,
+                            "ymin": 9.34675,
+                            "xmax": 2.246847222222222,
+                            "ymax": 9.513486111111112,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2721,
+                            "id": 13904,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.34,
+                                "y": 9.41,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.246847222222222,
+                            "ymin": 9.34675,
+                            "xmax": 2.316027777777778,
+                            "ymax": 9.513486111111112,
+                            "value": "u",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2721,
+                            "id": 13905,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.34,
+                                "y": 9.41,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.316027777777778,
+                            "ymin": 9.34675,
+                            "xmax": 2.362111111111111,
+                            "ymax": 9.513486111111112,
+                            "value": "r",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2721,
+                            "id": 13906,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.34,
+                                "y": 9.41,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.362111111111111,
+                            "ymin": 9.34675,
+                            "xmax": 2.4081944444444443,
+                            "ymax": 9.513486111111112,
+                            "value": "f",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2721,
+                            "id": 13907,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.34,
+                                "y": 9.41,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.4068055555555556,
+                            "ymin": 9.34675,
+                            "xmax": 2.468236111111111,
+                            "ymax": 9.513486111111112,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2721,
+                            "id": 13908,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.34,
+                                "y": 9.41,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.468236111111111,
+                            "ymin": 9.34675,
+                            "xmax": 2.5296805555555557,
+                            "ymax": 9.513486111111112,
+                            "value": "c",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2721,
+                            "id": 13909,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.34,
+                                "y": 9.41,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.5296805555555557,
+                            "ymin": 9.34675,
+                            "xmax": 2.591111111111111,
+                            "ymax": 9.513486111111112,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2721,
+                            "id": 13910,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.34,
+                                "y": 9.41,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "density",
+                    "chars": [
+                        {
+                            "xmin": 2.6382916666666665,
+                            "ymin": 9.34675,
+                            "xmax": 2.707486111111111,
+                            "ymax": 9.513486111111112,
+                            "value": "d",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2722,
+                            "id": 13911,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.775,
+                                "y": 9.425,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.707486111111111,
+                            "ymin": 9.34675,
+                            "xmax": 2.7689166666666667,
+                            "ymax": 9.513486111111112,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2722,
+                            "id": 13912,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.775,
+                                "y": 9.425,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.7689166666666667,
+                            "ymin": 9.34675,
+                            "xmax": 2.8380972222222223,
+                            "ymax": 9.513486111111112,
+                            "value": "n",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2722,
+                            "id": 13913,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.775,
+                                "y": 9.425,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.8380972222222223,
+                            "ymin": 9.34675,
+                            "xmax": 2.8919305555555557,
+                            "ymax": 9.513486111111112,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2722,
+                            "id": 13914,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.775,
+                                "y": 9.425,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.8919305555555557,
+                            "ymin": 9.34675,
+                            "xmax": 2.930388888888889,
+                            "ymax": 9.513486111111112,
+                            "value": "i",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2722,
+                            "id": 13915,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.775,
+                                "y": 9.425,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.930388888888889,
+                            "ymin": 9.34675,
+                            "xmax": 2.9688611111111114,
+                            "ymax": 9.513486111111112,
+                            "value": "t",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2722,
+                            "id": 13916,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.775,
+                                "y": 9.425,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.9688611111111114,
+                            "ymin": 9.34675,
+                            "xmax": 3.0380416666666665,
+                            "ymax": 9.513486111111112,
+                            "value": "y",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2722,
+                            "id": 13917,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.775,
+                                "y": 9.425,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 269,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    {
+        "equation": [
+            [
+                {
+                    "token": "RE",
+                    "chars": [
+                        {
+                            "xmin": 2.674847222222222,
+                            "ymin": 8.810597222222222,
+                            "xmax": 2.779916666666667,
+                            "ymax": 8.948972222222222,
+                            "value": "R",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "RE",
+                            "tokenid": 2668,
+                            "id": 13667,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.735,
+                                "y": 8.885,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.779916666666667,
+                            "ymin": 8.864819444444445,
+                            "xmax": 2.8542916666666667,
+                            "ymax": 8.961680555555555,
+                            "value": "E",
+                            "font": "ZNCPKA+CMR7",
+                            "font_size": "6.974",
+                            "token": "RE",
+                            "tokenid": 2668,
+                            "id": 13668,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.82,
+                                "y": 8.915,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "text": [
+            [
+                {
+                    "token": "RE",
+                    "chars": [
+                        {
+                            "xmin": 1.087013888888889,
+                            "ymin": 9.225944444444444,
+                            "xmax": 1.1920833333333334,
+                            "ymax": 9.364319444444444,
+                            "value": "R",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "RE",
+                            "tokenid": 2705,
+                            "id": 13841,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.14,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.1920694444444444,
+                            "ymin": 9.280166666666666,
+                            "xmax": 1.2664444444444445,
+                            "ymax": 9.377027777777776,
+                            "value": "E",
+                            "font": "ZNCPKA+CMR7",
+                            "font_size": "6.974",
+                            "token": "RE",
+                            "tokenid": 2705,
+                            "id": 13842,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.14,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "description": [
+            [
+                {
+                    "token": "Einstein",
+                    "chars": [
+                        {
+                            "xmin": 3.644930555555556,
+                            "ymin": 9.054513888888888,
+                            "xmax": 3.7294722222222223,
+                            "ymax": 9.221250000000001,
+                            "value": "E",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13827,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.7294722222222223,
+                            "ymin": 9.054513888888888,
+                            "xmax": 3.767944444444444,
+                            "ymax": 9.221250000000001,
+                            "value": "i",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13828,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.767944444444444,
+                            "ymin": 9.054513888888888,
+                            "xmax": 3.8371250000000003,
+                            "ymax": 9.221250000000001,
+                            "value": "n",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13829,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.8371250000000003,
+                            "ymin": 9.054513888888888,
+                            "xmax": 3.8909583333333333,
+                            "ymax": 9.221250000000001,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13830,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.8909583333333333,
+                            "ymin": 9.054513888888888,
+                            "xmax": 3.9294166666666666,
+                            "ymax": 9.221250000000001,
+                            "value": "t",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13831,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.9294166666666666,
+                            "ymin": 9.054513888888888,
+                            "xmax": 3.9908611111111107,
+                            "ymax": 9.221250000000001,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13832,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 3.9908611111111107,
+                            "ymin": 9.054513888888888,
+                            "xmax": 4.029319444444444,
+                            "ymax": 9.221250000000001,
+                            "value": "i",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13833,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 4.029319444444444,
+                            "ymin": 9.054513888888888,
+                            "xmax": 4.0985,
+                            "ymax": 9.221250000000001,
+                            "value": "n",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "Einstein",
+                            "tokenid": 2703,
+                            "id": 13834,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 3.7849999999999997,
+                                "y": 9.11,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "radius",
+                    "chars": [
+                        {
+                            "xmin": 0.7047222222222222,
+                            "ymin": 9.200624999999999,
+                            "xmax": 0.7508055555555555,
+                            "ymax": 9.367361111111112,
+                            "value": "r",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "radius",
+                            "tokenid": 2704,
+                            "id": 13835,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.9200000000000002,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 0.7508055555555555,
+                            "ymin": 9.200624999999999,
+                            "xmax": 0.8122361111111112,
+                            "ymax": 9.367361111111112,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "radius",
+                            "tokenid": 2704,
+                            "id": 13836,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.9200000000000002,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 0.8122361111111112,
+                            "ymin": 9.200624999999999,
+                            "xmax": 0.8814166666666667,
+                            "ymax": 9.367361111111112,
+                            "value": "d",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "radius",
+                            "tokenid": 2704,
+                            "id": 13837,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.9200000000000002,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 0.8814166666666667,
+                            "ymin": 9.200624999999999,
+                            "xmax": 0.9198888888888889,
+                            "ymax": 9.367361111111112,
+                            "value": "i",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "radius",
+                            "tokenid": 2704,
+                            "id": 13838,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.9200000000000002,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 0.9198888888888889,
+                            "ymin": 9.200624999999999,
+                            "xmax": 0.9890694444444443,
+                            "ymax": 9.367361111111112,
+                            "value": "u",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "radius",
+                            "tokenid": 2704,
+                            "id": 13839,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.9200000000000002,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 0.9890694444444443,
+                            "ymin": 9.200624999999999,
+                            "xmax": 1.0429027777777777,
+                            "ymax": 9.367361111111112,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "radius",
+                            "tokenid": 2704,
+                            "id": 13840,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.9200000000000002,
+                                "y": 9.275,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 268,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    {
+        "equation": [
+            [
+                {
+                    "token": "Σ(x,",
+                    "chars": [
+                        {
+                            "xmin": 0.9198333333333333,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.019763888888889,
+                            "ymax": 8.854055555555554,
+                            "value": "Σ",
+                            "font": "FAXQSU+CMR10",
+                            "font_size": "9.963",
+                            "token": "Σ(x,",
+                            "tokenid": 2660,
+                            "id": 13652,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 0.9650000000000001,
+                                "y": 8.795,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.019763888888889,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.0735694444444444,
+                            "ymax": 8.854055555555554,
+                            "value": "(",
+                            "font": "FAXQSU+CMR10",
+                            "font_size": "9.963",
+                            "token": "Σ(x,",
+                            "tokenid": 2660,
+                            "id": 13653,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.045,
+                                "y": 8.78,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.0735833333333333,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.1526666666666667,
+                            "ymax": 8.854055555555554,
+                            "value": "x",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "Σ(x,",
+                            "tokenid": 2660,
+                            "id": 13654,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.105,
+                                "y": 8.775,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.1526666666666667,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.1910972222222223,
+                            "ymax": 8.854055555555554,
+                            "value": ",",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "Σ(x,",
+                            "tokenid": 2660,
+                            "id": 13655,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.175,
+                                "y": 8.765,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "y)",
+                    "chars": [
+                        {
+                            "xmin": 1.2142083333333333,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.2820555555555557,
+                            "ymax": 8.854055555555554,
+                            "value": "y",
+                            "font": "RPZLNF+CMMI10",
+                            "font_size": "9.963",
+                            "token": "y)",
+                            "tokenid": 2661,
+                            "id": 13656,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.235,
+                                "y": 8.77,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.2869722222222224,
+                            "ymin": 8.715680555555556,
+                            "xmax": 1.3407777777777778,
+                            "ymax": 8.854055555555554,
+                            "value": ")",
+                            "font": "FAXQSU+CMR10",
+                            "font_size": "9.963",
+                            "token": "y)",
+                            "tokenid": 2661,
+                            "id": 13657,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.32,
+                                "y": 8.765,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 265,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ],
+        "description": [
+            [
+                {
+                    "token": "surface",
+                    "chars": [
+                        {
+                            "xmin": 1.2811666666666666,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.335,
+                            "ymax": 8.442194444444445,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2650,
+                            "id": 13607,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.515,
+                                "y": 8.36,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.335,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.4041805555555555,
+                            "ymax": 8.442194444444445,
+                            "value": "u",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2650,
+                            "id": 13608,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.515,
+                                "y": 8.36,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.4041805555555555,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.45025,
+                            "ymax": 8.442194444444445,
+                            "value": "r",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2650,
+                            "id": 13609,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.515,
+                                "y": 8.36,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.45025,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.4963333333333333,
+                            "ymax": 8.442194444444445,
+                            "value": "f",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2650,
+                            "id": 13610,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.515,
+                                "y": 8.36,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.4949444444444444,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.5563888888888888,
+                            "ymax": 8.442194444444445,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2650,
+                            "id": 13611,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.515,
+                                "y": 8.36,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.5563888888888888,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.6178194444444445,
+                            "ymax": 8.442194444444445,
+                            "value": "c",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2650,
+                            "id": 13612,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.515,
+                                "y": 8.36,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.6178194444444445,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.679263888888889,
+                            "ymax": 8.442194444444445,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "surface",
+                            "tokenid": 2650,
+                            "id": 13613,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.515,
+                                "y": 8.36,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "mass",
+                    "chars": [
+                        {
+                            "xmin": 1.7138472222222223,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.8215,
+                            "ymax": 8.442194444444445,
+                            "value": "m",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mass",
+                            "tokenid": 2651,
+                            "id": 13614,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.8250000000000002,
+                                "y": 8.365,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.8215,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.8829444444444445,
+                            "ymax": 8.442194444444445,
+                            "value": "a",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mass",
+                            "tokenid": 2651,
+                            "id": 13615,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.8250000000000002,
+                                "y": 8.365,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.8829444444444445,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.936763888888889,
+                            "ymax": 8.442194444444445,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mass",
+                            "tokenid": 2651,
+                            "id": 13616,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.8250000000000002,
+                                "y": 8.365,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 1.936763888888889,
+                            "ymin": 8.275458333333333,
+                            "xmax": 1.9905833333333334,
+                            "ymax": 8.442194444444445,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "mass",
+                            "tokenid": 2651,
+                            "id": 13617,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 1.8250000000000002,
+                                "y": 8.365,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "token": "density",
+                    "chars": [
+                        {
+                            "xmin": 2.0251805555555555,
+                            "ymin": 8.275458333333333,
+                            "xmax": 2.094361111111111,
+                            "ymax": 8.442194444444445,
+                            "value": "d",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2652,
+                            "id": 13618,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.165,
+                                "y": 8.375,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.094361111111111,
+                            "ymin": 8.275458333333333,
+                            "xmax": 2.1558055555555553,
+                            "ymax": 8.442194444444445,
+                            "value": "e",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2652,
+                            "id": 13619,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.165,
+                                "y": 8.375,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.1558055555555553,
+                            "ymin": 8.275458333333333,
+                            "xmax": 2.2249861111111113,
+                            "ymax": 8.442194444444445,
+                            "value": "n",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2652,
+                            "id": 13620,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.165,
+                                "y": 8.375,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.2249861111111113,
+                            "ymin": 8.275458333333333,
+                            "xmax": 2.2788194444444443,
+                            "ymax": 8.442194444444445,
+                            "value": "s",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2652,
+                            "id": 13621,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.165,
+                                "y": 8.375,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.2788194444444443,
+                            "ymin": 8.275458333333333,
+                            "xmax": 2.3172777777777775,
+                            "ymax": 8.442194444444445,
+                            "value": "i",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2652,
+                            "id": 13622,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.165,
+                                "y": 8.375,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.3172777777777775,
+                            "ymin": 8.275458333333333,
+                            "xmax": 2.35575,
+                            "ymax": 8.442194444444445,
+                            "value": "t",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2652,
+                            "id": 13623,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.165,
+                                "y": 8.375,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        },
+                        {
+                            "xmin": 2.35575,
+                            "ymin": 8.275458333333333,
+                            "xmax": 2.4249305555555556,
+                            "ymax": 8.442194444444445,
+                            "value": "y",
+                            "font": "HUGPRB+NimbusRomNo9L-Regu",
+                            "font_size": "12.005",
+                            "token": "density",
+                            "tokenid": 2652,
+                            "id": 13624,
+                            "page": 2,
+                            "synctex": {
+                                "output": "/Users/claytonm/Documents/repository/pdfalign/data/papers-next-20191022/1801.01506_equation0003/ms.pdf",
+                                "x": 2.165,
+                                "y": 8.375,
+                                "input": "/data/arxiv/src/1801/1801.01506/ms.tex",
+                                "line": 260,
+                                "column": -1,
+                                "offset": 0,
+                                "context": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    }
+]

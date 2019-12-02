@@ -1,6 +1,6 @@
 import sys
 from lxml import etree
-from ..util.utils import remove_bad_chars
+from ... util.utils import remove_bad_chars
 
 if sys.version_info[0] == 3:
     from urllib.request import urlopen
