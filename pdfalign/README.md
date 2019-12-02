@@ -1,5 +1,12 @@
 # pdfalign annotation tool 
 
+PDFAlign is a tool to facilitate annotation of mathematical formula identifiers
+in scientific papers and link them to their textual descriptions.
+
+![Snapshot of the our annotation tool, PDFAlign, currently part way through annotation the first mathematical for-
+mula of arXiv paper
+1801.00269](http://vanga.sista.arizona.edu/automates_data/pdfalign_1801-00269_equation0000.png)
+
 ## 1. Setup instructions (using the Anaconda Python distribution)
 
     conda create -n pdfalign python=3 --yes
