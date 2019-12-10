@@ -149,6 +149,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield m
   }
 
+  def looksLikeAVariableWithGreek(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    //returns mentions that look like a variable
+    for {
+      m <- mentions
+      varMention = m match {
+        case tb: TextBoundMention => m
+        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head
+        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head
+        case _ => ???
+      }
+      if varMention.words.length < 3
+      if varMention.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))
+
+    } yield m
+  }
+
+
   def defIsNotVar(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions in which definitions are not also variables
     //and the variable and the definition don't overlap
