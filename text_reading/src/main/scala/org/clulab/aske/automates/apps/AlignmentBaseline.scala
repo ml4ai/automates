@@ -187,10 +187,6 @@ class AlignmentBaseline() {
     //    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
     //    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
 
-    //this is where the gold data is stored
-    //    val goldDir = config[String]("apps.baselineGoldDir")
-    // todo: eval script
-
     // todo: Becky -- speed this up a bit, and maybe add a backoff? par?
     // todo: for debug load in the mentions?
     for ((eqn_id, eqnIndex) <- eqn_ids.zipWithIndex.par) {
@@ -222,12 +218,10 @@ class AlignmentBaseline() {
 
   }
 
-
+  //Simple latex equation segmenter
+  //Sample equation: \ \mathcal { L } = \mathcal { L } _ { A } + \lambda _ { 1 } \mathcal { L } _ { 1 } + \lambda _ { 2 } \mathcal { L } _ { p e r p }
   def getSimpleVars(eqString: String, pdfalignDir: String, greekLetterWords: Seq[String]): Seq[String] = {
     val simpleVars = new ArrayBuffer[String]()
-    //    val splitOnSpace = eqString.split("\\\\\\w*")
-    //    val splitOnSpace = eqString.split(" ")
-    //    val pattern1 = "\\{.*?\\}".r
     val fontStrings = "(\\\\mathcal|\\\\mathrm|\\\\mathbf|\\\\mathrm|\\\\pmb|\\\\mathcal|\\\\boldsymbol|\\\\mathbf|\\\\acute|\\\\grave|\\\\ddotv|\\\\tilde|\\\\bar|\\\\breve|\\\\check|\\\\hat|\\\\vec|\\\\dot|\\\\ddot|\\\\textrm|\\\\textsf|\\\\texttt|\\\\textup|\\\\textit|\\\\textsl|\\\\textsc|\\\\uppercase|\\\\textbf|\\\\textmd|\\\\textlf|\\\\mathbb)"
 
     val greekLetters = "[Aa]lpha|\\\\[Bb]eta|\\\\[Gg]amma|\\\\[Dd]elta|\\\\[Ee]psilon|\\\\[Zz]eta|\\\\[Ee]ta|\\\\[Tt]heta|\\\\[Ii]ota|\\\\[Kk]appa|\\\\[Ll]ambda|\\\\[Mm]u|\\\\[Nn]u|\\\\[Xx]i|\\\\[Oo]mikron|\\\\[Pp]i|\\\\[Rr]ho|\\\\[Ss]igma|\\\\[Tt]au|\\\\[Uu]psilon|\\\\[Pp]hi|\\\\[Cc]hi|\\\\[Pp]si|\\\\[Oo]mega"
@@ -235,12 +229,8 @@ class AlignmentBaseline() {
     val pattern0 = s"\\\\sum\\s[_^]\\s\\{.*?}(\\s[_^]\\s\\{.*?\\}\\s)?".r //get rid of sum symbol with other stuff on it
     val pattern1 = s"${fontStrings}?\\s(${greekLetters})\\s[_^]\\s\\{\\s\\D*?\\s\\}(\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\})?".r //lambdas with sub- and super-scripts
     val pattern2 = s"${fontStrings}?\\s\\w*?\\s[_^]\\s\\{\\s\\D*?\\s\\}(\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\})?".r //non-lambdas with both superscript and subscript
-    //    val pattern2 = "\\s\\w*?\\s[_^]\\s\\{.*?\\}".r //one var + subscript or superscript---patterns 1 and 2 should take care of this
     val pattern3 = s"${fontStrings}?\\s\\{\\s\\w*?\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\}(\\s\\}\\s[_^]\\s\\{\\s\\D*?\\s\\})?".r //same as 2, but the main thing is wrapped in curly braces
     val pattern4 = s"${fontStrings}\\s\\{\\s\\D\\s\\}".r
-
-//    println(eqString)
-
 
     for (m <- pattern0.findAllIn(eqString)) println("> " + m)
     val afterPatt0 = pattern0.replaceAllIn(eqString, "") //don't append these to possible vars---we don't care what's in the sum if it's not defined
@@ -250,40 +240,33 @@ class AlignmentBaseline() {
       if (!simpleVars.contains(m)) {
         simpleVars.append(m.trim)
       }
-//      println("=> " + m)
+
     }
     val afterPatt1 = pattern1.replaceAllIn(afterPatt0, "")
-//    println(afterPatt1)
 
     //what we find with patt2:
     for (m <- pattern2.findAllIn(afterPatt1)) {
       if (!simpleVars.contains(m)) {
         simpleVars.append(m.trim)
       }
-//      println("=> " + m)
     }
     val afterPatt2 = pattern2.replaceAllIn(afterPatt1, "")
-//    println(afterPatt2)
 
     //what we find with patt 3:
     for (m <- pattern3.findAllIn(afterPatt2)) {
       if (!simpleVars.contains(m)) {
         simpleVars.append(m.trim)
       }
-//      println("=> " + m)
     }
     val afterPatt3 = pattern3.replaceAllIn(afterPatt2, "")
-//    println(afterPatt3)
 
     //what we find with patt 4:
     for (m <- pattern4.findAllIn(afterPatt3)) {
       if (!simpleVars.contains(m)) {
         simpleVars.append(m)
       }
-//      println("=> " + m)
     }
     val afterPatt4 = pattern4.replaceAllIn(afterPatt3, "")
-//    println(afterPatt4)
 
 
     val finalStringTokenized = afterPatt4.split(" ")
@@ -297,7 +280,6 @@ class AlignmentBaseline() {
         } else {
           if (i + 1 < finalStringTokenized.length && i - 1 >= 0 && finalStringTokenized(i-1).toCharArray.length > 0 && finalStringTokenized(i+1).toCharArray.length > 0) {
 
-//            println("---->" + finalStringTokenized(i) + "next: " +   finalStringTokenized(i+1))
             if (!finalStringTokenized(i-1).toCharArray.last.isLetter
               && !finalStringTokenized(i+1).toCharArray.head.isLetter
               && !simpleVars.contains(finalStringTokenized(i))) {
@@ -333,7 +315,6 @@ class AlignmentBaseline() {
     val latexTextMatches = new ArrayBuffer[Prediction]()
     //for every extracted mention
     for (variable <- var2Defs.keys) {
-//      println(s"checking variable: $variable")
       //best Latex candidates, out of which we'll take the max (to account for some font info)
 //      val bestCandidates = new ArrayBuffer[String]()
         //for every candidate eq var
@@ -359,10 +340,6 @@ class AlignmentBaseline() {
 
   def numLetters(s: String): Int = s.count(_.isLetter)
 
-  //fixme: how did I get this output? why did 'b' from lambda end up as a valid candidate? instead of matching greek->word in text, match word->greek in equation
-//  b, ﬁgures (b),
-
-
   def findMatchingVar(
                        variable: String,
                        latexCandidateVar: String,
@@ -370,28 +347,12 @@ class AlignmentBaseline() {
                        mathSymbols: Seq[String],
                        word2greekDict: Map[String, String],
                        pdfalignDir: String): Option[String] = {
-    //only proceed if the latex candidate does not have unmatched braces
-    //replace all the math symbols in the latex candidate variable
-//    println("variable: " + variable)
-//    println("candidate: " + latexCandidateVar)
-//          val replacements = new ArrayBuffer[String]()
-//          replacements.append(latexCandidateVar)
-//          for (ms <- mathSymbols) {
-//            //to make the regex pattern work, add "\\" in case the pattern starts with backslashes
-//            val pattern = if (ms.startsWith("\\")) "\\" + ms else ms
-//
-//            val anotherReplacement = replacements.last.replaceAll(pattern, "")
-//            replacements.append(anotherReplacement)
-//          }
-//    //      take the last item from 'replacements' and replace the braces---that should get us to the value
-//          val maxReplacement = replacements.last.replaceAll("\\{","").replaceAll("\\}","").replace(" ","")
 
-    //render the candidate with the greek letter word replaced with the greek letter
-//    val rendered = render(replaceWordWithGreek(latexCandidateVar, word2greekDict), pdfalignDir).replaceAll("\\s", "")
-    //if the value that was left over after deleting all the latex stuff, then return the candidate as matching
+
+    //if the rendered value matches the variable extracted from text, then return the latex candidate variable (not the rendered value) as matching
     if (renderedLatexCandidateVar == variable) {
-      println(" --> rendered == variable")
-      println(" --> rendered: " + renderedLatexCandidateVar)
+//      println(" --> rendered == variable")
+//      println(" --> rendered: " + renderedLatexCandidateVar)
       //return the candidate
       return Some(latexCandidateVar)
     }
@@ -522,26 +483,13 @@ class AlignmentBaseline() {
     equationFileNames
   }
 
+  //used to finding a better definition---takes into account the amount of language characters in the definition and also the length of the definition
   def moreLanguagey(mentions: Seq[Mention]): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
 
-//    val defsWithLengthOfLangChars = for (
-//      m <- mentions
-//
-//    ) yield (m, m.arguments("definition").head.text.filter(c => valid contains c).length / m.arguments("definition").head.text.length)
-//
-//    val defsWithPropOfLang = mentions.map(m => m.arguments("definition").head.text.filter(c => valid contains c).length / m.arguments("definition").head.text.length)
-
     val sorted = mentions.sortBy(m => (m.arguments("definition").head.text.filter(c => valid contains c).length.toFloat / m.arguments("definition").head.text.length, m.arguments("definition").head.text.length)).reverse
 
-//    val betterDefinedMentions = defsWithLengthOfLangChars.sortBy(_._2)
-//    for (b <- betterDefinedMentions) println("better def " + b._1.text)
-//    println("++++++++++++++++")
-//    for (b <- sorted) println("better def " + b.arguments("definition").head.text + b.arguments("definition").head.text.filter(c => valid contains c).length.toFloat / b.arguments("definition").head.text.length + " " + b.arguments("definition").head.text.length)
-//    println("best" + sorted.head.arguments("definition").head.text)
-//    println("-+-+-+-+-+")
     sorted
-
   }
 
 
