@@ -74,6 +74,16 @@ rules:
     pattern: |
       @definition:Concept [word = "("] (@variable:Variable [!entity = /B-unit/]) [word = /,|\)/]
 
+#   todo: a promising pattern; needs work
+#  - name: definition_of_var_equals
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "The fit yields a bulk resistivity of ρinf = 238 nΩ m"
+#    action: ${action}
+#    pattern: |
+#      @definition:Concept [word = "of"] (@variable:Variable [!entity = /B-unit/]) [word = "="]
+#
 
   - name: var_verb
     label: Definition
@@ -87,6 +97,17 @@ rules:
       variable:Concept = /${agents}/
       definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+  - name: var_cop_definition_greek
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    action: looksLikeAVariableWithGreek
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
 
   - name: var_cop_definition
     label: Definition
