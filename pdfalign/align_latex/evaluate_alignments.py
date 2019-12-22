@@ -13,7 +13,7 @@ from align_eq_bb import tokens_to_string
 NO_DESC = "<<NO_DESC>>"
 NO_LATEX = "<<NO_LATEX>>"
 
-DEBUG = True
+DEBUG = False
 syn_pattern = re.compile(r'(\w+)\(.*\)')
 
 stops = ["a", "about", "above", "after", "again", "against", "ain", "all", "am", "an", "and", "any", "are",
@@ -269,7 +269,10 @@ def get_latex(filename):
 
 def format_latex_for_eval(latex):
     latex = remove_label(latex)
-    latex = tokens_to_string(normalize(LatexTokenizer(latex)))
+    try:
+        latex = tokens_to_string(normalize(LatexTokenizer(latex)))
+    except:
+        pass
     return latex.replace(' ', '')
 
 def remove_label(s):
@@ -390,9 +393,18 @@ def run_evaluation(mode, comparison_field, segmentation_only):
 
     # Scores
     print(f'tp:{tp}, fp:{fp}, fn:{fn}')
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1 = 2 * (precision * recall) / (precision + recall)
+    if (tp + fp) == 0:
+        precision = 0
+    else:
+        precision = tp / (tp + fp)
+    if (tp + fn) == 0:
+        recall = 0
+    else:
+        recall = tp / (tp + fn)
+    if (precision + recall) == 0:
+        f1 = 0
+    else:
+        f1 = 2 * (precision * recall) / (precision + recall)
     return (precision, recall, f1)
 
 # todo: add the segmentation alone eval
