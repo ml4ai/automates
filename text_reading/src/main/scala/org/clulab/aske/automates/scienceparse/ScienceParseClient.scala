@@ -58,8 +58,8 @@ object ScienceParseClient {
     val authors = json("authors").arr.map(_.str).toVector
     //val venue = json("venue").str
     val venueOption = json.obj.get("venue").map(_.str)
-    val year = json("year").num.toInt
-    Reference(title, authors, venueOption, year)
+    val yearOption = json.obj.get("year").map(_.num.toInt)
+    Reference(title, authors, venueOption, yearOption)
   }
 
 

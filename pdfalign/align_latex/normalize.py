@@ -8,7 +8,7 @@ def normalize(tokens):
     while i < len(tokens):
         if tokens[i].value == r'\label':
             i = drop_group(tokens, i)
-        elif tokens[i].code == CategoryCode.StartOfGroup and tokens[i+1].value == r'\rm':
+        elif i < len(tokens) - 1 and tokens[i].code == CategoryCode.StartOfGroup and tokens[i+1].value == r'\rm':
             yield Token(r'\mathrm', None)
             yield tokens[i]
             i += 2
@@ -76,6 +76,11 @@ def drop_group(tokens, i):
             # invalid group
             return i
 
+
+def render(formula):
+    for t in normalize(LatexTokenizer(formula)):
+        if t.code in (CategoryCode.Letter, CategoryCode.Space, CategoryCode.Other):
+            yield t.value
 
 if __name__ == '__main__':
     command = sys.argv[1]
