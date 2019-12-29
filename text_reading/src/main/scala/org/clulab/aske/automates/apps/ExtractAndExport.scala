@@ -6,7 +6,7 @@ import java.io.BufferedWriter
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.DataLoader
+import org.clulab.aske.automates.data.{DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
@@ -35,10 +35,14 @@ object ExtractAndExport extends App {
   val inputDir = config[String]("apps.inputDirectory")
   val outputDir = config[String]("apps.outputDirectory")
   val inputType = config[String]("apps.inputType")
-  val dataLoader = DataLoader.selectLoader(inputType) // txt or json are supported, and we assume json == science parse json
+  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
+
+  //uncomment these for using the text/comment router
+//  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+//  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
 
   // For each file in the input directory:
   files.par.foreach { file =>
@@ -50,7 +54,10 @@ object ExtractAndExport extends App {
     // 3. Extract causal mentions from the texts
     // todo: here I am choosing to pass each text/section through separately -- this may result in a difficult coref problem
     val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
+    //The version of mention that includes routing between text vs. comment
+//    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
     // 4. Export to all desired formats
+
     exportAs.foreach { format =>
         val exporter = getExporter(format, s"$outputDir/${file.getName}")
         exporter.export(mentions)

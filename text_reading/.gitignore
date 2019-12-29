@@ -60,3 +60,6 @@ scripts/*
 
 # For MacOS filesystem
 .DS_Store
+
+# other
+hotspot*
