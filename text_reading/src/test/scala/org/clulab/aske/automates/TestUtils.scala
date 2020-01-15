@@ -72,7 +72,7 @@ object TestUtils {
       testBinaryEvent(mentions, PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_ARG, desired)
     }
 
-    def testParameterSettingEventInterval(mentions: Seq[Mention], desired: Seq[Seq[String]]): Unit = {
+    def testParameterSettingEventInterval(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testThreeArgEvent(mentions, INTERVAL_PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_LEAST_ARG, VALUE_MOST_ARG, desired)
     }
 
@@ -85,11 +85,19 @@ object TestUtils {
       desired.foreach(d => found should contain(d))
     }
 
-
-    def testThreeArgEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, arg3Role: String, desired: Seq[Seq[String]]): Unit = {
+    //used for parameter setting tests where the setting is an interval
+    def testThreeArgEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, arg3Role: String, desired: Seq[(String, Seq[String])]): Unit = {
       val found = mentions.filter(_ matches eventType)
       found.length should be(desired.size)
       //todo add func to check args and not only the size
+
+      val grouped = found.groupBy(_.arguments(arg1Role).head.text)
+      // we assume only one variable (arg1) arg!
+      for {
+        (desiredVar, desiredParameters) <- desired
+        correspondingMentions = grouped.getOrElse(desiredVar, Seq())
+      } testThreeArgEventString(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredParameters.head, arg3Role, desiredParameters.last)
+
     }
 
     def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Seq[(String, Seq[String])]): Unit = {
@@ -113,6 +121,18 @@ object TestUtils {
       } yield (a1, a2)
 
       arg2Strings.foreach(arg2String => variableDefinitionPairs should contain ((arg1String, arg2String)))
+    }
+
+    //used for parameter setting tests where the setting is an interval
+    def testThreeArgEventString(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2String: String, arg3Role: String, arg3String: String): Unit = {
+      val varMinMaxSettings = for {
+        m <- ms
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(_.text)
+        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(_.text)
+        a3 <- m.arguments.getOrElse(arg3Role, Seq()).map(_.text)
+      } yield (a1, a2, a3)
+
+      varMinMaxSettings should contain ((arg1String, arg2String, arg3String))
     }
 
     def mentionHasArguments(m: Mention, argName: String, argValues: Seq[String]): Unit = {
