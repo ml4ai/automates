@@ -1,0 +1,24 @@
+SELECT DISTINCT
+  ?s3 AS ?appLabel 
+  ?s7 AS ?versionLabel  
+  ?s1 AS ?executableUri 
+  ?s4 AS ?formatLabel
+  ?s6 AS ?OSUri 
+  ?s8 AS ?OSLabel 
+  ?s2 AS ?downloadUrl
+FROM <urn:data:openlink:products>
+WHERE 
+  {
+    ?s1 a ?s9 .
+    ?s1 <http://schema.org/downloadUrl> ?s2 .
+    ?s1 <http://schema.org/name> ?s3 .
+    ?s1 <http://purl.org/dc/terms/format> ?s4 .
+    ?s1 <http://schema.org/name> ?s5 .
+    ?s1 <http://www.openlinksw.com/ontology/software#hasOperatingSystemFamily> ?s6 .## Uncomment (remove the leading hash "#" from) 
+## the following line to filter by Operating 
+## System Family; in this case, Generic Linux.# FILTER ( ?s6 = <http://www.openlinksw.com/ontology/software#GenericLinux> ) .    ?s1 <http://www.openlinksw.com/ontology/products#versionText> ?s7 .
+    ?s6 schema:name ?s8 . 
+  FILTER ( ?s9 in (<http://www.openlinksw.com/ontology/installers#ExecutableArchive>, <http://www.openlinksw.com/ontology/installers#InitializationFile> ) )
+  }## This ORDER BY clause will sort result rows 
+## by the 6th and 1st columns (i.e., ?OSLabel 
+## and ?appLabel)ORDER BY 6 1
