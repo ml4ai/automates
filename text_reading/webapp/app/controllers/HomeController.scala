@@ -37,6 +37,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(views.html.index())
   }
 
+  // we need documentation on how to use this, or we can remove it
   def getMentions(text: String) = Action {
     val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
@@ -63,21 +64,25 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   /* Webservice Methods */
   def process_text: Action[JsValue] = Action(parse.json) { request =>
-    (request.body \ "text").asOpt[String].map { text =>
-      val mentionsJson = processPlaytext(ieSystem, text)
-      val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-      Ok(parsed_output)
-    }.getOrElse {
-      BadRequest("Missing parameter [text]")
-    }
+    val data = request.body.toString()
+    val json = ujson.read(data)
+    val text = json("text").str
+    val gazetteer = json.obj.get("entities").map(_.arr.map(_.str))
+    val mentionsJson = processPlaytext(ieSystem, text, gazetteer)
+    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+    Ok(parsed_output)
   }
 
   // Method where aske reader processing for webservice happens
-  def processPlaytext(ieSystem: OdinEngine, text: String): org.json4s.JsonAST.JValue = {
+  def processPlaytext(ieSystem: OdinEngine, text: String, gazetteer: Option[Seq[String]] = None): org.json4s.JsonAST.JValue = {
 
     // preprocessing
     println(s"Processing sentence : $text" )
-    val mentions = ieSystem.extractFromText(text, filename = None)
+    val mentions = if (gazetteer.isDefined) {
+      ieSystem.extractFromTextWithGazetteer(text, filename = None, gazetteer = gazetteer.get)
+    } else {
+      ieSystem.extractFromText(text, filename = None)
+    }
 
     // Export to JSON
     val json = serializer.jsonAST(mentions)
