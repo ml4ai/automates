@@ -12,27 +12,26 @@ import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
 
 class StringMatchEntityFinder(strings: Set[String], label: String) extends EntityFinder {
+  println(strings)
   val regexBuilder = new RegexBuilder()
-  regexBuilder.add(strings.toSeq.map(s => s"""\\b${s}\\b"""):_*)
+  regexBuilder.add(strings.toSeq:_*)
   val regex = regexBuilder.mkPattern
   // alexeeva: added neg lookbehind to avoid equation # to be found as a variable
   //           |     (?<! [word = equation]) /\\Q${stringToMatch}\\E/
   def extract(doc: Document): Seq[Mention] = {
-    val mentions = for {
-      stringToMatch <- strings
-      ruleTemplate =
+    val ruleTemplate =
       s"""
          | - name: stringmatch
          |   label: ${label}
          |   priority: 1
          |   type: token
          |   pattern: |
-         |       (?<! [word = equation]) /${regex}/
+         |       (?<! [word = equation]) /^(${regex})$$/
          |
         """.stripMargin
-      engine = ExtractorEngine(ruleTemplate)
-    } yield engine.extractFrom(doc)
-    mentions.flatten.toSeq
+    val engine = ExtractorEngine(ruleTemplate)
+    val mentions = engine.extractFrom(doc)
+    mentions
   }
 
 }
