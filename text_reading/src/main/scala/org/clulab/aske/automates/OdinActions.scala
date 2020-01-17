@@ -125,10 +125,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
-      if ((v matches "Variable") && isArg) return true
       if (v.words.length != 1) return false
       // Else, the variable candidate has length 1
       val word = v.words.head
+      if (word.length > 6) return false
       val tag = v.tags.get.head
       return (
         word.toLowerCase != word // mixed case or all UPPER
