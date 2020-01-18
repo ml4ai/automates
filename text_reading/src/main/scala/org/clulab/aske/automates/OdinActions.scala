@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.odin._
 import org.clulab.odin.impl.Taxonomy
-import org.clulab.utils.FileUtils
+import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
@@ -124,28 +124,33 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions that look like a variable
+    def passesFilters(v: Mention, isArg: Boolean): Boolean = {
+      // If the variable was found with a Gazetteer passed through the webservice, keep it
+      if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
+      if (v.words.length != 1) return false
+      // Else, the variable candidate has length 1
+      val word = v.words.head
+      if (word.length > 6) return false
+      val tag = v.tags.get.head
+      return (
+        word.toLowerCase != word // mixed case or all UPPER
+        |
+        v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
+        |
+        word.length == 1 && tag.startsWith("NN") //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+        |
+        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0)//this is too specific; trying to get to single-letter vars with a subscript (e.g., u2) without getting units like m-2
+      //todo: still need a way to not avoid short lower-case vars
+    }
     for {
       m <- mentions
-      varMention = m match {
-        case tb: TextBoundMention => m
-        case rm: RelationMention => m.arguments.getOrElse("variable", Seq()).head
-        case em: EventMention => m.arguments.getOrElse("variable", Seq()).head
+      (varMention, isArg) = m match {
+        case tb: TextBoundMention => (m, false)
+        case rm: RelationMention => (m.arguments.getOrElse("variable", Seq()).head, true)
+        case em: EventMention => (m.arguments.getOrElse("variable", Seq()).head, true)
         case _ => ???
       }
-      if varMention.words.length == 1
-      word = varMention.words.head
-      if word.length <= 6
-      if (word.toLowerCase != word // mixed case or all UPPER
-        |
-        varMention.entities.exists(ent => ent.exists(_ == "B-GreekLetter")) //or is a greek letter
-        |
-        word.length == 1 && m.tags.exists(_.head matches "NN") //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
-        |
-        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0//this is too specific; trying to get to single-letter vars with a subscript (e.g., u2) without getting units like m-2
-      //todo: still need a way to not avoid short lower-case vars
-
-        )
-
+      if passesFilters(varMention, isArg)
     } yield m
   }
 
