@@ -92,9 +92,15 @@ class OdinEngine(
 
   // Supports web service, when existing entities are already known but from outside the project
   def extractFromTextWithGazetteer(text: String, keepText: Boolean = false, filename: Option[String], gazetteer: Seq[String]): Seq[Mention] = {
-    val providedFinder = StringMatchEntityFinder.fromStrings(gazetteer, label = "Variable")
+    val label = OdinEngine.VARIABLE_GAZETTEER_LABEL
+    val providedFinder = StringMatchEntityFinder.fromStrings(gazetteer, label)
     entityFinders = entityFinders ++ Seq(providedFinder)
-    extractFromText(text, keepText, filename)
+    val results = extractFromText(text, keepText, filename)
+    // cleanup -- remove the finder from this query
+    entityFinders = entityFinders.diff(Seq(providedFinder))
+
+    // return results
+    results
   }
 
   // ---------- Helper Methods -----------
@@ -121,6 +127,7 @@ object OdinEngine {
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
   val VARIABLE_LABEL: String = "Variable"
+  val VARIABLE_GAZETTEER_LABEL: String = "VariableGazetteer"
   val UNIT_LABEL: String = "Unit"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"

@@ -11,7 +11,7 @@ import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
 
-class StringMatchEntityFinder(strings: Set[String], label: String) extends EntityFinder {
+class StringMatchEntityFinder(strings: Set[String], label: String, taxonomyPath: String = "org/clulab/aske_automates/grammars/taxonomy.yml") extends EntityFinder {
   println(strings)
   val regexBuilder = new RegexBuilder()
   regexBuilder.add(strings.toSeq:_*)
@@ -21,6 +21,9 @@ class StringMatchEntityFinder(strings: Set[String], label: String) extends Entit
   def extract(doc: Document): Seq[Mention] = {
     val ruleTemplate =
       s"""
+         |taxonomy: "${taxonomyPath}"
+         |
+         |rules:
          | - name: stringmatch
          |   label: ${label}
          |   priority: 1
@@ -72,6 +75,7 @@ object GrFNEntityFinder {
     val variableShortNames = getVariableShortNames(variableNames)
 
     // Make a StringMatchEF based on the variable names
+    // todo: send in the taxonomy path
     StringMatchEntityFinder.fromStrings(variableShortNames, "Variable") // todo: GrFNVariable?
   }
 }

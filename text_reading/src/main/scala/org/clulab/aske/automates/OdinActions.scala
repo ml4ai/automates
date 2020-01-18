@@ -125,6 +125,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
+      // If the variable was found with a Gazetteer passed through the webservice, keep it
+      if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
       if (v.words.length != 1) return false
       // Else, the variable candidate has length 1
       val word = v.words.head
@@ -133,7 +135,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       return (
         word.toLowerCase != word // mixed case or all UPPER
         |
-        v.entities.exists(ent => ent.exists(_ == "B-GreekLetter")) //or is a greek letter
+        v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
         |
         word.length == 1 && tag.startsWith("NN") //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
         |
