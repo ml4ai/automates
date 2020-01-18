@@ -11,7 +11,7 @@ import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
 
-class StringMatchEntityFinder(strings: Set[String], label: String, taxonomyPath: String = "org/clulab/aske_automates/grammars/taxonomy.yml") extends EntityFinder {
+class StringMatchEntityFinder(strings: Set[String], label: String, taxonomyPath: String) extends EntityFinder {
   println(strings)
   val regexBuilder = new RegexBuilder()
   regexBuilder.add(strings.toSeq:_*)
@@ -48,16 +48,16 @@ object StringMatchEntityFinder {
     * @param validLabels
     * @return
     */
-  def apply(ms: Seq[Mention], validLabels: Seq[String], label: String): StringMatchEntityFinder = {
+  def apply(ms: Seq[Mention], validLabels: Seq[String], label: String, taxonomy: String = "org/clulab/aske_automates/grammars/taxonomy.yml"): StringMatchEntityFinder = {
     val strings = for {
       m <- ms
       m2 <- Seq(m) ++ m.arguments.valuesIterator.flatten
       if validLabels.contains(m2.label)
     } yield m2.text
-    new StringMatchEntityFinder(strings.toSet, label)
+    new StringMatchEntityFinder(strings.toSet, label, taxonomy)
   }
 
-  def fromStrings(ss: Seq[String], label: String): StringMatchEntityFinder = new StringMatchEntityFinder(ss.toSet, label)
+  def fromStrings(ss: Seq[String], label: String, taxonomy: String = "org/clulab/aske_automates/grammars/taxonomy.yml"): StringMatchEntityFinder = new StringMatchEntityFinder(ss.toSet, label, taxonomy)
 }
 
 object GrFNEntityFinder {
