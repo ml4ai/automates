@@ -172,4 +172,17 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
+
+  //Tests from paper 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
+
+  val t1b = "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
+  failingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "EORATIO" -> Seq("1.0")
+    )
+    val mentions = extractMentions(t1a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+
 }
