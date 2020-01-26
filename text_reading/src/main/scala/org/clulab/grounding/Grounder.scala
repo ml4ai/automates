@@ -40,13 +40,14 @@ object SVOGrounder {
 
 
     def runSparqlQuery(term: String, scriptDir: String): String = {
-      val command = Seq("python", s"$scriptDir/sparql.py")
+      val command = Seq("python", s"$scriptDir/sparqlWrapper.py")
       val process = Process(command, new File(s"$scriptDir"))
       process.!!
     }
 
 
-    runSparqlQuery("word", "/home/alexeeva/Repos/automates/text_reading/sparql")
+    val result = runSparqlQuery("word", "/home/alexeeva/Repos/automates/text_reading/sparql")
+    println(result)
 
 //    val text = "where Kcbmin is the minimum basal crop coefficient"
 //    val config = ConfigFactory.load()
