@@ -18,4 +18,27 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
     testParameterSettingEventInterval(mentions, desired)
   }
 
+  val t2a = "The value of SKc was varied between 0.4 and 0.9 with a base level of 0.5 for maize and 0.6 for cotton from prior calibration efforts."
+  passingTest should s"extract the parameter setting(s) from t2a: ${t2a}" taggedAs(Somebody, Interval) in {
+
+    val desired = Seq(
+      "SKc" -> Seq("0.4", "0.9")
+    )
+
+    val mentions = extractMentions(t2a)
+    testParameterSettingEventInterval(mentions, desired)
+  }
+
+  val t3a = "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
+  failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody, Interval) in {
+
+    val desired = Seq(
+      "KEP" -> Seq("0.5", "0.8") //todo: need a rule for "range from"
+    )
+
+    val mentions = extractMentions(t3a)
+    testParameterSettingEventInterval(mentions, desired)
+  }
+
+
 }

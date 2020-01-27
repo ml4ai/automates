@@ -4,6 +4,9 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestDefinitions extends ExtractionTest {
 
+
+  //todo: separate some of the tests---many fail because of one definition being slightly off, so the tests don't really test all the cases
+
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
 
   val t1a = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
@@ -20,8 +23,8 @@ class TestDefinitions extends ExtractionTest {
   failingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "LAI" -> Seq("simulated leaf area index"),
-      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"),
-      "Kcs" -> Seq("DSSAT-CSM crop coefficient") //todo: include model?
+      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"), //todo: how to attach param setting to definition?
+      "Kcs" -> Seq("DSSAT-CSM crop coefficient")
     )
     val mentions = extractMentions(t2a)
     val defMentions = mentions.seq.filter(_ matches "Definition")
@@ -32,7 +35,7 @@ class TestDefinitions extends ExtractionTest {
     "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
   failingTest should s"find definitions from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Kcdmin" -> Seq("minimum crop coefficient or Kcd at LAI = 0"),
+      "Kcdmin" -> Seq("minimum crop coefficient", "Kcd at LAI = 0"),
       "Kcdmax" -> Seq("maximum crop coefficient at high LAI"),
       "SKc" -> Seq("shaping parameter") //todo: should this be expanded?
     )
@@ -68,9 +71,9 @@ class TestDefinitions extends ExtractionTest {
   }
   val t7a = "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of " +
     "the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998)."
-    failingTest should s"find definitions from t7a: ${t7a}" taggedAs(Somebody) in {
+    passingTest should s"find definitions from t7a: ${t7a}" taggedAs(Somebody) in {
       val desired = Seq(
-        "KEP" -> Seq("energy extinction coefficient") // the def will eventually be the whole sentence
+        "KEP" -> Seq("energy extinction coefficient of the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo") // the def will eventually be the whole sentence
       )
       val mentions = extractMentions(t7a)
       testDefinitionEvent(mentions, desired)
