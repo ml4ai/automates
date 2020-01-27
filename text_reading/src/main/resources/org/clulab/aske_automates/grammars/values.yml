@@ -11,13 +11,4 @@ rules:
     pattern: |
       [entity = /NUMBER|PERCENT/ & tag = /CD/]
 
-  #fixme - move somewhere else - done
-  # todo: can we have a tag specification here? like tag=/CD/ ?
-  - name: interval_between
-    label: Interval
-    priority: ${priority}
-    type: token
-    #action: variableArguments
-    example: "The value of Kcbmax was varied between 0.9 and 1.4"
-    pattern: |
-      (?<=between) (?<least>[tag=/CD/])? and (?<most>[tag=/CD/])?
+

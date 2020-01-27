@@ -7,7 +7,6 @@
     - Value:
       - ValueAndUnit
     - Unit
-    - Interval
 - Event:
   - Causal
   - Definition

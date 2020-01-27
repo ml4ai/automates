@@ -123,10 +123,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+
+    val knownNonVars = Array("crop", "Crop") //todo: expand, put elsewhere
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable was found with a Gazetteer passed through the webservice, keep it
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
+      if (knownNonVars.contains(v.text)) return false //the word does not belong to the known domain vocab (filter out only if full var == word from the list; potentially, a var (dep on how we proceed to define it, could contain words)
       if (v.words.length != 1) return false
       // Else, the variable candidate has length 1
       val word = v.words.head
@@ -137,7 +140,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         |
         v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
         |
-        word.length == 1 && tag.startsWith("NN") //or the word is one character long and is a noun (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+        word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
         |
         word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0)//this is too specific; trying to get to single-letter vars with a subscript (e.g., u2) without getting units like m-2
       //todo: still need a way to not avoid short lower-case vars

@@ -74,6 +74,8 @@ rules:
     pattern: |
       @definition:Concept [word = "("] (@variable:Variable [!entity = /B-unit/]) [word = /,|\)/]
 
+
+
 #   todo: a promising pattern; needs work
 #  - name: definition_of_var_equals
 #    label: Definition
@@ -97,6 +99,19 @@ rules:
       variable:Concept = /${agents}/
       definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+
+  - name: var_is_defined
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
+    action: ${action}
+    pattern: |
+      trigger = [word=/defined/]
+      variable:Variable = nsubjpass | advcl nsubj
+      definition:Concept = nmod_as [!entity = "NUMBER"]
+
 
   - name: var_cop_definition_greek
     label: Definition

@@ -392,6 +392,7 @@ object ExpansionHandler {
     "acl:relcl".r,
     "advcl_to".r,
     "^advcl_because".r,
+    "advmod".r,
     "amod".r,
     "^case".r,
     "^cc$".r,

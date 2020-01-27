@@ -24,7 +24,8 @@ rules:
     pattern: |
       trigger = [lemma='vary']
       variable:Variable = nsubjpass nmod_of
-      value:Interval = nmod_between
+      valueLeast:Value = nmod_between
+      valueMost:Value = nmod_between conj_and
 
 #
   - name: var-vary_between_symbols_interval
@@ -65,7 +66,7 @@ rules:
     pattern: |
       trigger = [word=/(?i)^hard-coded/]
       variable:Concept = nsubj
-      value: Concept = /nmod_to/
+      value:Value = /nmod_to/
 
 
   - name: var-noun_of_param
