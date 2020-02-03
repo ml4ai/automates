@@ -5,9 +5,10 @@ import java.io.File
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.text.similarity.LevenshteinDistance
-import org.clulab.aske.automates.OdinEngine
-
-import org.clulab.odin.Mention
+import org.clulab.aske.automates.{OdinActions, OdinEngine}
+import org.clulab.odin.{Attachment, Mention, SynPath}
+import org.clulab.processors.Document
+import org.clulab.struct.Interval
 
 import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.Process
@@ -15,6 +16,15 @@ import scala.util.parsing.json.JSON
 
 
 case class sparqlResult(searchTerm: String, name: String, className: String, score: Option[Double])
+
+abstract class AutomatesAttachment extends Attachment
+
+class groundingAttachment(searchTerm: String, name: String, className: String, score: Option[Double]) extends  AutomatesAttachment
+
+//object groundingAttachment extends Attachment {
+//  def asGroundingAttachment(sparql: sparqlResult): groundingAttachment =
+//    sparql.asInstanceOf[groundingAttachment]
+//}
 
 object SVOGrounder {
 
@@ -36,10 +46,11 @@ object SVOGrounder {
 
 
 
-    def groundMentionWithSparql(mention: Mention) = {
+    def groundMentionWithSparql(mention: Mention): Mention = {
       //todo: should probably return a mention with attachment
       val terms = getTerms(mention) //todo: this should already have gotten rid of stop word and also returned reasonable collocations, e.g., head word + >compound
       if (terms.nonEmpty) {
+        val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
         for (word <- terms.get) {
 
           println("USING ENDPOINT:")
@@ -48,24 +59,32 @@ object SVOGrounder {
           println("end of result")
           if (result.nonEmpty) {
             val resultLines = result.split(("\n"))
-            val resultNames = resultLines.map(rl => rl.split("\t")(1))
-            println("BBBBB")
-            for (name <- resultNames) {
-              println("name: " + name + " score: " + editDistance(name, word))
-            }
+            val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)))).sortBy(sr => sr.score)
+            resultsFromAllTerms += sparqlResults.head
 
-            //todo:
-            //val nameWithScores = resultNames.map(rn => (name, editDistance(rn, word)
-            //get indices of names with max scores
-            //get the lines with those indices and turn those into
-            //sparql results
-
-//            println(withSimilarityScores.mkString(" -|||- "))
-//            val grounding = new sparqlResult(splitResult(0), splitResult(1), splitResult(2), None)
-//            println("=>>>" + grounding)
           }
         }
-      }
+
+        println("results from all terms, head: search term: " + resultsFromAllTerms.head.searchTerm + " name: " + resultsFromAllTerms.head.name + " className: " + resultsFromAllTerms.head.className + " score: " + resultsFromAllTerms.head.score)
+        val newMention = new Mention {
+          override def labels: Seq[String] = mention.labels
+
+          override def tokenInterval: Interval = mention.tokenInterval
+
+          override def sentence: Int = mention.sentence
+
+          override def document: Document = mention.document
+
+          override def keep: Boolean = mention.keep
+
+          override val arguments: Map[String, Seq[Mention]] = mention.arguments
+          override val attachments: Set[Attachment] = Set(new groundingAttachment(resultsFromAllTerms.head.searchTerm, resultsFromAllTerms.head.name, resultsFromAllTerms.head.className, resultsFromAllTerms.head.score)) //todo: change this to some meaningful check, e.g., the result that contains "_" in the search term---found something with a collocation, not just one term
+          override val paths: Map[String, Map[Mention, SynPath]] = mention.paths
+
+          override def foundBy: String = mention.foundBy + "_grounder"
+        }
+        return newMention
+      } else mention
     }
 
     def getTerms(mention: Mention): Option[Seq[String]] = {
@@ -120,15 +139,13 @@ object SVOGrounder {
     }
 
     def editDistance(s1: String, s2: String): Double = {
-      println("000000")
       val dist = LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
-      println("AAAAA")
       dist
     }
 
     def groundMentionsWithSparql(mentions: Seq[Mention]): Seq[Mention] = {
       //ground a seq of mentions using groundMentionWithSparql on each
-      ???
+      mentions.map(m => groundMentionWithSparql(m))
 
     }
 
@@ -136,17 +153,22 @@ object SVOGrounder {
 //    val result = runSparqlQuery("word", "/home/alexeeva/Repos/automates/text_reading/sparql")
 //    println(result)
 
-    val text = "where Kcbmin is the minimum radius"
+    val text = "where Kcbmin is the crop canopy"
     println(text + "<<--")
     val config = ConfigFactory.load()
     val textConfig: Config = config[Config]("TextEngine")
     val textReader = OdinEngine.fromConfig(textConfig)
     val defMentions = textReader.extractFromText(text, filename = Some("whatever")).filter(m => m matches "Definition")
-    for (dm <- defMentions) {
-      println("CCCCC")
-      //todo: this is temp to see if things work, should have a menthod
-      //that does this on all the found mentions
-      groundMentionWithSparql(dm)
+//    for (dm <- defMentions) {
+//      println("CCCCC")
+//      //todo: this is temp to see if things work, should have a menthod
+//      //that does this on all the found mentions
+//      groundMentionWithSparql(dm)
+//    }
+    val groundedMentions = groundMentionsWithSparql(defMentions)
+
+    for (m <- groundedMentions) {
+      println(m.text + " grounding: " + m.attachments.head)
     }
 
   }
