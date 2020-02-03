@@ -1,5 +1,6 @@
+import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
-
+term = sys.argv[1]
 sparql = SPARQLWrapper("http://35.194.43.13:3030/ds/query")
 sparql.setQuery("""
     prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -16,16 +17,15 @@ sparql.setQuery("""
         optional {?x skos:prefLabel ?label.
                   BIND(STR(?label) as ?prefLabel)} .
         optional {?x svu:hasAssociatedWikipediaPage ?wikip}.
-        FILTER(REGEX(?xname, '(?=.*(^|~|_|-)crop($|~|_|-))','i')) .
+        FILTER(REGEX(?xname, '(?=.*(^|~|_|-)%s($|~|_|-))','i')) .
         BIND (STR(?xname) as ?name)}
     ORDER BY ?x ?name ?prefLabel ?wikip
-""")
+""" % term)
 sparql.setReturnFormat(JSON)
 results = sparql.query().convert()
 
 for result in results["results"]["bindings"]:
-    print(result["name"]["value"])
-    print(result["classname"]["value"])
-    print("=========\n")
+    print(term, "\t", result["name"]["value"],"\t", result["classname"]["value"])
+
 
 # print(results)
