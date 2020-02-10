@@ -26,9 +26,11 @@ class groundingAttachment(searchTerm: String, name: String, className: String, s
 //    sparql.asInstanceOf[groundingAttachment]
 //}
 
+
+
 object SVOGrounder {
 
-  def main(args: Array[String]): Unit = {
+  def main(mentions: Seq[Mention]): Seq[Mention] = {
 
     def groundWithAPI(term: String) = {
       val url = "http://34.73.227.230:8000/match_phrase/" + term + "/"
@@ -45,48 +47,36 @@ object SVOGrounder {
 
 
 
-
+    /* return mention with a grounding attachment*/
     def groundMentionWithSparql(mention: Mention): Mention = {
-      //todo: should probably return a mention with attachment
-      val terms = getTerms(mention) //todo: this should already have gotten rid of stop word and also returned reasonable collocations, e.g., head word + >compound
+
+      val terms = getTerms(mention) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations, e.g., syntactic head of the mention + >compound
       if (terms.nonEmpty) {
         val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
         for (word <- terms.get) {
-
-          println("USING ENDPOINT:")
           val result = runSparqlQuery(word, "/home/alexeeva/Repos/automates/text_reading/sparql")
           println("term: " + word + "\nresult: " + result.mkString(""))
           println("end of result")
           if (result.nonEmpty) {
-            val resultLines = result.split(("\n"))
+            val resultLines = result.split(("\n")) //each line in the result is a separate entry returned by the query
+            //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
             val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)))).sortBy(sr => sr.score)
             resultsFromAllTerms += sparqlResults.head
 
           }
         }
-
+        //todo: the results where search term contains "_" should be ranked higher since those are collocations instead of separate words
         println("results from all terms, head: search term: " + resultsFromAllTerms.head.searchTerm + " name: " + resultsFromAllTerms.head.name + " className: " + resultsFromAllTerms.head.className + " score: " + resultsFromAllTerms.head.score)
-        val newMention = new Mention {
-          override def labels: Seq[String] = mention.labels
 
-          override def tokenInterval: Interval = mention.tokenInterval
+        val attachment = new groundingAttachment(resultsFromAllTerms.head.searchTerm, resultsFromAllTerms.head.name, resultsFromAllTerms.head.className, resultsFromAllTerms.head.score)
+        val newMention = mention.withAttachment(attachment)
 
-          override def sentence: Int = mention.sentence
-
-          override def document: Document = mention.document
-
-          override def keep: Boolean = mention.keep
-
-          override val arguments: Map[String, Seq[Mention]] = mention.arguments
-          override val attachments: Set[Attachment] = Set(new groundingAttachment(resultsFromAllTerms.head.searchTerm, resultsFromAllTerms.head.name, resultsFromAllTerms.head.className, resultsFromAllTerms.head.score)) //todo: change this to some meaningful check, e.g., the result that contains "_" in the search term---found something with a collocation, not just one term
-          override val paths: Map[String, Map[Mention, SynPath]] = mention.paths
-
-          override def foundBy: String = mention.foundBy + "_grounder"
-        }
+        println("new mention: " + newMention.label + " " + newMention.text + " " + newMention.attachments.mkString(" "))
         return newMention
       } else mention
     }
 
+    /*get the terms from the mention to run sparql queries with*/
     def getTerms(mention: Mention): Option[Seq[String]] = {
       println(mention.text)
       //todo: will depend on type of mention, e.g., for definitions, only look at the words in the definition arg, not var itself
@@ -110,13 +100,14 @@ object SVOGrounder {
 
     }
 
+    /*get collocations from the mention*/
     def getCompounds(mention: Mention): Option[String] = {
 
       println("==>" + mention.text)
       val headWord = mention.synHeadLemma
-      println("syn head: " + headWord)
+//      println("syn head: " + headWord)
       val outgoing = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get)
-      println("all deps from syntactic head: " + outgoing.mkString(" "))
+//      println("all deps from syntactic head: " + outgoing.mkString(" "))
       //get index of the leftmost word of the compound
       if (outgoing.exists(tuple => tuple._2 == "compound")) {
         val indexOfCompoundToken = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get).filter(tuple => tuple._2 == "compound").map(tuple => tuple._1).min
@@ -145,33 +136,37 @@ object SVOGrounder {
 
     def groundMentionsWithSparql(mentions: Seq[Mention]): Seq[Mention] = {
       //ground a seq of mentions using groundMentionWithSparql on each
-      mentions.map(m => groundMentionWithSparql(m))
-
+      val grounded = mentions.map(m => groundMentionWithSparql(m))
+      grounded
     }
 
 
 //    val result = runSparqlQuery("word", "/home/alexeeva/Repos/automates/text_reading/sparql")
 //    println(result)
 
-    val text = "where Kcbmin is the crop canopy"
-    println(text + "<<--")
-    val config = ConfigFactory.load()
-    val textConfig: Config = config[Config]("TextEngine")
-    val textReader = OdinEngine.fromConfig(textConfig)
-    val defMentions = textReader.extractFromText(text, filename = Some("whatever")).filter(m => m matches "Definition")
+//    val text = "where Kcbmin is the crop canopy"
+//    println(text + "<<--")
+//    val config = ConfigFactory.load()
+//    val textConfig: Config = config[Config]("TextEngine")
+//    val textReader = OdinEngine.fromConfig(textConfig)
+//    val defMentions = textReader.extractFromText(text, filename = Some("whatever")).filter(m => m matches "Definition")
 //    for (dm <- defMentions) {
 //      println("CCCCC")
 //      //todo: this is temp to see if things work, should have a menthod
 //      //that does this on all the found mentions
 //      groundMentionWithSparql(dm)
 //    }
-    val groundedMentions = groundMentionsWithSparql(defMentions)
+//    val groundedMentions = groundMentionsWithSparql(defMentions)
 
-    for (m <- groundedMentions) {
-      println(m.text + " grounding: " + m.attachments.head)
+//    for (m <- groundedMentions) {
+//      println(m.text + " grounding: " + m.attachments.head)
+
+    val (defMentions, other) = mentions.partition(m => m matches "Definition")
+
+    val groundedDefMentions = groundMentionsWithSparql(defMentions)
+
+    groundedDefMentions ++ other
     }
-
-  }
 
 
 }
