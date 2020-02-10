@@ -2,10 +2,10 @@ package controllers
 
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.DisplayUtils
-
 import play.api.mvc._
 import play.api.libs.json._
 
@@ -41,6 +41,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def getMentions(text: String) = Action {
     val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
+    for (em <- eidosMentions) {
+      if (em.label matches "Definition") {
+        println("Mention: " + em.text)
+        println("att: " + em.attachments.mkString(" "))
+      }
+    }
     val json = JsonUtils.mkJsonFromMentions(eidosMentions)
     Ok(json)
   }
@@ -55,7 +61,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     println(s"DOC : ${doc}")
     // extract mentions from annotated document
-    val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
+    val mentions = SVOGrounder.groundDefinitions(ieSystem.extractFrom(doc)).sortBy(m => (m.sentence, m.getClass.getSimpleName)).toVector
 
     println(s"Done extracting the mentions ... ")
     println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
