@@ -26,6 +26,7 @@ class groundingAttachment(searchTerm: String, name: String, className: String, s
 
 object SVOGrounder {
 
+  //todo: we just need a seq of grounding for whatever ph needs, e.g., a seq of mentions, a string, etc. AND document AND add API in the webapp, and send an email to paul and cc clay with plan to add api tp webapp to allow calls to SVO grounding, describe it: give it seq of seq of mentions and I'll give you a seq of groundings
 
   //grounding using the ontology API
   def groundWithAPI(term: String) = {
