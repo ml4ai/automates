@@ -37,6 +37,19 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(views.html.index())
   }
 
+  // -------------------------------------------
+  //      API entry points for SVOGrounder
+  // -------------------------------------------
+
+
+
+  def groundString: Action[AnyContent] = Action { request =>
+    val string = request.body.asText.get
+    // Note -- topN can be exposed to the API if needed
+    Ok(SVOGrounder.groundString(string)).as(JSON)
+  }
+
+
 
   def getMentions(text: String) = Action {
     val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
@@ -61,7 +74,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     println(s"DOC : ${doc}")
     // extract mentions from annotated document
-    val mentions = SVOGrounder.groundDefinitions(ieSystem.extractFrom(doc)).sortBy(m => (m.sentence, m.getClass.getSimpleName)).toVector
+    val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
 
     println(s"Done extracting the mentions ... ")
     println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")

@@ -13,6 +13,7 @@ import org.clulab.struct.Interval
 import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.Process
 import scala.util.parsing.json.JSON
+import org.clulab.processors.Processor
 
 
 case class sparqlResult(searchTerm: String, name: String, className: String, score: Option[Double])
@@ -43,8 +44,8 @@ object SVOGrounder {
 
 
 
-  /* return mention with a grounding attachment*/
-  def groundMentionWithSparql(mention: Mention): Mention = {
+  /* return a sequence of groundings for the given mention*/
+  def groundMentionWithSparql(mention: Mention): Option[Seq[sparqlResult]] = {
 
     val terms = getTerms(mention) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations, e.g., syntactic head of the mention + >compound
     if (terms.nonEmpty) {
@@ -77,13 +78,8 @@ object SVOGrounder {
 
 
       println("results from all terms, head: search term: " + finalResult.searchTerm + " name: " + finalResult.name + " className: " + finalResult.className + " score: " + finalResult.score)
-
-      val attachment = new groundingAttachment(finalResult.searchTerm, finalResult.name, finalResult.className, finalResult.score)
-      val newMention = mention.withAttachment(attachment)
-
-      println("new mention: " + newMention.label + " " + newMention.text + " " + newMention.attachments.mkString(" "))
-      return newMention
-    } else mention
+      Some(Seq(finalResult))
+    } else None
   }
 
   /*get the terms from the mention to run sparql queries with*/
@@ -108,6 +104,13 @@ object SVOGrounder {
       Some(terms)
     } else None
 
+  }
+
+  def getTerms(str: String): Seq[String] = {
+    val terms = new ArrayBuffer[String]()
+    //todo: get lemmas? is it worth it running the processors?
+    val termCandidates = str.split(" ")
+    termCandidates
   }
 
   /*get collocations from the mention*/
@@ -144,19 +147,43 @@ object SVOGrounder {
     dist
   }
 
-  def groundMentionsWithSparql(mentions: Seq[Mention]): Seq[Mention] = {
-    //ground a seq of mentions using groundMentionWithSparql on each
+  def groundMentionsWithSparql(mentions: Seq[Mention]): Seq[Option[Seq[sparqlResult]]] = {
+    //get grounding for each mention (todo: currently getting the best based on edit dist + whether or not is a colloquation, but will want to return a ranked seq of groundings)
     val grounded = mentions.map(m => groundMentionWithSparql(m))
     grounded
   }
 
 
+  def groundString(text:String): String = {
+    val terms = getTerms(text)
+    val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
+    for (word <- terms) {
+      val result = runSparqlQuery(word, "/home/alexeeva/Repos/automates/text_reading/sparql")
+      println("term: " + word + "\nresult: " + result.mkString(""))
+      println("end of result")
+      if (result.nonEmpty) {
+        //each line in the result is a separate entry returned by the query:
+        val resultLines = result.split(("\n"))
+        //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
+        //todo: if several highest score and are the same 'name', return the class that is the lowest node in the ontology
+        val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)))).sortBy(sr => sr.score)
+        for (result <- sparqlResults) {
+          println("==>" + result.searchTerm + " " + result.name + " " + result.className + " " + result.score)
+        }
 
-  def groundDefinitions(mentions: Seq[Mention]): Seq[Mention] = {
+        resultsFromAllTerms += sparqlResults.head
 
+      }
+    }
+    resultsFromAllTerms.mkString("")
+  }
+
+
+  def groundDefinitions(mentions: Seq[Mention]): Seq[Option[Seq[sparqlResult]]] = {
+    //sanity check to make sure all the passed mentions are def mentions
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
-    val groundedDefMentions = groundMentionsWithSparql(defMentions)
-    groundedDefMentions ++ other
+    val groundings = groundMentionsWithSparql(defMentions)
+    groundings
     }
 
 
