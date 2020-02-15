@@ -8,6 +8,7 @@ GET     /                           controllers.HomeController.index
 GET     /parseSentence              controllers.HomeController.parseSentence(sent: String, showEverything: Boolean)
 GET     /getMentions                controllers.HomeController.getMentions(text: String)
 POST     /groundString                 controllers.HomeController.groundString
+POST     /groundMentions               controllers.HomeController.groundMentions
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

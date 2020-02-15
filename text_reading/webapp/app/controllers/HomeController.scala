@@ -5,9 +5,14 @@ import org.clulab.aske.automates.OdinEngine
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.odin.serialization.json
+import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.DisplayUtils
-import play.api.mvc._
+import play.api.mvc.{AnyContent, _}
 import play.api.libs.json._
+import org.json4s._
+import org.json4s.jackson.JsonMethods
+import org.json4s.jackson.JsonMethods._
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -41,7 +46,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   //      API entry points for SVOGrounder
   // -------------------------------------------
 
-
+  def groundMentions: Action[AnyContent] = Action { request =>
+    val string = request.body.asText.get
+    val mentions = JSONSerializer.toMentions(string.asInstanceOf[JValue])
+    // Note -- topN can be exposed to the API if needed
+    Ok(SVOGrounder.groundDefinitions(mentions)).as(JSON)
+  }
 
   def groundString: Action[AnyContent] = Action { request =>
     val string = request.body.asText.get

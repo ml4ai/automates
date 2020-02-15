@@ -45,7 +45,7 @@ object SVOGrounder {
 
 
   /* return a sequence of groundings for the given mention*/
-  def groundMentionWithSparql(mention: Mention): Option[Seq[sparqlResult]] = {
+  def groundMentionWithSparql(mention: Mention): sparqlResult = {
 
     val terms = getTerms(mention) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations, e.g., syntactic head of the mention + >compound
     if (terms.nonEmpty) {
@@ -78,8 +78,8 @@ object SVOGrounder {
 
 
       println("results from all terms, head: search term: " + finalResult.searchTerm + " name: " + finalResult.name + " className: " + finalResult.className + " score: " + finalResult.score)
-      Some(Seq(finalResult))
-    } else None
+      finalResult
+    } else new sparqlResult("None", "None", "None", None)
   }
 
   /*get the terms from the mention to run sparql queries with*/
@@ -147,7 +147,7 @@ object SVOGrounder {
     dist
   }
 
-  def groundMentionsWithSparql(mentions: Seq[Mention]): Seq[Option[Seq[sparqlResult]]] = {
+  def groundMentionsWithSparql(mentions: Seq[Mention]): Seq[sparqlResult] = {
     //get grounding for each mention (todo: currently getting the best based on edit dist + whether or not is a colloquation, but will want to return a ranked seq of groundings)
     val grounded = mentions.map(m => groundMentionWithSparql(m))
     grounded
@@ -179,7 +179,7 @@ object SVOGrounder {
   }
 
 
-  def groundDefinitions(mentions: Seq[Mention]): Seq[Option[Seq[sparqlResult]]] = {
+  def groundDefinitions(mentions: Seq[Mention]): Seq[sparqlResult] = {
     //sanity check to make sure all the passed mentions are def mentions
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
     val groundings = groundMentionsWithSparql(defMentions)
