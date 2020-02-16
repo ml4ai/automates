@@ -245,15 +245,6 @@ class ExpansionHandler() extends LazyLogging {
     traverseIncomingLocal(Set.empty, m.tokenInterval.toSet, incomingRelations = incoming, numHops, maxHopLength, m.sentence, stateFromAvoid, sentence)
   }
 
-//  def reasonableLengthHop(): Boolean = {
-//    if (nextTok - currentToken < 10) {
-//      return true
-//    } else false
-//
-//  }
-
-
-
   def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.dependencies match {
     case None => sys.error("sentence has no dependencies")
     case Some(dependencies) => dependencies.outgoingEdges
@@ -395,7 +386,7 @@ class ExpansionHandler() extends LazyLogging {
 
 object ExpansionHandler {
   val MAX_HOPS_EXPANDING = 5
-  val MAX_HOP_LENGTH = 10 //max length of hop (in tokens); helps with bad parses
+  val MAX_HOP_LENGTH = 12 //max length of hop (in tokens); helps with bad parses
   val AVOID_LABEL = "Avoid-Strict"
 
   // avoid expanding along these dependencies
@@ -452,7 +443,7 @@ object ExpansionHandler {
   )
 
   val VALID_INCOMING = Set[scala.util.matching.Regex](
-//    "^nmod_for".r
+    "^nmod_for".r,
 //    "^amod$".r,
 //    "^compound$".r//,
     "nmod_at".r,

@@ -10,9 +10,9 @@ class TestDefinitions extends ExtractionTest {
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
 
   val t1a = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-  failingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
+  passingTest should s"extract definitions from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Kcs" -> Seq("Crop coefficients") //fixme: finds "current Penman-Monteith ET" as a def; filter out.
+      "Kcs" -> Seq("Crop coefficients")
     )
     val mentions = extractMentions(t1a)
     testDefinitionEvent(mentions, desired)
@@ -134,7 +134,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t1b = "In APSIM, water uptake (Ta, mm d−1) is determined from potential transpiration demand (Tp, mm d−1), soil " +
     "water available (WA, mm d−1), and water supply (WS, mm d−1) for each ith day and soil layer as:"
-  failingTest should s"find definitions from t1b: ${t1b}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t1b: ${t1b}" taggedAs(Somebody) in {
     val desired = Seq(
       "Ta" -> Seq("water uptake"),
       "Tp" -> Seq("potential transpiration demand"),
@@ -146,7 +146,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t2b = "where fi is the daily fractional light interception, ETo is the daily reference evapotranspiration (mm d−1)," +
-    "pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
+    " pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
     "is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be " +
     "supplied to the plant from each rooted soil layer."
   failingTest should s"find definitions from t2b: ${t2b}" taggedAs(Somebody) in {
@@ -175,7 +175,7 @@ class TestDefinitions extends ExtractionTest {
   val t4b = "The plant conductance is calculated by inverting the transpiration equation using a maximum expected " +
     "transpiration (Tx, mm d−1), the soil water potential at field capacity ( Sfc, J kg−1) and the leaf water " +
     "potential at the onset of stomatal closure ( Lsc, J kg−1):"
-  failingTest should s"find definitions from t4b: ${t4b}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t4b: ${t4b}" taggedAs(Somebody) in {
     val desired = Seq(
       //"plant conductance" -> Seq("inverting the transpiration equation"), // todo: do we want this one?
       "Tx" -> Seq("maximum expected transpiration"),
@@ -237,7 +237,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t11b = "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an " +
     "exponential function that depends on:"
-  failingTest should s"find definitions from t11b: ${t11b}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t11b: ${t11b}" taggedAs(Somebody) in {
     val desired = Seq(
       "Url" -> Seq("water uptake per unit of root length") // todo: add a rule?
     )
@@ -247,9 +247,9 @@ class TestDefinitions extends ExtractionTest {
   }
   val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl " +
     "times pr for each layer and summing over the soil profile:"
-    failingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
+    passingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
-        "Ux" -> Seq("maximum potential water uptake") //for the profile? - not part of the concept
+        "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
       )
       val mentions = extractMentions(t12b)
       testDefinitionEvent(mentions, desired)
@@ -286,7 +286,7 @@ class TestDefinitions extends ExtractionTest {
       val desired = Seq(
         "t" -> Seq("time"),
         "C" -> Seq("differential water capacity"),
-        "q" -> Seq("water flux density"),
+        "q" -> Seq("water flux density"), //fixme: m is found as entity by definition_var_appos despite the [!entity = "B-unit"]
         "r" -> Seq("distance from the axial center"),
         "S" -> Seq("sink or source term"), //two separate concepts, not going to pass without expansion?
         "H" -> Seq("hydraulic head")
@@ -368,8 +368,22 @@ class TestDefinitions extends ExtractionTest {
       "p" -> Seq("iteration level")
     )
     val mentions = extractMentions(t8c)
+    for (m <- mentions) println(m.text + m.label)
     testDefinitionEvent(mentions, desired)
   }
+
+
+  // Tests from paper: 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
+
+  val t1d = "The density of water (ρw) is taken as 1.0 Mg m-3."
+  passingTest should s"find definitions from t1d: ${t1d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "ρw" -> Seq("density of water")
+    )
+    val mentions = extractMentions(t1d)
+    testDefinitionEvent(mentions, desired)
+  }
+
 
 //  val t9c = "Assuming no sink or source (S = 0) and no gravitational or osmotic component (H = h), Eq. [4] reduces to..."
 //  failingTest should s"find definitions from t9c: ${t9c}" taggedAs(Somebody) in {

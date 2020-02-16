@@ -27,6 +27,17 @@ rules:
       valueLeast:Value = nmod_between
       valueMost:Value = nmod_between conj_and
 
+  - name: var_ranges
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
+    pattern: |
+      trigger = [lemma='range']
+      variable:Variable = nsubj
+      valueLeast:Value = nmod_from
+      valueMost:Value = nmod_from nmod
+
 #
   - name: var-vary_between_symbols_interval
     label: IntervalParameterSetting
@@ -103,3 +114,13 @@ rules:
     example: "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
     pattern: |
       @variable:Variable @value:Value
+
+  - name: adjust_to_setting
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed measurements to a standard height of 2.0 m"
+    pattern: |
+      trigger = [word=/(?i)adjust/]
+      variable:Concept = dobj
+      value:Value = nmod_to nmod_of nummod

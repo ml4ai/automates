@@ -30,7 +30,7 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
   }
 
   val t3a = "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
-  failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody, Interval) in {
 
     val desired = Seq(
       "KEP" -> Seq("0.5", "0.8") //todo: need a rule for "range from"
@@ -39,6 +39,19 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
     val mentions = extractMentions(t3a)
     testParameterSettingEventInterval(mentions, desired)
   }
+
+//
+//  // Tests from paper: 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
+//  val t1b = "Rns and Rnl are generally positive or zero in value."
+//  failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody, Interval) in {
+//
+//    val desired = Seq(
+//      "KEP" -> Seq("0", "0.8") //todo: need a rule for "range from"
+//    )
+//
+//    val mentions = extractMentions(t3a)
+//    testParameterSettingEventInterval(mentions, desired)
+//  }
 
 
 }
