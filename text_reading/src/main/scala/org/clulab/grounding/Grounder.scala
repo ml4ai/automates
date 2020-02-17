@@ -15,6 +15,8 @@ import scala.sys.process.Process
 import scala.util.parsing.json.JSON
 import org.clulab.processors.Processor
 
+import scala.collection.mutable
+
 
 case class sparqlResult(searchTerm: String, name: String, className: String, score: Option[Double])
 
@@ -29,14 +31,13 @@ object SVOGrounder {
 
   //todo: we just need a seq of grounding for whatever ph needs, e.g., a seq of mentions, a string, etc. AND document AND add API in the webapp, and send an email to paul and cc clay with plan to add api tp webapp to allow calls to SVO grounding, describe it: give it seq of seq of mentions and I'll give you a seq of groundings
 
-  //grounding using the ontology API
+  //grounding using the ontology API (not currently used)
   def groundWithAPI(term: String) = {
     val url = "http://34.73.227.230:8000/match_phrase/" + term + "/"
     scala.io.Source.fromURL(url)
   }
 
   def groundMentionWithAPI(mention: Mention) = {
-
     for (word <- mention.words) {
       println(groundWithAPI(word).mkString(""))
     }
@@ -147,10 +148,16 @@ object SVOGrounder {
     dist
   }
 
-  def groundMentionsWithSparql(mentions: Seq[Mention]): Seq[sparqlResult] = {
+  def groundMentionsWithSparql(mentions: Seq[Mention]): Map[String, sparqlResult] = {
     //get grounding for each mention (todo: currently getting the best based on edit dist + whether or not is a colloquation, but will want to return a ranked seq of groundings)
-    val grounded = mentions.map(m => groundMentionWithSparql(m))
-    grounded
+//    val grounded = mentions.map(m => groundMentionWithSparql(m))
+//    grounded
+
+    val groundings = mutable.Map[String, sparqlResult]()
+    for (m <- mentions) {
+      groundings += (m.text -> groundMentionWithSparql(m))
+    }
+    groundings.toMap
   }
 
 
@@ -179,11 +186,11 @@ object SVOGrounder {
   }
 
 
-  def groundDefinitions(mentions: Seq[Mention]): Seq[sparqlResult] = {
+  def groundDefinitions(mentions: Seq[Mention]): String = {
     //sanity check to make sure all the passed mentions are def mentions
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
     val groundings = groundMentionsWithSparql(defMentions)
-    groundings
+    groundings.mkString("")
     }
 
 

@@ -5,14 +5,15 @@ import org.clulab.aske.automates.OdinEngine
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.odin.serialization.json
+import org.clulab.odin.serialization.json._
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.DisplayUtils
+import org.json4s
 import play.api.mvc.{AnyContent, _}
 import play.api.libs.json._
 import org.json4s._
-import org.json4s.jackson.JsonMethods
-import org.json4s.jackson.JsonMethods._
+
+
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -46,12 +47,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   //      API entry points for SVOGrounder
   // -------------------------------------------
 
-  def groundMentions: Action[AnyContent] = Action { request =>
-    val string = request.body.asText.get
-    val mentions = JSONSerializer.toMentions(string.asInstanceOf[JValue])
-    // Note -- topN can be exposed to the API if needed
-    Ok(SVOGrounder.groundDefinitions(mentions)).as(JSON)
-  }
+//  def groundMentions: Action[AnyContent] = Action { request =>
+//    val string = request.body.asText.get
+////    val jval = ujson.read(string)
+//    val jval = json4s.jackson.parseJson(string)
+//    val map = JSONSerializer.mkDocumentMap(jval)
+////    val newJval =
+//    println(jval)
+//    val mentions = JSONSerializer.toMentions(jval)
+//    // Note -- topN can be exposed to the API if needed
+//    Ok(SVOGrounder.groundDefinitions(mentions)).as(JSON)
+//  }
 
   def groundString: Action[AnyContent] = Action { request =>
     val string = request.body.asText.get
@@ -60,17 +66,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
 
-
   def getMentions(text: String) = Action {
-    val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
+    val (doc, mentions) = processPlaySentence(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
-    for (em <- eidosMentions) {
+    for (em <- mentions) {
       if (em.label matches "Definition") {
         println("Mention: " + em.text)
         println("att: " + em.attachments.mkString(" "))
       }
     }
-    val json = JsonUtils.mkJsonFromMentions(eidosMentions)
+//    val mjson = Json.obj("x" -> mentions.jsonAST.toString)
+    val json = JsonUtils.mkJsonFromMentions(mentions)
     Ok(json)
   }
 
@@ -85,6 +91,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println(s"DOC : ${doc}")
     // extract mentions from annotated document
     val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
+
+    val json = JSONSerializer.jsonAST(mentions)
+    println("JSON: " + json)
 
     println(s"Done extracting the mentions ... ")
     println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
