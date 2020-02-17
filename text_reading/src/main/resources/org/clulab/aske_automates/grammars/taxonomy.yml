@@ -1,6 +1,7 @@
 - Entity:
   - Concept:
-      - Variable
+      - Variable:
+        - VariableGazetteer
       - Model
   - Measurement:
     - Value:

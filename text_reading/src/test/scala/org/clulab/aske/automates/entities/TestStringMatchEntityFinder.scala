@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TestStringMatchEntityFinder extends FlatSpec with Matchers {
 
-  val finder = StringMatchEntityFinder.fromStrings(Seq("MATCH", "OTHER"), "Matched")
+  val finder = StringMatchEntityFinder.fromStrings(Seq("MATCH", "OTHER"), "Matched", "testTaxonomy.yml")
 
   it should "not find mentions when no string match" in {
 

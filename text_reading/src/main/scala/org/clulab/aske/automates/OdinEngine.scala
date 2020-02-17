@@ -5,20 +5,20 @@ import com.typesafe.config.ConfigFactory
 import org.clulab.odin.{ExtractorEngine, Mention, State}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.aske.automates.entities.{EntityFinder, GrobidEntityFinder, RuleBasedEntityFinder, StringMatchEntityFinder}
+import org.clulab.aske.automates.entities.{EntityFinder, GazetteerEntityFinder, GrobidEntityFinder, RuleBasedEntityFinder, StringMatchEntityFinder}
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughFilter}
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.actions.ExpansionHandler
-import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, Preprocessor, PassThroughPreprocessor}
+import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, PassThroughPreprocessor, Preprocessor}
 
 
 class OdinEngine(
   val proc: Processor,
   masterRulesPath: String,
   taxonomyPath: String,
-  val entityFinders: Seq[EntityFinder],
+  var entityFinders: Seq[EntityFinder],
   enableExpansion: Boolean,
   validArgs: List[String],
   filterType: Option[String],
@@ -90,6 +90,19 @@ class OdinEngine(
     loadableAttributes.actions.keepLongest(events).toVector
   }
 
+  // Supports web service, when existing entities are already known but from outside the project
+  def extractFromTextWithGazetteer(text: String, keepText: Boolean = false, filename: Option[String], gazetteer: Seq[String]): Seq[Mention] = {
+    val label = OdinEngine.VARIABLE_GAZETTEER_LABEL
+    val providedFinder = StringMatchEntityFinder.fromStrings(gazetteer, label)
+    entityFinders = entityFinders ++ Seq(providedFinder)
+    val results = extractFromText(text, keepText, filename)
+    // cleanup -- remove the finder from this query
+    entityFinders = entityFinders.diff(Seq(providedFinder))
+
+    // return results
+    results
+  }
+
   // ---------- Helper Methods -----------
 
   // Annotate the text using a Processor and then populate lexicon labels
@@ -114,6 +127,7 @@ object OdinEngine {
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
   val VARIABLE_LABEL: String = "Variable"
+  val VARIABLE_GAZETTEER_LABEL: String = "VariableGazetteer"
   val UNIT_LABEL: String = "Unit"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"

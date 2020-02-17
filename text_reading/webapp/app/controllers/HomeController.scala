@@ -3,15 +3,16 @@ package controllers
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.grounding.SVOGrounder
+import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.odin.serialization.json._
-import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.utils.DisplayUtils
+
 import org.json4s
-import play.api.mvc.{AnyContent, _}
+import play.api.mvc._
+
 import play.api.libs.json._
-import org.json4s._
 
 
 
@@ -22,11 +23,11 @@ import org.json4s._
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
-  // Initialize the EidosSystem
   // -------------------------------------------------
   println("[OdinEngine] Initializing the OdinEngine ...")
   val ieSystem = OdinEngine.fromConfig()
   var proc = ieSystem.proc
+  val serializer = JSONSerializer
   println("[OdinEngine] Completed Initialization ...")
   // -------------------------------------------------
 
@@ -66,6 +67,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
 
+  // we need documentation on how to use this, or we can remove it
+
   def getMentions(text: String) = Action {
     val (doc, mentions) = processPlaySentence(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
@@ -79,8 +82,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val json = JsonUtils.mkJsonFromMentions(mentions)
     Ok(json)
   }
-
-
 
   def processPlaySentence(ieSystem: OdinEngine, text: String): (Document, Vector[Mention]) = {
     // preprocessing
@@ -101,6 +102,35 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // return the sentence and all the mentions extracted ... TODO: fix it to process all the sentences in the doc
     (doc, mentions.sortBy(_.start))
   }
+
+  /* Webservice Methods */
+  def process_text: Action[JsValue] = Action(parse.json) { request =>
+    val data = request.body.toString()
+    val json = ujson.read(data)
+    val text = json("text").str
+    val gazetteer = json.obj.get("entities").map(_.arr.map(_.str))
+    val mentionsJson = processPlaytext(ieSystem, text, gazetteer)
+    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+    Ok(parsed_output)
+  }
+
+  // Method where aske reader processing for webservice happens
+  def processPlaytext(ieSystem: OdinEngine, text: String, gazetteer: Option[Seq[String]] = None): org.json4s.JsonAST.JValue = {
+
+    // preprocessing
+    println(s"Processing sentence : $text" )
+    val mentions = if (gazetteer.isDefined) {
+      ieSystem.extractFromTextWithGazetteer(text, filename = None, gazetteer = gazetteer.get)
+    } else {
+      ieSystem.extractFromText(text, filename = None)
+    }
+
+    // Export to JSON
+    val json = serializer.jsonAST(mentions)
+
+    json
+  }
+
 
   def parseSentence(text: String, showEverything: Boolean) = Action {
     val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
