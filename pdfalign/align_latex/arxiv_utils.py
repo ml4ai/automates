@@ -18,6 +18,7 @@ def find_main_tex_file(dirname):
     #
     # Note that the system does not process using Makefile or any other manifest-type files.
     for filename in glob(os.path.join(dirname, '*.tex')):
+        print("arxiv_utils filename:", filename)
         with open(filename) as f:
             for token in LatexTokenizer(f.read()):
                 if token.value == '\\documentclass':
