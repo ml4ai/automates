@@ -17,9 +17,14 @@ def main(args):
     frags = os.listdir(args.dirname)
     component_scores = defaultdict(list)
     for frag in frags:
-        frag_dir = os.path.join(args.dirname, frag) 
+        print("dirname:", args.dirname)
+        print("frag:", frag)
+        frag_dir = os.path.join(args.dirname, frag)
+        print("frag_dir:", frag_dir)
         score_file = os.path.join(frag_dir, 'scores.tsv')
+        print("score_file:", score_file)
         frag_file = os.path.join(frag_dir, 'fragment.txt')
+        print("frag_file:", frag_files)
         with open(frag_file) as f:
             fragment = f.read()
         for scored_component in read_scores(score_file):
