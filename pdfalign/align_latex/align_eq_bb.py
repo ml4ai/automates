@@ -131,7 +131,8 @@ def all_fragments(tokens):
 def read_equation_annotations(ann_file):
     with open(ann_file) as f:
         annotations = json.load(f)
-        return [a['equation'] for a in annotations]
+        # the if checks for missing annotations, which sometimes are produced
+        return [a['equation'] for a in annotations if 'equation' in a]
 
 
 
