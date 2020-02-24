@@ -1,21 +1,30 @@
 package org.clulab.grounding
 
 import java.io.File
-
+import org.json4s._
+import upickle.default._
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.clulab.aske.automates.{OdinActions, OdinEngine}
+import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, Mention, SynPath}
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
-
+import org.json4s._
+import org.json4s.jackson.Serialization
+//import org.json4s.jackson.Serialization.{read, write}
 import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.Process
 import scala.util.parsing.json.JSON
 import org.clulab.processors.Processor
-
+import org.json4s
+import org.json4s.JsonAST.JValue
+import org.json4s.{JValue, JsonAST}
+import org.json4s.jackson.JsonMethods._
+import org.json4s
 import scala.collection.mutable
+
 
 
 case class sparqlResult(searchTerm: String, name: String, className: String, score: Option[Double])
@@ -46,13 +55,13 @@ object SVOGrounder {
 
 
   /* return a sequence of groundings for the given mention*/
-  def groundMentionWithSparql(mention: Mention): sparqlResult = {
+  def groundMentionWithSparql(mention: Mention): Seq[sparqlResult] = {
 
     val terms = getTerms(mention) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations, e.g., syntactic head of the mention + >compound
     if (terms.nonEmpty) {
       val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
       for (word <- terms.get) {
-        val result = runSparqlQuery(word, "/home/alexeeva/Repos/automates/text_reading/sparql")
+        val result = runSparqlQuery(word, "/home/alexeeva/Repos/automates/text_reading/sparql") //todo: pass through configs
         println("term: " + word + "\nresult: " + result.mkString(""))
         println("end of result")
         if (result.nonEmpty) {
@@ -63,6 +72,7 @@ object SVOGrounder {
           val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)))).sortBy(sr => sr.score)
           for (result <- sparqlResults) {
             println("==>" + result.searchTerm + " " + result.name + " " + result.className + " " + result.score)
+
           }
 
           resultsFromAllTerms += sparqlResults.head
@@ -71,16 +81,19 @@ object SVOGrounder {
       }
 
       //getting all the results with same (minimal) score
-      val onlyMinScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).min)
+      val onlyMinScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).min).toArray
 
       //the results where search term contains "_" should be ranked higher since those are collocations instead of separate words
       val (collocation, singleWord) = onlyMinScoreResults.partition(r => r.searchTerm.contains("_"))
-      val finalResult = if (collocation.nonEmpty) collocation.head else singleWord.head
+      val finalResult = if (collocation.nonEmpty) collocation else singleWord
 
 
-      println("results from all terms, head: search term: " + finalResult.searchTerm + " name: " + finalResult.name + " className: " + finalResult.className + " score: " + finalResult.score)
-      finalResult
-    } else new sparqlResult("None", "None", "None", None)
+      println("results from all terms, head: search term: " + finalResult.head.searchTerm + " name: " + finalResult.head.name + " className: " + finalResult.head.className + " score: " + finalResult.head.score)
+      //return the best result first, then only the min score ones, and then all the rest; some may overlap thus distinct
+      //todo: there has to be a more efficient way
+      val allResults = finalResult ++ onlyMinScoreResults ++ resultsFromAllTerms
+      allResults.distinct
+    } else Array(new sparqlResult("None", "None", "None", None))
   }
 
   /*get the terms from the mention to run sparql queries with*/
@@ -148,12 +161,12 @@ object SVOGrounder {
     dist
   }
 
-  def groundMentionsWithSparql(mentions: Seq[Mention]): Map[String, sparqlResult] = {
+  def groundMentionsWithSparql(mentions: Seq[Mention]): Map[String, Seq[sparqlResult]] = {
     //get grounding for each mention (todo: currently getting the best based on edit dist + whether or not is a colloquation, but will want to return a ranked seq of groundings)
 //    val grounded = mentions.map(m => groundMentionWithSparql(m))
 //    grounded
 
-    val groundings = mutable.Map[String, sparqlResult]()
+    val groundings = mutable.Map[String, Seq[sparqlResult]]()
     for (m <- mentions) {
       groundings += (m.text -> groundMentionWithSparql(m))
     }
@@ -190,7 +203,15 @@ object SVOGrounder {
     //sanity check to make sure all the passed mentions are def mentions
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
     val groundings = groundMentionsWithSparql(defMentions)
-    groundings.mkString("")
+
+//    val myJson = scala.util.parsing.json.JSONObject(groundings)
+////    groundings//.mkString("")
+////    myJson.toSeqtring()
+//    myJson
+//    groundings.mkString("")
+    val str = scala.util.parsing.json.JSONObject(groundings)
+    str.toString()
+
     }
 
 

@@ -25,7 +25,10 @@ libraryDependencies ++= {
     "com.typesafe"  %  "config"                   % "1.3.1",
     "org.json4s"    %%  "json4s-core"             % json4sVersion,
     "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
-    "org.apache.commons" % "commons-text" % "1.6"
+    "org.apache.commons" % "commons-text" % "1.6",
+    "com.typesafe.play" %% "play-json" % "2.7.0",
+    "org.json4s" %% "json4s-jackson" % "0.1.0"
+    
   )
 }
 
