@@ -1,9 +1,11 @@
 package org.clulab.grounding
 
 import java.io.File
+
 import org.json4s._
 import upickle.default._
 import ai.lum.common.ConfigUtils._
+import com.sun.corba.se.impl.presentation.rmi.DynamicMethodMarshallerImpl.ReaderWriter
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.clulab.aske.automates.{OdinActions, OdinEngine}
@@ -24,21 +26,36 @@ import org.json4s.{JValue, JsonAST}
 import org.json4s.jackson.JsonMethods._
 import org.json4s
 import scala.collection.mutable
-
+import upickle.default.{ReadWriter, macroRW}
 
 
 case class sparqlResult(searchTerm: String, name: String, className: String, score: Option[Double])
+
+object sparqlResult {
+  implicit val rw: ReadWriter[sparqlResult] = macroRW
+
+}
 
 abstract class AutomatesAttachment extends Attachment
 
 class groundingAttachment(searchTerm: String, name: String, className: String, score: Option[Double]) extends  AutomatesAttachment
 
 
+case class Grounding(variable: String, gr: Seq[sparqlResult])
+object Grounding {
+  implicit val rw: ReadWriter[Grounding] = macroRW
+}
 
+case class SeqOfGroundings(groundings: Seq[Grounding])
+object SeqOfGroundings {
+  implicit val rw: ReadWriter[SeqOfGroundings] = macroRW
+}
 
 object SVOGrounder {
 
+
   //todo: we just need a seq of grounding for whatever ph needs, e.g., a seq of mentions, a string, etc. AND document AND add API in the webapp, and send an email to paul and cc clay with plan to add api tp webapp to allow calls to SVO grounding, describe it: give it seq of seq of mentions and I'll give you a seq of groundings
+
 
   //grounding using the ontology API (not currently used)
   def groundWithAPI(term: String) = {
@@ -168,10 +185,11 @@ object SVOGrounder {
 
     val groundings = mutable.Map[String, Seq[sparqlResult]]()
     for (m <- mentions) {
-      groundings += (m.text -> groundMentionWithSparql(m))
+      groundings += (m.arguments("variable").head.text -> groundMentionWithSparql(m))
     }
     groundings.toMap
   }
+
 
 
   def groundString(text:String): String = {
@@ -209,9 +227,17 @@ object SVOGrounder {
 ////    myJson.toSeqtring()
 //    myJson
 //    groundings.mkString("")
-    val str = scala.util.parsing.json.JSONObject(groundings)
-    str.toString()
+//    val str = scala.util.parsing.json.JSONObject(groundings)
+//    str.toString()
+    val groundingsObj =
+        for {
+          gr <- groundings
 
+
+        } yield Grounding(gr._1, gr._2)
+
+    val seqOfGroundings = SeqOfGroundings(groundingsObj.toSeq)
+    write(seqOfGroundings, indent = 4)
     }
 
 
