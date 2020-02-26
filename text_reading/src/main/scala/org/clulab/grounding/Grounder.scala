@@ -35,6 +35,7 @@ import upickle.default.{ReadWriter, macroRW}
 //todo: pass the python query file from configs
 //todo: add source for the grounding
 //todo: check how this works with Seq[Mention]
+//todo: document in wiki
 
 case class sparqlResult(searchTerm: String, name: String, className: String, score: Option[Double])
 
