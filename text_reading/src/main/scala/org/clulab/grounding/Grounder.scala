@@ -29,6 +29,13 @@ import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
 
 
+//todo: produce a json for groundString
+//todo: limit the number of returned svo terms to k
+//todo: clean the code
+//todo: pass the python query file from configs
+//todo: add source for the grounding
+//todo: check how this works with Seq[Mention]
+
 case class sparqlResult(searchTerm: String, name: String, className: String, score: Option[Double])
 
 object sparqlResult {
@@ -85,7 +92,6 @@ object SVOGrounder {
           //each line in the result is a separate entry returned by the query:
           val resultLines = result.split(("\n"))
           //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
-          //todo: if several highest score and are the same 'name', return the class that is the lowest node in the ontology
           val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)))).sortBy(sr => sr.score)
           for (result <- sparqlResults) {
             println("==>" + result.searchTerm + " " + result.name + " " + result.className + " " + result.score)
