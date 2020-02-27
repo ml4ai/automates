@@ -33,8 +33,21 @@ rules:
     pattern: |
       trigger = [lemma = /express|give/]
       variable: Concept = <acl | nsubjpass
-      unit: Unit+ = <acl appos | nmod_in nmod_per? appos compound #todo: add an action to split these up and merge if
+      unit: Unit+ = <acl appos | nmod_in nmod_per? appos compound  #todo: add an action to split these up and merge if
       #overlap and keep the longer unit?
+
+
+  - name: var_taken_as_unit
+    label: Unit
+    priority: ${priority}
+    type: dependency
+    example: "The density of water (ρw) is taken as 1.0 Mg m-3."
+    action: looksLikeAUnit
+    pattern: |
+      trigger = [lemma = /take/]
+      variable: Variable = nsubjpass nmod_of? appos
+      unit: Unit+ = nmod_as
+      #todo: this rule is looking specifically for a variable and not a concept to attach the unit to; can combine with similar rules in future
 
   - name: concept_value_unit
     label: Unit
@@ -58,3 +71,4 @@ rules:
       trigger = [word = "="]
       variable: Variable = <amod
       unit: Unit = dep
+

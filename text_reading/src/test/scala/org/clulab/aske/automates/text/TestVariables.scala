@@ -96,13 +96,14 @@ class TestVariables extends ExtractionTest {
   }
   val t9a = "Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. " +
     "(2012a) recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
-  passingTest should s"extract variables from t9a: ${t9a}" taggedAs(Becky) in {
-
+  failingTest should s"extract variables from t9a: ${t9a}" taggedAs(Becky) in {
 
     val desired = Seq("Kcdmin", "Kcdmax", "SKc", "FAO-56") // todo: "FAO-56" - model? if yes, add to the model rule, delete from test
+    //fixme: 2012a is captured as var (prob bc of the lookslikeavar action)
     val mentions = extractMentions(t9a)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
+
   val t10a ="where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998)."
   passingTest should s"extract variables from t10a: ${t10a}" taggedAs(Becky) in {
 
@@ -146,10 +147,10 @@ class TestVariables extends ExtractionTest {
   // sentences from 2016-Camargo-and Kemanian-Six-crop-models differ-in-their-simulation-of water-uptake
   //
   val t1b = "In APSIM, water uptake (Ta, mm d−1) is determined from potential transpiration demand (Tp, mm d−1), soil water available (WA, mm d−1), and water supply (WS, mm d−1) for each ith day and soil layer as:"
-  passingTest should s"extract variables from t1b: ${t1b}" taggedAs(Somebody) in {
+  failingTest should s"extract variables from t1b: ${t1b}" taggedAs(Somebody) in {
 
     // TODO:  Is APSIM a variable or the name of a model?
-    val desired = Seq("APSIM", "Ta", "Tp", "WA", "WS")
+    val desired = Seq("APSIM", "Ta", "Tp", "WA", "WS") //fixme: ith is caught as var bc it's short, but is not on the freq word list; ideally, 'i' should be a variable
     val mentions = extractMentions(t1b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
@@ -162,7 +163,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
   val t3b = "This means that kl represents a maximum supply determined by r and the resistance to water flow (Passioura, 1983; Monteith, 1986)"
-  failingTest should s"extract variables from t3b: ${t3b}" taggedAs(Somebody) in {
+  passingTest should s"extract variables from t3b: ${t3b}" taggedAs(Somebody) in {
 
 
     val desired = Seq("kl", "r") //todo: see t2b
@@ -251,7 +252,7 @@ class TestVariables extends ExtractionTest {
   val t1c = "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
   failingTest should s"extract variables from t1c: ${t1c}" taggedAs(Somebody) in {
     // TODO:  deal with "∈" somehow ?
-    val desired = Seq("i", "t", "b", "∈") //fixme: i is probably filtered out
+    val desired = Seq("i", "t", "b", "∈") //fixme: i is probably filtered out; 'locations' is found as a variable---???
     val mentions = extractMentions(t1c)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }

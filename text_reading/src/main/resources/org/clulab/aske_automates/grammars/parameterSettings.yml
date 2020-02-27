@@ -80,6 +80,18 @@ rules:
       value:Value = /nmod_to/
 
 
+  - name: var_taken_as
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "The density of water (ρw) is taken as 1.0 Mg m-3."
+    pattern: |
+      trigger = [word=/(?i)^taken/]
+      variable:Variable = nsubjpass nmod_of appos
+      value:Value = nmod_as nummod
+      #todo: combine with a different verb-trigger-based rule
+
+
   - name: var-noun_of_param
     label: IntervalParameterSetting
     priority: ${priority}
