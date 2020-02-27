@@ -11,6 +11,8 @@ import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.entities.EntityHelper
 import org.clulab.struct.Interval
 
+import scala.io.{BufferedSource, Source}
+
 
 
 class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler], validArgs: List[String]) extends Actions with LazyLogging {
@@ -124,6 +126,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
+    val bufferedSource = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/src/main/resources/frequentWords.tsv")
+    val freqWordsIter = for (
+      line <- bufferedSource.getLines
+    ) yield line.trim
+
+    val freqWords = freqWordsIter.toArray
+//    println(freqWords.mkString(" "))
+
     val knownNonVars = Array("crop", "Crop") //todo: expand, put elsewhere
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
@@ -143,8 +153,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         |
         word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
         |
-        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0)//this is too specific; trying to get to single-letter vars with a subscript (e.g., u2) without getting units like m-2
+        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0//this is too specific; trying to get to single-letter vars with a subscript (e.g., u2) without getting units like m-2
       //todo: still need a way to not avoid short lower-case vars
+      |
+          (word.length < 6 && !freqWords.contains(word.toLowerCase()) && tag != "CD")
+        )
     }
     for {
       m <- mentions
