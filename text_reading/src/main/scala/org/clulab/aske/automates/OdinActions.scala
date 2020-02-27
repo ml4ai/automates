@@ -126,6 +126,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
+
+    //todo: pass from configs and put somewhere where I don't have to load this every time the action is applied
     val bufferedSource = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/src/main/resources/frequentWords.tsv")
     val freqWordsIter = for (
       line <- bufferedSource.getLines
@@ -134,7 +136,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val freqWords = freqWordsIter.toArray
 //    println(freqWords.mkString(" "))
 
-    val knownNonVars = Array("crop", "Crop") //todo: expand, put elsewhere
+    val knownNonVars = Array("crop", "Crop") //todo: expand, put elsewhere; todo: can get rid of this since have the dictionary check
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable was found with a Gazetteer passed through the webservice, keep it
