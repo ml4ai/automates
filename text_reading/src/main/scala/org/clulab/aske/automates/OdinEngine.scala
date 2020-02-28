@@ -13,6 +13,8 @@ import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, PassThroughPreprocessor, Preprocessor}
 
+import scala.io.Source
+
 
 class OdinEngine(
   val proc: Processor,
@@ -21,6 +23,7 @@ class OdinEngine(
   var entityFinders: Seq[EntityFinder],
   enableExpansion: Boolean,
   validArgs: List[String],
+  freqWords: Array[String],
   filterType: Option[String],
   enablePreprocessor: Boolean) {
 
@@ -47,7 +50,7 @@ class OdinEngine(
     def apply(): LoadableAttributes = {
       // Reread these values from their files/resources each time based on paths in the config file.
       val masterRules = FileUtils.getTextFromResource(masterRulesPath)
-      val actions = OdinActions(taxonomyPath, enableExpansion, validArgs)
+      val actions = OdinActions(taxonomyPath, enableExpansion, validArgs, freqWords)
       val extractorEngine = ExtractorEngine(masterRules, actions, actions.globalAction)
       new LoadableAttributes(
         actions,
@@ -173,8 +176,9 @@ object OdinEngine {
     // expansion: used to optionally expand mentions in certain situations to get more complete text spans
     val validArgs: List[String] = odinConfig[List[String]]("validArgs")
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
+    val freqWords = FileUtils.loadFromOneColumnTSV(odinConfig[String]("freqWordsPath"))
 
-    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, validArgs, filterType, enablePreprocessor)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, validArgs, freqWords, filterType, enablePreprocessor)
   }
 
 }

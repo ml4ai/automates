@@ -15,7 +15,7 @@ import scala.io.{BufferedSource, Source}
 
 
 
-class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler], validArgs: List[String]) extends Actions with LazyLogging {
+class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler], validArgs: List[String], freqWords: Array[String]) extends Actions with LazyLogging {
 
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
@@ -128,12 +128,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
     //todo: pass from configs and put somewhere where I don't have to load this every time the action is applied
-    val bufferedSource = Source.fromFile("/home/alexeeva/Repos/automates/text_reading/src/main/resources/frequentWords.tsv")
-    val freqWordsIter = for (
-      line <- bufferedSource.getLines
-    ) yield line.trim
 
-    val freqWords = freqWordsIter.toArray
 //    println(freqWords.mkString(" "))
 
     val knownNonVars = Array("crop", "Crop") //todo: expand, put elsewhere; todo: can get rid of this since have the dictionary check
@@ -277,12 +272,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 object OdinActions {
 
-  def apply(taxonomyPath: String, enableExpansion: Boolean, validArgs: List[String]) =
+  def apply(taxonomyPath: String, enableExpansion: Boolean, validArgs: List[String], freqWords: Array[String]) =
     {
       val expansionHandler = if(enableExpansion) {
       Some(ExpansionHandler())
       } else None
-      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler, validArgs)
+      new OdinActions(readTaxonomy(taxonomyPath), expansionHandler, validArgs, freqWords)
     }
 
   def readTaxonomy(path: String): Taxonomy = {
