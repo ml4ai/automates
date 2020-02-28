@@ -64,15 +64,11 @@ class OdinEngine(
   def reload() = loadableAttributes = LoadableAttributes()
 
   // MAIN PIPELINE METHOD
-  def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
+  def cleanAndAnnotate(text: String, keepText: Boolean = false, filename: Option[String]): Document = {
     val filteredText = edgeCaseFilter.cleanUp(text)
     val doc = annotate(filteredText, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
-    val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
-    //println(s"\nodinMentions() -- entities : \n\t${odinMentions.map(m => m.text).sorted.mkString("\n\t")}")
-
-    odinMentions  // CTM: collection of mentions ; to be converted to some form (json)
+    doc
   }
-
 
   def extractFrom(doc: Document): Vector[Mention] = {
     var initialState = new State()
@@ -90,12 +86,20 @@ class OdinEngine(
     loadableAttributes.actions.keepLongest(events).toVector
   }
 
+  def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
+    val doc = cleanAndAnnotate(text, keepText, filename)
+    val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
+    odinMentions  // CTM: collection of mentions ; to be converted to some form (json)
+  }
+
+
+
   // Supports web service, when existing entities are already known but from outside the project
-  def extractFromTextWithGazetteer(text: String, keepText: Boolean = false, filename: Option[String], gazetteer: Seq[String]): Seq[Mention] = {
+  def extractFromDocWithGazetteer(doc: Document, gazetteer: Seq[String]): Seq[Mention] = {
     val label = OdinEngine.VARIABLE_GAZETTEER_LABEL
     val providedFinder = StringMatchEntityFinder.fromStrings(gazetteer, label)
     entityFinders = entityFinders ++ Seq(providedFinder)
-    val results = extractFromText(text, keepText, filename)
+    val results = extractFrom(doc)
     // cleanup -- remove the finder from this query
     entityFinders = entityFinders.diff(Seq(providedFinder))
 

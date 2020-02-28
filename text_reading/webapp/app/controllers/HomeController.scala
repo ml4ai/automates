@@ -2,12 +2,16 @@ package controllers
 
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.DisplayUtils
+import org.json4s
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.mvc._
 import play.api.libs.json._
+
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -17,11 +21,16 @@ import play.api.libs.json._
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
   // -------------------------------------------------
-  println("[OdinEngine] Initializing the OdinEngine ...")
+  logger.info("Initializing the OdinEngine ...")
   val ieSystem = OdinEngine.fromConfig()
   var proc = ieSystem.proc
   val serializer = JSONSerializer
-  println("[OdinEngine] Completed Initialization ...")
+  lazy val scienceParse = new ScienceParseClient(domain="localhost", port="8080")
+  protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  private val numAlignments: Int = 5
+  private val numAlignmentsSrcToComment: Int = 1
+  private val scoreThreshold: Double = 0.0
+  logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
   type Trigger = String
@@ -38,62 +47,101 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   // we need documentation on how to use this, or we can remove it
+  // currently I think it's only used in odin_interface.py
+  // Deprecate
   def getMentions(text: String) = Action {
-    val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
-    println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
+    logger.warn("Deprecated")
+    val (doc, eidosMentions) = processPlayText(ieSystem, text)
+    logger.info(s"Sentence returned from processPlayText : ${doc.sentences.head.getSentenceText}")
     val json = JsonUtils.mkJsonFromMentions(eidosMentions)
     Ok(json)
   }
 
-  def processPlaySentence(ieSystem: OdinEngine, text: String): (Document, Vector[Mention]) = {
-    // preprocessing
-    println(s"Processing sentence : ${text}" )
-    val doc = ieSystem.annotate(text)
 
 
-    println(s"DOC : ${doc}")
-    // extract mentions from annotated document
-    val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
-
-    println(s"Done extracting the mentions ... ")
-    println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
-
-    // return the sentence and all the mentions extracted ... TODO: fix it to process all the sentences in the doc
-    (doc, mentions.sortBy(_.start))
-  }
-
-  /* Webservice Methods */
+  // -----------------------------------------------------------------
+  //                        Webservice Methods
+  // -----------------------------------------------------------------
   def process_text: Action[JsValue] = Action(parse.json) { request =>
     val data = request.body.toString()
     val json = ujson.read(data)
     val text = json("text").str
     val gazetteer = json.obj.get("entities").map(_.arr.map(_.str))
-    val mentionsJson = processPlaytext(ieSystem, text, gazetteer)
+    val mentionsJson = getOdinJsonMentions(ieSystem, text, gazetteer)
     val parsed_output = PlayUtils.toPlayJson(mentionsJson)
     Ok(parsed_output)
   }
 
+  def pdf_to_mentions: Action[AnyContent] = Action { request =>
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+    val pdfFile = json("pdf").str
+    logger.info(s"Extracting mentions from $pdfFile")
+    val scienceParseDoc = scienceParse.parsePdf(pdfFile)
+    val texts = scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
+    logger.info("Finished converting to text")
+    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
+    val mentionsJson = serializer.jsonAST(mentions)
+    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+    Ok(parsed_output)
+  }
+
+  def align: Action[AnyContent] = Action { request =>
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+    // Load the mentions
+    val mentionsJson4s = json4s.jackson.parseJson(json("mentions").str)
+    val mentions = JSONSerializer.toMentions(mentionsJson4s)
+    // Get the GrFN
+    val grfnString = json("grfn")
+
+
+
+    ???
+
+  }
+
+  // -----------------------------------------------------------------
+  //               Backend methods that do stuff :)
+  // -----------------------------------------------------------------
+
+  def processPlayText(ieSystem: OdinEngine, text: String, gazetteer: Option[Seq[String]] = None): (Document, Vector[Mention]) = {
+    // preprocessing
+    logger.info(s"Processing sentence : ${text}" )
+    val doc = ieSystem.cleanAndAnnotate(text, keepText = true, filename = None)
+
+    logger.info(s"DOC : ${doc}")
+    // extract mentions from annotated document
+    val mentions = if (gazetteer.isDefined) {
+      ieSystem.extractFromDocWithGazetteer(doc, gazetteer = gazetteer.get)
+    } else {
+      ieSystem.extractFrom(doc)
+    }
+    val sorted = mentions.sortBy(m => (m.sentence, m.getClass.getSimpleName)).toVector
+
+    logger.info(s"Done extracting the mentions ... ")
+    logger.info(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
+
+    // return the sentence and all the mentions extracted ... TODO: fix it to process all the sentences in the doc
+    (doc, sorted)
+  }
+
   // Method where aske reader processing for webservice happens
-  def processPlaytext(ieSystem: OdinEngine, text: String, gazetteer: Option[Seq[String]] = None): org.json4s.JsonAST.JValue = {
+  def getOdinJsonMentions(ieSystem: OdinEngine, text: String, gazetteer: Option[Seq[String]] = None): org.json4s.JsonAST.JValue = {
 
     // preprocessing
-    println(s"Processing sentence : $text" )
-    val mentions = if (gazetteer.isDefined) {
-      ieSystem.extractFromTextWithGazetteer(text, filename = None, gazetteer = gazetteer.get)
-    } else {
-      ieSystem.extractFromText(text, filename = None)
-    }
+    logger.info(s"Processing sentence : $text" )
+    val (_, mentions) = processPlayText(ieSystem, text, gazetteer)
 
     // Export to JSON
     val json = serializer.jsonAST(mentions)
-
     json
   }
 
 
   def parseSentence(text: String, showEverything: Boolean) = Action {
-    val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
-    println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
+    val (doc, eidosMentions) = processPlayText(ieSystem, text)
+    logger.info(s"Sentence returned from processPlayText : ${doc.sentences.head.getSentenceText}")
     val json = mkJson(text, doc, eidosMentions, showEverything) // we only handle a single sentence
     Ok(json)
   }
@@ -138,7 +186,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   def mkJson(text: String, doc: Document, mentions: Vector[Mention], showEverything: Boolean): JsValue = {
-    println("Found mentions (in mkJson):")
+    logger.info("Found mentions (in mkJson):")
     mentions.foreach(DisplayUtils.displayMention)
 
     val sent = doc.sentences.head

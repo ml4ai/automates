@@ -12,7 +12,20 @@ import scala.collection.mutable.ArrayBuffer
 
 object GrFNParser {
 
+  def addHypotheses(grfn: Value, hypotheses: Seq[Obj]): Value = {
+    grfn("grounding") = hypotheses.toList
+    grfn
+  }
 
+  def getVariableShortNames(variableNames: Seq[String]): Seq[String] = for (
+    name <- variableNames
+  ) yield name.split("::").reverse.slice(1, 2).mkString("")
+
+  def getVariableShortNames(grfn: Value): Seq[String] = {
+    getVariableShortNames(getVariables(grfn))
+  }
+
+  def getVariables(grfn: Value): Seq[String] = grfn("variables").arr.map(_.obj("name").str)
 
   def getCommentDocs(grfn: Value): Seq[Document] = {
 
