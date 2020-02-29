@@ -30,6 +30,54 @@ object ExtractAndAlign {
 
   val logger = LoggerFactory.getLogger(this.getClass())
 
+  def groundMentionsToGrfn(
+    textMentions: Seq[Mention],
+    grfn: Value,
+    commentReader: OdinEngine,
+    equationChunksAndSource: Seq[(String, String)],
+    alignmentHandler: AlignmentHandler,
+    numAlignments: Int = 5,
+    numAlignmentsSrcToComment: Int = 1,
+    scoreThreshold: Double = 0.0): Value = {
+
+    // =============================================
+    // Extract the variables and comment Mentions
+    // =============================================
+
+    // source code
+    val variableNames = GrFNParser.getVariables(grfn)
+    // The variable names only (excluding the scope info)
+    val variableShortNames = GrFNParser.getVariableShortNames(variableNames)
+
+    // source code comments
+    val commentDefinitionMentions = getCommentDefinitionMentions(commentReader, grfn, Some(variableShortNames))
+
+    // =============================================
+    // Alignment
+    // =============================================
+
+    val alignments = alignElements(
+      alignmentHandler,
+      textMentions,
+      equationChunksAndSource.unzip._1,
+      commentDefinitionMentions,
+      variableShortNames,
+      numAlignments,
+      numAlignmentsSrcToComment,
+      scoreThreshold
+    )
+
+    val linkElements = getLinkElements(grfn, textMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
+    val hypotheses = getLinkHypotheses(linkElements, alignments)
+
+    // =============================================
+    //                    EXPORT
+    // =============================================
+
+    // Add the grounding links to the GrFN
+    GrFNParser.addHypotheses(grfn, hypotheses)
+  }
+
   def getTextDefinitionMentions(textReader: OdinEngine, dataLoader: DataLoader, textRouter: TextRouter, files: Seq[File]): Seq[Mention] = {
     val textMentions = files.par.flatMap { file =>
       logger.info(s"Extracting from ${file.getName}")
@@ -169,6 +217,9 @@ object ExtractAndAlign {
   def main(args: Array[String]): Unit = {
 
     val config: Config = ConfigFactory.load()
+    val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
+    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
+
 
     // =============================================
     //                 DATA LOADING
@@ -190,16 +241,15 @@ object ExtractAndAlign {
     val grfnFile = new File(grfnPath)
     val grfn = ujson.read(grfnFile.readString())
 
-
-    // Load text input from directory
+    // Load text and extract definition mentions
     val inputDir = config[String]("apps.inputDirectory")
     val inputType = config[String]("apps.inputType")
     val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
     val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+    val textDefinitionMentions = getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
+    logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
 
-
-    // Load the equation file and get the tokens, ** chunked with heuristics **
-    // FIXME: Paul, this is where we need to plug in calling the equation model
+    // Load equations and "extract" variables/chunks (using heuristics)
     val equationFile: String = config[String]("apps.predictedEquations")
     val equationDataLoader = new TokenizedLatexDataLoader
     val equations = equationDataLoader.loadFile(new File(equationFile))
@@ -208,55 +258,21 @@ object ExtractAndAlign {
       sourceEq <- equations
       eqChunk <- equationDataLoader.chunkLatex(sourceEq)
     } yield (eqChunk, sourceEq)
-    val (equationChunks, _) = equationChunksAndSource.unzip
 
 
-    // =============================================
-    //                 EXTRACTION
-    // =============================================
+    // Make an alignment handler which handles all types of alignment being used
+    val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
 
-    // text
-    val textDefinitionMentions = getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
-    logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
-
-    // source code
-    val variableNames = GrFNParser.getVariables(grfn)
-    // The variable names only (excluding the scope info)
-    val variableShortNames = GrFNParser.getVariableShortNames(variableNames)
-
-    // source code comments
-    val commentDefinitionMentions = getCommentDefinitionMentions(commentReader, grfn, Some(variableShortNames))
-
-    // =============================================
-    //                 ALIGNMENT
-    // =============================================
-
-    val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
-    val numAlignmentsSrcToComment: Int = 1
-    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
-
-    // Initialize the Aligners
-    val alignmentHandler: AlignmentHandler = new AlignmentHandler(config[Config]("alignment"))
-    val alignments = alignElements(
-      alignmentHandler,
+    // Ground the extracted text mentions, the comments, and the equation variables to the grfn variables
+    val groundedGrfn = groundMentionsToGrfn(
       textDefinitionMentions,
-      equationChunks,
-      commentDefinitionMentions,
-      variableShortNames,
+      grfn,
+      commentReader,
+      equationChunksAndSource,
+      alignmentHandler,
       numAlignments,
-      numAlignmentsSrcToComment,
-      scoreThreshold
-    )
-
-    val linkElements = getLinkElements(grfn, textDefinitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
-    val hypotheses = getLinkHypotheses(linkElements, alignments)
-
-    // =============================================
-    //                    EXPORT
-    // =============================================
-
-    // Add the grounding links to the GrFN
-    val groundedGrfn = GrFNParser.addHypotheses(grfn, hypotheses)
+      1,
+      scoreThreshold)
 
     // Export
     val outputDir = config[String]("apps.outputDirectory")

@@ -145,6 +145,7 @@ object OdinEngine {
   // Used by LexiconNER
   val NER_OUTSIDE = "O"
 
+  def fromConfigSection(configSection: String) = OdinEngine.fromConfig(ConfigFactory.load()[Config](configSection))
   def fromConfig(odinConfig: Config = ConfigFactory.load()[Config]("TextEngine")): OdinEngine = {
 //    // The config with the main settings
 //    val odinConfig: Config = config[Config]("TextEngine")

@@ -1,7 +1,11 @@
 package controllers
 
+import ai.lum.common.ConfigUtils._
+import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.alignment.AlignmentHandler
+import org.clulab.aske.automates.apps.ExtractAndAlign
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
@@ -26,6 +30,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   var proc = ieSystem.proc
   val serializer = JSONSerializer
   lazy val scienceParse = new ScienceParseClient(domain="localhost", port="8080")
+  lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
+  lazy val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val numAlignments: Int = 5
   private val numAlignmentsSrcToComment: Int = 1
@@ -86,19 +92,29 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(parsed_output)
   }
 
+  // We expect the json to have two sub jsons: "mentions" and "grfn"
   def align: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
     // Load the mentions
     val mentionsJson4s = json4s.jackson.parseJson(json("mentions").str)
-    val mentions = JSONSerializer.toMentions(mentionsJson4s)
+    val textMentions = JSONSerializer.toMentions(mentionsJson4s)
     // Get the GrFN
-    val grfnString = json("grfn")
-
-
-
-    ???
-
+    val grfn = json("grfn")
+    // ground!
+    val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
+      textMentions,
+      grfn,
+      commentReader,
+      equationChunksAndSource = Seq.empty[(String, String)],
+      alignmentHandler,
+      numAlignments,
+      numAlignmentsSrcToComment,
+      scoreThreshold
+    )
+    // FIXME: add a conversion method for ujson <--> play json
+    val groundedGrfnJson4s = json4s.jackson.parseJson(groundedGrfn.str)
+    Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
   }
 
   // -----------------------------------------------------------------
