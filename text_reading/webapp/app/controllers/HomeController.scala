@@ -49,11 +49,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   // -------------------------------------------
 
   def groundMentions: Action[AnyContent] = Action { request =>
+    val k = 25 //todo: set as param in curl
     val string = request.body.asText.get
     val jval = json4s.jackson.parseJson(string)
     val mentions = JSONSerializer.toMentions(jval)
     // Note -- topN can be exposed to the API if needed
-    Ok(SVOGrounder.groundDefinitions(mentions)).as(JSON)
+    Ok(SVOGrounder.groundDefinitions(mentions, k)).as(JSON)
   }
 
   def groundString: Action[AnyContent] = Action { request =>
