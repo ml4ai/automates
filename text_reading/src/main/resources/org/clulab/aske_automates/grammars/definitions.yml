@@ -50,7 +50,7 @@ rules:
     example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
     action: ${action}
     pattern: |
-      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN|JJ/ & !entity = "B-GreekLetter"]{2,5}) @variable:Variable #(?! [chunk = I-NP])
+      (?<= [word = /a|the/]) (?<definition> [word = /.*/ & tag = /^NN|JJ/ & !entity = "B-GreekLetter"]{2,5}) @variable:Variable (?! [chunk = I-NP])
       #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
 
   - name: var_definition_appos_bidir
@@ -72,7 +72,18 @@ rules:
     example: "In APSIM, water uptake (Ta, mm d−1) is determined from..."
     action: ${action}
     pattern: |
-      @definition:Concept [word = "("] (@variable:Variable [!entity = /B-unit/]) [word = /,|\)/]
+      @definition:Concept [word = "("] (@variable:Variable [!entity = /B-unit/]) #[word = /,|\)/]
+
+  - name: definition_computed_appos
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:..."
+    action: ${action}
+    pattern: |
+      trigger = [word=/computed/]
+      definition:Concept = nsubjpass
+      variable:Variable = nmod_in appos
 
 #   todo: a promising pattern; needs work
 #  - name: definition_of_var_equals
@@ -97,6 +108,20 @@ rules:
       variable:Concept = /${agents}/
       definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+
+  - name: var_is_defined
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance; where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
+    action: ${action}
+    pattern: |
+      trigger = [lemma=/define/]
+      variable:Concept = nsubjpass | advcl nsubj
+      definition:Concept = nmod_as [!entity = "NUMBER"]
+      #fixme: need to limit to 'find first nsubj you find' to account for the second example
+
 
   - name: var_cop_definition_greek
     label: Definition

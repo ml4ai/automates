@@ -74,5 +74,16 @@ class TestUnits extends ExtractionTest {
     testUnitEvent(mentions, desired)
   }
 
+  //todo: check source of this example
+  val t8a = "The density of water (ρw) is taken as 1.0 Mg m-3."
+  passingTest should s"extract variables and units from t8a: ${t8a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "ρw" -> Seq("Mg m-3")
+
+    )
+    val mentions = extractMentions(t8a)
+    testUnitEvent(mentions, desired)
+  }
+
 
 }
