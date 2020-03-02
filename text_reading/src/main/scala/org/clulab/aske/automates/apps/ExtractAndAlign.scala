@@ -78,6 +78,16 @@ object ExtractAndAlign {
     GrFNParser.addHypotheses(grfn, hypotheses)
   }
 
+  def loadEquations(filename: String): Seq[(String, String)] = {
+    val equationDataLoader = new TokenizedLatexDataLoader
+    val equations = equationDataLoader.loadFile(new File(filename))
+    // tuple pairing each chunk with the original latex equation it came from
+    for {
+      sourceEq <- equations
+      eqChunk <- equationDataLoader.chunkLatex(sourceEq)
+    } yield (eqChunk, sourceEq)
+  }
+
   def getTextDefinitionMentions(textReader: OdinEngine, dataLoader: DataLoader, textRouter: TextRouter, files: Seq[File]): Seq[Mention] = {
     val textMentions = files.par.flatMap { file =>
       logger.info(s"Extracting from ${file.getName}")
@@ -251,13 +261,7 @@ object ExtractAndAlign {
 
     // Load equations and "extract" variables/chunks (using heuristics)
     val equationFile: String = config[String]("apps.predictedEquations")
-    val equationDataLoader = new TokenizedLatexDataLoader
-    val equations = equationDataLoader.loadFile(new File(equationFile))
-    // tuple pairing each chunk with the original latex equation it came from
-    val equationChunksAndSource = for {
-      sourceEq <- equations
-      eqChunk <- equationDataLoader.chunkLatex(sourceEq)
-    } yield (eqChunk, sourceEq)
+    val equationChunksAndSource = loadEquations(equationFile)
 
 
     // Make an alignment handler which handles all types of alignment being used

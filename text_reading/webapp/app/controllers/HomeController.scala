@@ -99,6 +99,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // Load the mentions
     val mentionsJson4s = json4s.jackson.parseJson(json("mentions").str)
     val textMentions = JSONSerializer.toMentions(mentionsJson4s)
+    // get the equations
+    val equationFile = json("equations").str
+    val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
     // Get the GrFN
     val grfn = json("grfn")
     // ground!
@@ -106,7 +109,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       textMentions,
       grfn,
       commentReader,
-      equationChunksAndSource = Seq.empty[(String, String)],
+      equationChunksAndSource,
       alignmentHandler,
       numAlignments,
       numAlignmentsSrcToComment,
