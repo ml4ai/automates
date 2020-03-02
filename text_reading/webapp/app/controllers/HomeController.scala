@@ -49,12 +49,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   // -------------------------------------------
 
   def groundMentions: Action[AnyContent] = Action { request =>
-    val k = 25 //todo: set as param in curl
+    val k = 10 //todo: set as param in curl
     val string = request.body.asText.get
     val jval = json4s.jackson.parseJson(string)
     val mentions = JSONSerializer.toMentions(jval)
-    // Note -- topN can be exposed to the API if needed
-    Ok(SVOGrounder.groundDefinitions(mentions, k)).as(JSON)
+    val result = SVOGrounder.mentionsToGroundingsJson(mentions, k)
+    Ok(result).as(JSON)
   }
 
   def groundString: Action[AnyContent] = Action { request =>
@@ -107,8 +107,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val text = json("text").str
     val gazetteer = json.obj.get("entities").map(_.arr.map(_.str))
     val mentionsJson = processPlaytext(ieSystem, text, gazetteer)
-    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-    Ok(parsed_output)
+    val compact = json4s.jackson.compactJson(mentionsJson)
+    Ok(compact)
   }
 
   // Method where aske reader processing for webservice happens
