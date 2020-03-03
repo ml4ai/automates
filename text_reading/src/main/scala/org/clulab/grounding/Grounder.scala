@@ -86,7 +86,7 @@ object SVOGrounder {
     if (terms.nonEmpty) {
       val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
       for (word <- terms.get) {
-        val result = runSparqlQuery(word, sparqlDir) //todo: pass through configs
+        val result = runSparqlQuery(word, sparqlDir)
         if (result.nonEmpty) {
           //each line in the result is a separate entry returned by the query:
           val resultLines = result.split(("\n"))
@@ -119,7 +119,7 @@ object SVOGrounder {
     val terms = getTerms(text)
     val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
     for (word <- terms) {
-      val result = runSparqlQuery(word, sparqlDir) //todo: pass from configs
+      val result = runSparqlQuery(word, sparqlDir)
       if (result.nonEmpty) {
         //each line in the result is a separate entry returned by the query:
         val resultLines = result.split(("\n"))
