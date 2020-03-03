@@ -89,8 +89,11 @@ class OdinEngine(
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
 
+    val (definitionMentions, other) = events.partition(_.label matches "Definition")
     // todo: some appropriate version of "keepMostComplete"
-    loadableAttributes.actions.keepLongest(events).toVector
+    //there could be multiple definitions for one variable, so don't eliminate any of definition mentions, even if there's overlap
+    (loadableAttributes.actions.keepLongest(other) ++ definitionMentions).toVector
+
   }
 
   // Supports web service, when existing entities are already known but from outside the project

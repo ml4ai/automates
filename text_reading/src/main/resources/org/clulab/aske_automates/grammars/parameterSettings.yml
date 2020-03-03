@@ -118,14 +118,13 @@ rules:
       variable: Concept = <amod <nmod_to dobj
       value: Concept = <amod nmod_of nummod [entity = "NUMBER"]
 
-  #fixme: could result in false positives, but does not seem to work when limit to [word = DOY]
   - name: var-DOY
     label: ParameterSetting
     priority: ${priority}
     type: token
     example: "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
     pattern: |
-      @variable:Variable @value:Value
+      (?<variable> [word = "DOY"]) @value:Value
 
   - name: adjust_to_setting
     label: ParameterSetting
