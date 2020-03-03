@@ -2,14 +2,16 @@ package org.clulab.grounding
 
 import java.io.File
 
+import com.typesafe.config.{Config, ConfigFactory}
 import upickle.default._
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.clulab.odin.{Attachment, Mention, SynPath}
+
 import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.Process
 import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
-
+import ai.lum.common.ConfigUtils._
 
 //todo: pass the python query file from configs
 //todo: document in wiki
@@ -33,6 +35,8 @@ object SeqOfGroundings {
 
 object SVOGrounder {
 
+  val config: Config = ConfigFactory.load()
+  val sparqlDir = config[String]("grounding.sparqlDir")
   // ==============================================================================
   // QUERYING THE SCIENTIFIC VARIABLE ONTOLOGY (http://www.geoscienceontology.org/)
   // ==============================================================================
@@ -81,7 +85,7 @@ object SVOGrounder {
     if (terms.nonEmpty) {
       val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
       for (word <- terms.get) {
-        val result = runSparqlQuery(word, "/home/alexeeva/Repos/automates/text_reading/sparql") //todo: pass through configs
+        val result = runSparqlQuery(word, sparqlDir) //todo: pass through configs
         if (result.nonEmpty) {
           //each line in the result is a separate entry returned by the query:
           val resultLines = result.split(("\n"))
@@ -114,7 +118,7 @@ object SVOGrounder {
     val terms = getTerms(text)
     val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
     for (word <- terms) {
-      val result = runSparqlQuery(word, "/home/alexeeva/Repos/automates/text_reading/sparql") //todo: pass from configs
+      val result = runSparqlQuery(word, sparqlDir) //todo: pass from configs
       if (result.nonEmpty) {
         //each line in the result is a separate entry returned by the query:
         val resultLines = result.split(("\n"))
