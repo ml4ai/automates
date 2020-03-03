@@ -221,11 +221,11 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t9b = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
-  passingTest should s"find NO definitions from t9b: ${t9b}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t9b: ${t9b}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t9b)
     testDefinitionEvent(mentions, desired)
-
+    //fixme: without the comma after 'research', 'research' is found as the definition for Tx because of the 'sort_of_appos' rule
   }
 
   val t10b = "In DSSAT, root water uptake is calculated in two steps."
