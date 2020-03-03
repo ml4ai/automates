@@ -23,7 +23,7 @@ object sparqlResult {
 
 }
 
-case class Grounding(variable: String, gr: Seq[sparqlResult])
+case class Grounding(variable: String, groundings: Seq[sparqlResult])
 object Grounding {
   implicit val rw: ReadWriter[Grounding] = macroRW
 }
@@ -37,6 +37,7 @@ object SVOGrounder {
 
   val config: Config = ConfigFactory.load()
   val sparqlDir = config[String]("grounding.sparqlDir")
+  val currentDir = System.getProperty("user.dir")
   // ==============================================================================
   // QUERYING THE SCIENTIFIC VARIABLE ONTOLOGY (http://www.geoscienceontology.org/)
   // ==============================================================================
@@ -44,7 +45,7 @@ object SVOGrounder {
   def runSparqlQuery(term: String, scriptDir: String): String = {
     //todo: currently, the sparql query returns up to 9 results to avoid overloading the server; this is currently defined
     //in the query in sparqlWrapper.py, but should be passed as a var.
-    val command = Seq("python", s"$scriptDir/sparqlWrapper.py", term)
+    val command = Seq("python", s"$currentDir/$scriptDir/sparqlWrapper.py", term)
     val process = Process(command, new File(s"$scriptDir"))
     process.!!
   }
