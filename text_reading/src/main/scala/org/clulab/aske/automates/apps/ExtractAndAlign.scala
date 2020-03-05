@@ -11,6 +11,7 @@ import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
+import org.clulab.grounding.{Grounding, SVOGrounder}
 import org.clulab.odin.Mention
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
@@ -31,14 +32,15 @@ object ExtractAndAlign {
   val logger = LoggerFactory.getLogger(this.getClass())
 
   def groundMentionsToGrfn(
-    textMentions: Seq[Mention],
-    grfn: Value,
-    commentReader: OdinEngine,
-    equationChunksAndSource: Seq[(String, String)],
-    alignmentHandler: AlignmentHandler,
-    numAlignments: Int = 5,
-    numAlignmentsSrcToComment: Int = 1,
-    scoreThreshold: Double = 0.0): Value = {
+                            textMentions: Seq[Mention],
+                            svoGroundings: Seq[Grounding],
+                            grfn: Value,
+                            commentReader: OdinEngine,
+                            equationChunksAndSource: Seq[(String, String)],
+                            alignmentHandler: AlignmentHandler,
+                            numAlignments: Int = 5,
+                            numAlignmentsSrcToComment: Int = 1,
+                            scoreThreshold: Double = 0.0): Value = {
 
     // =============================================
     // Extract the variables and comment Mentions
@@ -229,7 +231,7 @@ object ExtractAndAlign {
     val config: Config = ConfigFactory.load()
     val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
     val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
-
+    val k = config[Int]("grounding.k")
 
     // =============================================
     //                 DATA LOADING
@@ -258,7 +260,7 @@ object ExtractAndAlign {
     val files = FileUtils.findFiles(inputDir, dataLoader.extension)
     val textDefinitionMentions = getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
     logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
-
+    val svoGroundings = SVOGrounder.groundDefinitions(textDefinitionMentions, k)
     // Load equations and "extract" variables/chunks (using heuristics)
     val equationFile: String = config[String]("apps.predictedEquations")
     val equationChunksAndSource = loadEquations(equationFile)
@@ -270,6 +272,7 @@ object ExtractAndAlign {
     // Ground the extracted text mentions, the comments, and the equation variables to the grfn variables
     val groundedGrfn = groundMentionsToGrfn(
       textDefinitionMentions,
+      svoGroundings,
       grfn,
       commentReader,
       equationChunksAndSource,
