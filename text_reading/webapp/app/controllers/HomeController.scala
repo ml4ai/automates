@@ -2,12 +2,19 @@ package controllers
 
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.odin.serialization.json._
 import org.clulab.utils.DisplayUtils
+
+import org.json4s
 import play.api.mvc._
+
 import play.api.libs.json._
+
+
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -37,11 +44,39 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(views.html.index())
   }
 
+  // -------------------------------------------
+  //      API entry points for SVOGrounder
+  // -------------------------------------------
+
+  def groundMentions: Action[AnyContent] = Action { request =>
+    val k = 10 //todo: set as param in curl
+    val string = request.body.asText.get
+    val jval = json4s.jackson.parseJson(string)
+    val mentions = JSONSerializer.toMentions(jval)
+    val result = SVOGrounder.mentionsToGroundingsJson(mentions, k)
+    Ok(result).as(JSON)
+  }
+
+  def groundString: Action[AnyContent] = Action { request =>
+    val string = request.body.asText.get
+    // Note -- topN can be exposed to the API if needed
+    Ok(SVOGrounder.groundString(string)).as(JSON)
+  }
+
+
   // we need documentation on how to use this, or we can remove it
+
   def getMentions(text: String) = Action {
-    val (doc, eidosMentions) = processPlaySentence(ieSystem, text)
+    val (doc, mentions) = processPlaySentence(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
-    val json = JsonUtils.mkJsonFromMentions(eidosMentions)
+    for (em <- mentions) {
+      if (em.label matches "Definition") {
+        println("Mention: " + em.text)
+        println("att: " + em.attachments.mkString(" "))
+      }
+    }
+//    val mjson = Json.obj("x" -> mentions.jsonAST.toString)
+    val json = JsonUtils.mkJsonFromMentions(mentions)
     Ok(json)
   }
 
@@ -54,6 +89,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println(s"DOC : ${doc}")
     // extract mentions from annotated document
     val mentions = ieSystem.extractFrom(doc).sortBy(m => (m.sentence, m.getClass.getSimpleName))
+
+    val json = JSONSerializer.jsonAST(mentions)
+    println("JSON: " + json)
 
     println(s"Done extracting the mentions ... ")
     println(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
@@ -69,8 +107,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val text = json("text").str
     val gazetteer = json.obj.get("entities").map(_.arr.map(_.str))
     val mentionsJson = processPlaytext(ieSystem, text, gazetteer)
-    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-    Ok(parsed_output)
+    val compact = json4s.jackson.compactJson(mentionsJson)
+    Ok(compact)
   }
 
   // Method where aske reader processing for webservice happens
