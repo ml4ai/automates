@@ -36,8 +36,8 @@ object SeqOfGroundings {
 object SVOGrounder {
 
   val config: Config = ConfigFactory.load()
-  val sparqlDir = config[String]("grounding.sparqlDir")
-  val currentDir = System.getProperty("user.dir")
+  val sparqlDir: String = config[String]("grounding.sparqlDir")
+  val currentDir: String = System.getProperty("user.dir")
   // ==============================================================================
   // QUERYING THE SCIENTIFIC VARIABLE ONTOLOGY (http://www.geoscienceontology.org/)
   // ==============================================================================
@@ -89,7 +89,7 @@ object SVOGrounder {
         val result = runSparqlQuery(word, sparqlDir)
         if (result.nonEmpty) {
           //each line in the result is a separate entry returned by the query:
-          val resultLines = result.split(("\n"))
+          val resultLines = result.split("\n")
           //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
           val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)), "SVO")).sortBy(sr => sr.score)
           for (sr <- sparqlResults) resultsFromAllTerms += sr
@@ -102,7 +102,7 @@ object SVOGrounder {
       val onlyMinScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).min).toArray.distinct
 
       //the results where search term contains "_" or "-" should be ranked higher since those are multi-word instead of separate words
-      val (multiWord, singleWord) = onlyMinScoreResults.partition(r => (r.searchTerm.contains("_") || r.searchTerm.contains("-")))
+      val (multiWord, singleWord) = onlyMinScoreResults.partition(r => r.searchTerm.contains("_") || r.searchTerm.contains("-"))
 
       //this is the best results based on score and whether or not they are collocations
       val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
@@ -122,7 +122,7 @@ object SVOGrounder {
       val result = runSparqlQuery(word, sparqlDir)
       if (result.nonEmpty) {
         //each line in the result is a separate entry returned by the query:
-        val resultLines = result.split(("\n"))
+        val resultLines = result.split("\n")
         //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
         val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)))).sortBy(sr => sr.score)
         resultsFromAllTerms += sparqlResults.head
@@ -204,8 +204,8 @@ object SVOGrounder {
     //todo: do we want terms other than syntactic head?
     val outgoing = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get)
     //get indices of compounds or modifiers to the head word of the mention
-    if (outgoing.exists(tuple => (tuple._2 == "compound" || tuple._2 == "amod"))) {
-      val indicesOfCompoundToken = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get).filter(tuple => (tuple._2 == "compound" || tuple._2 == "amod")).map(tuple => tuple._1)
+    if (outgoing.exists(tuple => tuple._2 == "compound" || tuple._2 == "amod")) {
+      val indicesOfCompoundToken = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get).filter(tuple => tuple._2 == "compound" || tuple._2 == "amod").map(tuple => tuple._1)
       val compoundWords = new ArrayBuffer[String]()
       for (idx <- indicesOfCompoundToken) {
         val compoundWord = mention.sentenceObj.words.slice(idx, mention.synHead.get + 1).mkString(" ")
@@ -214,7 +214,7 @@ object SVOGrounder {
         compoundWords.append(compoundWord.replace(" ", "-")) //todo: in the ontology, some terms are linked with a dash and some with underscore; should look for both, but find a better place for this (?)
       }
 
-      return Some(compoundWords.toArray)
+      Some(compoundWords.toArray)
     } else None
 
   }
