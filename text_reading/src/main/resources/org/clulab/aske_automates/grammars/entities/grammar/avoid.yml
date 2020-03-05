@@ -29,6 +29,14 @@ rules:
       # avoid xrefs
       [tag=/NNP|FW/] (?="et" "al")
 
+  - name: "et-al"
+    label: Avoid
+    priority: 3
+    type: token
+    pattern: |
+      # avoid xrefs
+      "et" "al" | "et" "al."
+
   - name: "references-name-year"
     label: Avoid
     priority: 3
@@ -107,5 +115,6 @@ rules:
     type: token
     pattern: |
       [lemma = /this|the/]
+
 
 

@@ -84,5 +84,16 @@ object FileUtils {
   def loadStringsFromResource(resourcePath: String): Array[String] = {
     getTextFromResource(resourcePath).split("\n")
   }
+
+  def loadFromOneColumnTSV(resourcePath: String): Array[String] = {
+    val bufferedSource = Source.fromFile(resourcePath)
+    val freqWordsIter = for (
+      line <- bufferedSource.getLines
+    ) yield line.trim
+
+    val freqWords = freqWordsIter.toArray
+    bufferedSource.close()
+    freqWords
+  }
 }
 
