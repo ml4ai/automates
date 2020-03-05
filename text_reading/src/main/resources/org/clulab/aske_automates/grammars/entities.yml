@@ -27,7 +27,7 @@ rules:
     action: looksLikeAVariable
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
     pattern: |
-      (?<variable> [word = /.*/]) calculation
+      (?<variable> [word = /.*/]) (?=calculation)
 
   - name: var_versus
     label: Variable
@@ -90,4 +90,12 @@ rules:
     example: "a per-capita rate γ"
     pattern: |
       [entity="B-GreekLetter"]
+
+  - name: var_greek_and_latin
+    label: Variable
+    priority: ${priority}
+    type: token
+    example: "The density of water (ρw) is taken as 1.0 Mg m-3."
+    pattern: |
+      [chunk = /B-NP|I-NP/ & !word = /\(|\)|,|=|\[|\]/]? [entity="B-GreekLetter"] [chunk = "I-NP"]?
 

@@ -22,7 +22,7 @@ class TestParameterSetting  extends ExtractionTest {
   //can be done after we have confirmed that the tests look correct
 
   val t1a = "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
-  failingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
       "EORATIO" -> Seq("1.0")
     )
@@ -45,7 +45,7 @@ class TestParameterSetting  extends ExtractionTest {
     "prior calibration efforts."
   failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "SKc" -> Seq("0.4", "0.9", "0.5", "0.6") // the last two need to come with modifiers (e.g., for maize)
+      "SKc" -> Seq("0.4", "0.9") // todo: need a more fine-grained test with modifiers, e.g., SKc -> 0.5, maize; potential trigger - "level"
     )
 
     //fixme: change the test --- part should be in param setting interval + need a better rule to capture 0.5 and 0.6
@@ -77,7 +77,8 @@ class TestParameterSetting  extends ExtractionTest {
     "measurements to a standard height of 2.0 m"
   failingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "wind speed measurements" -> Seq("2.0 m") //todo: attaching value and unit? - finding variables when they are spelled out? - yes.
+      "wind speed measurements" -> Seq("2.0") //todo: attaching value and unit? - finding variables when they are spelled out? - yes.
+      //todo: rule with trigger "adjust"
     )
     val mentions = extractMentions(t6a)
     testParameterSettingEvent(mentions, desired)
@@ -111,7 +112,7 @@ class TestParameterSetting  extends ExtractionTest {
     "networks with anemometers at 2.0 m, such as CoAgMet in Colorado."
   toDiscuss should s"extract the parameter setting(s) from t9a: ${t9a}" taggedAs(Somebody, DiscussWithModelers) in {
     val desired = Seq(
-      "anometers" -> Seq("2.0 m"), //todo what will be the variable?
+      "anemometers" -> Seq("2.0 m"), //todo what will be the variable?
       "???" -> Seq("2.0 m")
     )
     val mentions = extractMentions(t9a)
@@ -171,5 +172,54 @@ class TestParameterSetting  extends ExtractionTest {
     val mentions = extractMentions(t14a)
     testParameterSettingEvent(mentions, desired)
   }
+
+
+  //Tests from paper 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
+
+  val t1b = "For ETsz, a constant value of λ = 2.45 MJ kg-1 is recommended."
+  passingTest should s"extract the parameter setting(s) from t1b: ${t1b}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "λ" -> Seq("2.45")
+    )
+    val mentions = extractMentions(t1b)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+//  val t2b = "For ETsz, a constant value of λ = 2.45 MJ kg-1 is recommended."
+//  passingTest should s"extract the parameter setting(s) from t2b: ${t2b}" taggedAs(Somebody) in {
+//    val desired = Seq(
+//      "ETsz" -> Seq("2.45")
+//    )
+//    val mentions = extractMentions(t2b)
+//    testParameterSettingEvent(mentions, desired)
+//  }
+
+
+  val t3b = "The density of water (ρw) is taken as 1.0 Mg m-3."
+  failingTest should s"extract the parameter setting(s) from t3b: ${t3b}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "ρw" -> Seq("1.0")
+    )
+    val mentions = extractMentions(t3b)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val t4b = " The inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
+  failingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "The inverse ratio of λ ρw times energy flux" -> Seq("1.0")
+    )
+    val mentions = extractMentions(t4b)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+//  val t4b = "The value of RHmax generally exceeds 90% and approaches 100%."
+//  passingTest should s"extract the parameter setting(s) from t1b: ${t4b}" taggedAs(Somebody) in {
+//    val desired = Seq(
+//      "The inverse ratio of λ ρw times energy flux" -> Seq("1.0")
+//    )
+//    val mentions = extractMentions(t4b)
+//    testParameterSettingEvent(mentions, desired)
+//  }
 
 }

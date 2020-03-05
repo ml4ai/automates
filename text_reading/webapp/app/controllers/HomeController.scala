@@ -4,17 +4,28 @@ import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
+
 import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.ExtractAndAlign
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
+
+import org.clulab.grounding.SVOGrounder
+
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
+
 import org.clulab.utils.DisplayUtils
-import org.json4s
+
 import org.slf4j.{Logger, LoggerFactory}
+
+
+import org.json4s
+
 import play.api.mvc._
+
 import play.api.libs.json._
+
 
 
 /**
@@ -52,20 +63,47 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(views.html.index())
   }
 
-  // we need documentation on how to use this, or we can remove it
-  // currently I think it's only used in odin_interface.py
-  // Deprecate
-  def getMentions(text: String) = Action {
-    logger.warn("Deprecated")
-    val (doc, eidosMentions) = processPlayText(ieSystem, text)
-    logger.info(s"Sentence returned from processPlayText : ${doc.sentences.head.getSentenceText}")
-    val json = JsonUtils.mkJsonFromMentions(eidosMentions)
-    Ok(json)
+  // -------------------------------------------
+  //      API entry points for SVOGrounder
+  // -------------------------------------------
+
+  def groundMentions: Action[AnyContent] = Action { request =>
+    val k = 10 //todo: set as param in curl
+    val string = request.body.asText.get
+    val jval = json4s.jackson.parseJson(string)
+    val mentions = JSONSerializer.toMentions(jval)
+    val result = SVOGrounder.mentionsToGroundingsJson(mentions, k)
+    Ok(result).as(JSON)
+  }
+
+  def groundString: Action[AnyContent] = Action { request =>
+    val string = request.body.asText.get
+    // Note -- topN can be exposed to the API if needed
+    Ok(SVOGrounder.groundString(string)).as(JSON)
   }
 
 
+  // we need documentation on how to use this, or we can remove it
 
-  // -----------------------------------------------------------------
+  // currently I think it's only used in odin_interface.py
+  // Deprecate
+
+
+  def getMentions(text: String) = Action {
+    val (doc, mentions) = processPlayText(ieSystem, text)
+    println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
+    for (em <- mentions) {
+      if (em.label matches "Definition") {
+        println("Mention: " + em.text)
+        println("att: " + em.attachments.mkString(" "))
+      }
+    }
+//    val mjson = Json.obj("x" -> mentions.jsonAST.toString)
+    val json = JsonUtils.mkJsonFromMentions(mentions)
+    Ok(json)
+  }
+
+    // -----------------------------------------------------------------
   //                        Webservice Methods
   // -----------------------------------------------------------------
   def process_text: Action[JsValue] = Action(parse.json) { request =>
@@ -73,9 +111,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val json = ujson.read(data)
     val text = json("text").str
     val gazetteer = json.obj.get("entities").map(_.arr.map(_.str))
+
     val mentionsJson = getOdinJsonMentions(ieSystem, text, gazetteer)
-    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-    Ok(parsed_output)
+    val compact = json4s.jackson.compactJson(mentionsJson)
+    Ok(compact)
+
   }
 
   def pdf_to_mentions: Action[AnyContent] = Action { request =>

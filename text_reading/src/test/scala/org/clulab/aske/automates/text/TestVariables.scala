@@ -28,10 +28,10 @@ class TestVariables extends ExtractionTest {
   // sentences from 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
   //
   val t1a = "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
-  failingTest should s"extract variables from t1a: ${t1a}" taggedAs(Becky) in {
+  passingTest should s"extract variables from t1a: ${t1a}" taggedAs(Becky) in {
 
     // TODO:  Is Penman-Monteith part of the variable?
-    val desired = Seq("Kcs", "ET") //todo: filter out 'Crop'; maybe something like 'if at beginning of sentence, don't count as passing the capital letter heuristic?'
+    val desired = Seq("Kcs", "ET")
     val mentions = extractMentions(t1a)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
@@ -73,8 +73,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
   val t6a = "The ESo calculation in equation 4 is implemented for the CSM-CERES-Maize model and several other crop models."
-  failingTest should s"extract variables from t6a: ${t6a}" taggedAs(Becky) in {
-
+  passingTest should s"extract variables from t6a: ${t6a}" taggedAs(Becky) in {
 
     val desired = Seq("ESo")
     val mentions = extractMentions(t6a)
@@ -97,13 +96,14 @@ class TestVariables extends ExtractionTest {
   }
   val t9a = "Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. " +
     "(2012a) recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
-  passingTest should s"extract variables from t9a: ${t9a}" taggedAs(Becky) in {
-
+  failingTest should s"extract variables from t9a: ${t9a}" taggedAs(Becky) in {
 
     val desired = Seq("Kcdmin", "Kcdmax", "SKc", "FAO-56") // todo: "FAO-56" - model? if yes, add to the model rule, delete from test
+    //fixme: 2012a is captured as var (prob bc of the lookslikeavar action)
     val mentions = extractMentions(t9a)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
+
   val t10a ="where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998)."
   passingTest should s"extract variables from t10a: ${t10a}" taggedAs(Becky) in {
 
@@ -147,10 +147,10 @@ class TestVariables extends ExtractionTest {
   // sentences from 2016-Camargo-and Kemanian-Six-crop-models differ-in-their-simulation-of water-uptake
   //
   val t1b = "In APSIM, water uptake (Ta, mm d−1) is determined from potential transpiration demand (Tp, mm d−1), soil water available (WA, mm d−1), and water supply (WS, mm d−1) for each ith day and soil layer as:"
-  passingTest should s"extract variables from t1b: ${t1b}" taggedAs(Somebody) in {
+  failingTest should s"extract variables from t1b: ${t1b}" taggedAs(Somebody) in {
 
     // TODO:  Is APSIM a variable or the name of a model?
-    val desired = Seq("APSIM", "Ta", "Tp", "WA", "WS")
+    val desired = Seq("APSIM", "Ta", "Tp", "WA", "WS") //fixme: ith is caught as var bc it's short, but is not on the freq word list; ideally, 'i' should be a variable
     val mentions = extractMentions(t1b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
@@ -158,29 +158,30 @@ class TestVariables extends ExtractionTest {
   failingTest should s"extract variables from t2b: ${t2b}" taggedAs(Somebody) in {
 
     val desired = Seq("fi", "ETo", "pwp", "$z", "kl") //todo: missing the last three, finding 'm' as a variable; adjust the lookLikeAVariable action to allow short lower-case vars, probably by checking a lexicon to see if the candidate var is an existing word, e.g. at/or/cat...
+    //todo: units are also found as vars
     val mentions = extractMentions(t2b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
   val t3b = "This means that kl represents a maximum supply determined by r and the resistance to water flow (Passioura, 1983; Monteith, 1986)"
-  failingTest should s"extract variables from t3b: ${t3b}" taggedAs(Somebody) in {
+  passingTest should s"extract variables from t3b: ${t3b}" taggedAs(Somebody) in {
 
 
-    val desired = Seq("kl", "r")
+    val desired = Seq("kl", "r") //todo: see t2b
     val mentions = extractMentions(t3b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
+
   val t4b = "The plant conductance is calculated by inverting the transpiration equation using a maximum expected transpiration (Tx, mm d−1), the soil water potential at field capacity ( Sfc, J kg−1) and the leaf water potential at the onset of stomatal closure ( Lsc, J kg−1):"
   failingTest should s"extract variables from t4b: ${t4b}" taggedAs(Somebody) in {
 
-    val desired = Seq("Tx", "Sfc", "Lsc") //todo: finds units as vars
+    val desired = Seq("Tx", "Sfc", "Lsc") //todo: finds units as vars; action at the end, if unit => not a var?
     val mentions = extractMentions(t4b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
-  val t5b = "The average soil water potential (̄S , J kg−1) is calculated based on a representative root length fraction for each soil layer (fr,j):"
+  val t5b = "The average soil water potential (S , J kg−1) is calculated based on a representative root length fraction for each soil layer (fr,j):"
   failingTest should s"extract variables from t5b: ${t5b}" taggedAs(Somebody) in {
 
-    // TODO:  What is (fr,j) ?
-    val desired = Seq("S", "(fr,j)") //todo: check what the vars are; make sure there's a definition test for this sent
+    val desired = Seq("S", "fr,j") //todo: make sure there's a definition test for this sent; need to do sth with the vars that contain commas (in the paper, 'r,j' is the subscript)
     val mentions = extractMentions(t5b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
@@ -211,7 +212,7 @@ class TestVariables extends ExtractionTest {
 
   val t9b = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
   failingTest should s"extract variables from t9b: ${t9b}" taggedAs(Somebody) in {
-    val desired = Seq("Tx", "Lsc", "Lpwp") //fixme: units found as variables
+    val desired = Seq("Tx", "Lsc", "Lpwp") //fixme: units found as variables; 'research TX' is found as var; need to apply looksLikeAVar to units and param settings, not only defs
     val mentions = extractMentions(t9b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
@@ -231,10 +232,10 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl times !r for each layer and summing over the soil profile:"
+  val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl times r for each layer and summing over the soil profile:"
   failingTest should s"extract variables from t12b: ${t12b}" taggedAs(Somebody) in {
-    // TODO:  Ta, rl, !r ??
-    val desired = Seq("Ux", "Ta", "rl", "!r")
+    // TODO:  Ta,rl - var with subscripts incl commas---get rid of commas in preprocessing if no spaces around?
+    val desired = Seq("Ux", "Ta,rl", "r")
     val mentions = extractMentions(t12b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
@@ -251,7 +252,7 @@ class TestVariables extends ExtractionTest {
   val t1c = "where locations are indexed by i, observational periods are indexed by t, b is the parameter of interest, and ∈ is the error."
   failingTest should s"extract variables from t1c: ${t1c}" taggedAs(Somebody) in {
     // TODO:  deal with "∈" somehow ?
-    val desired = Seq("i", "t", "b", "∈") //fixme: i is probably filtered out
+    val desired = Seq("i", "t", "b", "∈") //fixme: i is probably filtered out; 'locations' is found as a variable---???
     val mentions = extractMentions(t1c)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
