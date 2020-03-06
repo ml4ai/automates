@@ -55,6 +55,7 @@ object ExtractAndAlign {
     // =============================================
     // Alignment
     // =============================================
+    // add in SVO
 
     val alignments = alignElements(
       alignmentHandler,
