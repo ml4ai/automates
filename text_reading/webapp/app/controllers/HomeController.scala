@@ -47,7 +47,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val numAlignments: Int = 5
   private val numAlignmentsSrcToComment: Int = 1
   private val scoreThreshold: Double = 0.0
-  private val k: Int = ConfigFactory.load()[Int]("grounding.k")
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -140,7 +139,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // Load the mentions
     val mentionsJson4s = json4s.jackson.parseJson(json("mentions").str)
     val textMentions = JSONSerializer.toMentions(mentionsJson4s)
-    val svoGroundings = SVOGrounder.groundDefinitions(textMentions, k)
     // get the equations
     val equationFile = json("equations").str
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
@@ -149,7 +147,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // ground!
     val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
       textMentions,
-      svoGroundings,
       grfn,
       commentReader,
       equationChunksAndSource,
