@@ -75,7 +75,7 @@ object SVOGrounder {
 
   /* Grounding a sequence of mentions and return a pretty-printable json string*/
   def mentionsToGroundingsJson(mentions: Seq[Mention], k: Int): String = {
-    val seqOfGroundings = groundDefinitions(mentions, k)
+    val seqOfGroundings = SeqOfGroundings(groundDefinitions(mentions, k))
     write(seqOfGroundings, indent = 4)
   }
 
@@ -139,7 +139,7 @@ object SVOGrounder {
   /*takes a series of mentions, maps each variable in the definition mentions (currently the only groundable
   * type of mentions) to a sequence of results from the SVO ontology, and converts these mappings into an object
   * writable with upickle */
-  def groundDefinitions(mentions: Seq[Mention], k: Int): SeqOfGroundings = {
+  def groundDefinitions(mentions: Seq[Mention], k: Int): Seq[Grounding] = {
     //sanity check to make sure all the passed mentions are def mentions
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
     val groundings = groundMentionsWithSparql(defMentions, k)
@@ -150,7 +150,7 @@ object SVOGrounder {
 
       } yield Grounding(gr._1, gr._2)
 
-    SeqOfGroundings(groundingsObj.toSeq)
+    groundingsObj.toSeq
   }
 
   def getTopK(results: Seq[sparqlResult], k: Int): Seq[sparqlResult] = {

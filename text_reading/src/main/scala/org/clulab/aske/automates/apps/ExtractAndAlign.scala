@@ -15,6 +15,8 @@ import org.clulab.odin.Mention
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
+import org.clulab.grounding
+import org.clulab.grounding.{Grounding, SVOGrounder, SeqOfGroundings, sparqlResult}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -24,9 +26,11 @@ object ExtractAndAlign {
   val TEXT = "text"
   val SOURCE = "source"
   val EQUATION = "equation"
+  val SVO_GROUNDING = "SVOgrounding"
   val SRC_TO_COMMENT = "sourceToComment"
   val EQN_TO_TEXT = "equationToText"
   val COMMENT_TO_TEXT = "commentToText"
+  val TEXT_TO_SVO = "textToSVO"
 
   val logger = LoggerFactory.getLogger(this.getClass())
 
@@ -52,6 +56,11 @@ object ExtractAndAlign {
     // source code comments
     val commentDefinitionMentions = getCommentDefinitionMentions(commentReader, grfn, Some(variableShortNames))
 
+    // svo groundings
+    val definitionMentions = textMentions.filter(m => m.label matches "Definition")
+    val definitionMentionGroundings = SVOGrounder.groundDefinitions(definitionMentions, 5)
+
+
     // =============================================
     // Alignment
     // =============================================
@@ -68,7 +77,7 @@ object ExtractAndAlign {
     )
 
     val linkElements = getLinkElements(grfn, textMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
-    val hypotheses = getLinkHypotheses(linkElements, alignments)
+    val hypotheses = getLinkHypotheses(linkElements, alignments, definitionMentionGroundings)
 
     // =============================================
     //                    EXPORT
@@ -194,6 +203,7 @@ object ExtractAndAlign {
         contentType = "null"
       )
     }
+
     linkElements.toMap
   }
 
@@ -207,8 +217,23 @@ object ExtractAndAlign {
     } yield mkHypothesis(srcLinkElement, dstLinkElement, score)
   }
 
+  def mkLinkHypothesis(groundings: Seq[Grounding]): Seq[Obj] = {
+    for {
+      //each grounding is a mapping from text variable to seq of possible svo groundings (as sparqlResults)
+      gr <- groundings
+      //text link element//text link element
+      srcLinkElement = mkLinkElement(
+        elemType = "text_span",
+        source = "text_file", // fixme: the name of the file
+        content = gr.variable, //the variable associated with the definition that we used for grounding
+        contentType = "null"
+      )
+      dstLinkElement = GrFNParser.mkSVOElement(gr)
 
-  def getLinkHypotheses(linkElements: Map[String, Seq[Obj]], alignments: Map[String, Seq[Seq[Alignment]]]): Seq[Obj] = {
+    } yield mkHypothesis(srcLinkElement, dstLinkElement, 0) //fixme: no one overall score for seq of svo groundings; each grounding has own score
+  }
+
+  def getLinkHypotheses(linkElements: Map[String, Seq[Obj]], alignments: Map[String, Seq[Seq[Alignment]]], SVOGroungings: Seq[Grounding]): Seq[Obj] = {
     // Store them all here
     val hypotheses = new ArrayBuffer[ujson.Obj]()
 
@@ -220,6 +245,9 @@ object ExtractAndAlign {
 
     // Equation -> Text
     hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
+
+    // Text -> SVO grounding
+    hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
 
     hypotheses
   }

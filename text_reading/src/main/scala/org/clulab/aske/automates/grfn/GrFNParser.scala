@@ -3,6 +3,7 @@ package org.clulab.aske.automates.grfn
 import ai.lum.common.FileUtils._
 import java.io.File
 
+import org.clulab.grounding.{Grounding, sparqlResult}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.json4s.jackson.Json
@@ -120,6 +121,26 @@ object GrFNParser {
       "location" -> location
     )
     commentTextElement
+  }
+
+  def mkSVOElement(grounding: Grounding): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> "svo_gr",
+      "source" -> "svo_ontology",
+      "content" -> ujson.Arr(grounding.groundings.map(gr => sparqlResultTouJson(gr))),
+      "content_type" -> "grounding"
+    )
+    linkElement
+  }
+
+  def sparqlResultTouJson(grounding: sparqlResult): ujson.Obj = {
+    val sparqlResuJson = ujson.Obj(
+      "osv_term" -> grounding.osvTerm,
+      "class_name" -> grounding.className,
+      "source" -> grounding.source,
+      "score" -> grounding.score.toString
+    )
+    sparqlResuJson
   }
 
   def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = {
