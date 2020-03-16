@@ -123,6 +123,16 @@ object GrFNParser {
     commentTextElement
   }
 
+  def mkSVOElement(grounding: sparqlResult): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> "svo_gr",
+      "source" -> "svo_ontology",
+      "content" -> sparqlResultTouJson(grounding),
+      "content_type" -> "grounding"
+    )
+    linkElement
+  }
+
   def mkSVOElement(grounding: Grounding): ujson.Obj = {
     val linkElement = ujson.Obj(
       "type" -> "svo_gr",
