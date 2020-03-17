@@ -70,6 +70,12 @@ object SVOGrounder {
   def groundMentionsWithSparql(mentions: Seq[Mention], k: Int): Map[String, Seq[sparqlResult]] = {
 //    val groundings = mutable.Map[String, Seq[sparqlResult]]()
     val groundings = mentions.flatMap(m => groundOneMentionWithSparql(m, k))
+//    for (m <- mentions) {
+//      println("mention in groundMentions with sparql " + m.text)
+//      groundings ++ groundOneMentionWithSparql(m, k)
+//      println(groundings)
+//      println("done with one mention")
+//    }
     groundings.toMap
   }
 
@@ -81,34 +87,43 @@ object SVOGrounder {
 
   /* grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
-
+    println("grounding the following mention: " + mention.text)
     val terms = getTerms(mention) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
     if (terms.nonEmpty) {
       val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
       for (word <- terms.get) {
+        println("word: " + word)
         val result = runSparqlQuery(word, sparqlDir)
+        println("RESULT: " + result)
         if (result.nonEmpty) {
+          println("non empty")
           //each line in the result is a separate entry returned by the query:
           val resultLines = result.split("\n")
+          println("result lines: " + resultLines.length + " " + resultLines)
           //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
-          val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0), rl.split("\t")(1), rl.split("\t")(2), Some(editDistance(rl.split("\t")(1), word)), "SVO")).sortBy(sr => sr.score)
+          val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0).trim(), rl.split("\t")(1).trim(), rl.split("\t")(2).trim(), Some(editDistance(rl.split("\t")(1), word)), "SVO")).sortBy(sr => sr.score)
+          println("done mapping sparql results")
           for (sr <- sparqlResults) resultsFromAllTerms += sr
-        }
-       resultsFromAllTerms.toArray
-      }
+        } else {println("empty")}
+        println("done with current word")
 
+      }
+      println("done with resultsFromAllTerms loop")
+      resultsFromAllTerms.toArray
       //RANKING THE RESULTS (//todo: there has to be a more efficient way)
       //getting all the results with same (minimal) score
+
+      println("finding min score")
       val onlyMinScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).min).toArray.distinct
 
       //the results where search term contains "_" or "-" should be ranked higher since those are multi-word instead of separate words
       val (multiWord, singleWord) = onlyMinScoreResults.partition(r => r.searchTerm.contains("_") || r.searchTerm.contains("-"))
-
+      println("finding best result")
       //this is the best results based on score and whether or not they are collocations
       val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
 
       //return the best result first, then only the min score ones, and then all the rest; some may overlap thus distinct
-
+      println("all results")
       val allResults = (bestResults ++ onlyMinScoreResults ++ resultsFromAllTerms).distinct
       Map(mention.arguments("variable").head.text -> getTopK(allResults, k))
     } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
@@ -141,15 +156,17 @@ object SVOGrounder {
   * writable with upickle */
   def groundDefinitions(mentions: Seq[Mention], k: Int): Seq[Grounding] = {
     //sanity check to make sure all the passed mentions are def mentions
+    println("GROUNDING:")
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
     val groundings = groundMentionsWithSparql(defMentions, k)
 
+    for (gr <- groundings) println(gr._1)
     val groundingsObj =
       for {
         gr <- groundings
 
       } yield Grounding(gr._1, gr._2)
-
+    println("grounded in groundDefinitionsMethod")
     groundingsObj.toSeq
   }
 
@@ -175,15 +192,18 @@ object SVOGrounder {
         //disregard words  other than nouns, adjs, and verbs for now
         if (tags(i).startsWith("N") || tags(i).startsWith("J") || tags(i).startsWith("V")) {
           terms += lemmas(i)
+          println("lemma: " + lemmas(i))
         }
       }
       //the sparql query can't have spaces between words (can take words separated by underscores or dashes, so the compounds will include those)
       val compounds = getCompounds(mention.arguments("definition").head)
       if (compounds.nonEmpty) {
         for (c <- compounds.get) {
-          terms += c
+          println("c: " + c + "|")
+          if (c.length > 0) terms += c
         }
       }
+
       Some(terms)
     } else None
 
@@ -203,6 +223,7 @@ object SVOGrounder {
     val headWord = mention.synHeadLemma
     //todo: do we want terms other than syntactic head?
     val outgoing = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get)
+    println("head word: " + headWord + " " + "outgoing: " + outgoing.mkString(" "))
     //get indices of compounds or modifiers to the head word of the mention
     if (outgoing.exists(tuple => tuple._2 == "compound" || tuple._2 == "amod")) {
       val indicesOfCompoundToken = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get).filter(tuple => tuple._2 == "compound" || tuple._2 == "amod").map(tuple => tuple._1)

@@ -143,12 +143,12 @@ object GrFNParser {
     linkElement
   }
 
+  //losing the score from the sparqlResult bc the score goes to the hypothesis and not the link element
   def sparqlResultTouJson(grounding: sparqlResult): ujson.Obj = {
     val sparqlResuJson = ujson.Obj(
       "osv_term" -> grounding.osvTerm,
       "class_name" -> grounding.className,
-      "source" -> grounding.source,
-      "score" -> grounding.score.toString
+      "source" -> grounding.source
     )
     sparqlResuJson
   }
