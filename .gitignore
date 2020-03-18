@@ -53,7 +53,7 @@ wheels/
 # Generated files from program analysis
 *_lambdas.py
 preprocessed*
-!tests/data/*_lambdas.py
+!tests/data/*/*_lambdas.py
 
 # Ruby stuff
 Gemfile.lock
