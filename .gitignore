@@ -51,8 +51,9 @@ wheels/
 *.spec
 
 # Generated files from program analysis
-*lambdas.py
+*_lambdas.py
 preprocessed*
+!tests/data/*_lambdas.py
 
 # Ruby stuff
 Gemfile.lock
