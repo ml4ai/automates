@@ -106,6 +106,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // -----------------------------------------------------------------
   //                        Webservice Methods
   // -----------------------------------------------------------------
+  /**
+    * Extract mentions from a text, optionally given a set of already known entities.
+    * Expected fields in the json obj passed in:
+    *  'text' : String of the paper
+    *  'entities' : (optional) List of String entities of interest (e.g., variables)
+    * @return Seq[Mention] (json serialized)
+    */
   def process_text: Action[JsValue] = Action(parse.json) { request =>
     val data = request.body.toString()
     val json = ujson.read(data)
@@ -118,6 +125,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   }
 
+  /**
+    * Extract mentions from a pdf. Expected fields in the json obj passed in:
+    *  'pdf' : path to the pdf file
+    * @return Seq[Mention] (json serialized)
+    */
   def pdf_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
@@ -132,7 +144,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(parsed_output)
   }
 
-  // We expect the json to have two sub jsons: "mentions" and "grfn"
+  /**
+    * Align mentions from text, code, comment. Expected fields in the json obj passed in:
+    *  'mentions' : Odin serialized mentions
+    *  'equations': path to the decoded equations
+    *  'grfn'     : path to the grfn file, already expected to have comments and vars
+    * @return decorated grfn with link elems and link hypotheses
+    */
   def align: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
