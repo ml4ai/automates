@@ -92,23 +92,27 @@ object SVOGrounder {
           //each line in the result is a separate entry returned by the query:
           val resultLines = result.split("\n")
           //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
-          val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0).trim(), rl.split("\t")(1).trim(), rl.split("\t")(2).trim(), Some(editDistance(rl.split("\t")(1), word)), "SVO")).sortBy(sr => sr.score)
+
+
+          val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0).trim(), rl.split("\t")(1).trim(), rl.split("\t")(2).trim(), Some(editDistanceNormalized(rl.split("\t")(1).trim(), word)), "SVO")).sortBy(sr => sr.score).reverse
+
           for (sr <- sparqlResults) resultsFromAllTerms += sr
         }
       }
 
       resultsFromAllTerms.toArray
-      //RANKING THE RESULTS (//todo: there has to be a more efficient way)
-      //getting all the results with same (minimal) score
-      val onlyMinScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).min).toArray.distinct
+      //RANKING THE RESULTS
+      //getting all the results with same (maximum) score
+      val onlyMaxScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).max).toArray.distinct
 
       //the results where search term contains "_" or "-" should be ranked higher since those are multi-word instead of separate words
-      val (multiWord, singleWord) = onlyMinScoreResults.partition(r => r.searchTerm.contains("_") || r.searchTerm.contains("-"))
+      val (multiWord, singleWord) = onlyMaxScoreResults.partition(r => r.searchTerm.contains("_") || r.searchTerm.contains("-"))
+
       //this is the best results based on score and whether or not they are collocations
       val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
 
-      //return the best result first, then only the min score ones, and then all the rest; some may overlap thus distinct
-      val allResults = (bestResults ++ onlyMinScoreResults ++ resultsFromAllTerms).distinct
+      //return the best results first, then only the max score ones, and then all the rest; some may overlap thus distinct
+      val allResults = (bestResults ++ onlyMaxScoreResults ++ resultsFromAllTerms).distinct
       Map(mention.arguments("variable").head.text -> getTopK(allResults, k))
     } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
   }
@@ -152,7 +156,7 @@ object SVOGrounder {
 
   def getTopK(results: Seq[sparqlResult], k: Int): Seq[sparqlResult] = {
     if (k < results.length) {
-      val kResults = for (i <- 1 to k) yield results(i)
+      val kResults = for (i <- 0 to k-1) yield results(i)
       kResults
     } else {
       results
@@ -219,6 +223,13 @@ object SVOGrounder {
   def editDistance(s1: String, s2: String): Double = {
     val dist = LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
     dist
+  }
+
+  def editDistanceNormalized(s1: String, s2: String): Double = {
+    val maxLength = math.max(s1.length, s2.length)
+    val levenshteinDist = LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
+    val normalizedDist = (maxLength - levenshteinDist) / maxLength
+    normalizedDist
   }
 
 }
