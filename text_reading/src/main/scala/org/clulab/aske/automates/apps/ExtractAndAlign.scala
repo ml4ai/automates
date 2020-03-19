@@ -59,16 +59,12 @@ object ExtractAndAlign {
     // svo groundings
     val definitionMentions = textMentions.filter(m => m.label matches "Definition")
 
-    for (dm <- definitionMentions) println("DEF MENTION: ", dm.text, " ", dm.label)
-
-    val definitionMentionGroundings = SVOGrounder.groundDefinitions(definitionMentions, 5)
-    println("done grounding")
-
+    val definitionMentionGroundings = SVOGrounder.groundDefinitionsToSVO(definitionMentions, 5)
 
     // =============================================
     // Alignment
     // =============================================
-    println("getting alignments")
+
     val alignments = alignElements(
       alignmentHandler,
       textMentions,
@@ -79,9 +75,9 @@ object ExtractAndAlign {
       numAlignmentsSrcToComment,
       scoreThreshold
     )
-    println("getting link elements")
+
     val linkElements = getLinkElements(grfn, textMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
-    println("getting hupytheses")
+
     val hypotheses = getLinkHypotheses(linkElements, alignments, definitionMentionGroundings)
 
     // =============================================

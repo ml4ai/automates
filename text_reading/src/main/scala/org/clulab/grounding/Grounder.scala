@@ -50,80 +50,64 @@ object SVOGrounder {
     process.!!
   }
 
+  //todo: finish the methods if they are to be used
   /* grounding using the ontology API (not currently used) */
-  def groundWithAPI(term: String) = {
+  def groundToSVOWithAPI(term: String) = {
     val url = "http://34.73.227.230:8000/match_phrase/" + term + "/"
     scala.io.Source.fromURL(url)
   }
   /* grounding using the ontology API (not currently used) */
-  def groundMentionWithAPI(mention: Mention) = {
+  def groundMentionToSVOWithAPI(mention: Mention) = {
     for (word <- mention.words) {
-      println(groundWithAPI(word).mkString(""))
+      groundToSVOWithAPI(word)
     }
   }
 
   // ======================================================
-  //            GROUNDING METHODS
+  //            SVO GROUNDING METHODS
   // ======================================================
 
   /* grounds a seq of mentions and returns the var to grounding mapping */
   def groundMentionsWithSparql(mentions: Seq[Mention], k: Int): Map[String, Seq[sparqlResult]] = {
 //    val groundings = mutable.Map[String, Seq[sparqlResult]]()
     val groundings = mentions.flatMap(m => groundOneMentionWithSparql(m, k))
-//    for (m <- mentions) {
-//      println("mention in groundMentions with sparql " + m.text)
-//      groundings ++ groundOneMentionWithSparql(m, k)
-//      println(groundings)
-//      println("done with one mention")
-//    }
     groundings.toMap
   }
 
   /* Grounding a sequence of mentions and return a pretty-printable json string*/
   def mentionsToGroundingsJson(mentions: Seq[Mention], k: Int): String = {
-    val seqOfGroundings = SeqOfGroundings(groundDefinitions(mentions, k))
+    val seqOfGroundings = SeqOfGroundings(groundDefinitionsToSVO(mentions, k))
     write(seqOfGroundings, indent = 4)
   }
 
   /* grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
-    println("grounding the following mention: " + mention.text)
     val terms = getTerms(mention) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
     if (terms.nonEmpty) {
       val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
       for (word <- terms.get) {
-        println("word: " + word)
         val result = runSparqlQuery(word, sparqlDir)
-        println("RESULT: " + result)
+
         if (result.nonEmpty) {
-          println("non empty")
           //each line in the result is a separate entry returned by the query:
           val resultLines = result.split("\n")
-          println("result lines: " + resultLines.length + " " + resultLines)
           //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
           val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0).trim(), rl.split("\t")(1).trim(), rl.split("\t")(2).trim(), Some(editDistance(rl.split("\t")(1), word)), "SVO")).sortBy(sr => sr.score)
-          println("done mapping sparql results")
           for (sr <- sparqlResults) resultsFromAllTerms += sr
-        } else {println("empty")}
-        println("done with current word")
-
+        }
       }
-      println("done with resultsFromAllTerms loop")
+
       resultsFromAllTerms.toArray
       //RANKING THE RESULTS (//todo: there has to be a more efficient way)
       //getting all the results with same (minimal) score
-
-      println("finding min score")
       val onlyMinScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).min).toArray.distinct
 
       //the results where search term contains "_" or "-" should be ranked higher since those are multi-word instead of separate words
       val (multiWord, singleWord) = onlyMinScoreResults.partition(r => r.searchTerm.contains("_") || r.searchTerm.contains("-"))
-      println("finding best result")
       //this is the best results based on score and whether or not they are collocations
       val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
 
       //return the best result first, then only the min score ones, and then all the rest; some may overlap thus distinct
-      println("all results")
       val allResults = (bestResults ++ onlyMinScoreResults ++ resultsFromAllTerms).distinct
       Map(mention.arguments("variable").head.text -> getTopK(allResults, k))
     } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
@@ -154,19 +138,15 @@ object SVOGrounder {
   /*takes a series of mentions, maps each variable in the definition mentions (currently the only groundable
   * type of mentions) to a sequence of results from the SVO ontology, and converts these mappings into an object
   * writable with upickle */
-  def groundDefinitions(mentions: Seq[Mention], k: Int): Seq[Grounding] = {
+  def groundDefinitionsToSVO(mentions: Seq[Mention], k: Int): Seq[Grounding] = {
     //sanity check to make sure all the passed mentions are def mentions
-    println("GROUNDING:")
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
     val groundings = groundMentionsWithSparql(defMentions, k)
-
-    for (gr <- groundings) println(gr._1)
     val groundingsObj =
       for {
         gr <- groundings
 
       } yield Grounding(gr._1, gr._2)
-    println("grounded in groundDefinitionsMethod")
     groundingsObj.toSeq
   }
 
@@ -182,7 +162,6 @@ object SVOGrounder {
   /*get the terms (single-and multi-word) from the mention to run sparql queries with;
   * only look at the terms in the definition mentions for now*/
   def getTerms(mention: Mention): Option[Seq[String]] = {
-    println(mention.text)
     //todo: will depend on type of mention, e.g., for definitions, only look at the words in the definition arg, not var itself
     if (mention matches "Definition") {
       val terms = new ArrayBuffer[String]()
@@ -192,14 +171,12 @@ object SVOGrounder {
         //disregard words  other than nouns, adjs, and verbs for now
         if (tags(i).startsWith("N") || tags(i).startsWith("J") || tags(i).startsWith("V")) {
           terms += lemmas(i)
-          println("lemma: " + lemmas(i))
         }
       }
       //the sparql query can't have spaces between words (can take words separated by underscores or dashes, so the compounds will include those)
       val compounds = getCompounds(mention.arguments("definition").head)
       if (compounds.nonEmpty) {
         for (c <- compounds.get) {
-          println("c: " + c + "|")
           if (c.length > 0) terms += c
         }
       }
@@ -223,7 +200,6 @@ object SVOGrounder {
     val headWord = mention.synHeadLemma
     //todo: do we want terms other than syntactic head?
     val outgoing = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get)
-    println("head word: " + headWord + " " + "outgoing: " + outgoing.mkString(" "))
     //get indices of compounds or modifiers to the head word of the mention
     if (outgoing.exists(tuple => tuple._2 == "compound" || tuple._2 == "amod")) {
       val indicesOfCompoundToken = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get).filter(tuple => tuple._2 == "compound" || tuple._2 == "amod").map(tuple => tuple._1)

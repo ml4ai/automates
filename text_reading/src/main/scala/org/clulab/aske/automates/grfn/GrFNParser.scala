@@ -135,10 +135,10 @@ object GrFNParser {
 
   def mkSVOElement(grounding: Grounding): ujson.Obj = {
     val linkElement = ujson.Obj(
-      "type" -> "svo_gr",
+      "type" -> "svo_grounding",
       "source" -> "svo_ontology",
       "content" -> ujson.Arr(grounding.groundings.map(gr => sparqlResultTouJson(gr))),
-      "content_type" -> "grounding"
+      "content_type" -> "null"
     )
     linkElement
   }

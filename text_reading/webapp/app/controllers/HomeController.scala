@@ -67,7 +67,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   //      API entry points for SVOGrounder
   // -------------------------------------------
 
-  def groundMentions: Action[AnyContent] = Action { request =>
+  def groundMentionsToSVO: Action[AnyContent] = Action { request =>
     val k = 10 //todo: set as param in curl
     val string = request.body.asText.get
     val jval = json4s.jackson.parseJson(string)
@@ -76,7 +76,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(result).as(JSON)
   }
 
-  def groundString: Action[AnyContent] = Action { request =>
+  def groundStringToSVO: Action[AnyContent] = Action { request =>
     val string = request.body.asText.get
     // Note -- topN can be exposed to the API if needed
     Ok(SVOGrounder.groundString(string)).as(JSON)

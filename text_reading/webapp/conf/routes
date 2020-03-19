@@ -7,8 +7,8 @@
 GET     /                           controllers.HomeController.index
 GET     /parseSentence              controllers.HomeController.parseSentence(sent: String, showEverything: Boolean)
 GET     /getMentions                controllers.HomeController.getMentions(text: String)
-POST     /groundString                 controllers.HomeController.groundString
-POST     /groundMentions               controllers.HomeController.groundMentions
+POST     /groundString              controllers.HomeController.groundString
+POST     /groundMentionsToSVO       controllers.HomeController.groundMentionsToSVO
 POST    /process_text               controllers.HomeController.process_text
 POST    /pdf_to_mentions            controllers.HomeController.pdf_to_mentions
 POST    /align                      controllers.HomeController.align
