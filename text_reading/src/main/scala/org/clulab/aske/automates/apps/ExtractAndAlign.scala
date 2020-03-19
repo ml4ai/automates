@@ -233,7 +233,7 @@ object ExtractAndAlign {
       )
       dstLinkElement = GrFNParser.mkSVOElement(g)
 
-    } yield mkHypothesis(srcLinkElement, dstLinkElement, g.score.get) //fixme: no one overall score for seq of svo groundings; each grounding has own score
+    } yield mkHypothesis(srcLinkElement, dstLinkElement, g.score.get)
   }
 
   def getLinkHypotheses(linkElements: Map[String, Seq[Obj]], alignments: Map[String, Seq[Seq[Alignment]]], SVOGroungings: Seq[Grounding]): Seq[Obj] = {
