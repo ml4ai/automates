@@ -232,13 +232,6 @@ object ExtractAndAlign {
       )
       dstLinkElement = GrFNParser.mkSVOElement(g)
 
-//      dstLinkElement = mkLinkElement(
-//        elemType = "text_span",
-//        source = "text_file", // fixme: the name of the file
-//        content = ujson.Obj(GrFNParser.sparqlResultTouJson(g)),
-//        contentType = "null"
-//      )
-
     } yield mkHypothesis(srcLinkElement, dstLinkElement, g.score.get) //fixme: no one overall score for seq of svo groundings; each grounding has own score
   }
 
