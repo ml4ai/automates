@@ -50,9 +50,21 @@ wheels/
 *.manifest
 *.spec
 
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
 # Generated files from program analysis
-*lambdas.py
+*_lambdas.py
 preprocessed*
+!tests/data/**/*_lambdas.py
 
 # Ruby stuff
 Gemfile.lock

@@ -1,0 +1,4 @@
+ignore:
+  - "tests"
+  - "scripts"
+  - "notebooks"

@@ -1,0 +1,13 @@
+mod_wsgi
+sympy
+flask
+flask-sqlalchemy
+flask-codemirror
+Flask-WTF
+networkx
+numpy
+pandas
+pygraphviz
+tqdm
+pygments
+future
