@@ -1,10 +1,17 @@
 package org.clulab.aske.automates.alignment
 
-import ai.lum.common.ConfigUtils._
+
 import com.typesafe.config.Config
+import ai.lum.common.ConfigUtils._
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.apache.commons.text.similarity.LevenshteinDistance
+
+case class AlignmentHandler(editDistance: VariableEditDistanceAligner, w2v: PairwiseW2VAligner) {
+  def this(w2vPath: String, relevantArgs: Set[String]) =
+    this(new VariableEditDistanceAligner(), new PairwiseW2VAligner(new Word2Vec(w2vPath), relevantArgs))
+  def this(config: Config) = this(config[String]("w2vPath"), config[List[String]]("relevantArgs").toSet)
+}
 
 // todo: decide what to produce for reals
 case class Alignment(src: Int, dst: Int, score: Double)
@@ -15,7 +22,7 @@ trait Aligner {
 }
 
 
-class VariableEditDistanceAligner(relevantArgs: Set[String]) {
+class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
     alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs)), dstMentions.map(Aligner.getRelevantText(_, relevantArgs)))
   }
@@ -40,6 +47,7 @@ class VariableEditDistanceAligner(relevantArgs: Set[String]) {
   * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "variable" or "definition")
   */
 class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) extends Aligner {
+  def this(w2vPath: String, relevantArgs: Set[String]) = this(new Word2Vec(w2vPath), relevantArgs)
 
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
     alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs)), dstMentions.map(Aligner.getRelevantText(_, relevantArgs)))
@@ -77,6 +85,7 @@ object PairwiseW2VAligner {
 
     new PairwiseW2VAligner(w2v, relevantArgs.toSet)
   }
+
 }
 
 object Aligner {
