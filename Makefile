@@ -1,7 +1,4 @@
-all: test docs
-
-docs:
-	cd docs; make html
+all: test
 
 test:
 	pytest --cov-report term-missing:skip-covered --cov=src \
