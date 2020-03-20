@@ -22,10 +22,7 @@ script:
   - docker exec build-con git checkout $TRAVIS_BRANCH
   - if [[ $TRAVIS_BRANCH == "master" ]]; then docker exec build-con git pull; fi
   - if [[ ! $TRAVIS_PULL_REQUEST_BRANCH == "" ]]; then docker exec build-con git pull origin $TRAVIS_PULL_REQUEST_BRANCH; fi
-  - docker exec build-con make test
-  # - docker exec --workdir /automates/docs build-con make apidocs
-  # - docker exec --workdir /automates/docs build-con make html
-  # - docker cp build-con:/automates/docs .
+  - docker exec build-con pytest --cov-report term-missing:skip-covered --cov=src --ignore=tests/data tests
   - docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN build-con bash -c 'bash <(curl -s https://codecov.io/bash)'
 
 # deploy:
