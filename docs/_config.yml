@@ -1,0 +1,17 @@
+# Permalinks
+permalink:        pretty
+
+# Setup
+title:            AutoMATES
+tagline:          'Automated Model Assembly from Text, Equations, and Software'
+
+paginate:         5
+
+# Custom vars
+version:          2.0.0
+
+github:
+  repo:           https://github.com/ml4ai/automates
+
+plugins:
+  - jekyll-toc
