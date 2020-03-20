@@ -3,6 +3,7 @@ package org.clulab.aske.automates.grfn
 import ai.lum.common.FileUtils._
 import java.io.File
 
+import org.clulab.grounding.{Grounding, sparqlResult}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.json4s.jackson.Json
@@ -12,7 +13,20 @@ import scala.collection.mutable.ArrayBuffer
 
 object GrFNParser {
 
+  def addHypotheses(grfn: Value, hypotheses: Seq[Obj]): Value = {
+    grfn("grounding") = hypotheses.toList
+    grfn
+  }
 
+  def getVariableShortNames(variableNames: Seq[String]): Seq[String] = for (
+    name <- variableNames
+  ) yield name.split("::").reverse.slice(1, 2).mkString("")
+
+  def getVariableShortNames(grfn: Value): Seq[String] = {
+    getVariableShortNames(getVariables(grfn))
+  }
+
+  def getVariables(grfn: Value): Seq[String] = grfn("variables").arr.map(_.obj("name").str)
 
   def getCommentDocs(grfn: Value): Seq[Document] = {
 
@@ -107,6 +121,34 @@ object GrFNParser {
       "location" -> location
     )
     commentTextElement
+  }
+
+  def mkSVOElement(grounding: sparqlResult): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> "svo_grounding",
+      "source" -> "svo_ontology",
+      "content" -> sparqlResultTouJson(grounding)
+    )
+    linkElement
+  }
+
+  def mkSVOElement(grounding: Grounding): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> "svo_grounding",
+      "source" -> "svo_ontology",
+      "content" -> ujson.Arr(grounding.groundings.map(gr => sparqlResultTouJson(gr)))
+    )
+    linkElement
+  }
+
+  //losing the score from the sparqlResult bc the score goes to the hypothesis and not the link element
+  def sparqlResultTouJson(grounding: sparqlResult): ujson.Obj = {
+    val sparqlResuJson = ujson.Obj(
+      "osv_term" -> grounding.osvTerm,
+      "class_name" -> grounding.className,
+      "source" -> grounding.source
+    )
+    sparqlResuJson
   }
 
   def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = {

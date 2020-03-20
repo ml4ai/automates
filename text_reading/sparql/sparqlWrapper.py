@@ -20,8 +20,8 @@ sparql.setQuery("""
         FILTER(REGEX(?xname, '(?=.*(^|~|_|-)%s($|~|_|-))','i')) .
         BIND (STR(?xname) as ?name)}
     ORDER BY ?x ?name ?prefLabel ?wikip
-    
-    LIMIT 9
+
+    LIMIT 10
 """ % term)
 sparql.setReturnFormat(JSON)
 results = sparql.query().convert()
