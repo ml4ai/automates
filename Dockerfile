@@ -13,3 +13,4 @@ RUN pip3 install -r /requirements.txt
 
 RUN git clone https://github.com/ml4ai/automates
 WORKDIR /automates
+ENV PYTHONPATH="/automates/src:$PYTHONPATH"
