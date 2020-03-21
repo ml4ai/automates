@@ -26,10 +26,13 @@ object ScienceParseClient {
   def mkDocument(json: ujson.Js): ScienceParseDocument = {
     val id = json("id").str
     val title = json.obj.get("title").map(_.str)
-    val year = json("year").num.toInt
+    val year = json.obj.get("year")
     val authors = json("authors").arr.map(mkAuthor).toVector
     val abstractText = json.obj.get("abstractText").map(_.str)
-    val sections = json("sections").arr.map(mkSection).toVector
+    val sections = {
+      if (json.obj.get("sections").nonEmpty) Some(json("sections").arr.map(mkSection).toVector)
+      else None
+    }
     val references = json("references").arr.map(mkReference).toVector
     ScienceParseDocument(id, title, year, authors, abstractText, sections, references)
   }

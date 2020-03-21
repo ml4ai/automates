@@ -48,7 +48,9 @@ class ScienceParsedDataLoader extends DataLoader {
     // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
     //the heading and the text of the section are currently combined; might need to be revisted
     val scienceParseDoc = ScienceParseClient.mkDocument(f)
-    scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
+    if (scienceParseDoc.sections.isDefined)  {
+      scienceParseDoc.sections.get.map(_.headingAndText) ++ scienceParseDoc.abstractText
+    } else scienceParseDoc.abstractText.toSeq
   }
   override val extension: String = "json"
 }
@@ -77,7 +79,9 @@ class PDFDataLoader extends DataLoader {
     val jsonString = client.parsePdfToJson(f)
     val uJson = ujson.read(jsonString) //make a ujson value out of the json string we get from scienceParse; mkDocument does not work on plain string.
     val scienceParseDoc = ScienceParseClient.mkDocument(uJson)
-    scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
+    if (scienceParseDoc.sections.isDefined)  {
+      scienceParseDoc.sections.get.map(_.headingAndText) ++ scienceParseDoc.abstractText
+    } else scienceParseDoc.abstractText.toSeq
   }
   override val extension: String = "pdf"
 }
