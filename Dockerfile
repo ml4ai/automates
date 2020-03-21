@@ -12,5 +12,5 @@ RUN git clone https://github.com/ml4ai/automates
 WORKDIR /automates
 
 # Add necessary Python packages
-RUN pip3 install -r /automates/requirements.txt
+RUN pip3 install -r requirements.txt
 ENV PYTHONPATH="/automates/src:$PYTHONPATH"
