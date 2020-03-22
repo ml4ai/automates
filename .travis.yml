@@ -10,25 +10,17 @@ addons:
 
 env:
   global:
-    CACHE_IMAGE: ml4ailab/automates
+    CACHE_IMAGE: ml4ailab/automates:testing
 
 before_install:
-  - docker pull $CACHE_IMAGE:latest
+  - docker pull $CACHE_IMAGE
   - CI_ENV=`bash <(curl -s https://codecov.io/env)`
-  - docker run $CI_ENV -itd --rm --name build-con $CACHE_IMAGE:latest
+  - docker run $CI_ENV -itd --rm --name build-con $CACHE_IMAGE
 
 script:
   - docker exec build-con git fetch
   - docker exec build-con git checkout $TRAVIS_BRANCH
   - if [[ $TRAVIS_BRANCH == "master" ]]; then docker exec build-con git pull; fi
   - if [[ ! $TRAVIS_PULL_REQUEST_BRANCH == "" ]]; then docker exec build-con git pull origin $TRAVIS_PULL_REQUEST_BRANCH; fi
-  - docker exec build-con pytest --cov-report term-missing:skip-covered --cov=src --ignore=tests/data tests
+  - docker exec build-con make tests
   - docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN build-con bash -c 'bash <(curl -s https://codecov.io/bash)'
-
-# deploy:
-#   local-dir: docs/_build/html
-#   provider: pages
-#   skip-cleanup: true
-#   github-token: $GITHUB_TOKEN
-#   on:
-#     branch: master
