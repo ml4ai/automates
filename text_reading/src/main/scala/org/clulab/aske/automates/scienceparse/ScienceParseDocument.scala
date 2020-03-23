@@ -1,12 +1,14 @@
 package org.clulab.aske.automates.scienceparse
 
+import ujson.Value
+
 case class ScienceParseDocument(
   id: String,
   title: Option[String],
-  year: Int,
+  year: Option[Value],
   authors: Vector[Author],
   abstractText: Option[String],
-  sections: Vector[Section],
+  sections: Option[Vector[Section]],
   references: Vector[Reference]
 )
 
