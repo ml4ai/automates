@@ -136,7 +136,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val pdfFile = json("pdf").str
     logger.info(s"Extracting mentions from $pdfFile")
     val scienceParseDoc = scienceParse.parsePdf(pdfFile)
-    val texts = scienceParseDoc.sections.map(_.headingAndText) ++ scienceParseDoc.abstractText
+    val texts = if (scienceParseDoc.sections.isDefined)  {
+      scienceParseDoc.sections.get.map(_.headingAndText) ++ scienceParseDoc.abstractText
+    } else scienceParseDoc.abstractText.toSeq
     logger.info("Finished converting to text")
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
     val mentionsJson = serializer.jsonAST(mentions)
