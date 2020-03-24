@@ -633,7 +633,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
             source_lines = list()
             for i, line in enumerate(source_list[1:]):
                 for j, arg in enumerate(args):
-                    line = re.sub(arg, f"x{j}", line)
+                    line = re.sub(rf"\b{arg}\b", f"x{j}", line)
                 if i + 1 == len(source_list) - 1:
                     line = line.replace("return ", "")
                 source_lines.append(line.strip())
