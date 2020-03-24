@@ -1,11 +1,13 @@
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, Iterable, Set, Union
 from typing import List
 import importlib
+import datetime
 import inspect
+import uuid
 import json
 import os
+import re
 
 import networkx as nx
 from networkx.algorithms.simple_paths import all_simple_paths
@@ -207,6 +209,86 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 self.traverse_nodes(self.successors(n), depth=depth + 1)
             )
         return result
+
+    @classmethod
+    def from_json_file(cls, filepath: str):
+        # Load the JSON data file
+        grfn_json = json.load(open(filepath))
+        G = nx.DiGraph()
+
+        # Add edges data from JSON
+        for func_connection in grfn_json["edges"]:
+            func_node = func_connection["function"]
+            for src_node in func_connection["in"]:
+                G.add_edge((src_node, func_node))
+            for dst_node in func_connection["out"]:
+                G.add_edge((func_node, dst_node))
+
+        # Access the variable and function node lists
+        variables = {v["uid"]: v for v in grfn_json["variables"]}
+        functions = {f["uid"]: f for f in grfn_json["functions"]}
+        relations = {
+            e["functions"]: (e["in"], e["out"]) for e in grfn_json["edges"]
+        }
+
+        scopes = list()
+        for container in grfn_json["containers"]:
+            con_name = container["name"]
+            for vertex in container["vertices"]:
+                vert_id = vertex["uid"]
+                if vert_id in variables:
+                    var_node = variables[vert_id]
+                    var_name = var_node["name"]
+                    (basename, index) = var_name.split("::")
+                    is_exit = basename == "EXIT"
+                    G.add_node(
+                        var_node["uid"],
+                        ref_id=var_node["reference"],
+                        var_data_name=var_node["data-type"]["name"],
+                        var_data_type=var_node["data-type"]["type"],
+                        type="variable",
+                        color="crimson",
+                        fontcolor="white" if is_exit else "black",
+                        fillcolor="crimson" if is_exit else "white",
+                        style="filled" if is_exit else "",
+                        parent=con_name,
+                        label=f"{basename}::{index}",
+                        cag_label=f"{basename}",
+                        basename=basename,
+                        padding=15,
+                        value=None,
+                    )
+                elif vert_id in functions:
+                    func_node = functions[vert_id]
+                    func_id = func_node["uid"]
+                    func_type = func_node["type"]
+                    lambda_name = func_type + "_" + re.sub(r"-", "_", func_id)
+
+                    lambda_str = func_node["lambda"]
+                    all_var_mentions = re.findall(r"x[0-9]+\b", lambda_str)
+                    input_var_list = sorted(list(set(all_var_mentions)))
+
+                    func_str = f"def {lambda_name}({', '.join(input_var_list)}): return {lambda_str}"
+
+                    G.add_node(
+                        func_id,
+                        type="function",
+                        lambda_fn=getattr(lambdas, lambda_name),
+                        func_inputs=ordered_inputs,
+                        visited=False,
+                        shape="rectangle",
+                        parent=scope.name,
+                        label=stmt_type[0].upper(),
+                        padding=10,
+                    )
+                else:
+                    raise ValueError(f"Unmatched vertex ID in {con_name}")
+        outputs = [
+            n
+            for n, d in G.in_degree()
+            if d == 0 and G.nodes[n]["type"] == "variable"
+        ]
+        return cls(G, scopes, outputs)
 
     @classmethod
     def from_json_and_lambdas(cls, file: str, lambdas):
@@ -535,48 +617,112 @@ class GroundedFunctionNetwork(ComputationalGraph):
 
     def to_json(self):
         """Experimental outputting a GrFN to a JSON file."""
+
+        def func_type_from_name(func_name):
+            (_, _, _, _, full_func_name) = name.split("::")
+            (_, _, func_type, _, _) = full_func_name.split("__")
+            return func_type
+
+        def get_function_source(lambda_ref):
+            (source_list, _) = inspect.getsourcelines(lambda_ref)
+            arg_str = re.findall(r"\(.*\)", source_list[0])[0]
+            args_and_types = [
+                s for s in re.findall(r"\w*", arg_str) if s != ""
+            ]
+            args = [s for i, s in enumerate(args_and_types) if i % 2 == 0]
+            source_lines = list()
+            for i, line in enumerate(source_list[1:]):
+                for j, arg in enumerate(args):
+                    line = re.sub(arg, f"x{j}", line)
+                if i + 1 == len(source_list) - 1:
+                    line = line.replace("return ", "")
+                source_lines.append(line.strip())
+            lambda_code = ";".join(source_lines)
+            return lambda_code
+
+        def variable_type_data(var_basename):
+            # NOTE: This is not yet generalized, need to improve that soon
+            if var_basename.startswith("IF_"):
+                return {
+                    "name": "boolean",
+                    "type": "binary",
+                    "domain": [True, False],
+                }
+            elif var_basename == "doy":
+                return {
+                    "name": "int32",
+                    "type": "discrete",
+                    "domain": [(-2147483647, 2147483647)],
+                }
+            elif var_basename == "meevp":
+                return {
+                    "name": "string",
+                    "type": "ordinal",
+                    "domain": ["A", "W"],
+                }
+            else:
+                return {
+                    "name": "float32",
+                    "type": "continuous",
+                    "domain": [(-3.40282347e38, 3.40282347e38)],
+                }
+
         containers = {
-            name: {"name": name, "parent": None, "exit": True, "nodes": list()}
+            name: {
+                "name": name,
+                "parent": None,
+                "exit": None,
+                "vertices": list(),
+            }
             for name in self.scope_tree.nodes
         }
 
-        nodes_json = list()
+        identifiers = {name: str(uuid.uuid4()) for name in self.nodes}
+
+        variables, functions, edges = list(), list(), list()
         for name, data in self.nodes(data=True):
-            containers[data["parent"]]["nodes"].append(name)
+            identifier = identifiers[name]
+            containers[data["parent"]]["vertices"].append(identifier)
             if data["type"] == "variable":
-                nodes_json.append(
+                (_, _, _, _, basename, idx) = name.split("::")
+                variables.append(
                     {
-                        "name": name,
-                        "type": "variable",
+                        "name": f"{basename}::{idx}",
+                        "uid": identifier,
                         "reference": None,
-                        "data-type": {
-                            "name": "float32",
-                            "domain": [("-inf", "inf")],
-                        },
+                        "data-type": variable_type_data(basename),
                     }
                 )
             elif data["type"] == "function":
-                (source_list, _) = inspect.getsourcelines(data["lambda_fn"])
-                source_code = "".join(source_list)
-                nodes_json.append(
+                functions.append(
                     {
-                        "name": name,
-                        "type": "function",
+                        "type": func_type_from_name(name),
+                        "uid": identifier,
                         "reference": None,
-                        "inputs": data["func_inputs"],
-                        "lambda": source_code,
+                        "lambda": get_function_source(data["lambda_fn"]),
+                    }
+                )
+
+                func_inputs = [identifiers[n] for n in data["func_inputs"]]
+                func_outputs = [identifiers[n] for n in self.successors(name)]
+                edges.append(
+                    {
+                        "in": func_inputs,
+                        "function": identifier,
+                        "out": func_outputs,
                     }
                 )
             else:
                 raise ValueError(f"Unrecognized node type: {data['type']}")
 
-        return json.dumps(
-            {
-                "nodes": nodes_json,
-                "edges": list(self.edges),
-                "containers": list(containers.values()),
-            }
-        )
+        return {
+            "uid": str(uuid.uuid4()),
+            "data_created": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "edges": edges,
+            "functions": functions,
+            "variables": variables,
+            "containers": list(containers.values()),
+        }
 
     def to_json_file(self, filename):
         GrFN_json = self.to_json()
