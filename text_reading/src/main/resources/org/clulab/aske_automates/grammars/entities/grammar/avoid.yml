@@ -27,7 +27,7 @@ rules:
     type: token
     pattern: |
       # avoid xrefs
-      [tag=/NNP|FW/] (?="et" "al")
+      [tag=/NNP|FW/] (?="et" "al") | [tag=/NNP|FW/] (?="et" "al.")
 
   - name: "et-al"
     label: Avoid

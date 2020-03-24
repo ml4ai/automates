@@ -10,7 +10,8 @@ class EdgeCaseParagraphPreprocessor() extends Preprocessor {
     def cleanUp(text: String): String = {
     //follow up on combining the heading and the body of each section in the paper with "\n" in the DataLoader:
     //the heading and the body should be connected with a period if the body starts with a capital letter and space otherwise:
-    val cleanerText = text.replaceAll("\n(?=[A-Z])", ". ").replaceAll("\n", " ")
+    val loseVerticalText = text.split("\n").filter(t => t.length > 6).mkString("\n")
+    val cleanerText = loseVerticalText.replaceAll("\n(?=[A-Z])", ". ").replaceAll("\n", " ")
     val cleanerTextTokenized = cleanerText.split(" ")
     val numberOfNumbers = cleanerTextTokenized.filter(t => t.forall(_.isDigit)).length
     val numberProportion = numberOfNumbers.toFloat / cleanerTextTokenized.length
@@ -40,7 +41,8 @@ object EdgeCaseParagraphPreprocessor {
 
 class PassThroughPreprocessor() extends Preprocessor {
   def cleanUp(text: String): String = {
-    val cleanerText = text.replaceAll("\n", " ")
+    val loseVerticalText = text.split("\n").filter(t => t.length > 6).mkString("\n")
+    val cleanerText = loseVerticalText.replaceAll("\n", " ")
     cleanerText
   }
 }
