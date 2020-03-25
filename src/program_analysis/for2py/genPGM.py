@@ -3808,8 +3808,8 @@ class GrFNGenerator(object):
                 variable = reference
                 for var in variables:
                     variable += f"_{var}"
-            else:
-                variable = f"{variable}_{reference}"
+            # else:
+            #     variable = f"{variable}_{reference}"
             state.last_definitions[variable] = index[0]
 
         variable_name = (
