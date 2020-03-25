@@ -73,6 +73,7 @@ def test_petpt_creation_and_execution(petpt_grfn):
     A.draw("PETPT--GrFN.pdf", prog="dot")
     CAG = petpt_grfn.CAG_to_AGraph()
     CAG.draw("PETPT--CAG.pdf", prog="dot")
+    print(list(petpt_grfn.edges))
     assert isinstance(petpt_grfn, GroundedFunctionNetwork)
     assert len(petpt_grfn.inputs) == 5
     assert len(petpt_grfn.outputs) == 1
@@ -93,9 +94,11 @@ def test_GrFN_Json_loading(petpt_grfn):
     filepath = "tests/data/program_analysis/GrFN_JSON_TEST.json"
     petpt_grfn.to_json_file(filepath)
 
-    new_petpt_grfn = GroundedFunctionNetwork.from_json_file(filepath)
-    assert petpt_grfn.nodes == new_petpt_grfn.nodes
-    assert petpt_grfn.scope_tree == new_petpt_grfn.scope_tree
+    petpt_grfn2 = GroundedFunctionNetwork.from_json_file(filepath)
+    assert sorted(list(petpt_grfn.nodes)) == sorted(list(petpt_grfn2.nodes))
+    assert sorted(list(petpt_grfn.subgraphs.nodes)) == sorted(
+        list(petpt_grfn2.subgraphs.nodes)
+    )
 
 
 def test_petasce_creation(petasce_grfn):

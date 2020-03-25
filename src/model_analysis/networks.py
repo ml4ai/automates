@@ -173,10 +173,10 @@ class GroundedFunctionNetwork(ComputationalGraph):
             if d == 0 and self.nodes[n]["type"] == "variable"
         ]
         self.input_name_map = {
-            self.var_shortname(name): name for name in self.inputs
+            self.nodes[n_id]["basename"]: n_id for n_id in self.inputs
         }
         # self.outputs = outputs
-        self.scope_tree = scope_tree
+        self.subgraphs = scope_tree
 
     def __repr__(self):
         return self.__str__()
@@ -220,22 +220,37 @@ class GroundedFunctionNetwork(ComputationalGraph):
         for func_connection in grfn_json["edges"]:
             func_node = func_connection["function"]
             for src_node in func_connection["in"]:
-                G.add_edge((src_node, func_node))
+                G.add_edge(src_node, func_node)
             for dst_node in func_connection["out"]:
-                G.add_edge((func_node, dst_node))
+                G.add_edge(func_node, dst_node)
 
         # Access the variable and function node lists
         variables = {v["uid"]: v for v in grfn_json["variables"]}
         functions = {f["uid"]: f for f in grfn_json["functions"]}
         relations = {
-            e["functions"]: (e["in"], e["out"]) for e in grfn_json["edges"]
+            e["function"]: (e["in"], e["out"]) for e in grfn_json["edges"]
         }
 
-        scopes = list()
+        S = nx.DiGraph()
         for container in grfn_json["containers"]:
             con_name = container["name"]
-            for vertex in container["vertices"]:
-                vert_id = vertex["uid"]
+            parent_name = container["parent"]
+            all_vertices = container["vertices"]
+            container_color = (
+                "navyblue" if container["exit"] is not None else "forestgreen"
+            )
+            S.add_node(
+                con_name,
+                parent=parent_name,
+                exit_node=container["exit"],
+                func_node_list=[f for f in functions if f in all_vertices],
+                vertex_list=all_vertices,
+            )
+
+            if parent_name is not None:
+                S.add_edge(parent_name, con_name)
+
+            for vert_id in container["vertices"]:
                 if vert_id in variables:
                     var_node = variables[vert_id]
                     var_name = var_node["name"]
@@ -260,25 +275,32 @@ class GroundedFunctionNetwork(ComputationalGraph):
                     )
                 elif vert_id in functions:
                     func_node = functions[vert_id]
+
+                    # Build the name of the function to be executed
                     func_id = func_node["uid"]
                     func_type = func_node["type"]
                     lambda_name = func_type + "_" + re.sub(r"-", "_", func_id)
 
+                    # Build the argument list for the function
                     lambda_str = func_node["lambda"]
                     all_var_mentions = re.findall(r"x[0-9]+\b", lambda_str)
                     input_var_list = sorted(list(set(all_var_mentions)))
 
+                    # Build and execute the function then retrieve the func ref
                     func_str = f"def {lambda_name}({', '.join(input_var_list)}): return {lambda_str}"
+                    exec(func_str)
+                    func_ref = locals()[lambda_name]
 
                     G.add_node(
                         func_id,
                         type="function",
-                        lambda_fn=getattr(lambdas, lambda_name),
-                        func_inputs=ordered_inputs,
+                        func_type=func_type,
+                        lambda_fn=func_ref,
+                        func_inputs=relations[vert_id][0],
                         visited=False,
                         shape="rectangle",
-                        parent=scope.name,
-                        label=stmt_type[0].upper(),
+                        parent=con_name,
+                        label=func_type[0].upper(),
                         padding=10,
                     )
                 else:
@@ -288,7 +310,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
             for n, d in G.in_degree()
             if d == 0 and G.nodes[n]["type"] == "variable"
         ]
-        return cls(G, scopes, outputs)
+        return cls(G, S, outputs)
 
     @classmethod
     def from_json_and_lambdas(cls, file: str, lambdas):
@@ -326,6 +348,8 @@ class GroundedFunctionNetwork(ComputationalGraph):
         """
         lambdas = importlib.__import__(str(Path(lambdas_path).stem))
         functions = {d["name"]: d for d in data["containers"]}
+        variables = {v["name"]: v for v in data["variables"]}
+        varname2id = {name: str(uuid.uuid4()) for name in variables.keys()}
         occurrences = {}
         G = nx.DiGraph()
         scope_tree = nx.DiGraph()
@@ -333,19 +357,20 @@ class GroundedFunctionNetwork(ComputationalGraph):
         def identity(x):
             return x
 
-        def make_identifier(scope: str, var: str):
-            (_, name, idx) = var.split("::")
-            return make_variable_name(scope, name, idx)
-
-        def make_variable_name(parent: str, basename: str, index: str):
-            return f"{parent}::{basename}::{index}"
+        def get_variable_reference(parent: str, basename: str, index: str):
+            (namespace, context, container, _) = parent.split("::")
+            if context != "@global":
+                container = f"{context}.{container}"
+            return f"@variable::{namespace}::{container}::{basename}::{index}"
 
         def add_variable_node(
             parent: str, basename: str, index: str, is_exit: bool = False
         ):
-            full_var_name = make_variable_name(parent, basename, index)
+            var_identifier = varname2id[
+                get_variable_reference(parent, basename, index)
+            ]
             G.add_node(
-                full_var_name,
+                var_identifier,
                 type="variable",
                 color="crimson",
                 fontcolor="white" if is_exit else "black",
@@ -358,11 +383,11 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 padding=15,
                 value=None,
             )
-            return full_var_name
+            return var_identifier
 
         def process_wiring_statement(stmt, scope, inputs, cname):
             lambda_name = stmt["function"]["name"]
-            lambda_node_name = f"{scope.name}::" + lambda_name
+            lambda_identifier = str(uuid.uuid4())
 
             stmt_type = lambda_name.split("__")[-3]
             if stmt_type == "assign" and len(stmt["input"]) == 0:
@@ -373,7 +398,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 node_name = add_variable_node(
                     scope.name, var_name, idx, is_exit=var_name == "EXIT"
                 )
-                G.add_edge(lambda_node_name, node_name)
+                G.add_edge(lambda_identifier, node_name)
 
             ordered_inputs = list()
             for inp in stmt["input"]:
@@ -385,11 +410,12 @@ class GroundedFunctionNetwork(ComputationalGraph):
 
                 node_name = add_variable_node(parent, var_name, idx)
                 ordered_inputs.append(node_name)
-                G.add_edge(node_name, lambda_node_name)
+                G.add_edge(node_name, lambda_identifier)
 
             G.add_node(
-                lambda_node_name,
+                lambda_identifier,
                 type="function",
+                func_type=stmt_type,
                 lambda_fn=getattr(lambdas, lambda_name),
                 func_inputs=ordered_inputs,
                 visited=False,
@@ -441,10 +467,11 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 caller_up.append(node_name)
 
             for callee_var, caller_var in zip(callee_ret, caller_ret):
-                lambda_node_name = f"{callee_var}-->{caller_var}"
+                lambda_identifier = str(uuid.uuid4())
                 G.add_node(
-                    lambda_node_name,
+                    lambda_identifier,
                     type="function",
+                    func_type="assign",
                     lambda_fn=identity,
                     func_inputs=[callee_var],
                     shape="rectangle",
@@ -452,14 +479,15 @@ class GroundedFunctionNetwork(ComputationalGraph):
                     label="A",
                     padding=10,
                 )
-                G.add_edge(callee_var, lambda_node_name)
-                G.add_edge(lambda_node_name, caller_var)
+                G.add_edge(callee_var, lambda_identifier)
+                G.add_edge(lambda_identifier, caller_var)
 
             for callee_var, caller_var in zip(callee_up, caller_up):
-                lambda_node_name = f"{callee_var}-->{caller_var}"
+                lambda_identifier = str(uuid.uuid4())
                 G.add_node(
-                    lambda_node_name,
+                    lambda_identifier,
                     type="function",
+                    func_type="assign",
                     lambda_fn=identity,
                     func_inputs=[callee_var],
                     shape="rectangle",
@@ -467,8 +495,8 @@ class GroundedFunctionNetwork(ComputationalGraph):
                     label="A",
                     padding=10,
                 )
-                G.add_edge(callee_var, lambda_node_name)
-                G.add_edge(lambda_node_name, caller_var)
+                G.add_edge(callee_var, lambda_identifier)
+                G.add_edge(lambda_identifier, caller_var)
             occurrences[container_name] += 1
 
         def process_container(scope, input_vals, cname):
@@ -496,13 +524,17 @@ class GroundedFunctionNetwork(ComputationalGraph):
             for var_name in scope.returns:
                 (_, basename, idx) = var_name.split("::")
                 return_list.append(
-                    make_variable_name(scope.name, basename, idx)
+                    varname2id[
+                        get_variable_reference(scope.name, basename, idx)
+                    ]
                 )
 
             for var_name in scope.updated:
                 (_, basename, idx) = var_name.split("::")
                 updated_list.append(
-                    make_variable_name(scope.name, basename, idx)
+                    varname2id[
+                        get_variable_reference(scope.name, basename, idx)
+                    ]
                 )
             return return_list, updated_list
 
@@ -512,10 +544,6 @@ class GroundedFunctionNetwork(ComputationalGraph):
         scope_tree.add_node(cur_scope.name, color="forestgreen")
         returns, updates = process_container(cur_scope, [], root)
         return cls(G, scope_tree, returns + updates)
-
-    @staticmethod
-    def create_container_dict(G: nx.DiGraph):
-        containers = {node_name: dict() for node_name in scope_tree.nodes}
 
     @classmethod
     def from_python_file(
@@ -619,7 +647,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
         """Experimental outputting a GrFN to a JSON file."""
 
         def func_type_from_name(func_name):
-            (_, _, _, _, full_func_name) = name.split("::")
+            (_, _, _, _, full_func_name) = func_name.split("::")
             (_, _, func_type, _, _) = full_func_name.split("__")
             return func_type
 
@@ -674,17 +702,14 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 "exit": None,
                 "vertices": list(),
             }
-            for name in self.scope_tree.nodes
+            for name in self.subgraphs.nodes
         }
 
-        identifiers = {name: str(uuid.uuid4()) for name in self.nodes}
-
         variables, functions, edges = list(), list(), list()
-        for name, data in self.nodes(data=True):
-            identifier = identifiers[name]
+        for identifier, data in self.nodes(data=True):
             containers[data["parent"]]["vertices"].append(identifier)
             if data["type"] == "variable":
-                (_, _, _, _, basename, idx) = name.split("::")
+                (basename, idx) = data["label"].split("::")
                 variables.append(
                     {
                         "name": f"{basename}::{idx}",
@@ -696,15 +721,15 @@ class GroundedFunctionNetwork(ComputationalGraph):
             elif data["type"] == "function":
                 functions.append(
                     {
-                        "type": func_type_from_name(name),
+                        "type": data["func_type"],
                         "uid": identifier,
                         "reference": None,
                         "lambda": get_function_source(data["lambda_fn"]),
                     }
                 )
 
-                func_inputs = [identifiers[n] for n in data["func_inputs"]]
-                func_outputs = [identifiers[n] for n in self.successors(name)]
+                func_inputs = data["func_inputs"]
+                func_outputs = list(self.successors(identifier))
                 edges.append(
                     {
                         "in": func_inputs,
@@ -727,6 +752,12 @@ class GroundedFunctionNetwork(ComputationalGraph):
     def to_json_file(self, filename):
         GrFN_json = self.to_json()
         json.dump(GrFN_json, open(filename, "w"))
+
+    def get_GrFN_edges(self):
+        return [
+            (self.nodes[src_id]["label"], self.nodes[dst_id]["label"])
+            for src_id, dst_id in self.edges()
+        ]
 
     def to_AGraph(self):
         """ Export to a PyGraphviz AGraph object. """
@@ -751,11 +782,11 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 rankdir="LR",
                 color=node_attrs[cluster_name]["color"],
             )
-            for n in self.scope_tree.successors(cluster_name):
+            for n in self.subgraphs.successors(cluster_name):
                 build_tree(n, node_attrs, subgraph)
 
-        root = [n for n, d in self.scope_tree.in_degree() if d == 0][0]
-        node_data = {n: d for n, d in self.scope_tree.nodes(data=True)}
+        root = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
+        node_data = {n: d for n, d in self.subgraphs.nodes(data=True)}
         build_tree(root, node_data, A)
         return A
 
@@ -824,7 +855,7 @@ class ForwardInfluenceBlanket(ComputationalGraph):
         main_edges = {
             (n1, n2) for path in paths for n1, n2 in zip(path, path[1:])
         }
-        blanket_nodes = set()
+        self.blanket_nodes = set()
         add_nodes, add_edges = list(), list()
 
         def place_var_node(var_node):
@@ -834,7 +865,7 @@ class ForwardInfluenceBlanket(ComputationalGraph):
                 add_nodes.extend([var_node, prev_func])
                 add_edges.append((prev_func, var_node))
             else:
-                blanket_nodes.add(var_node)
+                self.blanket_nodes.add(var_node)
 
         for node in main_nodes:
             if G.nodes[node]["type"] == "function":
@@ -868,8 +899,10 @@ class ForwardInfluenceBlanket(ComputationalGraph):
 
         F.inputs = list(F.inputs)
 
-        F.add_nodes_from([(n, d) for n, d in orig_nodes if n in blanket_nodes])
-        for node in blanket_nodes:
+        F.add_nodes_from(
+            [(n, d) for n, d in orig_nodes if n in self.blanket_nodes]
+        )
+        for node in self.blanket_nodes:
             F.nodes[node]["fontname"] = FONT
             F.nodes[node]["color"] = forestgreen
             F.nodes[node]["fontcolor"] = forestgreen
@@ -950,7 +983,7 @@ class ForwardInfluenceBlanket(ComputationalGraph):
             inputs.
         """
         # Abort run if covers does not match our expected cover set
-        if len(covers) != len(blanket_nodes):
+        if len(covers) != len(self.blanket_nodes):
             raise ValueError("Incorrect number of cover values.")
 
         # Set the cover node values
