@@ -4,26 +4,19 @@ import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
-
 import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.ExtractAndAlign
+import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
+import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
-
 import org.clulab.grounding.SVOGrounder
-
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
-
 import org.clulab.utils.DisplayUtils
-
 import org.slf4j.{Logger, LoggerFactory}
-
-
 import org.json4s
-
 import play.api.mvc._
-
 import play.api.libs.json._
 
 
@@ -146,6 +139,26 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(parsed_output)
   }
 
+  def jsonDoc_to_mentions: Action[AnyContent] = Action { request =>
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+    val jsonFile = json("json").str
+    println(jsonFile)
+    logger.info(s"Extracting mentions from $jsonFile")
+    val loader = new ScienceParsedDataLoader
+    val texts = loader.loadFile(jsonFile)
+//    val scienceParseDoc = scienceParse.parsePdf(pdfFile)
+//    val texts = if (scienceParseDoc.sections.isDefined)  {
+//      scienceParseDoc.sections.get.map(_.headingAndText) ++ scienceParseDoc.abstractText
+//    } else scienceParseDoc.abstractText.toSeq
+
+    logger.info("Finished converting to text")
+    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonFile)))
+    val mentionsJson = serializer.jsonAST(mentions)
+    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+    Ok(parsed_output)
+  }
+
   /**
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:
     *  'mentions' : Odin serialized mentions
@@ -219,6 +232,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 
   def parseSentence(text: String, showEverything: Boolean) = Action {
+    println("HERE")
     val (doc, eidosMentions) = processPlayText(ieSystem, text)
     logger.info(s"Sentence returned from processPlayText : ${doc.sentences.head.getSentenceText}")
     val json = mkJson(text, doc, eidosMentions, showEverything) // we only handle a single sentence
