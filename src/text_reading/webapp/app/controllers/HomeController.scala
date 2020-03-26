@@ -139,20 +139,19 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(parsed_output)
   }
 
+  /**
+    * Extract mentions from a serialized Document json. Expected fields in the json obj passed in:
+    *  'json' : path to the serialized Document json file
+    * @return Seq[Mention] (json serialized)
+    */
+
   def jsonDoc_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
     val jsonFile = json("json").str
-    println(jsonFile)
     logger.info(s"Extracting mentions from $jsonFile")
     val loader = new ScienceParsedDataLoader
     val texts = loader.loadFile(jsonFile)
-//    val scienceParseDoc = scienceParse.parsePdf(pdfFile)
-//    val texts = if (scienceParseDoc.sections.isDefined)  {
-//      scienceParseDoc.sections.get.map(_.headingAndText) ++ scienceParseDoc.abstractText
-//    } else scienceParseDoc.abstractText.toSeq
-
-    logger.info("Finished converting to text")
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonFile)))
     val mentionsJson = serializer.jsonAST(mentions)
     val parsed_output = PlayUtils.toPlayJson(mentionsJson)
