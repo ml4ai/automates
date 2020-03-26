@@ -126,11 +126,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
-
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable was found with a Gazetteer passed through the webservice, keep it
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
+      if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
       if (v.words.length > 1 && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for var that include a greek letter---those are found as separate words even if there is not space
       if (v.words.length != 1) return false
       // Else, the variable candidate has length 1
