@@ -231,7 +231,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 
   def parseSentence(text: String, showEverything: Boolean) = Action {
-    println("HERE")
     val (doc, eidosMentions) = processPlayText(ieSystem, text)
     logger.info(s"Sentence returned from processPlayText : ${doc.sentences.head.getSentenceText}")
     val json = mkJson(text, doc, eidosMentions, showEverything) // we only handle a single sentence
