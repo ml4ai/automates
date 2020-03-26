@@ -29,18 +29,6 @@ class ComputationalGraph(nx.DiGraph):
         self.FCG = self.to_FCG()
         self.function_sets = self.build_function_sets()
 
-    @staticmethod
-    def var_shortname(long_var_name):
-        (
-            module,
-            var_scope,
-            container_name,
-            container_index,
-            var_name,
-            var_index,
-        ) = long_var_name.split("::")
-        return var_name
-
     def get_input_nodes(self) -> List[str]:
         """ Get all input nodes from a network. """
         return [n for n, d in self.in_degree() if d == 0]
@@ -149,6 +137,45 @@ class ComputationalGraph(nx.DiGraph):
 
         return G
 
+    def CAG_to_AGraph(self):
+        """Returns a variable-only view of the GrFN in the form of an AGraph.
+
+        Returns:
+            type: A CAG constructed via variable influence in the GrFN object.
+
+        """
+        CAG = self.to_CAG()
+        for name, data in CAG.nodes(data=True):
+            CAG.nodes[name]["label"] = data["cag_label"]
+        A = nx.nx_agraph.to_agraph(CAG)
+        A.graph_attr.update(
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "LR"}
+        )
+        A.node_attr.update(
+            {
+                "shape": "rectangle",
+                "color": "#650021",
+                "style": "rounded",
+                "fontname": "Menlo",
+            }
+        )
+        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+        return A
+
+    def FCG_to_AGraph(self):
+        """ Build a PyGraphviz AGraph object corresponding to a call graph of
+        functions. """
+
+        A = nx.nx_agraph.to_agraph(self.FCG)
+        A.graph_attr.update(
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+        )
+        A.node_attr.update(
+            {"shape": "rectangle", "color": "#650021", "style": "rounded"}
+        )
+        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+        return A
+
 
 class GroundedFunctionNetwork(ComputationalGraph):
     """
@@ -173,7 +200,15 @@ class GroundedFunctionNetwork(ComputationalGraph):
             if d == 0 and self.nodes[n]["type"] == "variable"
         ]
         self.input_name_map = {
-            self.nodes[n_id]["basename"]: n_id for n_id in self.inputs
+            d["basename"]: l
+            for l, d in self.nodes(data=True)
+            if d["type"] == "variable"
+        }
+
+        self.node_name_map = {
+            d["label"]: l
+            for l, d in self.nodes(data=True)
+            if d["type"] == "variable"
         }
         # self.outputs = outputs
         self.subgraphs = scope_tree
@@ -790,45 +825,6 @@ class GroundedFunctionNetwork(ComputationalGraph):
         build_tree(root, node_data, A)
         return A
 
-    def CAG_to_AGraph(self):
-        """Returns a variable-only view of the GrFN in the form of an AGraph.
-
-        Returns:
-            type: A CAG constructed via variable influence in the GrFN object.
-
-        """
-        CAG = self.to_CAG()
-        for name, data in CAG.nodes(data=True):
-            CAG.nodes[name]["label"] = data["cag_label"]
-        A = nx.nx_agraph.to_agraph(CAG)
-        A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "LR"}
-        )
-        A.node_attr.update(
-            {
-                "shape": "rectangle",
-                "color": "#650021",
-                "style": "rounded",
-                "fontname": "Menlo",
-            }
-        )
-        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
-        return A
-
-    def FCG_to_AGraph(self):
-        """ Build a PyGraphviz AGraph object corresponding to a call graph of
-        functions. """
-
-        A = nx.nx_agraph.to_agraph(self.FCG)
-        A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
-        )
-        A.node_attr.update(
-            {"shape": "rectangle", "color": "#650021", "style": "rounded"}
-        )
-        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
-        return A
-
 
 class ForwardInfluenceBlanket(ComputationalGraph):
     """
@@ -847,7 +843,7 @@ class ForwardInfluenceBlanket(ComputationalGraph):
 
         # Get all paths from shared inputs to shared outputs
         path_inputs = shared_nodes - set(outputs)
-        io_pairs = [(inp, G.output_node) for inp in path_inputs]
+        io_pairs = [(inp, outputs[0]) for inp in path_inputs]
         paths = [p for (i, o) in io_pairs for p in all_simple_paths(G, i, o)]
 
         # Get all edges needed to blanket the included nodes
@@ -897,8 +893,6 @@ class ForwardInfluenceBlanket(ComputationalGraph):
             F.nodes[node]["penwidth"] = 3.0
             F.nodes[node]["fontname"] = FONT
 
-        F.inputs = list(F.inputs)
-
         F.add_nodes_from(
             [(n, d) for n, d in orig_nodes if n in self.blanket_nodes]
         )
@@ -917,7 +911,7 @@ class ForwardInfluenceBlanket(ComputationalGraph):
             F.nodes[out_var_node]["fontcolor"] = dodgerblue3
 
         F.add_edges_from(main_edges)
-        super().__init__(F, outputs)
+        super().__init__(F)
 
         # self.FCG = self.to_FCG()
         # self.function_sets = self.build_function_sets()
@@ -943,30 +937,27 @@ class ForwardInfluenceBlanket(ComputationalGraph):
                 f"Expected two GrFNs, but got ({type(G1)}, {type(G2)})"
             )
 
-        def shortname(var):
-            return var[var.find("::") + 2 : var.rfind("_")]
-
-        def shortname_vars(graph, shortname):
-            return [v for v in graph.nodes() if shortname in v]
-
         g1_var_nodes = {
-            shortname(n)
+            d["basename"]
             for (n, d) in G1.nodes(data=True)
             if d["type"] == "variable"
         }
         g2_var_nodes = {
-            shortname(n)
+            d["basename"]
             for (n, d) in G2.nodes(data=True)
             if d["type"] == "variable"
         }
 
-        shared_vars = {
-            full_var
-            for shared_var in g1_var_nodes.intersection(g2_var_nodes)
-            for full_var in shortname_vars(G1, shared_var)
-        }
+        shared_vars = list(g1_var_nodes.intersection(g2_var_nodes))
+        orig_shared_vars = [
+            d["label"]
+            for n, d in G1.nodes(data=True)
+            if d["type"] == "variable" and d["basename"] in shared_vars
+        ]
 
-        return cls(G1, shared_vars)
+        shared_var_ids = {G1.node_name_map[name] for name in orig_shared_vars}
+
+        return cls(G1, shared_var_ids)
 
     def run(
         self,

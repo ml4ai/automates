@@ -6,7 +6,10 @@ import sys
 
 import numpy as np
 
-from model_analysis.networks import GroundedFunctionNetwork
+from model_analysis.networks import (
+    GroundedFunctionNetwork,
+    ForwardInfluenceBlanket,
+)
 import model_analysis.linking as linking
 
 # import delphi.translators.GrFN2WiringDiagram.translate as GrFN2WD
@@ -29,6 +32,20 @@ def crop_yield_grfn():
 def petpt_grfn():
     yield GroundedFunctionNetwork.from_fortran_file(
         "tests/data/program_analysis/PETPT.for"
+    )
+
+
+@pytest.fixture
+def petpno_grfn():
+    yield GroundedFunctionNetwork.from_fortran_file(
+        "tests/data/program_analysis/PETPNO.for"
+    )
+
+
+@pytest.fixture
+def petpen_grfn():
+    yield GroundedFunctionNetwork.from_fortran_file(
+        "tests/data/program_analysis/PETPEN.for"
     )
 
 
@@ -156,7 +173,7 @@ def test_sir_simple_creation(sir_simple_grfn):
     # assert len(F) == 5
 
 
-@pytest.mark.skip("Need to update to latest JSON")
+# @pytest.mark.skip("Need to update to latest JSON")
 def test_sir_gillespie_inline_creation(sir_gillespie_inline_grfn):
     assert isinstance(sir_gillespie_inline_grfn, GroundedFunctionNetwork)
     G = sir_gillespie_inline_grfn.to_AGraph()
@@ -165,7 +182,7 @@ def test_sir_gillespie_inline_creation(sir_gillespie_inline_grfn):
     CAG.draw("SIR-Gillespie_inline--CAG.pdf", prog="dot")
 
 
-@pytest.mark.skip("Need to update to latest JSON")
+# @pytest.mark.skip("Need to update to latest JSON")
 def test_sir_gillespie_ms_creation(sir_gillespie_ms_grfn):
     assert isinstance(sir_gillespie_ms_grfn, GroundedFunctionNetwork)
     G = sir_gillespie_ms_grfn.to_AGraph()
@@ -199,8 +216,10 @@ def test_GrFN_Json_dumping(petpt_grfn):
     os.remove(filepath)
 
 
-def test_FIB_formation():
-    pass
+def test_FIB_formation(petpno_grfn, petpen_grfn):
+    petpno_fib = ForwardInfluenceBlanket.from_GrFN(petpno_grfn, petpen_grfn)
+    CAG = petpno_fib.CAG_to_AGraph()
+    CAG.draw("PETPNO_FIB--CAG.pdf", prog="dot")
 
 
 @pytest.mark.skip("Need to update to latest JSON")
