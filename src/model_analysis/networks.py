@@ -200,9 +200,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
             if d == 0 and self.nodes[n]["type"] == "variable"
         ]
         self.input_name_map = {
-            d["basename"]: l
-            for l, d in self.nodes(data=True)
-            if d["type"] == "variable"
+            self.nodes[n]["basename"]: n for n in self.inputs
         }
 
         self.node_name_map = {

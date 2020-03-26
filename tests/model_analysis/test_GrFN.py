@@ -219,6 +219,7 @@ def test_FIB_formation(petpno_grfn, petpen_grfn):
     petpno_fib = ForwardInfluenceBlanket.from_GrFN(petpno_grfn, petpen_grfn)
     CAG = petpno_fib.CAG_to_AGraph()
     CAG.draw("PETPNO_FIB--CAG.pdf", prog="dot")
+    os.remove("PETPNO_FIB--CAG.pdf")
 
 
 @pytest.mark.skip("Need to update to latest JSON")
