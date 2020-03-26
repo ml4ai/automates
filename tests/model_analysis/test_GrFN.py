@@ -173,7 +173,6 @@ def test_sir_simple_creation(sir_simple_grfn):
     # assert len(F) == 5
 
 
-# @pytest.mark.skip("Need to update to latest JSON")
 def test_sir_gillespie_inline_creation(sir_gillespie_inline_grfn):
     assert isinstance(sir_gillespie_inline_grfn, GroundedFunctionNetwork)
     G = sir_gillespie_inline_grfn.to_AGraph()
@@ -182,7 +181,7 @@ def test_sir_gillespie_inline_creation(sir_gillespie_inline_grfn):
     CAG.draw("SIR-Gillespie_inline--CAG.pdf", prog="dot")
 
 
-# @pytest.mark.skip("Need to update to latest JSON")
+@pytest.mark.skip("Need to fix AIR index bug")
 def test_sir_gillespie_ms_creation(sir_gillespie_ms_grfn):
     assert isinstance(sir_gillespie_ms_grfn, GroundedFunctionNetwork)
     G = sir_gillespie_ms_grfn.to_AGraph()
