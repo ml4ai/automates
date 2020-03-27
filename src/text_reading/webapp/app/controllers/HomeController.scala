@@ -160,7 +160,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   /**
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:
-    *  'mentions' : Odin serialized mentions
+    *  'mentions' : file path to Odin serialized mentions
     *  'equations': path to the decoded equations
     *  'grfn'     : path to the grfn file, already expected to have comments and vars
     * @return decorated grfn with link elems and link hypotheses
@@ -169,7 +169,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
     // Load the mentions
-    val mentionsJson4s = json4s.jackson.parseJson(json("mentions").str)
+    val source = scala.io.Source.fromFile(json("mentions").str)
+    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
+    source.close()
     val textMentions = JSONSerializer.toMentions(mentionsJson4s)
     // get the equations
     val equationFile = json("equations").str
