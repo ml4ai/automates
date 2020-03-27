@@ -17,16 +17,17 @@ def main():
     # )
     # json_dict = res.json()
     # mentions = json_dict["mentions"]
-    pdf_json = json.load(open("PT-mentions.json", "r"))
-    mentions = pdf_json["mentions"]
+    mentions = json.load(open("PT-mentions.json", "r"))
+    print(type(mentions))
+    print(mentions[0])
 
     res = requests.post(
         f"{webservice}/align",
         headers={"Content-type": "application/json"},
         json={
-            "mentions": mentions,
-            "equations": f"PETPT_equations.txt",
-            "grfn": "PETPT_GrFN.json",
+            "mentions": "/Users/phein/repos/aske/automates/scripts/model_analysis/PT-mentions.json",
+            "equations": f"{pet_eqns}/PETPT/PETPT_equations.txt",
+            "grfn": "/Users/phein/repos/aske/automates/scripts/model_analysis/PETPT_GrFN.json",
         },
     )
     print(res)
