@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
-from src.model_analysis.networks import GroundedFunctionNetwork as GrFN
-from src.model_analysis.sensitivity import SensitivityIndices, SensitivityAnalyzer
-from src.model_analysis.visualization import SensitivityVisualizer
+from model_analysis.networks import GroundedFunctionNetwork as GrFN
+from model_analysis.sensitivity import SensitivityIndices, SensitivityAnalyzer
+from model_analysis.visualization import SensitivityVisualizer
 
 class SensitivityModel(object):
 
@@ -134,7 +134,7 @@ if __name__  == '__main__':
 
 
 
-    sample_list = [10**x for x in range(1, 6)]
+    sample_list = [10**x for x in range(2, 3)]
 
     method = 'Sobol'
 
