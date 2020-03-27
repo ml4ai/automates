@@ -1,0 +1,17 @@
+REW = \frac{\theta - \theta_w}{\theta_F - \theta_w}
+g_c = \frac{\gamma \lambda ET g_a}{\Delta (R_n - G) + \rho c_p g_a VPD - \lambda ET (\Delta + \gamma)}
+g_a = \left( \frac{u}{u_*^2} + 6.2 u_*^{-2/3} \right)^{-1}
+\lambda ET = \alpha_b \cdot \lambda ET_{eq} = \alpha_b \frac{\Delta}{\Delta + \gamma} (R_n - G)
+\lambda ET = \lambda E_s + \lambda T_c
+\lambda E_s = \alpha_s \frac{\Delta}{\Delta + \gamma} (R_{ns} - G)
+\lambda T_c = \alpha_c \frac{\Delta}{\Delta + \gamma} R_{nc}
+R_{ns} = \tau R_n
+R_{nc} = (1 - \tau) R_n
+\tau = \exp(- \kappa LAI)
+\alpha_s = f_{sw} (1 - f_m) \alpha_{s0}
+\alpha_c = f_{cw} (1 - f_s) \alpha_{0}
+\alpha_{s0} = \begin{cases} 1.0 & \tau \leq \tau_c \\ \alpha_0 - \frac{(\alpha_0 - 1) (1 - \tau)}{1 - \tau_c} & \tau > \tau_c \end{cases}
+f_{sw} = \begin{cases} S_e & S_e < 0.75 \\ 1.0 & S_e \geq 0.75 \end{cases}
+f_{cw} = min(1.0, m_1 + m_2(1 - \exp(-m_e REW)))
+G = f_G R_{ns}
+\alpha_b = \frac{f_{cw} (1 - f_s) \alpha_0 - [ f_{cw} (1 - f_s) \alpha_0 - f{sw} (1 - f_m) (1 - f_G) \alpha_{s0} ] \exp(- \kappa LAI)}{1 - f_G \exp(- \kappa LAI)}
