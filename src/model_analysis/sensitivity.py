@@ -4,8 +4,8 @@ from SALib.sample import saltelli
 from SALib.analyze import sobol
 import numpy as np
 import json
-from delphi.GrFN.networks import ComputationalGraph
-from delphi.GrFN.utils import timeit
+from model_analysis.networks import ComputationalGraph
+from model_analysis.utils import timeit
 
 
 class InputError(Exception):
