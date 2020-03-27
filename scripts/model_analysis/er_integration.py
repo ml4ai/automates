@@ -4,7 +4,7 @@ import requests
 def main():
     webservice = "http://localhost:8000"
 
-    eqn_pic_path = "/Users/phein/Google Drive/ASKE-AutoMATES/Data/Mini-SPAM/eqns/SPAM/PET/PETPT/8.png"
+    eqn_pic_path = "8.png"
     res = requests.post(
         f"{webservice}/decode_equation/",
         headers={"Content-type": "multipart/form-data"},
