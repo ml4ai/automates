@@ -113,18 +113,21 @@ object ExtractAndAlign {
 
   def getCommentDefinitionMentions(commentReader: OdinEngine, grfn: Value, variableShortNames: Option[Seq[String]]): Seq[Mention] = {
     val commentDocs = GrFNParser.getCommentDocs(grfn)
+    println(s"len commentDocs: ${commentDocs.length}")
 
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
+    println(s"len commentMentions: ${commentMentions.length}")
     val definitions = commentMentions.seq.filter(_ matches "Definition")
+    println(s"len definitions: ${definitions.length}")
     if (variableShortNames.isEmpty) return definitions
-
+    println("Didn't return in the line above")
     val overlapsWithVariables = definitions.filter(
       m => variableShortNames.get
         .map(string => string.toLowerCase)
         .contains(m.arguments("variable").head.text.toLowerCase)
     )
-
+    println(s"len overlapsWithVariables: ${overlapsWithVariables.length}")
     overlapsWithVariables
   }
 
