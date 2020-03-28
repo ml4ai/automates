@@ -192,13 +192,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
     
     // Get the GrFN
-    val grfnFile = new File(json("grfn").str)
+    val grfnPath = json("grfn").str
+    val grfnFile = new File(grfnPath)
     val grfn = ujson.read(grfnFile.readString())
+    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("comment", grfnPath)
     // ground!
     val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
       textMentions,
       grfn,
-      commentReader,
+      localCommentReader,
       equationChunksAndSource,
       alignmentHandler,
       numAlignments,
