@@ -187,6 +187,9 @@ object ExtractAndAlign {
     }
 
     // Repeat for text variables
+    println("!!!!!!!!!!!")
+    println(textDefinitionMentions.length)
+    println("!!!!!!!!!!!")
     linkElements(TEXT) = textDefinitionMentions.map { mention =>
       mkLinkElement(
         elemType = "text_span",
