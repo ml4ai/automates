@@ -20,6 +20,9 @@ RUN apt-get -y --no-install-recommends install \
   graphviz \
   libgraphviz-dev \
   doxygen
+
+RUN git config --global user.email "pauldhein@email.arizona.edu"
+RUN git config --global user.name "Paul Hein"
 # ==============================================================================
 
 # ==============================================================================
