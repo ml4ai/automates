@@ -17,8 +17,8 @@ def test_pdf_to_mentions():
         json={"pdf": f"{pet_docs}/petpt_2012.pdf"},
     )
     print(res)
-    json_dict = res.json()
-    mentions = json_dict["mentions"]
+    mentions = res.json()
+    # mentions = json_dict["mentions"]
     json.dump(mentions, open("PT-mentions.json", "w"))
 
 
@@ -52,6 +52,6 @@ def test_groundMentionsToSVO():
 
 
 if __name__ == "__main__":
-    # test_pdf_to_mentions()
+    test_pdf_to_mentions()
     test_align()
     # test_groundMentionsToSVO()
