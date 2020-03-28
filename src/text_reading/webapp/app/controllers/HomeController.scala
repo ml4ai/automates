@@ -195,7 +195,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val grfnPath = json("grfn").str
     val grfnFile = new File(grfnPath)
     val grfn = ujson.read(grfnFile.readString())
-    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("comment", grfnPath)
+    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
     // ground!
     val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
       textMentions,
