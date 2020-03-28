@@ -5,7 +5,10 @@ import sys
 
 def main():
     eqn_pic_path = sys.argv[1]
-    decoded_output_path = sys.argv[2]
+    filename = eqn_pic_path[
+        eqn_pic_path.rfind("/") + 1 : eqn_pic_path.rfind(".png")
+    ]
+    decoded_output_path = f"{sys.argv[2]}/{filename}.json"
 
     res = requests.post(
         "http://localhost:8000/decode_equation/",
