@@ -9,7 +9,8 @@ def main():
     mini_spam = "/Users/phein/Google Drive/ASKE-AutoMATES/Data/Mini-SPAM"
     pet_docs = f"{mini_spam}/docs/SPAM/PET"
     pet_eqns = f"{mini_spam}/eqns/SPAM/PET"
-    petpt_grfn = f"PETPT_GrFN.json"
+    petpt_grfn = json.load(open(f"PETPT_GrFN.json", "r"))
+    petpt_grfn = json.dumps(petpt_grfn)
     # res = requests.post(
     #     "%s/pdf_to_mentions" % webservice,
     #     headers={"Content-type": "application/json"},
@@ -27,7 +28,7 @@ def main():
         json={
             "mentions": "/Users/phein/repos/aske/automates/scripts/model_analysis/PT-mentions.json",
             "equations": f"{pet_eqns}/PETPT/PETPT_equations.txt",
-            "grfn": "/Users/phein/repos/aske/automates/scripts/model_analysis/PETPT_GrFN.json",
+            "grfn": petpt_grfn,
         },
     )
     print(res)
