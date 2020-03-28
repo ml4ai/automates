@@ -1,19 +1,20 @@
 import requests
+import json
+import sys
 
 
 def main():
-    webservice = "http://localhost:8000"
+    eqn_pic_path = sys.argv[1]
+    decoded_output_path = sys.argv[2]
 
-    eqn_pic_path = "8.png"
     res = requests.post(
-        f"{webservice}/decode_equation/",
-        # headers={"Content-type": "multipart/form-data"},
+        "http://localhost:8000/decode_equation/",
         files={"file": (eqn_pic_path, open(eqn_pic_path, "rb"), "image/png")},
     )
 
     data = res.json()
     print(data)
-    print(type(data))
+    json.dump(data, open(decoded_output_path, "w"))
 
 
 if __name__ == "__main__":
