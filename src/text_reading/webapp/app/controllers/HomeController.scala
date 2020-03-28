@@ -208,7 +208,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       scoreThreshold
     )
     // FIXME: add a conversion method for ujson <--> play json
-    val groundedGrfnAsString = groundedGrfn.toString()
+    val groundedGrfnAsString = ujson.write(groundedGrfn)
     val groundedGrfnJson4s = json4s.jackson.parseJson(groundedGrfnAsString)
     Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
   }
