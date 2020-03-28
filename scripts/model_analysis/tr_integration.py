@@ -1,32 +1,36 @@
 import requests
 import json
 
-# from delphi.GrFN.networks import GroundedFunctionNetwork
+webservice = "http://localhost:9000"
+
+# TODO: update this to no longer depend on my google drive path
+mini_spam = "/Users/phein/Google Drive/ASKE-AutoMATES/Data/Mini-SPAM"
+cur_dir = "/Users/phein/repos/aske/automates/scripts/model_analysis"
+
+pet_docs = f"{mini_spam}/docs/SPAM/PET"
+pet_eqns = f"{mini_spam}/eqns/SPAM/PET"
 
 
-def main():
-    webservice = "http://localhost:9000"
-    mini_spam = "/Users/phein/Google Drive/ASKE-AutoMATES/Data/Mini-SPAM"
-    pet_docs = f"{mini_spam}/docs/SPAM/PET"
-    pet_eqns = f"{mini_spam}/eqns/SPAM/PET"
-    petpt_grfn = json.load(open(f"PETPT_GrFN.json", "r"))
-    petpt_grfn = json.dumps(petpt_grfn)
-    # res = requests.post(
-    #     "%s/pdf_to_mentions" % webservice,
-    #     headers={"Content-type": "application/json"},
-    #     json={"pdf": f"{pet_docs}/petpt_2012.pdf"},
-    # )
-    # json_dict = res.json()
-    # mentions = json_dict["mentions"]
-    mentions = json.load(open("PT-mentions.json", "r"))
-    print(type(mentions))
-    print(mentions[0])
+def test_pdf_to_mentions():
+    res = requests.post(
+        f"{webservice}/pdf_to_mentions",
+        headers={"Content-type": "application/json"},
+        json={"pdf": f"{pet_docs}/petpt_2012.pdf"},
+    )
+    print(res)
+    json_dict = res.json()
+    mentions = json_dict["mentions"]
+    json.dump(mentions, open("PT-mentions.json", "w"))
 
+
+def test_align():
+    # NOTE: relies upon test_pdf_to_mentions being run previously
+    petpt_grfn = json.load(open("PETPT_GrFN.json", "r"))
     res = requests.post(
         f"{webservice}/align",
         headers={"Content-type": "application/json"},
         json={
-            "mentions": "/Users/phein/repos/aske/automates/scripts/model_analysis/PT-mentions.json",
+            "mentions": f"{cur_dir}/PT-mentions.json",
             "equations": f"{pet_eqns}/PETPT/PETPT_equations.txt",
             "grfn": petpt_grfn,
         },
@@ -36,5 +40,20 @@ def main():
     json.dump(json_dict, open("PT-alignment.json", "w"))
 
 
+def test_groundMentionsToSVO():
+    # NOTE: relies upon test_pdf_to_mentions being run previously
+    res = requests.post(
+        f"{webservice}/groundMentionsToSVO",
+        headers={"Content-type": "application/json"},
+        json={"mentions": f"{cur_dir}/PT-mentions.json"},
+    )
+
+    print(res)
+    json_dict = res.json()
+    json.dump(json_dict, open("PT-ground-SVO.json", "w"))
+
+
 if __name__ == "__main__":
-    main()
+    test_pdf_to_mentions()
+    test_align()
+    # test_groundMentionsToSVO()
