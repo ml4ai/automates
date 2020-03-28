@@ -102,6 +102,7 @@ object Aligner {
     val grouped = alignments.groupBy(_.src).toSeq
     for {
       (srcIdx, aa) <- grouped
+      _ = println(s"srcIdx: ${srcIdx}, alignments: ${alignments}")
       topK = aa.sortBy(-_.score).slice(0,k).filter(_.score > scoreThreshold) //filter out those with the score below the threshold; threshold is 0 by default
       if topK.nonEmpty
     } yield topK
