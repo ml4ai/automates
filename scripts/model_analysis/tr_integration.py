@@ -32,7 +32,7 @@ def test_align():
         json={
             "mentions": f"{cur_dir}/PT-mentions.json",
             "equations": f"{pet_eqns}/PETPT/PETPT_equations.txt",
-            "grfn": petpt_grfn,
+            "grfn": json.dumps(petpt_grfn),
         },
     )
     print(res)
