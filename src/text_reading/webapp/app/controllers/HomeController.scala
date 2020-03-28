@@ -15,6 +15,8 @@ import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
+//import org.clulab.odin._
+import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.DisplayUtils
@@ -148,9 +150,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     } else scienceParseDoc.abstractText.toSeq
     logger.info("Finished converting to text")
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
-    val mentionsJson = serializer.jsonAST(mentions)
-    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-    Ok(parsed_output)
+    val outFile = json("outfile").str
+    mentions.saveJSON(outFile, pretty=true)
+    Ok(JsonUtils.mkJson(Nil))
   }
 
   /**
@@ -183,10 +185,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
     // Load the mentions
-    val source = scala.io.Source.fromFile(json("mentions").str)
-    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
-    source.close()
-    val textMentions = JSONSerializer.toMentions(mentionsJson4s)
+    val textMentions = JSONSerializer.toMentions(new File(json("mentions").str))
     // get the equations
     val equationFile = json("equations").str
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
