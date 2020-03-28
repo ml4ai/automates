@@ -277,11 +277,11 @@ object ExtractAndAlign {
     val textReader = OdinEngine.fromConfig(textConfig)
 
     // Instantiate the comment reader
-    val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+    val localCommentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
     // todo: future readers
     //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
     //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
-    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> commentReader))
+    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> localCommentReader))
 
     // Load a GrFN
     val grfnPath: String = config[String]("apps.grfnFile")
@@ -308,7 +308,7 @@ object ExtractAndAlign {
     val groundedGrfn = groundMentionsToGrfn(
       textDefinitionMentions,
       grfn,
-      commentReader,
+      localCommentReader,
       equationChunksAndSource,
       alignmentHandler,
       numAlignments,
