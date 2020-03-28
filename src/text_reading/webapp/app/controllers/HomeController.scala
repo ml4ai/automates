@@ -62,9 +62,19 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def groundMentionsToSVO: Action[AnyContent] = Action { request =>
     val k = 10 //todo: set as param in curl
-    val string = request.body.asText.get
-    val jval = json4s.jackson.parseJson(string)
-    val mentions = JSONSerializer.toMentions(jval)
+
+    // Using Becky's method to load mentions
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+    val source = scala.io.Source.fromFile(json("mentions").str)
+    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
+    source.close()
+
+    // NOTE: Masha's original method
+    // val string = request.body.asText.get
+    // val jval = json4s.jackson.parseJson(string)
+    
+    val mentions = JSONSerializer.toMentions(mentionsJson4s)
     val result = SVOGrounder.mentionsToGroundingsJson(mentions, k)
     Ok(result).as(JSON)
   }
@@ -176,6 +186,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // get the equations
     val equationFile = json("equations").str
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
+    
     // Get the GrFN
     val grfn = json("grfn")
     // ground!
