@@ -152,7 +152,7 @@ object ExtractAndAlign {
     /** Align the comment definitions to the text definitions */
     val commentToTextAlignments = alignmentHandler.w2v.alignMentions(commentDefinitionMentions, textDefinitionMentions)
     // group by src idx, and keep only top k (src, dst, score) for each src idx
-    alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold)
+    alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold, debug = true)
 
     alignments.toMap
   }
