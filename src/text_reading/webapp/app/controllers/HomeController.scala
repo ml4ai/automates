@@ -1,6 +1,9 @@
 package controllers
 
+import java.io.File
+
 import ai.lum.common.ConfigUtils._
+import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
@@ -8,6 +11,7 @@ import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.ExtractAndAlign
 import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
+import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
@@ -188,7 +192,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
     
     // Get the GrFN
-    val grfn = json("grfn")
+    val grfnFile = new File(json("grfn").str)
+    val grfn = ujson.read(grfnFile.readString())
     // ground!
     val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
       textMentions,
