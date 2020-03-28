@@ -37,7 +37,8 @@ object SVOGrounder {
 
   val config: Config = ConfigFactory.load()
   val sparqlDir: String = config[String]("grounding.sparqlDir")
-  val currentDir: String = System.getProperty("user.dir")
+//  val currentDir: String = System.getProperty("user.dir")
+
   // ==============================================================================
   // QUERYING THE SCIENTIFIC VARIABLE ONTOLOGY (http://www.geoscienceontology.org/)
   // ==============================================================================
@@ -45,7 +46,7 @@ object SVOGrounder {
   def runSparqlQuery(term: String, scriptDir: String): String = {
     //todo: currently, the sparql query returns up to 9 results to avoid overloading the server; this is currently defined
     //in the query in sparqlWrapper.py, but should be passed as a var.
-    val command = Seq("python", s"$currentDir/$scriptDir/sparqlWrapper.py", term)
+    val command = Seq("python", s"$sparqlDir/sparqlWrapper.py", term)
     val process = Process(command, new File(s"$scriptDir"))
     process.!!
   }
