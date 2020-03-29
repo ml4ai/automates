@@ -14,19 +14,22 @@ def test_pdf_to_mentions():
     res = requests.post(
         f"{webservice}/pdf_to_mentions",
         headers={"Content-type": "application/json"},
-        json={"pdf": f"{pet_docs}/petpt_2012.pdf"},
+        json={
+            "pdf": f"{pet_docs}/petpt_2012.pdf",
+            "outfile": f"{cur_dir}/PT-mentions.json",
+        },
     )
     print(res)
-    mentions = res.json()
+    # mentions = res.json()
     # mentions = json_dict["mentions"]
-    json.dump(mentions, open("PT-mentions.json", "w"))
+    # json.dump(mentions, open("PT-mentions.json", "w"))
 
 
 def test_align():
     # NOTE: relies upon test_pdf_to_mentions being run previously
-    mentions = json.load(open("PT-mentions.json", "r"))
-    mentions["outfile"] = f"{cur_dir}/PT-alignment.json"
-    json.dump(mentions, open("PT-mentions.json", "w"))
+    # mentions = json.load(open("PT-mentions.json", "r"))
+    # mentions["outfile"] = f"{cur_dir}/PT-alignment.json"
+    # json.dump(mentions, open("PT-mentions.json", "w"))
 
     res = requests.post(
         f"{webservice}/align",
@@ -38,8 +41,8 @@ def test_align():
         },
     )
     print(res)
-    # json_dict = res.json()
-    # json.dump(json_dict, open("PT-alignment.json", "w"))
+    json_dict = res.json()
+    json.dump(json_dict, open("PT-alignment.json", "w"))
 
 
 def test_groundMentionsToSVO():
