@@ -1,10 +1,13 @@
+# -----------------------------------------------------------------------------
 # Script to read equation latex from source file (one eqn per line)
 # and render each equation as a png
+#
+# NOTE: Assumes availability of ImageMagick: https://imagemagick.org/index.php
+# -----------------------------------------------------------------------------
 
 import os
 import subprocess
-# import pdf2image
-# import sys
+
 
 EQN_SOURCE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES/Data/Mini-SPAM/eqns/SPAM/PET'
 
@@ -21,18 +24,45 @@ def standalone_eq_template(eqn):
     return template
 
 
-def render_eqn_latex():
-    pass
+def process_latex_source(latex_src, eqn_tex_dst_root, image_dst_root, verbose=False, test_p=True):
+    """
 
+    Args:
+        latex_src: filepath to file containing single latex equation on each line
+        eqn_tex_dst_root: root path for individual latex .tex files (1 per eqn)
+        image_dst_root: root path for generated .png files
+        verbose:
+        test_p: flag for whether to run in test mode (don't actually generate anything)
 
-def process_latex_source(latex_src, image_dst_root, dpi=50, verbose=False, test_p=True):
+    Returns:
 
+    """
+
+    '''
     cwd = os.getcwd()
     if verbose:
         print(f'Initial CWD: {cwd}')
     os.chdir(os.path.join(image_dst_root, 'manual_latex'))
     if verbose:
         print(f'Changed to {os.getcwd()}')
+    '''
+
+    eqn_tex_dst_root = os.path.abspath(eqn_tex_dst_root)
+
+    if not test_p:
+        if not os.path.exists(eqn_tex_dst_root):
+            os.makedirs(eqn_tex_dst_root)
+
+    image_dst_root = os.path.abspath(image_dst_root)
+
+    if not test_p:
+        if not os.path.exists(image_dst_root):
+            os.makedirs(image_dst_root)
+
+    if verbose:
+        print(f'latex_src: {latex_src}')
+        print(f'eqn_tex_dst_root: {eqn_tex_dst_root}')
+        print(f'image_dst_root: {image_dst_root}')
 
     with open(latex_src, 'r') as fin:
         for i, line in enumerate(fin.readlines()):
@@ -40,18 +70,16 @@ def process_latex_source(latex_src, image_dst_root, dpi=50, verbose=False, test_
             latex_output = standalone_eq_template(eqn_latex)
             if verbose:
                 print('-'*20, i)
-                # print(i, eqn_latex)
-                # print(i, latex_output)
 
-            eqn_latex_file = f'{i}.tex'
+            eqn_tex_file = os.path.join(eqn_tex_dst_root, f'{i}.tex')
 
             if verbose:
-                print(f'writing {eqn_latex_file}')
+                print(f'writing {eqn_tex_file}')
             if not test_p:
-                with open(eqn_latex_file, 'w') as fout:
+                with open(eqn_tex_file, 'w') as fout:
                     fout.write(latex_output)
 
-            command_args = ['pdflatex', f'{i}.tex']
+            command_args = ['pdflatex', '-output-directory', eqn_tex_dst_root, eqn_tex_file]
 
             if verbose:
                 print(f'suprocess.run({command_args})')
@@ -59,13 +87,12 @@ def process_latex_source(latex_src, image_dst_root, dpi=50, verbose=False, test_
                 subprocess.run(command_args)
                 if verbose:
                     print('    after subprocess.run')
+                # cleanup
+                os.remove(os.path.join(eqn_tex_dst_root, f'{i}.aux'))
+                os.remove(os.path.join(eqn_tex_dst_root, f'{i}.log'))
 
-            # cleanup
-            os.remove(f'{i}.aux')
-            os.remove(f'{i}.log')
-
-            eqn_pdf_file = f'{i}.pdf'
-            eqn_png_file = f'../{i}.png'
+            eqn_pdf_file = os.path.join(eqn_tex_dst_root, f'{i}.pdf')
+            eqn_png_file = os.path.join(image_dst_root, f'{i}.png')
 
             command_args = ['convert',
                             '-background', 'white', '-alpha',
@@ -81,32 +108,21 @@ def process_latex_source(latex_src, image_dst_root, dpi=50, verbose=False, test_
                 if verbose:
                     print('    after subprocess.run')
 
-            '''
-            print(f'waiting for {eqn_pdf_file}', end='')
-            while not os.path.exists(eqn_pdf_file):
-                print('.', end='')
-            print('!')
-            '''
-
-            '''
-            if verbose:
-                print(f'pdf2image.convert_from_path(\'{eqn_pdf_file}\', fmt=\'png\', dpi={dpi}), output_file=\'{eqn_png_file}\'')
-            if not test_p:
-                images = pdf2image.convert_from_path(eqn_pdf_file, fmt='png', dpi={dpi},
-                                                     output_file=eqn_png_file)
-                print(images)
-                print(type(images))
-
-            sys.exit()
-            '''
-
+    '''
     if verbose:
         print(f'Current CWD: {os.getcwd()}')
     os.chdir(cwd)
     if verbose:
         print(f'Returning CWD, now: {os.getcwd()}')
+    '''
 
 
 if __name__ == '__main__':
     PETPT_LATEX_SOURCE = os.path.join(PETPT_ROOT, 'PETPT_equations.txt')
-    process_latex_source(PETPT_LATEX_SOURCE, PETPT_ROOT, 50, True, False)
+    PETPT_EQN_TEX_DST_ROOT = os.path.join(PETPT_ROOT, 'manual_latex')
+    PETPT_IMAGE_DST_ROOT = os.path.join(PETPT_ROOT, 'manual_eqn_images')
+    process_latex_source(PETPT_LATEX_SOURCE,
+                         PETPT_EQN_TEX_DST_ROOT,
+                         PETPT_IMAGE_DST_ROOT,
+                         verbose=True,
+                         test_p=False)
