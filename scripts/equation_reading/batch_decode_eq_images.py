@@ -18,6 +18,7 @@ ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
 
 MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
+PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
 
 
 # -----------------------------------------------------------------------------
@@ -84,22 +85,28 @@ def batch_decode(img_src_root, dec_dst_root, verbose=False):
 
     for file in files:
 
-        if verbose:
-            print('-'*20, file)
+        if file in []:  # ['47.png']:  # HACK: skip list
 
-        json_path = decode.png2latex(os.path.join(img_src_root, file), dec_dst_json_root)
+            latex_src_list.append('None')
 
-        if verbose:
-            print(json_path)
+        else:
 
-        with open(json_path) as json_file:
-            jeq = json.load(json_file)
+            if verbose:
+                print('-'*20, file)
 
-        if verbose:
-            # pprint.pprint(jeq)
-            print(jeq['latex'])
+            json_path = decode.png2latex(os.path.join(img_src_root, file), dec_dst_json_root)
 
-        latex_src_list.append(jeq['latex'])
+            if verbose:
+                print(json_path)
+
+            with open(json_path) as json_file:
+                jeq = json.load(json_file)
+
+            if verbose:
+                # pprint.pprint(jeq)
+                print(jeq['latex'])
+
+            latex_src_list.append(jeq['latex'])
 
     if verbose:
         print('='*20)
@@ -127,7 +134,15 @@ def render_decoded_eqns(decoded_images_root, verbose, test_p):
 
 if __name__ == '__main__':
     # TODO: provide proper cli interface
+
+    '''
     PETPT_EQN_IMG_SRC_ROOT = os.path.join(PETPT_ROOT, 'manual_eqn_images')
     PETPT_DECODED_ROOT = os.path.join(PETPT_ROOT, 'decoded_images')
     batch_decode(PETPT_EQN_IMG_SRC_ROOT, PETPT_DECODED_ROOT, verbose=True)
     render_decoded_eqns(PETPT_DECODED_ROOT, verbose=True, test_p=False)
+    '''
+
+    PETASCE_EQN_IMG_SRC_ROOT = os.path.join(PETASCE_ROOT, 'manual_eqn_images')
+    PETASCE_DECODED_ROOT = os.path.join(PETASCE_ROOT, 'decoded_images')
+    batch_decode(PETASCE_EQN_IMG_SRC_ROOT, PETASCE_DECODED_ROOT, verbose=True)
+    render_decoded_eqns(PETASCE_DECODED_ROOT, verbose=True, test_p=False)

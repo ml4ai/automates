@@ -18,6 +18,7 @@ ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
 
 MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
+PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
 
 
 # -----------------------------------------------------------------------------
@@ -41,7 +42,9 @@ def render_images_for_model(model_root, model_name, verbose, test_p):
 if __name__ == '__main__':
     # TODO: provide proper cli interface
 
-    render_images_for_model(PETPT_ROOT, 'PETPT', verbose=True, test_p=False)
+    print('render_images_for_model(): NEED TO UNCOMMENT')
+    # render_images_for_model(PETPT_ROOT, 'PETPT', verbose=True, test_p=False)
+    # render_images_for_model(PETASCE_ROOT, 'PETASCE', verbose=True, test_p=False)
 
     '''
     PETPT_LATEX_SOURCE = os.path.join(PETPT_ROOT, 'PETPT_equations.txt')

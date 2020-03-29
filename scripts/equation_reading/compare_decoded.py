@@ -11,6 +11,7 @@ ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
 
 MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
+PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
 
 
 # -----------------------------------------------------------------------------
@@ -26,8 +27,9 @@ def generate_model_spec(model_root, model_name):
 
 
 PETPT_SPEC = generate_model_spec(PETPT_ROOT, 'PETPT')
+PETASCE_SPEC = generate_model_spec(PETASCE_ROOT, 'PETASCE')
 
-COMPARISON_SPEC = (PETPT_SPEC, )
+COMPARISON_SPEC = (PETPT_SPEC, PETASCE_SPEC)
 
 
 # -----------------------------------------------------------------------------
@@ -137,6 +139,10 @@ def generate_comparison(root, comparison_spec):
 
         src_images_files = natural_sort_filenames(src_images_root, extension='.png')
         dec_images_files = natural_sort_filenames(dec_images_root, extension='.png')
+
+        max_length = min(len(src_images_files), len(dec_images_files))
+        src_images_files = src_images_files[:max_length]
+        dec_images_files = dec_images_files[:max_length]
 
         # TODO: add extraction of dec_latex by line
 
