@@ -52,12 +52,12 @@ object SVOGrounder {
   }
 
   //todo: finish the methods if they are to be used
-  /* grounding using the ontology API (not currently used) */
+  /** grounding using the ontology API (not currently used) */
   def groundToSVOWithAPI(term: String) = {
     val url = "http://34.73.227.230:8000/match_phrase/" + term + "/"
     scala.io.Source.fromURL(url)
   }
-  /* grounding using the ontology API (not currently used) */
+  /** grounding using the ontology API (not currently used) */
   def groundMentionToSVOWithAPI(mention: Mention) = {
     for (word <- mention.words) {
       groundToSVOWithAPI(word)
@@ -68,7 +68,7 @@ object SVOGrounder {
   //            SVO GROUNDING METHODS
   // ======================================================
 
-  /* grounds a seq of mentions and returns the var to grounding mapping */
+  /** grounds a seq of mentions and returns the var to grounding mapping */
   def groundMentionsWithSparql(mentions: Seq[Mention], k: Int): Map[String, Seq[sparqlResult]] = {
 //    val groundings = mutable.Map[String, Seq[sparqlResult]]()
     val groundings = mentions.flatMap(m => groundOneMentionWithSparql(m, k))
@@ -76,13 +76,13 @@ object SVOGrounder {
     groundings.toMap
   }
 
-  /* Grounding a sequence of mentions and return a pretty-printable json string*/
+  /** Grounding a sequence of mentions and return a pretty-printable json string*/
   def mentionsToGroundingsJson(mentions: Seq[Mention], k: Int): String = {
     val seqOfGroundings = SeqOfGroundings(groundDefinitionsToSVO(mentions, k))
     write(seqOfGroundings, indent = 4)
   }
 
-  /* grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
+  /** grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
     println("Started grounding a mention: " + mention.arguments("definition").head.text + " var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
     val terms = getTerms(mention).get.filter(t => t.length > 1) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
@@ -146,7 +146,7 @@ object SVOGrounder {
   //            SUPPORT METHODS
   // ======================================================
 
-  /*takes a series of mentions, maps each variable in the definition mentions (currently the only groundable
+  /**takes a series of mentions, maps each variable in the definition mentions (currently the only groundable
   * type of mentions) to a sequence of results from the SVO ontology, and converts these mappings into an object
   * writable with upickle */
   def groundDefinitionsToSVO(mentions: Seq[Mention], k: Int): Seq[Grounding] = {

@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
 import org.clulab.grounding
 import org.clulab.grounding.{Grounding, SVOGrounder, SeqOfGroundings, sparqlResult}
+import org.clulab.odin.serialization.json.JSONSerializer
+import org.json4s
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -41,7 +43,7 @@ object ExtractAndAlign {
     equationChunksAndSource: Seq[(String, String)],
     alignmentHandler: AlignmentHandler,
     numAlignments: Int = 5,
-    numAlignmentsSrcToComment: Int = 1,
+    numAlignmentsSrcToComment: Int = 1, //fixme: this value is overwritten by whatever you pass in the HomeController; should all these numerical settings not be here?
     scoreThreshold: Double = 0.0): Value = {
 
     // =============================================
@@ -61,6 +63,7 @@ object ExtractAndAlign {
 
 //    val definitionMentionGroundings = SVOGrounder.groundMentionsWithSparql(commentDefinitionMentions, 5)
 
+
     // =============================================
     // Alignment
     // =============================================
@@ -68,7 +71,7 @@ object ExtractAndAlign {
 
     val alignments = alignElements(
       alignmentHandler,
-      textMentions,
+      definitionMentions, //fixme: here and in get linkElements---pass all mentions, only definition mentions, other types?
       equationChunksAndSource.unzip._1,
       commentDefinitionMentions,
       variableShortNames,
@@ -77,9 +80,11 @@ object ExtractAndAlign {
       scoreThreshold
     )
 
-    val linkElements = getLinkElements(grfn, textMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
+    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
+
 
     val hypotheses = getLinkHypotheses(linkElements, alignments)//, definitionMentionGroundings)
+
 
     // =============================================
     //                    EXPORT
@@ -153,9 +158,12 @@ object ExtractAndAlign {
     alignments(EQN_TO_TEXT) = Aligner.topKBySrc(equationToTextAlignments, numAlignments)
 
     /** Align the comment definitions to the text definitions */
+    println(s"commentDefinitionMentions: ${commentDefinitionMentions.length}")
+    println(s"textDefinitionMentions: ${textDefinitionMentions.length}")
     val commentToTextAlignments = alignmentHandler.w2v.alignMentions(commentDefinitionMentions, textDefinitionMentions)
+    println(s"commentToTextAlignments: ${commentToTextAlignments.length}")
     // group by src idx, and keep only top k (src, dst, score) for each src idx
-    alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold, debug = true)
+    alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold, debug = false)
 
     alignments.toMap
   }
@@ -244,6 +252,7 @@ object ExtractAndAlign {
   }
 
   def getLinkHypotheses(linkElements: Map[String, Seq[Obj]], alignments: Map[String, Seq[Seq[Alignment]]]): Seq[Obj] = {//, SVOGroungings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
+
     // Store them all here
     val hypotheses = new ArrayBuffer[ujson.Obj]()
 
@@ -257,7 +266,8 @@ object ExtractAndAlign {
     hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
 
     // Text -> SVO grounding
-//    hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
+    // hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
+
 
     hypotheses
   }
@@ -290,11 +300,15 @@ object ExtractAndAlign {
     val grfn = ujson.read(grfnFile.readString())
 
     // Load text and extract definition mentions
-    val inputDir = config[String]("apps.inputDirectory")
-    val inputType = config[String]("apps.inputType")
-    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
-    val files = FileUtils.findFiles(inputDir, dataLoader.extension)
-    val textDefinitionMentions = getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
+//    val inputDir = config[String]("apps.inputDirectory")
+//    val inputType = config[String]("apps.inputType")
+//    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
+//    val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+//    val textDefinitionMentions = getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
+//    val source = scala.io.Source.fromFile()
+//    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
+//    source.close()
+    val textDefinitionMentions = JSONSerializer.toMentions(new File("/Users/bsharp/Downloads/PT-stuf/PT-mentions.json"))
     logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
 
     // Load equations and "extract" variables/chunks (using heuristics)
