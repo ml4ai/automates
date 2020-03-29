@@ -9,10 +9,20 @@ import os
 import subprocess
 
 
-EQN_SOURCE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES/Data/Mini-SPAM/eqns/SPAM/PET'
+# -----------------------------------------------------------------------------
+# PATHS
+# -----------------------------------------------------------------------------
 
+# NOTE: Must be updated to your local!
+ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
+
+EQN_SOURCE_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(EQN_SOURCE_ROOT, 'PETPT')
 
+
+# -----------------------------------------------------------------------------
+# Render image from latex
+# -----------------------------------------------------------------------------
 
 def standalone_eq_template(eqn):
     template = '\\documentclass{standalone}\n' \
@@ -24,7 +34,7 @@ def standalone_eq_template(eqn):
     return template
 
 
-def process_latex_source(latex_src, eqn_tex_dst_root, image_dst_root, verbose=False, test_p=True):
+def render_image_from_latex(latex_src, eqn_tex_dst_root, image_dst_root, verbose=False, test_p=True):
     """
 
     Args:
@@ -37,15 +47,6 @@ def process_latex_source(latex_src, eqn_tex_dst_root, image_dst_root, verbose=Fa
     Returns:
 
     """
-
-    '''
-    cwd = os.getcwd()
-    if verbose:
-        print(f'Initial CWD: {cwd}')
-    os.chdir(os.path.join(image_dst_root, 'manual_latex'))
-    if verbose:
-        print(f'Changed to {os.getcwd()}')
-    '''
 
     eqn_tex_dst_root = os.path.abspath(eqn_tex_dst_root)
 
@@ -108,21 +109,18 @@ def process_latex_source(latex_src, eqn_tex_dst_root, image_dst_root, verbose=Fa
                 if verbose:
                     print('    after subprocess.run')
 
-    '''
-    if verbose:
-        print(f'Current CWD: {os.getcwd()}')
-    os.chdir(cwd)
-    if verbose:
-        print(f'Returning CWD, now: {os.getcwd()}')
-    '''
 
+# -----------------------------------------------------------------------------
+# Main
+# -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    # TODO: provide proper cli interface
     PETPT_LATEX_SOURCE = os.path.join(PETPT_ROOT, 'PETPT_equations.txt')
-    PETPT_EQN_TEX_DST_ROOT = os.path.join(PETPT_ROOT, 'manual_latex')
+    PETPT_EQN_TEX_DST_ROOT = os.path.join(os.path.join(PETPT_ROOT, 'manual_latex'), 'tex')
     PETPT_IMAGE_DST_ROOT = os.path.join(PETPT_ROOT, 'manual_eqn_images')
-    process_latex_source(PETPT_LATEX_SOURCE,
-                         PETPT_EQN_TEX_DST_ROOT,
-                         PETPT_IMAGE_DST_ROOT,
-                         verbose=True,
-                         test_p=False)
+    render_image_from_latex(PETPT_LATEX_SOURCE,
+                            PETPT_EQN_TEX_DST_ROOT,
+                            PETPT_IMAGE_DST_ROOT,
+                            verbose=True,
+                            test_p=False)
