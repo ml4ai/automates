@@ -152,7 +152,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
     val outFile = json("outfile").str
     mentions.saveJSON(outFile, pretty=true)
-    Ok(JsonUtils.mkJson(Nil))
+    Ok("")
   }
 
   /**
