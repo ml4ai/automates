@@ -84,7 +84,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 //    val grfn = ujson.read(grfnFile.readString())
 //    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
     println("len mentions: " + defMentions.length)
-    val result = SVOGrounder.mentionsToGroundingsJson(defMentions.slice(0,10), k)
+    val result = SVOGrounder.mentionsToGroundingsJson(defMentions,k)   //slice for debugging to avoid overloading the server: defMentions.slice(0,10), k)
     Ok(result).as(JSON)
   }
 
