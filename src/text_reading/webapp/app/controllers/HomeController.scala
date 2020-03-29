@@ -78,8 +78,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // val string = request.body.asText.get
     // val jval = json4s.jackson.parseJson(string)
     
-    val mentions = JSONSerializer.toMentions(mentionsJson4s)
-    val result = SVOGrounder.mentionsToGroundingsJson(mentions, k)
+    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Definition")
+//    val grfnPath = json("grfn").str
+//    val grfnFile = new File(grfnPath)
+//    val grfn = ujson.read(grfnFile.readString())
+//    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
+    println("len mentions: " + defMentions.length)
+    val result = SVOGrounder.mentionsToGroundingsJson(defMentions.slice(0,10), k)
     Ok(result).as(JSON)
   }
 
@@ -187,6 +192,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
     source.close()
     val textMentions = JSONSerializer.toMentions(mentionsJson4s)
+    println(textMentions.filter(m => m.label matches "Definition").length)
     // get the equations
     val equationFile = json("equations").str
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
