@@ -62,8 +62,8 @@ def html_model(model_name, body):
 """
 
 
-def html_eqn_comparison(eqn_num, eqn_src, eqn_dec):
-    return tr(td(eqn_num) + td(eqn_src) + td(eqn_dec))
+def html_eqn_comparison(eqn_num, eqn_src, eqn_dec, dec_latex_src=''):
+    return tr(td(eqn_num) + td(eqn_src) + td(eqn_dec) + dec_latex_src)
 
 
 def html_image(img_src, alt='None', width='400'):
@@ -137,6 +137,8 @@ def generate_comparison(root, comparison_spec):
 
         src_images_files = natural_sort_filenames(src_images_root, extension='.png')
         dec_images_files = natural_sort_filenames(dec_images_root, extension='.png')
+
+        # TODO: add extraction of dec_latex by line
 
         html_comparisons = list()
 
