@@ -43,7 +43,7 @@ object ExtractAndAlign {
     equationChunksAndSource: Seq[(String, String)],
     alignmentHandler: AlignmentHandler,
     numAlignments: Int = 5,
-    numAlignmentsSrcToComment: Int = 1,
+    numAlignmentsSrcToComment: Int = 1, //fixme: this value is overwritten by whatever you pass in the HomeController; should all these numerical settings not be here?
     scoreThreshold: Double = 0.0): Value = {
 
     // =============================================
@@ -70,7 +70,7 @@ object ExtractAndAlign {
 
     val alignments = alignElements(
       alignmentHandler,
-      textMentions,
+      definitionMentions, //fixme: here and in get linkElements---pass all mentions, only definition mentions, other types?
       equationChunksAndSource.unzip._1,
       commentDefinitionMentions,
       variableShortNames,
@@ -79,7 +79,7 @@ object ExtractAndAlign {
       scoreThreshold
     )
 
-    val linkElements = getLinkElements(grfn, textMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
+    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
 
     val hypotheses = getLinkHypotheses(linkElements, alignments)
 
@@ -160,7 +160,7 @@ object ExtractAndAlign {
     val commentToTextAlignments = alignmentHandler.w2v.alignMentions(commentDefinitionMentions, textDefinitionMentions)
     println(s"commentToTextAlignments: ${commentToTextAlignments.length}")
     // group by src idx, and keep only top k (src, dst, score) for each src idx
-    alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold, debug = true)
+    alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold, debug = false)
 
     alignments.toMap
   }

@@ -44,7 +44,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   lazy val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val numAlignments: Int = 5
-  private val numAlignmentsSrcToComment: Int = 1
+  private val numAlignmentsSrcToComment: Int = 3
   private val scoreThreshold: Double = 0.0
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
