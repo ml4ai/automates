@@ -61,7 +61,7 @@ object ExtractAndAlign {
     // svo groundings
     val definitionMentions = textMentions.filter(m => m.label matches "Definition")
 
-//    val definitionMentionGroundings = SVOGrounder.groundMentionsWithSparql(commentDefinitionMentions, 5)
+//    val definitionMentionGroundings = SVOGrounder.groundMentionsWithSparql(definitionMentions, 5)
 
 
     // =============================================
