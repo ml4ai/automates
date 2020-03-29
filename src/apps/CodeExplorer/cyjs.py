@@ -192,13 +192,13 @@ def to_cyjs_grfn(G):
                     "height": "label",
                     "padding": 10,
                     "parent": (
-                        list(G.scope_tree.predecessors(n[0]))[0]
-                        if len(list(G.scope_tree.predecessors(n[0]))) != 0
+                        list(G.subgraphs.predecessors(n[0]))[0]
+                        if len(list(G.subgraphs.predecessors(n[0]))) != 0
                         else n[0]
                     ),
                 }
             }
-            for n in G.scope_tree.nodes(data=True)
+            for n in G.subgraphs.nodes(data=True)
         ],
         "edges": [
             {

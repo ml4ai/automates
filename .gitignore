@@ -69,3 +69,6 @@ preprocessed*
 
 # Ruby stuff
 Gemfile.lock
+
+# Adding lib files for TR webapp
+!src/text_reading/webapp/public/brat/client/lib

@@ -4,26 +4,19 @@ import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
-
 import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.ExtractAndAlign
+import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
+import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
-
 import org.clulab.grounding.SVOGrounder
-
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
-
 import org.clulab.utils.DisplayUtils
-
 import org.slf4j.{Logger, LoggerFactory}
-
-
 import org.json4s
-
 import play.api.mvc._
-
 import play.api.libs.json._
 
 
@@ -141,6 +134,25 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     } else scienceParseDoc.abstractText.toSeq
     logger.info("Finished converting to text")
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
+    val mentionsJson = serializer.jsonAST(mentions)
+    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+    Ok(parsed_output)
+  }
+
+  /**
+    * Extract mentions from a serialized Document json. Expected fields in the json obj passed in:
+    *  'json' : path to the serialized Document json file
+    * @return Seq[Mention] (json serialized)
+    */
+
+  def jsonDoc_to_mentions: Action[AnyContent] = Action { request =>
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+    val jsonFile = json("json").str
+    logger.info(s"Extracting mentions from $jsonFile")
+    val loader = new ScienceParsedDataLoader
+    val texts = loader.loadFile(jsonFile)
+    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonFile)))
     val mentionsJson = serializer.jsonAST(mentions)
     val parsed_output = PlayUtils.toPlayJson(mentionsJson)
     Ok(parsed_output)
