@@ -59,6 +59,6 @@ def test_groundMentionsToSVO():
 
 
 if __name__ == "__main__":
-    test_pdf_to_mentions()
+    # test_pdf_to_mentions()
     test_align()
     # test_groundMentionsToSVO()
