@@ -45,7 +45,7 @@ class SensitivityModel(object):
 
         return sobol_dict.__dict__, sample_time, exec_time, analysis_time
 
-    def generate_dataframe(self):
+    def generate_dataframe(self, decimal):
 
         i = len(self.sample_list) - 1
         N = self.sample_list[i]
@@ -61,6 +61,9 @@ class SensitivityModel(object):
             ST_max, orient="index", columns=[self.model]
         )
 
+        df_S1 = df_S1.round(decimal).T
+        df_ST = df_ST.round(decimal).T
+        
         return df_S1, df_ST
 
     def generate_indices(self):
@@ -152,29 +155,21 @@ if __name__ == "__main__":
     # "canht": [0.001, 3],
     # }
 
-    sample_list = [10 ** x for x in range(1, 6)]
+    # sample_list = [10 ** x for x in range(1, 2)]
 
-<<<<<<< HEAD
+    # method = "Sobol"
 
-    sample_list = [10**x for x in range(2, 3)]
+    # SM = SensitivityModel(model, bounds, sample_list, method)
 
-    method = 'Sobol'
+    # df_S1, df_ST = SM.generate_dataframe(5)
 
-=======
-    method = "Sobol"
->>>>>>> 24b88276b3779d306b786e914127bc859bf37395
+    # indices_lst = SM.generate_indices()
 
-    SM = SensitivityModel(model, bounds, sample_list, method)
+    # component = "S1"
+    # SM.sensitivity_plots(indices_lst, component)
 
-    SM.generate_dataframe()
+    # component = "S2"
+    # SM.sensitivity_plots(indices_lst, component)
 
-    indices_lst = SM.generate_indices()
-
-    component = "S1"
-    SM.sensitivity_plots(indices_lst, component)
-
-    component = "S2"
-    SM.sensitivity_plots(indices_lst, component)
-
-    component = "runtime"
-    SM.sensitivity_plots(indices_lst, component)
+    # component = "runtime"
+    # SM.sensitivity_plots(indices_lst, component)
