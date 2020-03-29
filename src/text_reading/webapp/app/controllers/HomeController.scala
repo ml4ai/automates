@@ -39,7 +39,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   val ieSystem = OdinEngine.fromConfig()
   var proc = ieSystem.proc
   val serializer = JSONSerializer
-  lazy val scienceParse = new ScienceParseClient(domain="localhost", port="8080")
+  lazy val scienceParse = new ScienceParseClient(domain = "localhost", port = "8080")
   lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
   lazy val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -79,7 +79,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // NOTE: Masha's original method
     // val string = request.body.asText.get
     // val jval = json4s.jackson.parseJson(string)
-    
+
     val mentions = JSONSerializer.toMentions(mentionsJson4s)
     val result = SVOGrounder.mentionsToGroundingsJson(mentions, k)
     Ok(result).as(JSON)
@@ -189,7 +189,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // get the equations
     val equationFile = json("equations").str
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
-    
+
     // Get the GrFN
     val grfnPath = json("grfn").str
     val grfnFile = new File(grfnPath)
