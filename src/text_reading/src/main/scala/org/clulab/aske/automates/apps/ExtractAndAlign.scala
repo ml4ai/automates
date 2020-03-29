@@ -61,7 +61,7 @@ object ExtractAndAlign {
     // svo groundings
     val definitionMentions = textMentions.filter(m => m.label matches "Definition")
 
-    val definitionMentionGroundings = SVOGrounder.groundDefinitionsToSVO(definitionMentions, 5)
+    // val definitionMentionGroundings = SVOGrounder.groundDefinitionsToSVO(definitionMentions, 5)
 
     // =============================================
     // Alignment
@@ -81,7 +81,7 @@ object ExtractAndAlign {
 
     val linkElements = getLinkElements(grfn, textMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
 
-    val hypotheses = getLinkHypotheses(linkElements, alignments, definitionMentionGroundings)
+    val hypotheses = getLinkHypotheses(linkElements, alignments)
 
     // =============================================
     //                    EXPORT
@@ -247,7 +247,7 @@ object ExtractAndAlign {
     } yield mkHypothesis(srcLinkElement, dstLinkElement, g.score.get)
   }
 
-  def getLinkHypotheses(linkElements: Map[String, Seq[Obj]], alignments: Map[String, Seq[Seq[Alignment]]], SVOGroungings: Seq[Grounding]): Seq[Obj] = {
+  def getLinkHypotheses(linkElements: Map[String, Seq[Obj]], alignments: Map[String, Seq[Seq[Alignment]]]): Seq[Obj] = {
     // Store them all here
     val hypotheses = new ArrayBuffer[ujson.Obj]()
 
@@ -261,7 +261,7 @@ object ExtractAndAlign {
     hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
 
     // Text -> SVO grounding
-    hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
+    // hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
 
     hypotheses
   }
