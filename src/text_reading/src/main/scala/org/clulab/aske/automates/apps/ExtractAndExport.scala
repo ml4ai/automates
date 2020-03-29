@@ -1,8 +1,6 @@
 package org.clulab.aske.automates.apps
 
-import java.io.File
-import java.io.FileWriter
-import java.io.BufferedWriter
+import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -25,6 +23,7 @@ object ExtractAndExport extends App {
     exporterString match {
       case "serialized" => SerializedExporter(filename)
       case "json" => JSONExporter(filename)
+      case "tsv" => TSVExporter(filename)
       case _ => throw new NotImplementedError(s"Export mode $exporterString is not supported.")
     }
   }
@@ -57,7 +56,6 @@ object ExtractAndExport extends App {
     //The version of mention that includes routing between text vs. comment
 //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
     // 4. Export to all desired formats
-
     exportAs.foreach { format =>
         val exporter = getExporter(format, s"$outputDir/${file.getName}")
         exporter.export(mentions)
@@ -88,6 +86,22 @@ case class JSONExporter(filename: String) extends Exporter {
     val bw = new BufferedWriter(new FileWriter(file))
     bw.write(text)
     bw.close()
+  }
+
+  override def close(): Unit = ()
+}
+
+// used to produce tsv files with extracted mentions; add 'tsv' to the list of foramats under apps.exportAs in application.conf; change m.label filtering to whatever type of event you are interested in.
+case class TSVExporter(filename: String) extends Exporter {
+  override def export(mentions: Seq[Mention]): Unit = {
+    val pw = new PrintWriter(new File(filename.toString().replace(".json", "_mentions.tsv") ))
+    val contentMentions = mentions.filter(m => (m.label matches "Definition") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting"))
+    for (m <- contentMentions) {
+      pw.write(m.label + "\t" + m.text.trim())
+      for (arg <- m.arguments) pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+      pw.write("\n")
+    }
+    pw.close()
   }
 
   override def close(): Unit = ()

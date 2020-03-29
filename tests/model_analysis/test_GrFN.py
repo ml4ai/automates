@@ -6,7 +6,10 @@ import sys
 
 import numpy as np
 
-from model_analysis.networks import GroundedFunctionNetwork
+from model_analysis.networks import (
+    GroundedFunctionNetwork,
+    ForwardInfluenceBlanket,
+)
 import model_analysis.linking as linking
 
 # import delphi.translators.GrFN2WiringDiagram.translate as GrFN2WD
@@ -29,6 +32,20 @@ def crop_yield_grfn():
 def petpt_grfn():
     yield GroundedFunctionNetwork.from_fortran_file(
         "tests/data/program_analysis/PETPT.for"
+    )
+
+
+@pytest.fixture
+def petpno_grfn():
+    yield GroundedFunctionNetwork.from_fortran_file(
+        "tests/data/program_analysis/PETPNO.for"
+    )
+
+
+@pytest.fixture
+def petpen_grfn():
+    yield GroundedFunctionNetwork.from_fortran_file(
+        "tests/data/program_analysis/PETPEN.for"
     )
 
 
@@ -73,6 +90,7 @@ def test_petpt_creation_and_execution(petpt_grfn):
     A.draw("PETPT--GrFN.pdf", prog="dot")
     CAG = petpt_grfn.CAG_to_AGraph()
     CAG.draw("PETPT--CAG.pdf", prog="dot")
+    print(list(petpt_grfn.edges))
     assert isinstance(petpt_grfn, GroundedFunctionNetwork)
     assert len(petpt_grfn.inputs) == 5
     assert len(petpt_grfn.outputs) == 1
@@ -87,6 +105,17 @@ def test_petpt_creation_and_execution(petpt_grfn):
     assert res[0] == np.float32(0.02998372)
     os.remove("PETPT--GrFN.pdf")
     os.remove("PETPT--CAG.pdf")
+
+
+def test_GrFN_Json_loading(petpt_grfn):
+    filepath = "tests/data/program_analysis/GrFN_JSON_TEST.json"
+    petpt_grfn.to_json_file(filepath)
+
+    petpt_grfn2 = GroundedFunctionNetwork.from_json_file(filepath)
+    assert sorted(list(petpt_grfn.nodes)) == sorted(list(petpt_grfn2.nodes))
+    assert sorted(list(petpt_grfn.subgraphs.nodes)) == sorted(
+        list(petpt_grfn2.subgraphs.nodes)
+    )
 
 
 def test_petasce_creation(petasce_grfn):
@@ -172,17 +201,24 @@ def test_linking_graph():
 
 
 def test_GrFN_Json_dumping(petpt_grfn):
-    PETPT_json = petpt_grfn.to_json()
-    PETPT_dict = json.loads(PETPT_json)
-    assert "nodes" in PETPT_dict
+    PETPT_dict = petpt_grfn.to_json()
+    assert "variables" in PETPT_dict
+    assert "functions" in PETPT_dict
     assert "edges" in PETPT_dict
     assert "containers" in PETPT_dict
-    assert len(PETPT_dict["nodes"]) == 35
+    assert len(PETPT_dict["containers"]) == 1
 
     filepath = "tests/data/program_analysis/GrFN_JSON_TEST.json"
     petpt_grfn.to_json_file(filepath)
     assert os.path.isfile(filepath)
     os.remove(filepath)
+
+
+def test_FIB_formation(petpno_grfn, petpen_grfn):
+    petpno_fib = ForwardInfluenceBlanket.from_GrFN(petpno_grfn, petpen_grfn)
+    CAG = petpno_fib.CAG_to_AGraph()
+    CAG.draw("PETPNO_FIB--CAG.pdf", prog="dot")
+    os.remove("PETPNO_FIB--CAG.pdf")
 
 
 @pytest.mark.skip("Need to update to latest JSON")
