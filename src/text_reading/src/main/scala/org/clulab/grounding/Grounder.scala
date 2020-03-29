@@ -84,9 +84,9 @@ object SVOGrounder {
 
   /** grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
-    println("Started grounding a mention: " + mention.arguments("definition").head.text + " var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
+    println("Started grounding a mention: " + mention.arguments("definition").head.text + " | var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
     val terms = getTerms(mention).get.filter(t => t.length > 1) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
-    println("terms: " + terms.mkString(" "))
+    println("search terms: " + terms.mkString(" "))
     if (terms.nonEmpty) {
       val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
       for (word <- terms) {
@@ -114,12 +114,12 @@ object SVOGrounder {
 
       //this is the best results based on score and whether or not they are collocations
       val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
-      println("Almost done grounding 1 mention")
+
       //return the best results first, then only the max score ones, and then all the rest; some may overlap thus distinct
       val allResults = (bestResults ++ onlyMaxScoreResults ++ resultsFromAllTerms).distinct
       println("len all results: " + allResults.length)
       for (r <- allResults) println("res: " + r)
-      Some(Map(mention.arguments("variable").head.text -> getTopK(allResults, k)))
+      Map(mention.arguments("variable").head.text -> getTopK(allResults, k))
     } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
 
   }
@@ -173,36 +173,35 @@ object SVOGrounder {
   * only look at the terms in the definition mentions for now*/
   def getTerms(mention: Mention): Option[Seq[String]] = {
     //todo: will depend on type of mention, e.g., for definitions, only look at the words in the definition arg, not var itself
-    println("Getting terms")
+    println("Getting search terms for the mention")
     if (mention matches "Definition") {
       val terms = new ArrayBuffer[String]()
 
       //the sparql query can't have spaces between words (can take words separated by underscores or dashes, so the compounds will include those)
       val compounds = getCompounds(mention.arguments("definition").head)
-      println("compounds line 191: " + compounds.mkString(" "))
+
       if (compounds.nonEmpty) {
         for (c <- compounds.get) {
-          if (c.length > 0) {
-            println("comp len > 0 " + c)
+          if (c.length > 0) { //empty string results halted the process
             terms += c
           }
         }
       }
+      //if there were no search terms found by getCompounds, just ground any nouns in the definition
       if (terms.length == 0) {
-        println("NO RESULTS FROM COMPOUNDS")
-        //get terms from words, but this should not happen
+        //get terms from words
         val lemmas = mention.arguments("definition").head.lemmas.get
         val tags = mention.arguments("definition").head.tags.get
         for (i <- 0 to lemmas.length-1) {
-          //disregard words  other than nouns, adjs, and verbs for now
+          //disregard words  other than nouns for now fixme: add other parts of speech?
           if (lemmas(i).length > 1) {
-            if (tags(i).startsWith("N") || tags(i).startsWith("J") || tags(i).startsWith("V")) {
+            if (tags(i).startsWith("N")) {
               terms += lemmas(i)
             }
           }
         }
       }
-      println("terms line 200: " + terms.mkString(" "))
+
       Some(terms.sortBy(_.length))
     } else None
 
@@ -225,35 +224,29 @@ object SVOGrounder {
   def getCompounds(mention: Mention): Option[Array[String]] = {
     val compoundWords = new ArrayBuffer[String]()
     val headWord = mention.synHeadLemma.get
-    println("syn head ind: " + mention.synHead)
-    println("syn head in sentence " + mention.sentenceObj.words(mention.synHead.get))
-    println("head word: " + headWord + "|")
     if (headWord.trim().length > 1 && headWord.trim().count(_.isLetter) > 0) { //don't ground words that are too short---too many false pos from svo
       compoundWords.append(headWord)
       //todo: do we want terms other than syntactic head?
       val outgoing = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get)
       //get indices of compounds or modifiers to the head word of the mention
       val outgoingNodes = outgoing.map(o => o._1)
-      for (o <- outgoing) println(o._1 + " | " + o._2)
 
-      println("len outgoing: " + outgoing.length)
-
+        //check if two previous words are parts of a compound
         for (i <- 1 to 2) {
-          println("ind: " + i)
           val idxToCheck = mention.synHead.get - i
-          println(idxToCheck)
           if (outgoingNodes.contains(idxToCheck)) {
-            if (outgoing.exists(item => item._1 == idxToCheck && item._2 == "compound")) {
-              println("TRUE")
+            //ideally need to add an nmod_of here; would require checking cur word + 2; todo: check if SVO has 'of' terms
+            if (outgoing.exists(item => item._1 == idxToCheck && (item._2 == "compound" || item._2 == "amod"))) {
+
               val newComp = mention.sentenceObj.words.slice(idxToCheck,mention.synHead.get + 1).mkString("_")
-              println("new compound: " + newComp)
+              //fixme: if grounder not too slow, also get compounds separated by "-" bc those also occur in SVO
               compoundWords.append(newComp)
             }
           }
 
         }
 
-      println("compound words: " + compoundWords.distinct.mkString(" "))
+//      println("compound words: " + compoundWords.distinct.mkString(" "))
       Some(compoundWords.toArray.distinct)
     } else None
 
