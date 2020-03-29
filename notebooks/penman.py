@@ -12,15 +12,32 @@ class SensitivityModel(object):
         self.sample_list = sample_list
         self.method = method
 
+    def modify_bounds(self, param, partition, partitions=3):
+        
+        partition -= 1
+        if partition < 0 or partition > partitions:
+            raise ValueError('Invalid partition number!')
+
+        int_range = self.B[param]
+        lower = int_range[0]; upper = int_range[1];
+        size = (upper - lower)/partitions
+
+        partition_param_bounds = list()
+        for i in range(0, partitions):
+            new_upper = lower + size
+            partition_param_bounds.append([lower, new_upper])
+            lower = new_upper
+
+        self.B[param] =  partition_param_bounds[partition]
+
+
     def sensitivity(self, N):
 
         if self.model == "PETASCE":
-            # tG = GrFN.from_fortran_file(f"../../tests/data/program_analysis/{self.model}_simple.for", save_file=True)
             tG = GrFN.from_fortran_file(
                 f"../tests/data/program_analysis/{self.model}_simple.for"
             )
         else:
-            # tG = GrFN.from_fortran_file(f"../../tests/data/program_analysis/{self.model}.for", save_file=True)
             tG = GrFN.from_fortran_file(
                 f"../tests/data/program_analysis/{self.model}.for"
             )
@@ -87,7 +104,6 @@ class SensitivityModel(object):
             else:
                 Si["O2_indices"] = None
 
-            # S2_dataframe = pd.DataFrame(data=Si['O2_indices'], columns=var_names)
             S2_dataframe = pd.DataFrame(
                 data=Si["O2_indices"], columns=Si["parameter_list"]
             )
@@ -111,13 +127,13 @@ class SensitivityModel(object):
 
         if component == "S1":
             S1 = plots.create_S1_plot()
-            # S1.show()
+            S1.show()
             return
 
         if component == "S2":
             if self.method == "Sobol":
                 S2 = plots.create_S2_plot()
-                # S2.show()
+                S2.show()
                 return
 
         if component == "runtime":
@@ -139,6 +155,7 @@ if __name__ == "__main__":
         "xhlai": [0.0, 20.0],
     }
 
+
     # bounds = {
     # "doy": [1, 365],
     # "meevp": [0, 1],
@@ -155,21 +172,30 @@ if __name__ == "__main__":
     # "canht": [0.001, 3],
     # }
 
-    # sample_list = [10 ** x for x in range(1, 2)]
 
-    # method = "Sobol"
 
-    # SM = SensitivityModel(model, bounds, sample_list, method)
+    sample_list = [10 ** x for x in range(1, 6)]
 
-    # df_S1, df_ST = SM.generate_dataframe(5)
+    method = "Sobol"
 
-    # indices_lst = SM.generate_indices()
+    SM = SensitivityModel(model, bounds, sample_list, method)
 
-    # component = "S1"
-    # SM.sensitivity_plots(indices_lst, component)
+    param = 'tmax'
+    partitions = 3
+    partition = 2
+    SM.modify_bounds(param, partition, partitions)
 
-    # component = "S2"
-    # SM.sensitivity_plots(indices_lst, component)
+    df_S1, df_ST = SM.generate_dataframe(4)
+    print("df_ST\n", df_ST)
+    print("df_S1\n", df_S1)
 
-    # component = "runtime"
-    # SM.sensitivity_plots(indices_lst, component)
+    indices_lst = SM.generate_indices()
+
+    component = "S1"
+    SM.sensitivity_plots(indices_lst, component)
+
+    component = "S2"
+    SM.sensitivity_plots(indices_lst, component)
+
+    component = "runtime"
+    SM.sensitivity_plots(indices_lst, component)
