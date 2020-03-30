@@ -1,0 +1,91 @@
+      SUBROUTINE PETASCE( CANHT, DOY, MSALB, MEEVP, SRAD, TDEW, TMAX, TMIN, WINDHT, WINDRUN, XHLAI, XLAT, XELEV, EO)
+
+      IMPLICIT NONE
+      SAVE
+      REAL CANHT, MSALB, SRAD, TDEW, TMAX, TMIN, WINDHT, WINDRUN
+      REAL XHLAI, XLAT, XELEV
+      INTEGER DOY
+      CHARACTER*1 MEEVP
+      REAL EO
+      REAL TAVG, PATM, PSYCON, UDELTA, EMAX, EMIN, ES, EA, FC, FEW, FW
+      REAL ALBEDO, RNS, PIE, DR, LDELTA, WS, RA1, RA2, RA, RSO, RATIO
+      REAL FCD, TK4, RNL, RN, G, WINDSP, WIND2m, Cn, Cd, KCMAX, RHMIN
+      REAL WND, CHT
+      REAL REFET, SKC, KCBMIN, KCBMAX, KCB, KE, KC
+      TAVG = (TMAX + TMIN) / 2.0
+      PATM = 101.3 * ((293.0 - 0.0065 * XELEV)/293.0) ** 5.26
+      PSYCON = 0.000665 * PATM
+      UDELTA = 2503.0*EXP(17.27*TAVG/(TAVG+237.3))/(TAVG+237.3)**2.0
+      EMAX = 0.6108*EXP((17.27*TMAX)/(TMAX+237.3))
+      EMIN = 0.6108*EXP((17.27*TMIN)/(TMIN+237.3))
+      ES = (EMAX + EMIN) / 2.0
+      EA = 0.6108*EXP((17.27*TDEW)/(TDEW+237.3))
+      RHMIN = MAX(20.0, MIN(80.0, EA/EMAX*100.0))
+      IF (XHLAI .LE. 0.0) THEN
+        ALBEDO = MSALB
+      ELSE
+        ALBEDO = 0.23
+      ENDIF
+      RNS = (1.0-ALBEDO)*SRAD
+      PIE = 3.14159265359
+      DR = 1.0+0.033*COS(2.0*PIE/365.0*DOY)
+      LDELTA = 0.409*SIN(2.0*PIE/365.0*DOY-1.39)
+      WS = ACOS(-1.0*TAN(XLAT*PIE/180.0)*TAN(LDELTA))
+      RA1 = WS*SIN(XLAT*PIE/180.0)*SIN(LDELTA)
+      RA2 = COS(XLAT*PIE/180.0)*COS(LDELTA)*SIN(WS)
+      RA = 24.0/PIE*4.92*DR*(RA1+RA2)
+      RSO = (0.75+2E-5*XELEV)*RA
+      RATIO = SRAD/RSO
+      IF (RATIO .LT. 0.3) THEN
+        RATIO = 0.3
+      ELSEIF (RATIO .GT. 1.0) THEN
+        RATIO = 1.0
+      END IF
+      FCD = 1.35*RATIO-0.35
+      TK4 = ((TMAX+273.16)**4.0+(TMIN+273.16)**4.0)/2.0
+      RNL = 4.901E-9*FCD*(0.34-0.14*SQRT(EA))*TK4
+      RN = RNS - RNL
+      G = 0.0
+      WINDSP = WINDRUN * 1000.0 / 24.0 / 60.0 / 60.0
+      WIND2m = WINDSP * (4.87/LOG(67.8*WINDHT-5.42))
+      Cn = 0.0
+      Cd = 0.0
+      IF (MEEVP .EQ. 'A') THEN
+        Cn = 1600.0
+        Cd = 0.38
+      ELSE IF (MEEVP .EQ. 'G') THEN
+        Cn = 900.0
+        Cd = 0.34
+      END IF
+      REFET =0.408*UDELTA*(RN-G)+PSYCON*(Cn/(TAVG+273.0))*WIND2m*(ES-EA)
+      REFET = REFET/(UDELTA+PSYCON*(1.0+Cd*WIND2m))
+      REFET = MAX(0.0001, REFET)
+      SKC = 0.8
+      KCBMIN = 0.3
+      KCBMAX = 1.2
+      IF (XHLAI .LE. 0.0) THEN
+         KCB = 0.0
+      ELSE
+         KCB = MAX(0.0,KCBMIN+(KCBMAX-KCBMIN)*(1.0-EXP(-1.0*SKC*XHLAI)))
+      ENDIF
+      WND = MAX(1.0,MIN(WIND2m,6.0))
+      CHT = MAX(0.001,CANHT)
+      KCMAX = 0.5
+      IF (MEEVP .EQ. 'A') THEN
+        KCMAX = MAX(1.0,KCB+0.05)
+      ELSE IF (MEEVP .EQ. 'G') THEN
+        KCMAX = MAX((1.2+(0.04*(WND-2.0)-0.004*(RHMIN-45.0)) *(CHT/3.0)**(0.3)),KCB+0.05)
+
+      END IF
+      IF (KCB .LE. KCBMIN) THEN
+         FC = 0.0
+      ELSE
+         FC = ((KCB-KCBMIN)/(KCMAX-KCBMIN))**(1.0+0.5*CANHT)
+      ENDIF
+      FW = 1.0
+      FEW = MIN(1.0-FC,FW)
+      KE = MAX(0.0, MIN(1.0*(KCMAX-KCB), FEW*KCMAX))
+      EO = (KCB + KE) * REFET
+      EO = MAX(EO,0.0001)
+      RETURN
+      END SUBROUTINE PETASCE

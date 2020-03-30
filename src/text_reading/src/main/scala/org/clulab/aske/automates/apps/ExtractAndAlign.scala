@@ -58,6 +58,10 @@ object ExtractAndAlign {
     // source code comments
     val commentDefinitionMentions = getCommentDefinitionMentions(commentReader, grfn, Some(variableShortNames))
 
+    for (cdm <- commentDefinitionMentions) {
+      println("===============\n" + "Comment mentions: " + cdm.text + "\nvariable: " + cdm.arguments(("variable") + "\ndefinition: " + cdm.arguments("definition") + "\n"))
+    }
+
     // svo groundings
     val definitionMentions = textMentions.filter(m => m.label matches "Definition")
 

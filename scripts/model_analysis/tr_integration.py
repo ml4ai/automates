@@ -15,8 +15,8 @@ def test_pdf_to_mentions():
         f"{webservice}/pdf_to_mentions",
         headers={"Content-type": "application/json"},
         json={
-            "pdf": f"{pet_docs}/petpt_2012.pdf",
-            "outfile": f"{cur_dir}/PT-mentions.json",
+            "pdf": f"{pet_docs}/petasce.pdf",
+            "outfile": f"{cur_dir}/ASCE-mentions.json",
         },
     )
     print(res)
@@ -35,9 +35,9 @@ def test_align():
         f"{webservice}/align",
         headers={"Content-type": "application/json"},
         json={
-            "mentions": f"{cur_dir}/PT-mentions.json",
-            "equations": f"{pet_eqns}/PETPT/PETPT_equations.txt",
-            "grfn": f"{cur_dir}/PETPT_GrFN.json",
+            "mentions": f"{cur_dir}/ASCE-mentions.json",
+            "equations": f"{pet_eqns}/PETASCE/PETASCE_equations.txt",
+            "grfn": f"{cur_dir}/PETASCE_GrFN.json",
         },
     )
     print(res)
@@ -50,15 +50,15 @@ def test_groundMentionsToSVO():
     res = requests.post(
         f"{webservice}/groundMentionsToSVO",
         headers={"Content-type": "application/json"},
-        json={"mentions": f"{cur_dir}/PT-mentions.json"},
+        json={"mentions": f"{cur_dir}/ASCE-mentions.json"},
     )
 
     print(res)
     json_dict = res.json()
-    json.dump(json_dict, open("PT-ground-SVO.json", "w"))
+    json.dump(json_dict, open("ASCE-ground-SVO.json", "w"))
 
 
 if __name__ == "__main__":
     # test_pdf_to_mentions()
-    test_align()
-    # test_groundMentionsToSVO()
+    # test_align()
+    test_groundMentionsToSVO()

@@ -1,0 +1,3790 @@
+{
+  "groundings": [
+    {
+      "variable": "E",
+      "groundings": [
+        {
+          "searchTerm": "None",
+          "osvTerm": "None",
+          "className": "None",
+          "score": []
+        }
+      ]
+    },
+    {
+      "variable": "eaf",
+      "groundings": [
+        {
+          "searchTerm": "model",
+          "osvTerm": "model",
+          "className": "Mathematical Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "model",
+          "className": "Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_clark_z_airfoil_model",
+          "className": "Assumption",
+          "score": [
+            0.14705882352941177
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_clark_z_airfoil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.14705882352941177
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_clark_y_airfoil_model",
+          "className": "Assumption",
+          "score": [
+            0.14705882352941177
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_clark_y_airfoil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.14705882352941177
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_clark_x_airfoil_model",
+          "className": "Assumption",
+          "score": [
+            0.14705882352941177
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_clark_x_airfoil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.14705882352941177
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_eppler_1200_airfoil_model",
+          "className": "Assumption",
+          "score": [
+            0.13157894736842105
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "model",
+          "osvTerm": "aerodynamics_eppler_1200_airfoil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.13157894736842105
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "s",
+      "groundings": [
+        {
+          "searchTerm": "None",
+          "osvTerm": "None",
+          "className": "None",
+          "score": []
+        }
+      ]
+    },
+    {
+      "variable": "˛b",
+      "groundings": [
+        {
+          "searchTerm": "function",
+          "osvTerm": "function",
+          "className": "Mathematical Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "function",
+          "className": "Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "analytic_function",
+          "className": "Assumption",
+          "score": [
+            0.47058823529411764
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "analytic_function",
+          "className": "Function-Type Assumptions",
+          "score": [
+            0.47058823529411764
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "bijective_function",
+          "className": "Assumption",
+          "score": [
+            0.4444444444444444
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "bijective_function",
+          "className": "Function-Type Assumptions",
+          "score": [
+            0.4444444444444444
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "beta_density_function",
+          "className": "Assumption",
+          "score": [
+            0.38095238095238093
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "beta_density_function",
+          "className": "Function-Type Assumptions",
+          "score": [
+            0.38095238095238093
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "chebyshev_polynomial_function",
+          "className": "Assumption",
+          "score": [
+            0.27586206896551724
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "function",
+          "osvTerm": "chebyshev_polynomial_function",
+          "className": "Function-Type Assumptions",
+          "score": [
+            0.27586206896551724
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "˛m",
+      "groundings": [
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "attenuation_coefficient",
+          "className": "Property",
+          "score": [
+            0.4782608695652174
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "evaporation rate",
+      "groundings": [
+        {
+          "searchTerm": "amount",
+          "osvTerm": "amount",
+          "className": "Standardized Property",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "amount",
+          "className": "Quantitative Property",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "amount",
+          "className": "Property",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "amount_concentration",
+          "className": "Property",
+          "score": [
+            0.3
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "amount-per-volume_capacity",
+          "className": "Standardized Property",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "amount-per-volume_capacity",
+          "className": "Quantitative Property",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "amount-per-volume_capacity",
+          "className": "Property",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "acid-neutralizing_amount-per-volume_capacity",
+          "className": "Standardized Property",
+          "score": [
+            0.13636363636363635
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "acid-neutralizing_amount-per-volume_capacity",
+          "className": "Quantitative Property",
+          "score": [
+            0.13636363636363635
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "amount",
+          "osvTerm": "acid-neutralizing_amount-per-volume_capacity",
+          "className": "Property",
+          "score": [
+            0.13636363636363635
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "Agric",
+      "groundings": [
+        {
+          "searchTerm": "rest",
+          "osvTerm": "rest",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "rest",
+          "osvTerm": "rest_mass",
+          "className": "Standardized Property",
+          "score": [
+            0.4444444444444444
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "rest",
+          "osvTerm": "rest_mass",
+          "className": "Quantitative Property",
+          "score": [
+            0.4444444444444444
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "rest",
+          "osvTerm": "rest_mass",
+          "className": "Property",
+          "score": [
+            0.4444444444444444
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "rest",
+          "osvTerm": "electron__rest_mass",
+          "className": "Variable",
+          "score": [
+            0.21052631578947367
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "Tc",
+      "groundings": [
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "crop@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.2826086956521739
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "crop@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.2826086956521739
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "vegetation@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.25
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "vegetation@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.25
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(crop_canopy)@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.23636363636363636
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(crop_canopy)@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.23636363636363636
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(land_surface)@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.23214285714285715
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(land_surface)@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.23214285714285715
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(vegetation_canopy)@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.21311475409836064
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(vegetation_canopy)@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.21311475409836064
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "y",
+      "groundings": [
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "plastic_material",
+          "className": "Assumption",
+          "score": [
+            0.4375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "plastic_material",
+          "className": "Material-Type Assumptions",
+          "score": [
+            0.4375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "mohr-coulomb-plastic",
+          "className": "Physical Abstraction",
+          "score": [
+            0.35
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "mohr-coulomb-plastic",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.35
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "mohr-coulomb-plastic",
+          "className": "Abstraction",
+          "score": [
+            0.35
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "bingham_plastic_fluid",
+          "className": "Assumption",
+          "score": [
+            0.3333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "bingham_plastic_fluid",
+          "className": "Fluid-Type Assumptions",
+          "score": [
+            0.3333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "material~mohr-coulomb-plastic",
+          "className": "Phenomenon",
+          "score": [
+            0.2413793103448276
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "(earth_mantle)@context~in_material~mohr-coulomb-plastic",
+          "className": "Phenomenon",
+          "score": [
+            0.12727272727272726
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "(earth_mantle)@context~in_material~mohr-coulomb-plastic",
+          "className": "Context Phenomenon",
+          "score": [
+            0.12727272727272726
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "Es",
+      "groundings": [
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_debruin_evaporation_model",
+          "className": "Assumption",
+          "score": [
+            0.3142857142857143
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_debruin_evaporation_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.3142857142857143
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_hargreaves_evaporation_model",
+          "className": "Assumption",
+          "score": [
+            0.2894736842105263
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_hargreaves_evaporation_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.2894736842105263
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_energy_balance_evaporation_model",
+          "className": "Assumption",
+          "score": [
+            0.2619047619047619
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_energy_balance_evaporation_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.2619047619047619
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_blaney_criddle_evaporation_model",
+          "className": "Assumption",
+          "score": [
+            0.2619047619047619
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_blaney_criddle_evaporation_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.2619047619047619
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_asce_standardized_evaporation_model",
+          "className": "Assumption",
+          "score": [
+            0.24444444444444444
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "evaporation",
+          "osvTerm": "hydrology_asce_standardized_evaporation_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.24444444444444444
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "RMSE",
+      "groundings": []
+    },
+    {
+      "variable": "Dinga",
+      "groundings": []
+    },
+    {
+      "variable": "t",
+      "groundings": [
+        {
+          "searchTerm": "None",
+          "osvTerm": "None",
+          "className": "None",
+          "score": []
+        }
+      ]
+    },
+    {
+      "variable": "nd",
+      "groundings": [
+        {
+          "searchTerm": "irrigation",
+          "osvTerm": "irrigation",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "irrigation",
+          "osvTerm": "irrigation_volume_flux",
+          "className": "Standardized Property",
+          "score": [
+            0.45454545454545453
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "irrigation",
+          "osvTerm": "irrigation_volume_flux",
+          "className": "Quantitative Property",
+          "score": [
+            0.45454545454545453
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "irrigation",
+          "osvTerm": "irrigation_volume_flux",
+          "className": "Property",
+          "score": [
+            0.45454545454545453
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "irrigation",
+          "osvTerm": "soil_surface_water__irrigation_volume_flux",
+          "className": "Variable",
+          "score": [
+            0.23809523809523808
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "irrigation",
+          "osvTerm": "(soil_surface)@role~sink_water@role~main_irrigation",
+          "className": "Phenomenon",
+          "score": [
+            0.19607843137254902
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "irrigation",
+          "osvTerm": "(soil_surface)@role~sink_water@role~main_irrigation",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.19607843137254902
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "REW",
+      "groundings": [
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_sea_water_and_air",
+          "className": "Assumption",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_sea_water_and_air",
+          "className": "CF Convention Standard Name Assumptions",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_air_and_sea_water",
+          "className": "Assumption",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_air_and_sea_water",
+          "className": "CF Convention Standard Name Assumptions",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "deep_water_wave_approximation",
+          "className": "Assumption",
+          "score": [
+            0.1724137931034483
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "deep_water_wave_approximation",
+          "className": "Approximations",
+          "score": [
+            0.1724137931034483
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_liquid_water_equivalent",
+          "className": "Assumption",
+          "score": [
+            0.15151515151515152
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_liquid_water_equivalent",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.15151515151515152
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_thornthwaite_water_balance_model",
+          "className": "Assumption",
+          "score": [
+            0.11904761904761904
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_thornthwaite_water_balance_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.11904761904761904
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "re",
+      "groundings": [
+        {
+          "searchTerm": "management",
+          "osvTerm": "management",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "ation",
+      "groundings": []
+    },
+    {
+      "variable": "SD",
+      "groundings": [
+        {
+          "searchTerm": "standard_deviation",
+          "osvTerm": "standard_deviation",
+          "className": "Operator",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "deviation",
+          "osvTerm": "deviation",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "deviation",
+          "osvTerm": "standard_deviation",
+          "className": "Operator",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "f",
+      "groundings": [
+        {
+          "searchTerm": "slope",
+          "osvTerm": "d8_slope",
+          "className": "Standardized Property",
+          "score": [
+            0.625
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "d8_slope",
+          "className": "Quantitative Property",
+          "score": [
+            0.625
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "d8_slope",
+          "className": "Property",
+          "score": [
+            0.625
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "d-infinity_slope",
+          "className": "Standardized Property",
+          "score": [
+            0.3125
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "d-infinity_slope",
+          "className": "Quantitative Property",
+          "score": [
+            0.3125
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "d-infinity_slope",
+          "className": "Property",
+          "score": [
+            0.3125
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "downstream_hydraulic_geometry_slope-vs-discharge_exponent",
+          "className": "Property",
+          "score": [
+            0.08771929824561403
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "downstream_hydraulic_geometry_slope-vs-discharge_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.08333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "downstream_hydraulic_geometry_slope-vs-discharge_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.08333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "slope",
+          "osvTerm": "downstream_hydraulic_geometry_slope-vs-discharge_coefficient",
+          "className": "Property",
+          "score": [
+            0.08333333333333333
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "eld",
+      "groundings": []
+    },
+    {
+      "variable": "F",
+      "groundings": [
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "amount-per-volume_capacity",
+          "className": "Property",
+          "score": [
+            0.3076923076923077
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_mass-per-time_capacity",
+          "className": "Standardized Property",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_mass-per-time_capacity",
+          "className": "Quantitative Property",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_mass-per-time_capacity",
+          "className": "Property",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_mass-per-volume_capacity",
+          "className": "Standardized Property",
+          "score": [
+            0.19047619047619047
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_mass-per-volume_capacity",
+          "className": "Quantitative Property",
+          "score": [
+            0.19047619047619047
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_mass-per-volume_capacity",
+          "className": "Property",
+          "score": [
+            0.19047619047619047
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_amount-per-volume_capacity",
+          "className": "Standardized Property",
+          "score": [
+            0.18181818181818182
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_amount-per-volume_capacity",
+          "className": "Quantitative Property",
+          "score": [
+            0.18181818181818182
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "capacity",
+          "osvTerm": "acid-neutralizing_amount-per-volume_capacity",
+          "className": "Property",
+          "score": [
+            0.18181818181818182
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "fG",
+      "groundings": [
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "fraction",
+          "className": "Operator",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "area_fraction",
+          "className": "Standardized Property",
+          "score": [
+            0.6153846153846154
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "area_fraction",
+          "className": "Quantitative Property",
+          "score": [
+            0.6153846153846154
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "area_fraction",
+          "className": "Property",
+          "score": [
+            0.6153846153846154
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "amount_fraction",
+          "className": "Standardized Property",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "amount_fraction",
+          "className": "Quantitative Property",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "amount_fraction",
+          "className": "Property",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "application_reduced_cost_fraction",
+          "className": "Standardized Property",
+          "score": [
+            0.24242424242424243
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "application_reduced_cost_fraction",
+          "className": "Quantitative Property",
+          "score": [
+            0.24242424242424243
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "application_reduced_cost_fraction",
+          "className": "Property",
+          "score": [
+            0.24242424242424243
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "e.g",
+      "groundings": [
+        {
+          "searchTerm": "management",
+          "osvTerm": "management",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "fm",
+      "groundings": []
+    },
+    {
+      "variable": "A",
+      "groundings": []
+    },
+    {
+      "variable": "a",
+      "groundings": [
+        {
+          "searchTerm": "aerodynamic_conductance",
+          "osvTerm": "aerodynamic_conductance",
+          "className": "Standardized Property",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "aerodynamic_conductance",
+          "osvTerm": "aerodynamic_conductance",
+          "className": "Quantitative Property",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "aerodynamic_conductance",
+          "osvTerm": "aerodynamic_conductance",
+          "className": "Property",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "conductance",
+          "osvTerm": "aerodynamic_conductance",
+          "className": "Standardized Property",
+          "score": [
+            0.4782608695652174
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "conductance",
+          "osvTerm": "aerodynamic_conductance",
+          "className": "Quantitative Property",
+          "score": [
+            0.4782608695652174
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "conductance",
+          "osvTerm": "aerodynamic_conductance",
+          "className": "Property",
+          "score": [
+            0.4782608695652174
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "conductance",
+          "osvTerm": "bulk_aerodynamic_conductance",
+          "className": "Standardized Property",
+          "score": [
+            0.39285714285714285
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "conductance",
+          "osvTerm": "bulk_aerodynamic_conductance",
+          "className": "Quantitative Property",
+          "score": [
+            0.39285714285714285
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "conductance",
+          "osvTerm": "bulk_aerodynamic_conductance",
+          "className": "Property",
+          "score": [
+            0.39285714285714285
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "conductance",
+          "osvTerm": "bulk_mass_aerodynamic_conductance",
+          "className": "Property",
+          "score": [
+            0.3333333333333333
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "m3REW",
+      "groundings": [
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "attenuation_coefficient",
+          "className": "Property",
+          "score": [
+            0.4782608695652174
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "m",
+      "groundings": [
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "angular_velocity",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "angular_velocity",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "angular_velocity",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "azimuth_angle_of_group_velocity",
+          "className": "Property",
+          "score": [
+            0.25806451612903225
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "azimuth_angle_of_darcy_velocity",
+          "className": "Standardized Property",
+          "score": [
+            0.25806451612903225
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "azimuth_angle_of_darcy_velocity",
+          "className": "Quantitative Property",
+          "score": [
+            0.25806451612903225
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "azimuth_angle_of_darcy_velocity",
+          "className": "Property",
+          "score": [
+            0.25806451612903225
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "azimuth_angle_of_bolus_velocity",
+          "className": "Standardized Property",
+          "score": [
+            0.25806451612903225
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "azimuth_angle_of_bolus_velocity",
+          "className": "Quantitative Property",
+          "score": [
+            0.25806451612903225
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "velocity",
+          "osvTerm": "azimuth_angle_of_bolus_velocity",
+          "className": "Property",
+          "score": [
+            0.25806451612903225
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "sugi",
+      "groundings": []
+    },
+    {
+      "variable": "mulch",
+      "groundings": [
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "plastic_material",
+          "className": "Assumption",
+          "score": [
+            0.4375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "plastic_material",
+          "className": "Material-Type Assumptions",
+          "score": [
+            0.4375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "mohr-coulomb-plastic",
+          "className": "Physical Abstraction",
+          "score": [
+            0.35
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "mohr-coulomb-plastic",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.35
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "mohr-coulomb-plastic",
+          "className": "Abstraction",
+          "score": [
+            0.35
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "bingham_plastic_fluid",
+          "className": "Assumption",
+          "score": [
+            0.3333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "bingham_plastic_fluid",
+          "className": "Fluid-Type Assumptions",
+          "score": [
+            0.3333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "material~mohr-coulomb-plastic",
+          "className": "Phenomenon",
+          "score": [
+            0.2413793103448276
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "(earth_mantle)@context~in_material~mohr-coulomb-plastic",
+          "className": "Phenomenon",
+          "score": [
+            0.12727272727272726
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "plastic",
+          "osvTerm": "(earth_mantle)@context~in_material~mohr-coulomb-plastic",
+          "className": "Context Phenomenon",
+          "score": [
+            0.12727272727272726
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "m1",
+      "groundings": [
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_c_parameter",
+          "className": "Standardized Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_c_parameter",
+          "className": "Quantitative Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_c_parameter",
+          "className": "Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_b_parameter",
+          "className": "Standardized Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_b_parameter",
+          "className": "Quantitative Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_b_parameter",
+          "className": "Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_a_parameter",
+          "className": "Standardized Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_a_parameter",
+          "className": "Quantitative Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "antoine-vapor-pressure_a_parameter",
+          "className": "Property",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "parameter",
+          "osvTerm": "ashton-et-al_approach_angle_asymmetry_parameter",
+          "className": "Property",
+          "score": [
+            0.19148936170212766
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "ge",
+      "groundings": []
+    },
+    {
+      "variable": "elow",
+      "groundings": []
+    },
+    {
+      "variable": "Rev.",
+      "groundings": [
+        {
+          "searchTerm": "weather",
+          "osvTerm": "weather",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "weather-station",
+          "className": "Spatial Phenomenon",
+          "score": [
+            0.4666666666666667
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "weather-station",
+          "className": "Phenomenon",
+          "score": [
+            0.4666666666666667
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "weather-station",
+          "className": "Body",
+          "score": [
+            0.4666666666666667
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "weather-station__latitude",
+          "className": "Variable",
+          "score": [
+            0.28
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "weather-station__longitude",
+          "className": "Variable",
+          "score": [
+            0.2692307692307692
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "basin~drainage_weather-station__count",
+          "className": "Variable",
+          "score": [
+            0.1891891891891892
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "weather-station__identification_number",
+          "className": "Variable",
+          "score": [
+            0.18421052631578946
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "basin~drainage@context~in_weather-station",
+          "className": "Phenomenon",
+          "score": [
+            0.17073170731707318
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "weather",
+          "osvTerm": "basin~drainage@context~in_weather-station",
+          "className": "Context Phenomenon",
+          "score": [
+            0.17073170731707318
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "al",
+      "groundings": []
+    },
+    {
+      "variable": "VPD",
+      "groundings": []
+    },
+    {
+      "variable": "Cc",
+      "groundings": [
+        {
+          "searchTerm": "stage",
+          "osvTerm": "stage",
+          "className": "Property Standardization",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "stage",
+          "className": "Property",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "stage",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "stage_height",
+          "className": "Standardized Property",
+          "score": [
+            0.4166666666666667
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "stage_height",
+          "className": "Quantitative Property",
+          "score": [
+            0.4166666666666667
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "stage_height",
+          "className": "Property",
+          "score": [
+            0.4166666666666667
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "phenological_stage",
+          "className": "Standardized Property",
+          "score": [
+            0.2777777777777778
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "phenological_stage",
+          "className": "Quantitative Property",
+          "score": [
+            0.2777777777777778
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "phenological_stage",
+          "className": "Property",
+          "score": [
+            0.2777777777777778
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "stage",
+          "osvTerm": "stage_severity_code",
+          "className": "Property",
+          "score": [
+            0.2631578947368421
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "Rana",
+      "groundings": [
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "crop@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.2826086956521739
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "crop@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.2826086956521739
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "vegetation@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.25
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "vegetation@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.25
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(crop_canopy)@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.23636363636363636
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(crop_canopy)@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.23636363636363636
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(land_surface)@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.23214285714285715
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(land_surface)@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.23214285714285715
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(vegetation_canopy)@role~source_water@role~main_transpiration",
+          "className": "Phenomenon",
+          "score": [
+            0.21311475409836064
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "transpiration",
+          "osvTerm": "(vegetation_canopy)@role~source_water@role~main_transpiration",
+          "className": "Compound Phenomenon",
+          "score": [
+            0.21311475409836064
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "Se",
+      "groundings": [
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "saturation",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "at_saturation",
+          "className": "Assumption",
+          "score": [
+            0.7692307692307693
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "at_saturation",
+          "className": "CF Convention Standard Name Assumptions",
+          "score": [
+            0.7692307692307693
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "specific_saturation",
+          "className": "Standardized Property",
+          "score": [
+            0.5263157894736842
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "specific_saturation",
+          "className": "Quantitative Property",
+          "score": [
+            0.5263157894736842
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "specific_saturation",
+          "className": "Property",
+          "score": [
+            0.5263157894736842
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "max_of_relative_saturation",
+          "className": "Standardized Property",
+          "score": [
+            0.38461538461538464
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "max_of_relative_saturation",
+          "className": "Quantitative Property",
+          "score": [
+            0.38461538461538464
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "saturation",
+          "osvTerm": "max_of_relative_saturation",
+          "className": "Property",
+          "score": [
+            0.38461538461538464
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "G",
+      "groundings": [
+        {
+          "searchTerm": "energy",
+          "osvTerm": "energy_conserved",
+          "className": "Assumption",
+          "score": [
+            0.375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "energy_conserved",
+          "className": "Conserved Quantity Assumptions",
+          "score": [
+            0.375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "conservation_of_energy_law",
+          "className": "Assumption",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "conservation_of_energy_law",
+          "className": "Equations, Laws and Principles",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "cosmology_dark_energy_model",
+          "className": "Assumption",
+          "score": [
+            0.2222222222222222
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "cosmology_dark_energy_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.2222222222222222
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "hydrology_energy_balance_snowmelt_model",
+          "className": "Assumption",
+          "score": [
+            0.15384615384615385
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "hydrology_energy_balance_snowmelt_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.15384615384615385
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "hydrology_energy_balance_evaporation_model",
+          "className": "Assumption",
+          "score": [
+            0.14285714285714285
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "energy",
+          "osvTerm": "hydrology_energy_balance_evaporation_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.14285714285714285
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "˛s0",
+      "groundings": [
+        {
+          "searchTerm": "value",
+          "osvTerm": "generalized_extreme_value_distribution",
+          "className": "Assumption",
+          "score": [
+            0.13157894736842105
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "value",
+          "osvTerm": "generalized_extreme_value_distribution",
+          "className": "Probability Distributions",
+          "score": [
+            0.13157894736842105
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "L",
+      "groundings": [
+        {
+          "searchTerm": "None",
+          "osvTerm": "None",
+          "className": "None",
+          "score": []
+        }
+      ]
+    },
+    {
+      "variable": "˛s",
+      "groundings": [
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "activity_coefficient",
+          "className": "Property",
+          "score": [
+            0.55
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "reflection_coefficient",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "absorption_coefficient",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "coefficient",
+          "osvTerm": "attenuation_coefficient",
+          "className": "Property",
+          "score": [
+            0.4782608695652174
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "elds",
+      "groundings": []
+    },
+    {
+      "variable": "P",
+      "groundings": []
+    },
+    {
+      "variable": "kPa",
+      "groundings": []
+    },
+    {
+      "variable": "Rn",
+      "groundings": [
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_deep_snow",
+          "className": "Assumption",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_deep_snow",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_clear_sky",
+          "className": "Assumption",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_clear_sky",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.2647058823529412
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_boussinesq_approximation",
+          "className": "Assumption",
+          "score": [
+            0.1836734693877551
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_boussinesq_approximation",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.1836734693877551
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_horizontal_plane_topography",
+          "className": "Assumption",
+          "score": [
+            0.17307692307692307
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_horizontal_plane_topography",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.17307692307692307
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_brutsaert_saturated_vapor_pressure_model",
+          "className": "Assumption",
+          "score": [
+            0.13846153846153847
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "radiation",
+          "osvTerm": "atmosphere-and-radiation_brutsaert_saturated_vapor_pressure_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.13846153846153847
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "PT",
+      "groundings": [
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "taylor_couette_flow",
+          "className": "Assumption",
+          "score": [
+            0.2631578947368421
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "taylor_couette_flow",
+          "className": "Flow-Type Assumptions",
+          "score": [
+            0.2631578947368421
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "fluid-dynamics_taylor_dean_flow_model",
+          "className": "Assumption",
+          "score": [
+            0.13513513513513514
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "fluid-dynamics_taylor_dean_flow_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.13513513513513514
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "fluid-dynamics_taylor_green_vortex_model",
+          "className": "Assumption",
+          "score": [
+            0.125
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "fluid-dynamics_taylor_green_vortex_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.125
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "fluid-dynamics_taylor_couette_flow_model",
+          "className": "Assumption",
+          "score": [
+            0.125
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "fluid-dynamics_taylor_couette_flow_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.125
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "hydrology_priestley_taylor_evaporation_model",
+          "className": "Assumption",
+          "score": [
+            0.11363636363636363
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Taylor",
+          "osvTerm": "hydrology_priestley_taylor_evaporation_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.11363636363636363
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "gc",
+      "groundings": [
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "canopy",
+          "className": "Part",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "canopy",
+          "className": "Spatial Phenomenon",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "canopy",
+          "className": "Phenomenon",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "canopy",
+          "className": "Body",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "crop_canopy",
+          "className": "Phenomenon",
+          "score": [
+            0.5454545454545454
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "vegetation_canopy",
+          "className": "Spatial Phenomenon",
+          "score": [
+            0.35294117647058826
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "vegetation_canopy",
+          "className": "Phenomenon",
+          "score": [
+            0.35294117647058826
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "vegetation_canopy",
+          "className": "Body",
+          "score": [
+            0.35294117647058826
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "atmosphere_bottom_air_canopy__brutsaert_emissivity_factor",
+          "className": "Variable",
+          "score": [
+            0.10526315789473684
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "canopy",
+          "osvTerm": "crop_canopy_radiation~solar__interception_energy_flux_fraction",
+          "className": "Variable",
+          "score": [
+            0.0967741935483871
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "ystem",
+      "groundings": []
+    },
+    {
+      "variable": "ier",
+      "groundings": []
+    },
+    {
+      "variable": "Ta",
+      "groundings": [
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "potential-temperature",
+          "className": "Attribute",
+          "score": [
+            0.5238095238095238
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "temperature_derivative",
+          "className": "Operator",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "adiabatic_temperature_lapse_rate",
+          "className": "Quantitative Property",
+          "score": [
+            0.34375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "adiabatic_temperature_lapse_rate",
+          "className": "Property",
+          "score": [
+            0.34375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "isosurface~potential-temperature",
+          "className": "Physical Abstraction",
+          "score": [
+            0.34375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "isosurface~potential-temperature",
+          "className": "Part",
+          "score": [
+            0.34375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "isosurface~potential-temperature",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.34375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "isosurface~potential-temperature",
+          "className": "Abstraction",
+          "score": [
+            0.34375
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "atmosphere-and-radiation_standard_temperature",
+          "className": "Assumption",
+          "score": [
+            0.24444444444444444
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "temperature",
+          "osvTerm": "atmosphere-and-radiation_standard_temperature",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.24444444444444444
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "3D",
+      "groundings": [
+        {
+          "searchTerm": "response",
+          "osvTerm": "response",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "response-filter",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "response-filter",
+          "className": "Abstraction",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "instrument@context~part_response-filter",
+          "className": "Phenomenon",
+          "score": [
+            0.20512820512820512
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "instrument@context~part_response-filter",
+          "className": "Context Phenomenon",
+          "score": [
+            0.20512820512820512
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "station~seismic@context~part_(instrument@context~part_response-filter)",
+          "className": "Phenomenon",
+          "score": [
+            0.11428571428571428
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "station~seismic@context~part_(instrument@context~part_response-filter)",
+          "className": "Context Phenomenon",
+          "score": [
+            0.11428571428571428
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "(earth_surface)@context~on_(station~seismic@context~part_(instrument@context~part_response-filter))",
+          "className": "Phenomenon",
+          "score": [
+            0.08080808080808081
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "response",
+          "osvTerm": "(earth_surface)@context~on_(station~seismic@context~part_(instrument@context~part_response-filter))",
+          "className": "Context Phenomenon",
+          "score": [
+            0.08080808080808081
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "c",
+      "groundings": [
+        {
+          "searchTerm": "value",
+          "osvTerm": "generalized_extreme_value_distribution",
+          "className": "Assumption",
+          "score": [
+            0.13157894736842105
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "value",
+          "osvTerm": "generalized_extreme_value_distribution",
+          "className": "Probability Distributions",
+          "score": [
+            0.13157894736842105
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "W",
+      "groundings": [
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_sea_water_and_air",
+          "className": "Assumption",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_sea_water_and_air",
+          "className": "CF Convention Standard Name Assumptions",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_air_and_sea_water",
+          "className": "Assumption",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "between_air_and_sea_water",
+          "className": "CF Convention Standard Name Assumptions",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "deep_water_wave_approximation",
+          "className": "Assumption",
+          "score": [
+            0.1724137931034483
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "deep_water_wave_approximation",
+          "className": "Approximations",
+          "score": [
+            0.1724137931034483
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_liquid_water_equivalent",
+          "className": "Assumption",
+          "score": [
+            0.15151515151515152
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_liquid_water_equivalent",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.15151515151515152
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_thornthwaite_water_balance_model",
+          "className": "Assumption",
+          "score": [
+            0.11904761904761904
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "water",
+          "osvTerm": "hydrology_thornthwaite_water_balance_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.11904761904761904
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "˛c",
+      "groundings": [
+        {
+          "searchTerm": "transpire",
+          "osvTerm": "transpire",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "RE",
+      "groundings": [
+        {
+          "searchTerm": "error",
+          "osvTerm": "error",
+          "className": "Operator",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "error",
+          "osvTerm": "counting_error",
+          "className": "Operator",
+          "score": [
+            0.35714285714285715
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "h",
+      "groundings": [
+        {
+          "searchTerm": "None",
+          "osvTerm": "None",
+          "className": "None",
+          "score": []
+        }
+      ]
+    },
+    {
+      "variable": "r",
+      "groundings": [
+        {
+          "searchTerm": "content",
+          "osvTerm": "cold_content",
+          "className": "Standardized Property",
+          "score": [
+            0.5833333333333334
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "cold_content",
+          "className": "Quantitative Property",
+          "score": [
+            0.5833333333333334
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "cold_content",
+          "className": "Property",
+          "score": [
+            0.5833333333333334
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "energy_content",
+          "className": "Standardized Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "energy_content",
+          "className": "Quantitative Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "energy_content",
+          "className": "Property",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "energy-per-area_content",
+          "className": "Standardized Property",
+          "score": [
+            0.30434782608695654
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "energy-per-area_content",
+          "className": "Quantitative Property",
+          "score": [
+            0.30434782608695654
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "energy-per-area_content",
+          "className": "Property",
+          "score": [
+            0.30434782608695654
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "content",
+          "osvTerm": "heat-content_temperature",
+          "className": "Property",
+          "score": [
+            0.2916666666666667
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "LAI",
+      "groundings": [
+        {
+          "searchTerm": "area_index",
+          "osvTerm": "leaf-area_index",
+          "className": "Standardized Property",
+          "score": [
+            0.6666666666666666
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "area_index",
+          "osvTerm": "leaf-area_index",
+          "className": "Quantitative Property",
+          "score": [
+            0.6666666666666666
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "area_index",
+          "osvTerm": "leaf-area_index",
+          "className": "Property",
+          "score": [
+            0.6666666666666666
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "index",
+          "osvTerm": "consumer_price_index",
+          "className": "Property",
+          "score": [
+            0.25
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "index",
+          "osvTerm": "atterberg_activity_index",
+          "className": "Standardized Property",
+          "score": [
+            0.20833333333333334
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "index",
+          "osvTerm": "atterberg_activity_index",
+          "className": "Quantitative Property",
+          "score": [
+            0.20833333333333334
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "index",
+          "osvTerm": "atterberg_activity_index",
+          "className": "Property",
+          "score": [
+            0.20833333333333334
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "index",
+          "osvTerm": "atterberg_liquidity_index",
+          "className": "Standardized Property",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "index",
+          "osvTerm": "atterberg_liquidity_index",
+          "className": "Quantitative Property",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "index",
+          "osvTerm": "atterberg_liquidity_index",
+          "className": "Property",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "w",
+      "groundings": [
+        {
+          "searchTerm": "point",
+          "osvTerm": "point",
+          "className": "Mathematical Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "point",
+          "className": "Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "point-set",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.5555555555555556
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "point-set",
+          "className": "Abstraction",
+          "score": [
+            0.5555555555555556
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "fixed_point",
+          "className": "Assumption",
+          "score": [
+            0.45454545454545453
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "fixed_point",
+          "className": "Mathematical Assumptions",
+          "score": [
+            0.45454545454545453
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "cox_point_process",
+          "className": "Assumption",
+          "score": [
+            0.29411764705882354
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "cox_point_process",
+          "className": "Stochastic Model Assumptions",
+          "score": [
+            0.29411764705882354
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "five-point_stencil_method",
+          "className": "Assumption",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "point",
+          "osvTerm": "five-point_stencil_method",
+          "className": "Numerical Method Assumptions",
+          "score": [
+            0.2
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "fs",
+      "groundings": [
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "fraction",
+          "className": "Operator",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "area_fraction",
+          "className": "Standardized Property",
+          "score": [
+            0.6153846153846154
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "area_fraction",
+          "className": "Quantitative Property",
+          "score": [
+            0.6153846153846154
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "area_fraction",
+          "className": "Property",
+          "score": [
+            0.6153846153846154
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "amount_fraction",
+          "className": "Standardized Property",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "amount_fraction",
+          "className": "Quantitative Property",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "amount_fraction",
+          "className": "Property",
+          "score": [
+            0.5333333333333333
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "application_reduced_cost_fraction",
+          "className": "Standardized Property",
+          "score": [
+            0.24242424242424243
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "application_reduced_cost_fraction",
+          "className": "Quantitative Property",
+          "score": [
+            0.24242424242424243
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "fraction",
+          "osvTerm": "application_reduced_cost_fraction",
+          "className": "Property",
+          "score": [
+            0.24242424242424243
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "Rns",
+      "groundings": [
+        {
+          "searchTerm": "soil_surface",
+          "osvTerm": "soil_surface",
+          "className": "Phenomenon",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "surface",
+          "className": "Mathematical Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "surface",
+          "className": "Abstraction",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "sphere_surface",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "sphere_surface",
+          "className": "Abstraction",
+          "score": [
+            0.5
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "grid_cell_surface",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.4117647058823529
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "grid_cell_surface",
+          "className": "Abstraction",
+          "score": [
+            0.4117647058823529
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "grid_cell~dual_surface",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.3181818181818182
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "grid_cell~dual_surface",
+          "className": "Abstraction",
+          "score": [
+            0.3181818181818182
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "surface",
+          "osvTerm": "grid_cell~primary_surface",
+          "className": "Mathematical Abstraction",
+          "score": [
+            0.28
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "ET",
+      "groundings": [
+        {
+          "searchTerm": "estimation",
+          "osvTerm": "estimation",
+          "className": "Process",
+          "score": [
+            1
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "S.",
+      "groundings": []
+    },
+    {
+      "variable": "cm3",
+      "groundings": [
+        {
+          "searchTerm": "soil",
+          "osvTerm": "soil~moist_layer",
+          "className": "Phenomenon",
+          "score": [
+            0.25
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "soil~moist_layer",
+          "className": "Body",
+          "score": [
+            0.25
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_darcy_soil_model",
+          "className": "Assumption",
+          "score": [
+            0.15384615384615385
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_darcy_soil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.15384615384615385
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_brooks_corey_soil_model",
+          "className": "Assumption",
+          "score": [
+            0.12121212121212122
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_brooks_corey_soil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.12121212121212122
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_van_genuchten_soil_model",
+          "className": "Assumption",
+          "score": [
+            0.11764705882352941
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_van_genuchten_soil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.11764705882352941
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_transitional_brooks_corey_soil_model",
+          "className": "Assumption",
+          "score": [
+            0.08695652173913043
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "soil",
+          "osvTerm": "hydrology_transitional_brooks_corey_soil_model",
+          "className": "Named Model-Type Assumptions",
+          "score": [
+            0.08695652173913043
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "o",
+      "groundings": [
+        {
+          "searchTerm": "Agricultural",
+          "osvTerm": "agricultural",
+          "className": "Attribute",
+          "score": [
+            0.9166666666666666
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Forest",
+          "osvTerm": "forest",
+          "className": "Phenomenon",
+          "score": [
+            0.8333333333333334
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Agricultural",
+          "osvTerm": "land~agricultural",
+          "className": "Spatial Phenomenon",
+          "score": [
+            0.6470588235294118
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Agricultural",
+          "osvTerm": "land~agricultural",
+          "className": "Phenomenon",
+          "score": [
+            0.6470588235294118
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Agricultural",
+          "osvTerm": "land~agricultural",
+          "className": "Body",
+          "score": [
+            0.6470588235294118
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Agricultural",
+          "osvTerm": "region~state@medium_land~agricultural",
+          "className": "Phenomenon",
+          "score": [
+            0.2972972972972973
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Agricultural",
+          "osvTerm": "region~state@medium_land~agricultural",
+          "className": "Medium Phenomenon",
+          "score": [
+            0.2972972972972973
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "Agricultural",
+          "osvTerm": "region_state_land~agricultural__area_fraction",
+          "className": "Variable",
+          "score": [
+            0.24444444444444444
+          ],
+          "source": "SVO"
+        }
+      ]
+    },
+    {
+      "variable": "EC",
+      "groundings": []
+    },
+    {
+      "variable": "fsw",
+      "groundings": [
+        {
+          "searchTerm": "factor",
+          "osvTerm": "anisotropy_factor",
+          "className": "Standardized Property",
+          "score": [
+            0.35294117647058826
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "anisotropy_factor",
+          "className": "Quantitative Property",
+          "score": [
+            0.35294117647058826
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "anisotropy_factor",
+          "className": "Property",
+          "score": [
+            0.35294117647058826
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "area-diameter_shape_factor",
+          "className": "Standardized Property",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "area-diameter_shape_factor",
+          "className": "Quantitative Property",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "area-diameter_shape_factor",
+          "className": "Property",
+          "score": [
+            0.23076923076923078
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "brutsaert_emissivity_factor",
+          "className": "Property",
+          "score": [
+            0.2222222222222222
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "area-perimeter_shape_factor",
+          "className": "Standardized Property",
+          "score": [
+            0.2222222222222222
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "area-perimeter_shape_factor",
+          "className": "Quantitative Property",
+          "score": [
+            0.2222222222222222
+          ],
+          "source": "SVO"
+        },
+        {
+          "searchTerm": "factor",
+          "osvTerm": "area-perimeter_shape_factor",
+          "className": "Property",
+          "score": [
+            0.2222222222222222
+          ],
+          "source": "SVO"
+        }
+      ]
+    }
+  ]
+}
