@@ -210,7 +210,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       numAlignments,
       numAlignmentsSrcToComment,
       scoreThreshold,
-      svo_file
+      Some(svo_file)
     )
     // FIXME: add a conversion method for ujson <--> play json
     val groundedGrfnAsString = ujson.write(groundedGrfn)
