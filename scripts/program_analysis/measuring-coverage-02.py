@@ -40,6 +40,24 @@ assert sys.version_info.major == 3 and sys.version_info.minor in (6, 7)
 
 FORTRAN_EXTENSIONS = {".f", ".f90", ".for"}
 
+# ------------------------------------------------------------------------------
+# HACK
+# ------------------------------------------------------------------------------
+
+# Global to keep track of file with largest number of lines
+LINES_MAX = 0
+LINES_MAX_FILE = ''
+
+LINES_MIN = 99999999999
+LINES_MIN_FILE = ''
+
+LINES_MAX_DSSAT = 9327
+
+# ------------------------------------------------------------------------------
+# END HACK
+# ------------------------------------------------------------------------------
+
+
 ################################################################################
 #                                                                              #
 #                                SYNTAX MATCHING                               #
@@ -277,7 +295,13 @@ def process_dir(dirname, G):
     """
         This function recursively processes all the contents of a single
         directory
+
+        TODO: Currently has bug where nfiles returns 0
     """
+
+    # TODO HACK
+    global LINES_MAX, LINES_MIN, LINES_MAX_FILE, LINES_MIN_FILE
+
     # Variable initializations
     unhandled_keywds, unhandled_lines = {}, set()
     file_map = {}
@@ -347,7 +371,18 @@ def process_dir(dirname, G):
                     matplotlib.colors.rgb2hex(cm.Greens(pct_handled/100.0))
                 )
 
-                G.add_node(fname, style="filled", fontcolor="white", fillcolor=color)
+                # TODO HACK: finding the file with the largest number of lines
+                if ftot > LINES_MAX:
+                    LINES_MAX = ftot
+                    LINES_MAX_FILE = fname
+                if ftot < LINES_MIN:
+                    LINES_MIN = ftot
+                    LINES_MIN_FILE = fname
+
+                node_size = 100 * (ftot / LINES_MAX_DSSAT)
+                G.add_node(fname, size=node_size, shape='ellipse', style="filled", fontcolor="white", fillcolor=color)
+                # G.add_node(fname, style="filled", fontcolor="white", fillcolor=color)
+
                 file_map[fname] = {
                     "Total number of lines": ftot,
                     "Number of lines handled": fhandled,
@@ -441,4 +476,10 @@ if __name__ == "__main__":
     # with open("coverage_file_map.json", "w") as fp:
         # json.dump(coverage_results_dict, fp, indent=4)
 
+    # TODO: Hack to work around nfile (first value in _result_ from process_dir()) ending up as 0.
+    temp_nfile = [results[0]]
+    results = tuple([G.number_of_nodes(), *results[1:]])
     print_results(results)
+    print(f'TODO BUG (nfile returning 0): nfile= {temp_nfile}')
+    print(f'LINES_MIN: {LINES_MIN_FILE} {LINES_MIN}')
+    print(f'LINES_MAX: {LINES_MAX_FILE} {LINES_MAX}')
