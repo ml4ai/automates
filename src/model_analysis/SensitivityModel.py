@@ -6,8 +6,9 @@ from model_analysis.visualization import SensitivityVisualizer
 
 
 class SensitivityModel(object):
-    def __init__(self, model, bounds, sample_list, method):
+    def __init__(self, model: GrFN, bounds, sample_list, method, model_name = "model"):
         self.model = model
+        self.model_name = model_name
         self.B = bounds
         self.sample_list = sample_list
         self.method = method
@@ -33,26 +34,17 @@ class SensitivityModel(object):
 
     def sensitivity(self, N):
 
-        if self.model == "PETASCE":
-            tG = GrFN.from_fortran_file(
-                f"../tests/data/program_analysis/{self.model}_simple.for"
-            )
-        else:
-            tG = GrFN.from_fortran_file(
-                f"../tests/data/program_analysis/{self.model}.for"
-            )
-
         if self.method == "Sobol":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
-                N, tG, self.B, save_time=True
+                N, self.model, self.B, save_time=True
             )
         elif self.method == "FAST":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_FAST(
-                N, tG, self.B, save_time=True
+                N, self.model, self.B, save_time=True
             )
         elif self.method == "RBD FAST":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_RBD_FAST(
-                N, tG, self.B, save_time=True
+                N, self.model, self.B, save_time=True
             )
         else:
             print("Method not known!")
@@ -62,7 +54,7 @@ class SensitivityModel(object):
 
         return sobol_dict.__dict__, sample_time, exec_time, analysis_time
 
-    def generate_dataframe(self, decimal=2):
+    def generate_dataframes(self, decimal=2):
 
         i = len(self.sample_list) - 1
         N = self.sample_list[i]
@@ -72,10 +64,10 @@ class SensitivityModel(object):
         ST_max = dict(zip(var_names, Si["OT_indices"].tolist()))
 
         df_S1 = pd.DataFrame.from_dict(
-            S1_max, orient="index", columns=[self.model]
+            S1_max, orient="index", columns=[self.model_name]
         )
         df_ST = pd.DataFrame.from_dict(
-            ST_max, orient="index", columns=[self.model]
+            ST_max, orient="index", columns=[self.model_name]
         )
 
         df_S1 = df_S1.round(decimal).T
