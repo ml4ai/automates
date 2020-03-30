@@ -210,18 +210,24 @@ object ExtractAndAlign {
 
     // Repeat for text variables
     linkElements(TEXT) = textDefinitionMentions.map { mention =>
+      val docId = mention.document.id.getOrElse("unk_text_file")
+      val sent = mention.sentence
+      val offsets = mention.tokenInterval.toString()
       mkLinkElement(
         elemType = "text_span",
-        source = mention.document.id.getOrElse("unk_text_file"),
+        source = s"${docId}_sent${sent}_$offsets",
         content = mention.arguments(DEFINITION).head.text,
         contentType = "null"
       )
     }
 
     linkElements(TEXT_VAR) = textDefinitionMentions.map { mention =>
+      val docId = mention.document.id.getOrElse("unk_text_file")
+      val sent = mention.sentence
+      val offsets = mention.tokenInterval.toString()
       mkLinkElement(
         elemType = "text_var",
-        source = mention.document.id.getOrElse("unk_text_file"),
+        source = s"${docId}_sent${sent}_$offsets",
         content = mention.arguments(VARIABLE).head.text,
         contentType = "null"
       )
