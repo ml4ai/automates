@@ -383,13 +383,22 @@ def process_dir(dirname, G):
 
 def print_results(results):
     nfiles, ntot, nhandled, u_keywds, u_lines, h_files, file_map = results
-    pct_handled = h_files / nfiles * 100
+
+    if nfiles > 0:
+        pct_handled = h_files / nfiles * 100
+    else:
+        pct_handled = 0
+
     logging.debug(
         f"FILES: total = {nfiles}; handled = {h_files} "
         f"[{pct_handled:.1f}%]\n"
     )
 
-    pct_handled = nhandled / ntot * 100
+    if ntot > 0:
+        pct_handled = nhandled / ntot * 100
+    else:
+        pct_handled = 0
+
     logging.debug(
         f"LINES: total = {ntot}; handled = {nhandled} [{pct_handled:.1f}%]\n"
     )
@@ -431,3 +440,5 @@ if __name__ == "__main__":
 
     # with open("coverage_file_map.json", "w") as fp:
         # json.dump(coverage_results_dict, fp, indent=4)
+
+    print_results(results)
