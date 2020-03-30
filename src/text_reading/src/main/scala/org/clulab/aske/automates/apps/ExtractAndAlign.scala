@@ -26,6 +26,7 @@ import scala.collection.mutable.ArrayBuffer
 object ExtractAndAlign {
   val COMMENT = "comment"
   val TEXT = "text"
+  val TEXT_VAR = "text_var"
   val SOURCE = "source"
   val EQUATION = "equation"
   val SVO_GROUNDING = "SVOgrounding"
@@ -33,6 +34,9 @@ object ExtractAndAlign {
   val EQN_TO_TEXT = "equationToText"
   val COMMENT_TO_TEXT = "commentToText"
   val TEXT_TO_SVO = "textToSVO"
+  val DEFINITION = "definition"
+  val VARIABLE = "variable"
+  val DEF_LABEL = "Definition"
 
   val logger = LoggerFactory.getLogger(this.getClass())
 
@@ -57,14 +61,23 @@ object ExtractAndAlign {
 
     // source code comments
     val commentDefinitionMentions = getCommentDefinitionMentions(commentReader, grfn, Some(variableShortNames))
+      .filter(hasRequiredArgs)
+    logger.info(s"Found ${commentDefinitionMentions.length} comment definition mentions")
 
-    for (cdm <- commentDefinitionMentions) {
-      println("===============\n" + "Comment mentions: " + cdm.text + "\nvariable: " + cdm.arguments(("variable") + "\ndefinition: " + cdm.arguments("definition") + "\n"))
-    }
+//    for (cdm <- commentDefinitionMentions) {
+//      println(s"===============\n " +
+//        s"Comment mentions: ${cdm.text} \n " +
+//        s"variable: ${cdm.arguments("variable")} \n " +
+//        s"definition: ${cdm.arguments("definition")}\n")
+//    }
+
+    // text mentions
+    val definitionMentions = textMentions
+      .filter(m => m.label matches DEF_LABEL)
+      .filter(hasRequiredArgs)
+    logger.info(s"Found ${definitionMentions.length} text definition mentions")
 
     // svo groundings
-    val definitionMentions = textMentions.filter(m => m.label matches "Definition")
-
 //    val definitionMentionGroundings = SVOGrounder.groundMentionsWithSparql(definitionMentions, 5)
 
 
@@ -98,6 +111,8 @@ object ExtractAndAlign {
     GrFNParser.addHypotheses(grfn, hypotheses)
   }
 
+  def hasRequiredArgs(m: Mention): Boolean = m.arguments.contains(VARIABLE) && m.arguments.contains(DEFINITION)
+
   def loadEquations(filename: String): Seq[(String, String)] = {
     val equationDataLoader = new TokenizedLatexDataLoader
     val equations = equationDataLoader.loadFile(new File(filename))
@@ -117,26 +132,21 @@ object ExtractAndAlign {
     }
     logger.info(s"Extracted ${textMentions.length} text mentions")
 
-    textMentions.seq.filter(_ matches "Definition")
+    textMentions.seq.filter(_ matches DEF_LABEL)
   }
 
   def getCommentDefinitionMentions(commentReader: OdinEngine, grfn: Value, variableShortNames: Option[Seq[String]]): Seq[Mention] = {
     val commentDocs = GrFNParser.getCommentDocs(grfn)
-    println(s"len commentDocs: ${commentDocs.length}")
 
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
-    println(s"len commentMentions: ${commentMentions.length}")
-    val definitions = commentMentions.seq.filter(_ matches "Definition")
-    println(s"len definitions: ${definitions.length}")
+    val definitions = commentMentions.seq.filter(_ matches DEF_LABEL)
     if (variableShortNames.isEmpty) return definitions
-    println("Didn't return in the line above")
     val overlapsWithVariables = definitions.filter(
       m => variableShortNames.get
         .map(string => string.toLowerCase)
-        .contains(m.arguments("variable").head.text.toLowerCase)
+        .contains(m.arguments(VARIABLE).head.text.toLowerCase)
     )
-    println(s"len overlapsWithVariables: ${overlapsWithVariables.length}")
     overlapsWithVariables
   }
 
@@ -162,10 +172,7 @@ object ExtractAndAlign {
     alignments(EQN_TO_TEXT) = Aligner.topKBySrc(equationToTextAlignments, numAlignments)
 
     /** Align the comment definitions to the text definitions */
-    println(s"commentDefinitionMentions: ${commentDefinitionMentions.length}")
-    println(s"textDefinitionMentions: ${textDefinitionMentions.length}")
     val commentToTextAlignments = alignmentHandler.w2v.alignMentions(commentDefinitionMentions, textDefinitionMentions)
-    println(s"commentToTextAlignments: ${commentToTextAlignments.length}")
     // group by src idx, and keep only top k (src, dst, score) for each src idx
     alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments, scoreThreshold, debug = false)
 
@@ -186,7 +193,7 @@ object ExtractAndAlign {
       mkLinkElement(
         elemType = "comment_span",
         source = commentMention.document.id.getOrElse("unk_file"),
-        content = commentMention.text,
+        content = commentMention.arguments(DEFINITION).head.text,
         contentType = "null"
       )
     }
@@ -202,14 +209,20 @@ object ExtractAndAlign {
     }
 
     // Repeat for text variables
-    println("!!!!!!!!!!!")
-    println(textDefinitionMentions.length)
-    println("!!!!!!!!!!!")
     linkElements(TEXT) = textDefinitionMentions.map { mention =>
       mkLinkElement(
         elemType = "text_span",
-        source = mention.document.id.getOrElse("unk_text_file"), // fixme
-        content = mention.text, //todo add the relevant parts of the metnion var + def as a string --> smth readable,
+        source = mention.document.id.getOrElse("unk_text_file"),
+        content = mention.arguments(DEFINITION).head.text,
+        contentType = "null"
+      )
+    }
+
+    linkElements(TEXT_VAR) = textDefinitionMentions.map { mention =>
+      mkLinkElement(
+        elemType = "text_var",
+        source = mention.document.id.getOrElse("unk_text_file"),
+        content = mention.arguments(VARIABLE).head.text,
         contentType = "null"
       )
     }
@@ -226,6 +239,14 @@ object ExtractAndAlign {
 
     linkElements.toMap
   }
+
+  def mkLinkHypothesisTextVarDef(variables: Seq[Obj], definitions: Seq[Obj]): Seq[Obj] = {
+    assert(variables.length == definitions.length)
+    for {
+      i <- variables.indices
+    } yield mkHypothesis(variables(i), definitions(i), 1.0)
+  }
+
 
   def mkLinkHypothesis(srcElements: Seq[Obj], dstElements: Seq[Obj], alignments: Seq[Seq[Alignment]]): Seq[Obj] = {
     for {
@@ -268,6 +289,9 @@ object ExtractAndAlign {
 
     // Equation -> Text
     hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
+
+    // TextVar -> TextDef (text_span)
+    hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT)))
 
     // Text -> SVO grounding
     // hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
