@@ -162,7 +162,7 @@ object ExtractAndAlign {
 
     val alignments = scala.collection.mutable.HashMap[String, Seq[Seq[Alignment]]]()
 
-    val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
+    val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames.map(_.toLowerCase), commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
     // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
     alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment)
 

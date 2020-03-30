@@ -32,11 +32,10 @@ object GrFNParser {
 
     val sourceCommentObject = grfn("source_comments").obj
     val commentTextObjects = new ArrayBuffer[Obj]()
-//
+
     val keys = sourceCommentObject.keys
     for (k <- keys) {
       if (sourceCommentObject(k).isInstanceOf[Value.Arr]) {
-//        println("TRUE")
         val text = sourceCommentObject(k).arr.map(_.str).mkString("")
         if (text.length > 0) {
           commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, ""))
@@ -46,7 +45,6 @@ object GrFNParser {
           val value = item._2
           for (str <- value.arr) if (value.arr.length > 0) {
             val text = str.str
-//            println("HERE " + text)
             if (text.length > 0) {
               commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, item._1))
             }
