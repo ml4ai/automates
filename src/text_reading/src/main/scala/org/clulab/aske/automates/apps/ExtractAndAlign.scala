@@ -162,7 +162,7 @@ object ExtractAndAlign {
 
     val alignments = scala.collection.mutable.HashMap[String, Seq[Seq[Alignment]]]()
 
-    val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames, commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))))
+    val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames.map(_.toLowerCase), commentDefinitionMentions.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
     // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
     alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment)
 
@@ -210,18 +210,24 @@ object ExtractAndAlign {
 
     // Repeat for text variables
     linkElements(TEXT) = textDefinitionMentions.map { mention =>
+      val docId = mention.document.id.getOrElse("unk_text_file")
+      val sent = mention.sentence
+      val offsets = mention.tokenInterval.toString()
       mkLinkElement(
         elemType = "text_span",
-        source = mention.document.id.getOrElse("unk_text_file"),
+        source = s"${docId}_sent${sent}_$offsets",
         content = mention.arguments(DEFINITION).head.text,
         contentType = "null"
       )
     }
 
     linkElements(TEXT_VAR) = textDefinitionMentions.map { mention =>
+      val docId = mention.document.id.getOrElse("unk_text_file")
+      val sent = mention.sentence
+      val offsets = mention.tokenInterval.toString()
       mkLinkElement(
         elemType = "text_var",
-        source = mention.document.id.getOrElse("unk_text_file"),
+        source = s"${docId}_sent${sent}_$offsets",
         content = mention.arguments(VARIABLE).head.text,
         contentType = "null"
       )
