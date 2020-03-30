@@ -9,9 +9,12 @@ class SensitivityModel(object):
     def __init__(self, model: GrFN, bounds, sample_list, method, model_name = "model"):
         self.model = model
         self.model_name = model_name
-        self.B = bounds
+        self.bounds = bounds
         self.sample_list = sample_list
         self.method = method
+
+    def set_bounds(self, bounds):
+        self.bounds = bounds
 
     def modify_bounds(self, param, partition, partitions=3):
 
@@ -19,7 +22,7 @@ class SensitivityModel(object):
         if partition < 0 or partition > partitions:
             raise ValueError("Invalid partition number!")
 
-        int_range = self.B[param]
+        int_range = self.bounds[param]
         lower = int_range[0]
         upper = int_range[1]
         size = (upper - lower) / partitions
@@ -30,21 +33,21 @@ class SensitivityModel(object):
             partition_param_bounds.append([lower, new_upper])
             lower = new_upper
 
-        self.B[param] = partition_param_bounds[partition]
+        self.bounds[param] = partition_param_bounds[partition]
 
     def sensitivity(self, N):
 
         if self.method == "Sobol":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
-                N, self.model, self.B, save_time=True
+                N, self.model, self.bounds, save_time=True
             )
         elif self.method == "FAST":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_FAST(
-                N, self.model, self.B, save_time=True
+                N, self.model, self.bounds, save_time=True
             )
         elif self.method == "RBD FAST":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_RBD_FAST(
-                N, self.model, self.B, save_time=True
+                N, self.model, self.bounds, save_time=True
             )
         else:
             print("Method not known!")

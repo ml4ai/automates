@@ -14,7 +14,8 @@ def display_code(file: str):
     try:
         lexer = pygments.lexers.get_lexer_for_filename(file)
     except:
-        lexer = pygments.lexers.fortran.FortranLexer()
+        from pygments.lexers.fortran import FortranLexer
+        lexer = FortranLexer()
 
     with open(file, "r") as f:
         code = f.read()
