@@ -13,14 +13,15 @@ class SensitivityModel(object):
         self.method = method
 
     def modify_bounds(self, param, partition, partitions=3):
-        
+
         partition -= 1
         if partition < 0 or partition > partitions:
-            raise ValueError('Invalid partition number!')
+            raise ValueError("Invalid partition number!")
 
         int_range = self.B[param]
-        lower = int_range[0]; upper = int_range[1];
-        size = (upper - lower)/partitions
+        lower = int_range[0]
+        upper = int_range[1]
+        size = (upper - lower) / partitions
 
         partition_param_bounds = list()
         for i in range(0, partitions):
@@ -28,8 +29,7 @@ class SensitivityModel(object):
             partition_param_bounds.append([lower, new_upper])
             lower = new_upper
 
-        self.B[param] =  partition_param_bounds[partition]
-
+        self.B[param] = partition_param_bounds[partition]
 
     def sensitivity(self, N):
 
@@ -80,7 +80,7 @@ class SensitivityModel(object):
 
         df_S1 = df_S1.round(decimal).T
         df_ST = df_ST.round(decimal).T
-        
+
         return df_S1, df_ST
 
     def generate_indices(self):
@@ -155,7 +155,6 @@ if __name__ == "__main__":
         "xhlai": [0.0, 20.0],
     }
 
-
     # bounds = {
     # "doy": [1, 365],
     # "meevp": [0, 1],
@@ -172,15 +171,13 @@ if __name__ == "__main__":
     # "canht": [0.001, 3],
     # }
 
-
-
     sample_list = [10 ** x for x in range(1, 6)]
 
     method = "Sobol"
 
     SM = SensitivityModel(model, bounds, sample_list, method)
 
-    param = 'tmax'
+    param = "tmax"
     partitions = 3
     partition = 2
     SM.modify_bounds(param, partition, partitions)
