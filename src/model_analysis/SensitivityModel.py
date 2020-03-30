@@ -62,7 +62,7 @@ class SensitivityModel(object):
 
         return sobol_dict.__dict__, sample_time, exec_time, analysis_time
 
-    def generate_dataframe(self, decimal):
+    def generate_dataframe(self, decimal=2):
 
         i = len(self.sample_list) - 1
         N = self.sample_list[i]
