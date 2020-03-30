@@ -77,8 +77,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     source.close()
 
     // NOTE: Masha's original method
-    // val string = request.body.asText.get
-    // val jval = json4s.jackson.parseJson(string)
+//     val string = request.body.asText.get
+//     val jval = json4s.jackson.parseJson(string)
     
     val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Definition")
 //    val grfnPath = json("grfn").str
@@ -194,11 +194,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // get the equations
     val equationFile = json("equations").str
     val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
-
     // Get the GrFN
     val grfnPath = json("grfn").str
     val grfnFile = new File(grfnPath)
     val grfn = ujson.read(grfnFile.readString())
+    val svo_file = json("svo_groundings").str
     val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
     // ground!
     val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
@@ -209,7 +209,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       alignmentHandler,
       numAlignments,
       numAlignmentsSrcToComment,
-      scoreThreshold
+      scoreThreshold,
+      svo_file
     )
     // FIXME: add a conversion method for ujson <--> play json
     val groundedGrfnAsString = ujson.write(groundedGrfn)

@@ -35,6 +35,7 @@ def test_align():
         f"{webservice}/align",
         headers={"Content-type": "application/json"},
         json={
+            "svo_groundings": "/home/alexeeva/Downloads/ASCE-ground-SVO.json",
             "mentions": f"{cur_dir}/ASCE-mentions.json",
             "equations": f"{pet_eqns}/PETASCE/PETASCE_equations.txt",
             "grfn": f"{cur_dir}/PETASCE_GrFN.json",
