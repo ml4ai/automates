@@ -1,0 +1,2022 @@
+<ofp version="0.8.4">
+  <file path="/Users/phein/repos/aske/automates/scripts/program_analysis/./PETASCE_simple_preprocessed.f">
+    <subroutine name="PETASCE">
+      <header hasArgSpecifier="true" hasBindingSpec="false" hasDummyArgList="true" hasPrefix="false" name="PETASCE">
+        <arguments count="14">
+          <argument is_array="false" name="CANHT" type="REAL" />
+          <argument is_array="false" name="DOY" type="INTEGER" />
+          <argument is_array="false" name="MSALB" type="REAL" />
+          <argument is_array="false" name="MEEVP" type="CHARACTER" />
+          <argument is_array="false" name="SRAD" type="REAL" />
+          <argument is_array="false" name="TDEW" type="REAL" />
+          <argument is_array="false" name="TMAX" type="REAL" />
+          <argument is_array="false" name="TMIN" type="REAL" />
+          <argument is_array="false" name="WINDHT" type="REAL" />
+          <argument is_array="false" name="WINDRUN" type="REAL" />
+          <argument is_array="false" name="XHLAI" type="REAL" />
+          <argument is_array="false" name="XLAT" type="REAL" />
+          <argument is_array="false" name="XELEV" type="REAL" />
+          <argument is_array="false" name="EO" type="REAL" />
+        </arguments>
+      </header>
+      <body parent="subroutine">
+        <specification declarations="11" implicits="1" imports="0" uses="0">
+          <declaration>
+            <save-stmt hasSavedEntityList="false" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="8">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="CANHT" is_array="false" name="CANHT" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="MSALB" is_array="false" name="MSALB" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="SRAD" is_array="false" name="SRAD" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="TDEW" is_array="false" name="TDEW" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="TMAX" is_array="false" name="TMAX" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="TMIN" is_array="false" name="TMIN" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="WINDHT" is_array="false" name="WINDHT" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="WINDRUN" is_array="false" name="WINDRUN" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="3">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="XHLAI" is_array="false" name="XHLAI" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="XLAT" is_array="false" name="XLAT" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="XELEV" is_array="false" name="XELEV" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="INTEGER" />
+            <variables count="1">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="DOY" is_array="false" name="DOY" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="true" is_derived_type="False" keyword2="none" name="CHARACTER" string_length="1">
+              <length>
+                <literal type="int" value="1" />
+                <char-length hasTypeParamValue="false" rule="426" />
+              </length>
+            </type>
+            <variables count="1">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="MEEVP" is_array="false" name="MEEVP" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="1">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="EO" is_array="false" name="EO" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="11">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="TAVG" is_array="false" name="TAVG" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="PATM" is_array="false" name="PATM" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="PSYCON" is_array="false" name="PSYCON" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="UDELTA" is_array="false" name="UDELTA" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="EMAX" is_array="false" name="EMAX" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="EMIN" is_array="false" name="EMIN" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="ES" is_array="false" name="ES" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="EA" is_array="false" name="EA" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="FC" is_array="false" name="FC" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="FEW" is_array="false" name="FEW" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="FW" is_array="false" name="FW" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="11">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="ALBEDO" is_array="false" name="ALBEDO" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RNS" is_array="false" name="RNS" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="PIE" is_array="false" name="PIE" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="DR" is_array="false" name="DR" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="LDELTA" is_array="false" name="LDELTA" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="WS" is_array="false" name="WS" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RA1" is_array="false" name="RA1" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RA2" is_array="false" name="RA2" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RA" is_array="false" name="RA" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RSO" is_array="false" name="RSO" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RATIO" is_array="false" name="RATIO" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="11">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="FCD" is_array="false" name="FCD" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="TK4" is_array="false" name="TK4" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RNL" is_array="false" name="RNL" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RN" is_array="false" name="RN" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="G" is_array="false" name="G" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="WINDSP" is_array="false" name="WINDSP" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="WIND2m" is_array="false" name="WIND2m" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="Cn" is_array="false" name="Cn" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="Cd" is_array="false" name="Cd" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="KCMAX" is_array="false" name="KCMAX" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="RHMIN" is_array="false" name="RHMIN" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="2">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="WND" is_array="false" name="WND" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="CHT" is_array="false" name="CHT" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+          <declaration type="variable">
+            <type hasKind="false" hasLength="false" is_derived_type="False" keyword2="none" name="REAL" />
+            <variables count="7">
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="REFET" is_array="false" name="REFET" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="SKC" is_array="false" name="SKC" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="KCBMIN" is_array="false" name="KCBMIN" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="KCBMAX" is_array="false" name="KCBMAX" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="KCB" is_array="false" name="KCB" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="KE" is_array="false" name="KE" />
+              <variable hasArraySpec="false" hasCharLength="false" hasCoarraySpec="false" hasInitialValue="false" hasInitialization="false" id="KC" is_array="false" name="KC" />
+            </variables>
+            <type-declaration-stmt numAttributes="0" />
+          </declaration>
+        </specification>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="TAVG" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <name hasSubscripts="false" id="TMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="+" />
+                    <operand>
+                      <name hasSubscripts="false" id="TMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <literal type="real" value="2.0" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="PATM" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="101.3" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <literal type="real" value="293.0" />
+                            </operand>
+                            <operator operator="-" />
+                            <operand>
+                              <operation type="multiary">
+                                <operand>
+                                  <literal type="real" value="0.0065" />
+                                </operand>
+                                <operator operator="*" />
+                                <operand>
+                                  <name hasSubscripts="false" id="XELEV" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                </operand>
+                              </operation>
+                            </operand>
+                          </operation>
+                        </operand>
+                        <operator operator="/" />
+                        <operand>
+                          <literal type="real" value="293.0" />
+                        </operand>
+                      </operation>
+                    </operand>
+                    <operator operator="**" />
+                    <operand>
+                      <literal type="real" value="5.26" />
+                    </operand>
+                  </operation>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="PSYCON" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="0.000665" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="false" id="PATM" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="UDELTA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="2503.0" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="EXP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <literal type="real" value="17.27" />
+                          </operand>
+                          <operator operator="*" />
+                          <operand>
+                            <name hasSubscripts="false" id="TAVG" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="/" />
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <name hasSubscripts="false" id="TAVG" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                              <operator operator="+" />
+                              <operand>
+                                <literal type="real" value="237.3" />
+                              </operand>
+                            </operation>
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <name hasSubscripts="false" id="TAVG" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                        <operator operator="+" />
+                        <operand>
+                          <literal type="real" value="237.3" />
+                        </operand>
+                      </operation>
+                    </operand>
+                    <operator operator="**" />
+                    <operand>
+                      <literal type="real" value="2.0" />
+                    </operand>
+                  </operation>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="EMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="0.6108" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="EXP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <literal type="real" value="17.27" />
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <name hasSubscripts="false" id="TMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                            </operation>
+                          </operand>
+                          <operator operator="/" />
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <name hasSubscripts="false" id="TMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                              <operator operator="+" />
+                              <operand>
+                                <literal type="real" value="237.3" />
+                              </operand>
+                            </operation>
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="EMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="0.6108" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="EXP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <literal type="real" value="17.27" />
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <name hasSubscripts="false" id="TMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                            </operation>
+                          </operand>
+                          <operator operator="/" />
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <name hasSubscripts="false" id="TMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                              <operator operator="+" />
+                              <operand>
+                                <literal type="real" value="237.3" />
+                              </operand>
+                            </operation>
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="ES" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <name hasSubscripts="false" id="EMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="+" />
+                    <operand>
+                      <name hasSubscripts="false" id="EMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <literal type="real" value="2.0" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="EA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="0.6108" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="EXP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <literal type="real" value="17.27" />
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <name hasSubscripts="false" id="TDEW" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                            </operation>
+                          </operand>
+                          <operator operator="/" />
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <name hasSubscripts="false" id="TDEW" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                              <operator operator="+" />
+                              <operand>
+                                <literal type="real" value="237.3" />
+                              </operand>
+                            </operation>
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RHMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="2">
+                  <subscript type="simple">
+                    <literal type="real" value="20.0" />
+                  </subscript>
+                  <subscript type="simple">
+                    <name hasSubscripts="true" id="MIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                      <subscripts count="2">
+                        <subscript type="simple">
+                          <literal type="real" value="80.0" />
+                        </subscript>
+                        <subscript type="simple">
+                          <operation type="multiary">
+                            <operand>
+                              <name hasSubscripts="false" id="EA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="/" />
+                            <operand>
+                              <name hasSubscripts="false" id="EMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="*" />
+                            <operand>
+                              <literal type="real" value="100.0" />
+                            </operand>
+                          </operation>
+                        </subscript>
+                      </subscripts>
+                    </name>
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <if if-before-goto="true">
+          <header>
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="XHLAI" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".LE." />
+              <operand>
+                <literal type="real" value="0.0" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="ALBEDO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <name hasSubscripts="false" id="MSALB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+          <body parent="if" type="else">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="ALBEDO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="0.23" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+        </if>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RNS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <literal type="real" value="1.0" />
+                    </operand>
+                    <operator operator="-" />
+                    <operand>
+                      <name hasSubscripts="false" id="ALBEDO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="false" id="SRAD" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="PIE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="3.14159265359" />
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="DR" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="1.0" />
+                </operand>
+                <operator operator="+" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <literal type="real" value="0.033" />
+                    </operand>
+                    <operator operator="*" />
+                    <operand>
+                      <name hasSubscripts="true" id="COS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                        <subscripts count="1">
+                          <subscript type="simple">
+                            <operation type="multiary">
+                              <operand>
+                                <literal type="real" value="2.0" />
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <name hasSubscripts="false" id="PIE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                              <operator operator="/" />
+                              <operand>
+                                <literal type="real" value="365.0" />
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <name hasSubscripts="false" id="DOY" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                            </operation>
+                          </subscript>
+                        </subscripts>
+                      </name>
+                    </operand>
+                  </operation>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="LDELTA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="0.409" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="SIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <literal type="real" value="2.0" />
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <name hasSubscripts="false" id="PIE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                              <operator operator="/" />
+                              <operand>
+                                <literal type="real" value="365.0" />
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <name hasSubscripts="false" id="DOY" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </operand>
+                            </operation>
+                          </operand>
+                          <operator operator="-" />
+                          <operand>
+                            <literal type="real" value="1.39" />
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="WS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="ACOS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="1">
+                  <subscript type="simple">
+                    <operation type="unary">
+                      <operator operator="-" />
+                      <operand>
+                        <operation type="multiary">
+                          <operand>
+                            <literal type="real" value="1.0" />
+                          </operand>
+                          <operator operator="*" />
+                          <operand>
+                            <name hasSubscripts="true" id="TAN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                              <subscripts count="1">
+                                <subscript type="simple">
+                                  <operation type="multiary">
+                                    <operand>
+                                      <name hasSubscripts="false" id="XLAT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                    </operand>
+                                    <operator operator="*" />
+                                    <operand>
+                                      <name hasSubscripts="false" id="PIE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                    </operand>
+                                    <operator operator="/" />
+                                    <operand>
+                                      <literal type="real" value="180.0" />
+                                    </operand>
+                                  </operation>
+                                </subscript>
+                              </subscripts>
+                            </name>
+                          </operand>
+                          <operator operator="*" />
+                          <operand>
+                            <name hasSubscripts="true" id="TAN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                              <subscripts count="1">
+                                <subscript type="simple">
+                                  <name hasSubscripts="false" id="LDELTA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                </subscript>
+                              </subscripts>
+                            </name>
+                          </operand>
+                        </operation>
+                      </operand>
+                    </operation>
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RA1" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <name hasSubscripts="false" id="WS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="SIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <name hasSubscripts="false" id="XLAT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="*" />
+                          <operand>
+                            <name hasSubscripts="false" id="PIE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="/" />
+                          <operand>
+                            <literal type="real" value="180.0" />
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="SIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <name hasSubscripts="false" id="LDELTA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RA2" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <name hasSubscripts="true" id="COS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <name hasSubscripts="false" id="XLAT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="*" />
+                          <operand>
+                            <name hasSubscripts="false" id="PIE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="/" />
+                          <operand>
+                            <literal type="real" value="180.0" />
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="COS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <name hasSubscripts="false" id="LDELTA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="true" id="SIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="1">
+                      <subscript type="simple">
+                        <name hasSubscripts="false" id="WS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="24.0" />
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <name hasSubscripts="false" id="PIE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <literal type="real" value="4.92" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="false" id="DR" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <name hasSubscripts="false" id="RA1" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="+" />
+                    <operand>
+                      <name hasSubscripts="false" id="RA2" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                  </operation>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RSO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <literal type="real" value="0.75" />
+                    </operand>
+                    <operator operator="+" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <literal type="real" value="2E-5" />
+                        </operand>
+                        <operator operator="*" />
+                        <operand>
+                          <name hasSubscripts="false" id="XELEV" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                      </operation>
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="false" id="RA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RATIO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <name hasSubscripts="false" id="SRAD" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <name hasSubscripts="false" id="RSO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <if if-before-goto="true">
+          <header>
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="RATIO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".LT." />
+              <operand>
+                <literal type="real" value="0.3" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="RATIO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="0.3" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+          <header type="else-if">
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="RATIO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".GT." />
+              <operand>
+                <literal type="real" value="1.0" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if" type="else-if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="RATIO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="1.0" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+        </if>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="FCD" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <literal type="real" value="1.35" />
+                    </operand>
+                    <operator operator="*" />
+                    <operand>
+                      <name hasSubscripts="false" id="RATIO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="-" />
+                <operand>
+                  <literal type="real" value="0.35" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="TK4" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <name hasSubscripts="false" id="TMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="+" />
+                            <operand>
+                              <literal type="real" value="273.16" />
+                            </operand>
+                          </operation>
+                        </operand>
+                        <operator operator="**" />
+                        <operand>
+                          <literal type="real" value="4.0" />
+                        </operand>
+                      </operation>
+                    </operand>
+                    <operator operator="+" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <name hasSubscripts="false" id="TMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="+" />
+                            <operand>
+                              <literal type="real" value="273.16" />
+                            </operand>
+                          </operation>
+                        </operand>
+                        <operator operator="**" />
+                        <operand>
+                          <literal type="real" value="4.0" />
+                        </operand>
+                      </operation>
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <literal type="real" value="2.0" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RNL" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <literal type="real" value="4.901E-9" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="false" id="FCD" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <literal type="real" value="0.34" />
+                    </operand>
+                    <operator operator="-" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <literal type="real" value="0.14" />
+                        </operand>
+                        <operator operator="*" />
+                        <operand>
+                          <name hasSubscripts="true" id="SQRT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                            <subscripts count="1">
+                              <subscript type="simple">
+                                <name hasSubscripts="false" id="EA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                              </subscript>
+                            </subscripts>
+                          </name>
+                        </operand>
+                      </operation>
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="false" id="TK4" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="RN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <name hasSubscripts="false" id="RNS" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="-" />
+                <operand>
+                  <name hasSubscripts="false" id="RNL" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="G" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="0.0" />
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="WINDSP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <name hasSubscripts="false" id="WINDRUN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <literal type="real" value="1000.0" />
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <literal type="real" value="24.0" />
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <literal type="real" value="60.0" />
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <literal type="real" value="60.0" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="WIND2m" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <name hasSubscripts="false" id="WINDSP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <literal type="real" value="4.87" />
+                    </operand>
+                    <operator operator="/" />
+                    <operand>
+                      <name hasSubscripts="true" id="LOG" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                        <subscripts count="1">
+                          <subscript type="simple">
+                            <operation type="multiary">
+                              <operand>
+                                <operation type="multiary">
+                                  <operand>
+                                    <literal type="real" value="67.8" />
+                                  </operand>
+                                  <operator operator="*" />
+                                  <operand>
+                                    <name hasSubscripts="false" id="WINDHT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                  </operand>
+                                </operation>
+                              </operand>
+                              <operator operator="-" />
+                              <operand>
+                                <literal type="real" value="5.42" />
+                              </operand>
+                            </operation>
+                          </subscript>
+                        </subscripts>
+                      </name>
+                    </operand>
+                  </operation>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="Cn" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="0.0" />
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="Cd" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="0.0" />
+            </value>
+          </assignment>
+        </statement>
+        <if if-before-goto="true">
+          <header>
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="MEEVP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".EQ." />
+              <operand>
+                <literal type="char" value="'A'" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="Cn" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="1600.0" />
+                </value>
+              </assignment>
+            </statement>
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="Cd" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="0.38" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+          <header type="else-if">
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="MEEVP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".EQ." />
+              <operand>
+                <literal type="char" value="'G'" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if" type="else-if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="Cn" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="900.0" />
+                </value>
+              </assignment>
+            </statement>
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="Cd" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="0.34" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+        </if>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="REFET" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <literal type="real" value="0.408" />
+                    </operand>
+                    <operator operator="*" />
+                    <operand>
+                      <name hasSubscripts="false" id="UDELTA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="*" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <name hasSubscripts="false" id="RN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                        <operator operator="-" />
+                        <operand>
+                          <name hasSubscripts="false" id="G" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                      </operation>
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="+" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <name hasSubscripts="false" id="PSYCON" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="*" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <name hasSubscripts="false" id="Cn" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                        <operator operator="/" />
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <name hasSubscripts="false" id="TAVG" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="+" />
+                            <operand>
+                              <literal type="real" value="273.0" />
+                            </operand>
+                          </operation>
+                        </operand>
+                      </operation>
+                    </operand>
+                    <operator operator="*" />
+                    <operand>
+                      <name hasSubscripts="false" id="WIND2m" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="*" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <name hasSubscripts="false" id="ES" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                        <operator operator="-" />
+                        <operand>
+                          <name hasSubscripts="false" id="EA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                      </operation>
+                    </operand>
+                  </operation>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="REFET" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <name hasSubscripts="false" id="REFET" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+                <operator operator="/" />
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <name hasSubscripts="false" id="UDELTA" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="+" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <name hasSubscripts="false" id="PSYCON" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </operand>
+                        <operator operator="*" />
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <literal type="real" value="1.0" />
+                            </operand>
+                            <operator operator="+" />
+                            <operand>
+                              <operation type="multiary">
+                                <operand>
+                                  <name hasSubscripts="false" id="Cd" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                </operand>
+                                <operator operator="*" />
+                                <operand>
+                                  <name hasSubscripts="false" id="WIND2m" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                </operand>
+                              </operation>
+                            </operand>
+                          </operation>
+                        </operand>
+                      </operation>
+                    </operand>
+                  </operation>
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="REFET" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="2">
+                  <subscript type="simple">
+                    <literal type="real" value="0.0001" />
+                  </subscript>
+                  <subscript type="simple">
+                    <name hasSubscripts="false" id="REFET" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="SKC" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="0.8" />
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="KCBMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="0.3" />
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="KCBMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="1.2" />
+            </value>
+          </assignment>
+        </statement>
+        <if if-before-goto="true">
+          <header>
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="XHLAI" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".LE." />
+              <operand>
+                <literal type="real" value="0.0" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="0.0" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+          <body parent="if" type="else">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="2">
+                      <subscript type="simple">
+                        <literal type="real" value="0.0" />
+                      </subscript>
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <name hasSubscripts="false" id="KCBMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="+" />
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <operation type="multiary">
+                                  <operand>
+                                    <name hasSubscripts="false" id="KCBMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                  </operand>
+                                  <operator operator="-" />
+                                  <operand>
+                                    <name hasSubscripts="false" id="KCBMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                  </operand>
+                                </operation>
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <operation type="multiary">
+                                  <operand>
+                                    <literal type="real" value="1.0" />
+                                  </operand>
+                                  <operator operator="-" />
+                                  <operand>
+                                    <name hasSubscripts="true" id="EXP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                                      <subscripts count="1">
+                                        <subscript type="simple">
+                                          <operation type="unary">
+                                            <operator operator="-" />
+                                            <operand>
+                                              <operation type="multiary">
+                                                <operand>
+                                                  <literal type="real" value="1.0" />
+                                                </operand>
+                                                <operator operator="*" />
+                                                <operand>
+                                                  <name hasSubscripts="false" id="SKC" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                                </operand>
+                                                <operator operator="*" />
+                                                <operand>
+                                                  <name hasSubscripts="false" id="XHLAI" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                                </operand>
+                                              </operation>
+                                            </operand>
+                                          </operation>
+                                        </subscript>
+                                      </subscripts>
+                                    </name>
+                                  </operand>
+                                </operation>
+                              </operand>
+                            </operation>
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </value>
+              </assignment>
+            </statement>
+          </body>
+        </if>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="WND" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="2">
+                  <subscript type="simple">
+                    <literal type="real" value="1.0" />
+                  </subscript>
+                  <subscript type="simple">
+                    <name hasSubscripts="true" id="MIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                      <subscripts count="2">
+                        <subscript type="simple">
+                          <name hasSubscripts="false" id="WIND2m" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                        </subscript>
+                        <subscript type="simple">
+                          <literal type="real" value="6.0" />
+                        </subscript>
+                      </subscripts>
+                    </name>
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="CHT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="2">
+                  <subscript type="simple">
+                    <literal type="real" value="0.001" />
+                  </subscript>
+                  <subscript type="simple">
+                    <name hasSubscripts="false" id="CANHT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="KCMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="0.5" />
+            </value>
+          </assignment>
+        </statement>
+        <if if-before-goto="true">
+          <header>
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="MEEVP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".EQ." />
+              <operand>
+                <literal type="char" value="'A'" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="KCMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="2">
+                      <subscript type="simple">
+                        <literal type="real" value="1.0" />
+                      </subscript>
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="+" />
+                          <operand>
+                            <literal type="real" value="0.05" />
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </value>
+              </assignment>
+            </statement>
+          </body>
+          <header type="else-if">
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="MEEVP" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".EQ." />
+              <operand>
+                <literal type="char" value="'G'" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if" type="else-if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="KCMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                    <subscripts count="2">
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <literal type="real" value="1.2" />
+                          </operand>
+                          <operator operator="+" />
+                          <operand>
+                            <operation type="multiary">
+                              <operand>
+                                <operation type="multiary">
+                                  <operand>
+                                    <operation type="multiary">
+                                      <operand>
+                                        <literal type="real" value="0.04" />
+                                      </operand>
+                                      <operator operator="*" />
+                                      <operand>
+                                        <operation type="multiary">
+                                          <operand>
+                                            <name hasSubscripts="false" id="WND" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                          </operand>
+                                          <operator operator="-" />
+                                          <operand>
+                                            <literal type="real" value="2.0" />
+                                          </operand>
+                                        </operation>
+                                      </operand>
+                                    </operation>
+                                  </operand>
+                                  <operator operator="-" />
+                                  <operand>
+                                    <operation type="multiary">
+                                      <operand>
+                                        <literal type="real" value="0.004" />
+                                      </operand>
+                                      <operator operator="*" />
+                                      <operand>
+                                        <operation type="multiary">
+                                          <operand>
+                                            <name hasSubscripts="false" id="RHMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                          </operand>
+                                          <operator operator="-" />
+                                          <operand>
+                                            <literal type="real" value="45.0" />
+                                          </operand>
+                                        </operation>
+                                      </operand>
+                                    </operation>
+                                  </operand>
+                                </operation>
+                              </operand>
+                              <operator operator="*" />
+                              <operand>
+                                <operation type="multiary">
+                                  <operand>
+                                    <operation type="multiary">
+                                      <operand>
+                                        <name hasSubscripts="false" id="CHT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                      </operand>
+                                      <operator operator="/" />
+                                      <operand>
+                                        <literal type="real" value="3.0" />
+                                      </operand>
+                                    </operation>
+                                  </operand>
+                                  <operator operator="**" />
+                                  <operand>
+                                    <literal type="real" value="0.3" />
+                                  </operand>
+                                </operation>
+                              </operand>
+                            </operation>
+                          </operand>
+                        </operation>
+                      </subscript>
+                      <subscript type="simple">
+                        <operation type="multiary">
+                          <operand>
+                            <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                          </operand>
+                          <operator operator="+" />
+                          <operand>
+                            <literal type="real" value="0.05" />
+                          </operand>
+                        </operation>
+                      </subscript>
+                    </subscripts>
+                  </name>
+                </value>
+              </assignment>
+            </statement>
+          </body>
+        </if>
+        <if if-before-goto="true">
+          <header>
+            <operation type="multiary">
+              <operand>
+                <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+              <operator operator=".LE." />
+              <operand>
+                <name hasSubscripts="false" id="KCBMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+              </operand>
+            </operation>
+          </header>
+          <body parent="if">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="FC" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <literal type="real" value="0.0" />
+                </value>
+              </assignment>
+            </statement>
+          </body>
+          <body parent="if" type="else">
+            <statement body-level="if">
+              <assignment>
+                <target>
+                  <name hasSubscripts="false" id="FC" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </target>
+                <value>
+                  <operation type="multiary">
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="-" />
+                            <operand>
+                              <name hasSubscripts="false" id="KCBMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                          </operation>
+                        </operand>
+                        <operator operator="/" />
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <name hasSubscripts="false" id="KCMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="-" />
+                            <operand>
+                              <name hasSubscripts="false" id="KCBMIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                          </operation>
+                        </operand>
+                      </operation>
+                    </operand>
+                    <operator operator="**" />
+                    <operand>
+                      <operation type="multiary">
+                        <operand>
+                          <literal type="real" value="1.0" />
+                        </operand>
+                        <operator operator="+" />
+                        <operand>
+                          <operation type="multiary">
+                            <operand>
+                              <literal type="real" value="0.5" />
+                            </operand>
+                            <operator operator="*" />
+                            <operand>
+                              <name hasSubscripts="false" id="CANHT" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                          </operation>
+                        </operand>
+                      </operation>
+                    </operand>
+                  </operation>
+                </value>
+              </assignment>
+            </statement>
+          </body>
+        </if>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="FW" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <literal type="real" value="1.0" />
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="FEW" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="MIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="2">
+                  <subscript type="simple">
+                    <operation type="multiary">
+                      <operand>
+                        <literal type="real" value="1.0" />
+                      </operand>
+                      <operator operator="-" />
+                      <operand>
+                        <name hasSubscripts="false" id="FC" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                      </operand>
+                    </operation>
+                  </subscript>
+                  <subscript type="simple">
+                    <name hasSubscripts="false" id="FW" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="KE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="2">
+                  <subscript type="simple">
+                    <literal type="real" value="0.0" />
+                  </subscript>
+                  <subscript type="simple">
+                    <name hasSubscripts="true" id="MIN" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                      <subscripts count="2">
+                        <subscript type="simple">
+                          <operation type="multiary">
+                            <operand>
+                              <literal type="real" value="1.0" />
+                            </operand>
+                            <operator operator="*" />
+                            <operand>
+                              <operation type="multiary">
+                                <operand>
+                                  <name hasSubscripts="false" id="KCMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                </operand>
+                                <operator operator="-" />
+                                <operand>
+                                  <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                                </operand>
+                              </operation>
+                            </operand>
+                          </operation>
+                        </subscript>
+                        <subscript type="simple">
+                          <operation type="multiary">
+                            <operand>
+                              <name hasSubscripts="false" id="FEW" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                            <operator operator="*" />
+                            <operand>
+                              <name hasSubscripts="false" id="KCMAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                            </operand>
+                          </operation>
+                        </subscript>
+                      </subscripts>
+                    </name>
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="EO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <operation type="multiary">
+                <operand>
+                  <operation type="multiary">
+                    <operand>
+                      <name hasSubscripts="false" id="KCB" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                    <operator operator="+" />
+                    <operand>
+                      <name hasSubscripts="false" id="KE" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                    </operand>
+                  </operation>
+                </operand>
+                <operator operator="*" />
+                <operand>
+                  <name hasSubscripts="false" id="REFET" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                </operand>
+              </operation>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <assignment>
+            <target>
+              <name hasSubscripts="false" id="EO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+            </target>
+            <value>
+              <name hasSubscripts="true" id="MAX" is_arg="false" is_array="false" numPartRef="1" type="ambiguous">
+                <subscripts count="2">
+                  <subscript type="simple">
+                    <name hasSubscripts="false" id="EO" is_arg="false" is_array="false" numPartRef="1" type="ambiguous" />
+                  </subscript>
+                  <subscript type="simple">
+                    <literal type="real" value="0.0001" />
+                  </subscript>
+                </subscripts>
+              </name>
+            </value>
+          </assignment>
+        </statement>
+        <statement body-level="subroutine">
+          <return hasScalarIntExpr="false" hasValue="false" />
+        </statement>
+        <statement body-level="subroutine">
+          <execution-part />
+        </statement>
+      </body>
+    </subroutine>
+  </file>
+</ofp>

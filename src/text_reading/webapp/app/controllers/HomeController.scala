@@ -79,9 +79,14 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // NOTE: Masha's original method
     // val string = request.body.asText.get
     // val jval = json4s.jackson.parseJson(string)
-
-    val mentions = JSONSerializer.toMentions(mentionsJson4s)
-    val result = SVOGrounder.mentionsToGroundingsJson(mentions, k)
+    
+    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Definition")
+//    val grfnPath = json("grfn").str
+//    val grfnFile = new File(grfnPath)
+//    val grfn = ujson.read(grfnFile.readString())
+//    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
+    println("len mentions: " + defMentions.length)
+    val result = SVOGrounder.mentionsToGroundingsJson(defMentions,k)   //slice for debugging to avoid overloading the server: defMentions.slice(0,10), k)
     Ok(result).as(JSON)
   }
 

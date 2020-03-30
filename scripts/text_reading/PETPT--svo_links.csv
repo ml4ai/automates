@@ -1,0 +1,387 @@
+Score,Mention,Search term,OSV term,Class name
+1,˛c,transpire,transpire,Process
+1,˛b,function,function,Mathematical Abstraction
+1,˛b,function,function,Abstraction
+1,w,point,point,Mathematical Abstraction
+1,w,point,point,Abstraction
+1,re,management,management,Process
+1,nd,irrigation,irrigation,Process
+1,gc,canopy,canopy,Spatial Phenomenon
+1,gc,canopy,canopy,Phenomenon
+1,gc,canopy,canopy,Part
+1,gc,canopy,canopy,Body
+1,fs,fraction,fraction,Operator
+1,fG,fraction,fraction,Operator
+1,evaporation rate,amount,amount,Standardized Property
+1,evaporation rate,amount,amount,Quantitative Property
+1,evaporation rate,amount,amount,Property
+1,eaf,model,model,Mathematical Abstraction
+1,eaf,model,model,Abstraction
+1,e.g,management,management,Process
+1,a,aerodynamic_conductance,aerodynamic_conductance,Standardized Property
+1,a,aerodynamic_conductance,aerodynamic_conductance,Quantitative Property
+1,a,aerodynamic_conductance,aerodynamic_conductance,Property
+1,Se,saturation,saturation,Process
+1,SD,standard_deviation,standard_deviation,Operator
+1,SD,deviation,deviation,Process
+1,Rns,surface,surface,Mathematical Abstraction
+1,Rns,surface,surface,Abstraction
+1,Rns,soil_surface,soil_surface,Phenomenon
+1,Rev.,weather,weather,Process
+1,RE,error,error,Operator
+1,ET,estimation,estimation,Process
+1,Cc,stage,stage,Property Standardization
+1,Cc,stage,stage,Property
+1,Cc,stage,stage,Process
+1,Agric,rest,rest,Process
+1,3D,response,response,Process
+0.9167,o,Agricultural,agricultural,Attribute
+0.8333,o,Forest,forest,Phenomenon
+0.7692,Se,saturation,at_saturation,CF Convention Standard Name Assumptions
+0.7692,Se,saturation,at_saturation,Assumption
+0.6667,LAI,area_index,leaf-area_index,Standardized Property
+0.6667,LAI,area_index,leaf-area_index,Quantitative Property
+0.6667,LAI,area_index,leaf-area_index,Property
+0.6471,o,Agricultural,land~agricultural,Spatial Phenomenon
+0.6471,o,Agricultural,land~agricultural,Phenomenon
+0.6471,o,Agricultural,land~agricultural,Body
+0.625,f,slope,d8_slope,Standardized Property
+0.625,f,slope,d8_slope,Quantitative Property
+0.625,f,slope,d8_slope,Property
+0.6154,fs,fraction,area_fraction,Standardized Property
+0.6154,fs,fraction,area_fraction,Quantitative Property
+0.6154,fs,fraction,area_fraction,Property
+0.6154,fG,fraction,area_fraction,Standardized Property
+0.6154,fG,fraction,area_fraction,Quantitative Property
+0.6154,fG,fraction,area_fraction,Property
+0.5833,r,content,cold_content,Standardized Property
+0.5833,r,content,cold_content,Quantitative Property
+0.5833,r,content,cold_content,Property
+0.5556,w,point,point-set,Mathematical Abstraction
+0.5556,w,point,point-set,Abstraction
+0.55,˛s,coefficient,activity_coefficient,Standardized Property
+0.55,˛s,coefficient,activity_coefficient,Quantitative Property
+0.55,˛s,coefficient,activity_coefficient,Property
+0.55,˛m,coefficient,activity_coefficient,Standardized Property
+0.55,˛m,coefficient,activity_coefficient,Quantitative Property
+0.55,˛m,coefficient,activity_coefficient,Property
+0.55,m3REW,coefficient,activity_coefficient,Standardized Property
+0.55,m3REW,coefficient,activity_coefficient,Quantitative Property
+0.55,m3REW,coefficient,activity_coefficient,Property
+0.5455,gc,canopy,crop_canopy,Phenomenon
+0.5333,fs,fraction,amount_fraction,Standardized Property
+0.5333,fs,fraction,amount_fraction,Quantitative Property
+0.5333,fs,fraction,amount_fraction,Property
+0.5333,fG,fraction,amount_fraction,Standardized Property
+0.5333,fG,fraction,amount_fraction,Quantitative Property
+0.5333,fG,fraction,amount_fraction,Property
+0.5333,3D,response,response-filter,Mathematical Abstraction
+0.5333,3D,response,response-filter,Abstraction
+0.5263,Se,saturation,specific_saturation,Standardized Property
+0.5263,Se,saturation,specific_saturation,Quantitative Property
+0.5263,Se,saturation,specific_saturation,Property
+0.5238,Ta,temperature,potential-temperature,Attribute
+0.5,˛s,coefficient,reflection_coefficient,Standardized Property
+0.5,˛s,coefficient,reflection_coefficient,Quantitative Property
+0.5,˛s,coefficient,reflection_coefficient,Property
+0.5,˛s,coefficient,absorption_coefficient,Standardized Property
+0.5,˛s,coefficient,absorption_coefficient,Quantitative Property
+0.5,˛s,coefficient,absorption_coefficient,Property
+0.5,˛m,coefficient,reflection_coefficient,Standardized Property
+0.5,˛m,coefficient,reflection_coefficient,Quantitative Property
+0.5,˛m,coefficient,reflection_coefficient,Property
+0.5,˛m,coefficient,absorption_coefficient,Standardized Property
+0.5,˛m,coefficient,absorption_coefficient,Quantitative Property
+0.5,˛m,coefficient,absorption_coefficient,Property
+0.5,r,content,energy_content,Standardized Property
+0.5,r,content,energy_content,Quantitative Property
+0.5,r,content,energy_content,Property
+0.5,m3REW,coefficient,reflection_coefficient,Standardized Property
+0.5,m3REW,coefficient,reflection_coefficient,Quantitative Property
+0.5,m3REW,coefficient,reflection_coefficient,Property
+0.5,m3REW,coefficient,absorption_coefficient,Standardized Property
+0.5,m3REW,coefficient,absorption_coefficient,Quantitative Property
+0.5,m3REW,coefficient,absorption_coefficient,Property
+0.5,m,velocity,angular_velocity,Standardized Property
+0.5,m,velocity,angular_velocity,Quantitative Property
+0.5,m,velocity,angular_velocity,Property
+0.5,Ta,temperature,temperature_derivative,Operator
+0.5,SD,deviation,standard_deviation,Operator
+0.5,Rns,surface,sphere_surface,Mathematical Abstraction
+0.5,Rns,surface,sphere_surface,Abstraction
+0.4783,˛s,coefficient,attenuation_coefficient,Property
+0.4783,˛m,coefficient,attenuation_coefficient,Property
+0.4783,m3REW,coefficient,attenuation_coefficient,Property
+0.4783,a,conductance,aerodynamic_conductance,Standardized Property
+0.4783,a,conductance,aerodynamic_conductance,Quantitative Property
+0.4783,a,conductance,aerodynamic_conductance,Property
+0.4706,˛b,function,analytic_function,Function-Type Assumptions
+0.4706,˛b,function,analytic_function,Assumption
+0.4667,Rev.,weather,weather-station,Spatial Phenomenon
+0.4667,Rev.,weather,weather-station,Phenomenon
+0.4667,Rev.,weather,weather-station,Body
+0.4545,w,point,fixed_point,Mathematical Assumptions
+0.4545,w,point,fixed_point,Assumption
+0.4545,nd,irrigation,irrigation_volume_flux,Standardized Property
+0.4545,nd,irrigation,irrigation_volume_flux,Quantitative Property
+0.4545,nd,irrigation,irrigation_volume_flux,Property
+0.4444,˛b,function,bijective_function,Function-Type Assumptions
+0.4444,˛b,function,bijective_function,Assumption
+0.4444,Agric,rest,rest_mass,Standardized Property
+0.4444,Agric,rest,rest_mass,Quantitative Property
+0.4444,Agric,rest,rest_mass,Property
+0.4375,y,plastic,plastic_material,Material-Type Assumptions
+0.4375,y,plastic,plastic_material,Assumption
+0.4375,mulch,plastic,plastic_material,Material-Type Assumptions
+0.4375,mulch,plastic,plastic_material,Assumption
+0.4167,Cc,stage,stage_height,Standardized Property
+0.4167,Cc,stage,stage_height,Quantitative Property
+0.4167,Cc,stage,stage_height,Property
+0.4118,Rns,surface,grid_cell_surface,Mathematical Abstraction
+0.4118,Rns,surface,grid_cell_surface,Abstraction
+0.3929,a,conductance,bulk_aerodynamic_conductance,Standardized Property
+0.3929,a,conductance,bulk_aerodynamic_conductance,Quantitative Property
+0.3929,a,conductance,bulk_aerodynamic_conductance,Property
+0.3846,Se,saturation,max_of_relative_saturation,Standardized Property
+0.3846,Se,saturation,max_of_relative_saturation,Quantitative Property
+0.3846,Se,saturation,max_of_relative_saturation,Property
+0.381,˛b,function,beta_density_function,Function-Type Assumptions
+0.381,˛b,function,beta_density_function,Assumption
+0.375,G,energy,energy_conserved,Conserved Quantity Assumptions
+0.375,G,energy,energy_conserved,Assumption
+0.3571,RE,error,counting_error,Operator
+0.3529,gc,canopy,vegetation_canopy,Spatial Phenomenon
+0.3529,gc,canopy,vegetation_canopy,Phenomenon
+0.3529,gc,canopy,vegetation_canopy,Body
+0.3529,fsw,factor,anisotropy_factor,Standardized Property
+0.3529,fsw,factor,anisotropy_factor,Quantitative Property
+0.3529,fsw,factor,anisotropy_factor,Property
+0.35,y,plastic,mohr-coulomb-plastic,Physical Abstraction
+0.35,y,plastic,mohr-coulomb-plastic,Mathematical Abstraction
+0.35,y,plastic,mohr-coulomb-plastic,Abstraction
+0.35,mulch,plastic,mohr-coulomb-plastic,Physical Abstraction
+0.35,mulch,plastic,mohr-coulomb-plastic,Mathematical Abstraction
+0.35,mulch,plastic,mohr-coulomb-plastic,Abstraction
+0.3438,Ta,temperature,isosurface~potential-temperature,Physical Abstraction
+0.3438,Ta,temperature,isosurface~potential-temperature,Part
+0.3438,Ta,temperature,isosurface~potential-temperature,Mathematical Abstraction
+0.3438,Ta,temperature,isosurface~potential-temperature,Abstraction
+0.3438,Ta,temperature,adiabatic_temperature_lapse_rate,Quantitative Property
+0.3438,Ta,temperature,adiabatic_temperature_lapse_rate,Property
+0.3333,y,plastic,bingham_plastic_fluid,Fluid-Type Assumptions
+0.3333,y,plastic,bingham_plastic_fluid,Assumption
+0.3333,mulch,plastic,bingham_plastic_fluid,Fluid-Type Assumptions
+0.3333,mulch,plastic,bingham_plastic_fluid,Assumption
+0.3333,a,conductance,bulk_mass_aerodynamic_conductance,Property
+0.3182,Rns,surface,grid_cell~dual_surface,Mathematical Abstraction
+0.3182,Rns,surface,grid_cell~dual_surface,Abstraction
+0.3143,Es,evaporation,hydrology_debruin_evaporation_model,Named Model-Type Assumptions
+0.3143,Es,evaporation,hydrology_debruin_evaporation_model,Assumption
+0.3125,f,slope,d-infinity_slope,Standardized Property
+0.3125,f,slope,d-infinity_slope,Quantitative Property
+0.3125,f,slope,d-infinity_slope,Property
+0.3077,F,capacity,amount-per-volume_capacity,Property
+0.3043,r,content,energy-per-area_content,Standardized Property
+0.3043,r,content,energy-per-area_content,Quantitative Property
+0.3043,r,content,energy-per-area_content,Property
+0.3,evaporation rate,amount,amount_concentration,Property
+0.2973,o,Agricultural,region~state@medium_land~agricultural,Phenomenon
+0.2973,o,Agricultural,region~state@medium_land~agricultural,Medium Phenomenon
+0.2941,w,point,cox_point_process,Stochastic Model Assumptions
+0.2941,w,point,cox_point_process,Assumption
+0.2917,r,content,heat-content_temperature,Property
+0.2895,Es,evaporation,hydrology_hargreaves_evaporation_model,Named Model-Type Assumptions
+0.2895,Es,evaporation,hydrology_hargreaves_evaporation_model,Assumption
+0.2826,Tc,transpiration,crop@role~source_water@role~main_transpiration,Phenomenon
+0.2826,Tc,transpiration,crop@role~source_water@role~main_transpiration,Compound Phenomenon
+0.2826,Rana,transpiration,crop@role~source_water@role~main_transpiration,Phenomenon
+0.2826,Rana,transpiration,crop@role~source_water@role~main_transpiration,Compound Phenomenon
+0.28,Rns,surface,grid_cell~primary_surface,Mathematical Abstraction
+0.28,Rev.,weather,weather-station__latitude,Variable
+0.2778,Cc,stage,phenological_stage,Standardized Property
+0.2778,Cc,stage,phenological_stage,Quantitative Property
+0.2778,Cc,stage,phenological_stage,Property
+0.2759,˛b,function,chebyshev_polynomial_function,Function-Type Assumptions
+0.2759,˛b,function,chebyshev_polynomial_function,Assumption
+0.2692,Rev.,weather,weather-station__longitude,Variable
+0.2647,m1,parameter,antoine-vapor-pressure_c_parameter,Standardized Property
+0.2647,m1,parameter,antoine-vapor-pressure_c_parameter,Quantitative Property
+0.2647,m1,parameter,antoine-vapor-pressure_c_parameter,Property
+0.2647,m1,parameter,antoine-vapor-pressure_b_parameter,Standardized Property
+0.2647,m1,parameter,antoine-vapor-pressure_b_parameter,Quantitative Property
+0.2647,m1,parameter,antoine-vapor-pressure_b_parameter,Property
+0.2647,m1,parameter,antoine-vapor-pressure_a_parameter,Standardized Property
+0.2647,m1,parameter,antoine-vapor-pressure_a_parameter,Quantitative Property
+0.2647,m1,parameter,antoine-vapor-pressure_a_parameter,Property
+0.2647,Rn,radiation,atmosphere-and-radiation_deep_snow,Named Model-Type Assumptions
+0.2647,Rn,radiation,atmosphere-and-radiation_deep_snow,Assumption
+0.2647,Rn,radiation,atmosphere-and-radiation_clear_sky,Named Model-Type Assumptions
+0.2647,Rn,radiation,atmosphere-and-radiation_clear_sky,Assumption
+0.2632,PT,Taylor,taylor_couette_flow,Flow-Type Assumptions
+0.2632,PT,Taylor,taylor_couette_flow,Assumption
+0.2632,Cc,stage,stage_severity_code,Property
+0.2619,Es,evaporation,hydrology_energy_balance_evaporation_model,Named Model-Type Assumptions
+0.2619,Es,evaporation,hydrology_energy_balance_evaporation_model,Assumption
+0.2619,Es,evaporation,hydrology_blaney_criddle_evaporation_model,Named Model-Type Assumptions
+0.2619,Es,evaporation,hydrology_blaney_criddle_evaporation_model,Assumption
+0.2581,m,velocity,azimuth_angle_of_group_velocity,Property
+0.2581,m,velocity,azimuth_angle_of_darcy_velocity,Standardized Property
+0.2581,m,velocity,azimuth_angle_of_darcy_velocity,Quantitative Property
+0.2581,m,velocity,azimuth_angle_of_darcy_velocity,Property
+0.2581,m,velocity,azimuth_angle_of_bolus_velocity,Standardized Property
+0.2581,m,velocity,azimuth_angle_of_bolus_velocity,Quantitative Property
+0.2581,m,velocity,azimuth_angle_of_bolus_velocity,Property
+0.25,cm3,soil,soil~moist_layer,Phenomenon
+0.25,cm3,soil,soil~moist_layer,Body
+0.25,Tc,transpiration,vegetation@role~source_water@role~main_transpiration,Phenomenon
+0.25,Tc,transpiration,vegetation@role~source_water@role~main_transpiration,Compound Phenomenon
+0.25,Rana,transpiration,vegetation@role~source_water@role~main_transpiration,Phenomenon
+0.25,Rana,transpiration,vegetation@role~source_water@role~main_transpiration,Compound Phenomenon
+0.25,LAI,index,consumer_price_index,Property
+0.2444,o,Agricultural,region_state_land~agricultural__area_fraction,Variable
+0.2444,Ta,temperature,atmosphere-and-radiation_standard_temperature,Named Model-Type Assumptions
+0.2444,Ta,temperature,atmosphere-and-radiation_standard_temperature,Assumption
+0.2444,Es,evaporation,hydrology_asce_standardized_evaporation_model,Named Model-Type Assumptions
+0.2444,Es,evaporation,hydrology_asce_standardized_evaporation_model,Assumption
+0.2424,fs,fraction,application_reduced_cost_fraction,Standardized Property
+0.2424,fs,fraction,application_reduced_cost_fraction,Quantitative Property
+0.2424,fs,fraction,application_reduced_cost_fraction,Property
+0.2424,fG,fraction,application_reduced_cost_fraction,Standardized Property
+0.2424,fG,fraction,application_reduced_cost_fraction,Quantitative Property
+0.2424,fG,fraction,application_reduced_cost_fraction,Property
+0.2414,y,plastic,material~mohr-coulomb-plastic,Phenomenon
+0.2414,mulch,plastic,material~mohr-coulomb-plastic,Phenomenon
+0.2381,nd,irrigation,soil_surface_water__irrigation_volume_flux,Variable
+0.2364,Tc,transpiration,(crop_canopy)@role~source_water@role~main_transpiration,Phenomenon
+0.2364,Tc,transpiration,(crop_canopy)@role~source_water@role~main_transpiration,Compound Phenomenon
+0.2364,Rana,transpiration,(crop_canopy)@role~source_water@role~main_transpiration,Phenomenon
+0.2364,Rana,transpiration,(crop_canopy)@role~source_water@role~main_transpiration,Compound Phenomenon
+0.2321,Tc,transpiration,(land_surface)@role~source_water@role~main_transpiration,Phenomenon
+0.2321,Tc,transpiration,(land_surface)@role~source_water@role~main_transpiration,Compound Phenomenon
+0.2321,Rana,transpiration,(land_surface)@role~source_water@role~main_transpiration,Phenomenon
+0.2321,Rana,transpiration,(land_surface)@role~source_water@role~main_transpiration,Compound Phenomenon
+0.2308,fsw,factor,area-diameter_shape_factor,Standardized Property
+0.2308,fsw,factor,area-diameter_shape_factor,Quantitative Property
+0.2308,fsw,factor,area-diameter_shape_factor,Property
+0.2308,evaporation rate,amount,amount-per-volume_capacity,Standardized Property
+0.2308,evaporation rate,amount,amount-per-volume_capacity,Quantitative Property
+0.2308,evaporation rate,amount,amount-per-volume_capacity,Property
+0.2308,G,energy,conservation_of_energy_law,"Equations, Laws and Principles"
+0.2308,G,energy,conservation_of_energy_law,Assumption
+0.2222,fsw,factor,brutsaert_emissivity_factor,Property
+0.2222,fsw,factor,area-perimeter_shape_factor,Standardized Property
+0.2222,fsw,factor,area-perimeter_shape_factor,Quantitative Property
+0.2222,fsw,factor,area-perimeter_shape_factor,Property
+0.2222,G,energy,cosmology_dark_energy_model,Named Model-Type Assumptions
+0.2222,G,energy,cosmology_dark_energy_model,Assumption
+0.2131,Tc,transpiration,(vegetation_canopy)@role~source_water@role~main_transpiration,Phenomenon
+0.2131,Tc,transpiration,(vegetation_canopy)@role~source_water@role~main_transpiration,Compound Phenomenon
+0.2131,Rana,transpiration,(vegetation_canopy)@role~source_water@role~main_transpiration,Phenomenon
+0.2131,Rana,transpiration,(vegetation_canopy)@role~source_water@role~main_transpiration,Compound Phenomenon
+0.2105,Agric,rest,electron__rest_mass,Variable
+0.2083,LAI,index,atterberg_activity_index,Standardized Property
+0.2083,LAI,index,atterberg_activity_index,Quantitative Property
+0.2083,LAI,index,atterberg_activity_index,Property
+0.2051,3D,response,instrument@context~part_response-filter,Phenomenon
+0.2051,3D,response,instrument@context~part_response-filter,Context Phenomenon
+0.2,w,point,five-point_stencil_method,Numerical Method Assumptions
+0.2,w,point,five-point_stencil_method,Assumption
+0.2,W,water,between_sea_water_and_air,CF Convention Standard Name Assumptions
+0.2,W,water,between_sea_water_and_air,Assumption
+0.2,W,water,between_air_and_sea_water,CF Convention Standard Name Assumptions
+0.2,W,water,between_air_and_sea_water,Assumption
+0.2,REW,water,between_sea_water_and_air,CF Convention Standard Name Assumptions
+0.2,REW,water,between_sea_water_and_air,Assumption
+0.2,REW,water,between_air_and_sea_water,CF Convention Standard Name Assumptions
+0.2,REW,water,between_air_and_sea_water,Assumption
+0.2,LAI,index,atterberg_liquidity_index,Standardized Property
+0.2,LAI,index,atterberg_liquidity_index,Quantitative Property
+0.2,LAI,index,atterberg_liquidity_index,Property
+0.2,F,capacity,acid-neutralizing_mass-per-time_capacity,Standardized Property
+0.2,F,capacity,acid-neutralizing_mass-per-time_capacity,Quantitative Property
+0.2,F,capacity,acid-neutralizing_mass-per-time_capacity,Property
+0.1961,nd,irrigation,(soil_surface)@role~sink_water@role~main_irrigation,Phenomenon
+0.1961,nd,irrigation,(soil_surface)@role~sink_water@role~main_irrigation,Compound Phenomenon
+0.1915,m1,parameter,ashton-et-al_approach_angle_asymmetry_parameter,Property
+0.1905,F,capacity,acid-neutralizing_mass-per-volume_capacity,Standardized Property
+0.1905,F,capacity,acid-neutralizing_mass-per-volume_capacity,Quantitative Property
+0.1905,F,capacity,acid-neutralizing_mass-per-volume_capacity,Property
+0.1892,Rev.,weather,basin~drainage_weather-station__count,Variable
+0.1842,Rev.,weather,weather-station__identification_number,Variable
+0.1837,Rn,radiation,atmosphere-and-radiation_boussinesq_approximation,Named Model-Type Assumptions
+0.1837,Rn,radiation,atmosphere-and-radiation_boussinesq_approximation,Assumption
+0.1818,F,capacity,acid-neutralizing_amount-per-volume_capacity,Standardized Property
+0.1818,F,capacity,acid-neutralizing_amount-per-volume_capacity,Quantitative Property
+0.1818,F,capacity,acid-neutralizing_amount-per-volume_capacity,Property
+0.1731,Rn,radiation,atmosphere-and-radiation_horizontal_plane_topography,Named Model-Type Assumptions
+0.1731,Rn,radiation,atmosphere-and-radiation_horizontal_plane_topography,Assumption
+0.1724,W,water,deep_water_wave_approximation,Assumption
+0.1724,W,water,deep_water_wave_approximation,Approximations
+0.1724,REW,water,deep_water_wave_approximation,Assumption
+0.1724,REW,water,deep_water_wave_approximation,Approximations
+0.1707,Rev.,weather,basin~drainage@context~in_weather-station,Phenomenon
+0.1707,Rev.,weather,basin~drainage@context~in_weather-station,Context Phenomenon
+0.1538,cm3,soil,hydrology_darcy_soil_model,Named Model-Type Assumptions
+0.1538,cm3,soil,hydrology_darcy_soil_model,Assumption
+0.1538,G,energy,hydrology_energy_balance_snowmelt_model,Named Model-Type Assumptions
+0.1538,G,energy,hydrology_energy_balance_snowmelt_model,Assumption
+0.1515,W,water,hydrology_liquid_water_equivalent,Named Model-Type Assumptions
+0.1515,W,water,hydrology_liquid_water_equivalent,Assumption
+0.1515,REW,water,hydrology_liquid_water_equivalent,Named Model-Type Assumptions
+0.1515,REW,water,hydrology_liquid_water_equivalent,Assumption
+0.1471,eaf,model,aerodynamics_clark_z_airfoil_model,Named Model-Type Assumptions
+0.1471,eaf,model,aerodynamics_clark_z_airfoil_model,Assumption
+0.1471,eaf,model,aerodynamics_clark_y_airfoil_model,Named Model-Type Assumptions
+0.1471,eaf,model,aerodynamics_clark_y_airfoil_model,Assumption
+0.1471,eaf,model,aerodynamics_clark_x_airfoil_model,Named Model-Type Assumptions
+0.1471,eaf,model,aerodynamics_clark_x_airfoil_model,Assumption
+0.1429,G,energy,hydrology_energy_balance_evaporation_model,Named Model-Type Assumptions
+0.1429,G,energy,hydrology_energy_balance_evaporation_model,Assumption
+0.1385,Rn,radiation,atmosphere-and-radiation_brutsaert_saturated_vapor_pressure_model,Named Model-Type Assumptions
+0.1385,Rn,radiation,atmosphere-and-radiation_brutsaert_saturated_vapor_pressure_model,Assumption
+0.1364,evaporation rate,amount,acid-neutralizing_amount-per-volume_capacity,Standardized Property
+0.1364,evaporation rate,amount,acid-neutralizing_amount-per-volume_capacity,Quantitative Property
+0.1364,evaporation rate,amount,acid-neutralizing_amount-per-volume_capacity,Property
+0.1351,PT,Taylor,fluid-dynamics_taylor_dean_flow_model,Named Model-Type Assumptions
+0.1351,PT,Taylor,fluid-dynamics_taylor_dean_flow_model,Assumption
+0.1316,˛s0,value,generalized_extreme_value_distribution,Probability Distributions
+0.1316,˛s0,value,generalized_extreme_value_distribution,Assumption
+0.1316,eaf,model,aerodynamics_eppler_1200_airfoil_model,Named Model-Type Assumptions
+0.1316,eaf,model,aerodynamics_eppler_1200_airfoil_model,Assumption
+0.1316,c,value,generalized_extreme_value_distribution,Probability Distributions
+0.1316,c,value,generalized_extreme_value_distribution,Assumption
+0.1273,y,plastic,(earth_mantle)@context~in_material~mohr-coulomb-plastic,Phenomenon
+0.1273,y,plastic,(earth_mantle)@context~in_material~mohr-coulomb-plastic,Context Phenomenon
+0.1273,mulch,plastic,(earth_mantle)@context~in_material~mohr-coulomb-plastic,Phenomenon
+0.1273,mulch,plastic,(earth_mantle)@context~in_material~mohr-coulomb-plastic,Context Phenomenon
+0.125,PT,Taylor,fluid-dynamics_taylor_green_vortex_model,Named Model-Type Assumptions
+0.125,PT,Taylor,fluid-dynamics_taylor_green_vortex_model,Assumption
+0.125,PT,Taylor,fluid-dynamics_taylor_couette_flow_model,Named Model-Type Assumptions
+0.125,PT,Taylor,fluid-dynamics_taylor_couette_flow_model,Assumption
+0.1212,cm3,soil,hydrology_brooks_corey_soil_model,Named Model-Type Assumptions
+0.1212,cm3,soil,hydrology_brooks_corey_soil_model,Assumption
+0.119,W,water,hydrology_thornthwaite_water_balance_model,Named Model-Type Assumptions
+0.119,W,water,hydrology_thornthwaite_water_balance_model,Assumption
+0.119,REW,water,hydrology_thornthwaite_water_balance_model,Named Model-Type Assumptions
+0.119,REW,water,hydrology_thornthwaite_water_balance_model,Assumption
+0.1176,cm3,soil,hydrology_van_genuchten_soil_model,Named Model-Type Assumptions
+0.1176,cm3,soil,hydrology_van_genuchten_soil_model,Assumption
+0.1143,3D,response,station~seismic@context~part_(instrument@context~part_response-filter),Phenomenon
+0.1143,3D,response,station~seismic@context~part_(instrument@context~part_response-filter),Context Phenomenon
+0.1136,PT,Taylor,hydrology_priestley_taylor_evaporation_model,Named Model-Type Assumptions
+0.1136,PT,Taylor,hydrology_priestley_taylor_evaporation_model,Assumption
+0.1053,gc,canopy,atmosphere_bottom_air_canopy__brutsaert_emissivity_factor,Variable
+0.0968,gc,canopy,crop_canopy_radiation~solar__interception_energy_flux_fraction,Variable
+0.0877,f,slope,downstream_hydraulic_geometry_slope-vs-discharge_exponent,Property
+0.087,cm3,soil,hydrology_transitional_brooks_corey_soil_model,Named Model-Type Assumptions
+0.087,cm3,soil,hydrology_transitional_brooks_corey_soil_model,Assumption
+0.0833,f,slope,downstream_hydraulic_geometry_slope-vs-discharge_coefficient,Standardized Property
+0.0833,f,slope,downstream_hydraulic_geometry_slope-vs-discharge_coefficient,Quantitative Property
+0.0833,f,slope,downstream_hydraulic_geometry_slope-vs-discharge_coefficient,Property
+0.0808,3D,response,(earth_surface)@context~on_(station~seismic@context~part_(instrument@context~part_response-filter)),Phenomenon
+0.0808,3D,response,(earth_surface)@context~on_(station~seismic@context~part_(instrument@context~part_response-filter)),Context Phenomenon
+-1,t,None,None,None
+-1,s,None,None,None
+-1,h,None,None,None
+-1,L,None,None,None
+-1,E,None,None,None
