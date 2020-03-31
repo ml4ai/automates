@@ -53,6 +53,24 @@ LINES_MIN_FILE = ''
 
 LINES_MAX_DSSAT = 9327
 
+# Mini-SPAM
+SPAM = \
+    ('ETPHOT.for', 'ROOTWU.for', 'SPAM.for', 'STEMP.for', 'ETPHR.for',
+     'PET.for', 'SOILEV.for', 'SPSUBS.for', 'TRANS.for',  # SPAM
+     'MULCH_EVAP.for',  # Soil/Mulch
+     'DATES.for', 'ModuleDefs.for', 'WARNING.for',  # Utilities
+     'HMET.for'  # Weather
+     )
+
+# dssat_PET
+PET = \
+    ('ERROR.for', 'Paddy_Mgmt.for', 'ROOTWU.for', 'VEGDM.for', 'CSMVersion.for',
+     'ESR_SOILEVAP.for', 'RESPIR.for', 'diffusiv.for', 'ASMDM.for', 'MULCHEVAP.for',
+     'TextureClass.for', 'NFLUX.for', 'SDCOMP.for', 'VEGDM.for', 'SOLAR.for',
+     'MOBIL.for', 'RNOFF.for', 'OSDefinitions.for', 'nox_pulse.for', 'plant.for',
+     'RStages.for', 'Flood_Irrig.for')
+
+
 # ------------------------------------------------------------------------------
 # END HACK
 # ------------------------------------------------------------------------------
@@ -367,10 +385,6 @@ def process_dir(dirname, G):
                 else:
                     pct_handled = fhandled / ftot * 100
 
-                color = (
-                    matplotlib.colors.rgb2hex(cm.Greens(pct_handled/100.0))
-                )
-
                 # TODO HACK: finding the file with the largest number of lines
                 if ftot > LINES_MAX:
                     LINES_MAX = ftot
@@ -379,9 +393,23 @@ def process_dir(dirname, G):
                     LINES_MIN = ftot
                     LINES_MIN_FILE = fname
 
-                node_size = 100 * (ftot / LINES_MAX_DSSAT)
-                G.add_node(fname, size=node_size, shape='ellipse', style="filled", fontcolor="white", fillcolor=color)
-                # G.add_node(fname, style="filled", fontcolor="white", fillcolor=color)
+                node_size = ftot / LINES_MAX_DSSAT
+
+                color = (
+                    matplotlib.colors.rgb2hex(cm.Greens(pct_handled / 100.0))
+                    # matplotlib.colors.rgb2hex(cm.Greens(node_size))
+                )
+
+                if fname in PET:
+                    color = 'red'
+                else:
+                    color = 'black'
+
+                node_name = f'{fname} ({ftot})'
+
+                # G.add_node(node_name, style="filled", fontcolor="white", fillcolor=color)
+                # G.add_node(fname, width=node_size, style="filled", fontcolor="white", fillcolor=color)
+                G.add_node(fname, style="filled", fontcolor="white", fillcolor=color)
 
                 file_map[fname] = {
                     "Total number of lines": ftot,
