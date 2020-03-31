@@ -19,6 +19,8 @@ RESERVED_WORDS = {
     "ln",
 }
 
+letters = ["a", "b", "c", "d", "e", "f", "g", "h", "j", "k"]
+
 
 def latex2python(symbols_str):
     try:
@@ -26,6 +28,13 @@ def latex2python(symbols_str):
     except Exception as e:
         print(e)
         return None
+
+
+def re_map_vars(eqn_str, var_map):
+    for var, letter in var_map.items():
+        clean_var = re.sub(r"\{|\}", "", var)
+        eqn_str = re.sub(rf"\b{letter}\b", clean_var, eqn_str)
+    return eqn_str
 
 
 def sanitize_token_tex(tokenized_tex):
@@ -42,8 +51,12 @@ def sanitize_token_tex(tokenized_tex):
     # print(words)
     unique_words = set(words)
     vars = list(unique_words - RESERVED_WORDS)
+    var_map = {v: letters[i] for i, v in enumerate(vars)}
+    for var, letter in var_map.items():
+        tokenized_tex = re.sub(var, letter, tokenized_tex)
+
     # print(vars)
-    return tokenized_tex
+    return tokenized_tex, var_map
 
 
 if __name__ == "__main__":
@@ -56,14 +69,16 @@ if __name__ == "__main__":
             no_ws_eqn_tex = eqn_tex.strip()
             if no_ws_eqn_tex == "None":
                 continue
-            # print(no_ws_eqn_tex)
-            sanitized_eqn_tex = sanitize_token_tex(no_ws_eqn_tex)
+            if l == 5:
+                break
+            sanitized_eqn_tex, var_maps = sanitize_token_tex(no_ws_eqn_tex)
             python_eqn = latex2python(sanitized_eqn_tex)
+            new_python_eqn = re_map_vars(python_eqn, var_maps)
             equations.append(
                 {
                     "original": no_ws_eqn_tex,
                     "sanitized": sanitized_eqn_tex,
-                    "translated": python_eqn,
+                    "translated": new_python_eqn,
                 }
             )
 
