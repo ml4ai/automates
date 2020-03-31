@@ -39,10 +39,10 @@ def sanitize_token_tex(tokenized_tex):
         r"[A-Za-z]+\^[A-Za-z]|[A-Za-z]+_[A-Za-z0-9]|[A-Za-z]+_\{[A-Za-z0-9]+\}|[A-Za-z]+",
         tokenized_tex,
     )
-    print(words)
+    # print(words)
     unique_words = set(words)
     vars = list(unique_words - RESERVED_WORDS)
-    print(vars)
+    # print(vars)
     return tokenized_tex
 
 
@@ -53,12 +53,10 @@ if __name__ == "__main__":
     equations = list()
     with open(eqn_filepath, "r") as infile:
         for l, eqn_tex in enumerate(infile):
-            if l == 5:
-                break
             no_ws_eqn_tex = eqn_tex.strip()
             if no_ws_eqn_tex == "None":
                 continue
-            print(no_ws_eqn_tex)
+            # print(no_ws_eqn_tex)
             sanitized_eqn_tex = sanitize_token_tex(no_ws_eqn_tex)
             python_eqn = latex2python(sanitized_eqn_tex)
             equations.append(
@@ -69,8 +67,8 @@ if __name__ == "__main__":
                 }
             )
 
-    # for eqns in equations:
-    #     print(f"ORIGINAL:\t\t{eqns['original']}")
-    #     print(f"SANITIZED:\t\t{eqns['sanitized']}")
-    #     print(f"TRANSLATED:\t\t{eqns['translated']}")
-    #     print("\n")
+    for eqns in equations:
+        print(f"ORIGINAL:\t\t{eqns['original']}")
+        print(f"SANITIZED:\t\t{eqns['sanitized']}")
+        print(f"TRANSLATED:\t\t{eqns['translated']}")
+        print("\n")
