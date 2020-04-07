@@ -2,7 +2,25 @@
 # Script to read equation latex from source file (one eqn per line)
 # and render each equation as a png
 #
-# NOTE: Assumes availability of ImageMagick: https://imagemagick.org/index.php
+# NOTE: Assumes availability of:
+#     pdflatex
+#     ImageMagick (for the 'convert' command): https://imagemagick.org/index.php
+#
+# Usage:
+# TODO provide better cli interface
+# Currently: comment out the line(s) for the corresponding model(s)
+#   under __main__ that you want to process
+#
+# What it does:
+# For each latex source line in <model>_equations.txt:
+#     ... in the directory: <model>/manual_latex/tex/
+#       Create a corresponding <#>.tex file with the latex line inside
+#         a latex 'standalone' template
+#       Calls pdflatex (subprocess) to render the <#>.tex as a PDF in <#>.pdf
+#     Calls convert (subprocess) to convert the <#>.pdf to a <#>.png
+#       ... where the <#>.png is saved in the directory:
+#         <model>/manual_eqn_images/
+#
 # -----------------------------------------------------------------------------
 
 import os
@@ -19,6 +37,10 @@ ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
 MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
 PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
+PETDYN_ROOT = os.path.join(MODEL_ROOT, 'PETDYN')
+PETMEY_ROOT = os.path.join(MODEL_ROOT, 'PETMEY')
+PETPEN_ROOT = os.path.join(MODEL_ROOT, 'PETPEN')
+PETPNO_ROOT = os.path.join(MODEL_ROOT, 'PETPNO')
 
 
 # -----------------------------------------------------------------------------
@@ -43,16 +65,10 @@ if __name__ == '__main__':
     # TODO: provide proper cli interface
 
     print('render_images_for_model(): NEED TO UNCOMMENT')
+    # UNCOMMENT the line(s) for the model(s) you want to process
     # render_images_for_model(PETPT_ROOT, 'PETPT', verbose=True, test_p=False)
     # render_images_for_model(PETASCE_ROOT, 'PETASCE', verbose=True, test_p=False)
-
-    '''
-    PETPT_LATEX_SOURCE = os.path.join(PETPT_ROOT, 'PETPT_equations.txt')
-    PETPT_EQN_TEX_DST_ROOT = os.path.join(os.path.join(PETPT_ROOT, 'manual_latex'), 'tex')
-    PETPT_IMAGE_DST_ROOT = os.path.join(PETPT_ROOT, 'manual_eqn_images')
-    render_image_from_latex(PETPT_LATEX_SOURCE,
-                            PETPT_EQN_TEX_DST_ROOT,
-                            PETPT_IMAGE_DST_ROOT,
-                            verbose=True,
-                            test_p=False)
-    '''
+    # render_images_for_model(PETDYN_ROOT, 'PETDYN', verbose=True, test_p=False)
+    # render_images_for_model(PETMEY_ROOT, 'PETMEY', verbose=True, test_p=False)
+    # render_images_for_model(PETPEN_ROOT, 'PETPEN', verbose=True, test_p=False)
+    # render_images_for_model(PETPNO_ROOT, 'PETPNO', verbose=True, test_p=False)x

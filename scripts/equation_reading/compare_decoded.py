@@ -1,3 +1,18 @@
+# -----------------------------------------------------------------------------
+# Script to generate webpage comparing original equation PNGs to PNGs from
+# decoded latex.
+#
+# Usage:
+# TODO provide better cli interface
+# Currently: comment out the line(s) for the corresponding model(s)
+#   under __main__ that you want to process
+#
+# What it does:
+# Generates ASKE-AutoMATES/Data/Mini-SPAM/
+#
+# -----------------------------------------------------------------------------
+
+
 import os
 import re
 
@@ -12,6 +27,10 @@ ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
 MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
 PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
+PETDYN_ROOT = os.path.join(MODEL_ROOT, 'PETDYN')
+PETMEY_ROOT = os.path.join(MODEL_ROOT, 'PETMEY')
+PETPEN_ROOT = os.path.join(MODEL_ROOT, 'PETPEN')
+PETPNO_ROOT = os.path.join(MODEL_ROOT, 'PETPNO')
 
 
 # -----------------------------------------------------------------------------
@@ -28,7 +47,13 @@ def generate_model_spec(model_root, model_name):
 
 PETPT_SPEC = generate_model_spec(PETPT_ROOT, 'PETPT')
 PETASCE_SPEC = generate_model_spec(PETASCE_ROOT, 'PETASCE')
+PETDYN_SPEC = generate_model_spec(PETDYN_ROOT, 'PETDYN')
+PETMEY_SPEC = generate_model_spec(PETMEY_ROOT, 'PETME')
+PETPEN_SPEC = generate_model_spec(PETPEN_ROOT, 'PETPEN')
+PETPNO_SPEC = generate_model_spec(PETPNO_ROOT, 'PETPNO')
 
+
+# TODO: After completing a model, add it to the list...
 COMPARISON_SPEC = (PETPT_SPEC, PETASCE_SPEC)
 
 
