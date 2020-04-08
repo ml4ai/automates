@@ -4,26 +4,26 @@
 #
 # Usage:
 # TODO provide better cli interface
-# Currently: comment out the line(s) for the corresponding model(s)
-#   under __main__ that you want to process
+# Currently: after a model has been processed, add it's root (available under
+# PATHS) to the COMPARISON_SPEC tuple.
 #
 # What it does:
-# Generates ASKE-AutoMATES/Data/Mini-SPAM/
+# Generates comparison.html
 #
 # -----------------------------------------------------------------------------
 
 import os
 import re
+import parameters
 
 
 # -----------------------------------------------------------------------------
 # PATHS
 # -----------------------------------------------------------------------------
 
-# NOTE: Must be updated to your local!
-ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
+ASKE_GOOGLE_DRIVE_ROOT = parameters.get()['AUTOMATES_DATA']
 
-MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
+MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
 PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
 PETDYN_ROOT = os.path.join(MODEL_ROOT, 'PETDYN')

@@ -14,13 +14,14 @@
 #   under __main__ that you want to process
 #
 # What it does:
-#
-#
+# Executes eqdec across the PNGs under the specified <model>/manual_eqn_images/
+# Then calls render_decoded_eqns on the extracted json (containing the decoded latex
 # -----------------------------------------------------------------------------
 
 import os
 import json
 import re
+import parameters
 import src.equation_reading.equation_translation.img_translator as decode
 import src.equation_reading.equation_extraction.render_image_from_latex as rifl
 
@@ -33,10 +34,9 @@ import src.equation_reading.equation_extraction.render_image_from_latex as rifl
 # PATHS
 # -----------------------------------------------------------------------------
 
-# NOTE: Must be updated to your local!
-ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
+ASKE_GOOGLE_DRIVE_DATA_ROOT = parameters.get()['AUTOMATES_DATA']
 
-MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
+MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_DATA_ROOT, 'Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
 PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
 PETDYN_ROOT = os.path.join(MODEL_ROOT, 'PETDYN')
