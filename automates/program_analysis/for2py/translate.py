@@ -28,8 +28,8 @@ import uuid
 import xml.etree.ElementTree as ET
 from typing import List, Dict
 from collections import OrderedDict
-from program_analysis.for2py.get_comments import get_comments
-from program_analysis.for2py.loop_handle import RefactorConstructs
+from .get_comments import get_comments
+from .loop_handle import RefactorConstructs
 
 
 class ParseState(object):

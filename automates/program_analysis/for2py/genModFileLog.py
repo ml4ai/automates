@@ -23,7 +23,7 @@ import sys
 import json
 import argparse
 from os.path import isfile
-from program_analysis.for2py import syntax, preprocessor
+from .for2py import syntax, preprocessor
 
 
 def parse_args():

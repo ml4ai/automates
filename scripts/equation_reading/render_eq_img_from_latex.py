@@ -24,8 +24,8 @@
 # -----------------------------------------------------------------------------
 
 import os
-import parameters
-import src.equation_reading.equation_extraction.render_image_from_latex as rifl
+import automates.parameters
+import automates.equation_reading.equation_extraction.render_image_from_latex as rifl
 
 
 # -----------------------------------------------------------------------------

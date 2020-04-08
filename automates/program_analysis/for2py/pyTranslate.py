@@ -7,8 +7,8 @@ import pickle
 import argparse
 import re
 from typing import Dict
-from program_analysis.for2py.format import list_data_type
-from program_analysis.for2py import For2PyError, syntax
+from .format import list_data_type
+from . import For2PyError, syntax
 
 ###############################################################################
 #                                                                             #
@@ -875,12 +875,12 @@ class PythonCodeGenerator(object):
     def printUse(self, node, printState: PrintState):
         if node.get("include"):
             self.imports.append(
-                f"from program_analysis.for2py.tmp.m_{node['arg'].lower()} "
+                f"from automates.program_analysis.for2py.tmp.m_{node['arg'].lower()} "
                 f"import {', '.join(node['include'])}\n"
             )
         else:
             self.imports.append(
-                f"from program_analysis.for2py.tmp.m_"
+                f"from automates.program_analysis.for2py.tmp.m_"
                 f"{node['arg'].lower()} import *\n"
             )
 
@@ -1800,13 +1800,13 @@ def get_python_sources_and_variable_map(outputDict: Dict):
         "import sys",
         "from typing import List",
         "import math",
-        "from program_analysis.for2py.format import *",
-        "from program_analysis.for2py.arrays import *",
-        "from program_analysis.for2py.static_save import *",
-        "from program_analysis.for2py.strings import *",
+        "from automates.program_analysis.for2py.format import *",
+        "from automates.program_analysis.for2py.arrays import *",
+        "from automates.program_analysis.for2py.static_save import *",
+        "from automates.program_analysis.for2py.strings import *",
         "from dataclasses import dataclass",
-        "from program_analysis.for2py.types_ext import Float32",
-        "import program_analysis.for2py.math_ext as math",
+        "from automates.program_analysis.for2py.types_ext import Float32",
+        "import automates.program_analysis.for2py.math_ext as math",
         "from numbers import Real",
         "from random import random\n",
     ]

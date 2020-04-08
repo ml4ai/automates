@@ -9,10 +9,10 @@ import re
 import argparse
 from functools import reduce
 import json
-from program_analysis.for2py.genCode import genCode, PrintState
-from program_analysis.for2py.mod_index_generator import get_index
-from program_analysis.for2py.get_comments import get_comments
-from program_analysis.for2py import For2PyError
+from .genCode import genCode, PrintState
+from .mod_index_generator import get_index
+from .get_comments import get_comments
+from . import For2PyError
 from typing import List, Dict, Iterable, Optional
 from collections import OrderedDict
 from itertools import chain, product
@@ -4481,9 +4481,9 @@ def create_grfn_dict(
     lambda_string_list = [
         "from numbers import Real\n",
         "from random import random\n",
-        "from program_analysis.for2py.strings import *\n"
+        "from automates.program_analysis.for2py.strings import *\n"
         "import numpy as np\n"
-        "import program_analysis.for2py.math_ext as math\n\n",
+        "import automates.program_analysis.for2py.math_ext as math\n\n",
     ]
 
     state = GrFNState(lambda_string_list)

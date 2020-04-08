@@ -12,7 +12,7 @@ import sys
 import re
 from collections import OrderedDict
 from typing import List, Dict, Tuple
-from program_analysis.for2py.syntax import (
+from .syntax import (
     line_is_comment,
     line_is_continuation,
     line_is_continued,

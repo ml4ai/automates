@@ -21,9 +21,9 @@
 import os
 import json
 import re
-import parameters
-import src.equation_reading.equation_translation.img_translator as decode
-import src.equation_reading.equation_extraction.render_image_from_latex as rifl
+import automates.parameters
+import automates.equation_reading.equation_translation.img_translator as decode
+import automates.equation_reading.equation_extraction.render_image_from_latex as rifl
 
 # -----------------------------------------------------------------------------
 # NOTE: Must have eqdec app running. See:

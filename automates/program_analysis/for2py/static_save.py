@@ -18,7 +18,7 @@ Usage:
             "target_function"
 """
 
-from program_analysis.for2py.arrays import *
+from .arrays import *
 from dataclasses import dataclass
 
 

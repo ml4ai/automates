@@ -30,7 +30,7 @@ import xml.etree.ElementTree as ET
 from os.path import isfile
 from typing import Dict, List, Tuple
 
-from program_analysis.for2py import (
+from . import (
     preprocessor,
     translate,
     get_comments,
