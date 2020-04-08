@@ -185,17 +185,17 @@ if __name__ == "__main__":
     partition = 2
     SM.modify_bounds(param, partition, partitions)
 
-    df_S1, df_ST = SM.generate_dataframe(4)
-    print("df_ST\n", df_ST)
-    print("df_S1\n", df_S1)
+    # df_S1, df_ST = SM.generate_dataframe(4)
+    # print("df_ST\n", df_ST)
+    # print("df_S1\n", df_S1)
 
     indices_lst = SM.generate_indices()
 
     component = "S1"
     SM.sensitivity_plots(indices_lst, component)
 
-    component = "S2"
-    SM.sensitivity_plots(indices_lst, component)
+    # component = "S2"
+    # SM.sensitivity_plots(indices_lst, component)
 
-    component = "runtime"
-    SM.sensitivity_plots(indices_lst, component)
+    # component = "runtime"
+    # SM.sensitivity_plots(indices_lst, component)
