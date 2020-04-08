@@ -3,8 +3,11 @@ import SALib as SAL
 from SALib.sample import saltelli
 from SALib.analyze import sobol
 import numpy as np
+import networkx as nx
 import json
-from model_analysis.networks import ComputationalGraph
+import inspect
+from copy import deepcopy
+from model_analysis.networks import ComputationalGraph, GroundedFunctionNetwork
 from model_analysis.utils import timeit
 
 
@@ -320,3 +323,88 @@ class SensitivityAnalyzer(object):
             if not save_time
             else (Si, (sample_time, exec_time, analyze_time))
         )
+
+
+def ISA(
+    model: GroundedFunctionNetwork,
+    bounds: dict,
+    sample_size: int,
+    sa_method: callable,
+    max_iterations: int = 5,
+) -> dict:
+    var_bound_graph = nx.DiGraph()
+
+    def __get_max_S1(cur_bounds: dict) -> tuple:
+        Si = sa_method(sample_size, model, cur_bounds, save_time=False)
+
+        S1_tuples = list(zip(Si.parameter_list, list(Si.O1_indices)))
+        (max_var, max_val) = max(S1_tuples, key=lambda tup: tup[1])
+        return max_var, max_val
+
+    def __get_var_bound_breaks(cur_bounds: list, partitions: int = 3):
+        num_bounds = len(cur_bounds)
+        if num_bounds < 2:
+            raise RuntimeError(f"Improper number of bounds: {num_bounds}")
+        elif num_bounds == 2:
+            (lower, upper) = cur_bounds
+            interval_sz = (upper - lower) / partitions
+            return [
+                (lower + (i * interval_sz), lower + ((i + 1) * interval_sz))
+                for i in range(partitions)
+            ]
+        else:
+            return list(zip(cur_bounds[:-1], cur_bounds[1:]))
+
+    def __get_new_bound_sets(bbreaks: list, cur_var: str, cur_bounds: dict):
+        new_bounds_container = list()
+        for bound in bbreaks:
+            new_bounds = deepcopy(cur_bounds)
+            new_bounds[cur_var] = bound
+            new_bounds_container.append(new_bounds)
+        return new_bounds_container
+
+    def __find_values_of_interest(max_var: str) -> list:
+        new_bounds = list()
+        for _, y in model.nodes(data="lambda_fn"):
+            if y is not None:
+                lambda_type = (
+                    inspect.getsourcelines(y)[0][0]
+                    .split("def")[1]
+                    .split("__")[2]
+                )
+                if lambda_type == "condition":
+                    var = inspect.getsourcelines(y)[0][0]
+                    var = var[var.find("(") + 1 : var.find(")")].split(":")[0]
+                    if var == max_var:
+                        lambda_fn = (
+                            inspect.getsourcelines(y)[0][1]
+                            .split("return")[-1]
+                            .split("\n")[0]
+                        )
+                        val = lambda_fn[
+                            lambda_fn.find("(") + 1 : lambda_fn.find(")")
+                        ].split()[-1]
+                        new_bounds.append(float(val))
+        return new_bounds
+
+    def __iterate_with_bounds(cur_bounds: dict, pass_number: int):
+        # start by getting the current max S1 var and value
+        max_var, s1_val = __get_max_S1(cur_bounds)
+        var_bound_graph.add_edge(str(cur_bounds), max_var)
+
+        # Stop recursion with max iterations
+        if pass_number == max_iterations:
+            return
+
+        new_vals = __find_values_of_interest(max_var)
+        interval_bounds = sorted(bounds[max_var] + new_vals)
+        bound_breaks = __get_var_bound_breaks(interval_bounds)
+        new_bound_sets = __get_new_bound_sets(
+            bound_breaks, max_var, cur_bounds
+        )
+
+        for new_bounds in new_bound_sets:
+            var_bound_graph.add_edge(max_var, str(new_bounds))
+            __iterate_with_bounds(new_bounds)
+
+    return var_bound_graph
