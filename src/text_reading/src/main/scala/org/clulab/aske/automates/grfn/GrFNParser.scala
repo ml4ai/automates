@@ -110,6 +110,16 @@ object GrFNParser {
     linkElement
   }
 
+  def mkTextLinkElement(elemType: String, source: String, content: String, contentType: String, svoQueryTerms: Seq[String]): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> elemType,
+      "source" -> source,
+      "content" -> content,
+      "content_type" -> contentType,
+      "svo_query_terms" -> svoQueryTerms
+    )
+    linkElement
+  }
 
   def mkCommentTextElement(text: String, source: String, container: String, location: String): ujson.Obj = {
     val commentTextElement = ujson.Obj(
