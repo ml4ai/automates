@@ -106,48 +106,19 @@ class MaxSensitivity(object):
     
     def search_maxS1(self):
 
-        print("Start Search For Max S1\n")
         var_max, max_val = self.maxS1()
-        print(var_max, max_val)
         var_bounds = self.split_interval_maxS1(var_max)
-        print(var_bounds)
 
         return self.search_new_maxS1(var_max, max_val, var_bounds)
 
     def search_new_maxS1(self, param, val, bounds):
 
-        print("Start Search For New Max S1\n")
         prev_max = val
-        print("Starting max values ", param, prev_max)
         for i in range(0, len(bounds)):
-            print(f'bound for {param} is {bounds[i]}')
             self.B[param] = bounds[i]
             var_max, max_val = self.maxS1()
-            print(f'new max variable is {var_max} and max value is {max_val}')
             if var_max != param:
                 var_bounds = self.split_interval_maxS1(var_max)
-                print(f'new  bounds for {var_max} are {var_bounds}')
                 self.search_new_maxS1(var_max, max_val, var_bounds)
 
         return
-
-
-if __name__ == "__main__":
-
-    model = "PETPT"
-
-    bounds = {
-        "tmax": [-30.0, 60.0],
-        "tmin": [-30.0, 60.0],
-        "srad": [0.0, 30.0],
-        "msalb": [0.0, 1.0],
-        "xhlai": [0.0, 20.0],
-    }
-
-    sample_size = 10**5
-
-    method = "Sobol"
-
-    SM = MaxSensitivity(model, bounds, sample_size, method)
-    SM.search_maxS1()
-
