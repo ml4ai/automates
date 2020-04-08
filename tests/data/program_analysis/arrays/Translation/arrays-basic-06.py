@@ -1,5 +1,5 @@
-from program_analysis.for2py.format import *
-from program_analysis.for2py.arrays import *
+from automates.program_analysis.for2py.format import *
+from automates.program_analysis.for2py.arrays import *
 
 def main():
     A = Array([(-3,1),(1,5),(10,14)])

@@ -1,4 +1,4 @@
-from program_analysis.for2py.format import *
+from automates.program_analysis.for2py.format import *
 from M_mymod import *
 
 def main():

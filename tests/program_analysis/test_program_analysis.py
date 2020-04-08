@@ -4,7 +4,7 @@ import json
 from datetime import date
 import pytest
 
-from program_analysis.for2py import genPGM, f2grfn
+from automates.program_analysis.for2py import genPGM, f2grfn
 
 from pathlib import Path
 from typing import Dict

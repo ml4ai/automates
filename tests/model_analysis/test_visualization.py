@@ -2,9 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from model_analysis.networks import GroundedFunctionNetwork as GrFN
-from model_analysis.sensitivity import SensitivityAnalyzer
-from model_analysis.visualization import SensitivityVisualizer
+from automates.model_analysis.networks import GroundedFunctionNetwork as GrFN
+from automates.model_analysis.sensitivity import SensitivityAnalyzer
+from automates.model_analysis.visualization import SensitivityVisualizer
 
 
 @pytest.fixture

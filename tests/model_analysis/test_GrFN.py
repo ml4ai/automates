@@ -6,14 +6,13 @@ import sys
 
 import numpy as np
 
-from model_analysis.networks import (
+from automates.model_analysis.networks import (
     GroundedFunctionNetwork,
     ForwardInfluenceBlanket,
 )
-import model_analysis.linking as linking
+import automates.model_analysis.linking as linking
 
-# import delphi.translators.GrFN2WiringDiagram.translate as GrFN2WD
-import program_analysis.for2py.f2grfn as f2grfn
+import automates.program_analysis.for2py.f2grfn as f2grfn
 
 data_dir = "tests/data/GrFN/"
 sys.path.insert(0, "tests/data/program_analysis")

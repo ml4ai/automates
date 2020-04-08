@@ -13,8 +13,8 @@ import networkx as nx
 from networkx.algorithms.simple_paths import all_simple_paths
 
 # from model_analysis.analysis import get_max_s2_sensitivity
-from model_analysis.utils import ScopeNode, choose_font
-from program_analysis.for2py import f2grfn
+from .utils import ScopeNode, choose_font
+from ..program_analysis.for2py import f2grfn
 import numpy as np
 
 FONT = choose_font()

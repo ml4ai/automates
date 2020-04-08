@@ -1,11 +1,11 @@
 import sys
 from typing import List
 import math
-from program_analysis.for2py.format import *
-from program_analysis.for2py.arrays import *
+from automates.program_analysis.for2py.format import *
+from automates.program_analysis.for2py.arrays import *
 from dataclasses import dataclass
-from program_analysis.for2py.types_ext import Float32
-import program_analysis.for2py.math_ext as math
+from automates.program_analysis.for2py.types_ext import Float32
+import automates.program_analysis.for2py.math_ext as math
 from numbers import Real
 
 

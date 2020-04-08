@@ -18,7 +18,7 @@ EXTRAS_REQUIRE = {
         "jupyter",
         "jupyter-contrib-nbextensions",
     ],
-    "test": ["pytest>=4.4.0", "pytest-cov", "pytest-sugar", "pytest-xdist"],
+    "test": ["pytest>=4.4.0", "pytest-cov", "pytest-xdist"],
     "docs": [
         "sphinx",
         "sphinx-rtd-theme",
