@@ -2,15 +2,16 @@
 
 The scripts in this directory support batch decoding of latex from PNG images of equations (`batch_decode_eq_images.py`), as well as provide help with creating equation image corpora from latext (`render_eq_img_from_latex.py`) and comparing images (where the images presumably were manually created and then decoded using `eqdec`: `compare_decoded.py`).
 
-The scripts are currently set up to expect a path to a local version of the AutoMATES Google Drive Data root. This path is set in each script by the global var `ASKE_GOOGLE_DRIVE_DATA_ROOT`, but can be specified either by creating a config.json file that has the following content:
+The scripts are currently set up to expect a path to a local version of the AutoMATES Google Drive Data root. This path is set in each script by the global var `ASKE_GOOGLE_DRIVE_DATA_ROOT`, but can be specified either by (1) creating a file called `config.json` that has the following content:
 
 ```
 {
-  "AUTOMATES_DATA": <string of absolute path to ASKE-Automates/Data>
+  "AUTOMATES_DATA": <string of absolute path to Google Drive ASKE-Automates/Data>
 }
 ```
+(Note: config.json is .gitignore'd in the `scripts/equation_reading/ directory`)
 
-Or you can specify this as a user environment variable (e.g., in your .zshrc/.bashrc).
+... or (2) you can specify this as a user environment variable (e.g., in your .zshrc/.bashrc).
 
 The following is the procedure for manually creating latex source for equations and then using the three scripts to create source PNGs, decode them to latex, make PNGs of those, and the create the summary comparison html. See the next section, _Common Directory Structure_, for the general directory structure assumed by the escripts; specific files that are created (by you) or generated (by the scripts) are referred to in the following steps.
 
