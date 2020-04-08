@@ -443,8 +443,6 @@ def fortran_to_grfn(
         ), f"Directory {temp_dir} is not writable.\n\
             Please, provide the directory name to hold files."
 
-    print(f"*** ALL OUTPUT FILES LIVE IN [{temp_dir}]")
-
     # Output files
     python_file = temp_dir + "/" + base + ".py"
 

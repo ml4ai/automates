@@ -6,21 +6,26 @@ from model_analysis.visualization import SensitivityVisualizer
 
 
 class SensitivityModel(object):
-    def __init__(self, model, bounds, sample_list, method):
+    def __init__(self, model: GrFN, bounds, sample_list, method, model_name = "model"):
         self.model = model
-        self.B = bounds
+        self.model_name = model_name
+        self.bounds = bounds
         self.sample_list = sample_list
         self.method = method
 
+    def set_bounds(self, bounds):
+        self.bounds = bounds
+
     def modify_bounds(self, param, partition, partitions=3):
-        
+
         partition -= 1
         if partition < 0 or partition > partitions:
-            raise ValueError('Invalid partition number!')
+            raise ValueError("Invalid partition number!")
 
-        int_range = self.B[param]
-        lower = int_range[0]; upper = int_range[1];
-        size = (upper - lower)/partitions
+        int_range = self.bounds[param]
+        lower = int_range[0]
+        upper = int_range[1]
+        size = (upper - lower) / partitions
 
         partition_param_bounds = list()
         for i in range(0, partitions):
@@ -28,31 +33,21 @@ class SensitivityModel(object):
             partition_param_bounds.append([lower, new_upper])
             lower = new_upper
 
-        self.B[param] =  partition_param_bounds[partition]
-
+        self.bounds[param] = partition_param_bounds[partition]
 
     def sensitivity(self, N):
 
-        if self.model == "PETASCE":
-            tG = GrFN.from_fortran_file(
-                f"../tests/data/program_analysis/{self.model}_simple.for"
-            )
-        else:
-            tG = GrFN.from_fortran_file(
-                f"../tests/data/program_analysis/{self.model}.for"
-            )
-
         if self.method == "Sobol":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
-                N, tG, self.B, save_time=True
+                N, self.model, self.bounds, save_time=True
             )
         elif self.method == "FAST":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_FAST(
-                N, tG, self.B, save_time=True
+                N, self.model, self.bounds, save_time=True
             )
         elif self.method == "RBD FAST":
             (sobol_dict, timing_data) = SensitivityAnalyzer.Si_from_RBD_FAST(
-                N, tG, self.B, save_time=True
+                N, self.model, self.bounds, save_time=True
             )
         else:
             print("Method not known!")
@@ -62,7 +57,7 @@ class SensitivityModel(object):
 
         return sobol_dict.__dict__, sample_time, exec_time, analysis_time
 
-    def generate_dataframe(self, decimal):
+    def generate_dataframes(self, decimal=2):
 
         i = len(self.sample_list) - 1
         N = self.sample_list[i]
@@ -72,15 +67,15 @@ class SensitivityModel(object):
         ST_max = dict(zip(var_names, Si["OT_indices"].tolist()))
 
         df_S1 = pd.DataFrame.from_dict(
-            S1_max, orient="index", columns=[self.model]
+            S1_max, orient="index", columns=[self.model_name]
         )
         df_ST = pd.DataFrame.from_dict(
-            ST_max, orient="index", columns=[self.model]
+            ST_max, orient="index", columns=[self.model_name]
         )
 
         df_S1 = df_S1.round(decimal).T
         df_ST = df_ST.round(decimal).T
-        
+
         return df_S1, df_ST
 
     def generate_indices(self):
@@ -155,7 +150,6 @@ if __name__ == "__main__":
         "xhlai": [0.0, 20.0],
     }
 
-
     # bounds = {
     # "doy": [1, 365],
     # "meevp": [0, 1],
@@ -172,15 +166,13 @@ if __name__ == "__main__":
     # "canht": [0.001, 3],
     # }
 
-
-
     sample_list = [10 ** x for x in range(1, 6)]
 
     method = "Sobol"
 
     SM = SensitivityModel(model, bounds, sample_list, method)
 
-    param = 'tmax'
+    param = "tmax"
     partitions = 3
     partition = 2
     SM.modify_bounds(param, partition, partitions)
