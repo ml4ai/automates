@@ -14,7 +14,7 @@
 
 import os
 import re
-import automates.parameters
+import automates.utils.parameters as parameters
 
 
 # -----------------------------------------------------------------------------

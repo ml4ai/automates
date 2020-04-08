@@ -21,7 +21,7 @@
 import os
 import json
 import re
-import automates.parameters
+import automates.utils.parameters as parameters
 import automates.equation_reading.equation_translation.img_translator as decode
 import automates.equation_reading.equation_extraction.render_image_from_latex as rifl
 

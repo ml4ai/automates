@@ -24,7 +24,7 @@
 # -----------------------------------------------------------------------------
 
 import os
-import automates.parameters
+import automates.utils.parameters as parameters
 import automates.equation_reading.equation_extraction.render_image_from_latex as rifl
 
 
