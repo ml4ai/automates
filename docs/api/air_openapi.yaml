@@ -1,15 +1,15 @@
 openapi: 3.0.0
 
 info:
-  title: GrFN spec
-  description: Grounded Function Network (GrFN) schema specification
+  title: AIR spec
+  description: AutoMATES Intermediate Representation (AIR) schema specification
   contact:
     name: Clayton T. Morrison
     email: claytonm@email.arizona.edu
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
-  version: 0.2.17
+  version: 0.1
 
 paths: {}
 
