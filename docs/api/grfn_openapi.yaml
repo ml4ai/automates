@@ -1,0 +1,173 @@
+openapi: 3.0.0
+
+info:
+  title: GrFN spec
+  description: Grounded Function Network (GrFN) schema specification
+  contact:
+    name: Clayton T. Morrison
+    email: claytonm@email.arizona.edu
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  version: 2.0.0
+
+paths: {}
+
+components:
+
+  schemas:
+
+    grfn:
+      title: <grfn>
+      description: >
+        Top-level structure.
+        A <grfn_def> corresponds to a namespace.
+      required:
+        - uid
+        - date_created
+        - functions
+        - variables
+        - edges
+        - containers
+      properties:
+        uid:
+          type: string
+          description: unique identifier
+        date_created:
+          type: string
+          format: date-time
+          description: >
+            Date and time that current GrFN was generated.
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/variable'
+        functions:
+          type: array
+          items:
+            $ref: '#/components/schemas/function'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/edge'
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/container'
+
+    edge:
+      title: <edge>
+      description: GrFN edge
+      required:
+      - in
+      - function
+      - out
+      properties:
+        in:
+          type: array
+          items:
+            $ref: '#/components/schemas/variable_identifier'
+        function:
+          $ref: '#/components/schemas/function_identifier'
+        out:
+          type: array
+          items:
+            $ref: '#/components/schemas/variable_identifier'
+
+    variable:
+      title: <variable>
+      description: A representation of a variable extracted from source code
+      required:
+        - name
+        - uid
+        - reference
+      properties:
+        name:
+          type: string
+          description: variable basename and index extracted from source code
+        uid:
+          type: string
+          description: variable unique identifier
+        reference:
+          type: string
+          description: grounding reference to scientific variable ontology
+        data-type:
+          type: object
+          description: TODO -- not sure how to do this section
+
+    function:
+      title: <function>
+      description: A representation of a functional computation extracted from source code
+      required:
+        - uid
+        - type
+        - reference
+        - lambda
+      properties:
+        uid:
+          type: string
+          description: function unique identifier
+        type:
+          type: string
+          description: states the type of function being computed by this function node
+        reference:
+          type: string
+          description: grounding reference to scientific variable ontology
+        lambda:
+          type: string
+          description: stringified pythonic version of the lambda function code
+
+    container:
+      title: <container>
+      description: >
+        TODO
+      required:
+        - name
+        - parent
+        - exit
+        - vertices
+      properties:
+        name:
+          type: string
+          description: a reference to the container that shows the original module path, scope path, and container name
+        parent:
+          type: string
+          description: the container name for the parent container to this container
+        exit:
+          type: string
+          description: a function unique identifier for the lambda function that computes the exit condition
+        vertices:
+          type: array
+          description: TODO -- not sure how to do this section
+
+    data-type:
+      title: <data-type>
+      description: TODO -- fill in this to define the data type field
+      required:
+        - name
+        - type
+        - domain
+      properties:
+        name:
+          type: string
+          description: the type name of the data field used in Python/NumPy
+        type:
+          type: string
+          description: the scale of this data-type binary/categorical/discrete/continuous
+        domain:
+          type: array
+          description: TODO -- fill in this section
+
+    variable_identifier:
+      title: <variable_identifier>
+      description: variable unique identifier
+
+    function_identifier:
+      title: <function_identifier>
+      description: function unique identifier
+
+    file_path:
+      title: <file_path>
+      description: >
+        String representation of the path to a file.
+      type: string
