@@ -1,7 +1,8 @@
-from PIL import Image
+from PIL import Image  # pillow
 import numpy as np
-import png
+import png             # pypng
 import sys
+
 
 def reformat(fn, fn_out):
     grey = np.array(Image.open(fn).convert('L'))
@@ -10,6 +11,7 @@ def reformat(fn, fn_out):
     img = grey_pil.point(lambda x: int(x/17))
     #(w, h) = img.size
     png.fromarray(np.asarray(img, np.uint8),'L;4').save(fn_out)
+
 
 if __name__ == "__main__":
     args = sys.argv
