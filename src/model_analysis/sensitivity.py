@@ -405,6 +405,7 @@ def ISA(
 
         for new_bounds in new_bound_sets:
             var_bound_graph.add_edge(max_var, str(new_bounds))
-            __iterate_with_bounds(new_bounds)
+            __iterate_with_bounds(new_bounds, pass_number + 1)
 
+    __iterate_with_bounds(bounds, 0)
     return var_bound_graph
