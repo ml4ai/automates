@@ -173,7 +173,7 @@ object SVOGrounder {
   * only look at the terms in the definition mentions for now*/
   def getTerms(mention: Mention): Option[Seq[String]] = {
     //todo: will depend on type of mention, e.g., for definitions, only look at the words in the definition arg, not var itself
-    println("Getting search terms for the mention")
+//    println("Getting search terms for the mention")
     if (mention matches "Definition") {
       val terms = new ArrayBuffer[String]()
 
@@ -231,11 +231,11 @@ object SVOGrounder {
       //get indices of compounds or modifiers to the head word of the mention
       val outgoingNodes = outgoing.map(o => o._1)
 
-        //check if two previous words are parts of a compound
+        //check if two previous words are parts of a compound---two words window was chosen based on seen examples
         for (i <- 1 to 2) {
           val idxToCheck = mention.synHead.get - i
           if (outgoingNodes.contains(idxToCheck)) {
-            //ideally need to add an nmod_of here; would require checking cur word + 2; todo: check if SVO has 'of' terms
+            //ideally need to add an nmod_of here; would require checking cur word + 2-3;
             if (outgoing.exists(item => item._1 == idxToCheck && (item._2 == "compound" || item._2 == "amod"))) {
 
               val newComp = mention.sentenceObj.words.slice(idxToCheck,mention.synHead.get + 1).mkString("_")

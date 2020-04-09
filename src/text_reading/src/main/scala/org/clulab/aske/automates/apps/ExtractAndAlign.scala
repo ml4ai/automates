@@ -7,7 +7,7 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement}
+import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
@@ -225,11 +225,12 @@ object ExtractAndAlign {
       val docId = mention.document.id.getOrElse("unk_text_file")
       val sent = mention.sentence
       val offsets = mention.tokenInterval.toString()
-      mkLinkElement(
+      mkTextLinkElement(
         elemType = "text_var",
         source = s"${docId}_sent${sent}_$offsets",
         content = mention.arguments(VARIABLE).head.text,
-        contentType = "null"
+        contentType = "null",
+        svoQueryTerms = SVOGrounder.getTerms(mention).getOrElse(Seq.empty)
       )
     }
 
