@@ -69,19 +69,27 @@ def call_groundMentionsToSVO(mentions_name, out_name):
 
 
 if __name__ == "__main__":
-    call_pdf_to_mentions("petasce", "ASCE-mentions")
-    call_align(
-        "ASCE-mentions",
-        "PETASCE",
-        "PETASCE_equations",
-        "PETASCE_GrFN",
-        "ASCE-alignment",
-    )
+    # call_pdf_to_mentions("petasce", "ASCE-mentions")
+    # call_align(
+    #     "ASCE-mentions",
+    #     "PETASCE",
+    #     "PETASCE_equations",
+    #     "PETASCE_GrFN",
+    #     "ASCE-alignment",
+    # )
+    #
+    # call_pdf_to_mentions("petpt_2012", "PT-mentions")
+    # call_align(
+    #     "PT-mentions", "PETPT", "PETPT_equations", "PETPT_GrFN", "PT-alignment"
+    # )
+    #
+    # call_groundMentionsToSVO("ASCE-mentions", "ASCE-svo_grounding")
+    # call_groundMentionsToSVO("PT-mentions", "PT-svo_grounding")
 
-    call_pdf_to_mentions("petpt_2012", "PT-mentions")
-    call_align(
-        "PT-mentions", "PETPT", "PETPT_equations", "PETPT_GrFN", "PT-alignment"
-    )
+    # call_pdf_to_mentions("petpno_Penman", "PNO-mentions")
+    # call_pdf_to_mentions("petpen_PM", "PEN-mentions")
+    # call_pdf_to_mentions("petdyn_modern", "DYN-mentions")
 
-    call_groundMentionsToSVO("ASCE-mentions", "ASCE-svo_grounding")
-    call_groundMentionsToSVO("PT-mentions", "PT-svo_grounding")
+    call_groundMentionsToSVO("PNO-mentions", "PNO-svo_grounding")
+    call_groundMentionsToSVO("PEN-mentions", "PEN-svo_grounding")
+    call_groundMentionsToSVO("DYN-mentions", "DYN-svo_grounding")
