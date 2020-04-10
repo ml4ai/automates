@@ -202,7 +202,9 @@ object SVOGrounder {
         }
       }
 
-      Some(terms.sortBy(_.length))
+      val finalTerms = terms.map(t => t.filter(ch => ch.isLetter || ch.toString == "-" || ch.toString == "_"))
+      println(finalTerms)
+      Some(finalTerms.sortBy(_.length))
     } else None
 
   }
@@ -238,7 +240,7 @@ object SVOGrounder {
             //ideally need to add an nmod_of here; would require checking cur word + 2-3;
             if (outgoing.exists(item => item._1 == idxToCheck && (item._2 == "compound" || item._2 == "amod"))) {
 
-              val newComp = mention.sentenceObj.words.slice(idxToCheck,mention.synHead.get + 1).mkString("_")
+              val newComp = mention.sentenceObj.words.slice(idxToCheck,mention.synHead.get + 1).filter(w => w.count(_.isLetter) == w.length).mkString("_")
               //fixme: if grounder not too slow, also get compounds separated by "-" bc those also occur in SVO
               compoundWords.append(newComp)
             }
