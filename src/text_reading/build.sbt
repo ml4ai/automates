@@ -28,7 +28,7 @@ libraryDependencies ++= {
     "org.apache.commons" % "commons-text" % "1.6",
     "com.typesafe.play" %% "play-json" % "2.7.0",
     "org.json4s" %% "json4s-jackson" % "0.1.0"
-    
+
   )
 }
 
