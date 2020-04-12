@@ -215,6 +215,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
   }
 
+
+  /**Align everything except for equations**/
   def alignDocstringsAndText: Action[AnyContent] = Action { request =>
     val toAlign = Seq("Comment", "Text")
     val data = request.body.asJson.get.toString()
@@ -243,6 +245,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
 
+  /**get arguments for the aligner depending on what's needed for each endpoint**/
   def getArgsForAlignment(json: Value, toAlign: Seq[String]): alignmentArguments = {
 
     // load text mentions
