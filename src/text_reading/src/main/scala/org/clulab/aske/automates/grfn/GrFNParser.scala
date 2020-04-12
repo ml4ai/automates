@@ -14,7 +14,8 @@ import scala.collection.mutable.ArrayBuffer
 object GrFNParser {
 
   def addHypotheses(grfn: Value, hypotheses: Seq[Obj]): Value = {
-    grfn("grounding") = hypotheses.toList
+    //adding to exisitng grounding; intended to help with running complementary endpoints (instead of the full pipeline)
+    grfn("grounding") = (grfn("grounding").arr ++ hypotheses.toList).distinct
     grfn
   }
 
