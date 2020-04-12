@@ -22,6 +22,7 @@ import org.json4s
 
 import scala.collection.mutable.ArrayBuffer
 
+case class alignmentArguments(grfn: Value, variableNames: Seq[String], variableShortNames: Seq[String], commentDefinitionMentions: Option[Seq[Mention]], definitionMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]])
 
 object ExtractAndAlign {
   val COMMENT = "comment"
@@ -41,51 +42,17 @@ object ExtractAndAlign {
   val logger = LoggerFactory.getLogger(this.getClass())
 
   def groundMentionsToGrfn(
-                            toAlign: Seq[String],
-    textMentions: Seq[Mention],
     grfn: Value,
-    commentReader: Option[OdinEngine],
+    variableNames: Seq[String],
+    variableShortNames: Seq[String],
+    definitionMentions: Option[Seq[Mention]],
+    commentDefinitionMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
     alignmentHandler: AlignmentHandler,
     numAlignments: Option[Int],
     numAlignmentsSrcToComment: Option[Int],
-    scoreThreshold: Double = 0.0): Value = {
-
-    // =============================================
-    // Extract the variables and comment Mentions
-    // =============================================
-
-    // source code
-    val variableNames = GrFNParser.getVariables(grfn)
-    // The variable names only (excluding the scope info)
-    val variableShortNames = GrFNParser.getVariableShortNames(variableNames)
-
-    // source code comments
-    val commentDefinitionMentions = if (toAlign.contains("Comment")) {
-      Some(getCommentDefinitionMentions(commentReader.get, grfn, Some(variableShortNames))
-        .filter(hasRequiredArgs))
-    } else None
-
-
-//    for (cdm <- commentDefinitionMentions) {
-//      println(s"===============\n " +
-//        s"Comment mentions: ${cdm.text} \n " +
-//        s"variable: ${cdm.arguments("variable")} \n " +
-//        s"definition: ${cdm.arguments("definition")}\n")
-//    }
-
-    // text mentions
-    val definitionMentions =  if (toAlign.contains("Text")) {
-      Some(textMentions
-        .filter(m => m.label matches DEF_LABEL)
-        .filter(hasRequiredArgs))
-    } else None
-
-//    logger.info(s"Found ${definitionMentions.length} text definition mentions")
-
-    // svo groundings
-//    val definitionMentionGroundings = SVOGrounder.groundMentionsWithSparql(definitionMentions, 5)
-    val equationChunks = if (toAlign.contains("Equations")) Some(equationChunksAndSource.get.unzip._1) else None
+    scoreThreshold: Double = 0.0
+    ): Value = {
 
     // =============================================
     // Alignment
@@ -95,7 +62,7 @@ object ExtractAndAlign {
     val alignments = alignElements(
       alignmentHandler,
       definitionMentions, //fixme: here and in get linkElements---pass all mentions, only definition mentions, other types?
-      equationChunks,
+      equationChunksAndSource,
       commentDefinitionMentions,
       Some(variableShortNames),
       numAlignments,
@@ -105,8 +72,7 @@ object ExtractAndAlign {
 
     val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, Some(variableNames))
 
-
-    val hypotheses = getLinkHypotheses(linkElements, alignments)//, definitionMentionGroundings)
+    val hypotheses = getLinkHypotheses(linkElements, alignments)
 
 
     // =============================================
@@ -159,7 +125,7 @@ object ExtractAndAlign {
   def alignElements(
     alignmentHandler: AlignmentHandler,
     textDefinitionMentions: Option[Seq[Mention]],
-    equationChunks: Option[Seq[String]],
+    equationChunksAndSource: Option[Seq[(String, String)]],
     commentDefinitionMentions: Option[Seq[Mention]],
     variableShortNames: Option[Seq[String]],
     numAlignments: Option[Int],
@@ -174,14 +140,12 @@ object ExtractAndAlign {
       alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
     }
 
-
     /** Align the equation chunks to the text definitions */
-      if (equationChunks.isDefined && textDefinitionMentions.isDefined) {
-        val equationToTextAlignments = alignmentHandler.editDistance.alignTexts(equationChunks.get, textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))))
+      if (equationChunksAndSource.isDefined && textDefinitionMentions.isDefined) {
+        val equationToTextAlignments = alignmentHandler.editDistance.alignTexts(equationChunksAndSource.get.unzip._1, textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))))
         // group by src idx, and keep only top k (src, dst, score) for each src idx
         alignments(EQN_TO_TEXT) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
       }
-
 
     /** Align the comment definitions to the text definitions */
     if (commentDefinitionMentions.isDefined && textDefinitionMentions.isDefined) {
@@ -189,7 +153,6 @@ object ExtractAndAlign {
       // group by src idx, and keep only top k (src, dst, score) for each src idx
       alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
     }
-
 
     alignments.toMap
   }
@@ -347,91 +310,91 @@ object ExtractAndAlign {
     hypotheses
   }
 
-  def main(args: Array[String]): Unit = {
-    val toAlign = Seq("Comment", "Text", "Equation")
-    val config: Config = ConfigFactory.load()
-    val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
-    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
-
-
-    // =============================================
-    //                 DATA LOADING
-    // =============================================
-
-    // Instantiate the text reader
-    val textConfig: Config = config[Config]("TextEngine")
-    val textReader = OdinEngine.fromConfig(textConfig)
-
-    // Instantiate the comment reader
-    val localCommentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
-    // todo: future readers
-    //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
-    //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
-    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> localCommentReader))
-
-    // Load a GrFN
-    val grfnPath: String = config[String]("apps.grfnFile")
-    val grfnFile = new File(grfnPath)
-    val grfn = ujson.read(grfnFile.readString())
-
-    // Load text and extract definition mentions
-//    val inputDir = config[String]("apps.inputDirectory")
-//    val inputType = config[String]("apps.inputType")
-//    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
-//    val files = FileUtils.findFiles(inputDir, dataLoader.extension)
-//    val textDefinitionMentions = getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
-//    val source = scala.io.Source.fromFile()
-//    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
-//    source.close()
-    val textDefinitionMentions = JSONSerializer.toMentions(new File("/Users/bsharp/Downloads/PT-stuf/PT-mentions.json"))
-    logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
-
-    // Load equations and "extract" variables/chunks (using heuristics)
-    val equationFile: String = config[String]("apps.predictedEquations")
-    val equationChunksAndSource = loadEquations(equationFile)
-
-
-    // Make an alignment handler which handles all types of alignment being used
-    val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
-
-    // Ground the extracted text mentions, the comments, and the equation variables to the grfn variables
-    val groundedGrfn = groundMentionsToGrfn(
-      toAlign,
-      textDefinitionMentions,
-      grfn,
-      Some(localCommentReader),
-      Some(equationChunksAndSource),
-      alignmentHandler,
-      Some(numAlignments),
-      Some(1),
-      scoreThreshold)
-
-    // Export
-    val outputDir = config[String]("apps.outputDirectory")
-    val grfnBaseName = new File(grfnPath).getBaseName()
-    val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_groundings.json")
-    ujson.writeTo(groundedGrfn, grfnWriter)
-    grfnWriter.close()
-
-
-
-//For debugging:
-//        topKCommentToText.foreach { aa =>
-//          println("====================================================================")
-//          println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
-//          println("====================================================================")
-//          aa.foreach { topK =>
-//            val v1Text = commentDefinitionMentions(topK.src).text
-//            val v2Text = textDefinitionMentions(topK.dst).text
-//            println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text} ${commentDefinitionMentions(topK.src).arguments("variable").head.foundBy}")
-//            println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
-//            println(s"comment: ${v1Text}")
-//            println(s"text: ${v2Text}")
-//              println(s"text: ${v2Text} ${textDefinitionMentions(topK.dst).label} ${textDefinitionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
-//            println(s"score: ${topK.score}\n")
-//          }
-//        }
-  }
+//  def main(args: Array[String]): Unit = {
+//    val toAlign = Seq("Comment", "Text", "Equation")
+//    val config: Config = ConfigFactory.load()
+//    val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
+//    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
+//
+//
+//    // =============================================
+//    //                 DATA LOADING
+//    // =============================================
+//
+//    // Instantiate the text reader
+//    val textConfig: Config = config[Config]("TextEngine")
+//    val textReader = OdinEngine.fromConfig(textConfig)
+//
+//    // Instantiate the comment reader
+//    val localCommentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+//    // todo: future readers
+//    //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
+//    //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
+//    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> localCommentReader))
+//
+//    // Load a GrFN
+//    val grfnPath: String = config[String]("apps.grfnFile")
+//    val grfnFile = new File(grfnPath)
+//    val grfn = ujson.read(grfnFile.readString())
+//
+//    // Load text and extract definition mentions
+////    val inputDir = config[String]("apps.inputDirectory")
+////    val inputType = config[String]("apps.inputType")
+////    val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
+////    val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+////    val textDefinitionMentions = getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
+////    val source = scala.io.Source.fromFile()
+////    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
+////    source.close()
+//    val textDefinitionMentions = JSONSerializer.toMentions(new File("/Users/bsharp/Downloads/PT-stuf/PT-mentions.json"))
+//    logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
+//
+//    // Load equations and "extract" variables/chunks (using heuristics)
+//    val equationFile: String = config[String]("apps.predictedEquations")
+//    val equationChunksAndSource = loadEquations(equationFile)
+//
+//
+//    // Make an alignment handler which handles all types of alignment being used
+//    val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
+//
+//    // Ground the extracted text mentions, the comments, and the equation variables to the grfn variables
+//    val groundedGrfn = groundMentionsToGrfn(
+//      toAlign,
+//      textDefinitionMentions,
+//      grfn,
+//      Some(localCommentReader),
+//      Some(equationChunksAndSource),
+//      alignmentHandler,
+//      Some(numAlignments),
+//      Some(1),
+//      scoreThreshold)
+//
+//    // Export
+//    val outputDir = config[String]("apps.outputDirectory")
+//    val grfnBaseName = new File(grfnPath).getBaseName()
+//    val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_groundings.json")
+//    ujson.writeTo(groundedGrfn, grfnWriter)
+//    grfnWriter.close()
+//
+//
+//
+////For debugging:
+////        topKCommentToText.foreach { aa =>
+////          println("====================================================================")
+////          println(s"              SRC VAR: ${commentDefinitionMentions(aa.head.src).arguments("variable").head.text}")
+////          println("====================================================================")
+////          aa.foreach { topK =>
+////            val v1Text = commentDefinitionMentions(topK.src).text
+////            val v2Text = textDefinitionMentions(topK.dst).text
+////            println(s"aligned variable (comment): ${commentDefinitionMentions(topK.src).arguments("variable").head.text} ${commentDefinitionMentions(topK.src).arguments("variable").head.foundBy}")
+////            println(s"aligned variable (text): ${textDefinitionMentions(topK.dst).arguments("variable").head.text}")
+////            println(s"comment: ${v1Text}")
+////            println(s"text: ${v2Text}")
+////              println(s"text: ${v2Text} ${textDefinitionMentions(topK.dst).label} ${textDefinitionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
+////            println(s"score: ${topK.score}\n")
+////          }
+////        }
+//  }
 
 
 }
