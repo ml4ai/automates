@@ -187,6 +187,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
+    val toAlign = Seq("Comment", "Text", "Equation")
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
     // Load the mentions
@@ -199,16 +200,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val grfnPath = json("grfn").str
     val grfnFile = new File(grfnPath)
     val grfn = ujson.read(grfnFile.readString())
-    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
+    val localCommentReader = Some(OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath))
     // ground!
     val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
+      toAlign,
       textMentions,
       grfn,
       localCommentReader,
-      equationChunksAndSource,
+      Some(equationChunksAndSource),
       alignmentHandler,
-      numAlignments,
-      numAlignmentsSrcToComment,
+      Some(numAlignments),
+      Some(numAlignmentsSrcToComment),
       scoreThreshold
     )
     // FIXME: add a conversion method for ujson <--> play json
@@ -216,6 +218,42 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val groundedGrfnJson4s = json4s.jackson.parseJson(groundedGrfnAsString)
     Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
   }
+
+
+  def alignDocstringsAndText: Action[AnyContent] = Action { request =>
+    val toAlign = Seq("Comment", "Text")
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+
+    // Load the mentions
+    val textMentions = JSONSerializer.toMentions(new File(json("mentions").str))
+    // Get the GrFN
+    val grfnPath = json("grfn").str
+    val grfnFile = new File(grfnPath)
+    val grfn = ujson.read(grfnFile.readString())
+
+    val localCommentReader = if (toAlign.contains("Comment")) {
+       Some(OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath))
+    } else None
+
+    // ground!
+    val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
+      toAlign,
+      textMentions,
+      grfn,
+      localCommentReader,
+      None,
+      alignmentHandler,
+      Some(numAlignments),
+      Some(numAlignmentsSrcToComment),
+      scoreThreshold
+    )
+    // FIXME: add a conversion method for ujson <--> play json
+    val groundedGrfnAsString = ujson.write(groundedGrfn)
+    val groundedGrfnJson4s = json4s.jackson.parseJson(groundedGrfnAsString)
+    Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
+  }
+
 
   // -----------------------------------------------------------------
   //               Backend methods that do stuff :)
