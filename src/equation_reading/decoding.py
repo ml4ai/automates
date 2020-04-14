@@ -38,9 +38,9 @@ def tex2py(latex):
     for name, safe in variables.items():
         python_eqn = re.sub(rf'\b{safe}\b', name, python_eqn)
     return {
-        'original_latex': latex,
-        'sanitized_latex': new_latex,
-        'python': python_eqn,
+        'original': latex,
+        'sanitized': new_latex,
+        'translated': python_eqn,
     }
 
 
