@@ -22,7 +22,7 @@ def main():
     grfn_with_hypotheses = json.load(open(filepath, "r"))
 
     link_tables = make_link_tables(grfn_with_hypotheses)
-    outpath = filepath.replace("_with_groundings.json", "--links.csv")
+    outpath = filepath.replace(".json", "--links.csv")
     with open(outpath, "w", newline="") as csvfile:
         link_writer = csv.writer(csvfile, dialect="excel")
 
