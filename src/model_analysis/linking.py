@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import singledispatch
 import re
 
 from networkx import DiGraph
@@ -140,61 +141,100 @@ class EqnSpanNode(LinkNode):
 
 
 def build_link_graph(link_hypotheses: list) -> DiGraph:
+    G = DiGraph()
+
     def report_bad_link(n1, n2):
         raise ValueError(f"Inappropriate link type: ({type(n1)}, {type(n2)})")
 
-    G = DiGraph()
+    @singledispatch
+    def add_link_node(node):
+        raise ValueError(f"Inappropriate node type: {type(node)}")
+
+    @add_link_node.register
+    def _(node: CodeVarNode):
+        G.add_node(node, color="darkviolet")
+
+    @add_link_node.register
+    def _(node: CommSpanNode):
+        G.add_node(node, color="lightskyblue")
+
+    @add_link_node.register
+    def _(node: TextSpanNode):
+        G.add_node(node, color="crimson")
+
+    @add_link_node.register
+    def _(node: EqnSpanNode):
+        G.add_node(node, color="orange")
+
+    @add_link_node.register
+    def _(node: TextVarNode):
+        G.add_node(node, color="deeppink")
+
+    @singledispatch
+    def add_link(n1, n2, score):
+        raise ValueError(f"Inappropriate node type: {type(n1)}")
+
+    @add_link.register
+    def _(n1: CodeVarNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, CommSpanNode):
+            G.add_edge(n2, n1, weight=score)
+        else:
+            report_bad_link(n1, n2)
+
+    @add_link.register
+    def _(n1: CommSpanNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, CodeVarNode):
+            G.add_edge(n1, n2, weight=score)
+        elif isinstance(n2, TextSpanNode):
+            G.add_edge(n2, n1, weight=score)
+        else:
+            report_bad_link(n1, n2)
+
+    @add_link.register
+    def _(n1: TextSpanNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, EqnSpanNode):
+            G.add_edge(n2, n1, weight=link_score)
+        elif isinstance(n2, CommSpanNode):
+            G.add_edge(n1, n2, weight=link_score)
+        elif isinstance(n2, TextVarNode):
+            G.add_edge(n2, n1, weight=link_score)
+        else:
+            report_bad_link(n1, n2)
+
+    @add_link.register
+    def _(n1: EqnSpanNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, TextSpanNode):
+            G.add_edge(n1, n2, weight=link_score)
+        else:
+            report_bad_link(n1, n2)
+
+    @add_link.register
+    def _(n1: TextVarNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, TextSpanNode):
+            G.add_edge(n1, n2, weight=link_score)
+        else:
+            report_bad_link(n1, n2)
+
     for link_dict in link_hypotheses:
         node1 = LinkNode.from_dict(link_dict["element_1"])
         node2 = LinkNode.from_dict(link_dict["element_2"])
         link_score = round(link_dict["score"], 3)
-
-        if isinstance(node1, CodeVarNode):
-            G.add_node(node1, color="darkviolet")
-            if isinstance(node2, CommSpanNode):
-                G.add_node(node2, color="lightskyblue")
-                G.add_edge(node2, node1, weight=link_score)
-            else:
-                report_bad_link(node1, node2)
-        elif isinstance(node1, CommSpanNode):
-            G.add_node(node1, color="lightskyblue")
-            if isinstance(node2, CodeVarNode):
-                G.add_node(node2, color="darkviolet")
-                G.add_edge(node1, node2, weight=link_score)
-            elif isinstance(node2, TextSpanNode):
-                G.add_node(node2, color="crimson")
-                G.add_edge(node2, node1, weight=link_score)
-            else:
-                report_bad_link(node1, node2)
-        elif isinstance(node1, TextSpanNode):
-            G.add_node(node1, color="crimson")
-            if isinstance(node2, EqnSpanNode):
-                G.add_node(node2, color="orange")
-                G.add_edge(node2, node1, weight=link_score)
-            elif isinstance(node2, CommSpanNode):
-                G.add_node(node2, color="lightskyblue")
-                G.add_edge(node1, node2, weight=link_score)
-            elif isinstance(node2, TextVarNode):
-                G.add_node(node2, color="deeppink")
-                G.add_edge(node2, node1, weight=link_score)
-            else:
-                report_bad_link(node1, node2)
-        elif isinstance(node1, EqnSpanNode):
-            G.add_node(node1, color="orange")
-            if isinstance(node2, TextSpanNode):
-                G.add_node(node2, color="crimson")
-                G.add_edge(node1, node2, weight=link_score)
-            else:
-                report_bad_link(node1, node2)
-        elif isinstance(node1, TextVarNode):
-            G.add_node(node1, color="deeppink")
-            if isinstance(node2, TextSpanNode):
-                G.add_node(node2, color="crimson")
-                G.add_edge(node1, node2, weight=link_score)
-            else:
-                report_bad_link(node1, node2)
-        else:
-            report_bad_link(node1, node2)
+        add_link(node1, node2, link_score)
 
     return G
 
