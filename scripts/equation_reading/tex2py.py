@@ -21,11 +21,13 @@ def main():
         for tex_eqn_line in infile:
             no_ws_tex_eqn_line = tex_eqn_line.strip()
             if no_ws_tex_eqn_line == "None":
-                continue
-
-            (sanitized_eqn, py_eqn) = tex2py(
-                no_ws_tex_eqn_line, include_sanitized=True
-            )
+                no_ws_tex_eqn_line = None
+                sanitized_eqn = None
+                py_eqn = None
+            else:
+                (sanitized_eqn, py_eqn) = tex2py(
+                    no_ws_tex_eqn_line, include_sanitized=True
+                )
 
             print(f"ORIGINAL:\t\t{no_ws_tex_eqn_line}")
             print(f"SANITIZED:\t\t{sanitized_eqn}")
