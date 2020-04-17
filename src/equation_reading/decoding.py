@@ -37,14 +37,18 @@ def tex2py(latex: str, include_sanitized: bool = False) -> Union[tuple, str]:
     new_latex = "".join(
         f"{t.value} " if t.code is None else t.value for t in new_tokens
     )
-    python_eqn = repr(parse_latex(new_latex))
-    for name, safe in variables.items():
-        python_eqn = re.sub(rf"\b{safe}\b", name, python_eqn)
-    return {
-        "original": latex,
-        "sanitized": new_latex,
-        "translated": python_eqn,
-    }
+    try:
+        python_eqn = repr(parse_latex(new_latex))
+        for name, safe in variables.items():
+            python_eqn = re.sub(rf"\b{safe}\b", name, python_eqn)
+    except LaTeXParsingError as err:
+        print(err)
+        python_eqn = None
+
+    if include_sanitized:
+        return new_latex, python_eqn
+    else:
+        return python_eqn
 
 
 def split_assignments(tokens):

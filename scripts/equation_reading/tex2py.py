@@ -22,18 +22,21 @@ def main():
             no_ws_tex_eqn_line = tex_eqn_line.strip()
             if no_ws_tex_eqn_line == "None":
                 continue
-            eqn_data = tex2py(no_ws_tex_eqn_line)
 
-            print(f"ORIGINAL:\t\t{eqn_data['original']}")
-            print(f"SANITIZED:\t\t{eqn_data['sanitized']}")
-            print(f"TRANSLATED:\t\t{eqn_data['translated']}")
+            (sanitized_eqn, py_eqn) = tex2py(
+                no_ws_tex_eqn_line, include_sanitized=True
+            )
+
+            print(f"ORIGINAL:\t\t{no_ws_tex_eqn_line}")
+            print(f"SANITIZED:\t\t{sanitized_eqn}")
+            print(f"TRANSLATED:\t\t{py_eqn}")
             print("\n")
-            py_equations.append(eqn_data["translated"])
+            py_equations.append(py_eqn)
 
     py_eqn_filepath = sys.argv[2]
     with open(py_eqn_filepath, "w") as outfile:
         for py_eqn in py_equations:
-            outfile.write(py_eqn)
+            outfile.write(f"{py_eqn}\n")
 
 
 if __name__ == "__main__":
