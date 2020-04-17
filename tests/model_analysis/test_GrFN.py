@@ -189,17 +189,6 @@ def test_sir_gillespie_ms_creation(sir_gillespie_ms_grfn):
     CAG.draw("SIR-Gillespie_ms--CAG.pdf", prog="dot")
 
 
-def test_linking_graph():
-    grfn = json.load(
-        open(
-            "tests/data/program_analysis/SIR-simple_with_groundings.json", "r"
-        )
-    )
-    tables = linking.make_link_tables(grfn)
-    linking.print_table_data(tables)
-    assert len(tables.keys()) == 11
-
-
 def test_GrFN_Json_dumping(petpt_grfn):
     PETPT_dict = petpt_grfn.to_json()
     assert "variables" in PETPT_dict
