@@ -267,13 +267,13 @@ def print_table_data(table_data: dict) -> None:
         print("L-SCORE\tComment\tV-C\tText-span\tC-T\tEquation\tT-E")
         for row in table:
             row_data = [
-                row["link_score"],
+                str(row["link_score"]),
                 row["comm"],
-                row["vc_score"],
+                str(row["vc_score"]),
                 row["txt"],
-                row["ct_score"],
+                str(row["ct_score"]),
                 row["eqn"],
-                row["te_score"],
+                str(row["te_score"]),
             ]
             print("\t".join(row_data))
         print("\n\n")
