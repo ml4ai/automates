@@ -49,12 +49,12 @@ class CodeVarNode(LinkNode):
 
     def get_table_rows(self, L: DiGraph) -> list:
         comm_span_nodes = [
-            n for n in L.neighbors(self) if isinstance(n, CommSpanNode)
+            n for n in L.predecessors(self) if isinstance(n, CommSpanNode)
         ]
 
         rows = list()
         for comm_node in comm_span_nodes:
-            w_vc = L.edges[self, comm_node]["weight"]
+            w_vc = L.edges[comm_node, self]["weight"]
             for r in comm_node.get_table_rows(L):
                 w_row = min(w_vc, r["ct_score"], r["te_score"])
                 r.update({"vc_score": w_vc, "link_score": w_row})
@@ -90,12 +90,12 @@ class CommSpanNode(LinkNode):
 
     def get_table_rows(self, L: DiGraph) -> list:
         txt_span_nodes = [
-            n for n in L.neighbors(self) if isinstance(n, TextSpanNode)
+            n for n in L.predecessors(self) if isinstance(n, TextSpanNode)
         ]
 
         rows = list()
         for txt_node in txt_span_nodes:
-            w_ct = L.edges[self, txt_node]["weight"]
+            w_ct = L.edges[txt_node, self]["weight"]
             for r in txt_node.get_table_rows(L):
                 r.update({"comm": str(self), "ct_score": w_ct})
                 rows.append(r)
@@ -121,14 +121,14 @@ class TextSpanNode(LinkNode):
 
     def get_table_rows(self, L: DiGraph) -> list:
         eqn_span_nodes = [
-            n for n in L.neighbors(self) if isinstance(n, EqnSpanNode)
+            n for n in L.predecessors(self) if isinstance(n, EqnSpanNode)
         ]
 
         rows = list()
         for eqn_node in eqn_span_nodes:
-            w_te = L.edges[self, eqn_node]["weight"]
+            w_te = L.edges[eqn_node, self]["weight"]
             for r in eqn_node.get_table_rows(L):
-                r.update({"txt": str(self), "ct_score": w_te})
+                r.update({"txt": str(self), "te_score": w_te})
                 rows.append(r)
 
         return rows
