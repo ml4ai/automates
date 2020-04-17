@@ -1,8 +1,9 @@
 import re
 from string import ascii_uppercase
 from collections import defaultdict
+from typing import Union
 
-from sympy.parsing.latex import parse_latex
+from sympy.parsing.latex import parse_latex, LaTeXParsingError
 
 from equation_reading.latex_tokenizer import LatexTokenizer, Token
 
@@ -25,7 +26,7 @@ RESERVED_WORDS = {
 safe_names = list(ascii_uppercase)
 
 
-def tex2py(latex):
+def tex2py(latex: str, include_sanitized: bool = False) -> Union[tuple, str]:
     tokens = list(sanitize(LatexTokenizer(latex)))
     sections = list(split_assignments(tokens))
     if len(sections) == 1:
