@@ -33,20 +33,22 @@ def tex2py(latex):
         pass
     variables, spans = variable_dicts(tokens)
     new_tokens = list(replace_vars(tokens, variables, spans))
-    new_latex = ''.join(f'{t.value} ' if t.code == None else t.value for t in new_tokens)
+    new_latex = "".join(
+        f"{t.value} " if t.code is None else t.value for t in new_tokens
+    )
     python_eqn = repr(parse_latex(new_latex))
     for name, safe in variables.items():
-        python_eqn = re.sub(rf'\b{safe}\b', name, python_eqn)
+        python_eqn = re.sub(rf"\b{safe}\b", name, python_eqn)
     return {
-        'original': latex,
-        'sanitized': new_latex,
-        'translated': python_eqn,
+        "original": latex,
+        "sanitized": new_latex,
+        "translated": python_eqn,
     }
 
 
 def split_assignments(tokens):
     start = 0
-    equals = Token('=', 11)
+    equals = Token("=", 11)
     try:
         while True:
             pos = tokens.index(equals, start)
@@ -63,10 +65,10 @@ def sanitize(tokens):
     i = 0
     while i < len(tokens):
         t = tokens[i]
-        if t.value in ['\\left', '\\right']:
+        if t.value in ["\\left", "\\right"]:
             pass
-        elif t.value == '~':
-            yield Token(' ', 10)
+        elif t.value == "~":
+            yield Token(" ", 10)
         else:
             yield t
         i += 1
@@ -95,45 +97,45 @@ def variable_dicts(tokens):
     spans = defaultdict(list)
     i = 0
     for chunk, start, stop in collect_chunks(tokens):
-        name = ''.join(c.value for c in chunk)
-        name = re.sub(r'\W', '_', name)
-        if name not in variables and name not in RESERVED_WORDS and name != '':
+        name = "".join(c.value for c in chunk)
+        name = re.sub(r"\W", "_", name)
+        if name not in variables and name not in RESERVED_WORDS and name != "":
             variables[name] = safe_names[i]
             i += 1
             spans[name].append((start, stop))
     return variables, spans
 
-        
+
 def collect_chunks(tokens):
-    state = 'B' # B(begin)  I(inside)
+    state = "B"  # B(begin)  I(inside)
     start = 0
     chunk = []
     i = 0
     while i < len(tokens):
         t = tokens[i]
         i += 1
-        if t.value.isalnum() or t.code == None:
+        if t.value.isalnum() or t.code is None:
             # letter or control sequence
-            if state == 'B':
-                state = 'I'
-                start = i-1
+            if state == "B":
+                state = "I"
+                start = i - 1
             chunk.append(t)
-        elif state == 'I' and (t.code == 7 or t.code == 8):
+        elif state == "I" and (t.code == 7 or t.code == 8):
             chunk.append(t)
             group, i = get_group(tokens, i)
             chunk.extend(group)
         else:
             yield (chunk, start, start + len(chunk))
             chunk = []
-            state = 'B'
+            state = "B"
     if len(chunk) > 0:
         yield (chunk, start, start + len(chunk))
 
 
 def get_group(tokens, pos):
     t = tokens[pos]
-    if t.value.isalnum() or t.code == None:
-        return ([t], pos+1)
+    if t.value.isalnum() or t.code is None:
+        return ([t], pos + 1)
     elif t.code == 1:
         group = []
         while t.code != 2:
@@ -141,11 +143,10 @@ def get_group(tokens, pos):
             pos += 1
             t = tokens[pos]
         group.append(t)
-        return (group, pos+1)
+        return (group, pos + 1)
 
 
 if __name__ == "__main__":
 
-
-    latex = r'x = \frac{\sigma^2}{\tau} + b'
+    latex = r"x = \frac{\sigma^2}{\tau} + b"
     print(tex2py(latex))
