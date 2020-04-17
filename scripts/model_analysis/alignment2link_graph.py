@@ -19,8 +19,9 @@ def main():
         {"shape": "rectangle", "style": "bold", "fontname": "Menlo"}
     )
 
-    alignment_name = alignment_filepath[alignment_filepath.rfind("/") + 1 :]
-    alingment_outname = alignment_name.replace("-alignment.json", "-links.pdf")
+    alingment_outname = alignment_filepath.replace(
+        "-alignment.json", "-link-graph.pdf"
+    )
     A.draw(alingment_outname, prog="dot")
 
 

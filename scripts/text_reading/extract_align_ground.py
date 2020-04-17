@@ -94,21 +94,21 @@ if __name__ == "__main__":
         "PNO-mentions",
         "PETPNO",
         "PETPNO_equations",
-        "PETPNO_GrFN",
+        "PETPNO_AIR",
         "PNO-alignment",
     )
     call_align(
         "PEN-mentions",
         "PETPEN",
         "PETPEN_equations",
-        "PETPEN_GrFN",
+        "PETPEN_AIR",
         "PEN-alignment",
     )
     call_align(
         "DYN-mentions",
         "PETDYN",
         "PETDYN_equations",
-        "PETDYN_GrFN",
+        "PETDYN_AIR",
         "DYN-alignment",
     )
 
