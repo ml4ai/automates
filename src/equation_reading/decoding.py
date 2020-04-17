@@ -1,10 +1,10 @@
-import sys
 import re
-import os
 from string import ascii_uppercase
 from collections import defaultdict
+
 from sympy.parsing.latex import parse_latex
-from latex_tokenizer import LatexTokenizer, Token
+
+from equation_reading.latex_tokenizer import LatexTokenizer, Token
 
 
 RESERVED_WORDS = {
