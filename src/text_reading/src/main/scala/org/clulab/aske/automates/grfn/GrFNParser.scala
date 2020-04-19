@@ -27,11 +27,11 @@ object GrFNParser {
     getVariableShortNames(getVariables(grfn))
   }
 
-  def getVariables(grfn: Value): Seq[String] = grfn("variables").arr.map(_.obj("name").str)
+  def getVariables(json: Value): Seq[String] = json("source_code").obj("variables").arr.map(_.obj("name").str)
 
-  def getCommentDocs(grfn: Value): Seq[Document] = {
+  def getCommentDocs(json: Value): Seq[Document] = {
 
-    val sourceCommentObject = grfn("source_comments").obj
+    val sourceCommentObject = json("source_code").obj("comments").obj
     val commentTextObjects = new ArrayBuffer[Obj]()
 
     val keys = sourceCommentObject.keys
@@ -39,7 +39,7 @@ object GrFNParser {
       if (sourceCommentObject(k).isInstanceOf[Value.Arr]) {
         val text = sourceCommentObject(k).arr.map(_.str).mkString("")
         if (text.length > 0) {
-          commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, ""))
+          commentTextObjects.append(mkCommentTextElement(text, "some_file", k, "")) //fixme: add source to json
         }
       } else {
         for (item <- sourceCommentObject(k).obj) if (item._2.isInstanceOf[Value.Arr]) {
@@ -47,7 +47,7 @@ object GrFNParser {
           for (str <- value.arr) if (value.arr.length > 0) {
             val text = str.str
             if (text.length > 0) {
-              commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, item._1))
+              commentTextObjects.append(mkCommentTextElement(text, "some_file", k, item._1))
             }
           }
         }
