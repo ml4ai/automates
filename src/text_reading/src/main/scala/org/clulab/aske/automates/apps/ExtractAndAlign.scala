@@ -22,7 +22,7 @@ import org.json4s
 
 import scala.collection.mutable.ArrayBuffer
 
-case class alignmentArguments(grfn: Value, variableNames: Seq[String], variableShortNames: Seq[String], commentDefinitionMentions: Option[Seq[Mention]], definitionMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]])
+case class alignmentArguments(json: Value, variableNames: Option[Seq[String]], variableShortNames: Option[Seq[String]], commentDefinitionMentions: Option[Seq[Mention]], definitionMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]])
 
 object ExtractAndAlign {
   val COMMENT = "comment"
@@ -43,8 +43,8 @@ object ExtractAndAlign {
 
   def groundMentionsToGrfn(
     grfn: Value,
-    variableNames: Seq[String],
-    variableShortNames: Seq[String],
+    variableNames: Option[Seq[String]],
+    variableShortNames: Option[Seq[String]],
     definitionMentions: Option[Seq[Mention]],
     commentDefinitionMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
@@ -64,23 +64,18 @@ object ExtractAndAlign {
       definitionMentions, //fixme: here and in get linkElements---pass all mentions, only definition mentions, other types?
       equationChunksAndSource,
       commentDefinitionMentions,
-      Some(variableShortNames),
+      variableShortNames,
       numAlignments,
       numAlignmentsSrcToComment,
       scoreThreshold
     )
 
-    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, Some(variableNames))
+    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
 
     val hypotheses = getLinkHypotheses(linkElements, alignments)
 
+    hypotheses
 
-    // =============================================
-    //                    EXPORT
-    // =============================================
-
-    // Add the grounding links to the GrFN
-    GrFNParser.addHypotheses(grfn, hypotheses)
   }
 
   def hasRequiredArgs(m: Mention): Boolean = m.arguments.contains(VARIABLE) && m.arguments.contains(DEFINITION)
@@ -88,6 +83,16 @@ object ExtractAndAlign {
   def loadEquations(filename: String): Seq[(String, String)] = {
     val equationDataLoader = new TokenizedLatexDataLoader
     val equations = equationDataLoader.loadFile(new File(filename))
+    // tuple pairing each chunk with the original latex equation it came from
+    for {
+      sourceEq <- equations
+      eqChunk <- equationDataLoader.chunkLatex(sourceEq)
+    } yield (eqChunk, sourceEq)
+  }
+
+  def processEquations(equationsVal: Value): Seq[(String, String)] = {
+    val equationDataLoader = new TokenizedLatexDataLoader
+    val equations = equationsVal.arr.map(_.str)
     // tuple pairing each chunk with the original latex equation it came from
     for {
       sourceEq <- equations
@@ -107,11 +112,13 @@ object ExtractAndAlign {
     textMentions.seq.filter(_ matches DEF_LABEL)
   }
 
-  def getCommentDefinitionMentions(commentReader: OdinEngine, grfn: Value, variableShortNames: Option[Seq[String]]): Seq[Mention] = {
-    val commentDocs = GrFNParser.getCommentDocs(grfn)
-
+  def getCommentDefinitionMentions(commentReader: OdinEngine, json: Value, variableShortNames: Option[Seq[String]]): Seq[Mention] = {
+    val commentDocs = GrFNParser.getCommentDocs(json)
+    for (cd <- commentDocs) println("comm doc: " + cd.text)
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
+
+    for (cm <- commentMentions) println("com mention: " + cm.text)
     val definitions = commentMentions.seq.filter(_ matches DEF_LABEL)
     if (variableShortNames.isEmpty) return definitions
     val overlapsWithVariables = definitions.filter(
@@ -185,7 +192,7 @@ object ExtractAndAlign {
       linkElements(SOURCE) = variableNames.get.map { varName =>
         mkLinkElement(
           elemType = "identifier",
-          source = grfn("source").arr.head.str,
+          source = "some_file", //fixme: need source to be passed in json
           content = varName,
           contentType = "null"
         )
