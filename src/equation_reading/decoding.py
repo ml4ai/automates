@@ -103,11 +103,13 @@ def variable_dicts(tokens):
     i = 0
     for chunk, start, stop in collect_chunks(tokens):
         name = "".join(c.value for c in chunk)
-        name = re.sub(r"\W", "_", name)
-        if name not in variables and name not in RESERVED_WORDS and name != "":
+        name = re.sub(r"[^\w.]", "_", name)
+        if name not in RESERVED_WORDS and name != "":
             variables[name] = safe_names[i]
             i += 1
             spans[name].append((start, stop))
+    # variables: Dict[String, String]
+    # spans: Dict[String, List[(Int, Int)]
     return variables, spans
 
 
@@ -119,22 +121,33 @@ def collect_chunks(tokens):
     while i < len(tokens):
         t = tokens[i]
         i += 1
-        if t.value.isalnum() or t.code is None:
+        if t.value.isalnum() or t.code is None or t.value == '.':
             # letter or control sequence
             if state == "B":
                 state = "I"
                 start = i - 1
             chunk.append(t)
-        elif state == "I" and (t.code == 7 or t.code == 8):
-            chunk.append(t)
-            group, i = get_group(tokens, i)
-            chunk.extend(group)
+        elif state == "I" and (t.code == 7 or t.code == 8 or t.value == '.'):
+            group, j = get_group(tokens, i)
+            if not is_number(group):
+                i = j
+                chunk.append(t)
+                chunk.extend(group)
         else:
             yield (chunk, start, start + len(chunk))
             chunk = []
             state = "B"
     if len(chunk) > 0:
         yield (chunk, start, start + len(chunk))
+
+
+def is_number(tokens):
+    if len(tokens) > 1: # if we are in a group
+        tokens = tokens[1:-1]
+    for t in tokens:
+        if not t.value.isdigit() and t.value != '.':
+            return False
+    return True
 
 
 def get_group(tokens, pos):
