@@ -220,7 +220,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       // FIXME: add a conversion method for ujson <--> play json
       val groundingsAsString = ujson.write(groundings, indent = 4) //todo: here, json object: array with link hypotheses
       val groundedGrfnJson4s = json4s.jackson.parseJson(groundingsAsString)
-      Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
+      Ok(PlayUtils.toPlayJson(groundedGrfnJson4s)) //todo: pretty print json
     } else {
       logger.warn(s"Nothing to do for keys: $jsonKeys")
       Ok("")
@@ -232,9 +232,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   /**get arguments for the aligner depending on what's needed for each endpoint**/
   def getArgsForAlignment(jsonPath: String, json: Value): alignmentArguments = {
 
-
+    val jsonKeys = json.obj.keys.toList
     // load text mentions
-    val definitionMentions =  if (json.obj.keys.toList.contains("mentions")) {
+    val definitionMentions =  if (jsonKeys.contains("mentions")) {
       val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
       //transform the mentions into json4s format, used by mention serializer
       val jvalueMentions = upickle.default.transform(
@@ -247,12 +247,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     } else None
 
     // get the equations
-    val equationChunksAndSource = if (json.obj.keys.toList.contains("equations")) {
+    val equationChunksAndSource = if (jsonKeys.contains("equations")) {
       val equations = json("equations").arr
       Some(ExtractAndAlign.processEquations(equations))
     } else None
 
-    val variableNames = if (json.obj.keys.toList.contains("source_code")) {
+    val variableNames = if (jsonKeys.contains("source_code")) {
       Some(json("source_code").obj("variables").arr.map(_.obj("name").str))
     } else None
     // The variable names only (excluding the scope info)
@@ -260,7 +260,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       Some(GrFNParser.getVariableShortNames(variableNames.get))
     } else None
     // source code comments
-    val commentDefinitionMentions = if (json.obj.keys.toList.contains("source_code")) {
+    val commentDefinitionMentions = if (jsonKeys.contains("source_code")) {
 
       val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
       Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames)//
