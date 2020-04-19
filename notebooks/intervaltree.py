@@ -151,11 +151,10 @@ class MaxSensitivityTree(object):
         return self.create_child(sensitivity, self.root, child_bounds, 0)
 
 
-    def create_child(self, S1_obj, param, bounds, count):
-
-        if count == 2:
+    def create_child(self, S1_obj, param, bounds, pass_number, max_iterations=25):
+        
+        if pass_number == max_iterations:
             return
-        count += 1
 
         param_dict = param.val
         param_varmax, param_maxS1 = S1_obj.maxS1(param_dict)  
@@ -178,11 +177,11 @@ class MaxSensitivityTree(object):
             new_param.key = {param_varmax:bounds[i]}
             if param_varmax != new_param_varmax:
                 new_param_bounds = S1_obj.split_interval_S1(new_param_varmax)
-                self.create_child(S1_obj, new_param, new_param_bounds, count)
+                self.create_child(S1_obj, new_param, new_param_bounds, pass_number+1)
 
         return
 
-    def insert_node_ref(self):
+    def create_graph(self):
         
         G = nx.DiGraph()
 
@@ -193,14 +192,17 @@ class MaxSensitivityTree(object):
         qu = deque()
         qu.append(self.root)
         node_no = 0
-        G.add_node(node_no, name=str(p.key))
 
         while len(qu):
             p = qu.popleft()
             node_no += 1
             p.index = node_no
-            G.add_node(node_no, name=str(p.key))
-            G.add_edges_from([(p.par.index, p.index)], color='red')
+            if p == self.root:
+                G.add_node(node_no, rank=0, label=str((node_no, p.key)))
+            else:
+                G.add_node(node_no, label=str((node_no, p.key)))
+            if p != self.root:
+                G.add_edges_from([(p.par.index, p.index)], color='red', label=str(p.key))
             if  p.par == None:
                 print(p.index, p.key)
             else:
@@ -208,8 +210,18 @@ class MaxSensitivityTree(object):
             if p.child is not None:
                 for i in range(0, len(p.child)):
                     qu.append(p.child[i])
+       
+        G.graph['graph'] = {'rankdir':'TD'}
+        G.graph['node']={'shape':'circle'}
+        G.graph['edges']={'arrowsize':'4.0'}
 
-        return G
+        A = nx.nx_agraph.to_agraph(G)
+
+        return A
+
+    def plot(self, A, filename):
+        A.layout('dot')
+        A.draw(filename + '.png')
 
     def bar_plot(self, node):
 
@@ -243,18 +255,9 @@ class MaxSensitivityTree(object):
         plt.xticks(xval, list(sorted_dict.keys()))
         plt.xlabel('Parameters')
         plt.ylabel('S1 indices')
-        plt.title(f'Bar Plot of S1 indices for Node (key - {node.key})')
+        plt.title(f'Bar Plot of S1 indices for Node (parent - {node.key})')
         plt.show()
 
-    
-    def tree_plot(self, G):
-
-        pos = nx.spring_layout(G)
-        nx.draw(G, pos, with_labels=True)
-        plt.show()
-        # nx.nx_agraph.write_dot(G, 'test.dot')
-
-        # plt.title()
     
 
 if __name__ == '__main__':
@@ -275,8 +278,7 @@ if __name__ == '__main__':
 
     SM_tree = MaxSensitivityTree()
     SM_tree.construct_tree(model, bounds,  sample_size, method)
-    G =  SM_tree.insert_node_ref()
-    # SM_tree.bar_plot(6)
-    SM_tree.tree_plot(G)
-
+    G =  SM_tree.create_graph()
+    SM_tree.plot(G, 'PETPT')
+    SM_tree.bar_plot(6)
 
