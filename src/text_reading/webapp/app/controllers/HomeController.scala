@@ -26,7 +26,8 @@ import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
 import play.api.mvc._
 import play.api.libs.json._
-
+import ujson.json4s._
+import org.json4s.JsonAST
 
 
 /**
@@ -189,95 +190,84 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
-    val toAlign = Seq("Comment", "Text", "Equation")
+
     val data = request.body.asJson.get.toString()
-    val json = ujson.read(data)
-    // Load the mentions
+    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
+    val jsonPath = pathJson("pathToJson").str
+    val jsonFile = new File(jsonPath)
+    val json = ujson.read(jsonFile.readString())
 
-    val argsForGrounding = getArgsForAlignment(json, toAlign)
+    val jsonKeys = json.obj.keys.toList
 
-    // ground!
-    val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
-      argsForGrounding.grfn,
-      argsForGrounding.variableNames,
-      argsForGrounding.variableShortNames,
-      argsForGrounding.definitionMentions,
-      argsForGrounding.commentDefinitionMentions,
-      argsForGrounding.equationChunksAndSource,
-      alignmentHandler,
-      Some(numAlignments),
-      Some(numAlignmentsSrcToComment),
-      scoreThreshold
-    )
-    // FIXME: add a conversion method for ujson <--> play json
-    val groundedGrfnAsString = ujson.write(groundedGrfn)
-    val groundedGrfnJson4s = json4s.jackson.parseJson(groundedGrfnAsString)
-    Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
-  }
+    //align components if the right information is provided in the json
+    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("equations"))) {
+      val argsForGrounding = getArgsForAlignment(jsonPath, json)
+      // ground!
+      val groundings = ExtractAndAlign.groundMentionsToGrfn(
+        json,
+        argsForGrounding.variableNames,
+        argsForGrounding.variableShortNames,
+        argsForGrounding.definitionMentions,
+        argsForGrounding.commentDefinitionMentions,
+        argsForGrounding.equationChunksAndSource,
+        alignmentHandler,
+        Some(numAlignments),
+        Some(numAlignmentsSrcToComment),
+        scoreThreshold
+      )
 
 
-  /**Align everything except for equations**/
-  def alignDocstringsAndText: Action[AnyContent] = Action { request =>
-    val toAlign = Seq("Comment", "Text")
-    val data = request.body.asJson.get.toString()
-    val json = ujson.read(data)
-    // Load the mentions
+      // FIXME: add a conversion method for ujson <--> play json
+      val groundingsAsString = ujson.write(groundings, indent = 4) //todo: here, json object: array with link hypotheses
+      val groundedGrfnJson4s = json4s.jackson.parseJson(groundingsAsString)
+      Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
+    } else {
+      logger.warn(s"Nothing to do for keys: $jsonKeys")
+      Ok("")
+    }
 
-    val argsForGrounding = getArgsForAlignment(json, toAlign)
-
-    // ground!
-    val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
-      argsForGrounding.grfn,
-      argsForGrounding.variableNames,
-      argsForGrounding.variableShortNames,
-      argsForGrounding.definitionMentions,
-      argsForGrounding.commentDefinitionMentions,
-      argsForGrounding.equationChunksAndSource,
-      alignmentHandler,
-      Some(numAlignments),
-      Some(numAlignmentsSrcToComment),
-      scoreThreshold
-    )
-    // FIXME: add a conversion method for ujson <--> play json
-    val groundedGrfnAsString = ujson.write(groundedGrfn)
-    val groundedGrfnJson4s = json4s.jackson.parseJson(groundedGrfnAsString)
-    Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
   }
 
 
   /**get arguments for the aligner depending on what's needed for each endpoint**/
-  def getArgsForAlignment(json: Value, toAlign: Seq[String]): alignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value): alignmentArguments = {
+
 
     // load text mentions
-    val definitionMentions =  if (toAlign.contains("Text")) {
-      val textMentions = JSONSerializer.toMentions(new File(json("mentions").str))
+    val definitionMentions =  if (json.obj.keys.toList.contains("mentions")) {
+      val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+      //transform the mentions into json4s format, used by mention serializer
+      val jvalueMentions = upickle.default.transform(
+        ujsonMentions
+      ).to(Json4sJson)
+      val textMentions = JSONSerializer.toMentions(jvalueMentions)
       Some(textMentions
         .filter(m => m.label matches "Definition")
         .filter(hasRequiredArgs))
     } else None
 
     // get the equations
-    val equationChunksAndSource = if (toAlign.contains("Equations")) {
-      val equationFile = json("equations").str
-      Some(ExtractAndAlign.loadEquations(equationFile))
+    val equationChunksAndSource = if (json.obj.keys.toList.contains("equations")) {
+      val equations = json("equations").arr
+      Some(ExtractAndAlign.processEquations(equations))
     } else None
 
-    // Get the GrFN
-    val grfnPath = json("grfn").str
-    val grfnFile = new File(grfnPath)
-    val grfn = ujson.read(grfnFile.readString())
-
-    val variableNames = GrFNParser.getVariables(grfn)
+    val variableNames = if (json.obj.keys.toList.contains("source_code")) {
+      Some(json("source_code").obj("variables").arr.map(_.obj("name").str))
+    } else None
     // The variable names only (excluding the scope info)
-    val variableShortNames = GrFNParser.getVariableShortNames(variableNames)
+    val variableShortNames = if (variableNames.isDefined) {
+      Some(GrFNParser.getVariableShortNames(variableNames.get))
+    } else None
     // source code comments
-    val commentDefinitionMentions = if (toAlign.contains("Comment")) {
-      val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
-      Some(getCommentDefinitionMentions(localCommentReader, grfn, Some(variableShortNames))
+    val commentDefinitionMentions = if (json.obj.keys.toList.contains("source_code")) {
+
+      val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
+      Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames)//
         .filter(hasRequiredArgs))
     } else None
 
-    new alignmentArguments(grfn, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource)
+    new alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource)
   }
 
 
