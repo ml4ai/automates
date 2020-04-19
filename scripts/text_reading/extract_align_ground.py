@@ -86,10 +86,32 @@ if __name__ == "__main__":
     # call_groundMentionsToSVO("ASCE-mentions", "ASCE-svo_grounding")
     # call_groundMentionsToSVO("PT-mentions", "PT-svo_grounding")
 
-    # call_pdf_to_mentions("petpno_Penman", "PNO-mentions")
-    # call_pdf_to_mentions("petpen_PM", "PEN-mentions")
-    # call_pdf_to_mentions("petdyn_modern", "DYN-mentions")
+    call_pdf_to_mentions("petpno_Penman", "PNO-mentions")
+    call_pdf_to_mentions("petpen_PM", "PEN-mentions")
+    call_pdf_to_mentions("petdyn_modern", "DYN-mentions")
 
-    call_groundMentionsToSVO("PNO-mentions", "PNO-svo_grounding")
-    call_groundMentionsToSVO("PEN-mentions", "PEN-svo_grounding")
-    call_groundMentionsToSVO("DYN-mentions", "DYN-svo_grounding")
+    call_align(
+        "PNO-mentions",
+        "PETPNO",
+        "PETPNO_equations",
+        "PETPNO_AIR",
+        "PNO-alignment",
+    )
+    call_align(
+        "PEN-mentions",
+        "PETPEN",
+        "PETPEN_equations",
+        "PETPEN_AIR",
+        "PEN-alignment",
+    )
+    call_align(
+        "DYN-mentions",
+        "PETDYN",
+        "PETDYN_equations",
+        "PETDYN_AIR",
+        "DYN-alignment",
+    )
+
+    # call_groundMentionsToSVO("PNO-mentions", "PNO-svo_grounding")
+    # call_groundMentionsToSVO("PEN-mentions", "PEN-svo_grounding")
+    # call_groundMentionsToSVO("DYN-mentions", "DYN-svo_grounding")
