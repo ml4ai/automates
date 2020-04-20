@@ -1,8 +1,8 @@
 import numpy as np
 import operator
 import inspect
-from model_analysis.networks import GroundedFunctionNetwork as GrFN
-from model_analysis.sensitivity import SensitivityAnalyzer
+from src.model_analysis.networks import GroundedFunctionNetwork as GrFN
+from src.model_analysis.sensitivity import SensitivityAnalyzer
 from copy import deepcopy
 from collections import deque
 import matplotlib.pyplot as plt
@@ -23,11 +23,11 @@ class MaxSensitivity(object):
 
         if self.model == "PETASCE":
             tG = GrFN.from_fortran_file(
-                f"../tests/data/program_analysis/{self.model}_simple.for"
+                f"../../tests/data/program_analysis/{self.model}_simple.for"
             )
         else:
             tG = GrFN.from_fortran_file(
-                f"../tests/data/program_analysis/{self.model}.for"
+                f"../../tests/data/program_analysis/{self.model}.for"
             )
 
         return tG
@@ -151,7 +151,7 @@ class MaxSensitivityTree(object):
         return self.create_child(sensitivity, self.root, child_bounds, 0)
 
 
-    def create_child(self, S1_obj, param, bounds, pass_number, max_iterations=25):
+    def create_child(self, S1_obj, param, bounds, pass_number, max_iterations=5):
         
         if pass_number == max_iterations:
             return
@@ -197,10 +197,13 @@ class MaxSensitivityTree(object):
             p = qu.popleft()
             node_no += 1
             p.index = node_no
+            val = p.val
+            var =  max(val.items(), key=operator.itemgetter(1))[0]
+            # var_S1 = val[var]
             if p == self.root:
-                G.add_node(node_no, rank=0, label=str((node_no, p.key)))
+                G.add_node(node_no, rank=0, label=str((node_no, var, p.key)))
             else:
-                G.add_node(node_no, label=str((node_no, p.key)))
+                G.add_node(node_no, label=str((node_no, var)))
             if p != self.root:
                 G.add_edges_from([(p.par.index, p.index)], color='red', label=str(p.key))
             if  p.par == None:
@@ -223,7 +226,8 @@ class MaxSensitivityTree(object):
         A.layout('dot')
         A.draw(filename + '.png')
 
-    def bar_plot(self, node):
+
+    def bar_plot(self, node, filename):
 
         if self.root is None:
             print("Tree is empty!")
@@ -235,14 +239,14 @@ class MaxSensitivityTree(object):
         while len(qu):
             p = qu.popleft()
             if p.index == node:
-                self.bar(p)
+                self.bar(p, filename)
                 return
             if p.child is not None:
                 for i in range(0, len(p.child)):
                     qu.append(p.child[i])
 
 
-    def bar(self, node):
+    def bar(self, node, filename):
         
         sorted_dict = OrderedDict(sorted(node.val.items(), key=lambda t: t[1]))
 
@@ -256,29 +260,6 @@ class MaxSensitivityTree(object):
         plt.xlabel('Parameters')
         plt.ylabel('S1 indices')
         plt.title(f'Bar Plot of S1 indices for Node (parent - {node.key})')
-        plt.show()
+        plt.savefig(filename + '_barplot.png')
 
-    
-
-if __name__ == '__main__':
-
-    model =  'PETPT'
-
-    bounds = {
-        "tmax": [-30.0, 60.0],
-        "tmin": [-30.0, 60.0],
-        "srad": [0.0, 30.0],
-        "msalb": [0.0, 1.0],
-        "xhlai": [0.0, 20.0],
-    }
-
-    sample_size = 10**5
-
-    method = 'Sobol'
-
-    SM_tree = MaxSensitivityTree()
-    SM_tree.construct_tree(model, bounds,  sample_size, method)
-    G =  SM_tree.create_graph()
-    SM_tree.plot(G, 'PETPT')
-    SM_tree.bar_plot(6)
 
