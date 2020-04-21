@@ -411,9 +411,10 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 fillcolor="crimson" if is_exit else "white",
                 style="filled" if is_exit else "",
                 parent=parent,
+                basename=basename,
+                index=index,
                 label=f"{basename}\n({index})",
                 cag_label=f"{basename}",
-                basename=basename,
                 padding=15,
                 value=None,
             )
@@ -743,7 +744,8 @@ class GroundedFunctionNetwork(ComputationalGraph):
         for identifier, data in self.nodes(data=True):
             containers[data["parent"]]["vertices"].append(identifier)
             if data["type"] == "variable":
-                (basename, idx) = data["label"].split("::")
+                basename = data["basename"]
+                idx = data["index"]
                 variables.append(
                     {
                         "name": f"{basename}::{idx}",
