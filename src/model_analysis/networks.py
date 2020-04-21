@@ -150,7 +150,7 @@ class ComputationalGraph(nx.DiGraph):
             CAG.nodes[name]["label"] = data["cag_label"]
         A = nx.nx_agraph.to_agraph(CAG)
         A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "LR"}
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
         )
         A.node_attr.update(
             {
@@ -411,7 +411,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 fillcolor="crimson" if is_exit else "white",
                 style="filled" if is_exit else "",
                 parent=parent,
-                label=f"{basename}::{index}",
+                label=f"{basename}\n({index})",
                 cag_label=f"{basename}",
                 basename=basename,
                 padding=15,
@@ -807,7 +807,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
             [n for n in node_names if len(list(self.successors(n))) == 0]
         )
         A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "LR"}
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
         )
 
         A.node_attr.update({"fontname": "Menlo"})
@@ -824,7 +824,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 name=f"cluster_{cluster_name}",
                 label=cluster_name,
                 style="bold, rounded",
-                rankdir="LR",
+                rankdir="TB",
                 color=node_attrs[cluster_name]["color"],
             )
 
