@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from collections import OrderedDict
 import networkx as nx
+import os
+import json
+import csv
+import pandas as pd
+import ast
 
 class MaxSensitivity(object):
 
@@ -181,8 +186,16 @@ class MaxSensitivityTree(object):
 
         return
 
-    def create_graph(self):
+    def create_graph(self, filename, file_format=None):
         
+        if filename.split('.')[1] == 'json':
+            file_format = 'json'
+        elif filename.split('.')[1] == 'csv':
+            file_format = 'csv'
+        else:
+            print('File format not supported!')
+            return
+
         G = nx.DiGraph()
 
         if self.root is None:
@@ -199,17 +212,13 @@ class MaxSensitivityTree(object):
             p.index = node_no
             val = p.val
             var =  max(val.items(), key=operator.itemgetter(1))[0]
-            # var_S1 = val[var]
+            self.toFile(p, filename, file_format)
             if p == self.root:
-                G.add_node(node_no, rank=0, label=str((node_no, var, p.key)))
+                G.add_node(p.index, rank=0, label=str((node_no, var, p.key)))
             else:
-                G.add_node(node_no, label=str((node_no, var)))
+                G.add_node(p.index, label=str((node_no, var)))
             if p != self.root:
                 G.add_edges_from([(p.par.index, p.index)], color='red', label=str(p.key))
-            if  p.par == None:
-                print(p.index, p.key)
-            else:
-                print(p.index, p.key, p.par.key)
             if p.child is not None:
                 for i in range(0, len(p.child)):
                     qu.append(p.child[i])
@@ -227,28 +236,61 @@ class MaxSensitivityTree(object):
         A.draw(filename + '.png')
 
 
-    def bar_plot(self, node, filename):
+    def toFile(self, node, filename, file_format):
 
-        if self.root is None:
-            print("Tree is empty!")
-            return
+        data =  {"node":node.index, "S1 indices":node.val}
 
-        qu = deque()
-        qu.append(self.root)
+        if file_format == 'json':
+
+            a = []
+
+            if not os.path.isfile(filename):
+                a.append(data)
+                with  open(filename, 'w') as f:
+                    f.write(json.dumps(a, indent=2))
+            else:
+                with open(filename) as fjson:
+                    js_data =  json.load(fjson)
+
+                js_data.append(data)
+                with  open(filename, 'w') as f:
+                    f.write(json.dumps(js_data,  indent=2))
+
+        elif file_format  == 'csv':
+            
+            if not os.path.isfile(filename):
+                with open(filename, 'a') as f:
+                    writer = csv.DictWriter(f, fieldnames=["node", "S1 indices"])
+                    writer.writeheader()
+                    writer.writerow(data)
+            else:
+                with open(filename, 'a') as f:
+                    writer = csv.DictWriter(f, fieldnames=["node", "S1 indices"])
+                    writer.writerow(data)
+
+
+    def bar_plot_from_file(self, node_number, filepath):
+
+        file_ext = filepath.split('.')[1]
+        filename = filepath.split('.')[0]
+
+        if file_ext ==  'json':
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+
+            for item in data:
+                if item['node'] == node_number:
+                    self.bar(item['node'], item['S1 indices'], filename)
+
+        elif file_ext == 'csv':
+            df = pd.read_csv(filepath)
+            val = df[df['node'] == node_number]['S1 indices'].values[0]
+            val = ast.literal_eval(val)
+            self.bar(node_number, val, filename)
+
+    def bar(self, node_number, S1_dict, filename):
         
-        while len(qu):
-            p = qu.popleft()
-            if p.index == node:
-                self.bar(p, filename)
-                return
-            if p.child is not None:
-                for i in range(0, len(p.child)):
-                    qu.append(p.child[i])
-
-
-    def bar(self, node, filename):
-        
-        sorted_dict = OrderedDict(sorted(node.val.items(), key=lambda t: t[1]))
+        sorted_dict = OrderedDict(sorted(S1_dict.items(), key=lambda t: t[1]))
 
         xval = range(len(sorted_dict)); yval = list(sorted_dict.values());
         colors = cm.Accent(np.array(yval) / max(yval))
@@ -259,7 +301,7 @@ class MaxSensitivityTree(object):
         plt.xticks(xval, list(sorted_dict.keys()))
         plt.xlabel('Parameters')
         plt.ylabel('S1 indices')
-        plt.title(f'Bar Plot of S1 indices for Node (parent - {node.key})')
+        plt.title(f'Bar Plot of S1 indices for Node - {node_number}')
         plt.savefig(filename + '_barplot.png')
 
 
