@@ -301,7 +301,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
                         fillcolor="crimson" if is_exit else "white",
                         style="filled" if is_exit else "",
                         parent=con_name,
-                        label=f"{basename}::{index}",
+                        label=f"{basename}\n({index})",
                         cag_label=f"{basename}",
                         basename=basename,
                         padding=15,
