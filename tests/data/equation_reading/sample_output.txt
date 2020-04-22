@@ -1,0 +1,5 @@
+Eq(T, (T__max_ + T__min_)/2)
+Eq(e_a, (RH__max_/100)*e_o(T__min_))
+Eq(R_a, (24/_pi)*(G__sc_*(d_r*(_omega_s*(sin(_varphi)*sin(_delta)) + (sin(_omega_s)*cos(_delta))*cos(_varphi)))))
+Eq(P, 101.3((-0.0065*z + 293)/293)**5.26)
+Eq(R__so_, R_a*(0.75 + 2*(_times10___5_*z)))
