@@ -1,0 +1,4 @@
+T = \frac{T_{max} + T_{min}}{2}
+e_a = e^o (T_{min}) \frac{RH_{max}}{100}
+R_a = \frac{24}{\pi} G_{sc} d_r \left[ \omega_s \sin(\varphi) \sin(\delta) + \cos(\varphi) \cos(\delta) \sin(\omega_s) \right]
+P = 101.3 \left( \frac{293 - 0.0065 z}{293} \right)^{5.26}
