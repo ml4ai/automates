@@ -17,6 +17,7 @@ RUN apt-get -y --no-install-recommends install \
   python3-dev \
   python3-pip \
   openjdk-8-jdk \
+  antlr4 \
   graphviz \
   libgraphviz-dev \
   doxygen
