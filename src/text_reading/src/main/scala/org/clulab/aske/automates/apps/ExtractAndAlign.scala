@@ -12,7 +12,7 @@ import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
-import org.clulab.utils.{DisplayUtils, FileUtils}
+import org.clulab.utils.{DisplayUtils, FileUtils, AlignmentJsonUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
 import org.clulab.grounding
@@ -41,7 +41,7 @@ object ExtractAndAlign {
 
   val logger = LoggerFactory.getLogger(this.getClass())
 
-  def groundMentionsToGrfn(
+  def groundMentions(
     grfn: Value,
     variableNames: Option[Seq[String]],
     variableShortNames: Option[Seq[String]],
@@ -113,13 +113,14 @@ object ExtractAndAlign {
   }
 
   def getCommentDefinitionMentions(commentReader: OdinEngine, json: Value, variableShortNames: Option[Seq[String]]): Seq[Mention] = {
-    val commentDocs = GrFNParser.getCommentDocs(json)
-    for (cd <- commentDocs) println("comm doc: " + cd.text)
+    val commentDocs = AlignmentJsonUtils.getCommentDocs(json)
+//    for (cd <- commentDocs) println("comm doc: " + cd.text)
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
 
-    for (cm <- commentMentions) println("com mention: " + cm.text)
+//    for (cm <- commentMentions) println("com mention: " + cm.text)
     val definitions = commentMentions.seq.filter(_ matches DEF_LABEL)
+//    for (cm <- definitions) println("com def mention: " + cm.text)
     if (variableShortNames.isEmpty) return definitions
     val overlapsWithVariables = definitions.filter(
       m => variableShortNames.get
