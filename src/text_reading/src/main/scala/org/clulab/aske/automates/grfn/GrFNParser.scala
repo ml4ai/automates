@@ -15,7 +15,9 @@ object GrFNParser {
 
   def addHypotheses(grfn: Value, hypotheses: Seq[Obj]): Value = {
     //adding to exisitng grounding; intended to help with running complementary endpoints (instead of the full pipeline)
-    grfn("grounding") = (grfn("grounding").arr ++ hypotheses.toList).distinct
+    grfn("grounding") =  if (grfn.obj.get("grounding").isDefined) {
+      (grfn("grounding").arr ++ hypotheses.toList).distinct
+    } else hypotheses.distinct
     grfn
   }
 

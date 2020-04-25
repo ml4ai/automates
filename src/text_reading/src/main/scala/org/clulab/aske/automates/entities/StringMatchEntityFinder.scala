@@ -72,7 +72,9 @@ object GrFNEntityFinder {
     // The variable names only (excluding the scope info)
     val variableShortNames = if (grfn.obj.get("variables").isDefined) {
       GrFNParser.getVariableShortNames(grfn)
-    } else AlignmentJsonUtils.getVariableShortNames(grfn)
+    } else {
+      AlignmentJsonUtils.getVariableShortNames(grfn)
+    }
 
     // Make a StringMatchEF based on the variable names
     // todo: send in the taxonomy path

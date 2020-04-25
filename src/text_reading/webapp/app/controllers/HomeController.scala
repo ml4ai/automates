@@ -190,7 +190,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
-
+    val appendToGrFN = false //todo: how pass from configs??
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
     val jsonPath = pathJson("pathToJson").str
@@ -213,7 +213,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         alignmentHandler,
         Some(numAlignments),
         Some(numAlignmentsSrcToComment),
-        scoreThreshold
+        scoreThreshold,
+        appendToGrFN
       )
 
 
