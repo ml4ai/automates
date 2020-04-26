@@ -86,7 +86,7 @@ object SVOGrounder {
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
     println("Started grounding a mention: " + mention.arguments("definition").head.text + " | var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
     val terms = getTerms(mention).get.filter(t => t.length > 1) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
-    println("search terms: " + terms.mkString(" "))
+//    println("search terms: " + terms.mkString(" "))
     if (terms.nonEmpty) {
       val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
       for (word <- terms) {
@@ -117,8 +117,8 @@ object SVOGrounder {
 
       //return the best results first, then only the max score ones, and then all the rest; some may overlap thus distinct
       val allResults = (bestResults ++ onlyMaxScoreResults ++ resultsFromAllTerms).distinct
-      println("len all results: " + allResults.length)
-      for (r <- allResults) println("res: " + r)
+//      println("len all results: " + allResults.length)
+//      for (r <- allResults) println("res: " + r)
       Map(mention.arguments("variable").head.text -> getTopK(allResults, k))
     } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
 
@@ -203,7 +203,7 @@ object SVOGrounder {
       }
 
       val finalTerms = terms.map(t => t.filter(ch => ch.isLetter || ch.toString == "-" || ch.toString == "_"))
-      println(finalTerms)
+//      println(finalTerms)
       Some(finalTerms.sortBy(_.length))
     } else None
 
