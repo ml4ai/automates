@@ -102,7 +102,13 @@ object ExtractAndAlign {
     // tuple pairing each chunk with the original latex equation it came from
     for {
       sourceEq <- equations
-      eqChunk <- equationDataLoader.chunkLatex(sourceEq).filter(cand => cand.count(char => !char.isSpaceChar) <= 15 && cand.count(char => char.isDigit) < 2).map(c => AlignmentBaseline.replaceWordWithGreek(c, word2greekDict.toMap))//.replace("\\\\\\w+\\s", "\\s"))// keep the ones that have less than 15 non-space chars and don't allow digits
+      eqChunk <- equationDataLoader.chunkLatex(sourceEq)
+        .filter(cand => cand.count(char => !char.isSpaceChar) <= 15 && cand.count(char => char.isDigit) < 2)
+        .filter(cand => is_balanced(cand))
+        .filter(chunk => !chunk.matches("\\\\\\w+"))
+          .map(c => AlignmentBaseline.replaceWordWithGreek(c, word2greekDict.toMap))
+
+        //.replace("\\\\\\w+\\s", "\\s"))// keep the ones that have less than 15 non-space chars and don't allow digits
     } yield (eqChunk, sourceEq)
   }
 
@@ -330,6 +336,21 @@ object ExtractAndAlign {
 
 
     hypotheses
+  }
+
+
+  def is_balanced(string: String): Boolean = {
+    is_balanced_delim(string, "(", ")") && is_balanced_delim(string, "{", "}") && is_balanced_delim(string, "[", "]")
+  }
+
+  def is_balanced_delim(string: String, open_delim: String, close_delim: String): Boolean = {
+    var n_open = 0
+    for (char <- string) {
+      if (char.toString == open_delim) n_open += 1 else if (char.toString == close_delim) n_open -= 1
+      if (n_open < 0) return false
+
+    }
+    n_open == 0
   }
 
   def main(args: Array[String]): Unit = {
