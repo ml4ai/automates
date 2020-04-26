@@ -23,12 +23,12 @@ object sparqlResult {
 
 }
 
-case class Grounding(variable: String, groundings: Seq[sparqlResult])
-object Grounding {
-  implicit val rw: ReadWriter[Grounding] = macroRW
+case class SVOGrounding(variable: String, groundings: Seq[sparqlResult])
+object SVOGrounding {
+  implicit val rw: ReadWriter[SVOGrounding] = macroRW
 }
 
-case class SeqOfGroundings(groundings: Seq[Grounding])
+case class SeqOfGroundings(groundings: Seq[SVOGrounding])
 object SeqOfGroundings {
   implicit val rw: ReadWriter[SeqOfGroundings] = macroRW
 }
@@ -149,7 +149,7 @@ object SVOGrounder {
   /**takes a series of mentions, maps each variable in the definition mentions (currently the only groundable
   * type of mentions) to a sequence of results from the SVO ontology, and converts these mappings into an object
   * writable with upickle */
-  def groundDefinitionsToSVO(mentions: Seq[Mention], k: Int): Seq[Grounding] = {
+  def groundDefinitionsToSVO(mentions: Seq[Mention], k: Int): Seq[SVOGrounding] = {
     //sanity check to make sure all the passed mentions are def mentions
     val (defMentions, other) = mentions.partition(m => m matches "Definition")
     val groundings = groundMentionsWithSparql(defMentions, k)
@@ -157,7 +157,7 @@ object SVOGrounder {
       for {
         gr <- groundings
 
-      } yield Grounding(gr._1, gr._2)
+      } yield SVOGrounding(gr._1, gr._2)
     groundingsObj.toSeq
   }
 

@@ -16,7 +16,7 @@ import org.clulab.utils.{DisplayUtils, FileUtils, AlignmentJsonUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
 import org.clulab.grounding
-import org.clulab.grounding.{Grounding, SVOGrounder, SeqOfGroundings, sparqlResult}
+import org.clulab.grounding.{SVOGrounding, SVOGrounder, SeqOfGroundings, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s
 
@@ -116,9 +116,9 @@ object ExtractAndAlign {
     textMentions.seq.filter(_ matches DEF_LABEL)
   }
 
-  def getCommentDefinitionMentions(commentReader: OdinEngine, alignmentInputFile: Value, variableShortNames: Option[Seq[String]]): Seq[Mention] = {
+  def getCommentDefinitionMentions(commentReader: OdinEngine, alignmentInputFile: Value, variableShortNames: Option[Seq[String]], source: Option[String]): Seq[Mention] = {
     val commentDocs = if (alignmentInputFile.obj.get("source_code").isDefined) {
-      AlignmentJsonUtils.getCommentDocs(alignmentInputFile)
+      AlignmentJsonUtils.getCommentDocs(alignmentInputFile, source)
     } else GrFNParser.getCommentDocs(alignmentInputFile)
 
 //    for (cd <- commentDocs) println("comm doc: " + cd.text)
@@ -354,13 +354,15 @@ object ExtractAndAlign {
     val grfnFile = new File(grfnPath)
     val grfn = ujson.read(grfnFile.readString())
 
-
+    val source = if (grfn.obj.get("source").isDefined) {
+      Some(grfn.obj("source").arr.mkString(";"))
+    } else None
     // Get source variables
     val variableNames = Some(GrFNParser.getVariables(grfn))
     val variableShortNames = Some(GrFNParser.getVariableShortNames(variableNames.get))
 
     // Get comment definitions
-    val commentDefinitionMentions = getCommentDefinitionMentions(localCommentReader, grfn, variableShortNames)
+    val commentDefinitionMentions = getCommentDefinitionMentions(localCommentReader, grfn, variableShortNames, source)
       .filter(hasRequiredArgs)
 
     val textDefinitionMentions = if (loadMentions) {

@@ -51,10 +51,14 @@ object AlignmentJsonUtils {
     } else None
     // source code comments
 
+    val source = if (variableNames.isDefined) {
+      Some(getSourceFromSrcVariables(variableNames.get))
+    } else None
+
     val commentDefinitionMentions = if (jsonKeys.contains("source_code")) {
 
       val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
-      Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames)//
+      Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames, source)
         .filter(hasRequiredArgs))
     } else None
 
@@ -69,11 +73,17 @@ object AlignmentJsonUtils {
     getVariableShortNames(getVariables(json))
   }
 
+  def getSourceFromSrcVariables(variables: Seq[String]): String = {
+    // fixme: getting source from all variables provided---if there are more than one, the source field will list all of them; need a different solution if the source is different for every variable/comment
+    variables.map(name => name.split("::")(1)).distinct.mkString(";")
+  }
+
   def getVariableShortNames(variableNames: Seq[String]): Seq[String] = for (
     name <- variableNames
   ) yield name.split("::").reverse.slice(1, 2).mkString("")
 
-  def getCommentDocs(json: Value): Seq[Document] = {
+  def getCommentDocs(json: Value, source: Option[String]): Seq[Document] = {
+    val source_file = if (source.isDefined) source.get else "Unknown"
     val sourceCommentObject = json("source_code").obj("comments").obj
     val commentTextObjects = new ArrayBuffer[Obj]()
 
@@ -82,7 +92,7 @@ object AlignmentJsonUtils {
       if (sourceCommentObject(k).isInstanceOf[Value.Arr]) {
         val text = sourceCommentObject(k).arr.map(_.str).mkString("")
         if (text.length > 0) {
-          commentTextObjects.append(mkCommentTextElement(text, "some_file", k, "")) //fixme: add source to json
+          commentTextObjects.append(mkCommentTextElement(text, source.get, k, ""))
         }
       } else {
         for (item <- sourceCommentObject(k).obj) if (item._2.isInstanceOf[Value.Arr]) {
@@ -90,7 +100,7 @@ object AlignmentJsonUtils {
           for (str <- value.arr) if (value.arr.length > 0) {
             val text = str.str
             if (text.length > 0) {
-              commentTextObjects.append(mkCommentTextElement(text, "some_file", k, item._1))
+              commentTextObjects.append(mkCommentTextElement(text, source.get, k, item._1))
             }
           }
         }
