@@ -38,8 +38,10 @@ object AlignmentJsonUtils {
     // get the equations
     val equationChunksAndSource = if (jsonKeys.contains("equations")) {
       val equations = json("equations").arr
-      Some(ExtractAndAlign.processEquations(equations))
+      Some(ExtractAndAlign.processEquations(equations)) //provides ALL var candidates
     } else None
+
+    for (item <- equationChunksAndSource.get) println(item._1 + " | " + item._2)
 
     val variableNames = if (jsonKeys.contains("source_code")) {
       Some(json("source_code").obj("variables").arr.map(_.obj("name").str))

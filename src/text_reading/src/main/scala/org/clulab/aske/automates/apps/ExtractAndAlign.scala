@@ -9,14 +9,15 @@ import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDat
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement}
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.apps.AlignmentBaseline.word2greekDict
 import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
-import org.clulab.utils.{DisplayUtils, FileUtils, AlignmentJsonUtils}
+import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
 import org.clulab.grounding
-import org.clulab.grounding.{SVOGrounding, SVOGrounder, SeqOfGroundings, sparqlResult}
+import org.clulab.grounding.{SVOGrounder, SVOGrounding, SeqOfGroundings, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s
 
@@ -96,11 +97,12 @@ object ExtractAndAlign {
 
   def processEquations(equationsVal: Value): Seq[(String, String)] = {
     val equationDataLoader = new TokenizedLatexDataLoader
+    val pdfAlignDir = "/home/alexeeva/Repos/automates/src/apps/pdfalign"
     val equations = equationsVal.arr.map(_.str)
     // tuple pairing each chunk with the original latex equation it came from
     for {
       sourceEq <- equations
-      eqChunk <- equationDataLoader.chunkLatex(sourceEq)
+      eqChunk <- equationDataLoader.chunkLatex(sourceEq).filter(cand => cand.count(char => !char.isSpaceChar) <= 15 && cand.count(char => char.isDigit) < 2).map(c => AlignmentBaseline.replaceWordWithGreek(c, word2greekDict.toMap))//.replace("\\\\\\w+\\s", "\\s"))// keep the ones that have less than 15 non-space chars and don't allow digits
     } yield (eqChunk, sourceEq)
   }
 
@@ -147,6 +149,8 @@ object ExtractAndAlign {
     numAlignmentsSrcToComment: Option[Int],
     scoreThreshold: Double): Map[String, Seq[Seq[Alignment]]] = {
 
+
+    for (eq <- equationChunksAndSource.get) println(eq._1)
     val alignments = scala.collection.mutable.HashMap[String, Seq[Seq[Alignment]]]()
 
     if (commentDefinitionMentions.isDefined && variableShortNames.isDefined) {
@@ -157,7 +161,7 @@ object ExtractAndAlign {
 
     /** Align the equation chunks to the text definitions */
       if (equationChunksAndSource.isDefined && textDefinitionMentions.isDefined) {
-        val equationToTextAlignments = alignmentHandler.editDistance.alignTexts(equationChunksAndSource.get.unzip._1, textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))))
+        val equationToTextAlignments = alignmentHandler.editDistance.alignEqAndTexts(equationChunksAndSource.get.unzip._1, textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))))
         // group by src idx, and keep only top k (src, dst, score) for each src idx
         alignments(EQN_TO_TEXT) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
       }
@@ -200,7 +204,7 @@ object ExtractAndAlign {
       linkElements(SOURCE) = variableNames.get.map { varName =>
         mkLinkElement(
           elemType = "identifier",
-          source = "some_file", //fixme: need source to be passed in json
+          source = varName.split("::")(1), //fixme: need source to be passed in json
           content = varName,
           contentType = "null"
         )
@@ -311,6 +315,9 @@ object ExtractAndAlign {
     if (linkElKeys.toSeq.contains(EQUATION) && linkElKeys.toSeq.contains(TEXT)) {
       hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
     }
+    val eqHyp = mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT))
+
+    println(ujson.write(eqHyp, indent = 3))
 
 
     // TextVar -> TextDef (text_span)
@@ -384,7 +391,6 @@ object ExtractAndAlign {
     // Load equations and "extract" variables/chunks (using heuristics)
     val equationFile: String = config[String]("apps.predictedEquations")
     val equationChunksAndSource = Some(loadEquations(equationFile))
-
 
     // Make an alignment handler which handles all types of alignment being used
     val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
