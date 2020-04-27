@@ -1,12 +1,6 @@
 import os
-from pprint import pprint
-import pandas as pd
-from typing import List, Dict, Optional, Tuple
 from IPython.display import HTML, Code, Image
-from matplotlib import pyplot as plt
-import json
 import pygments
-import numpy as np
 import subprocess as sp
 
 
@@ -15,6 +9,7 @@ def display_code(file: str):
         lexer = pygments.lexers.get_lexer_for_filename(file)
     except:
         from pygments.lexers.fortran import FortranLexer
+
         lexer = FortranLexer()
 
     with open(file, "r") as f:
@@ -67,6 +62,7 @@ def print_commit_hash_message():
         f"This notebook has been rendered with commit {commit_hash[:-1]} of"
         " Delphi."
     )
+
 
 def display(A):
     from IPython.core.display import Image
