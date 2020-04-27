@@ -38,7 +38,7 @@ object AlignmentJsonUtils {
     // get the equations
     val equationChunksAndSource = if (jsonKeys.contains("equations")) {
       val equations = json("equations").arr
-      Some(ExtractAndAlign.processEquations(equations)) //provides ALL var candidates
+      Some(ExtractAndAlign.processEquations(equations))
     } else None
 
 //    for (item <- equationChunksAndSource.get) println(item._1 + " | " + item._2)
