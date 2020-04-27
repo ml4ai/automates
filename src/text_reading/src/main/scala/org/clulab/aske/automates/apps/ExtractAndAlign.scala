@@ -209,7 +209,7 @@ object ExtractAndAlign {
       linkElements(SOURCE) = variableNames.get.map { varName =>
         mkLinkElement(
           elemType = "identifier",
-          source = varName.split("::")(1), //fixme: need source to be passed in json
+          source = varName.split("::")(1),
           content = varName,
           contentType = "null"
         )
