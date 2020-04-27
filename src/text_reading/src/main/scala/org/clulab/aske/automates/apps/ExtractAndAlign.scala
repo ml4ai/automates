@@ -320,7 +320,6 @@ object ExtractAndAlign {
     if (linkElKeys.toSeq.contains(EQUATION) && linkElKeys.toSeq.contains(TEXT)) {
       hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
     }
-    val eqHyp = mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT))
 
     // TextVar -> TextDef (text_span)
     if (linkElKeys.toSeq.contains(TEXT_VAR) && linkElKeys.toSeq.contains(TEXT)) {
