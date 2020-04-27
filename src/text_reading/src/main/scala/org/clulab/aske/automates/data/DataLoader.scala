@@ -148,21 +148,6 @@ class TokenizedLatexDataLoader extends DataLoader {
     tokens.filter(_.exists(char => char.isLetter))
   }
 
-//  def chunkLatexWithRendering(equation: String): Map[String, String] = {
-//    val pdfAlignDir = "/home/alexeeva/Repos/automates/pdfalign"
-//    val allEqVarCandidates = AlignmentBaseline.getFrags(equation, pdfAlignDir)
-//      .split("\n")
-//      // keep the ones that have less than 50 non-space chars
-//      .filter(cand => cand.count(char => !char.isSpaceChar) <= 50)
-//
-//
-//    val renderedAll = mutable.HashMap[String, String]()
-//    for (variableCand <- allEqVarCandidates) {
-//      renderedAll.put(variableCand, AlignmentBaseline.customRender(variableCand))
-//    }
-//
-//    renderedAll.toMap
-//  }
 }
 
 
