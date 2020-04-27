@@ -9,7 +9,7 @@ import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDat
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement}
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.apps.AlignmentBaseline.word2greekDict
+import org.clulab.aske.automates.apps.AlignmentBaseline.{word2greekDict, greek2wordDict}
 import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
@@ -103,12 +103,11 @@ object ExtractAndAlign {
     for {
       sourceEq <- equations
       eqChunk <- equationDataLoader.chunkLatex(sourceEq)
-        .filter(cand => cand.count(char => !char.isSpaceChar) <= 15 && cand.count(char => char.isDigit) < 2)
+        .filter(cand => cand.count(char => char.isDigit) < 2) //to eliminate chunks that have numerical data in them
         .filter(cand => is_balanced(cand))
-        .filter(chunk => !chunk.matches("\\\\\\w+"))
-          .map(c => AlignmentBaseline.replaceWordWithGreek(c, word2greekDict.toMap))
+        .map(c => AlignmentBaseline.replaceWordWithGreek(c, word2greekDict.toMap)) //before filtering out latex control sequences, change greek letters from latex control spelling; it will be switch back to word while creating the link element
+        .filter(chunk => !chunk.matches("&?\\\\\\w+&?")) //to eliminate standalone latex control sequences, e.g., \\times (they can have ampersands on each side)
 
-        //.replace("\\\\\\w+\\s", "\\s"))// keep the ones that have less than 15 non-space chars and don't allow digits
     } yield (eqChunk, sourceEq)
   }
 
@@ -255,7 +254,7 @@ object ExtractAndAlign {
         mkLinkElement(
           elemType = "equation_span",
           source = orig,
-          content = chunk,
+          content = AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap),
           contentType = "null"
         )
       }
@@ -322,9 +321,6 @@ object ExtractAndAlign {
       hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
     }
     val eqHyp = mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT))
-
-    println(ujson.write(eqHyp, indent = 3))
-
 
     // TextVar -> TextDef (text_span)
     if (linkElKeys.toSeq.contains(TEXT_VAR) && linkElKeys.toSeq.contains(TEXT)) {

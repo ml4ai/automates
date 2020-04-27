@@ -526,10 +526,12 @@ object AlignmentBaseline {
   val greekLetterLines = loadStringsFromResource("/AlignmentBaseline/greek2words.tsv")
   //these will be used to map greek letters to words and back
   val word2greekDict = mutable.Map[String, String]()
+  val greek2wordDict = mutable.Map[String, String]()
   for (line <- greekLetterLines) {
     val splitLine = line.split("\t")
     //      greek2wordDict += (splitLine.head -> splitLine.last)
     word2greekDict += (splitLine.last -> splitLine.head)
+    greek2wordDict += (splitLine.head -> splitLine.last)
   }
 
   def main(args:Array[String]) {
@@ -562,9 +564,26 @@ object AlignmentBaseline {
     toReturn
   }
 
+  def replaceGreekWithWord(varName: String, greek2wordDict: Map[String, String]): String = {
+    var toReturn = varName
+    for (k <- greek2wordDict.keys) {
+      if (varName.contains(k)) {
+        toReturn = toReturn.replace(k, s"""\\\\${greek2wordDict(k)}""")
+      }
+    }
+    toReturn
+  }
+
   def customRender(cand: String): String = {
     println("Start rend one cand")
     val rendered = render(replaceWordWithGreek(cand, word2greekDict.toMap), pdfalignDir).replaceAll("\\s", "")
+    println("rendered: " + rendered + " original: " + cand)
+    rendered
+  }
+
+  def renderForAlign(cand: String): String = {
+    println("Start rend one cand")
+    val rendered = render(cand, pdfalignDir).replaceAll("\\s", "")
     println("rendered: " + rendered + " original: " + cand)
     rendered
   }

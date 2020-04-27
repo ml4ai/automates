@@ -40,9 +40,9 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
   def alignEqAndTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
-      rendered = AlignmentBaseline.customRender(src)
+      rendered = AlignmentBaseline.renderForAlign(src)
       (dst, j) <- dstTexts.zipWithIndex
-      score = 1.0 / (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term?
+      score = 1.0 / (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term? next thing to try: only align if rendered starts with the same letter as actual---might need to make this output an option in case if there are no alignments
     } yield Alignment(i, j, score)
     // redundant but good for debugging
     exhaustiveScores
