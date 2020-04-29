@@ -521,11 +521,70 @@ class AlignmentBaseline() {
 
 
 object AlignmentBaseline {
+  val config: Config = ConfigFactory.load()
+  val pdfalignDir = config[String]("apps.pdfalignDir")
+  val greekLetterLines = loadStringsFromResource("/AlignmentBaseline/greek2words.tsv")
+  //these will be used to map greek letters to words and back
+  val word2greekDict = mutable.Map[String, String]()
+  val greek2wordDict = mutable.Map[String, String]()
+  for (line <- greekLetterLines) {
+    val splitLine = line.split("\t")
+    //      greek2wordDict += (splitLine.head -> splitLine.last)
+    word2greekDict += (splitLine.last -> splitLine.head)
+    greek2wordDict += (splitLine.head -> splitLine.last)
+  }
+
   def main(args:Array[String]) {
     val fs = new AlignmentBaseline()//(args(0))
 //        fs.runCopyPdfAndTsvs()
     fs.process()
+  }
 
+  def render(formula: String, pdfalignDir: String): String = {
+    val command = Seq("python", s"$pdfalignDir/align_latex/normalize.py", "render", formula.trim)
+    val process = Process(command, new File(s"$pdfalignDir/align_latex"))
+    process.!!
+  }
 
+  def getFrags(formula: String, pdfalignDir: String): String = {
+    val command = Seq("python", s"$pdfalignDir/align_latex/tokenize_and_fragment.py", "get_fragments", formula.trim)
+    val process = Process(command, new File(s"$pdfalignDir/align_latex"))
+    process.!!.trim
+  }
+
+  def replaceWordWithGreek(varName: String, word2greekDict: Map[String, String]): String = {
+    var toReturn = varName
+    for (k <- word2greekDict.keys) {
+      val escaped = """\""" + k
+      if (varName.contains(escaped)) {
+        toReturn = toReturn.replace(escaped, word2greekDict(k))
+      }
+    }
+
+    toReturn
+  }
+
+  def replaceGreekWithWord(varName: String, greek2wordDict: Map[String, String]): String = {
+    var toReturn = varName
+    for (k <- greek2wordDict.keys) {
+      if (varName.contains(k)) {
+        toReturn = toReturn.replace(k, s"""\\\\${greek2wordDict(k)}""")
+      }
+    }
+    toReturn
+  }
+
+  def customRender(cand: String): String = {
+    println("Start rend one cand")
+    val rendered = render(replaceWordWithGreek(cand, word2greekDict.toMap), pdfalignDir).replaceAll("\\s", "")
+    println("rendered: " + rendered + " original: " + cand)
+    rendered
+  }
+
+  def renderForAlign(cand: String): String = {
+    println("Start rend one cand")
+    val rendered = render(cand, pdfalignDir).replaceAll("\\s", "")
+    println("rendered: " + rendered + " original: " + cand)
+    rendered
   }
 }

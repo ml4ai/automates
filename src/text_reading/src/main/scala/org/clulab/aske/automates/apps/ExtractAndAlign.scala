@@ -9,14 +9,15 @@ import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDat
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement}
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.apps.AlignmentBaseline.{word2greekDict, greek2wordDict}
 import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
-import org.clulab.utils.{DisplayUtils, FileUtils, AlignmentJsonUtils}
+import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
 import org.clulab.grounding
-import org.clulab.grounding.{SVOGrounding, SVOGrounder, SeqOfGroundings, sparqlResult}
+import org.clulab.grounding.{SVOGrounder, SVOGrounding, SeqOfGroundings, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s
 
@@ -96,11 +97,17 @@ object ExtractAndAlign {
 
   def processEquations(equationsVal: Value): Seq[(String, String)] = {
     val equationDataLoader = new TokenizedLatexDataLoader
+    val pdfAlignDir = "/home/alexeeva/Repos/automates/src/apps/pdfalign"
     val equations = equationsVal.arr.map(_.str)
     // tuple pairing each chunk with the original latex equation it came from
     for {
       sourceEq <- equations
       eqChunk <- equationDataLoader.chunkLatex(sourceEq)
+        .filter(cand => cand.count(char => char.isDigit) < 2) //to eliminate chunks that have numerical data in them
+        .filter(cand => is_balanced(cand))
+        .map(c => AlignmentBaseline.replaceWordWithGreek(c, word2greekDict.toMap)) //before filtering out latex control sequences, change greek letters from latex control spelling; it will be switch back to word while creating the link element
+        .filter(chunk => !chunk.matches("&?\\\\\\w+&?")) //to eliminate standalone latex control sequences, e.g., \\times (they can have ampersands on each side)
+
     } yield (eqChunk, sourceEq)
   }
 
@@ -147,6 +154,8 @@ object ExtractAndAlign {
     numAlignmentsSrcToComment: Option[Int],
     scoreThreshold: Double): Map[String, Seq[Seq[Alignment]]] = {
 
+
+    for (eq <- equationChunksAndSource.get) println(eq._1)
     val alignments = scala.collection.mutable.HashMap[String, Seq[Seq[Alignment]]]()
 
     if (commentDefinitionMentions.isDefined && variableShortNames.isDefined) {
@@ -157,7 +166,7 @@ object ExtractAndAlign {
 
     /** Align the equation chunks to the text definitions */
       if (equationChunksAndSource.isDefined && textDefinitionMentions.isDefined) {
-        val equationToTextAlignments = alignmentHandler.editDistance.alignTexts(equationChunksAndSource.get.unzip._1, textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))))
+        val equationToTextAlignments = alignmentHandler.editDistance.alignEqAndTexts(equationChunksAndSource.get.unzip._1, textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))))
         // group by src idx, and keep only top k (src, dst, score) for each src idx
         alignments(EQN_TO_TEXT) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
       }
@@ -245,7 +254,7 @@ object ExtractAndAlign {
         mkLinkElement(
           elemType = "equation_span",
           source = orig,
-          content = chunk,
+          content = AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap),
           contentType = "null"
         )
       }
@@ -312,7 +321,6 @@ object ExtractAndAlign {
       hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT), alignments(EQN_TO_TEXT)))
     }
 
-
     // TextVar -> TextDef (text_span)
     if (linkElKeys.toSeq.contains(TEXT_VAR) && linkElKeys.toSeq.contains(TEXT)) {
       hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT)))
@@ -323,6 +331,21 @@ object ExtractAndAlign {
 
 
     hypotheses
+  }
+
+
+  def is_balanced(string: String): Boolean = {
+    is_balanced_delim(string, "(", ")") && is_balanced_delim(string, "{", "}") && is_balanced_delim(string, "[", "]")
+  }
+
+  def is_balanced_delim(string: String, open_delim: String, close_delim: String): Boolean = {
+    var n_open = 0
+    for (char <- string) {
+      if (char.toString == open_delim) n_open += 1 else if (char.toString == close_delim) n_open -= 1
+      if (n_open < 0) return false
+
+    }
+    n_open == 0
   }
 
   def main(args: Array[String]): Unit = {
@@ -384,7 +407,6 @@ object ExtractAndAlign {
     // Load equations and "extract" variables/chunks (using heuristics)
     val equationFile: String = config[String]("apps.predictedEquations")
     val equationChunksAndSource = Some(loadEquations(equationFile))
-
 
     // Make an alignment handler which handles all types of alignment being used
     val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
