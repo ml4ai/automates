@@ -17,6 +17,7 @@ RUN apt-get -y --no-install-recommends install \
   python3-dev \
   python3-pip \
   openjdk-8-jdk \
+  antlr4 \
   graphviz \
   libgraphviz-dev \
   doxygen
@@ -70,6 +71,9 @@ RUN pip3 install \
   flask_codemirror==1.1 \
   flask_wtf==0.14.3 \
   WTForms==2.2.1
+
+# Unassigned other stuff
+RUN pip3 install SPARQLWrapper==1.8.5
 # ==============================================================================
 
 # ==============================================================================

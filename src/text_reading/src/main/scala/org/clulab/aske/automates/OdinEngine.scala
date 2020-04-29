@@ -2,6 +2,7 @@ package org.clulab.aske.automates
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigValueFactory
 import org.clulab.odin.{ExtractorEngine, Mention, State}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -152,6 +153,10 @@ object OdinEngine {
   val NER_OUTSIDE = "O"
 
   def fromConfigSection(configSection: String) = OdinEngine.fromConfig(ConfigFactory.load()[Config](configSection))
+  def fromConfigSectionAndGrFN(configSection: String, grfnFile: String) = {
+    val config:Config = ConfigFactory.load()[Config](configSection)
+    OdinEngine.fromConfig(config.withValue("entityFinder.grfnFile", ConfigValueFactory.fromAnyRef(grfnFile)))
+  }
   def fromConfig(odinConfig: Config = ConfigFactory.load()[Config]("TextEngine")): OdinEngine = {
 //    // The config with the main settings
 //    val odinConfig: Config = config[Config]("TextEngine")

@@ -10,6 +10,7 @@ import os
 import re
 
 import networkx as nx
+from pygraphviz import AGraph
 from networkx.algorithms.simple_paths import all_simple_paths
 
 # from model_analysis.analysis import get_max_s2_sensitivity
@@ -149,7 +150,7 @@ class ComputationalGraph(nx.DiGraph):
             CAG.nodes[name]["label"] = data["cag_label"]
         A = nx.nx_agraph.to_agraph(CAG)
         A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "LR"}
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
         )
         A.node_attr.update(
             {
@@ -300,7 +301,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
                         fillcolor="crimson" if is_exit else "white",
                         style="filled" if is_exit else "",
                         parent=con_name,
-                        label=f"{basename}::{index}",
+                        label=f"{basename}\n({index})",
                         cag_label=f"{basename}",
                         basename=basename,
                         padding=15,
@@ -410,9 +411,10 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 fillcolor="crimson" if is_exit else "white",
                 style="filled" if is_exit else "",
                 parent=parent,
-                label=f"{basename}::{index}",
-                cag_label=f"{basename}",
                 basename=basename,
+                index=index,
+                label=f"{basename}\n({index})",
+                cag_label=f"{basename}",
                 padding=15,
                 value=None,
             )
@@ -742,7 +744,8 @@ class GroundedFunctionNetwork(ComputationalGraph):
         for identifier, data in self.nodes(data=True):
             containers[data["parent"]]["vertices"].append(identifier)
             if data["type"] == "variable":
-                (basename, idx) = data["label"].split("::")
+                basename = data["basename"]
+                idx = data["index"]
                 variables.append(
                     {
                         "name": f"{basename}::{idx}",
@@ -795,9 +798,20 @@ class GroundedFunctionNetwork(ComputationalGraph):
     def to_AGraph(self):
         """ Export to a PyGraphviz AGraph object. """
         A = nx.nx_agraph.to_agraph(self)
-        A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "LR"}
+
+        node_names = [
+            n for n, d in self.nodes(data=True) if d["type"] == "variable"
+        ]
+        input_nodes = set(
+            [n for n in node_names if len(list(self.predecessors(n))) == 0]
         )
+        output_nodes = set(
+            [n for n in node_names if len(list(self.successors(n))) == 0]
+        )
+        A.graph_attr.update(
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+        )
+
         A.node_attr.update({"fontname": "Menlo"})
 
         def build_tree(cluster_name, node_attrs, root_graph):
@@ -806,21 +820,35 @@ class GroundedFunctionNetwork(ComputationalGraph):
                 for node_name, node_data in self.nodes(data=True)
                 if node_data["parent"] == cluster_name
             ]
-            root_graph.add_nodes_from(subgraph_nodes)
+            # root_graph.add_nodes_from(subgraph_nodes)
             subgraph = root_graph.add_subgraph(
                 subgraph_nodes,
                 name=f"cluster_{cluster_name}",
                 label=cluster_name,
                 style="bold, rounded",
-                rankdir="LR",
+                rankdir="TB",
                 color=node_attrs[cluster_name]["color"],
             )
+
+            subgraph.add_subgraph(input_nodes, rank="same")
+            subgraph.add_subgraph(output_nodes, rank="same")
+            function_sets = self.build_function_sets()
+            for func_set in function_sets:
+                subgraph.add_subgraph(list(func_set), rank="same")
+                output_var_nodes = list()
+                for func_node in func_set:
+                    succs = list(self.successors(func_node))
+                    output_var_nodes.extend(succs)
+                output_var_nodes = list(set(output_var_nodes) - output_nodes)
+                subgraph.add_subgraph(output_var_nodes, rank="same")
+
             for n in self.subgraphs.successors(cluster_name):
                 build_tree(n, node_attrs, subgraph)
 
         root = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         node_data = {n: d for n, d in self.subgraphs.nodes(data=True)}
         build_tree(root, node_data, A)
+
         return A
 
 
