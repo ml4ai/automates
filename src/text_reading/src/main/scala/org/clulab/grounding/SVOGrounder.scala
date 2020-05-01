@@ -82,7 +82,8 @@ object SVOGrounder {
     write(seqOfGroundings, indent = 4)
   }
 
-  def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Map[String, Seq[sparqlResult]] = {
+  def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Option[Map[String, Seq[sparqlResult]]] = {
+    //todo: this should only output groundings that dont have empty or non sparqlresults
 
     println("STARTED GROUNDING HYPOTHESES")
 
@@ -100,6 +101,8 @@ object SVOGrounder {
       }
     }
 
+    val shorterThingToGroundForDebugging = textVarLinkElements.slice(0, 4)
+
     //todo: collapse terms for same var IF from same paprt, get get info from source in the link element
 
     //    val toGround = for {
@@ -108,26 +111,45 @@ object SVOGrounder {
     //    } yield (hyp.obj("content"), hyp.obj("svo_query_terms"))
 
     //dict with the terms from all the instances of the variable
-//    val toGround = mutable.Map[String, Seq[String]]()
-//
-//    for (hyp <- textVarLinkElements) {
-//      val variable = hyp.obj("content")
-//      val terms = hyp.obj("svo_query_terms").arr.map(_.str)
-//      if (toGround.keys.toArray.contains(variable) {
-//        toGround(variable) =  terms
-//      }
-//    }
+    val toGround = mutable.Map[String, Seq[String]]()
+
+    for (hyp <- textVarLinkElements) {
+      val variable = hyp.obj("content").str
+//      val pdfNameRegex = raw"\\/.*\\.pdf".r
+//      val source = hyp.obj("content").str.
+//      val pdfName =  pdfNameRegex.findFirstIn(source).
+
+      //todo in during getting terms---filter out terms len < 3
+      val terms = hyp.obj("svo_query_terms").arr.map(_.str)
+      if (toGround.keys.toArray.contains(variable)) {
+        val currentTerms = toGround(variable)
+        println(s"CUR TERMS: $currentTerms")
+        val updatesTerms =  (currentTerms ++ terms.toList).distinct
+        println(s"UPDATED TERMS: $updatesTerms")
+        toGround(variable) = updatesTerms
+      } else {
+        toGround(variable) = terms
+      }
+    }
 
 
     val varGroundings = mutable.Map[String, Seq[sparqlResult]]()
 
-    for (hyp <- textVarLinkElements.distinct) {
-      varGroundings ++ groundOneTextVarCommentHypothesis(hyp.obj("content").str, hyp.obj("svo_query_terms").arr.map(term => term.str), k)
+    for (hyp <- shorterThingToGroundForDebugging.distinct) {
+      val oneHypGrounding = groundOneTextVarCommentHypothesis(hyp.obj("content").str, hyp.obj("svo_query_terms").arr.map(term => term.str), k)
+      if (oneHypGrounding.isDefined) {
+        oneHypGrounding.get.keys.foreach(key => varGroundings.put(key, oneHypGrounding.get(key)))
+      }
     }
-    varGroundings.toMap
+    println("len of keys in var groundings: " + varGroundings.toMap.keys.toList.length)
+
+    if (varGroundings.nonEmpty) {
+      return  Some(varGroundings.toMap)
+
+    } else None
   }
 
-  def groundOneTextVarCommentHypothesis(variable: String, terms: Seq[String], k: Int):  Map[String, Seq[sparqlResult]] = {
+  def groundOneTextVarCommentHypothesis(variable: String, terms: Seq[String], k: Int):  Option[Map[String, Seq[sparqlResult]]] = {
 
     println(s"grounding variable $variable")
 //    val textVarLinkElement = hypothesis.obj("element_1")
@@ -137,13 +159,17 @@ object SVOGrounder {
       val resultsFromAllTerms = groundTerms(terms)
       val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
       println(s"svo groundings: $svoGroundings")
-      svoGroundings
+      if (svoGroundings.isDefined) {
+        return svoGroundings
+      } else None
 
 
-    } else Map(variable -> Array(new sparqlResult("None", "None", "None", None)))
+
+    } else None
   }
 
   /** grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
+  //todo: this should also probably return and option
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
     println("Started grounding a mention: " + mention.arguments("definition").head.text + " | var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
     val terms = getTerms(mention).get.filter(t => t.length > 1) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
@@ -153,7 +179,10 @@ object SVOGrounder {
 
       val variable = mention.arguments("variable").head.text
       val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
-      svoGroundings
+      if (svoGroundings.isDefined) {
+        return svoGroundings.get
+      } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
+
 
     } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
   }
@@ -177,7 +206,7 @@ object SVOGrounder {
   }
 
 
-  def rankAndReturnSVOGroundings(variable: String, k: Int, resultsFromAllTerms: Seq[sparqlResult]): Map[String, Seq[sparqlResult]] = {
+  def rankAndReturnSVOGroundings(variable: String, k: Int, resultsFromAllTerms: Seq[sparqlResult]): Option[Map[String, Seq[sparqlResult]]] = {
     resultsFromAllTerms.toArray
     //RANKING THE RESULTS
     //getting all the results with same (maximum) score
@@ -191,10 +220,11 @@ object SVOGrounder {
 
     //return the best results first, then only the max score ones, and then all the rest; some may overlap thus distinct
     val allResults = (bestResults ++ onlyMaxScoreResults ++ resultsFromAllTerms).distinct
-    //      println("len all results: " + allResults.length)
-    //      for (r <- allResults) println("res: " + r)
-    Map(variable -> getTopK(allResults, k))
-
+    if (allResults.nonEmpty) {
+      //      println("len all results: " + allResults.length)
+      //      for (r <- allResults) println("res: " + r)
+      Some(Map(variable -> getTopK(allResults, k)))
+    } else None
   }
 
   //ground a string (for API)
@@ -268,6 +298,7 @@ object SVOGrounder {
         for (i <- 0 to lemmas.length-1) {
           //disregard words  other than nouns for now fixme: add other parts of speech?
           if (lemmas(i).length > 1) {
+            println("one term; checking length: " + lemmas(i).length + lemmas(i))
             if (tags(i).startsWith("N")) {
               terms += lemmas(i)
             }

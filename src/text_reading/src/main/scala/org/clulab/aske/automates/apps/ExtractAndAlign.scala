@@ -89,7 +89,10 @@ object ExtractAndAlign {
         logger.warn("No svo groundings provided in json; querying the SVO ontology with Sparql")
         //query svo here
         val groundings = SVOGrounder.groundHypothesesToSVO(hypotheses, 5)
-        hypotheses = hypotheses ++ mkLinkHypotheses(groundings)
+        if (groundings.isDefined) {
+          hypotheses = hypotheses ++ mkLinkHypotheses(groundings.get)
+        }
+
       }
     } else logger.warn("SVO grounding is disabled")
 
@@ -299,6 +302,11 @@ object ExtractAndAlign {
   }
 
   def mkLinkHypotheses(groundings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
+
+    //todo: groundings with Nones should not make it here
+    logger.info("Making link hypotheses for svo groundings")
+    println("groundings length: " + groundings.keys.toList.length)
+    println(s"groundings inside mkling hypotheses: $groundings")
     val groundingObjects = for {
       //each grounding is a mapping from text variable to seq of possible svo groundings (as sparqlResults)
       v <- groundings.keys //variable
