@@ -87,9 +87,20 @@ object SVOGrounder {
     println("STARTED GROUNDING HYPOTHESES")
 
     //todo: do something to get to any text_var element, no matter if element 1 ot element 2
-    val textVarLinkElements = hypotheses.filter(hyp => hyp.obj("element_1").obj("type").str == "text_var").map(_("element_1")).distinct
+//    val textVarLinkElements = hypotheses.filter(hyp => hyp.obj("element_1").obj("type").str == "text_var").map(_("element_1")).distinct
 
-    //todo: collapse terms for same var
+    val textVarLinkElements = new ArrayBuffer[ujson.Value]()
+    for (hyp <- hypotheses) {
+      for (el <- hyp.obj) {
+        if (el._1.startsWith("element") && el._2.obj("type").str == "text_var" ) {
+          if (el._2.obj("svo_query_terms").arr.nonEmpty) {
+            textVarLinkElements.append(el._2)
+          }
+        }
+      }
+    }
+
+    //todo: collapse terms for same var IF from same paprt, get get info from source in the link element
 
     //    val toGround = for {
     //      hyp <- textVarLinkElements
@@ -110,7 +121,7 @@ object SVOGrounder {
 
     val varGroundings = mutable.Map[String, Seq[sparqlResult]]()
 
-    for (hyp <- textVarLinkElements) {
+    for (hyp <- textVarLinkElements.distinct) {
       varGroundings ++ groundOneTextVarCommentHypothesis(hyp.obj("content").str, hyp.obj("svo_query_terms").arr.map(term => term.str), k)
     }
     varGroundings.toMap

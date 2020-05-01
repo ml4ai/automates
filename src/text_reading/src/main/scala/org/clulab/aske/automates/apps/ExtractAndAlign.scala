@@ -78,17 +78,18 @@ object ExtractAndAlign {
 
     var hypotheses = getLinkHypotheses(linkElements, alignments)
 
-    println("ground svo: " + groundToSVO)
+
     if (groundToSVO) {
       if (SVOgroundings.isDefined) {
+        logger.info("Making Text-variable/SVO link hypotheses")
         //this means they have been read in from json during getArgsForAlignment
         val svo_hypotheses = mkLinkHypotheses(SVOgroundings.get)
         hypotheses = hypotheses ++ svo_hypotheses
       } else {
-        logger.warn("No svo groundings provided in json")
+        logger.warn("No svo groundings provided in json; querying the SVO ontology with Sparql")
         //query svo here
         val groundings = SVOGrounder.groundHypothesesToSVO(hypotheses, 5)
-        hypotheses ++ mkLinkHypotheses(groundings)
+        hypotheses = hypotheses ++ mkLinkHypotheses(groundings)
       }
     } else logger.warn("SVO grounding is disabled")
 
