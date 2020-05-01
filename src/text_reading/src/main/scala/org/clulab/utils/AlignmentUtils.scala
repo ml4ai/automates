@@ -33,7 +33,6 @@ object AlignmentJsonUtils {
 
     } else None
 
-    println("one grounding: " + svoGroundings.head.values.head.mkString(" | "))
 
     // load text mentions
     val definitionMentions =  if (jsonKeys.contains("mentions")) {

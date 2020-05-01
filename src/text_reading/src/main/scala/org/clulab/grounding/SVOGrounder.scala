@@ -85,7 +85,28 @@ object SVOGrounder {
   def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Map[String, Seq[sparqlResult]] = {
 
     println("STARTED GROUNDING HYPOTHESES")
+
+    //todo: do something to get to any text_var element, no matter if element 1 ot element 2
     val textVarLinkElements = hypotheses.filter(hyp => hyp.obj("element_1").obj("type").str == "text_var").map(_("element_1")).distinct
+
+    //todo: collapse terms for same var
+
+    //    val toGround = for {
+    //      hyp <- textVarLinkElements
+    //
+    //    } yield (hyp.obj("content"), hyp.obj("svo_query_terms"))
+
+    //dict with the terms from all the instances of the variable
+//    val toGround = mutable.Map[String, Seq[String]]()
+//
+//    for (hyp <- textVarLinkElements) {
+//      val variable = hyp.obj("content")
+//      val terms = hyp.obj("svo_query_terms").arr.map(_.str)
+//      if (toGround.keys.toArray.contains(variable) {
+//        toGround(variable) =  terms
+//      }
+//    }
+
 
     val varGroundings = mutable.Map[String, Seq[sparqlResult]]()
 
@@ -104,7 +125,9 @@ object SVOGrounder {
     if (terms.nonEmpty) {
       val resultsFromAllTerms = groundTerms(terms)
       val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
+      println(s"svo groundings: $svoGroundings")
       svoGroundings
+
 
     } else Map(variable -> Array(new sparqlResult("None", "None", "None", None)))
   }

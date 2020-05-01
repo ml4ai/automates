@@ -197,7 +197,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonKeys = json.obj.keys.toList
 
     //align components if the right information is provided in the json
-    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("equations") || jsonKeys.contains("SVOgroundings"))) {
+    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code") || jsonKeys.contains("SVOgroundings"))) {
       val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
 
       // ground!

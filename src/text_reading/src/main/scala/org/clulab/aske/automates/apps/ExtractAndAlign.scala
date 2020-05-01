@@ -85,6 +85,7 @@ object ExtractAndAlign {
         val svo_hypotheses = mkLinkHypotheses(SVOgroundings.get)
         hypotheses = hypotheses ++ svo_hypotheses
       } else {
+        logger.warn("No svo groundings provided in json")
         //query svo here
         val groundings = SVOGrounder.groundHypothesesToSVO(hypotheses, 5)
         hypotheses ++ mkLinkHypotheses(groundings)
