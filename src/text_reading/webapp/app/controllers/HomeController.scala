@@ -186,6 +186,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
+    val groundToSVO = true //fixme: pass from somewhere
     val appendToGrFN = false //todo: how pass from configs??
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
@@ -196,8 +197,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonKeys = json.obj.keys.toList
 
     //align components if the right information is provided in the json
-    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("equations"))) {
-      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json)
+    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("equations") || jsonKeys.contains("SVOgroundings"))) {
+      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
+
       // ground!
       val groundings = ExtractAndAlign.groundMentions(
         json,
@@ -206,6 +208,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.definitionMentions,
         argsForGrounding.commentDefinitionMentions,
         argsForGrounding.equationChunksAndSource,
+        argsForGrounding.svoGroundings,
+        groundToSVO,
         alignmentHandler,
         Some(numAlignments),
         Some(numAlignmentsSrcToComment),

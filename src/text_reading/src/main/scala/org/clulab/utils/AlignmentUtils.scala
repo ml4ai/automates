@@ -5,6 +5,7 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMenti
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
+import org.clulab.grounding.sparqlResult
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.processors.Document
 import ujson.{Obj, Value}
@@ -18,9 +19,22 @@ object AlignmentJsonUtils {
     * other related methods are in GrFNParser*/
 
   /**get arguments for the aligner depending on what data are provided**/
-  def getArgsForAlignment(jsonPath: String, json: Value): alignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean): alignmentArguments = {
 
     val jsonKeys = json.obj.keys.toList
+
+    //todo: 1) if svogroundings are in the json 2) if we want them to be extracted as part of align (maybe just use the terms I added to link element AND only the ones that overlap with comments vars 3) if we don't want them extracted at all 4) add comment/text_var overlap in svo grounding endpoint
+
+
+    val svoGroundings = if (groundToSVO) {
+      if (jsonKeys.contains("SVOgroundings")) {
+        Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).toMap)
+      } else None
+
+    } else None
+
+    println("one grounding: " + svoGroundings.head.values.head.mkString(" | "))
+
     // load text mentions
     val definitionMentions =  if (jsonKeys.contains("mentions")) {
       val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
@@ -64,7 +78,9 @@ object AlignmentJsonUtils {
         .filter(hasRequiredArgs))
     } else None
 
-    new alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource)
+
+
+    new alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")

@@ -82,45 +82,84 @@ object SVOGrounder {
     write(seqOfGroundings, indent = 4)
   }
 
+  def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Map[String, Seq[sparqlResult]] = {
+
+    println("STARTED GROUNDING HYPOTHESES")
+    val textVarLinkElements = hypotheses.filter(hyp => hyp.obj("element_1").obj("type").str == "text_var").map(_("element_1")).distinct
+
+    val varGroundings = mutable.Map[String, Seq[sparqlResult]]()
+
+    for (hyp <- textVarLinkElements) {
+      varGroundings ++ groundOneTextVarCommentHypothesis(hyp.obj("content").str, hyp.obj("svo_query_terms").arr.map(term => term.str), k)
+    }
+    varGroundings.toMap
+  }
+
+  def groundOneTextVarCommentHypothesis(variable: String, terms: Seq[String], k: Int):  Map[String, Seq[sparqlResult]] = {
+
+    println(s"grounding variable $variable")
+//    val textVarLinkElement = hypothesis.obj("element_1")
+//    val variable = textVarLinkElement.obj("content").str
+//    val terms = textVarLinkElement.obj("svo_query_terms").arr.map(_.str)
+    if (terms.nonEmpty) {
+      val resultsFromAllTerms = groundTerms(terms)
+      val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
+      svoGroundings
+
+    } else Map(variable -> Array(new sparqlResult("None", "None", "None", None)))
+  }
+
   /** grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
     println("Started grounding a mention: " + mention.arguments("definition").head.text + " | var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
     val terms = getTerms(mention).get.filter(t => t.length > 1) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
 //    println("search terms: " + terms.mkString(" "))
     if (terms.nonEmpty) {
-      val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
-      for (word <- terms) {
-        val result = runSparqlQuery(word, sparqlDir)
+      val resultsFromAllTerms = groundTerms(terms)
 
-        if (result.nonEmpty) {
-          //each line in the result is a separate entry returned by the query:
-          val resultLines = result.split("\n")
-          //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
+      val variable = mention.arguments("variable").head.text
+      val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
+      svoGroundings
 
-
-          val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0).trim(), rl.split("\t")(1).trim(), rl.split("\t")(2).trim(), Some(editDistanceNormalized(rl.split("\t")(1).trim(), word)), "SVO")).sortBy(sr => sr.score).reverse
-
-          for (sr <- sparqlResults) resultsFromAllTerms += sr
-        }
-      }
-
-      resultsFromAllTerms.toArray
-      //RANKING THE RESULTS
-      //getting all the results with same (maximum) score
-      val onlyMaxScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).max).toArray.distinct
-
-      //the results where search term contains "_" or "-" should be ranked higher since those are multi-word instead of separate words
-      val (multiWord, singleWord) = onlyMaxScoreResults.partition(r => r.searchTerm.contains("_") || r.searchTerm.contains("-"))
-
-      //this is the best results based on score and whether or not they are collocations
-      val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
-
-      //return the best results first, then only the max score ones, and then all the rest; some may overlap thus distinct
-      val allResults = (bestResults ++ onlyMaxScoreResults ++ resultsFromAllTerms).distinct
-//      println("len all results: " + allResults.length)
-//      for (r <- allResults) println("res: " + r)
-      Map(mention.arguments("variable").head.text -> getTopK(allResults, k))
     } else Map(mention.arguments("variable").head.text -> Array(new sparqlResult("None", "None", "None", None)))
+  }
+
+  def groundTerms(terms: Seq[String]): Seq[sparqlResult] = {
+    val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
+    for (word <- terms) {
+      val result = runSparqlQuery(word, sparqlDir)
+
+      if (result.nonEmpty) {
+        //each line in the result is a separate entry returned by the query:
+        val resultLines = result.split("\n")
+        //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
+
+        val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0).trim(), rl.split("\t")(1).trim(), rl.split("\t")(2).trim(), Some(editDistanceNormalized(rl.split("\t")(1).trim(), word)), "SVO")).sortBy(sr => sr.score).reverse
+
+        for (sr <- sparqlResults) resultsFromAllTerms += sr
+      }
+    }
+    resultsFromAllTerms
+  }
+
+
+  def rankAndReturnSVOGroundings(variable: String, k: Int, resultsFromAllTerms: Seq[sparqlResult]): Map[String, Seq[sparqlResult]] = {
+    resultsFromAllTerms.toArray
+    //RANKING THE RESULTS
+    //getting all the results with same (maximum) score
+    val onlyMaxScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).max).toArray.distinct
+
+    //the results where search term contains "_" or "-" should be ranked higher since those are multi-word instead of separate words
+    val (multiWord, singleWord) = onlyMaxScoreResults.partition(r => r.searchTerm.contains("_") || r.searchTerm.contains("-"))
+
+    //this is the best results based on score and whether or not they are collocations
+    val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
+
+    //return the best results first, then only the max score ones, and then all the rest; some may overlap thus distinct
+    val allResults = (bestResults ++ onlyMaxScoreResults ++ resultsFromAllTerms).distinct
+    //      println("len all results: " + allResults.length)
+    //      for (r <- allResults) println("res: " + r)
+    Map(variable -> getTopK(allResults, k))
 
   }
 
