@@ -314,8 +314,14 @@ object ExtractAndAlign {
       //text link element//text link element
       srcLinkElement = mkLinkElement(
         elemType = "text_var",
-        source = "text_file", // fixme: the name of the file
-        content = v, //the variable associated with the definition that we used for grounding
+        source = v match {
+          case v if v.contains("::") => v.split("::").last
+          case _ => "text_pdf"
+        },
+        content = v match {
+          case v if v.contains("::") => v.split("::").head
+          case _ => v
+        }, //the variable associated with the definition that we used for grounding; if we get the variable from other link hypotheses, it also includes the name of the pdf it came from in this format <variable_name>::<source_pdf>; todo: include that info in the svo grounding endpoint? or is it already there?
         contentType = "null"
       )
       dstLinkElement = GrFNParser.mkSVOElement(gr)

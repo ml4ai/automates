@@ -83,12 +83,8 @@ object SVOGrounder {
   }
 
   def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Option[Map[String, Seq[sparqlResult]]] = {
-    //todo: this should only output groundings that dont have empty or non sparqlresults
-
+    //todo: this should only output groundings that dont have empty or non sparqlresults - done?
     println("STARTED GROUNDING HYPOTHESES")
-
-    //todo: do something to get to any text_var element, no matter if element 1 ot element 2
-//    val textVarLinkElements = hypotheses.filter(hyp => hyp.obj("element_1").obj("type").str == "text_var").map(_("element_1")).distinct
 
     val textVarLinkElements = new ArrayBuffer[ujson.Value]()
     for (hyp <- hypotheses) {
@@ -101,7 +97,7 @@ object SVOGrounder {
       }
     }
 
-    val shorterThingToGroundForDebugging = textVarLinkElements.slice(0, 4)
+//    val shorterThingToGroundForDebugging = textVarLinkElements.slice(0, 4)
 
     //todo: collapse terms for same var IF from same paprt, get get info from source in the link element
 
@@ -113,30 +109,37 @@ object SVOGrounder {
     //dict with the terms from all the instances of the variable
     val toGround = mutable.Map[String, Seq[String]]()
 
-    for (hyp <- textVarLinkElements) {
+    //here, include the pdf name in the variable lest we concat variables from different papers (they may not refer to the same concept)
+    for (hyp <- textVarLinkElements.distinct) {
       val variable = hyp.obj("content").str
-//      val pdfNameRegex = raw"\\/.*\\.pdf".r
-//      val source = hyp.obj("content").str.
-//      val pdfName =  pdfNameRegex.findFirstIn(source).
+      val pdfNameRegex = ".*?\\.pdf".r
+      val source = hyp.obj("source").str.split("/").last
+      println ("source str: " + source)
+      val pdfName =  pdfNameRegex.findFirstIn(source).getOrElse("Unknown")
 
-      //todo in during getting terms---filter out terms len < 3
+      println("PDF NAME: " + pdfName)
+
+
       val terms = hyp.obj("svo_query_terms").arr.map(_.str)
       if (toGround.keys.toArray.contains(variable)) {
         val currentTerms = toGround(variable)
         println(s"CUR TERMS: $currentTerms")
         val updatesTerms =  (currentTerms ++ terms.toList).distinct
         println(s"UPDATED TERMS: $updatesTerms")
-        toGround(variable) = updatesTerms
+        toGround(variable + "::" + pdfName) = updatesTerms
       } else {
-        toGround(variable) = terms
+        toGround(variable + "::" + pdfName) = terms
       }
     }
 
 
+    //todo: have variable include pdf name to make sure we don't collapse vars from different papers; then, can use that string to make source in the link hypothesis; then need to do something with the ones already extracted
+
     val varGroundings = mutable.Map[String, Seq[sparqlResult]]()
 
-    for (hyp <- shorterThingToGroundForDebugging.distinct) {
-      val oneHypGrounding = groundOneTextVarCommentHypothesis(hyp.obj("content").str, hyp.obj("svo_query_terms").arr.map(term => term.str), k)
+    for (hyp <- toGround) {
+      //TODO: CREATE THE LINK HERE WHILE HAVE ALL THE INFO
+      val oneHypGrounding = groundVarTermsToSVO(hyp._1, hyp._2, k)
       if (oneHypGrounding.isDefined) {
         oneHypGrounding.get.keys.foreach(key => varGroundings.put(key, oneHypGrounding.get(key)))
       }
@@ -149,12 +152,10 @@ object SVOGrounder {
     } else None
   }
 
-  def groundOneTextVarCommentHypothesis(variable: String, terms: Seq[String], k: Int):  Option[Map[String, Seq[sparqlResult]]] = {
-
+  def groundVarTermsToSVO(variable: String, terms: Seq[String], k: Int):  Option[Map[String, Seq[sparqlResult]]] = {
+    // ground terms from one variable
     println(s"grounding variable $variable")
-//    val textVarLinkElement = hypothesis.obj("element_1")
-//    val variable = textVarLinkElement.obj("content").str
-//    val terms = textVarLinkElement.obj("svo_query_terms").arr.map(_.str)
+
     if (terms.nonEmpty) {
       val resultsFromAllTerms = groundTerms(terms)
       val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
@@ -290,15 +291,18 @@ object SVOGrounder {
           }
         }
       }
+
+      for (t <- compounds) println(s"term from compounds ${t.mkString("|")} ${t.length}")
       //if there were no search terms found by getCompounds, just ground any nouns in the definition
-      if (terms.length == 0) {
+      if (terms.isEmpty) {
         //get terms from words
         val lemmas = mention.arguments("definition").head.lemmas.get
         val tags = mention.arguments("definition").head.tags.get
-        for (i <- 0 to lemmas.length-1) {
+        for (i <- lemmas.indices) {
           //disregard words  other than nouns for now fixme: add other parts of speech?
-          if (lemmas(i).length > 1) {
-            println("one term; checking length: " + lemmas(i).length + lemmas(i))
+          //disregard words that are too short---unlikely to ground well to svo
+          if (lemmas(i).length > 3) {
+            println("one term; checking length: " + lemmas(i).length + " " + lemmas(i))
             if (tags(i).startsWith("N")) {
               terms += lemmas(i)
             }
@@ -315,11 +319,6 @@ object SVOGrounder {
 
   //with strings, just take each word of the string as term---don't have access to all the ling info a mention has
   def getTerms(str: String): Seq[String] = {
-
-    //todo have a none option - does not work well
-    //if no res from compounds, get each word individually - done
-    //if headword len 1 don't do anything with it - done
-    //make sure the output of groundmenttosvo outputs the format that will work in align - looks right
     val terms = new ArrayBuffer[String]()
     //todo: get lemmas? pos? is it worth it running the processors?
     val termCandidates = str.split(" ")
@@ -330,7 +329,7 @@ object SVOGrounder {
   def getCompounds(mention: Mention): Option[Array[String]] = {
     val compoundWords = new ArrayBuffer[String]()
     val headWord = mention.synHeadLemma.get
-    if (headWord.trim().length > 1 && headWord.trim().count(_.isLetter) > 0) { //don't ground words that are too short---too many false pos from svo
+    if (headWord.trim().length > 3 && headWord.trim().count(_.isLetter) > 0) { //don't ground words that are too short---too many false pos from svo and many are variables; has to contain letters
       compoundWords.append(headWord)
       //todo: do we want terms other than syntactic head?
       val outgoing = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get)

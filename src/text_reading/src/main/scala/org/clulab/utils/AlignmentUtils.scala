@@ -23,9 +23,6 @@ object AlignmentJsonUtils {
 
     val jsonKeys = json.obj.keys.toList
 
-    //todo: 1) if svogroundings are in the json 2) if we want them to be extracted as part of align (maybe just use the terms I added to link element AND only the ones that overlap with comments vars 3) if we don't want them extracted at all 4) add comment/text_var overlap in svo grounding endpoint
-
-
     val svoGroundings = if (groundToSVO) {
       if (jsonKeys.contains("SVOgroundings")) {
         Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).toMap)

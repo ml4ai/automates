@@ -186,7 +186,16 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
-    val groundToSVO = true //fixme: pass from somewhere
+
+
+    //todo:
+    // 1) if svogroundings are in the json - done
+    // 2) if we want them to be extracted as part of align (maybe just use the terms I added to link element AND only the ones that overlap with comments var (will there be vars from diff papers? okay to collapse all instances of the same variable?
+    // 3) if we don't want them extracted at all - done
+    // 4) add comment/text_var overlap in svo grounding endpoint
+
+
+  val groundToSVO = true //fixme: pass from somewhere
     val appendToGrFN = false //todo: how pass from configs??
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
