@@ -23,14 +23,6 @@ object AlignmentJsonUtils {
 
     val jsonKeys = json.obj.keys.toList
 
-    val svoGroundings = if (groundToSVO) {
-      if (jsonKeys.contains("SVOgroundings")) {
-        Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).toMap)
-      } else None
-
-    } else None
-
-
     // load text mentions
     val definitionMentions =  if (jsonKeys.contains("mentions")) {
       val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
@@ -72,6 +64,15 @@ object AlignmentJsonUtils {
       val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
       Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames, source)
         .filter(hasRequiredArgs))
+    } else None
+
+
+    //deserialize svo groundings if a) grounding svo and b) if svo groundings have been provided in the input
+    val svoGroundings = if (groundToSVO) {
+      if (jsonKeys.contains("SVOgroundings")) {
+        Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).toMap)
+      } else None
+
     } else None
 
 

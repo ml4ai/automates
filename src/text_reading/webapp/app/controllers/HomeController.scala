@@ -49,6 +49,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val numAlignments: Int = 5
   private val numAlignmentsSrcToComment: Int = 3
   private val scoreThreshold: Double = 0.0
+  private val numOfGroundingsToReturn: Int = 5
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -187,16 +188,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     */
   def align: Action[AnyContent] = Action { request =>
 
+    val groundToSVO = true //whether or not one wants to use svo grounding; fixme: pass from somewhere
+    val appendToGrFN = false //todo: how to pass from configs??
 
-    //todo:
-    // 1) if svogroundings are in the json - done
-    // 2) if we want them to be extracted as part of align (maybe just use the terms I added to link element AND only the ones that overlap with comments var (will there be vars from diff papers? okay to collapse all instances of the same variable?
-    // 3) if we don't want them extracted at all - done
-    // 4) add comment/text_var overlap in svo grounding endpoint
-
-
-  val groundToSVO = true //fixme: pass from somewhere
-    val appendToGrFN = false //todo: how pass from configs??
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
     val jsonPath = pathJson("pathToJson").str
@@ -205,8 +199,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val jsonKeys = json.obj.keys.toList
 
-    //align components if the right information is provided in the json
-    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code") || jsonKeys.contains("SVOgroundings"))) {
+    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
+    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
       val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
 
       // ground!
@@ -219,6 +213,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.equationChunksAndSource,
         argsForGrounding.svoGroundings,
         groundToSVO,
+        numOfGroundingsToReturn,
         alignmentHandler,
         Some(numAlignments),
         Some(numAlignmentsSrcToComment),
@@ -227,12 +222,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       )
 
 
-      // FIXME: add a conversion method for ujson <--> play json
-      val groundingsAsString = ujson.write(groundings, indent = 4) //todo: here, json object: array with link hypotheses
+      val groundingsAsString = ujson.write(groundings, indent = 4)
 
-      //todo: add some option to write grfn if needed; maybe pass from configs?
       val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
-      Ok(groundingsJson4s) //todo: pretty print json
+      Ok(groundingsJson4s)
     } else {
       logger.warn(s"Nothing to do for keys: $jsonKeys")
       Ok("")

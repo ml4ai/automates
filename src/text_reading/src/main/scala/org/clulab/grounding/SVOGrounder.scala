@@ -12,7 +12,6 @@ import scala.sys.process.Process
 import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
-
 //todo: pass the python query file from configs
 //todo: document in wiki
 
@@ -82,10 +81,8 @@ object SVOGrounder {
     write(seqOfGroundings, indent = 4)
   }
 
+  /** produces svo groundings for text_var link elements*/
   def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Option[Map[String, Seq[sparqlResult]]] = {
-    //todo: this should only output groundings that dont have empty or non sparqlresults - done?
-    println("STARTED GROUNDING HYPOTHESES")
-
     val textVarLinkElements = new ArrayBuffer[ujson.Value]()
     for (hyp <- hypotheses) {
       for (el <- hyp.obj) {
@@ -99,14 +96,7 @@ object SVOGrounder {
 
 //    val shorterThingToGroundForDebugging = textVarLinkElements.slice(0, 4)
 
-    //todo: collapse terms for same var IF from same paprt, get get info from source in the link element
-
-    //    val toGround = for {
-    //      hyp <- textVarLinkElements
-    //
-    //    } yield (hyp.obj("content"), hyp.obj("svo_query_terms"))
-
-    //dict with the terms from all the instances of the variable
+    //dict mapping a variable with the terms from all the text_var link elements with this variable
     val toGround = mutable.Map[String, Seq[String]]()
 
     //here, include the pdf name in the variable lest we concat variables from different papers (they may not refer to the same concept)
@@ -114,38 +104,26 @@ object SVOGrounder {
       val variable = hyp.obj("content").str
       val pdfNameRegex = ".*?\\.pdf".r
       val source = hyp.obj("source").str.split("/").last
-      println ("source str: " + source)
       val pdfName =  pdfNameRegex.findFirstIn(source).getOrElse("Unknown")
-
-      println("PDF NAME: " + pdfName)
-
-
       val terms = hyp.obj("svo_query_terms").arr.map(_.str)
       if (toGround.keys.toArray.contains(variable)) {
         val currentTerms = toGround(variable)
-        println(s"CUR TERMS: $currentTerms")
         val updatesTerms =  (currentTerms ++ terms.toList).distinct
-        println(s"UPDATED TERMS: $updatesTerms")
         toGround(variable + "::" + pdfName) = updatesTerms
       } else {
         toGround(variable + "::" + pdfName) = terms
       }
     }
 
-
-    //todo: have variable include pdf name to make sure we don't collapse vars from different papers; then, can use that string to make source in the link hypothesis; then need to do something with the ones already extracted
-
     val varGroundings = mutable.Map[String, Seq[sparqlResult]]()
 
-    for (hyp <- toGround) {
-      //TODO: CREATE THE LINK HERE WHILE HAVE ALL THE INFO
-      val oneHypGrounding = groundVarTermsToSVO(hyp._1, hyp._2, k)
+    //ground to svo
+    for (varTermTuple <- toGround) {
+      val oneHypGrounding = groundVarTermsToSVO(varTermTuple._1, varTermTuple._2, k)
       if (oneHypGrounding.isDefined) {
         oneHypGrounding.get.keys.foreach(key => varGroundings.put(key, oneHypGrounding.get(key)))
       }
     }
-    println("len of keys in var groundings: " + varGroundings.toMap.keys.toList.length)
-
     if (varGroundings.nonEmpty) {
       return  Some(varGroundings.toMap)
 
@@ -155,6 +133,7 @@ object SVOGrounder {
   def groundVarTermsToSVO(variable: String, terms: Seq[String], k: Int):  Option[Map[String, Seq[sparqlResult]]] = {
     // ground terms from one variable
     println(s"grounding variable $variable")
+
 
     if (terms.nonEmpty) {
       val resultsFromAllTerms = groundTerms(terms)

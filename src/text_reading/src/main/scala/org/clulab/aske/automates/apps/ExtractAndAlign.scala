@@ -51,6 +51,7 @@ object ExtractAndAlign {
     equationChunksAndSource: Option[Seq[(String, String)]],
     SVOgroundings: Option[Map[String, Seq[sparqlResult]]],
     groundToSVO: Boolean,
+    numOfGroundingsToReturn: Int,
     alignmentHandler: AlignmentHandler,
     numAlignments: Option[Int],
     numAlignmentsSrcToComment: Option[Int],
@@ -88,7 +89,7 @@ object ExtractAndAlign {
       } else {
         logger.warn("No svo groundings provided in json; querying the SVO ontology with Sparql")
         //query svo here
-        val groundings = SVOGrounder.groundHypothesesToSVO(hypotheses, 5)
+        val groundings = SVOGrounder.groundHypothesesToSVO(hypotheses, numOfGroundingsToReturn)
         if (groundings.isDefined) {
           hypotheses = hypotheses ++ mkLinkHypotheses(groundings.get)
         }
@@ -96,6 +97,8 @@ object ExtractAndAlign {
       }
     } else logger.warn("SVO grounding is disabled")
 
+
+    // the produced hypotheses can be either appended to the input file as "groundings" or returned as a separate ujson object
     if (appendToGrFN) {
       // Add the grounding links to the GrFN
       GrFNParser.addHypotheses(grfn, hypotheses)
