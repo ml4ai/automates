@@ -15,4 +15,4 @@ This module is being developed as part of the
 [AutoMATES](https://ml4ai.github.io/automates/) project at the University of
 Arizona.
 
-- [Github code repository](https://github.com/ml4ai/automates/tree/master/equation_extraction)
+- [Github code repository](https://github.com/ml4ai/automates/tree/master/src/equation_reading/equation_extraction)
