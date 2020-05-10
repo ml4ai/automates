@@ -77,7 +77,7 @@ object AlignmentJsonUtils {
 
 
 
-    new alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource, svoGroundings)
+    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")
@@ -112,7 +112,7 @@ object AlignmentJsonUtils {
       } else {
         for (item <- sourceCommentObject(k).obj) if (item._2.isInstanceOf[Value.Arr]) {
           val value = item._2
-          for (str <- value.arr) if (value.arr.length > 0) {
+          for (str <- value.arr) if (value.arr.nonEmpty) {
             val text = str.str
             if (text.length > 0) {
               commentTextObjects.append(mkCommentTextElement(text, source.get, k, item._1))
