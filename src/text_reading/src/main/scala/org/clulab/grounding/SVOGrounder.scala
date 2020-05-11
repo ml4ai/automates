@@ -12,6 +12,7 @@ import scala.sys.process.Process
 import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
+import org.clulab.grounding.SVOGrounder.sparqlDir
 //todo: pass the python query file from configs
 //todo: document in wiki
 
@@ -30,6 +31,21 @@ object SVOGrounding {
 case class SeqOfGroundings(groundings: Seq[SVOGrounding])
 object SeqOfGroundings {
   implicit val rw: ReadWriter[SeqOfGroundings] = macroRW
+}
+
+
+object wikidataGrounder {
+  val config: Config = ConfigFactory.load()
+  val sparqlDir: String = config[String]("grounding.sparqlDir")
+
+  def runSparqlQuery(term: String, scriptDir: String): String = {
+    //todo: currently, the sparql query returns up to 9 results to avoid overloading the server; this is currently defined
+    //in the query in sparqlWrapper.py, but should be passed as a var.
+    val command = Seq("python", s"$sparqlDir/sparqlWrapperWikidata.py", term)
+    val process = Process(command, new File(s"$scriptDir"))
+    process.!!
+  }
+
 }
 
 object SVOGrounder {

@@ -14,7 +14,8 @@ import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
-import org.clulab.grounding.SVOGrounder
+import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.grounding.{SVOGrounder, wikidataGrounder}
 import org.clulab.odin.serialization.json.JSONSerializer
 import ujson.Value
 //import org.clulab.odin._
@@ -188,48 +189,70 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     */
   def align: Action[AnyContent] = Action { request =>
 
-    val groundToSVO = true //whether or not one wants to use svo grounding; fixme: pass from somewhere
-    val appendToGrFN = false //todo: how to pass from configs??
+    lazy val w2v = new Word2Vec("vectors.txt")
+//    val term = "crop"
+//    val term_list = List("crop", "agricultural crop", "crop canopy")
+    val term = "air temperature"
+    val term_list = List("temperature", "air temperature")
+    val result = wikidataGrounder.runSparqlQuery(term, wikidataGrounder.sparqlDir)
+    if (result.nonEmpty) {
+      val resultLines = result.split("\n")
+      for (line <- resultLines) println("res line: " + line)
+      val allLabels = resultLines.map(line => line.split("\t")(2))
+      println(allLabels.mkString("|"))
 
-    val data = request.body.asJson.get.toString()
-    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
-    val jsonPath = pathJson("pathToJson").str
-    val jsonFile = new File(jsonPath)
-    val json = ujson.read(jsonFile.readString())
+      if (allLabels.length > 1 && allLabels.distinct.length == 1) {
+        //then need to compare all the terms available to the definition and maybe altLabels of the item and see which one is the closest
+        val scoresPerLine = for {
+          line <- resultLines
+        } yield (line, w2v.avgSimilarity(term_list, line.split("\t")(3).split(" ")))
 
-    val jsonKeys = json.obj.keys.toList
-
-    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
-    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
-      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
-
-      // ground!
-      val groundings = ExtractAndAlign.groundMentions(
-        json,
-        argsForGrounding.variableNames,
-        argsForGrounding.variableShortNames,
-        argsForGrounding.definitionMentions,
-        argsForGrounding.commentDefinitionMentions,
-        argsForGrounding.equationChunksAndSource,
-        argsForGrounding.svoGroundings,
-        groundToSVO,
-        maxSVOgroundingsPerVar,
-        alignmentHandler,
-        Some(numAlignments),
-        Some(numAlignmentsSrcToComment),
-        scoreThreshold,
-        appendToGrFN
-      )
-
-
-      val groundingsAsString = ujson.write(groundings, indent = 4)
-
-      val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
-      Ok(groundingsJson4s)
-    } else {
-      logger.warn(s"Nothing to do for keys: $jsonKeys")
-      Ok("")
-    }
+        for (spl <- scoresPerLine) println("line and score: " + spl._1 + " " + spl._2)
+      }
+    } else println("Result empty")
+//    val groundToSVO = true //whether or not one wants to use svo grounding; fixme: pass from somewhere
+//    val appendToGrFN = false //todo: how to pass from configs??
+//
+//    val data = request.body.asJson.get.toString()
+//    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
+//    val jsonPath = pathJson("pathToJson").str
+//    val jsonFile = new File(jsonPath)
+//    val json = ujson.read(jsonFile.readString())
+//
+//    val jsonKeys = json.obj.keys.toList
+//
+//    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
+//    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
+//      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
+//
+//      // ground!
+//      val groundings = ExtractAndAlign.groundMentions(
+//        json,
+//        argsForGrounding.variableNames,
+//        argsForGrounding.variableShortNames,
+//        argsForGrounding.definitionMentions,
+//        argsForGrounding.commentDefinitionMentions,
+//        argsForGrounding.equationChunksAndSource,
+//        argsForGrounding.svoGroundings,
+//        groundToSVO,
+//        maxSVOgroundingsPerVar,
+//        alignmentHandler,
+//        Some(numAlignments),
+//        Some(numAlignmentsSrcToComment),
+//        scoreThreshold,
+//        appendToGrFN
+//      )
+//
+//
+//      val groundingsAsString = ujson.write(groundings, indent = 4)
+//
+//      val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
+//      Ok(groundingsJson4s)
+//    } else {
+//      logger.warn(s"Nothing to do for keys: $jsonKeys")
+//      Ok("")
+//    }
+    Ok("")
 
   }
 
