@@ -190,10 +190,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def align: Action[AnyContent] = Action { request =>
 
     lazy val w2v = new Word2Vec("vectors.txt")
-//    val term = "crop"
-//    val term_list = List("crop", "agricultural crop", "crop canopy")
-    val term = "air temperature"
-    val term_list = List("temperature", "air temperature")
+    val term = "crop"
+    val term_list = List("crop", "agricultural crop", "crop canopy") //throw in the sentence
+//    val term = "air temperature"
+//    val term_list = List("temperature", "air temperature")
     val result = wikidataGrounder.runSparqlQuery(term, wikidataGrounder.sparqlDir)
     if (result.nonEmpty) {
       val resultLines = result.split("\n")
