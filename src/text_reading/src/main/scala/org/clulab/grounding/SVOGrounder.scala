@@ -138,7 +138,7 @@ object SVOGrounder {
     if (terms.nonEmpty) {
       val resultsFromAllTerms = groundTerms(terms)
       val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
-      println(s"svo groundings: $svoGroundings")
+//      println(s"svo groundings: $svoGroundings")
       if (svoGroundings.isDefined) {
         return svoGroundings
       } else None
@@ -271,7 +271,7 @@ object SVOGrounder {
         }
       }
 
-      for (t <- compounds) println(s"term from compounds ${t.mkString("|")} ${t.length}")
+//      for (t <- compounds) println(s"term from compounds ${t.mkString("|")} ${t.length}")
       //if there were no search terms found by getCompounds, just ground any nouns in the definition
       if (terms.isEmpty) {
         //get terms from words
@@ -281,7 +281,7 @@ object SVOGrounder {
           //disregard words  other than nouns for now fixme: add other parts of speech?
           //disregard words that are too short---unlikely to ground well to svo
           if (lemmas(i).length > 3) {
-            println("one term; checking length: " + lemmas(i).length + " " + lemmas(i))
+//            println("one term; checking length: " + lemmas(i).length + " " + lemmas(i))
             if (tags(i).startsWith("N")) {
               terms += lemmas(i)
             }

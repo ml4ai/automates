@@ -23,6 +23,7 @@ object AlignmentJsonUtils {
 
     val jsonKeys = json.obj.keys.toList
 
+
     // load text mentions
     val definitionMentions =  if (jsonKeys.contains("mentions")) {
       val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format

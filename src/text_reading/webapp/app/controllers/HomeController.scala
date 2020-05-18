@@ -49,7 +49,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val numAlignments: Int = 5
   private val numAlignmentsSrcToComment: Int = 3
   private val scoreThreshold: Double = 0.0
-  private val maxSVOgroundingsPerVar: Int = 5
+  private val maxSVOgroundingsPerVarDefault: Int = 5
+  private val groundToSVODefault = true
+  private val appendToGrFNDefault = true
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -188,9 +190,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     */
   def align: Action[AnyContent] = Action { request =>
 
-    val groundToSVO = true //whether or not one wants to use svo grounding; fixme: pass from somewhere
-    val appendToGrFN = false //todo: how to pass from configs??
-
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
     val jsonPath = pathJson("pathToJson").str
@@ -198,6 +197,21 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val json = ujson.read(jsonFile.readString())
 
     val jsonKeys = json.obj.keys.toList
+
+
+    //if toggles and arguments are not provided in the input, use class defaults (this is to be able to process the previously used GrFN format input)
+    val groundToSVO = if (jsonKeys.contains("toggles")) {
+      json("toggles").obj("groundToSVO").bool
+    } else groundToSVODefault
+
+    val appendToGrFN = if (jsonKeys.contains("toggles")) {
+      json("toggles").obj("appendToGrFN").bool
+    } else appendToGrFNDefault
+
+    val maxSVOgroundingsPerVar = if (jsonKeys.contains("arguments")) {
+      json("arguments").obj("maxSVOgroundingsPerVar").num.toInt
+    } else maxSVOgroundingsPerVarDefault
+
 
     //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
     if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
