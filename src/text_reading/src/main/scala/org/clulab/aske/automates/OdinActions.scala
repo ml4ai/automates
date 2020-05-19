@@ -189,6 +189,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       variableMention = m.arguments.getOrElse("variable", Seq())
       defMention = m.arguments.getOrElse("definition", Seq())
       if (
+        defMention.nonEmpty && //there has to be a definition
         looksLikeADef(defMention, state).nonEmpty && //make sure the def looks like a def
         defMention.head.text.length > 4 && //the def can't be the length of a var
         !defMention.head.text.contains("=") &&
