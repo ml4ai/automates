@@ -116,5 +116,20 @@ rules:
     pattern: |
       [lemma = /this|the/]
 
+  - name: "eg"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [lemma = "e.g"]
+
+  - name: "email"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [lemma = /.*@.*\..*/]
+
+
 
 

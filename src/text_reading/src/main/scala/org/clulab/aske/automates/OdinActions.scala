@@ -28,7 +28,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (expandable, other) = mentions.partition(m => m matches "Definition")
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepLongest(expanded) ++ other
-
+//        expanded ++ other
 
       //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
       //val result = mostComplete ++ textBounds
@@ -45,6 +45,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       m <- v
       // for overlapping mentions starting at the same token, keep only the longest
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => ((m.end - m.start) + 0.1 * m.arguments.size))
+      //      longest = v.filter(_.tokenInterval.start == m.tokenInterval.start).maxBy(m => ((m.end - m.start) + 0.1 * m.arguments.size))
+
     } yield longest
     mns.toVector.distinct
   }
@@ -193,7 +195,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         looksLikeAVariable(defMention, state).isEmpty //makes sure the definition is not another variable (or does not look like what could be a variable)
         &&
         defMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the definition don't overlap
-        )
+        ) || (defMention.nonEmpty && freqWords.contains(defMention.head.text)) //the definition can be one short, frequent word
     } yield m
   }
 
@@ -250,7 +252,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         case em: EventMention => m.arguments.getOrElse("definition", Seq()).head
         case _ => ???
       }
-      if (definText.text.filter(c => valid contains c).length.toFloat / definText.text.length > 0.60)
+      if definText.text.filter(c => valid contains c).length.toFloat / definText.text.length > 0.60
     } yield m
   }
 
