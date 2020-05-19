@@ -1,10 +1,10 @@
-C      module PolicyMod
-C        implicit none
-C        type Policy
-C          real beta
-C          integer num_days
-C        end type Policy
-C      end module PolicyMod
+      module PolicyMod
+        implicit none
+        type Policy
+          real beta
+          integer num_days
+        end type Policy
+      end module PolicyMod
 
       subroutine get_beta(intrinsic_growth_rate, gamma,
      &                    susceptible, relative_contact_rate,
@@ -41,43 +41,40 @@ C      end module PolicyMod
       end subroutine sir
 
       subroutine sim_sir(s_n, i_n, r_n, gamma, i_day,
-     &                   N_p, N_t, pol_betas, pol_days,
-     &                   T, S, E, I, R)
-C        use PolicyMod
+     &                   N_p, N_t, policies, T, S, E, I, R)
+        use PolicyMod
         real s_n, i_n, r_n, n, gamma, beta
         integer d
-        integer i_day, index, d_idx, p_idx, N_d, N_p, N_t
-        real, dimension(1:N_p) :: pol_betas
-        integer, dimension(1:N_p) :: pol_days
-        integer, dimension(1:N_t) :: T
-        real, dimension(1:N_t) :: S, E, I, R
+        integer i_day, idx, d_idx, p_idx, N_d, N_p, N_t, T(N_t)
+        type (Policy) policies(N_p)
+        real S(N_t), E(N_t), I(N_t), R(N_t)
 
         n = s_n + i_n + r_n
         d = i_day
 
-        index = 1
+        idx = 1
         do p_idx = 1, N_p
-          beta = pol_betas(p_idx)
-          N_d = pol_days(p_idx)
+          beta = policies(p_idx) % beta
+          N_d = policies(p_idx) % num_days
           do d_idx = 1, N_d
-            T(index) = d
-            S(index) = s_n
-            I(index) = i_n
-            R(index) = r_n
-            index = index + 1
+            T(idx) = d
+            S(idx) = s_n
+            I(idx) = i_n
+            R(idx) = r_n
+            idx = idx + 1
             call sir(s_n, i_n, r_n, beta, gamma, n)
             d = d + 1
           enddo
         enddo
 
-        T(index) = d
-        S(index) = s_n
-        I(index) = i_n
-        R(index) = r_n
+        T(idx) = d
+        S(idx) = s_n
+        I(idx) = i_n
+        R(idx) = r_n
       end subroutine sim_sir
 
       program main
-C        use PolicyMod
+        use PolicyMod
         implicit none
         real s_n, i_n, r_n, beta, doubling_time, growth_rate
         integer p_idx
@@ -85,8 +82,7 @@ C        use PolicyMod
         integer, parameter :: N_p = 3, N_t = 121, infectious_days = 14
         real, parameter :: relative_contact_rate = 0.05
         real, parameter :: gamma = 1.0 / infectious_days
-        real, dimension(1:N_p) :: policy_betas
-        integer, dimension(1:N_p) :: policy_days
+        type (Policy), dimension(1:N_p) :: policies
         integer, dimension(1:N_t) :: T
         real, dimension(1:N_t) :: S, E, I, R
 
@@ -99,12 +95,11 @@ C        use PolicyMod
           call get_growth_rate(doubling_time, growth_rate)
           call get_beta(growth_rate, gamma, s_n,
      &                  relative_contact_rate, beta)
-          policy_betas(p_idx) = beta
-          policy_days(p_idx) = n_days * p_idx
+          policies(p_idx) % beta = beta
+          policies(p_idx) % num_days = n_days * p_idx
         end do
 
-        call sim_sir(s_n, i_n, r_n, gamma, i_day, N_p, N_t,
-     &               policy_betas, policy_days,
+        call sim_sir(s_n, i_n, r_n, gamma, i_day, N_p, N_t, policies,
      &               T, S, E, I, R)
         print*, s_n, i_n, r_n
         print*, E
