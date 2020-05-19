@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from typing import Dict, Tuple, Sequence, Optional
 from datetime import datetime, timedelta
-
+import json
 
 def sir(
     s: float, i: float, r: float, beta: float, gamma: float, n: float
@@ -329,7 +329,7 @@ def CHIME(
         else:
             projections = {}
             best_i_day = -1
-            beta_i_day_loss = float("inf")
+            best_i_day_loss = float("inf")
             for day in range(n_days):
                 i_day = day
                 raw = run_projection(
@@ -460,6 +460,8 @@ def CHIME(
     daily_growth_rate_t = get_growth_rate(doubling_time_t)
 
 
+    return  sim_sir_w_date_df
+
 if __name__ == "__main__":
 
     ### Parameters ###
@@ -474,29 +476,31 @@ if __name__ == "__main__":
         "ventilated": ventilated,
     }
 
-    market_share = 10
+    market_share = 15
 
-    population = 1000
+    population = 3600000
 
     infectious_days = 14
 
     recovered = 0
 
-    date_first_hospitalized = "01/01/2020"
 
-    doubling_time = None
+    # date_first_hospitalized, doubling_time = None, 5
+    date_first_hospitalized, doubling_time = "03/23/2020", None
 
-    mitigation_date = "01/10/2020"
+    # mitigation_date = None
+    mitigation_date = "03/29/2020"
+    
+    # n_days = 30
+    n_days = 200
 
-    n_days = 20
+    current_date = "04/22/2020"
 
-    current_date = "01/15/2020"
+    current_hospitalized = 155.0
 
-    current_hospitalized = 50.0
+    relative_contact_rate = 0.3
 
-    relative_contact_rate = 0.05
-
-    CHIME(
+    sim_sir_w_date_df = CHIME(
         dispositions,
         market_share,
         population,
@@ -510,3 +514,10 @@ if __name__ == "__main__":
         mitigation_date,
         current_date,
     )
+    
+    print(sim_sir_w_date_df)
+    sim_sir_w_date_df.to_csv('chime-data.csv')
+    param_set = {'date_first_hospitalized':date_first_hospitalized, 'doubling_time':doubling_time, 'mitigation_date':mitigation_date}
+    with  open('chime-data.txt', 'w') as f:
+        f.write(json.dumps(param_set))
+
