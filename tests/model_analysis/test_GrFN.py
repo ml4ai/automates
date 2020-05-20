@@ -10,7 +10,7 @@ from model_analysis.networks import (
     GroundedFunctionNetwork,
     ForwardInfluenceBlanket,
 )
-import model_analysis.linking as linking
+import model_assembly.linking as linking
 
 # import delphi.translators.GrFN2WiringDiagram.translate as GrFN2WD
 import program_analysis.for2py.f2grfn as f2grfn

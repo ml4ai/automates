@@ -3,7 +3,7 @@ import json
 
 import networkx as nx
 
-from model_analysis.linking import build_link_graph
+from model_assembly.linking import build_link_graph
 
 
 def main():

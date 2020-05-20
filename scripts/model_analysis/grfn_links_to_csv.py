@@ -14,7 +14,7 @@ import json
 import sys
 import csv
 
-from model_analysis.linking import build_link_graph, extract_link_tables
+from model_assembly.linking import build_link_graph, extract_link_tables
 
 
 def main():
