@@ -1,40 +1,51 @@
-C===========================================================================
-C CHIME model
-C Simulates Susceptible, Infected, Recovered Population by taking into
-C account SIR model parameters as long as hospitalization parameters and
-C policy initiatives
-C===========================================================================
-C Policy Module
+***************************************************************************
+
+!                           CHIME model
+! Simulates Susceptible, Infected, Recovered Population by taking into
+! account SIR model parameters as long as hospitalization parameters and
+! policy initiatives
+
+****************************************************************************
+!       Policy Module
+
+!       State Variables:
+!       beta       Rate  of transmission via contact
+!       num_days   Number of  days over which a certain policy is active
+****************************************************************************      
       module PolicyMod
         implicit none
-        type Policy   ! Derived Type : Mimics Tuple From  Python Code    
-          real beta    ! Variable (SIR model parameter)
-          integer num_days  ! Variable (Number of Days over which beta
-                            ! is effective)
+        type Policy       
+          real beta    
+          integer num_days  
+                            
         end type Policy
       end module PolicyMod
 
-
-C============================================================================
-C Subroutine to calculate beta of SIR model from intrinsic growth rate,
-C gamma (1/infectious days), relative contact rate (social distancing
-C parameter)
-C===========================================================================
-
-      subroutine get_beta(intrinsic_growth_rate, gamma,         !Input
-     &                    susceptible, relative_contact_rate,   !Input
-     &                    beta)                                 !Output
-!----------------------------------------------------------------------------
+*****************************************************************************
+!       Subroutine to calculate beta of SIR model from intrinsic growth rate,
+!       gamma (1/infectious days), relative contact rate (social distancing
+!       parameter)
+!
 !       Input Variables:
+!       intrinsic_growth_rate     Rate at which rate of infection  is growing      
+!       gamma                     Rate of recovery  from infection
+!       susceptible               Size of Susceptible Population
+!       relative_contact_rate     Contact rate between members of susceptible and infected groups
+!       
+!       Local Variables:
+!       inv_contact_rate          Complement of relative_contact_rate
+!       updated_growth_rate       modified growth rate
+!
+!       Output  Variable:
+!       beta                      Rate  of transmission  via contact
+*****************************************************************************
+      subroutine get_beta(intrinsic_growth_rate, gamma,         
+     &                    susceptible, relative_contact_rate,   
+     &                    beta)                                 
         real intrinsic_growth_rate, susceptible
      &       relative_contact_rate, gamma
-!----------------------------------------------------------------------------
-!       Local Variables:
         real inv_contact_rate, updated_growth_rate
-!----------------------------------------------------------------------------
-!       Output Variable:
         real  beta
-!----------------------------------------------------------------------------
 
         inv_contact_rate = 1.0 - relative_contact_rate
         updated_growth_rate = intrinsic_growth_rate + gamma
@@ -42,21 +53,23 @@ C===========================================================================
 
       end subroutine get_beta
 
-C============================================================================
-C Subroutine to calculate intrinsic growth rate necessary for
-C calculating beta from doubling time (doubling_time) as the input
-C parameter
-C===========================================================================
-
-      subroutine get_growth_rate(doubling_time,      !Input
-     &  growth_rate)                                 !Output
-!----------------------------------------------------------------------------
-!       Input Variables:
-        real doubling_time
-!----------------------------------------------------------------------------
+*****************************************************************************
+!       Subroutine to calculate intrinsic growth rate necessary for
+!       calculating beta from doubling time (doubling_time) as the input
+!       parameter
+!
+!       Input Variable:
+!       doubling_time       Time taken for the  number of infected people to  double      
+!     
 !       Output Variable:
+!       growth_rate         Intrinsic  growth rate      
+****************************************************************************
+
+      subroutine get_growth_rate(doubling_time,      
+     &  growth_rate)                                 
+
+        real doubling_time
         real growth_rate
-!----------------------------------------------------------------------------
 
         if (doubling_time .eq. 0.0) then
             growth_rate = 0.0
@@ -66,25 +79,33 @@ C===========================================================================
 
       end subroutine get_growth_rate
 
-C============================================================================
-C Subroutine to calculate susceptible (s), infected (i), and recovered (r)
-C group of people in one day. The populations are normaized based
-C on a scaling factor (scale) from beta, gamma parameters 
-C===========================================================================
 
-      subroutine sir(beta, gamma, n,                       !Input
-     &                s, i, r)                             !Output
-
-!----------------------------------------------------------------------------
+*****************************************************************************
+!       Subroutine to calculate susceptible (s), infected (i), and recovered (r)
+!       group of people in one day. The populations are normaized based
+!       on a scaling factor (scale) from beta, gamma parameters 
+!
 !       Input Variables:
+!       beta        Rate of transmission via contact
+!       gamma       Rate of recovery from infection
+!       n           Total number of members (s+i+r)
+!       s           Amount of susceptble members at previous timestep
+!       i           Amount of infected members at previous timestep
+!       r           Amount of recovered members at current timestep
+!
+!       State Variables:
+!       s_n         Amount of susceptible members at current timestep
+!       i_n         Amount of infected members at current timestep
+!       r_n         Amount of recovered members at current timestep
+!       scale       scaling factor
+*****************************************************************************
+
+      subroutine sir(beta, gamma, n,                       
+     &                s, i, r)                             
+
         real  beta, gamma, n
-!----------------------------------------------------------------------------
-!       Local Variables:
-        real s_n, i_n, r_n, scale
-!----------------------------------------------------------------------------
-!       Input and Output Variables:
         real s, i, r
-!----------------------------------------------------------------------------
+        real s_n, i_n, r_n, scale
 
         ! Calculate current day's susceptible (s_n), infected (i_n),
         ! recovered (r_n) populations from  previous day's populations
@@ -103,40 +124,53 @@ C===========================================================================
 
       end subroutine sir
 
-
-C============================================================================
-C Subroutine to simulate susceptible (s), infected (i), and recovered (r)
-C group of people over the total number of days included in policies.
-C Number  of policies is given by N_p
-C Total number of days is given  by N_t
-C Number of days  over which a given beta is effective after which a
-C different policy initiative is underaken is given by N_d
-C policies is a derived type which contain N_p number of (beta, N_d)
-C T is an array with a list of total days ranging from 1 to N_t
-C S, I, R are arrays with their respective populations simulated over
-C N_t days. E is the array which contains a list of people who have been infected
-C (infected + recovered) at some point in time
-C===========================================================================
-      subroutine sim_sir(s_n, i_n, r_n, gamma, i_day, N_p,       !Input
-     &                    N_t, policies,                         
-     &                    T, S, E,  I, R)                        !Output 
-        use PolicyMod
-!----------------------------------------------------------------------------
+*****************************************************************************
+!       Subroutine to simulate susceptible (s), infected (i), and recovered (r)
+!       group of people over the total number of days spanning over all policies
+!       
 !       Input Variables:
+!       s_n         Amount of susceptible members at current timestep
+!       i_n         Amount of infected members at current timestep
+!       r_n         Amount of recovered members at current timestep
+!       gamma       Rate of recovery from infection
+!       i_day       Index of day beyond which SIR  model is simulated  
+!       N_p         Number  of policies
+!       N_t         Total number of days over which  policies are active
+!       policy      list of policies containing both beta and number of  days over
+!                   which a particular  policy is active
+!
+!       Local Variables:
+!       n           Total population
+!       beta        Rate of  transmission via contact
+!       N_d         Number  of days in each policy
+!       d           Day Index
+!       idx         Counter over arrays
+!       p_idx       Counter over policies
+!       d_idx       Counter over  N_d
+!       
+!       Output  Variables:
+!       T           Array for storing indices of total number  of days
+!       S           Array  for  storing amount of susceptible members on a  particular day
+!                   over all sets  of policies
+!       I           Array  for  storing amount of infected members on a  particular day
+!                   over all sets  of policies
+!       R           Array  for  storing amount of recovered members on a  particular day
+!                   over all sets  of policies
+!       E           Arrau for  storing amount of  members to have ever been infected on a
+!                   particular day over all  policies
+*****************************************************************************
+      subroutine sim_sir(s_n, i_n, r_n, gamma, i_day, N_p,       
+     &                    N_t, policies,                         
+     &                    T, S, E,  I, R)                         
+        use PolicyMod
+
         real s_n, i_n, r_n, gamma
         integer i_day,  N_p, N_t
         type (Policy) policies(N_p)
-
-!----------------------------------------------------------------------------
-!       Local Variables:
         real n, beta
         integer d, idx, p_idx, d_idx, N_d
-
-!----------------------------------------------------------------------------
-!       Output Variables:
         integer T(N_t+1)
         real S(N_t+1), E(N_t+1), I(N_t+1), R(N_t+1)
-!----------------------------------------------------------------------------
 
         n = s_n + i_n + r_n
         d = i_day
