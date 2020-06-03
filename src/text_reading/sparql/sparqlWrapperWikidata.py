@@ -2,6 +2,11 @@ import requests
 import sys
 term = sys.argv[1]
 
+#the link to the query on wikidata api https://w.wiki/Sfu
+#todo for the query:
+#have this regex as filter: "^(\\w*\\s){{0,2}}{term}(\\sof)?(\\s\\w*){{0,3}}$"
+#make item description optional in the printout (some sort of getOrElse("None"))
+
 url = 'https://query.wikidata.org/sparql'
 query = f"""
 SELECT DISTINCT ?item ?itemLabel ?itemDescription ?itemAltLabel
@@ -17,10 +22,13 @@ mwapi:gsrlimit "max".
 ?item wikibase:apiOutputItem mwapi:title.
 }}
 ?item rdfs:label ?label.
-
+?sitelink ^schema:name ?article .
+?article schema:about ?item ;
+    schema:isPartOf <https://en.wikipedia.org/> .
 
 
     FILTER REGEX (?label, "^{term}$")
+
     SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
 }}
 
@@ -30,10 +38,39 @@ r = requests.get(url, params = {'format': 'json', 'query': query})
 data = r.json()
 
 for result in data["results"]["bindings"]:
-    print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}\t{result['itemDescription']['value']}")
+    print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}")#\t{result['itemDescription']['value']}")
 
 
+#the link to the query on wikidata api https://w.wiki/Sfu
 
+# The query should be something like this
+# url = 'https://query.wikidata.org/sparql'
+# query = f"""
+# SELECT DISTINCT ?item ?itemLabel ?itemDescription ?itemAltLabel
+# WHERE
+# {{
+#     SERVICE wikibase:mwapi
+# {{
+#     bd:serviceParam wikibase:endpoint "www.wikidata.org";
+# wikibase:api "Generator";
+# mwapi:generator "search";
+# mwapi:gsrsearch "inlabel:'{term}'";
+# mwapi:gsrlimit "max".
+# ?item wikibase:apiOutputItem mwapi:title.
+# }}
+# ?item rdfs:label ?label.
+# ?sitelink ^schema:name ?article .
+# ?article schema:about ?item ;
+#     schema:isPartOf <https://en.wikipedia.org/> .
+#
+#
+#     FILTER REGEX (?label, "^(\\w*\\s){{0,2}}{term}(\\sof)?(\\s\\w*){{0,3}}$")
+#
+#     SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
+# }}
+#
+# LIMIT 10
+# """
 
 
 

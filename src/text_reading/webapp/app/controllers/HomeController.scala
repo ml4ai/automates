@@ -189,6 +189,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     */
   def align: Action[AnyContent] = Action { request =>
 
+    //todo: check todos in the sparqlWrapperWikidata
+    //todo: make sure the old ranking system works for this
+
     lazy val w2v = new Word2Vec("vectors.txt")
     val term = "crop"
     val term_list = List("crop", "agricultural crop", "crop canopy") //throw in the sentence
