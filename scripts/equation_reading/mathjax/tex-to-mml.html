@@ -48,6 +48,7 @@
           //
           //  The function for rendering a document's math elements
           //
+          // CTM: APPEARS TO BE THE FN THAT GETS CALLED...
           (doc) => {
             const toMML = MathJax.startup.toMML;
             for (math of doc.math) {
@@ -55,7 +56,7 @@
               console.log(math.root);  // attempt to show what is in math.root -- can't find latex source text... where is it?
               mml = toMML(math.root);  // convert the math.root payload to mml
               
-              // From the original demo
+              // From the original demo... somehow renders the MathML in the browser AT the location where the math object is found
               math.typesetRoot = document.createElement('mjx-container');
               math.typesetRoot.innerHTML = mml;  // toMML(math.root);
               math.display && math.typesetRoot.setAttribute('display', 'block');
@@ -81,6 +82,7 @@
           //
           //  The function for rendering a single math expression
           //
+          // CTM: WHEN DOES THIS GET CALLED?
           (math, doc) => {
             math.typesetRoot = document.createElement('mjx-container');
             math.typesetRoot.innerHTML = MathJax.startup.toMML(math.root);
