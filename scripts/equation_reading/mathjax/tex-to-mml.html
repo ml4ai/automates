@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width">
+  
+  <style>
+  table {
+    border-collapse: collapse;
+  }
+  
+  table, th, td {
+    border: 1px solid black;
+  }
+  </style>
+  
+  <title>LaTeX to MathML and render</title>
+  
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  
+  <script>
+  MathJax = {
+  
+  	loader: {load: ['input/tex', 'ui/menu']},
+  
+  	startup: {
+      ready() {
+        MathJax.startup.defaultReady();
+        MathJax.startup.document.menu.menu.findID('Accessibility', 'AssistiveMml').disable();
+      },
+      pageReady() {
+        MathJax._.mathjax.mathjax.handleRetriesFor(() => {
+          MathJax.startup.document.render();
+        });
+      }
+    },
+  
+    tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]},
+    
+    options: {
+      menuOptions: {
+        settings: {
+          assistiveMml: false
+        }
+      },
+      renderActions: {
+        typeset: [150,
+          //
+          //  The function for rendering a document's math elements
+          //
+          (doc) => {
+            const toMML = MathJax.startup.toMML;
+            for (math of doc.math) {
+              // let latex_src = document.getElementById("latex_src");
+			  // console.log(latex_src.textContent);
+              
+              math.typesetRoot = document.createElement('mjx-container');
+              math.typesetRoot.innerHTML = toMML(math.root);
+              math.display && math.typesetRoot.setAttribute('display', 'block');
+              
+              // console.log(math);
+              
+              mml = toMML(math.root);
+              
+              mml_td = document.getElementById("mml_src");
+              mml_td.textContent = mml;
+              
+              // math.typesetRoot = mml_td
+              // math.typesetRoot.innerHTML = mml;
+              // math.display && math.typesetRoot.setAttribute('display', 'block');
+              
+              // let mml = toMML(math.root)
+              // console.log(mml);
+              // let mml_src = document.getElementById("mml_src");
+              // console.log(mml_src.textContent);
+              // mml_src.textContent = mml;
+              // mml_src.display && mml_src.setAttribute('display', 'block');
+            }
+          },
+          //
+          //  The function for rendering a single math expression
+          //
+          (math, doc) => {
+            math.typesetRoot = document.createElement('mjx-container');
+            math.typesetRoot.innerHTML = MathJax.startup.toMML(math.root);
+            math.display && math.typesetRoot.setAttribute('display', 'block');
+          }
+        ]
+      }
+    }
+  };
+  </script>
+  
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</head>
+
+<body>
+
+  <div>
+    <table>
+	  <tr>
+	    <td id="latex_src">\[P(E) = {n \choose k} p^k (1-p)^{ n-k} \]</td>
+	    <td id="mml_src">blee</td>
+	  </tr>
+	</table>
+  </div>
+  
+  <!--
+  <p>
+  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> <mi>P</mi> <mo stretchy="false">(</mo> <mi>E</mi> <mo stretchy="false">)</mo> <mo>=</mo> <mrow> <mrow data-mjx-texclass="ORD"> <mrow data-mjx-texclass="OPEN"> <mo minsize="2.047em" maxsize="2.047em">(</mo> </mrow> <mfrac linethickness="0"> <mi>n</mi> <mi>k</mi> </mfrac> <mrow data-mjx-texclass="CLOSE"> <mo minsize="2.047em" maxsize="2.047em">)</mo> </mrow> </mrow> </mrow> <msup> <mi>p</mi> <mi>k</mi> </msup> <mo stretchy="false">(</mo> <mn>1</mn> <mo>&#x2212;</mo> <mi>p</mi> <msup> <mo stretchy="false">)</mo> <mrow> <mi>n</mi> <mo>&#x2212;</mo> <mi>k</mi> </mrow> </msup> </math>
+  </p>
+  -->
+  
+  <!--
+  <div id="latex_src">\[P(E) = {n \choose k} p^k (1-p)^{ n-k} \]</div>
+  -->
+  
+</body>
+
+<!--
+<script>
+  // let latex_src = document.getElementById("latex_src");
+  // console.log(latex_src.textContent);
+  const toMML = MathJax.startup.toMML;
+  let mml = toMML(latex_src);
+  console.log(mml);
+  // let mml_src = document.getElementById("mml_src");
+  // mml_src.textContent = '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> <mi>P</mi> <mo stretchy="false">(</mo> <mi>E</mi> <mo stretchy="false">)</mo> <mo>=</mo> <mrow> <mrow data-mjx-texclass="ORD"> <mrow data-mjx-texclass="OPEN"> <mo minsize="2.047em" maxsize="2.047em">(</mo> </mrow> <mfrac linethickness="0"> <mi>n</mi> <mi>k</mi> </mfrac> <mrow data-mjx-texclass="CLOSE"> <mo minsize="2.047em" maxsize="2.047em">)</mo> </mrow> </mrow> </mrow> <msup> <mi>p</mi> <mi>k</mi> </msup> <mo stretchy="false">(</mo> <mn>1</mn> <mo>&#x2212;</mo> <mi>p</mi> <msup> <mo stretchy="false">)</mo> <mrow> <mi>n</mi> <mo>&#x2212;</mo> <mi>k</mi> </mrow> </msup> </math>';
+</script>
+-->
+
+</html>
