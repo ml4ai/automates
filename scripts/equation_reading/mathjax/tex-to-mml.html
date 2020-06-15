@@ -128,6 +128,8 @@ let latex_source = [
   { src: "\\begin{align} \\dot{x} \& = \\sigma(y-x) \\\\ \\dot{y} \& = \\rho x - y - xz \\\\ \\dot{z} \& = -\\beta z + xy \\end{align}" },
   { src: "\\left( \\sum_{k=1}^n a_k b_k \\right)^{\\!\\!2} \\leq \\left( \\sum_{k=1}^n a_k^2 \\right) \\left( \\sum_{k=1}^n b_k^2 \\right)" },
   { src: "\\mathbf{V}_1 \\times \\mathbf{V}_2 = \\begin{vmatrix} \\mathbf{i} \& \\mathbf{j} \& \\mathbf{k} \\\\ \\frac{\\partial X}{\\partial u} \& \\frac{\\partial Y}{\\partial u} \& 0 \\\\ \\frac{\\partial X}{\\partial v} \& \\frac{\\partial Y}{\\partial v} \& 0 \\\\ \\end{vmatrix}" }
+  // { src: "\\mathbf{V}_1 \\times \\mathbf{V}_2 = " },
+  // { src: "\\begin{vmatrix} \\mathbf{i} \& \\mathbf{j} \& \\mathbf{k} \\\\ \\frac{\\partial X}{\\partial u} \& \\frac{\\partial Y}{\\partial u} \& 0 \\\\ \\frac{\\partial X}{\\partial v} \& \\frac{\\partial Y}{\\partial v} \& 0 \\\\ \\end{vmatrix}" }
 ];
 
 function generateTable(table, data) {
@@ -137,7 +139,7 @@ function generateTable(table, data) {
     
     let cell = row.insertCell();
     cell.id = `tex_src_${i}`;
-    let text = document.createTextNode(`\\[ ${element["src"]} \\`);
+    let text = document.createTextNode(`\\[ ${element["src"]} \\]`);
     cell.appendChild(text);
     
     cell = row.insertCell();
