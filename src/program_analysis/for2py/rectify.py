@@ -15,13 +15,16 @@ import argparse
 import json
 import xml.etree.ElementTree as ET
 import copy
-from program_analysis.for2py import For2PyError, syntax, f2grfn
+from delphi.translators.for2py import For2PyError, syntax, f2grfn
 from os.path import isfile, join
 from typing import List, Tuple
+import math
 
 TYPE_MAP = {
     "int": "integer",
     "bool": "logical",
+    "char": "character",
+    "real": "real",
 }
 
 class RectifiedXMLGenerator:
@@ -188,15 +191,14 @@ class RectifiedXMLGenerator:
         # Temporarily holds the type of declaring variable type
         self.variable_type = None
         # Holds the caller arguments that are array
-        self.caller_arr_arguments = {}
+        # self.caller_arr_arguments = {}
         # Set to true if handling <call>
         self.call_function = False
         self.original_fortran_file_abs_path = None
         self.module_log_file_path = None
         self.module_files_to_process = []
         self.modules_in_file = []
-        self.derived_type_array_dimensions = {}
-        self.dim = 0
+        self.dtype_dimensions = {}
         # Keeps a track of maximum number of function
         # arguments that are member of interface
         self.member_function_argument_max = 0
@@ -233,7 +235,8 @@ class RectifiedXMLGenerator:
         "module",
         "declaration",
         "function",
-        "prefix"
+        "prefix",
+        "length",
     ]
 
     program_child_tags = [
@@ -267,6 +270,17 @@ class RectifiedXMLGenerator:
         "prefix",
         "exit",
         "cycle",
+        "if",
+        "loop",
+        "operation",
+        "arithmetic-if-stmt",
+        "position-spec-list__begin",
+        "position-spec",
+        "position-spec-list",
+        "rewind-stmt",
+        "label-list__begin",
+        "label-list",
+        "computed-goto-stmt",
     ]
 
     loop_child_tags = [
@@ -298,10 +312,14 @@ class RectifiedXMLGenerator:
         "interface",
         "subroutine",
         "intent",
+        "intent-stmt",
         "names",
         "procedure-stmt",
         "literal",
-        "values"
+        "values",
+        "common-block-name",
+        "objects",
+        "common-stmt",
     ]
 
     value_child_tags = [
@@ -346,6 +364,8 @@ class RectifiedXMLGenerator:
         "equiv-operand__equiv-op",
         "subroutine-stmt",
         "value-ranges",
+        "io-implied-do-control",
+        "format",
     ]
 
     body_child_tags = [
@@ -358,12 +378,23 @@ class RectifiedXMLGenerator:
         "do-term-action-stmt",
         "select",
         "case",
+        "expression",
+        "case-selector",
+        "case-stmt",
+        "body",
+        "assignment",
     ]
 
     operand_child_tags = [
         "name",
         "literal",
         "operation",
+    ]
+
+    if_child_tags = [
+        "header",
+        "body",
+        "format",
     ]
 
     subscripts_child_tags = [
@@ -384,6 +415,7 @@ class RectifiedXMLGenerator:
         "literal",
         "name",
         "operation",
+        "arguments",
     ]
 
     module_child_tags = [
@@ -451,7 +483,6 @@ class RectifiedXMLGenerator:
         "access-id",
         "parameter-stmt",
         "type-param-value",
-        "char-selector",
         "interface-block",
         "interface-stmt",
         "interface-body",
@@ -475,12 +506,20 @@ class RectifiedXMLGenerator:
         "signed-int-literal-constant",
         "data-stmt-constant",
         "data-i-do-object-list__begin",
+        "data-ref",
+    ]
+
+    expression_child_tags =  [
+        "name",
+        "operation",
+        "literal",
     ]
 
     output_child_tags = [
         "name",
         "literal",
         "operation",
+        "loop",
     ]
 
     dtype_var_declaration_tags = [
@@ -493,6 +532,23 @@ class RectifiedXMLGenerator:
         "initial-value",
         "length",
         "dimensions",
+        "literal",
+    ]
+
+    objects_child_tags = [
+        "common-block-object",
+    ]
+
+    name_child_tags = [
+        "subscripts",
+        "assignment",
+        "io-control",
+        "range",
+        "substring-range-or-arg-list",
+        "substr-range-or-arg-list-suffix",
+        "name",
+        "generic_spec",
+        "operation",
     ]
 
     #################################################################
@@ -522,13 +578,15 @@ class RectifiedXMLGenerator:
             cur_elem = ET.SubElement(
                 current, child.tag, child.attrib
             )
-
             try:
                 _ = self.file_child_tags.index(child.tag)
-            except KeyError:
-                assert (
-                    False
-                ), f'In handle_tag_file: "{child.tag}" not handled'
+            except ValueError:
+                try:
+                    _ = self.unnecessary_tags.index(child.tag)
+                except ValueError:
+                    assert (
+                        False
+                    ), f'In handle_tag_file: "{child.tag}" not handled'
 
             if len(child) > 0 or child.text:
                 self.parseXMLTree(child, cur_elem, current, parent, traverse)
@@ -595,9 +653,9 @@ class RectifiedXMLGenerator:
                     # function tracker dictionary if current header is
                     # for declaring interface.
                     if self.is_interface and cur_elem.tag == "name":
-                        self.interface_functions[cur_elem.attrib['id']] = []
-                        self.interface_function_xml[cur_elem.attrib['id']] = {}
-                        self.cur_interface_name = cur_elem.attrib['id']
+                        self.interface_functions[cur_elem.attrib['id'].lower()] = []
+                        self.interface_function_xml[cur_elem.attrib['id'].lower()] = {}
+                        self.cur_interface_name = cur_elem.attrib['id'].lower()
 
                     if len(child) > 0 or child.text:
                         self.parseXMLTree(
@@ -851,7 +909,7 @@ class RectifiedXMLGenerator:
                     assert (
                         False
                     ), f'In handle_tag_body: Empty elements "{child.tag}"' \
-                       f' not handled'
+                        ' not handled'
 
         if self.is_format:
             self.reconstruct_format(parent, traverse)
@@ -901,7 +959,9 @@ class RectifiedXMLGenerator:
         """
         is_derived_type_dimension_setting = False
         is_end_of_one_dimension = False
+        is_arrayVar = False
         dim_number = 0
+        dim_bounds = []
         for child in root:
             self.clean_attrib(child)
             # Temporarily hold the declaring variable's type.
@@ -910,14 +970,13 @@ class RectifiedXMLGenerator:
             # Keep a track of array in derived type dimension information.
             if child.tag == "explicit-shape-spec-list__begin":
                 is_derived_type_dimension_setting = True
-                self.dim += 1
                 dim_number += 1
-                self.derived_type_array_dimensions[self.dim] = []
             elif child.tag == "explicit-shape-spec":
                 is_end_of_one_dimension = True
                 dim_number += 1
             elif child.tag == "explicit-shape-spec-list":
                 is_derived_type_dimension_setting = False
+                is_arrayVar = True
 
             if len(child) > 0 or child.text:
                 if child.tag in self.declaration_child_tags:
@@ -930,7 +989,7 @@ class RectifiedXMLGenerator:
                     ):
                         if is_derived_type_dimension_setting:
                             child.attrib["dim-number"] = str(dim_number)
-                            self.derived_type_array_dimensions[self.dim].append(child)
+                            dim_bounds.append(child)
                         else:
                             self.derived_type_var_holder_list.append(child)
                     else:
@@ -942,6 +1001,9 @@ class RectifiedXMLGenerator:
                         self.parseXMLTree(
                             child, cur_elem, current, parent, traverse
                         )
+                        if cur_elem.tag == "type" and "name" in cur_elem.attrib:
+                            current.attrib["name"] = cur_elem.attrib["name"]
+                            current.attrib["is_derived_type"] = cur_elem.attrib["is_derived_type"]
                 elif (
                         child.tag == "component-array-spec"
                         or child.tag == "operation"
@@ -980,6 +1042,11 @@ class RectifiedXMLGenerator:
                 ):
                     current.attrib['type'] = "derived-type"
                     self.derived_type_var_holder_list.append(child)
+                    if (
+                            child.tag == "component-decl"
+                            and is_arrayVar
+                    ):
+                        self.dtype_dimensions[child.attrib['id']] = dim_bounds
                 elif child.tag == "component-array-spec":
                     self.derived_type_var_holder_list.append(child)
                 else:
@@ -1027,7 +1094,8 @@ class RectifiedXMLGenerator:
                 elif elem.tag == "variables":
                     for subElem in elem:
                         if subElem.tag == "variable":
-                            self.variables_by_scope[self.current_scope][subElem.attrib['id']] = var_type
+                            self.variables_by_scope[self.current_scope][
+                                subElem.attrib['id']] = var_type
 
     def handle_tag_type(
             self, root, current, parent, _, traverse
@@ -1044,7 +1112,9 @@ class RectifiedXMLGenerator:
                 current.set("string_length", str(1))
 
         dim_number = 0
+        dim_bounds = []
         is_derived_type_dimension_setting = False
+        is_array_var = False
         for child in root:
             self.clean_attrib(child)
             if "keyword2" in child.attrib:
@@ -1093,14 +1163,13 @@ class RectifiedXMLGenerator:
                 self.cur_derived_type_name = child.attrib['id']
             elif child.tag == "explicit-shape-spec-list__begin":
                 is_derived_type_dimension_setting = True
-                self.dim += 1
                 dim_number += 1
-                self.derived_type_array_dimensions[self.dim] = []
             elif child.tag == "explicit-shape-spec":
                 is_end_of_one_dimension = True
                 dim_number += 1
             elif child.tag == "explicit-shape-spec-list":
                 is_derived_type_dimension_setting = False
+                is_array_var = True
             elif child.tag == "intrinsic-type-spec":
                 if self.is_derived_type:
                     self.derived_type_var_holder_list.append(child)
@@ -1116,17 +1185,29 @@ class RectifiedXMLGenerator:
                 if self.is_character:
                     self.derived_type_var_holder_list.append(child)
                     current.set("string_length", str(child.attrib["value"]))
-                elif is_derived_type_dimension_setting:
+                if is_derived_type_dimension_setting:
                     child.attrib["dim-number"] = str(dim_number)
-                    self.derived_type_array_dimensions[self.dim].append(child)
+                    dim_bounds.append(child)
                 else:
                     self.derived_type_var_holder_list.append(child)
+            elif (
+                        child.tag == "component-decl"
+                        or child.tag == "component-decl-list"
+                        or child.tag == "component-decl-list__begin"
+                ):
+                    current.attrib['type'] = "derived-type"
+                    self.derived_type_var_holder_list.append(child)
+                    if (
+                            child.tag == "component-decl"
+                            and is_array_var
+                    ):
+                        self.dtype_dimensions[child.attrib['id']] = dim_bounds
             elif (
                     is_derived_type_dimension_setting
                     and child.tag == "name"
             ):
                     child.attrib["dim-number"] = str(dim_number)
-                    self.derived_type_array_dimensions[self.dim].append(child)
+                    dim_bounds.append(child)
             elif (
                     child.tag == "component-array-spec"
                     or child.tag == "operation"
@@ -1134,9 +1215,16 @@ class RectifiedXMLGenerator:
                 self.derived_type_var_holder_list.append(child)
             elif child.tag in self.dtype_var_declaration_tags:
                 self.derived_type_var_holder_list.append(child)
-            elif child.tag == "length":
-                cur_elem = ET.SubElement(current, child.tag, child.attrib)
-                self.parseXMLTree(child, cur_elem, current, parent, traverse)
+            elif (
+                    child.tag == "length"
+                    or child.tag == "name"
+            ):
+                if self.is_derived_type:
+                    for e in child:
+                        self.derived_type_var_holder_list.append(e)
+                else:
+                    cur_elem = ET.SubElement(current, child.tag, child.attrib)
+                    self.parseXMLTree(child, cur_elem, current, parent, traverse)
             else:
                 try:
                     _ = self.unnecessary_tags.index(child.tag)
@@ -1162,11 +1250,16 @@ class RectifiedXMLGenerator:
                 if (
                         child.tag == "variable"
                         and self.current_scope in self.argument_types
-                        and child.attrib['name'] in self.argument_types[
+                        and child.attrib['name'].lower() in self.argument_types[
                         self.current_scope]
+                        and "is_derived_type" in parent.attrib
                 ):
                     self.argument_types[self.current_scope][child.attrib[
-                        'name']] = self.variable_type
+                        'name'].lower()] = {
+                        "type": self.variable_type,
+                        "is_array": str(self.is_array).lower(),
+                        "is_derived_type": parent.attrib["is_derived_type"]
+                    }
                 # Up to this point, all the child (nested or sub) elements were
                 # <variable>
                 cur_elem = ET.SubElement(
@@ -1184,6 +1277,18 @@ class RectifiedXMLGenerator:
                     grandparent = ET.SubElement(
                         current, child.tag, child.attrib
                     )
+                elif (
+                    child.tag == "name"
+                    or child.tag == "dimension-stmt"
+                ):
+                    cur_elem = ET.SubElement(
+                        current, child.tag, child.attrib
+                    )
+                    if child.tag == "name":
+                        cur_elem.set("is_array", str(self.is_array).lower())
+                        self.parseXMLTree(
+                            child, cur_elem, current, parent, traverse
+                        )
                 else:
                     try:
                         _ = self.unnecessary_tags.index(child.tag)
@@ -1224,6 +1329,18 @@ class RectifiedXMLGenerator:
                         child, cur_elem, current, parent, traverse
                     )
                     if child.tag == "dimensions":
+                        if (
+                                self.current_scope in self.argument_types
+                                and root.attrib['name'] in self.argument_types[
+                                self.current_scope]
+                                and self.argument_types[self.current_scope][
+                                        root.attrib['name']
+                                    ]
+                                    
+                        ):
+                            self.argument_types[self.current_scope][
+                                root.attrib['name']]['is_array'] = "true"
+
                         current.attrib['is_array'] = "true"
                         self.declared_array_vars.update(
                             {current.attrib['name']: self.current_scope}
@@ -1235,7 +1352,10 @@ class RectifiedXMLGenerator:
                         False
                     ), f'In handle_tag_variable: "{child.tag}" not handled'
             else:
-                if child.tag == "entity-decl":
+                if (
+                        child.tag == "entity-decl"
+                        or child.tag == "dimension-decl"
+                ):
                     current.attrib.update(child.attrib)
                 else:
                     assert (
@@ -1290,18 +1410,13 @@ class RectifiedXMLGenerator:
 
         for child in root:
             self.clean_attrib(child)
+            cur_elem = ET.SubElement(
+                current, child.tag, child.attrib
+            )
             if child.text or len(child) > 0:
-                cur_elem = ET.SubElement(
-                    current, child.tag, child.attrib
-                )
                 self.parseXMLTree(
                     child, cur_elem, current, parent, traverse
                 )
-            else:
-                assert (
-                    False
-                ), f'In handle_tag_constant: Empty elements "{child.tag}" ' \
-                   f'not handled'
 
     def handle_tag_statement(
             self, root, current, parent, _, traverse
@@ -1397,8 +1512,8 @@ class RectifiedXMLGenerator:
                 # remove the outside name elements (but store it to the
                 # temporary holder) and reconstruct it before the end of
                 # statement
-                assert is_empty(self.derived_type_var_holder_list)
-                self.derived_type_var_holder_list.append(child.attrib['id'])
+                if is_empty(self.derived_type_var_holder_list):
+                    self.derived_type_var_holder_list.append(child.attrib['id'])
                 self.parseXMLTree(
                     child, current, current, parent, traverse
                 )
@@ -1576,11 +1691,13 @@ class RectifiedXMLGenerator:
                 )
                 if "id" in child.attrib and self.is_interface:
                     self.interface_functions[self.cur_interface_name].append(
-                        child.attrib['id'])
+                        child.attrib['id'].lower())
                     self.interface_function_xml[self.cur_interface_name][
-                        child.attrib['id']] = cur_elem
+                        child.attrib['id'].lower()] = cur_elem
                 if grandparent.tag == "function":
                     self.args_for_function.append(cur_elem.attrib['id'])
+                    self.argument_types[grandparent.attrib['name']][
+                        cur_elem.attrib['id'].lower()] = None
                 # If the element holds sub-elements, call the XML tree parser
                 # with created new <name> element
                 if len(child) > 0 or child.text:
@@ -1603,9 +1720,9 @@ class RectifiedXMLGenerator:
                         attributes['is_arg'] = "false"
                     cur_elem.attrib.update(attributes)
             else:
-                assert False, f'In handle_tag_names: "{child.tag}" not handled'
+                assert False, f'In handle_tag_names: "{child.tag}"-"{child.attrib}" not handled'
 
-    def handle_tag_name(self, root, current, parent, _, traverse):
+    def handle_tag_name(self, root, current, parent, grandparent, traverse):
         """This function handles cleaning up the XML elements between
         the name elements.
 
@@ -1625,6 +1742,18 @@ class RectifiedXMLGenerator:
             current.attrib['is_array'] = "true"
         else:
             current.attrib['is_array'] = "false"
+        if (
+            grandparent.tag != "use"
+            and "id" in current.attrib
+            and self.current_scope in self.variables_by_scope
+            and current.attrib['id'] in self.variables_by_scope[
+                  self.current_scope] and
+            self.variables_by_scope[self.current_scope][current.attrib['id']]
+                == "CHARACTER"
+        ):
+            current.attrib['is_string'] = "true"
+        else:
+            current.attrib['is_string'] = "false"
 
         # If 'id' attribute holds '%' symbol, it's an indication of derived type
         # referencing. Thus, clean up the 'id' and reconstruct the <name> AST.
@@ -1638,13 +1767,19 @@ class RectifiedXMLGenerator:
         current.attrib['numPartRef'] = "1"
         current.attrib['type'] = "ambiguous"
 
+        #######################################################################
+        # TODO Don't know how this will affect other code. Consult with
+        #  Terrence
+        if "id" in current.attrib and \
+            self.current_scope in self.argument_types and \
+                current.attrib["id"] in self.argument_types[self.current_scope]:
+            current.attrib['is_arg'] = "true"
+        #######################################################################
+
         for child in root:
             self.clean_attrib(child)
             if child.text:
-                if (
-                        child.tag == "subscripts"
-                        or child.tag == "assignment"
-                ):
+                if child.tag in self.name_child_tags:
                     cur_elem = ET.SubElement(
                         current, child.tag, child.attrib
                     )
@@ -1706,7 +1841,7 @@ class RectifiedXMLGenerator:
                         False
                     ), f'In self.handle_tag_name: "{child.tag}" not handled'
             else:
-                if child.tag == "generic_spec":
+                if child.tag in self.name_child_tags:
                     _ = ET.SubElement(
                         current, child.tag, child.attrib
                     )
@@ -1719,7 +1854,7 @@ class RectifiedXMLGenerator:
                         assert (
                             False
                         ), f'In self.handle_tag_name: Empty elements ' \
-                           f'"{child.tag}" not handled'
+                           f'"{child.tag}"-"{child.attrib}" not handled'
 
         # If the name element is for handling
         # derived type references, reconstruct it
@@ -1763,8 +1898,8 @@ class RectifiedXMLGenerator:
 
             # If current assignment is done with a function call,
             # then update function definition's arguments with array status
-            if function_call:
-                self.update_function_arguments(current)
+            # if function_call:
+            #     self.update_function_arguments(current)
 
             if (
                     child.tag == "name"
@@ -1831,7 +1966,11 @@ class RectifiedXMLGenerator:
         """
         for child in root:
             self.clean_attrib(child)
-            if len(child) > 0 or child.text:
+            if (
+                len(child) > 0
+                or child.text
+                or child.tag == "dimension"
+            ):
                 cur_elem = ET.SubElement(
                     current, child.tag, child.attrib
                 )
@@ -1860,7 +1999,7 @@ class RectifiedXMLGenerator:
             self.dimensions_holder = current
 
     def handle_tag_dimension(
-            self, root, current, parent, _, traverse
+            self, root, current, parent, grandparent, traverse
     ):
         """This function handles cleaning up the XML elements
         between the dimension elements.
@@ -1877,6 +2016,8 @@ class RectifiedXMLGenerator:
                 if (
                         child.tag == "literal"
                         or child.tag == "range"
+                        or child.tag == "name"
+                        or child.tag == "operation"
                 ):
                     self.parseXMLTree(
                         child, cur_elem, current, parent, traverse
@@ -1888,7 +2029,10 @@ class RectifiedXMLGenerator:
                         assert (
                             False
                         ), f'In handle_tag_dimension: "{child.tag}" not handled'
-            elif child.tag == "literal":
+            elif (
+                    child.tag == "literal"
+                    or child.tag == "name"
+            ):
                 cur_elem = ET.SubElement(
                     current, child.tag, child.attrib
                 )
@@ -1995,7 +2139,7 @@ class RectifiedXMLGenerator:
                             child.tag in self.unnecessary_tags
                     ), f'In handle_tag_upper_bound: "{child.tag}" not handled'
             else:
-                if traverse > 1:
+                if traverse > 1 or child.tag in self.bound_child_tags:
                     _ = ET.SubElement(
                         current, child.tag, child.attrib
                     )
@@ -2003,7 +2147,7 @@ class RectifiedXMLGenerator:
                     assert (
                             child.tag in self.unnecessary_tags
                     ), f'In handle_tag_upper_bound: Empty "{child.tag}" not ' \
-                       f'handled'
+                        'handled'
 
     def handle_tag_subscripts(
             self, root, current, parent, _, traverse
@@ -2031,7 +2175,7 @@ class RectifiedXMLGenerator:
                        f'handled'
 
     def handle_tag_subscript(
-            self, root, current, parent, _, traverse
+            self, root, current, parent, grandparent, traverse
     ):
         """This function handles cleaning up the XML elements
         between the subscript elements.
@@ -2059,21 +2203,21 @@ class RectifiedXMLGenerator:
                 # If current subscript is for a function caller and
                 # current element (argument) is an array, then store
                 # it into the caller_arr_arguments map for later use
-                if (
-                    self.call_function
-                    and (cur_elem.tag == "name"
-                         and cur_elem.attrib['is_array'] == "true")
-                ):
-                    assert (
-                        "fname" in parent.attrib
-                    ), "If this subscript is for the caller argument,\
-                            fname must exist in the parent"
-                    fname = parent.attrib['fname']
-                    arg = cur_elem.attrib['id']
-                    if fname in self.caller_arr_arguments:
-                        self.caller_arr_arguments[fname].append(arg)
-                    else:
-                        self.caller_arr_arguments[fname] = [arg]
+                # if (
+                #     self.call_function
+                #     and (cur_elem.tag == "name"
+                #          and cur_elem.attrib['is_array'] == "true")
+                # ):
+                #     assert (
+                #         "fname" in parent.attrib
+                #     ), "If this subscript is for the caller argument, " \
+                #        "fname must exist in the parent"
+                #     fname = parent.attrib['fname']
+                #     arg = cur_elem.attrib['id']
+                #     if fname in self.caller_arr_arguments:
+                #         self.caller_arr_arguments[fname].append(arg)
+                #     else:
+                #         self.caller_arr_arguments[fname] = [arg]
 
     def handle_tag_operation(
             self, root, current, parent, _, traverse
@@ -2180,7 +2324,10 @@ class RectifiedXMLGenerator:
                 current, child.tag, child.attrib
             )
             if child.text or len(child) > 0:
-                if child.tag == "io-control":
+                if (
+                        child.tag == "io-control"
+                        or child.tag == "name"
+                ):
                     self.parseXMLTree(
                         child, cur_elem, current, parent, traverse
                     )
@@ -2209,21 +2356,25 @@ class RectifiedXMLGenerator:
                 current.attrib.update(child.attrib)
             if child.text:
                 cur_elem = ET.SubElement(current, child.tag, child.attrib)
-                if child.tag == "io-control" or child.tag == "literal":
+                if child.tag == "io-control" or child.tag == "literal" or \
+                        child.tag == "name":
                     self.parseXMLTree(child, cur_elem, current, parent,
                                       traverse)
                 else:
                     assert False, f'In handle_tag_io_control: "{child.tag}" ' \
                                   f'not handled'
             else:
-                if child.tag == "literal":
+                if (
+                        child.tag == "literal"
+                        or child.tag == "name"
+                ):
                     _ = ET.SubElement(current, child.tag, child.attrib)
                 else:
                     try:
                         _ = self.unnecessary_tags.index(child.tag)
                     except ValueError:
                         assert False, f'In handle_tag_io_control: Empty "' \
-                                      f'{child.tag}" not handled'
+                                      f'{child.tag}"-"{child.attrib}" not handled'
 
     def handle_tag_outputs(
             self, root, current, parent, _, traverse
@@ -2392,30 +2543,22 @@ class RectifiedXMLGenerator:
         """
         for child in root:
             self.clean_attrib(child)
-            if child.text:
-                if (
-                        child.tag == "keyword-argument"
-                        or child.tag == "literal"
-                ):
-                    cur_elem = ET.SubElement(
-                        current, child.tag, child.attrib
-                    )
+            if (
+                    child.tag == "keyword-argument"
+                    or child.tag == "literal"
+                    or child.tag == "name"
+            ):
+                cur_elem = ET.SubElement(
+                    current, child.tag, child.attrib
+                )
+                if child.text or len(child) > 0:
                     self.parseXMLTree(
                         child, cur_elem, current, parent, traverse
                     )
-                else:
-                    assert (
-                        False
-                    ), f'In handle_tag_keyword_arguments: "{child.tag}" not ' \
-                       f'handled'
             else:
-                try:
-                    _ = self.unnecessary_tags.index(child.tag)
-                except ValueError:
-                    assert (
-                        False
-                    ), f'In handle_tag_keyword_arguments: Empty elements ' \
-                       f'"{child.tag}" not handled'
+                assert (
+                    False
+                ), f'In handle_tag_keyword_arguments: "{child.tag}" not handled.'
 
     def handle_tag_read(
             self, root, current, parent, _, traverse
@@ -2428,7 +2571,7 @@ class RectifiedXMLGenerator:
         """
         for child in root:
             self.clean_attrib(child)
-            if child.text:
+            if child.text or len(child) > 0:
                 if (
                         child.tag == "io-controls"
                         or child.tag == "inputs"
@@ -2469,6 +2612,7 @@ class RectifiedXMLGenerator:
                 if (
                         child.tag == "input"
                         or child.tag == "name"
+                        or child.tag == "loop"
                 ):
                     cur_elem = ET.SubElement(
                         current, child.tag, child.attrib
@@ -2481,6 +2625,10 @@ class RectifiedXMLGenerator:
                         False
                     ), f'In handle_tag_input - {root.tag}: "{child.tag}" not ' \
                        f'handled'
+            elif child.tag == "name":
+                cur_elem = ET.SubElement(
+                        current, child.tag, child.attrib
+                )
             else:
                 assert (
                     False
@@ -2553,13 +2701,14 @@ class RectifiedXMLGenerator:
                     ), f'In handle_tag_call: Empty elements "{child.tag}"'
 
         # Update call function definition's arguments with array status
-        self.update_function_arguments(current)
+        # self.update_function_arguments(current)
         # Update call function arguments with their types
         update = False
         arguments_info = []
-        self.update_call_argument_type(current, update, self.current_scope, arguments_info)
-        # If modules been used in the current program, check for interface functions
-        # and replace function names, if necessary.
+        self.update_call_argument_type(current, update, self.current_scope,
+                                       arguments_info)
+        # If modules been used in the current program, check for interface
+        # functions and replace function names, if necessary.
         if self.used_modules:
             self.replace_interface_function_to_target(current, arguments_info)
 
@@ -2597,16 +2746,29 @@ class RectifiedXMLGenerator:
                     assert (
                         False
                     ), f'In handle_tag_subroutine: Empty elements "{child.tag}"'
-        # Updating the argument attribute to hold the type.
-        for arg in self.arguments_list[current.attrib['name']]:
-            if arg.attrib['name'] in self.argument_types[current.attrib['name']]:
-                arg.attrib['type'] = str(self.argument_types[current.attrib['name']][arg.attrib['name']])
 
-        # Add extra XMLs under the interface function names to hold the argument types.
+        # Updating the argument attribute to hold the type.
+        if current.attrib['name'] in self.arguments_list:
+            for arg in self.arguments_list[current.attrib['name']]:
+                if (
+                        arg.attrib['name'].lower() in self.argument_types[current.attrib[
+                        'name']] and self.argument_types[current.attrib['name']][
+                        arg.attrib['name'].lower()]
+                ):
+                    arg.attrib['type'] = str(self.argument_types[current.attrib[
+                        'name']][arg.attrib['name'].lower()]["type"])
+                    arg.attrib['is_array'] = str(self.argument_types[current.attrib[
+                        'name']][arg.attrib['name'].lower()]["is_array"])
+                    arg.attrib['is_derived_type'] = str(self.argument_types[current.attrib[
+                        'name']][arg.attrib['name'].lower()]["is_derived_type"])
+
+        # Add extra XMLs under the interface function names to hold the
+        # argument types.
         for interface in self.interface_function_xml:
-            if current.attrib['name'] in self.interface_function_xml[interface]:
+            if current.attrib['name'].lower() in self.interface_function_xml[interface]:
                 argument_types = ET.SubElement(
-                    self.interface_function_xml[interface][current.attrib['name']],
+                    self.interface_function_xml[interface][current.attrib[
+                        'name'].lower()],
                     "argument-types"
                 )
                 num_args = 0
@@ -2617,7 +2779,8 @@ class RectifiedXMLGenerator:
                         "argument-type",
                         {"type": arg.attrib['type']}
                     )
-                self.interface_function_xml[interface][current.attrib['name']].attrib['num_args'] = str(num_args)
+                self.interface_function_xml[interface][current.attrib[
+                    'name'].lower()].attrib['num_args'] = str(num_args)
 
     def handle_tag_arguments(
             self, root, current, _, grandparent, traverse
@@ -2633,21 +2796,28 @@ class RectifiedXMLGenerator:
             if grandparent.tag == "subroutine":
                 for interface in self.interface_functions:
                     if (
-                            grandparent.attrib['name'] in self.interface_functions[interface]
+                            grandparent.attrib['name'] in
+                            self.interface_functions[interface]
                             and interface in self.interface_xml
                     ):
                         if (
-                                "max_arg" not in self.interface_xml[interface].attrib
-                                or ("max_arg" in self.interface_xml[interface].attrib
-                                    and int(self.interface_xml[interface].attrib['max_arg']) < num_of_args)
+                                "max_arg" not in self.interface_xml[
+                                 interface].attrib
+                                or ("max_arg" in self.interface_xml[
+                                  interface].attrib
+                                    and int(self.interface_xml[
+                                                interface].attrib['max_arg'])
+                                    < num_of_args)
                         ):
-                            self.interface_xml[interface].attrib['max_arg'] = str(num_of_args)
+                            self.interface_xml[interface].attrib['max_arg'] =\
+                                str(num_of_args)
                         else:
                             pass
                     else:
                         pass
             else:
-                assert False, f"Currently, {grandparent.tag} not handled for interface."
+                assert False, f"Currently, {grandparent.tag} not handled for " \
+                              f"interface."
                             
         for child in root:
             self.clean_attrib(child)
@@ -2655,12 +2825,11 @@ class RectifiedXMLGenerator:
                 # Collect the argument names with None as a initial type.
                 # Types will be updated in handle_tag_variable.
                 if grandparent.tag == "subroutine":
-                    self.argument_types[grandparent.attrib['name']][child.attrib['name']] = None
+                    self.argument_types[grandparent.attrib['name']][
+                        child.attrib['name'].lower()] = None
                 cur_elem = ET.SubElement(
                     current, child.tag, child.attrib
                 )
-                # Set a default array status to False
-                cur_elem.attrib['is_array'] = "false"
             else:
                 assert (
                     False
@@ -2675,7 +2844,6 @@ class RectifiedXMLGenerator:
         <argument>
         </argument>
         """
-        current.attrib['is_array'] = "false"
         for child in root:
             self.clean_attrib(child)
             cur_elem = ET.SubElement(
@@ -2702,7 +2870,7 @@ class RectifiedXMLGenerator:
         for child in root:
             self.clean_attrib(child)
             if child.text or len(child) > 0:
-                if child.tag == "header" or child.tag == "body":
+                if child.tag in self.if_child_tags:
                     cur_elem = ET.SubElement(
                         current, child.tag, child.attrib
                     )
@@ -2847,6 +3015,7 @@ class RectifiedXMLGenerator:
         <function>
         </function>
         """
+        self.argument_types[root.attrib['name']] = {}
         self.current_scope = root.attrib['name']
         for child in root:
             self.clean_attrib(child)
@@ -2879,6 +3048,15 @@ class RectifiedXMLGenerator:
                     assert (
                         False
                     ), f'In handle_tag_function: Empty elements "{child.tag}"'
+
+        # Updating the argument attribute to hold the type.
+        for arg in self.arguments_list[current.attrib['name']]:
+            if arg.attrib['name'] in self.argument_types[current.attrib[
+             'name']]:
+                arg.attrib['type'] = str(self.argument_types[current.attrib[
+                    'name']][arg.attrib['name']]["type"])
+                arg.attrib['is_array'] = str(self.argument_types[current.attrib[
+                    'name']][arg.attrib['name']]["is_array"])
 
     def handle_tag_use(
             self, root, current, parent, _, traverse
@@ -2942,6 +3120,7 @@ class RectifiedXMLGenerator:
         <module>
         </module>
         """
+        self.current_scope = root.attrib['name']
         for child in root:
             self.clean_attrib(child)
 
@@ -2985,6 +3164,10 @@ class RectifiedXMLGenerator:
             else:
                 if child.tag == "initialization":
                     current.attrib.update(child.attrib)
+                elif child.tag == "literal":
+                    cur_elem = ET.SubElement(
+                        current, child.tag, child.attrib
+                    )
                 else:
                     assert (
                         False
@@ -3263,6 +3446,58 @@ class RectifiedXMLGenerator:
         for child in delete_child:
             current.remove(child)
 
+    def handle_tag_expression(
+            self, root, current, parent, grandparent, traverse
+    ):
+        """This function handles expression XML tag.
+
+        <expressionn>
+        </expression>
+        """
+        for child in root:
+            self.clean_attrib(child)
+            if child.tag in self.expression_child_tags:
+                cur_elem = ET.SubElement(
+                    current, child.tag, child.attrib
+                )
+                if len(child) > 0 or child.text:
+                    self.parseXMLTree(
+                        child, cur_elem, current, parent, traverse
+                    )
+            else:
+                try:
+                    _ = self.unnecessary_tags.index(child.tag)
+                except ValueError:
+                    assert (
+                        False
+                    ), f'In handle_tag_expression: '\
+                       f'element "{child.tag}"-"{child.attrib}" is not handled.'
+
+    def handle_tag_objects(self, root, current, parent, grandparent, traverse):
+        """This function handles objects XML tag.
+
+        <objects>
+        </objects>
+        """
+        for child in root:
+            self.clean_attrib(child)
+            if child.tag in self.objects_child_tags:
+                cur_elem = ET.SubElement(
+                    current, child.tag, child.attrib
+                )
+                if len(child) > 0 or child.text:
+                    self.parseXMLTree(
+                        child, cur_elem, current, parent, traverse
+                    )
+            else:
+                try:
+                    _ = self.unnecessary_tags.index(child.tag)
+                except ValueError:
+                    assert (
+                        False
+                    ), f'In handle_tag_expression: '\
+                       f'element "{child.tag}"-"{child.attrib}" is not handled.'
+
     #################################################################
     #                                                               #
     #                       XML TAG PARSER                          #
@@ -3450,6 +3685,10 @@ class RectifiedXMLGenerator:
                                         traverse)
         elif root.tag == "values":
             self.handle_tag_values(root, current, parent, grandparent, traverse)
+        elif root.tag == "expression":
+            self.handle_tag_expression(root, current, parent, grandparent, traverse)
+        elif root.tag == "objects":
+            self.handle_tag_objects(root, current, parent, grandparent, traverse)
         else:
             assert (
                 False
@@ -3485,7 +3724,6 @@ class RectifiedXMLGenerator:
             for elem in self.derived_type_var_holder_list:
                 if elem.tag == "component-decl-list":
                     counts.append(elem.attrib['count'])
-
             # Initialize count to 0 for <variables> count attribute.
             count = 0
             dim = 0
@@ -3495,6 +3733,8 @@ class RectifiedXMLGenerator:
             derived_type = ET.SubElement(self.parent_type, "derived-types")
             literal_value = None
             str_value = None
+            dimHasType = False
+
             for elem in self.derived_type_var_holder_list:
                 if elem.tag == "intrinsic-type-spec":
                     keyword2 = ""
@@ -3512,10 +3752,12 @@ class RectifiedXMLGenerator:
                     newType = ET.SubElement(derived_type, "type", attributes)
                     if newType.attrib['name'].lower() == "character":
                         assert (
-                            literal_value != None
-                        ), "Literal value (String length) for character cannot be None."
+                            literal_value is not None
+                        ), "Literal value (String length) for character " \
+                           "cannot be None."
                         newType.set("string_length", literal_value)
                         literal_value = None  # Reset literal_value to None
+                    dimHasType = True
                 elif elem.tag == "derived-type-spec":
                     attributes = {
                         "hasKind": "false",
@@ -3535,20 +3777,26 @@ class RectifiedXMLGenerator:
                         literal_value = elem.attrib['value']
                     else:
                         tag_name = "name"
-                elif elem.tag == "component-array-spec":
+                elif (
+                        elem.tag == "component-array-spec"
+                        or elem.tag  == "explicit-shape-spec-list__begin"
+                ):
                     is_dimension = True
                     dim += 1
-                elif (
-                    elem.tag == "component-decl-list__begin"
-                    and not is_dimension
-
-                ):
+                elif elem.tag == "component-decl-list__begin":
                     if len(counts) > count:
-                        attr = {"count": counts[count]}
-                        new_variables = ET.SubElement(
-                            derived_type, "variables", attr
-                        )  # <variables _attribs_>
-                        count += 1
+                        counter = int(counts[count])
+                        if not is_dimension:
+                            attr = {"count": counts[count]}
+                            new_variables = ET.SubElement(
+                                derived_type, "variables", attr
+                            )  # <variables _attribs_>
+                            count += 1
+                elif (
+                    elem.tag == "component-decl-list"
+                    and is_dimension
+                ):
+                    is_dimension = False
                 elif elem.tag == "operation":
                     str_value = ""
                     for op in elem.iter():
@@ -3582,60 +3830,89 @@ class RectifiedXMLGenerator:
                                 init_value_attrib, tag_name, value.attrib
                             )  # <initial-value _attribs_>
                     else:
-                        total_number_of_arrays = len(self.derived_type_array_dimensions)
-                        new_dimensions = ET.SubElement(
-                            derived_type, "dimensions", {"count": "1"}
-                        )  # <dimensions count="1">
+                        if (
+                                "id" in elem.attrib
+                                and elem.attrib['id'] in self.dtype_dimensions
+                        ):
+                            if not dimHasType:
+                                dimension_type  = ET.SubElement(
+                                        derived_type, newType.tag, newType.attrib
+                                )
+                            else:
+                                dimHasType = False
 
-                        if self.derived_type_array_dimensions[dim]:
+                            arrayVar = elem.attrib['id']
+                            dimensions = self.dtype_dimensions[arrayVar]
+                            num_of_dimensions = len(dimensions)
+                            # <dimensions count="__dimensions__">
+                            new_dimensions = ET.SubElement(
+                                derived_type, "dimensions", {"count": str(math.ceil(num_of_dimensions/2))}
+                            )  
+                            # <dimension type="simple">
                             new_dimension = ET.SubElement(
                                 new_dimensions, "dimension", {"type": "simple"}
-                            )  # <dimension type="simple">
+                            )
+                            # Default: No explicit lower bound set.
                             has_lower_bound = False
                             new_range = ET.SubElement(new_dimension, "range")
-                            num_of_dimensions = len(self.derived_type_array_dimensions[dim])
+                            num_of_dimensions = len(dimensions)
+                            need_lower_bound = False
                             for s in range(0, num_of_dimensions):
-                                value = self.derived_type_array_dimensions[dim][s]
-                                if value.tag == "literal":
+                                if dimensions[s].tag == "literal":
                                     tag_name = "literal"
-                                elif value.tag == "name":
+                                elif dimensions[s].tag == "name":
                                     tag_name = "name"
-                                    value.attrib["is_derived_type_ref"] = "true"
+                                    dimensions[s].attrib["is_derived_type_ref"] = "true"
                                 else:
                                     pass
 
                                 need_new_dimension = False 
                                 need_upper_bound = False
+                                # Handle a case where there is no explicit lower-bound indication.
+                                # In such case, we add lower-bound XML element with a default value "0".
                                 if (
-                                        len(self.derived_type_array_dimensions[dim]) == 1
+                                        num_of_dimensions == 1
                                         or (not has_lower_bound 
-                                            and ((s+1) < len(self.derived_type_array_dimensions[dim])
-                                            and value.attrib["dim-number"] != self.derived_type_array_dimensions[dim][s+1].attrib["dim-number"]))
+                                            and ((s+1) < num_of_dimensions
+                                            and dimensions[s].attrib['dim-number'] != dimensions[s+1].attrib['dim-number']))
                                 ):
-                                    if (
-                                            (s+1) < len(self.derived_type_array_dimensions[dim])
-                                            and value.attrib["dim-number"] != self.derived_type_array_dimensions[dim][s+1].attrib["dim-number"]
-                                    ):
-                                        need_new_dimension = True
-                                    upper_bound_value = copy.copy(value)
-                                    upper_bound_tag_name = tag_name
-                                    tag_name = "literal"
-                                    value.tag = "literal"
-                                    value.attrib = {
-                                            "dim-number": value.attrib["dim-number"],
-                                            "type": "int",
-                                            "value": "0"
-                                    }
-                                    need_upper_bound = True
+                                    need_lower_bound = True
 
+                                # Case of multi-dimensional array. We need a new dimension XMLs.
+                                if (
+                                        ((s+1) < num_of_dimensions
+                                        and dimensions[s].attrib["dim-number"] != dimensions[s+1].attrib["dim-number"])
+                                ):
+                                    need_new_dimension = True
+                                    #  Case where next dimension has no lower bound indication.
+                                    if (s+2) == num_of_dimensions:
+                                        need_lower_bound = True
+                                elif ((s+1) == num_of_dimensions):
+                                    need_lower_bound = True
+
+
+                                bound_attrib = dimensions[s].attrib
+                                # Generate lower- and upper-bound XML elements.
                                 if not has_lower_bound:
                                     bound = ET.SubElement(new_range, "lower-bound")
+                                    if need_lower_bound:
+                                        tag_name = "literal"
+                                        bound_attrib =  {
+                                                "dim-number":dimensions[s].attrib["dim-number"],
+                                                "type": "int",
+                                                "value": "0",
+                                        }
+                                        tag_name = "literal"
+                                        need_upper_bound = True
+                                        upper_bound_value = copy.copy(dimensions[s])
+                                        upper_bound_tag_name = dimensions[s].tag
+                                        need_lower_bound = False
                                     has_lower_bound = True
                                 else:
                                     bound = ET.SubElement(new_range, "upper-bound")
                                     has_lower_bound = False
 
-                                new_range_value = ET.SubElement(bound, tag_name, value.attrib)
+                                new_range_value = ET.SubElement(bound, tag_name, bound_attrib)
 
                                 if need_upper_bound:
                                     bound = ET.SubElement(new_range, "upper-bound")
@@ -3647,30 +3924,33 @@ class RectifiedXMLGenerator:
                                         new_dimensions, "dimension", {"type": "simple"}
                                     )  # <dimension type="simple">
                                     new_range = ET.SubElement(new_dimension, "range")
-                                    need_new_dimension = False
-
-                        if len(counts) > count:
-                            attr = {"count": counts[count]}
-                            new_variables = ET.SubElement(
-                                derived_type, "variables", attr
+                                    # need_new_dimension = False
+                            if len(counts) > count:
+                                attr = {"count": "1"}
+                                new_variables_d = ET.SubElement(
+                                    derived_type, "variables", attr
+                                )
+                                if (
+                                        int(counts[count]) == 1
+                                        or counter ==  0
+                                ):
+                                    count += 1
+                                else:
+                                    counter -= 1
+                            var_attribs = {
+                                "has_initial_value": elem.attrib[
+                                    "hasComponentInitialization"
+                                ],
+                                "name": elem.attrib['id'],
+                                "is_array": "true",
+                            }
+                            # Store variable name in the array tracker
+                            self.declared_array_vars.update(
+                                {elem.attrib['id']: self.current_scope}
                             )
-                            count += 1
-                        var_attribs = {
-                            "has_initial_value": elem.attrib[
-                                "hasComponentInitialization"
-                            ],
-                            "name": elem.attrib['id'],
-                            "is_array": "true",
-                        }
-                        # Store variable name in the array tracker
-                        self.declared_array_vars.update(
-                            {elem.attrib['id']: self.current_scope}
-                        )
-                        new_variable = ET.SubElement(
-                            new_variables, "variable", var_attribs
-                        )
-                        is_dimension = False
-
+                            new_variable = ET.SubElement(
+                                new_variables_d, "variable", var_attribs
+                            )
             # Once one derived type was successfully constructed,
             # clear all the elements of a derived type list
             self.derived_type_var_holder_list.clear()
@@ -3837,8 +4117,11 @@ class RectifiedXMLGenerator:
             # update the cur_elem at each iteration.
             cur_elem = name_element
             if name_elements[idx].attrib['hasSubscripts'] == "true":
-                name_element.append(subscripts_holder[subscript_num])
-                subscript_num += 1
+                if subscript_num < len(subscripts_holder):
+                    name_element.append(subscripts_holder[subscript_num])
+                    subscript_num += 1
+                else:
+                    name_elements[idx].attrib['hasSubscripts'] = "false"
 
         # Clean out the lists for recyling.
         # This is not really needed as they are local lists,
@@ -3982,7 +4265,7 @@ class RectifiedXMLGenerator:
         # In case of multiple goto statements appears,
         # slice them into N number of list objects
         # The location of goto statement (inner to outer)
-        # is represented by the increament of index
+        # is represented by the increment of index
         # i.e. [0]: innermost, [N]: Outermost
         multiple_goto_stmts = []
         self.multiple_goto_identifier(
@@ -4820,7 +5103,11 @@ class RectifiedXMLGenerator:
         Returns:
             None
         """
-        return re.findall(r"\"([^\']+)\"", unrefined_id)[0]
+        cleaned_id = re.findall(r"\"([^\']+)\"", unrefined_id)
+        if len(cleaned_id) > 0:
+            return cleaned_id[0]
+        else:
+            return unrefined_id
 
     def clean_attrib(self, current):
         """The original XML elements holds 'eos' and
@@ -4908,47 +5195,46 @@ class RectifiedXMLGenerator:
                 self.statements_to_reconstruct_after['stmts-follow-label']
         )
 
-    def update_function_arguments(self, current):
-        """This function handles function definition's
-        arguments with array status based on the information
-        that was observed during the function call
-
-        Args:
-            current (:obj: 'ET'): Current node (either call or value)
-
-        Returns:
-            None.
-        """
-
-        fname = current.attrib['fname']
-        if fname in self.arguments_list:
-            callee_arguments = self.arguments_list[fname]
-            for arg in callee_arguments:
-                # self.caller_arr_arguments holds any element
-                # only when arrays are being passed to functions
-                # as arguments. Thus, we first need to check if
-                # callee function name exists in the list
-                if (
-                    fname in self.caller_arr_arguments
-                    and arg.attrib['name'] in self.caller_arr_arguments[fname]
-                ):
-                    arg.attrib['is_array'] = "true"
-                else:
-                    arg.attrib['is_array'] = "false"
-        # re-initialize back to initial values
-        self.call_function = False
+    # def update_function_arguments(self, current):
+    #     """This function handles function definition's
+    #     arguments with array status based on the information
+    #     that was observed during the function call
+    #
+    #     Args:
+    #         current (:obj: 'ET'): Current node (either call or value)
+    #
+    #     Returns:
+    #         None.
+    #     """
+    #     fname = current.attrib['fname']
+    #     if fname in self.arguments_list:
+    #         callee_arguments = self.arguments_list[fname]
+    #         for arg in callee_arguments:
+    #             # self.caller_arr_arguments holds any element
+    #             # only when arrays are being passed to functions
+    #             # as arguments. Thus, we first need to check if
+    #             # callee function name exists in the list
+    #             if (
+    #                 fname in self.caller_arr_arguments
+    #                 and arg.attrib['name'] in self.caller_arr_arguments[fname]
+    #             ):
+    #                 arg.attrib['is_array'] = "true"
+    #             else:
+    #                 arg.attrib['is_array'] = "false"
+    #     # re-initialize back to initial values
+    #     self.call_function = False
 
     def update_call_argument_type(self, current, update, scope, arguments_info):
         """This function updates call statement function argument xml
         with variable type."""
         if (
-                (current.tag == "name"
-                and update)
+                (current.tag == "name" and update)
                 and (scope in self.variables_by_scope
-                and current.attrib['id'] in self.variables_by_scope[scope])
+                     and current.attrib['id'] in self.variables_by_scope[scope])
         ):
 
-            current.attrib['type'] = self.variables_by_scope[scope][current.attrib['id']]
+            current.attrib['type'] = self.variables_by_scope[scope][
+                current.attrib['id']]
             arguments_info.append(current.attrib['type'])
         elif current.tag == "literal":
             if current.attrib['type'] in TYPE_MAP:
@@ -4970,7 +5256,8 @@ class RectifiedXMLGenerator:
         target_function = None
         for module in self.used_modules:
             if module in self.module_summary:
-                interface_funcs = self.module_summary[module]['interface_functions']
+                interface_funcs = self.module_summary[module][
+                    'interface_functions']
                 if cur_function in interface_funcs:
                     interface_func_list = interface_funcs[cur_function]
                     for func in interface_func_list:
@@ -4980,30 +5267,35 @@ class RectifiedXMLGenerator:
                             i = 0
                             #  a: argument, t: type
                             for a, t in function_args.items():
-                                if t == arguments_info[i].lower():
+                                if (
+                                        t == arguments_info[i].lower()
+                                        or (arguments_info[i].lower() in TYPE_MAP
+                                            and t == TYPE_MAP[arguments_info[i].lower()])
+                                ):
                                     found_target_function = True
                                 else:
                                     found_target_function = False
                                     break
                                 i += 1
-                        # If target function was found in the interface function list,
-                        # modify the current <call> element name and its child <name>
-                        # element id with the target function name from the interface name.
+                        # If target function was found in the interface
+                        # function list, modify the current <call> element
+                        # name and its child <name> element id with the
+                        # target function name from the interface name.
                         if found_target_function:
                             # The order of modifying is important.
-                            # MUST modify child element <name> first before modifying
-                            # current <call>.
+                            # MUST modify child element <name> first before
+                            # modifying current <call>.
                             for elem in current:
                                 if (
                                         elem.tag == "name"
-                                        and elem.attrib['id'] == current.attrib['fname']
+                                        and elem.attrib['id'] ==
+                                        current.attrib['fname']
                                 ):
                                     elem.attrib['id'] = func
                                 for subElem in elem:
                                     if subElem.tag == "subscripts":
                                         subElem.attrib['fname'] = func
                             current.attrib['fname'] = func
-
 
     #################################################################
     #                                                               #

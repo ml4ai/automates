@@ -16,7 +16,7 @@ import argparse
 import json
 import copy
 from typing import Dict
-from program_analysis.for2py import For2PyError, syntax
+from delphi.translators.for2py import For2PyError, syntax
 
 
 class ContinueState(object):

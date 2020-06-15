@@ -20,7 +20,7 @@
 
 import os
 import sys
-import program_analysis.for2py.preprocessor
+import delphi.translators.for2py.preprocessor
 from .syntax import *
 
 FORTRAN_EXTENSIONS = ['.f', '.f90', '.for']

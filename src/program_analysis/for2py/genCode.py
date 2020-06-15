@@ -16,11 +16,9 @@ class PrintState:
 
 
 class genCode:
-    def __init__(self,
-                 use_numpy=False,
-                 string_length=None,
-                 lambda_string="",
-                 ):
+    def __init__(
+        self, use_numpy=True, string_length=None, lambda_string="",
+    ):
         self.lambda_string = lambda_string
         # Setting the flag below creates the lambda file using numpy
         # functions instead of the previous Python approach
@@ -111,11 +109,13 @@ class genCode:
 
         if isinstance(node, list):
             for cur in node:
-                self.lambda_string += f"{self.generate_code(cur,state)}" \
-                                      f"{state.sep}"
+                self.lambda_string += (
+                    f"{self.generate_code(cur,state)}" f"{state.sep}"
+                )
         elif self.process_lambda_node.get(node_name):
-            self.lambda_string = self.process_lambda_node[node_name](node,
-                                                                     state)
+            self.lambda_string = self.process_lambda_node[node_name](
+                node, state
+            )
         else:
             sys.stderr.write(
                 "No handler for {0} in genCode, value: {1}\n".format(
@@ -135,8 +135,9 @@ class genCode:
         return code_string
 
     def process_arguments(self, node, state):
-        code_string = ", ".join([self.generate_code(arg, state) for arg in
-                                 node.args])
+        code_string = ", ".join(
+            [self.generate_code(arg, state) for arg in node.args]
+        )
         return code_string
 
     @staticmethod
@@ -222,7 +223,7 @@ class genCode:
     def process_unary_operation(self, node, state):
         code_string = "{0}({1})".format(
             self.generate_code(node.op, state),
-            self.generate_code(node.operand, state)
+            self.generate_code(node.operand, state),
         )
         return code_string
 
@@ -338,8 +339,10 @@ class genCode:
     def process_name(self, node, *_):
         code_string = node.id
         if self.use_numpy:
-            if self.current_function in ["np.maximum", "np.minimum"] and not \
-                    self.target_arr:
+            if (
+                self.current_function in ["np.maximum", "np.minimum"]
+                and not self.target_arr
+            ):
                 self.target_arr = code_string
 
         return code_string
@@ -365,7 +368,10 @@ class genCode:
                 return f"{string}.strip()"
 
             if not isinstance(function_node.value, ast.Attribute):
-                module = function_node.value.id
+                if isinstance(function_node.value, ast.Str):
+                    module = function_node.value.s
+                else:
+                    module = function_node.value.id
             elif isinstance(function_node.value.value, ast.Name):
                 module = function_node.value.value.id
             elif isinstance(function_node.value.value, ast.Call):
@@ -373,9 +379,11 @@ class genCode:
                 module = call.func.value.id
 
             function_name = function_node.attr
-            if module == "math" and \
-                self.use_numpy and \
-                    function_name in self.numpy_math_map:
+            if (
+                module == "math"
+                and self.use_numpy
+                and function_name in self.numpy_math_map
+            ):
                 module = "np"
                 function_name = self.numpy_math_map[function_name]
             function_name = module + "." + function_name
@@ -387,11 +395,14 @@ class genCode:
                 elif function_name == "min":
                     function_name = "np.minimum"
 
-        if function_name is not "Array":
+        if function_name != "Array":
             # Check for setter and getter functions to differentiate between
             # array and string operations
-            if ".set_" in function_name and len(node.args) > 1 and \
-                    function_name.split('.')[1] != "set_substr":
+            if (
+                ".set_" in function_name
+                and len(node.args) > 1
+                and function_name.split(".")[1] != "set_substr"
+            ):
                 # This is an Array operation
                 # Remove the first argument of <.set_>
                 # function of array as it is not needed
@@ -399,8 +410,10 @@ class genCode:
                 code_string = ""
                 for arg in node.args:
                     code_string += self.generate_code(arg, state)
-            elif ".get_" in function_name and \
-                    function_name.split('.')[1] != "get_substr":
+            elif (
+                ".get_" in function_name
+                and function_name.split(".")[1] != "get_substr"
+            ):
                 # This is an Array operation
                 code_string = function_name.replace(".get_", "[")
                 for arg in node.args:
@@ -408,7 +421,7 @@ class genCode:
                 code_string += "]"
             else:
                 # This is a String operation
-                module_parts = function_name.split('.')
+                module_parts = function_name.split(".")
                 module = module_parts[-1]
                 function = module_parts[0]
 
@@ -420,47 +433,42 @@ class genCode:
                 if len(node.args) > 0:
                     arg_list = []
                     arg_count = len(node.args)
-                    if arg_count == 1 and \
-                       module == "set_":
+                    if arg_count == 1 and module == "set_":
                         # This is a setter function for the string
-                        arg_string = self.generate_code(node.args[0],
-                                                        state)
+                        arg_string = self.generate_code(node.args[0], state)
                         arg_string = f"{arg_string}[0:{self.string_length}]"
-                        code_string = f'{arg_string}.' \
-                                      f'ljust({self.string_length}, " ")'
+                        code_string = (
+                            f"{arg_string}."
+                            f'ljust({self.string_length}, " ")'
+                        )
                         return code_string
                     elif function_name == "String":
                         # This is a String annotated assignment i.e.
                         # String(10, "abcdef")
-                        arg_string = self.generate_code(node.args[1],
-                                                        state)
+                        arg_string = self.generate_code(node.args[1], state)
                         arg_string = f"{arg_string}[0:{self.string_length}]"
-                        code_string = f'{arg_string}.' \
-                                      f'ljust({self.string_length}, " ")'
+                        code_string = (
+                            f"{arg_string}."
+                            f'ljust({self.string_length}, " ")'
+                        )
                         return code_string
                     elif module == "f_index":
                         # This is the f_index function
-                        find_string = self.generate_code(node.args[0],
-                                                         state)
+                        find_string = self.generate_code(node.args[0], state)
                         if arg_count == 1:
                             code_string = f"{function}.find({find_string})+1"
                         else:
                             code_string = f"{function}.rfind({find_string})+1"
                         return code_string
                     elif module == "get_substr":
-                        start_id = self.generate_code(node.args[0],
-                                                      state)
-                        end_id = self.generate_code(node.args[1],
-                                                    state)
+                        start_id = self.generate_code(node.args[0], state)
+                        end_id = self.generate_code(node.args[1], state)
                         code_string = f"{function}[{start_id}-1:{end_id}]"
                         return code_string
                     elif module == "set_substr":
-                        start_id = self.generate_code(node.args[0],
-                                                      state)
-                        end_id = self.generate_code(node.args[1],
-                                                    state)
-                        source_string = self.generate_code(node.args[2],
-                                                           state)
+                        start_id = self.generate_code(node.args[0], state)
+                        end_id = self.generate_code(node.args[1], state)
+                        source_string = self.generate_code(node.args[2], state)
                         new_index = f"{end_id}-{start_id}+1"
                         prefix = f"{function_name}[:{start_id}-1]"
                         suffix = f"{function_name}[{end_id}:]"
@@ -471,8 +479,9 @@ class genCode:
 
                     self.current_function = function_name
                     for arg_index in range(arg_count):
-                        arg_string = self.generate_code(node.args[arg_index],
-                                                        state)
+                        arg_string = self.generate_code(
+                            node.args[arg_index], state
+                        )
                         arg_list.append(arg_string)
 
                     # Change the max() and min() functions for numpy
@@ -480,8 +489,10 @@ class genCode:
                     if self.use_numpy and self.target_arr:
                         for index, arg_string in enumerate(arg_list):
                             if self._is_number(arg_string):
-                                arg_list[index] = f"np.full_like(" \
-                                             f"{self.target_arr}, {arg_string})"
+                                arg_list[index] = (
+                                    f"np.full_like("
+                                    f"{self.target_arr}, {arg_string})"
+                                )
 
                     code_string += ", ".join(arg_list)
                 code_string += ")"
@@ -493,8 +504,10 @@ class genCode:
 
     def process_import(self, node, state):
         code_string = "import {0}{1}".format(
-            ", ".join([self.generate_code(name, state) for name in
-                       node.names]), state.sep
+            ", ".join(
+                [self.generate_code(name, state) for name in node.names]
+            ),
+            state.sep,
         )
         return code_string
 
@@ -511,8 +524,10 @@ class genCode:
         return code_string
 
     def process_boolean_operation(self, node, state):
-        bool_tests = [self.generate_code(node.values[i], state) for i in range(
-            len(node.values))]
+        bool_tests = [
+            self.generate_code(node.values[i], state)
+            for i in range(len(node.values))
+        ]
         bool_operation = self.generate_code(node.op, state)
         code_string = f" {bool_operation} ".join(bool_tests)
 
@@ -528,8 +543,10 @@ class genCode:
         # <variable_name> which is stored under `node.attr`.
         code_string = node.attr
         if self.use_numpy:
-            if self.current_function in ["np.maximum", "np.minimum"] and not \
-                    self.target_arr:
+            if (
+                self.current_function in ["np.maximum", "np.minimum"]
+                and not self.target_arr
+            ):
                 self.target_arr = code_string
 
         return code_string

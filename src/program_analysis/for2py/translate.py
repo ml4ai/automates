@@ -25,11 +25,12 @@ import argparse
 import pickle
 import copy
 import uuid
+import re
 import xml.etree.ElementTree as ET
 from typing import List, Dict
 from collections import OrderedDict
-from program_analysis.for2py.get_comments import get_comments
-from program_analysis.for2py.loop_handle import RefactorConstructs
+from delphi.translators.for2py.get_comments import get_comments
+from delphi.translators.for2py.loop_handle import RefactorConstructs
 
 
 class ParseState(object):
@@ -75,6 +76,8 @@ class XML_to_JSON_translator(object):
             "len",
             "adjustl",
             "adjustr",
+            "amax1",
+            "amin1",
         ]
         self.handled_tags = [
             "access-spec",
@@ -143,7 +146,6 @@ class XML_to_JSON_translator(object):
             "operation": self.process_operation,
             "program": self.process_subroutine_or_program_module,
             "range": self.process_range,
-            "read": self.process_direct_map,
             "return": self.process_terminal,
             "stop": self.process_terminal,
             "subroutine": self.process_subroutine_or_program_module,
@@ -153,7 +155,6 @@ class XML_to_JSON_translator(object):
             "variable": self.process_variable,
             "constants": self.process_constants,
             "constant": self.process_constant,
-            "write": self.process_direct_map,
             "derived-types": self.process_derived_types,
             "length": self.process_length,
             "save-stmt": self.process_save,
@@ -163,6 +164,8 @@ class XML_to_JSON_translator(object):
             "value-range": self.process_value_range,
             "interface": self.process_interface,
             "argument-types": self.process_argument_types,
+            "read": self.process_read,
+            "write": self.process_write,
         }
 
         self.unhandled_tags = set()  # unhandled xml tags in the current input
@@ -194,12 +197,14 @@ class XML_to_JSON_translator(object):
         self.return_index = 0
         self.loop_active = False
         self.derived_type_list = []
+        self.format_dict = {}
 
     def process_subroutine_or_program_module(self, root, state):
         """ This function should be the very first function to be called """
         subroutine = {"tag": root.tag, "name": root.attrib["name"].lower()}
         self.current_module = root.attrib["name"].lower()
         self.summaries[root.attrib["name"]] = None
+        self.is_save = False
         if root.tag not in self.subroutineList:
             self.entryPoint.append(root.attrib["name"])
         for node in root:
@@ -248,6 +253,11 @@ class XML_to_JSON_translator(object):
         if (
                 "type" in root.attrib
                 and root.attrib["type"] in self.derived_type_list
+        ):
+            is_derived_type = "true"
+        elif (
+                "is_derived_type" in root.attrib
+                and root.attrib["is_derived_type"] == "True"
         ):
             is_derived_type = "true"
         else:
@@ -365,15 +375,18 @@ class XML_to_JSON_translator(object):
         if self.argument_list.get(self.current_module):
             exclusion_list += self.argument_list[self.current_module]
         exclusion_list = list(set([x.lower() for x in exclusion_list]))
-
         # Map each variable declaration to this parent
         # function/subroutine to keep a track of local variables
         if declared_variable and len(declared_variable) > 0:
             for var in declared_variable:
-                if (var.get("tag") in ["variable", "array"] and
-                        var.get("name") not in exclusion_list) or \
-                    (var.get("is_derived_type") is True and var.get("type")
-                     not in exclusion_list):
+                if (
+                        (var.get("tag") in ["variable", "array"] and
+                        var.get("name") not in exclusion_list)
+                        or (var.get("is_derived_type") is True 
+                            and var.get("type")
+                            not in exclusion_list)
+                ):
+
                     self.variable_list.setdefault(self.current_module,
                                                   []).append(var)
         else:
@@ -604,7 +617,7 @@ class XML_to_JSON_translator(object):
                 variables = self.parseTree(node, state)
                 # Declare variables based on the counts to handle the case
                 # where a multiple vars declared under a single type
-                for index in range(int(node.attrib["count"])):
+                for index in range(len(variables)):
                     combined = declared_type[-1]
                     combined.update(variables[index])
                     derived_types["derived-types"].append(combined.copy())
@@ -771,7 +784,7 @@ class XML_to_JSON_translator(object):
     def process_name(self, root, state) -> List[Dict]:
         """ This function handles <name> tag. The name tag will be added to the
         new AST for the pyTranslate.py with "ref" tag.  """
-
+        
         assert (
             root.tag == "name"
         ), f"The root must be <name>. Current tag is {root.tag} with " \
@@ -802,12 +815,17 @@ class XML_to_JSON_translator(object):
             if "is_array" in root.attrib:
                 is_array = root.attrib["is_array"]
 
+            is_string = "false"
+            if "is_string" in root.attrib:
+                is_string = root.attrib["is_string"]
+
             ref = {
                 "tag": "ref",
                 "name": root.attrib["id"].lower(),
                 "numPartRef": str(numPartRef),
                 "hasSubscripts": root.attrib["hasSubscripts"],
                 "is_array": is_array,
+                "is_string": is_string,
                 "is_arg": "false",
                 "is_parameter": "false",
                 "is_interface_func": "false",
@@ -914,6 +932,7 @@ class XML_to_JSON_translator(object):
                     "numPartRef": "1",
                     "hasSubscripts": "false",
                     "is_array": "false",
+                    "is_string": "false",
                     "is_arg": "false",
                     "is_parameter": "false",
                     "is_interface_func": "false",
@@ -1042,6 +1061,245 @@ class XML_to_JSON_translator(object):
         # added to the SAVE node in the ast
         if root.tag == "open":
             self.saved_filehandle += [val]
+        return [val]
+
+    def process_read(self, root, state) -> List[Dict]:
+        """
+            Handles reads of File or reading from a character string
+        """
+        # The Fortran READ statement can be used in two ways, reading from a
+        # file or reading from a CHARACTER string. If the statement is being
+        # used to read from a file, the first argument will be one of the
+        # following:
+        #      1. An integer literal
+        #      2. An integer variable
+        #      3. An arg_name with the text `UNIT`
+        # If the statement is being used to read from a character, the first
+        # argument will a `ref` to a string variable.
+        # Check the above conditions first
+        val = {"tag": root.tag, "args": []}
+        for node in root:
+            val["args"] += self.parseTree(node, state)
+
+        string_assign = False
+        if val["args"][0]["tag"] == "ref" and val["args"][0].get("is_string")\
+                == "true":
+            string_assign = True
+
+        if string_assign:
+            new_val = []
+            main_source = val["args"][0]
+            targets = val["args"][2:]
+            format = val["args"][1]
+            if main_source.get("subscripts"):
+                start_index_value = int(main_source["subscripts"][0]["low"][0][
+                    "value"])
+            else:
+                start_index_value = 1
+
+            format_label = None
+            format_string = None
+            if format["tag"] == "literal":
+                if format["type"] == "int":
+                    format_label = format["value"]
+                    format_tag = self.format_dict[format_label]
+                elif format["type"] == "char":
+                    format_string = format["value"]
+                else:
+                    assert False, "Unrecognized format type in READ"
+            else:
+                assert False, "Unrecognized format type in READ"
+
+            type_list = []
+            if format_label:
+                temp_list = []
+                _re_int = re.compile(r"^\d+$")
+                format_list = [token["value"] for token in format_tag]
+
+                for token in format_list:
+                    if not _re_int.match(token):
+                        temp_list.append(token)
+                    else:
+                        type_list.append(f"{token}({','.join(temp_list)})")
+                        temp_list = []
+                if len(type_list) == 0:
+                    type_list = temp_list
+            elif format_string:
+                type_list = re.findall(r"(\d+\(.+?\))", format_string)
+                if len(type_list) == 0:
+                    assert False, "No matches found"
+
+            var_index = 0
+            for item in type_list:
+                match = re.match(r"(\d+)(.+)", item)
+                if not match:
+                    assert False, "A single rep case not found"
+                else:
+                    reps = match.group(1)
+                    fmt = match.group(2)
+                    if "(" in fmt and "," in fmt:
+                        fmt = fmt[1:-1].split(",")
+                    elif "(" in fmt:
+                        fmt = [fmt[1:-1]]
+                    else:
+                        fmt = [fmt]
+                    for i in range(int(reps)):
+                        for ft in fmt:
+                            if ft[-1] in "Xx":
+                                start_index_value += int(ft[0:-1])
+                            elif ft[0] in "FfAaIi":
+                                length = int(ft[1])
+                                target = targets[var_index]
+                                source = copy.deepcopy(main_source)
+                                source["subscripts"] = [{
+                                    "low": [{
+                                        "tag": "literal",
+                                        "type": "int",
+                                        "value": str(start_index_value)
+                                    }],
+                                    "high": [{
+                                        "tag": "literal",
+                                        "type": "int",
+                                        "value": str(start_index_value +
+                                                     length - 1)
+                                    }]
+                                }]
+                                start_index_value += length
+                                new_val.append({
+                                    "tag": "assignment",
+                                    "target": [target],
+                                    "value": [source]
+                                })
+                                var_index += 1
+                            else:
+                                assert False, "Unseen Format type detected"
+
+            return new_val
+
+        return [val]
+
+    def process_write(self, root, state) -> List[Dict]:
+        """
+            Handles writes to File or writing into a character string
+        """
+        # The Fortran WRITE statement can be used in two ways, writing to a
+        # file or writing to a CHARACTER string. If the statement is being
+        # used to write to a file, the first argument will be one of the
+        # following:
+        #      1. An integer literal
+        #      2. An integer variable
+        #      3. An arg_name with the text `UNIT`
+        # If the statement is being used to write to a character, the first
+        # argument will a `ref` to a string variable.
+        # Check the above conditions first
+        val = {"tag": root.tag, "args": []}
+        for node in root:
+            val["args"] += self.parseTree(node, state)
+
+        string_assign = False
+        if val["args"][0]["tag"] == "ref" and val["args"][0].get("is_string") \
+                == "true":
+            string_assign = True
+
+        if string_assign:
+            new_val = []
+            main_target = val["args"][0]
+            sources = val["args"][2:]
+            format = val["args"][1]
+            if main_target.get("subscripts"):
+                start_index_value = int(main_target["subscripts"][0]["low"][0][
+                    "value"])
+            else:
+                start_index_value = 1
+
+            format_label = None
+            format_string = None
+            if format["tag"] == "literal":
+                if format["type"] == "int":
+                    format_label = format["value"]
+                    format_tag = self.format_dict[format_label]
+                elif format["type"] == "char":
+                    format_string = format["value"]
+                else:
+                    assert False, "Unrecognized format type in READ"
+            else:
+                assert False, "Unrecognized format type in READ"
+
+            type_list = []
+            if format_label:
+                temp_list = []
+                _re_int = re.compile(r"^\d+$")
+                format_list = [token["value"] for token in format_tag]
+
+                for token in format_list:
+                    if not _re_int.match(token):
+                        temp_list.append(token)
+                    else:
+                        type_list.append(f"{token}({','.join(temp_list)})")
+                        temp_list = []
+                if len(type_list) == 0:
+                    type_list = temp_list
+            elif format_string:
+                type_list = re.findall(r"(\d+\(.+?\))", format_string)
+                if len(type_list) == 0:
+                    assert False, "No matches found"
+
+            var_index = 0
+            for item in type_list:
+                match = re.match(r"(\d+)(.+)", item)
+                if not match:
+                    assert False, "A single rep case not found"
+                else:
+                    reps = match.group(1)
+                    fmt = match.group(2)
+                    if "(" in fmt and "," in fmt:
+                        fmt = fmt[1:-1].split(",")
+                    elif "(" in fmt:
+                        fmt = [fmt[1:-1]]
+                    else:
+                        fmt = [fmt]
+                    for i in range(int(reps)):
+                        for ft in fmt:
+                            if ft[-1] in "Xx":
+                                length = int(ft[0:-1])
+                                source = {
+                                             "tag": "literal",
+                                             "type": "char",
+                                             "value": " "*length,
+                                         }
+                            elif ft[0] in "FfAaIi":
+                                length = int(ft[1])
+                                source = sources[var_index]
+                            else:
+                                assert False, "Unseen Format type detected"
+                            if ft[0] in "Aa":
+                                if source["tag"] == "literal" and \
+                                    source["value"][0] == "'" and \
+                                        source["value"][-1] == "'":
+                                    source["value"] = source["value"][1:-1]
+                            target = copy.deepcopy(main_target)
+                            target["subscripts"] = [{
+                                "low": [{
+                                    "tag": "literal",
+                                    "type": "int",
+                                    "value": str(start_index_value)
+                                }],
+                                "high": [{
+                                    "tag": "literal",
+                                    "type": "int",
+                                    "value": str(start_index_value +
+                                                 length - 1)
+                                }]
+                            }]
+                            start_index_value += length
+                            new_val.append({
+                                "tag": "assignment",
+                                "target": [target],
+                                "value": [source]
+                            })
+                            if ft[0] in "FfAaIi":
+                                var_index += 1
+            return new_val
         return [val]
 
     def process_terminal(self, root, _) -> List[Dict]:
@@ -1466,6 +1724,7 @@ class XML_to_JSON_translator(object):
                     "numPartRef": "1",
                     "hasSubscripts": "false",
                     "is_array": "false",
+                    "is_string": "false",
                     "is_arg": "false",
                     "is_parameter": "false",
                     "is_interface_func": "false",
@@ -1538,6 +1797,7 @@ class XML_to_JSON_translator(object):
                     "numPartRef": "1",
                     "hasSubscripts": "false",
                     "is_array": "false",
+                    "is_string": "false",
                     "is_arg": "false",
                     "is_parameter": "false",
                     "is_interface_func": "false",
@@ -1550,6 +1810,7 @@ class XML_to_JSON_translator(object):
                     "numPartRef": "1",
                     "hasSubscripts": "false",
                     "is_array": "false",
+                    "is_string": "false",
                     "is_arg": "false",
                     "is_parameter": "false",
                     "is_interface_func": "false",
@@ -1651,6 +1912,7 @@ class XML_to_JSON_translator(object):
             "numPartRef": "1",
             "hasSubscripts": "false",
             "is_array": "false",
+            "is_string": "false",
             "is_arg": "false",
             "is_parameter": "false",
             "is_interface_func": "false",
@@ -1721,6 +1983,12 @@ class XML_to_JSON_translator(object):
             elif element.tag == "subroutine":
                 self.subroutineList.append(element.attrib["name"])
 
+    def load_format(self, root):
+        for element in root.iter():
+            if element.tag == "format":
+                val = self.ast_tag_handlers[element.tag](element, ParseState())
+                self.format_dict[val[0]["label"]] = val[0]["args"]
+
     def analyze(self, trees: List[ET.ElementTree]) -> Dict:
         outputDict = {}
         ast = []
@@ -1729,6 +1997,7 @@ class XML_to_JSON_translator(object):
         # present in the Fortran file.
         for tree in trees:
             self.loadFunction(tree)
+            self.load_format(tree)
 
         # Parse through the ast tree a second time to convert the XML ast
         # format to a format that can be used to generate Python statements.
