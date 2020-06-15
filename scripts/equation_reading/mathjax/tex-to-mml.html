@@ -3,8 +3,14 @@
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="viewport" content="width=device-width">
-  
+  <title>MathJax v3 with TeX input and MathML output</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <style>
+  mjx-container[display="block"] {
+    display: block;
+    margin: 1em 0;
+  }
+  
   table {
     border-collapse: collapse;
   }
@@ -13,17 +19,14 @@
     border: 1px solid black;
   }
   </style>
-  
-  <title>LaTeX to MathML and render</title>
-  
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  
   <script>
   MathJax = {
-  
-  	loader: {load: ['input/tex', 'ui/menu']},
-  
-  	startup: {
+    //
+    //  Load only TeX input and the contextual menu
+    //
+    loader: {load: ['input/tex', 'ui/menu']},
+    //
+    startup: {
       ready() {
         MathJax.startup.defaultReady();
         MathJax.startup.document.menu.menu.findID('Accessibility', 'AssistiveMml').disable();
@@ -34,9 +37,13 @@
         });
       }
     },
-  
-    tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]},
-    
+    //
+    //  Use dollar signs for in-line delimiters in addition to the usual ones
+    //
+    tex: {inlineMath: {'[+]': [['$', '$']]}},
+    //
+    //  Override the usual typeset render action with one that generates MathML output
+    //
     options: {
       menuOptions: {
         settings: {
@@ -48,41 +55,49 @@
           //
           //  The function for rendering a document's math elements
           //
-          // CTM: APPEARS TO BE THE FN THAT GETS CALLED...
           (doc) => {
-            const toMML = MathJax.startup.toMML;
+          
             for (math of doc.math) {
+            
+              latex_src_elm = document.getElementById("latex_src");
+              latex_src_string = latex_src_elm.textContent;
+
+              // extract just the src, not the enclosing mathjax latex indicators
+              latex_src = latex_src_string.substring(2, latex_src_string.length-2);
+
+              console.log(latex_src_elm);
+              console.log(latex_src);
+            
+              mml = MathJax.startup.toMML(math.root);
               
-              console.log(math.root);  // attempt to show what is in math.root -- can't find latex source text... where is it?
-              mml = toMML(math.root);  // convert the math.root payload to mml
+              mml_img = document.getElementById("mml_img");
+              mml_img.innerHTML = mml;
               
-              // From the original demo... somehow renders the MathML in the browser AT the location where the math object is found
+              mml_src = document.getElementById("mml_src");
+              mml_src.textContent = mml;
+            
+              console.log(latex_src_elm);
+              
+              // The next line restores the latex src text to the elm
+              // However, results in the following error:
+              //     TypeError: this.parent(...) is null - in core.js:1:59028
+              latex_src_elm.textContent = latex_src;
+            
+              // The next line is from the original mathjax web demo script
+              //     if remove next line, get the following error:
+              //        TypeError: t is null - in menu.js:1:24458
+              //     if keep next line, will remove the latex source in the first table cell
               math.typesetRoot = document.createElement('mjx-container');
-              math.typesetRoot.innerHTML = mml;  // toMML(math.root);
-              math.display && math.typesetRoot.setAttribute('display', 'block');
               
-              // Place the MathML content in the mml_src table data cell
-              mml_td = document.getElementById("mml_src");
-              mml_td.textContent = mml;
-              
-              // Attempt to render the MathML -- does not work.
-              // math.typesetRoot = mml_td
+              // from original mathjax web demo script
               // math.typesetRoot.innerHTML = mml;
               // math.display && math.typesetRoot.setAttribute('display', 'block');
-              
-              // Another attempt to render the MathML -- does not work.
-              // let mml = toMML(math.root)
-              // console.log(mml);
-              // let mml_src = document.getElementById("mml_src");
-              // console.log(mml_src.textContent);
-              // mml_src.textContent = mml;
-              // mml_src.display && mml_src.setAttribute('display', 'block');
             }
+            
           },
           //
           //  The function for rendering a single math expression
           //
-          // CTM: WHEN DOES THIS GET CALLED?
           (math, doc) => {
             math.typesetRoot = document.createElement('mjx-container');
             math.typesetRoot.innerHTML = MathJax.startup.toMML(math.root);
@@ -93,48 +108,19 @@
     }
   };
   </script>
-  
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js"></script>
 </head>
-
 <body>
+  <table>
+    <tr>
+	  <!-- First cell with latex source -->
+	  <td id="latex_src">\[P(E) = {n \choose k} p^k (1-p)^{ n-k} \]</td>
+	  <!-- Second cell for target MathML display -->
+	  <td id="mml_img">mathjax render of MathML from Latex</td>
+	  <!-- Third cell for target MathML xml source -->
+	  <td id="mml_src" width="500">mathjax MathML source</td>
+    </tr>
+  </table>
 
-  <div>  <!-- div doesn't appear to be necessary... -->
-    <table>
-	  <tr>
-	  	<!-- First cell with latex source -->
-	    <td id="latex_src">\[P(E) = {n \choose k} p^k (1-p)^{ n-k} \]</td>
-	    <!-- Second cell for target MathML display -->
-	    <td id="mml_src">blee</td>
-	  </tr>
-	</table>
-  </div>
-  
-  <!-- Static MathML content -- this *will* be rendered by MathJax on page load. -->
-  <!--  
-  <p>
-  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> <mi>P</mi> <mo stretchy="false">(</mo> <mi>E</mi> <mo stretchy="false">)</mo> <mo>=</mo> <mrow> <mrow data-mjx-texclass="ORD"> <mrow data-mjx-texclass="OPEN"> <mo minsize="2.047em" maxsize="2.047em">(</mo> </mrow> <mfrac linethickness="0"> <mi>n</mi> <mi>k</mi> </mfrac> <mrow data-mjx-texclass="CLOSE"> <mo minsize="2.047em" maxsize="2.047em">)</mo> </mrow> </mrow> </mrow> <msup> <mi>p</mi> <mi>k</mi> </msup> <mo stretchy="false">(</mo> <mn>1</mn> <mo>&#x2212;</mo> <mi>p</mi> <msup> <mo stretchy="false">)</mo> <mrow> <mi>n</mi> <mo>&#x2212;</mo> <mi>k</mi> </mrow> </msup> </math>
-  </p>
-  -->
-  
-  <!--
-  <div id="latex_src">\[P(E) = {n \choose k} p^k (1-p)^{ n-k} \]</div>
-  -->
-  
 </body>
-
-<!--
-// Attempt to write script that will convert to MathML after the html body, but cannot access MathJax...
-<script>
-  // let latex_src = document.getElementById("latex_src");
-  // console.log(latex_src.textContent);
-  const toMML = MathJax.startup.toMML;
-  let mml = toMML(latex_src);
-  console.log(mml);
-  // let mml_src = document.getElementById("mml_src");
-  // mml_src.textContent = '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> <mi>P</mi> <mo stretchy="false">(</mo> <mi>E</mi> <mo stretchy="false">)</mo> <mo>=</mo> <mrow> <mrow data-mjx-texclass="ORD"> <mrow data-mjx-texclass="OPEN"> <mo minsize="2.047em" maxsize="2.047em">(</mo> </mrow> <mfrac linethickness="0"> <mi>n</mi> <mi>k</mi> </mfrac> <mrow data-mjx-texclass="CLOSE"> <mo minsize="2.047em" maxsize="2.047em">)</mo> </mrow> </mrow> </mrow> <msup> <mi>p</mi> <mi>k</mi> </msup> <mo stretchy="false">(</mo> <mn>1</mn> <mo>&#x2212;</mo> <mi>p</mi> <msup> <mo stretchy="false">)</mo> <mrow> <mi>n</mi> <mo>&#x2212;</mo> <mi>k</mi> </mrow> </msup> </math>';
-</script>
--->
-
 </html>
