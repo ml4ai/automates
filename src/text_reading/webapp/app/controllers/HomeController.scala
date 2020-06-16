@@ -191,28 +191,18 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     //todo: check todos in the sparqlWrapperWikidata
     //todo: make sure the old ranking system works for this
+    //todo: instead of groundToSVO, have ontologyGrounding = None or List['wiki', 'svo'] or List['wiki'] or List['svo']
+    //todo: sparql result should work for both svo and wiki, so some fields need to be optional; can do that after get wiki to work OR (maybe preferable) have a separate wikiGrounder
 
     lazy val w2v = new Word2Vec("vectors.txt")
-    val term = "crop"
-    val term_list = List("crop", "agricultural crop", "crop canopy") //throw in the sentence
-//    val term = "air temperature"
-//    val term_list = List("temperature", "air temperature")
-    val result = wikidataGrounder.runSparqlQuery(term, wikidataGrounder.sparqlDir)
-    if (result.nonEmpty) {
-      val resultLines = result.split("\n")
-      for (line <- resultLines) println("res line: " + line)
-      val allLabels = resultLines.map(line => line.split("\t")(2))
-      println(allLabels.mkString("|"))
 
-      if (allLabels.length > 1 && allLabels.distinct.length == 1) {
-        //then need to compare all the terms available to the definition and maybe altLabels of the item and see which one is the closest
-        val scoresPerLine = for {
-          line <- resultLines
-        } yield (line, w2v.avgSimilarity(term_list, line.split("\t")(3).split(" ")))
+    val terms = List("crop", "agricultural crop", "crop canopy")
+    val wikiResults = SVOGrounder.groundTermsToWikidata(terms, w2v)
 
-        for (spl <- scoresPerLine) println("line and score: " + spl._1 + " " + spl._2)
-      }
-    } else println("Result empty")
+
+    val ranked = SVOGrounder.rankAndReturnWikiGroundings("someVar", 10,  wikiResults)
+
+    println("ranked: ", ranked)
 //    val groundToSVO = true //whether or not one wants to use svo grounding; fixme: pass from somewhere
 //    val appendToGrFN = false //todo: how to pass from configs??
 //

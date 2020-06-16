@@ -12,6 +12,7 @@ import scala.sys.process.Process
 import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
+import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.grounding.SVOGrounder.sparqlDir
 //todo: pass the python query file from configs
 //todo: document in wiki
@@ -31,6 +32,19 @@ object SVOGrounding {
 case class SeqOfGroundings(groundings: Seq[SVOGrounding])
 object SeqOfGroundings {
   implicit val rw: ReadWriter[SeqOfGroundings] = macroRW
+}
+
+
+case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
+
+object sparqlWikiResult {
+  implicit val rw: ReadWriter[sparqlWikiResult] = macroRW
+
+}
+
+case class WikiGrounding(variable: String, groundings: Seq[sparqlResult])
+object WikiGrounding {
+  implicit val rw: ReadWriter[WikiGrounding] = macroRW
 }
 
 
@@ -201,6 +215,102 @@ object SVOGrounder {
     resultsFromAllTerms
   }
 
+  def groundTermsToWikidata(terms: Seq[String], w2v: Word2Vec): Seq[sparqlWikiResult] = {
+
+    //todo: can I pass mentions here? that way can compare the whole sentence to the definition and alt labels instead of just the term list. although the terms come from elements and those are already missing mention info; can I store sentence along with the terms? maybe as the final element of the term list and then just do terms [:-1]
+    val resultsFromAllTerms = new ArrayBuffer[sparqlWikiResult]()
+
+    for (term <- terms) {
+
+
+      //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
+      val term_list = terms.filter(_==term) //throw in the sentence
+      //    val term = "air temperature"
+      //    val term_list = List("temperature", "air temperature")
+      val result = wikidataGrounder.runSparqlQuery(term, wikidataGrounder.sparqlDir)
+      val allSparqlWikiResults = new ArrayBuffer[sparqlWikiResult]()
+      if (result.nonEmpty) {
+        val lineResults = new ArrayBuffer[sparqlWikiResult]()
+        val resultLines = result.split("\n")
+        for (line <- resultLines) {
+          println("line: "+ line)
+          val splitLine = line.trim().split("\t")
+
+          println("split line: "+ splitLine.mkString("|"))
+          val conceptId = splitLine(1)
+          println("concept id: "+ conceptId)
+          val conceptLabel = splitLine(2)
+          println("concept label: "+ conceptLabel)
+          val conceptDescription = if (splitLine.length > 3) Some(splitLine(3)) else None
+          println("conc descr: "+ conceptDescription)
+          val altLabel = if (splitLine.length > 4) Some(splitLine(4)) else None
+          println("alt label: "+ altLabel)
+
+          val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, Some(editDistanceNormalized(conceptLabel, term)), "wikidata")
+          println("line result: ", lineResult)
+          lineResults += lineResult
+
+        }
+        val allLabels = lineResults.map(res => res.conceptLabel)
+        println("all labels: " + allLabels.mkString("|"))
+        val duplicates = allLabels.groupBy(identity).collect { case (x, ys) if ys.lengthCompare(1) > 0 => x }.toList
+
+        for (d <- duplicates) println("dup: " + d)
+
+        val (uniqueLabelResLines, nonUniqLabelResLines) = lineResults.partition(res => !duplicates.contains(res.conceptLabel))
+
+        allSparqlWikiResults ++= uniqueLabelResLines
+
+        for (ur <- uniqueLabelResLines) println("uniq label res: " + ur)
+
+        for (nur <- nonUniqLabelResLines) println("non uniq label res: " + nur)
+
+
+          //then need to compare all the terms available to the definition and maybe altLabels of the item and see which one is the closest
+
+          //get duplicates from the results
+
+        val resBySimilarityScoreToSearchTerms = for {
+          res <- nonUniqLabelResLines
+        } yield (res, w2v.avgSimilarity(term_list, res.conceptDescription.getOrElse("").split(" ") ++ res.alternativeLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ")))
+
+
+        allSparqlWikiResults.append(resBySimilarityScoreToSearchTerms.maxBy(_._2)._1)
+//        val resBySimilarityScoreToSearchTermsList = resBySimilarityScoreToSearchTerms.sortBy(_._2).reverse.map(_._1).toList
+
+//        for (res <- resBySimilarityScoreToSearchTermsList.sortBy(_._2)) println("res by sim score: " + res)
+
+//        println("res by sim score: " + resBySimilarityScoreToSearchTermsList + " " + resBySimilarityScoreToSearchTermsList.length)
+
+//        println("res by sim list sorted: " + resBySimilarityScoreToSearchTermsList)
+//
+////        allSparqlWikiResults ++ resBySimilarityScoreToSearchTermsList
+//
+//        for (res <- resBySimilarityScoreToSearchTermsList) {
+//          println("res: " + res)
+//          allSparqlWikiResults.append(res)
+//        }
+
+
+          //partition lines into those with and without duplicates -> no ndeed for line 235
+
+          //if there's a definition, compare those; if not... the score could be zero?.. maybe also check alt labels; if no alt labels and no defs, then cant accept that's the right concept if there are actual defined ones
+//          val scoresPerLine = for {
+//            line <- resultLines
+//            if duplicates.contains(line.split("\t")(2))
+//          } yield (line, w2v.avgSimilarity(term_list, line.split("\t")(3).split(" ")))
+//
+//          for (spl <- scoresPerLine) println("line and score: " + spl._1 + " " + spl._2)
+
+      } else println("Result empty")
+      println("allSparqlWikiResults inside the loop : " + allSparqlWikiResults)
+
+      resultsFromAllTerms ++= allSparqlWikiResults
+
+    }
+    resultsFromAllTerms.toList
+  }
+
 
   def rankAndReturnSVOGroundings(variable: String, k: Int, resultsFromAllTerms: Seq[sparqlResult]): Option[Map[String, Seq[sparqlResult]]] = {
     resultsFromAllTerms.toArray
@@ -222,6 +332,30 @@ object SVOGrounder {
       Some(Map(variable -> getTopK(allResults, k)))
     } else None
   }
+
+
+
+  def rankAndReturnWikiGroundings(variable: String, k: Int, resultsFromAllTerms: Seq[sparqlWikiResult]): Option[Map[String, Seq[sparqlWikiResult]]] = {
+    resultsFromAllTerms.toArray
+    //RANKING THE RESULTS
+    //getting all the results with same (maximum) score
+    val onlyMaxScoreResults = resultsFromAllTerms.filter(res => res.score == resultsFromAllTerms.map(r => r.score).max).toArray.distinct
+
+    //the results where search term contains "_" or "-" should be ranked higher since those are multi-word instead of separate words
+    val (multiWord, singleWord) = onlyMaxScoreResults.partition(r => r.searchTerm.split(" ").length > 1)
+
+    //this is the best results based on score and whether or not they are collocations
+    val bestResults = if (multiWord.nonEmpty) multiWord else singleWord
+
+    //return the best results first, then only the max score ones, and then all the rest; some may overlap thus distinct
+    val allResults = (bestResults ++ onlyMaxScoreResults ++ resultsFromAllTerms).distinct
+    if (allResults.nonEmpty) {
+      //      println("len all results: " + allResults.length)
+      //      for (r <- allResults) println("res: " + r)
+      Some(Map(variable -> getTopKWiki(allResults, k)))
+    } else None
+  }
+
 
   //ground a string (for API)
   def groundString(text:String): String = {
@@ -261,6 +395,14 @@ object SVOGrounder {
   }
 
   def getTopK(results: Seq[sparqlResult], k: Int): Seq[sparqlResult] = {
+    if (k < results.length) {
+      results.slice(0,k)
+    } else {
+      results
+    }
+  }
+
+  def getTopKWiki(results: Seq[sparqlWikiResult], k: Int): Seq[sparqlWikiResult] = {
     if (k < results.length) {
       results.slice(0,k)
     } else {
