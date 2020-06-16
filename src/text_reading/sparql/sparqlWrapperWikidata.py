@@ -26,19 +26,29 @@ mwapi:gsrlimit "max".
 ?article schema:about ?item ;
     schema:isPartOf <https://en.wikipedia.org/> .
 
-
-    FILTER REGEX (?label, "^{term}$")
+    FILTER REGEX (?label, "^(\\\\w*\\\\s){{0,2}}?{term}(\\\\sof)?(\\\\s\\\\w*){{0,3}}?$")
 
     SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
 }}
-
-LIMIT 10
+order by strlen(str(?label))
+LIMIT 20
 """
 r = requests.get(url, params = {'format': 'json', 'query': query})
 data = r.json()
 
+
+
 for result in data["results"]["bindings"]:
-    print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}")#\t{result['itemDescription']['value']}")
+	if 'itemDescription' in result.keys() and 'itemAltLabel' in result.keys():
+		print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}\t{result['itemDescription']['value']}\t{result['itemAltLabel']['value']}")
+	elif 'itemDescription' in result.keys() and not 'itemAltLabel' in result.keys():
+		print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}\t{result['itemDescription']['value']}")
+	
+	elif 'itemAltLabel' in result.keys() and not 'itemDescription' in result.keys():
+		print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}\t{result['itemAltLabel']['value']}")
+	
+	else:
+	    print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}")#\t{result['itemDescription']['value']}")
 
 
 #the link to the query on wikidata api https://w.wiki/Sfu
@@ -62,13 +72,13 @@ for result in data["results"]["bindings"]:
 # ?sitelink ^schema:name ?article .
 # ?article schema:about ?item ;
 #     schema:isPartOf <https://en.wikipedia.org/> .
-#
-#
+
+
 #     FILTER REGEX (?label, "^(\\w*\\s){{0,2}}{term}(\\sof)?(\\s\\w*){{0,3}}$")
-#
+
 #     SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
 # }}
-#
+
 # LIMIT 10
 # """
 
