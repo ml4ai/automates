@@ -195,14 +195,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     //todo: sparql result should work for both svo and wiki, so some fields need to be optional; can do that after get wiki to work OR (maybe preferable) have a separate wikiGrounder
 
     lazy val w2v = new Word2Vec("vectors.txt")
+    val variable = "LAI"
+    val terms = List("index", "area index", "leaf area index")
+    val sentence = List("here", "are", "the", "crops", "and", "the", "crop", "canopy", "with", "leaf", "area", "index")
+    val wikiResults = SVOGrounder.groundTermsToWikidataRanked(variable, terms, w2v, sentence)
 
-    val terms = List("crop", "agricultural crop", "crop canopy")
-    val wikiResults = SVOGrounder.groundTermsToWikidata(terms, w2v)
 
+//    val ranked = SVOGrounder.rankAndReturnWikiGroundings("someVar", 10,  wikiResults)
 
-    val ranked = SVOGrounder.rankAndReturnWikiGroundings("someVar", 10,  wikiResults)
-
-    println("ranked: ", ranked)
+    println("ranked: ", wikiResults)
 //    val groundToSVO = true //whether or not one wants to use svo grounding; fixme: pass from somewhere
 //    val appendToGrFN = false //todo: how to pass from configs??
 //

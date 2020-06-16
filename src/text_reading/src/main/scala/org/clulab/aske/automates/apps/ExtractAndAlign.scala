@@ -267,7 +267,8 @@ object ExtractAndAlign {
           source = s"${docId}_sent${sent}_$offsets",
           content = mention.arguments(VARIABLE).head.text,
           contentType = "null",
-          svoQueryTerms = SVOGrounder.getTerms(mention).getOrElse(Seq.empty)
+          svoQueryTerms = SVOGrounder.getTerms(mention).getOrElse(Seq.empty),
+          sentence = mention.sentenceObj.words
         )
       }
     }

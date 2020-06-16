@@ -138,8 +138,8 @@ object SVOGrounder {
       val terms = hyp.obj("svo_query_terms").arr.map(_.str)
       if (toGround.keys.toArray.contains(variable)) {
         val currentTerms = toGround(variable)
-        val updatesTerms =  (currentTerms ++ terms.toList).distinct
-        toGround(variable + "::" + pdfName) = updatesTerms
+        val updatedTerms =  (currentTerms ++ terms.toList).distinct
+        toGround(variable + "::" + pdfName) = updatedTerms
       } else {
         toGround(variable + "::" + pdfName) = terms
       }
@@ -215,14 +215,12 @@ object SVOGrounder {
     resultsFromAllTerms
   }
 
-  def groundTermsToWikidata(terms: Seq[String], w2v: Word2Vec): Seq[sparqlWikiResult] = {
+  def groundTermsToWikidataRanked(variable: String, terms: Seq[String], w2v: Word2Vec, sentence: Seq[String]): Seq[sparqlWikiResult] = {
 
     //todo: can I pass mentions here? that way can compare the whole sentence to the definition and alt labels instead of just the term list. although the terms come from elements and those are already missing mention info; can I store sentence along with the terms? maybe as the final element of the term list and then just do terms [:-1]
     val resultsFromAllTerms = new ArrayBuffer[sparqlWikiResult]()
 
     for (term <- terms) {
-
-
       //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
       val term_list = terms.filter(_==term) //throw in the sentence
       //    val term = "air temperature"
@@ -245,62 +243,32 @@ object SVOGrounder {
           println("conc descr: "+ conceptDescription)
           val altLabel = if (splitLine.length > 4) Some(splitLine(4)) else None
           println("alt label: "+ altLabel)
+          val textWordList = sentence ++ term_list ++ List(variable)
+          val wikidataWordList = conceptDescription.getOrElse("").split(" ") ++ altLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ")
 
-          val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, Some(editDistanceNormalized(conceptLabel, term)), "wikidata")
+          val score = editDistanceNormalized(conceptLabel, term) + w2v.avgSimilarity(textWordList,  wikidataWordList) + wordOverlap(textWordList, wikidataWordList)
+
+          val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, Some(score), "wikidata")
           println("line result: ", lineResult)
           lineResults += lineResult
 
         }
+
+
         val allLabels = lineResults.map(res => res.conceptLabel)
-        println("all labels: " + allLabels.mkString("|"))
+//        println("all labels: " + allLabels.mkString("|"))
         val duplicates = allLabels.groupBy(identity).collect { case (x, ys) if ys.lengthCompare(1) > 0 => x }.toList
-
-        for (d <- duplicates) println("dup: " + d)
-
+//
+//        for (d <- duplicates) println("dup: " + d)
+//
         val (uniqueLabelResLines, nonUniqLabelResLines) = lineResults.partition(res => !duplicates.contains(res.conceptLabel))
-
+//
         allSparqlWikiResults ++= uniqueLabelResLines
+        //out of the items with the same label, e.g., crop (grown and harvested plant or animal product) vs. crop (hairstyle), choose the one with the highest score based on similarity of the wikidata description and alternative label to the sentence and search term the search term from
+        if (nonUniqLabelResLines.nonEmpty) {
+          allSparqlWikiResults += nonUniqLabelResLines.maxBy(_.score)
+        }
 
-        for (ur <- uniqueLabelResLines) println("uniq label res: " + ur)
-
-        for (nur <- nonUniqLabelResLines) println("non uniq label res: " + nur)
-
-
-          //then need to compare all the terms available to the definition and maybe altLabels of the item and see which one is the closest
-
-          //get duplicates from the results
-
-        val resBySimilarityScoreToSearchTerms = for {
-          res <- nonUniqLabelResLines
-        } yield (res, w2v.avgSimilarity(term_list, res.conceptDescription.getOrElse("").split(" ") ++ res.alternativeLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ")))
-
-
-        allSparqlWikiResults.append(resBySimilarityScoreToSearchTerms.maxBy(_._2)._1)
-//        val resBySimilarityScoreToSearchTermsList = resBySimilarityScoreToSearchTerms.sortBy(_._2).reverse.map(_._1).toList
-
-//        for (res <- resBySimilarityScoreToSearchTermsList.sortBy(_._2)) println("res by sim score: " + res)
-
-//        println("res by sim score: " + resBySimilarityScoreToSearchTermsList + " " + resBySimilarityScoreToSearchTermsList.length)
-
-//        println("res by sim list sorted: " + resBySimilarityScoreToSearchTermsList)
-//
-////        allSparqlWikiResults ++ resBySimilarityScoreToSearchTermsList
-//
-//        for (res <- resBySimilarityScoreToSearchTermsList) {
-//          println("res: " + res)
-//          allSparqlWikiResults.append(res)
-//        }
-
-
-          //partition lines into those with and without duplicates -> no ndeed for line 235
-
-          //if there's a definition, compare those; if not... the score could be zero?.. maybe also check alt labels; if no alt labels and no defs, then cant accept that's the right concept if there are actual defined ones
-//          val scoresPerLine = for {
-//            line <- resultLines
-//            if duplicates.contains(line.split("\t")(2))
-//          } yield (line, w2v.avgSimilarity(term_list, line.split("\t")(3).split(" ")))
-//
-//          for (spl <- scoresPerLine) println("line and score: " + spl._1 + " " + spl._2)
 
       } else println("Result empty")
       println("allSparqlWikiResults inside the loop : " + allSparqlWikiResults)
@@ -308,7 +276,12 @@ object SVOGrounder {
       resultsFromAllTerms ++= allSparqlWikiResults
 
     }
-    resultsFromAllTerms.toList
+    resultsFromAllTerms.toList.distinct.sortBy(_.score).reverse
+  }
+
+
+  def wordOverlap(list1: Seq[String], list2: Seq[String]): Double = {
+    list1.union(list2).length/(list1 ++ list2).length
   }
 
 
