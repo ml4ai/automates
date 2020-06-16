@@ -575,16 +575,16 @@ object AlignmentBaseline {
   }
 
   def customRender(cand: String): String = {
-    println("Start rend one cand")
+//    println("Start rend one cand")
     val rendered = render(replaceWordWithGreek(cand, word2greekDict.toMap), pdfalignDir).replaceAll("\\s", "")
-    println("rendered: " + rendered + " original: " + cand)
+//    println("rendered: " + rendered + " original: " + cand)
     rendered
   }
 
   def renderForAlign(cand: String): String = {
-    println("Start rend one cand")
+//    println("Start rend one cand")
     val rendered = render(cand, pdfalignDir).replaceAll("\\s", "")
-    println("rendered: " + rendered + " original: " + cand)
+//    println("rendered: " + rendered + " original: " + cand)
     rendered
   }
 }

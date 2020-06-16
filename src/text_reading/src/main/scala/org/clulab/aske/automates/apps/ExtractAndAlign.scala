@@ -132,7 +132,7 @@ object ExtractAndAlign {
   /**get rid of chunks that are not good equation variable candidates and replace spelled out greek letters with unicode to make sure they are not lost during rendering */
   def filterEquations(equations: Seq[String]): Seq[String] = {
     equations.filter(cand => cand.count(char => char.isDigit) < 2) //to eliminate chunks that have numerical data in them
-      .filter(cand => is_balanced(cand))
+      .filter(cand => is_balanced(cand)) //todo: check this if missing vars
       .map(c => AlignmentBaseline.replaceWordWithGreek(c, word2greekDict.toMap)) //before filtering out latex control sequences, change greek letters from latex control spelling; it will be switch back to word while creating the link element
       .filter(chunk => !chunk.matches("&?\\\\\\w+&?")) //to eliminate standalone latex control sequences, e.g., \\times (they can have ampersands on each side)
   }
