@@ -1,8 +1,8 @@
 import sys
 from typing import List
 import math
-from program_analysis.for2py.format import *
-from program_analysis.for2py.arrays import *
+from delphi.translators.for2py.format import *
+from delphi.translators.for2py.arrays import *
 from dataclasses import dataclass
 from random import random
 @dataclass

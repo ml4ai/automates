@@ -1,11 +1,11 @@
 import sys
 from typing import List
 import math
-from program_analysis.for2py.format import *
-from program_analysis.for2py.arrays import *
+from delphi.translators.for2py.format import *
+from delphi.translators.for2py.arrays import *
 from dataclasses import dataclass
-from program_analysis.for2py.m_mod_evapotransp import *
-from program_analysis.for2py.m_petasce_init import *
+from delphi.translators.for2py.m_mod_evapotransp import *
+from delphi.translators.for2py.m_petasce_init import *
 
 
 def petasce(canht: List[float], doy: List[int], msalb: List[float], meevp: List[str], srad: List[float], tdew: List[float], tmax: List[float], tmin: List[float], windht: List[float], windrun: List[float], xhlai: List[float], xlat: List[float], xelev: List[float], eo: List[float]):

@@ -4,7 +4,7 @@ import json
 from datetime import date
 import pytest
 
-from program_analysis.for2py import genPGM, f2grfn
+from delphi.translators.for2py import genPGM, f2grfn
 
 from pathlib import Path
 from typing import Dict
@@ -16,22 +16,21 @@ TEMP_DIR = "."
 
 def cleanup(filepath):
     program_name = filepath.stem
-    if os.path.exists(program_name + "_lambdas.py"):
-        os.remove(program_name + "_lambdas.py")
+    if os.path.exists(program_name+"_lambdas.py"):
+        os.remove(program_name+"_lambdas.py")
     os.remove(f"{TEMP_DIR}/rectified_{program_name}.xml")
     os.remove(f"{TEMP_DIR}/{program_name}_variable_map.pkl")
     os.remove(f"{TEMP_DIR}/{program_name}_modFileLog.json")
 
-
 def get_python_source(original_fortran_file):
     # Setting a root directory to absolute path of /tests directory.
     root_dir = os.path.abspath(".")
-    result_tuple = f2grfn.fortran_to_grfn(
+    result_tuple =  f2grfn.fortran_to_grfn(
         original_fortran_file,
         temp_dir=TEMP_DIR,
         root_dir_path=root_dir,
         processing_modules=False,
-        module_file_name=f"{TEMP_DIR}/{Path(original_fortran_file).stem}_modFileLog.json",
+        module_file_name = f"{TEMP_DIR}/{Path(original_fortran_file).stem}_modFileLog.json"
     )
 
     return result_tuple
@@ -51,7 +50,9 @@ def make_grfn_dict(original_fortran_file) -> Dict:
     ) = get_python_source(original_fortran_file)
 
     for python_file_path in python_file_paths:
-        python_file_path_wo_extension = filename_regex.match(python_file_path)
+        python_file_path_wo_extension = filename_regex.match(
+            python_file_path
+        )
         lambdas_file_path = (
             python_file_path_wo_extension["filename"] + lambda_file_suffix
         )
@@ -144,7 +145,7 @@ def diff_level_goto_python_IR_test():
 
 @pytest.fixture
 def save_python_IR_test():
-    filepath = Path(f"{DATA_DIR}" f"/save/simple_variables/save-02.f")
+    filepath =  Path(f"{DATA_DIR}" f"/save/simple_variables/save-02.f")
     yield get_python_source(filepath)[0][0]
     cleanup(filepath)
 
@@ -165,18 +166,14 @@ def module_python_IR_test():
 
 @pytest.fixture
 def continuation_lines_python_IR_test():
-    filepath = Path(
-        f"{DATA_DIR}" f"/continuation_line/continuation-lines-01.for"
-    )
+    filepath =  Path(f"{DATA_DIR}" f"/continuation_line/continuation-lines-01.for")
     yield get_python_source(filepath)[0][0]
     cleanup(filepath)
 
 
 @pytest.fixture
 def continuation_lines_f90_python_IR_test():
-    filepath = Path(
-        f"{DATA_DIR}" f"/continuation_line/continuation-lines-02.f90"
-    )
+    filepath =  Path(f"{DATA_DIR}" f"/continuation_line/continuation-lines-02.f90")
     yield get_python_source(filepath)[0][0]
     cleanup(filepath)
 
@@ -184,13 +181,13 @@ def continuation_lines_f90_python_IR_test():
 @pytest.fixture
 def SIR_python_IR_test():
     filepath = Path(f"{DATA_DIR}" f"/SIR-Gillespie-SD_inline.f")
-    yield get_python_source(filepath)[0][0]
+    yield get_python_source(filepath)[ 0 ][0]
     cleanup(filepath)
 
 
 @pytest.fixture
 def array_to_func_python_IR_test():
-    filepath = Path(f"{DATA_DIR}" f"/array_func_loop/array-to-func_06.f")
+    filepath =  Path(f"{DATA_DIR}" f"/array_func_loop/array-to-func_06.f")
     yield get_python_source(filepath)[0][0]
     cleanup(filepath)
 
@@ -285,7 +282,7 @@ def test_crop_yield_pythonIR_generation(crop_yield_python_IR_test):
     assert crop_yield_python_IR_test[0] == python_src
 
 
-@pytest.mark.skip("This is already being tested by test_GrFN.py")
+@pytest.mark.skip("This is already being tested by test_AIR.py")
 def test_PETPT_pythonIR_generation(PETPT_python_IR_test):
     with open(f"{DATA_DIR}/PETPT.py", "r") as f:
         python_src = f.read()
@@ -311,7 +308,7 @@ def test_do_while_pythonIR_generation(do_while_python_IR_test):
 
 
 def test_derived_type_pythonIR_generation(derived_type_python_IR_test):
-    with open(f"{DATA_DIR}/derived-types-04.py", "r") as f:
+    with open(f"{DATA_DIR}/derived-types/derived-types-04.py", "r") as f:
         python_src = f.read()
     assert derived_type_python_IR_test[0] == python_src
 
@@ -347,10 +344,6 @@ def test_module_pythonIR_generation(module_python_IR_test):
     with open(f"{DATA_DIR}/modules/test_module_08.py", "r") as f:
         python_src = f.read()
     assert src[1][0] == python_src
-
-    with open(f"{DATA_DIR}/modules/m_mymod8.py", "r") as f:
-        python_src = f.read()
-    assert src[0][0] == python_src
 
 
 def test_cycle_exit_pythonIR_generation(cycle_exit_python_IR_test):
@@ -430,9 +423,8 @@ def test_derived_type_with_default_pythonIR_generation(
 ############################################################################
 
 
-@pytest.mark.skip("TODO: use similar tests once AIR JSON form is standardized")
 def test_multidimensional_array_grfn_generation(multidimensional_array_test):
-    with open(f"{DATA_DIR}/arrays/arrays-basic-06_GrFN.json", "r") as f:
+    with open(f"{DATA_DIR}/arrays/arrays-basic-06_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert multidimensional_array_test[0] == grfn_dict
 
@@ -445,7 +437,7 @@ def test_multidimensional_array_grfn_generation(multidimensional_array_test):
 
 @pytest.mark.skip("FIXME")
 def test_sir_gillespie_sd_multi_grfn_generation(sir_gillespie_sd_multi_test):
-    with open(f"{DATA_DIR}/SIR-Gillespie-SD_multi_module_GrFN.json", "r") as f:
+    with open(f"{DATA_DIR}/SIR-Gillespie-SD_multi_module_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert sir_gillespie_sd_multi_test[0] == grfn_dict
 
@@ -458,10 +450,9 @@ def test_sir_gillespie_sd_multi_grfn_generation(sir_gillespie_sd_multi_test):
     assert str(target_lambda_functions) == str(generated_lambda_functions)
 
 
-@pytest.mark.skip("TODO: use similar tests once AIR JSON form is standardized")
 def test_derived_type_grfn_generation(derived_type_grfn_test):
     with open(
-        f"{DATA_DIR}/derived-types/derived-types-04_GrFN.json", "r"
+        f"{DATA_DIR}/derived-types/derived-types-04_AIR.json", "r"
     ) as f:
         grfn_dict = json.load(f)
     assert derived_type_grfn_test[0] == grfn_dict
@@ -475,10 +466,9 @@ def test_derived_type_grfn_generation(derived_type_grfn_test):
     assert str(target_lambda_functions) == str(generated_lambda_functions)
 
 
-@pytest.mark.skip("TODO: use similar tests once AIR JSON form is standardized")
 def test_derived_type_array_grfn_generation(derived_type_array_grfn_test):
     with open(
-        f"{DATA_DIR}/derived-types/derived-types-02_GrFN.json", "r"
+        f"{DATA_DIR}/derived-types/derived-types-02_AIR.json", "r"
     ) as f:
         grfn_dict = json.load(f)
     assert derived_type_array_grfn_test[0] == grfn_dict
@@ -493,7 +483,7 @@ def test_derived_type_array_grfn_generation(derived_type_array_grfn_test):
 
 
 def test_select_case_grfn_generation(select_case_grfn_test):
-    with open(f"{DATA_DIR}/select_case/select02_GrFN.json", "r") as f:
+    with open(f"{DATA_DIR}/select_case/select02_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert select_case_grfn_test[0] == grfn_dict
 

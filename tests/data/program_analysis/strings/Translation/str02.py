@@ -1,5 +1,5 @@
-from program_analysis.for2py.format import *
-from program_analysis.for2py.strings import *
+from delphi.translators.for2py.format import *
+from delphi.translators.for2py.strings import *
 
 def main():
     str1 = String(10, "abcdef")
