@@ -8,7 +8,7 @@ from typing import Set, Dict
 from abc import ABC, abstractmethod
 
 from delphi.translators.for2py import f2grfn
-from delphi.GrFN.networks import GroundedFactorNetwork
+from delphi.GrFN.networks import GroundedFunctionNetwork
 from delphi.GrFN.structures import (
     GenericContainer,
     GenericStmt,
@@ -285,7 +285,7 @@ class ImperativeInterpreter(SourceInterpreter):
         represent a scientific model.
         """
         return {
-            name: GroundedFactorNetwork.from_AIR(
+            name: GroundedFunctionNetwork.from_AIR(
                 name, self.containers, self.variables, self.types,
             )
             for name in self.containers.keys()

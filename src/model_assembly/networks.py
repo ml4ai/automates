@@ -172,7 +172,7 @@ class GrFNSubgraph:
         return cls(id.namespace, id.scope, id.con_name, occ, clr, [])
 
 
-class GroundedFactorNetwork(nx.DiGraph):
+class GroundedFunctionNetwork(nx.DiGraph):
     def __init__(
         self,
         id: ContainerIdentifier,
@@ -500,7 +500,7 @@ class GroundedFactorNetwork(nx.DiGraph):
         """
         # TODO: Finish inpsection and testing of this function
 
-        if not isinstance(G2, GroundedFactorNetwork):
+        if not isinstance(G2, GroundedFunctionNetwork):
             raise TypeError(f"Expected a second GrFN but got: {type(G2)}")
 
         def shortname(var):

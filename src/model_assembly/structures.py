@@ -5,7 +5,7 @@ from types import ModuleType
 import re
 
 # from delphi.GrFN.networks import (
-#     GroundedFactorNetwork,
+#     GroundedFunctionNetwork,
 #     GrFNSubgraph,
 # )
 from delphi.GrFN.code_types import CodeType
@@ -362,7 +362,7 @@ class CallStmt(GenericStmt):
     # def translate(
     #     self,
     #     container_inputs: dict,
-    #     network: GroundedFactorNetwork,
+    #     network: GroundedFunctionNetwork,
     #     containers: dict,
     #     occurrences: dict,
     # ) -> None:
@@ -420,7 +420,7 @@ class LambdaStmt(GenericStmt):
             )
 
     # def translate(
-    #     self, container_inputs: dict, network: GroundedFactorNetwork
+    #     self, container_inputs: dict, network: GroundedFunctionNetwork
     # ) -> None:
     #     corrected_inputs = self.correct_input_list(container_inputs)
     #     in_nodes = [network.add_variable_node(var) for var in corrected_inputs]

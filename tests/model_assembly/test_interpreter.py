@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 
 from delphi.GrFN.interpreter import ImperativeInterpreter
-from delphi.GrFN.networks import GroundedFactorNetwork
+from delphi.GrFN.networks import GroundedFunctionNetwork
 from delphi.GrFN.structures import GenericIdentifier, LambdaStmt
 
 
@@ -32,7 +32,7 @@ def test_single_file_analysis():
         "@container::PETPNO::@global::petpno"
     )
 
-    PNO_GrFN = GroundedFactorNetwork.from_AIR(
+    PNO_GrFN = GroundedFunctionNetwork.from_AIR(
         petpno_con_id, ITP.containers, ITP.variables, ITP.types
     )
 
@@ -41,7 +41,7 @@ def test_single_file_analysis():
     A.draw("PETPNO--GrFN.pdf", prog="dot")
     # CAG = PNO_GrFN.CAG_to_AGraph()
     # CAG.draw("PETPT--CAG.pdf", prog="dot")
-    # assert isinstance(PNO_GrFN, GroundedFactorNetwork)
+    # assert isinstance(PNO_GrFN, GroundedFunctionNetwork)
     # assert len(PNO_GrFN.inputs) == 5
     # assert len(PNO_GrFN.outputs) == 1
     #
@@ -64,9 +64,9 @@ def test_file_with_loops():
     con_id = GenericIdentifier.from_str(
         "@container::SIR-Gillespie-SD::@global::main"
     )
-    G = GroundedFactorNetwork.from_AIR(
+    G = GroundedFunctionNetwork.from_AIR(
         con_id, ITP.containers, ITP.variables, ITP.types
     )
     A = G.to_AGraph()
     A.draw("Gillespie-SD--GrFN.pdf", prog="dot")
-    assert isinstance(G, GroundedFactorNetwork)
+    assert isinstance(G, GroundedFunctionNetwork)
