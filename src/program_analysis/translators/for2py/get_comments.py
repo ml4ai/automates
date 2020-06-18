@@ -50,7 +50,7 @@ import os
 import sys
 import re
 from collections import OrderedDict
-from delphi.translators.for2py.syntax import (
+from program_analysis.translators.for2py.syntax import (
     line_is_comment,
     line_starts_subpgm,
     line_ends_subpgm,

@@ -7,15 +7,15 @@ from pathlib import Path
 from typing import Set, Dict
 from abc import ABC, abstractmethod
 
-from delphi.translators.for2py import f2grfn
-from delphi.GrFN.networks import GroundedFunctionNetwork
-from delphi.GrFN.structures import (
+from program_analysis.translators.for2py import f2grfn
+from .networks import GroundedFunctionNetwork
+from .structures import (
     GenericContainer,
     GenericStmt,
     GenericIdentifier,
     GenericDefinition,
 )
-from delphi.GrFN.code_types import CodeType, build_code_type_decision_tree
+from .code_types import CodeType, build_code_type_decision_tree
 
 
 class SourceInterpreter(ABC):

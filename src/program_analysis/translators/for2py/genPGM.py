@@ -9,11 +9,11 @@ import re
 import argparse
 from functools import reduce
 import json
-from delphi.translators.for2py.genCode import genCode, PrintState
-from delphi.translators.for2py.mod_index_generator import get_index
-from delphi.translators.for2py.get_comments import get_comments
-from delphi.translators.for2py import syntax
-from delphi.translators.for2py import For2PyError
+from program_analysis.translators.for2py.genCode import genCode, PrintState
+from program_analysis.translators.for2py.mod_index_generator import get_index
+from program_analysis.translators.for2py.get_comments import get_comments
+from program_analysis.translators.for2py import syntax
+from program_analysis.translators.for2py import For2PyError
 from typing import List, Dict, Iterable, Optional
 from collections import OrderedDict
 from itertools import chain, product
@@ -5554,11 +5554,11 @@ def create_grfn_dict(
         "from numbers import Real\n",
         "from random import random\n",
         "import numpy as np\n",
-        "from delphi.translators.for2py.strings import *\n",
-        "from delphi.translators.for2py import intrinsics\n",
-        "from delphi.translators.for2py.arrays import *\n",
+        "from program_analysis.translators.for2py.strings import *\n",
+        "from program_analysis.translators.for2py import intrinsics\n",
+        "from program_analysis.translators.for2py.arrays import *\n",
         "from dataclasses import dataclass\n",
-        "import delphi.translators.for2py.math_ext as math\n\n",
+        "import program_analysis.translators.for2py.math_ext as math\n\n",
     ]
 
     state = GrFNState(lambda_string_list)

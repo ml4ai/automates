@@ -15,7 +15,7 @@ import argparse
 import json
 import xml.etree.ElementTree as ET
 import copy
-from delphi.translators.for2py import For2PyError, syntax, f2grfn
+from program_analysis.translators.for2py import For2PyError, syntax, f2grfn
 from os.path import isfile, join
 from typing import List, Tuple
 import math

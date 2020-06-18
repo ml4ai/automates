@@ -2,11 +2,11 @@ import math
 import numpy as np
 from numpy import ndarray
 from functools import singledispatch
-from delphi.translators.for2py.format import *
-from delphi.translators.for2py.arrays import *
-from delphi.translators.for2py.static_save import *
-from delphi.translators.for2py.strings import *
-from delphi.translators.for2py.types_ext import Float32
+from program_analysis.translators.for2py.format import *
+from program_analysis.translators.for2py.arrays import *
+from program_analysis.translators.for2py.static_save import *
+from program_analysis.translators.for2py.strings import *
+from program_analysis.translators.for2py.types_ext import Float32
 
 
 @singledispatch

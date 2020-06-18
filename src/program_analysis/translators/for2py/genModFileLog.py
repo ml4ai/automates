@@ -22,7 +22,7 @@ import sys
 import json
 import argparse
 from os.path import isfile
-from delphi.translators.for2py import syntax, preprocessor
+from program_analysis.translators.for2py import syntax, preprocessor
 
 
 def parse_args():

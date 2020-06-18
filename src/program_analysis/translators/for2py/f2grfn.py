@@ -26,14 +26,15 @@ import tokenize
 import json
 import argparse
 import pickle
-import delphi.paths
+
+# import program_analysis.for2py.paths
 from pathlib import Path
 import subprocess as sp
 import xml.etree.ElementTree as ET
 from os.path import isfile
 from typing import Dict, List, Tuple
 
-from delphi.translators.for2py import (
+from program_analysis.translators.for2py import (
     preprocessor,
     translate,
     get_comments,
@@ -91,16 +92,14 @@ def generate_ofp_xml(
 
     if save_intermediate_files:
         tree = ET.ElementTree(ET.fromstring(ofp_xml_string))
-        tree.write(
-            f"{temp_dir}/{Path(preprocessed_fortran_file).stem}.xml"
-        )
+        tree.write(f"{temp_dir}/{Path(preprocessed_fortran_file).stem}.xml")
 
     return ofp_xml_string
 
 
 def generate_preprocessed_fortran(original_fortran_file, temp_dir):
     """This function generates preprocessed fortran file.
-    
+
     Args:
         original_fortran_file(str): Original fortran file path.
         temp_dir(str): Target directory where temporary files will be
@@ -202,9 +201,9 @@ def generate_python_sources(
     (
         python_sources,
         variable_map,
-    ) = pyTranslate.get_python_sources_and_variable_map(output_dictionary,
-                                                        module_log_file_path,
-                                                        temp_dir)
+    ) = pyTranslate.get_python_sources_and_variable_map(
+        output_dictionary, module_log_file_path, temp_dir
+    )
 
     with open(main_python_file.replace(".py", "_variable_map.pkl"), "wb") as f:
         pickle.dump(variable_map, f)
@@ -499,7 +498,7 @@ def fortran_to_grfn(
     python_file = temp_dir + "/" + base + ".py"
 
     preprocessed_fortran_file = generate_preprocessed_fortran(
-            original_fortran_file, temp_dir
+        original_fortran_file, temp_dir
     )
 
     # Generate OFP XML from preprocessed fortran
@@ -553,7 +552,7 @@ def fortran_to_grfn(
         translated_python_files,
         python_file,
         temp_dir,
-        module_log_file_path
+        module_log_file_path,
     )
 
     if not save_intermediate_files:

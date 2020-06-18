@@ -9,7 +9,7 @@ import numpy as np
 from networkx.algorithms.simple_paths import all_simple_paths
 from pygraphviz import AGraph
 
-from delphi.GrFN.structures import (
+from .structures import (
     GenericContainer,
     FuncContainer,
     CondContainer,
@@ -24,7 +24,7 @@ from delphi.GrFN.structures import (
     VariableDefinition,
     TypeDefinition,
 )
-from delphi.utils.misc import choose_font
+from utils.misc import choose_font
 
 
 FONT = choose_font()

@@ -29,8 +29,8 @@ import re
 import xml.etree.ElementTree as ET
 from typing import List, Dict
 from collections import OrderedDict
-from delphi.translators.for2py.get_comments import get_comments
-from delphi.translators.for2py.loop_handle import RefactorConstructs
+from program_analysis.translators.for2py.get_comments import get_comments
+from program_analysis.translators.for2py.loop_handle import RefactorConstructs
 
 
 class ParseState(object):

@@ -1,5 +1,11 @@
+import os
+from pathlib import Path
+
+os.environ["CLASSPATH"] = str(Path(__file__).parent / "bin" / "*")
+
+
 class For2PyError(Exception):
-    status_code=400
+    status_code = 400
 
     def __init__(self, message, status_code=None, payload=None):
         Exception.__init__(self)
@@ -11,5 +17,5 @@ class For2PyError(Exception):
 
     def to_dict(self):
         rv = dict(self.payload or ())
-        rv['message'] = f"For2Py error: {self.message}"
+        rv["message"] = f"For2Py error: {self.message}"
         return rv

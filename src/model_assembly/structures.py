@@ -1,14 +1,9 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto, unique
 from dataclasses import dataclass
-from types import ModuleType
 import re
 
-# from delphi.GrFN.networks import (
-#     GroundedFunctionNetwork,
-#     GrFNSubgraph,
-# )
-from delphi.GrFN.code_types import CodeType
+from .code_types import CodeType
 
 
 @dataclass(repr=False, frozen=True)

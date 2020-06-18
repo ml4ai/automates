@@ -4,7 +4,7 @@ import json
 from datetime import date
 import pytest
 
-from delphi.translators.for2py import genPGM, f2grfn
+from program_analysis.translators.for2py import genPGM, f2grfn
 
 from pathlib import Path
 from typing import Dict
