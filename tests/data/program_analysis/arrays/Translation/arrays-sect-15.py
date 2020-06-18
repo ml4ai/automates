@@ -1,5 +1,5 @@
-from delphi.translators.for2py.format import *
-from delphi.translators.for2py.arrays import *
+from program_analysis.translators.for2py.format import *
+from program_analysis.translators.for2py.arrays import *
 
 def main():
     A = Array([(1,5),(1,5)])

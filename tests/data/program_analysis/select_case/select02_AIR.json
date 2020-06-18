@@ -1,10 +1,7 @@
 {
-  "start": [
-    "@container::select02::@global::main"
-  ],
   "variables": [
     {
-      "name": "@variable::select02::main.loop$0.IF_0::COND_0::0",
+      "name": "@variable::select02::main.loop$0.IF_0::COND_0_0::0",
       "source_refs": [],
       "domain": {
         "name": "boolean",
@@ -24,7 +21,7 @@
       "domain_constraint": "(and (> v -infty) (< v infty))"
     },
     {
-      "name": "@variable::select02::main.loop$0.IF_0::COND_1::0",
+      "name": "@variable::select02::main.loop$0.IF_0::COND_0_1::0",
       "source_refs": [],
       "domain": {
         "name": "boolean",
@@ -44,7 +41,7 @@
       "domain_constraint": "(and (> v -infty) (< v infty))"
     },
     {
-      "name": "@variable::select02::main.loop$0.IF_0::COND_2::0",
+      "name": "@variable::select02::main.loop$0.IF_0::COND_0_2::0",
       "source_refs": [],
       "domain": {
         "name": "boolean",
@@ -64,7 +61,7 @@
       "domain_constraint": "(and (> v -infty) (< v infty))"
     },
     {
-      "name": "@variable::select02::main.loop$0.IF_0::COND_3::0",
+      "name": "@variable::select02::main.loop$0.IF_0::COND_0_3::0",
       "source_refs": [],
       "domain": {
         "name": "boolean",
@@ -85,6 +82,16 @@
     },
     {
       "name": "@variable::select02::main.loop$0.IF_0::inc::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::select02::main.loop$0.IF_0::y::4",
       "source_refs": [],
       "domain": {
         "name": "integer",
@@ -154,6 +161,9 @@
       "domain_constraint": "(and (> v -infty) (< v infty))"
     }
   ],
+  "start": [
+    "@container::select02::@global::main"
+  ],
   "containers": [
     {
       "name": "@container::select02::@global::main",
@@ -189,7 +199,8 @@
         {
           "function": {
             "name": "select02__main__loop_0__assign__inc__0",
-            "type": "lambda"
+            "type": "lambda",
+            "code": "lambda :1"
           },
           "input": [],
           "output": [
@@ -200,7 +211,8 @@
         {
           "function": {
             "name": "select02__main__loop_0__condition__IF_0__0",
-            "type": "lambda"
+            "type": "lambda",
+            "code": "lambda inc:0 <= inc < 11"
           },
           "input": [
             "@variable::inc::0"
@@ -213,7 +225,8 @@
         {
           "function": {
             "name": "select02__main__loop_0__decision__EXIT__0",
-            "type": "lambda"
+            "type": "lambda",
+            "code": "lambda IF_0_0:(not IF_0_0)"
           },
           "input": [
             "@variable::IF_0::0"
@@ -231,38 +244,16 @@
           "input": [
             "@variable::inc::0"
           ],
-          "output": [],
           "updated": [
-            {
-              "condition": "COND_0",
-              "updates": [
-                "@variable::y::0"
-              ]
-            },
-            {
-              "condition": "COND_1",
-              "updates": [
-                "@variable::y::0"
-              ]
-            },
-            {
-              "condition": "COND_2",
-              "updates": [
-                "@variable::y::0"
-              ]
-            },
-            {
-              "condition": "COND_3",
-              "updates": [
-                "@variable::y::0"
-              ]
-            }
-          ]
+            "@variable::y::0"
+          ],
+          "output": []
         },
         {
           "function": {
-            "name": "select02__main__loop_0__assign_inc__1",
-            "type": "lambda"
+            "name": "select02__main__loop_0__assign__inc__1",
+            "type": "lambda",
+            "code": "lambda inc:inc + 1"
           },
           "input": [
             "@variable::inc::0"
@@ -282,160 +273,142 @@
         "@variable::inc::-1"
       ],
       "updated": [
-        {
-          "condition": "COND_0",
-          "updates": [
-            "@variable::y::0"
-          ]
-        },
-        {
-          "condition": "COND_1",
-          "updates": [
-            "@variable::y::1"
-          ]
-        },
-        {
-          "condition": "COND_2",
-          "updates": [
-            "@variable::y::2"
-          ]
-        },
-        {
-          "condition": "COND_3",
-          "updates": [
-            "@variable::y::3"
-          ]
-        }
+        "@variable::y::4"
       ],
       "return_value": [],
       "body": [
         {
-          "condition": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__condition__COND_0__0",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::COND_0::0"
-              ],
-              "updated": []
-            }
+          "function": {
+            "name": "select02__main__loop_0__IF_0__condition__COND_0_0__0",
+            "type": "lambda",
+            "code": "lambda inc:((inc >= \"-inf\") and (inc <= 3))"
+          },
+          "input": [
+            "@variable::inc::-1"
           ],
-          "statements": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__assign__y__0",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::y::0"
-              ],
-              "updated": []
-            }
-          ]
+          "output": [
+            "@variable::COND_0_0::0"
+          ],
+          "updated": []
         },
         {
-          "condition": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__condition__COND_1__0",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::COND_1::0"
-              ],
-              "updated": []
-            }
+          "function": {
+            "name": "select02__main__loop_0__IF_0__assign__y__0",
+            "type": "lambda",
+            "code": "lambda inc:int((inc*2))"
+          },
+          "input": [
+            "@variable::inc::-1"
           ],
-          "statements": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__assign__y__1",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::y::1"
-              ],
-              "updated": []
-            }
-          ]
+          "output": [
+            "@variable::y::0"
+          ],
+          "updated": []
         },
         {
-          "condition": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__condition__COND_2__0",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::COND_2::0"
-              ],
-              "updated": []
-            }
+          "function": {
+            "name": "select02__main__loop_0__IF_0__condition__COND_0_1__0",
+            "type": "lambda",
+            "code": "lambda inc:((inc >= 9) and (inc <= \"inf\"))"
+          },
+          "input": [
+            "@variable::inc::-1"
           ],
-          "statements": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__assign__y__2",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::y::2"
-              ],
-              "updated": []
-            }
-          ]
+          "output": [
+            "@variable::COND_0_1::0"
+          ],
+          "updated": []
         },
         {
-          "condition": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__condition__COND_3__0",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::COND_3::0"
-              ],
-              "updated": []
-            }
+          "function": {
+            "name": "select02__main__loop_0__IF_0__assign__y__1",
+            "type": "lambda",
+            "code": "lambda inc:int((inc*3))"
+          },
+          "input": [
+            "@variable::inc::-1"
           ],
-          "statements": [
-            {
-              "function": {
-                "name": "select02__main__loop_0__IF_0__assign__y__3",
-                "type": "lambda"
-              },
-              "input": [
-                "@variable::inc::-1"
-              ],
-              "output": [
-                "@variable::y::3"
-              ],
-              "updated": []
-            }
-          ]
+          "output": [
+            "@variable::y::1"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "select02__main__loop_0__IF_0__condition__COND_0_2__0",
+            "type": "lambda",
+            "code": "lambda inc:(inc == 8)"
+          },
+          "input": [
+            "@variable::inc::-1"
+          ],
+          "output": [
+            "@variable::COND_0_2::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "select02__main__loop_0__IF_0__assign__y__2",
+            "type": "lambda",
+            "code": "lambda inc:int((inc*4))"
+          },
+          "input": [
+            "@variable::inc::-1"
+          ],
+          "output": [
+            "@variable::y::2"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "select02__main__loop_0__IF_0__condition__COND_0_3__0",
+            "type": "lambda",
+            "code": "lambda inc:((inc >= 4) and (inc <= 7))"
+          },
+          "input": [
+            "@variable::inc::-1"
+          ],
+          "output": [
+            "@variable::COND_0_3::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "select02__main__loop_0__IF_0__assign__y__3",
+            "type": "lambda",
+            "code": "lambda inc:int((inc*5))"
+          },
+          "input": [
+            "@variable::inc::-1"
+          ],
+          "output": [
+            "@variable::y::3"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "select02__main__loop_0__IF_0__decision__y__4",
+            "type": "lambda",
+            "code": "lambda COND_0,COND_1,COND_2,COND_3,y_0,y_1,y_2,y_3:np.select([COND_0,COND_1,COND_2,COND_3],[y_0,y_1,y_2,y_3],default=0)"
+          },
+          "input": [
+            "@variable::COND_0_0::0",
+            "@variable::COND_0_1::0",
+            "@variable::COND_0_2::0",
+            "@variable::COND_0_3::0",
+            "@variable::y::0",
+            "@variable::y::1",
+            "@variable::y::2",
+            "@variable::y::3"
+          ],
+          "output": [
+            "@variable::y::4"
+          ],
+          "updated": []
         }
       ]
     }
@@ -446,7 +419,17 @@
     "select02.f"
   ],
   "source_comments": {
-    "$file_head": [],
+    "$file_head": [
+      "C FORTRAN test file to test CASE constructs\n",
+      "C This file tests an integer with various types of comparisons\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n"
+    ],
     "$file_foot": []
   },
   "system": {

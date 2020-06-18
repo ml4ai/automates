@@ -1,9 +1,9 @@
 import sys
 from typing import List
 import math
-from delphi.translators.for2py.format import *
-from delphi.translators.for2py.arrays import *
-from delphi.translators.for2py.static_save import *
+from program_analysis.translators.for2py.format import *
+from program_analysis.translators.for2py.arrays import *
+from program_analysis.translators.for2py.static_save import *
 from dataclasses import dataclass
 
 

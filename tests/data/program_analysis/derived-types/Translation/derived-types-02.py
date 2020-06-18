@@ -1,6 +1,6 @@
 import sys
-from delphi.translators.for2py.format import *
-from delphi.translators.for2py.arrays import *
+from program_analysis.translators.for2py.format import *
+from program_analysis.translators.for2py.arrays import *
 
 class mytype:
     def __init__(self):

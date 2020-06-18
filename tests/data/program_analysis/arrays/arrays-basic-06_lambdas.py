@@ -1,9 +1,9 @@
 from numbers import Real
 from random import random
-from delphi.translators.for2py.strings import *
+from program_analysis.translators.for2py.strings import *
 import numpy as np
-from delphi.translators.for2py import intrinsics
-import delphi.translators.for2py.math_ext as math
+from program_analysis.translators.for2py import intrinsics
+import program_analysis.translators.for2py.math_ext as math
 
 def arrays_basic_06__main__assign__a__0():
     a = [[0] * (1 - -(3)), [0] * (5 - 0), [0] * (14 - 10)]

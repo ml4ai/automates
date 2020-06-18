@@ -1,9 +1,9 @@
 from numbers import Real
 from random import random
-from delphi.translators.for2py.strings import *
+from program_analysis.translators.for2py.strings import *
 import numpy as np
-from delphi.translators.for2py import intrinsics
-import delphi.translators.for2py.math_ext as math
+from program_analysis.translators.for2py import intrinsics
+import program_analysis.translators.for2py.math_ext as math
 
 def derived_types_04__main__assign__var__x__a__0(var: mytype_123_456):
     var.x.a = 12

@@ -26,8 +26,6 @@ import tokenize
 import json
 import argparse
 import pickle
-
-# import program_analysis.for2py.paths
 from pathlib import Path
 import subprocess as sp
 import xml.etree.ElementTree as ET

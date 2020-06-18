@@ -23,7 +23,7 @@ Author: Terrence J. Lim
 
 import json
 import argparse
-from delphi.translators.for2py import f2grfn
+from program_analysis.translators.for2py import f2grfn
 
 if __name__ == "__main__":
     """This function is for a safe command line

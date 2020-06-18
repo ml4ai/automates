@@ -5292,16 +5292,25 @@ class GrFNGenerator(object):
         code = ""
         (cond_tuples, var_indices) = decision_versions
         if not self.use_numpy:
+            if cond_tuples[0][0] is None:
+                cond_var = argument_map[f"{condition_var}_0_0"]
+                if_var = argument_map[f"{var}_0"]
+                else_var = argument_map[f"{var}_xx"]
+                return f"{if_var} if not {cond_var} else {else_var}"
+
             for cond_data in cond_tuples:
                 (cond_name, var_idx) = cond_data
-                var_arg = f"{var}_{var_idx}"
+                var_arg = argument_map[f"{var}_{var_idx}"]
                 if cond_name is None:
                     code += f"{var_arg}"
                     return code
 
                 cond_arg = argument_map[f"{cond_name}_0"]
                 code += f"{var_arg} if {cond_arg} else "
-            else_var_name = argument_map[f"{var}_xx"]
+            if f"{var}_xx" in argument_map:
+                else_var_name = argument_map[f"{var}_xx"]
+            else:
+                else_var_name = "None"
             code += f"{else_var_name}"
             return code
         else:
@@ -5309,71 +5318,28 @@ class GrFNGenerator(object):
             if len(cond_tuples) == 2 and cond_tuples[-1][0] is None:
                 cond_name = cond_tuples[0][0]
                 cond_arg = argument_map[f"{cond_name}_0"]
-                var_if = f"{var}_{cond_tuples[0][1]}"
-                var_else = f"{var}_{cond_tuples[-1][1]}"
+                var_if = argument_map[f"{var}_{cond_tuples[0][1]}"]
+                var_else = argument_map[f"{var}_{cond_tuples[-1][1]}"]
                 return f"np.where({cond_arg},{var_if},{var_else})"
+
+            if cond_tuples[0][0] is None:
+                cond_var = argument_map[f"{condition_var}_0_0"]
+                if_var = argument_map[f"{var}_0"]
+                else_var = argument_map[f"{var}_xx"]
+                return f"np.where(~({cond_var}),{if_var},{else_var})"
 
             (cond_names, var_indices) = map(list, zip(*cond_tuples))
             cond_list = ",".join(
                 [argument_map[f"{cond_var}_0"] for cond_var in cond_names]
             )
-            var_list = ",".join([f"{var}_{v}" for v in var_indices])
-            var_else = argument_map[f"{var}_xx"]
+            var_list = ",".join(
+                [argument_map[f"{var}_{v}"] for v in var_indices]
+            )
+            if f"{var}_xx" in argument_map:
+                var_else = argument_map[f"{var}_xx"]
+            else:
+                var_else = "0"
             return f"np.select([{cond_list}],[{var_list}],default={var_else})"
-
-        # ======================================================================
-        # TODO: remove old code below here
-        # for i, cond in enumerate(cond_tuples):
-        #     (cond_node_str, index) = cond
-        #     if cond_node_str is None:
-        #         if len(var_indices) == 1 and var_indices[0] == -1:
-        #             code += f"{argument_map[f'{var}_{index}']} if "
-        #             condition_list = [
-        #                 f"not " f"{argument_map[f'{condition_var}_{x}_0']}"
-        #                 for x in range(max_conditions + 1)
-        #             ]
-        #             code += " and ".join(condition_list)
-        #             code += " else "
-        #         else:
-        #             assert i == (
-        #                 len(var_indices) - 1
-        #             ), f"None is not at the end of the list."
-        #             rep_list = [
-        #                 x
-        #                 for x in list(range(max_conditions + 1))
-        #                 if x not in var_indices[:i]
-        #             ]
-        #             if len(rep_list) == 0:
-        #                 code += argument_map[f"{var}_{index}"]
-        #             else:
-        #                 code += f"{argument_map[f'{var}_{index}']} if "
-        #                 condition_list = [
-        #                     f"not " f"{argument_map[f'{condition_var}_{x}_0']}"
-        #                     for x in rep_list
-        #                 ]
-        #                 code += " and ".join(condition_list)
-        #                 code += " else "
-        #     else:
-        #         max_id = var_indices[i]
-        #         if index == -1:
-        #             index = "xx"
-        #         code += f"{argument_map[f'{var}_{index}']} if "
-        #         rep_list = [
-        #             x for x in list(range(max_id)) if x not in var_indices[:i]
-        #         ]
-        #         condition_list = [
-        #             f"not " f"{argument_map[f'{condition_var}_{x}_0']}"
-        #             for x in rep_list
-        #         ]
-        #         code += " and ".join(condition_list)
-        #         if len(rep_list) == 0:
-        #             code += argument_map[f"{cond_node_str}_0"]
-        #         else:
-        #             code += f" and {argument_map[f'{cond_node_str}_0']}"
-        #         code += " else "
-        #
-        # code += argument_map.get(f"{var}_xx", "")
-        # return code
 
     def _generate_argument_map(self, inputs):
         """

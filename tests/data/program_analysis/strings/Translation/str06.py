@@ -1,5 +1,5 @@
-from delphi.translators.for2py.format import *
-from delphi.translators.for2py.strings import *
+from program_analysis.translators.for2py.format import *
+from program_analysis.translators.for2py.strings import *
 
 def main():
     str1 = String(10)
