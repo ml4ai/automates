@@ -14,6 +14,7 @@ import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.grounding.SVOGrounder.sparqlDir
+import ujson.Value
 //todo: pass the python query file from configs
 //todo: document in wiki
 
@@ -66,6 +67,7 @@ object SVOGrounder {
 
   val config: Config = ConfigFactory.load()
   val sparqlDir: String = config[String]("grounding.sparqlDir")
+  lazy val w2v = new Word2Vec("vectors.txt")
 //  val currentDir: String = System.getProperty("user.dir")
 
   // ==============================================================================
@@ -113,6 +115,8 @@ object SVOGrounder {
 
   /** produces svo groundings for text_var link elements*/
   def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Option[Map[String, Seq[sparqlResult]]] = {
+
+    //todo: from here to where we start grounding, should be a separate method reusable by wikidata grounder
     val textVarLinkElements = new ArrayBuffer[ujson.Value]()
     for (hyp <- hypotheses) {
       for (el <- hyp.obj) {
@@ -130,6 +134,7 @@ object SVOGrounder {
     val toGround = mutable.Map[String, Seq[String]]()
 
     //here, include the pdf name in the variable lest we concat variables from different papers (they may not refer to the same concept)
+    //todo: also, here we get terms from all link elements, but what to do with sentences? get all distinct content words from all sentences? could be okay
     for (hyp <- textVarLinkElements.distinct) {
       val variable = hyp.obj("content").str
       val pdfNameRegex = ".*?\\.pdf".r
@@ -159,6 +164,69 @@ object SVOGrounder {
 
     } else None
   }
+
+
+  def groundHypothesesToWiki(hypotheses: Seq[ujson.Obj], k: Int): Option[Map[String, (Seq[sparqlWikiResult], Value)]] = {
+
+    val textVarLinkElements = new ArrayBuffer[ujson.Value]()
+    for (hyp <- hypotheses) {
+      for (el <- hyp.obj) {
+        if (el._1.startsWith("element") && el._2.obj("type").str == "text_var" ) {
+          if (el._2.obj("svo_query_terms").arr.nonEmpty) {
+            textVarLinkElements.append(el._2)
+          }
+        }
+      }
+    }
+
+//    val shorterThingToGroundForDebugging = textVarLinkElements.slice(0, 4)
+
+    for (le <- textVarLinkElements) println(le)
+
+    //dict mapping a variable with the terms from all the text_var link elements with this variable
+    val toGround = mutable.Map[String, Tuple3[Seq[String], Seq[String], Value]]()
+
+    //here, include the pdf name in the variable lest we concat variables from different papers (they may not refer to the same concept)
+    //todo: also, here we get terms from all link elements, but what to do with sentences? get all distinct content words from all sentences? could be okay
+    for (hyp <- textVarLinkElements.distinct) {
+      val variable = hyp.obj("content").str
+      val pdfNameRegex = ".*?\\.pdf".r
+      val source = hyp.obj("source").str.split("/").last
+      val pdfName =  pdfNameRegex.findFirstIn(source).getOrElse("Unknown")
+      val terms = hyp.obj("svo_query_terms").arr.map(_.str)
+      val sentence = Seq(hyp.obj("sentenceString").str)
+      if (toGround.keys.toArray.contains(variable)) {
+        val currentTerms = toGround(variable)._1
+        val currentSentences = toGround(variable)._2
+        val updatedTerms =  (currentTerms ++ terms.toList).distinct
+        val updatedSentences = (sentence ++ currentSentences.toList).distinct //todo: source needs to be updated, too
+        toGround(variable + "::" + pdfName) = (updatedTerms, updatedSentences, hyp)
+      } else {
+        toGround(variable + "::" + pdfName) = (terms, sentence, hyp)
+      }
+    }
+
+    val varGroundings = mutable.Map[String, Tuple2[Seq[sparqlWikiResult], Value]]()
+
+    //ground to svo
+    for (varTermTuple <- toGround) {
+      val oneHypGrounding = groundTermsToWikidataRanked(varTermTuple._1, varTermTuple._2._1, varTermTuple._2._2,w2v, k)
+      if (oneHypGrounding.isDefined) {
+
+        oneHypGrounding.get.keys.foreach(key => varGroundings.put(key, (oneHypGrounding.get(key), varTermTuple._2._3)))
+      }
+    }
+    if (varGroundings.nonEmpty) {
+      return  Some(varGroundings.toMap)
+
+    } else None
+  }
+
+
+
+
+
+
 
   def groundVarTermsToSVO(variable: String, terms: Seq[String], k: Int):  Option[Map[String, Seq[sparqlResult]]] = {
     // ground terms from one variable
@@ -215,68 +283,76 @@ object SVOGrounder {
     resultsFromAllTerms
   }
 
-  def groundTermsToWikidataRanked(variable: String, terms: Seq[String], w2v: Word2Vec, sentence: Seq[String]): Seq[sparqlWikiResult] = {
+  def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Map[String, Seq[sparqlWikiResult]]] = {
 
     //todo: can I pass mentions here? that way can compare the whole sentence to the definition and alt labels instead of just the term list. although the terms come from elements and those are already missing mention info; can I store sentence along with the terms? maybe as the final element of the term list and then just do terms [:-1]
-    val resultsFromAllTerms = new ArrayBuffer[sparqlWikiResult]()
-
-    for (term <- terms) {
-      //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
-      val term_list = terms.filter(_==term) //throw in the sentence
-      //    val term = "air temperature"
-      //    val term_list = List("temperature", "air temperature")
-      val result = wikidataGrounder.runSparqlQuery(term, wikidataGrounder.sparqlDir)
-      val allSparqlWikiResults = new ArrayBuffer[sparqlWikiResult]()
-      if (result.nonEmpty) {
-        val lineResults = new ArrayBuffer[sparqlWikiResult]()
-        val resultLines = result.split("\n")
-        for (line <- resultLines) {
-          println("line: "+ line)
-          val splitLine = line.trim().split("\t")
-
-          println("split line: "+ splitLine.mkString("|"))
-          val conceptId = splitLine(1)
-          println("concept id: "+ conceptId)
-          val conceptLabel = splitLine(2)
-          println("concept label: "+ conceptLabel)
-          val conceptDescription = if (splitLine.length > 3) Some(splitLine(3)) else None
-          println("conc descr: "+ conceptDescription)
-          val altLabel = if (splitLine.length > 4) Some(splitLine(4)) else None
-          println("alt label: "+ altLabel)
-          val textWordList = sentence ++ term_list ++ List(variable)
-          val wikidataWordList = conceptDescription.getOrElse("").split(" ") ++ altLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ")
-
-          val score = editDistanceNormalized(conceptLabel, term) + w2v.avgSimilarity(textWordList,  wikidataWordList) + wordOverlap(textWordList, wikidataWordList)
-
-          val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, Some(score), "wikidata")
-          println("line result: ", lineResult)
-          lineResults += lineResult
-
-        }
+    if (terms_with_underscores.nonEmpty) {
+      val terms = terms_with_underscores.map(_.replace("_", " "))
+      val resultsFromAllTerms = new ArrayBuffer[sparqlWikiResult]()
 
 
-        val allLabels = lineResults.map(res => res.conceptLabel)
-//        println("all labels: " + allLabels.mkString("|"))
-        val duplicates = allLabels.groupBy(identity).collect { case (x, ys) if ys.lengthCompare(1) > 0 => x }.toList
-//
-//        for (d <- duplicates) println("dup: " + d)
-//
-        val (uniqueLabelResLines, nonUniqLabelResLines) = lineResults.partition(res => !duplicates.contains(res.conceptLabel))
-//
-        allSparqlWikiResults ++= uniqueLabelResLines
-        //out of the items with the same label, e.g., crop (grown and harvested plant or animal product) vs. crop (hairstyle), choose the one with the highest score based on similarity of the wikidata description and alternative label to the sentence and search term the search term from
-        if (nonUniqLabelResLines.nonEmpty) {
-          allSparqlWikiResults += nonUniqLabelResLines.maxBy(_.score)
-        }
+      for (term <- terms) {
+        //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
+        val term_list = terms.filter(_==term)
+        //    val term = "air temperature"
+        //    val term_list = List("temperature", "air temperature")
+        val result = wikidataGrounder.runSparqlQuery(term, wikidataGrounder.sparqlDir)
+        val allSparqlWikiResults = new ArrayBuffer[sparqlWikiResult]()
+        if (result.nonEmpty) {
+          val lineResults = new ArrayBuffer[sparqlWikiResult]()
+          val resultLines = result.split("\n")
+          for (line <- resultLines) {
+            println("line: "+ line)
+            val splitLine = line.trim().split("\t")
+
+            println("split line: "+ splitLine.mkString("|"))
+            val conceptId = splitLine(1)
+            println("concept id: "+ conceptId)
+            val conceptLabel = splitLine(2)
+            println("concept label: "+ conceptLabel)
+            val conceptDescription = if (splitLine.length > 3) Some(splitLine(3)) else None
+            println("conc descr: "+ conceptDescription)
+            val altLabel = if (splitLine.length > 4) Some(splitLine(4)) else None
+            println("alt label: "+ altLabel)
+            val textWordList = sentence ++ term_list ++ List(variable)
+            val wikidataWordList = conceptDescription.getOrElse("").split(" ") ++ altLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ")
+
+            val score = 1 - 1/(editDistanceNormalized(conceptLabel, term) + w2v.avgSimilarity(textWordList,  wikidataWordList) + wordOverlap(textWordList, wikidataWordList) + 1)
+
+            val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, Some(score), "wikidata")
+            println("line result: ", lineResult)
+            lineResults += lineResult
+
+          }
 
 
-      } else println("Result empty")
-      println("allSparqlWikiResults inside the loop : " + allSparqlWikiResults)
+          val allLabels = lineResults.map(res => res.conceptLabel)
+          //        println("all labels: " + allLabels.mkString("|"))
+          val duplicates = allLabels.groupBy(identity).collect { case (x, ys) if ys.lengthCompare(1) > 0 => x }.toList
+          //
+          //        for (d <- duplicates) println("dup: " + d)
+          //
+          val (uniqueLabelResLines, nonUniqLabelResLines) = lineResults.partition(res => !duplicates.contains(res.conceptLabel))
+          //
+          allSparqlWikiResults ++= uniqueLabelResLines
+          //out of the items with the same label, e.g., crop (grown and harvested plant or animal product) vs. crop (hairstyle), choose the one with the highest score based on similarity of the wikidata description and alternative label to the sentence and search term the search term from
+          if (nonUniqLabelResLines.nonEmpty) {
+            allSparqlWikiResults += nonUniqLabelResLines.maxBy(_.score)
+          }
 
-      resultsFromAllTerms ++= allSparqlWikiResults
 
-    }
-    resultsFromAllTerms.toList.distinct.sortBy(_.score).reverse
+        } else println("Result empty")
+        println("allSparqlWikiResults inside the loop : " + allSparqlWikiResults)
+
+        resultsFromAllTerms ++= allSparqlWikiResults
+
+      }
+
+      return Some(Map(variable -> getTopKWiki(resultsFromAllTerms.toList.distinct.sortBy(_.score).reverse, k)))
+
+
+    } else None
+
   }
 
 

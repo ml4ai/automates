@@ -256,6 +256,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
     val jsonPath = pathJson("pathToJson").str
     val jsonFile = new File(jsonPath)
+    println(jsonFile)
     val json = ujson.read(jsonFile.readString())
 
     val jsonKeys = json.obj.keys.toList
@@ -294,6 +295,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.equationChunksAndSource,
         argsForGrounding.svoGroundings,
         groundToSVO,
+        groundToWikidata,
         maxSVOgroundingsPerVar,
         alignmentHandler,
         Some(numAlignments),

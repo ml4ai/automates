@@ -3,7 +3,7 @@ package org.clulab.aske.automates.grfn
 import ai.lum.common.FileUtils._
 import java.io.File
 
-import org.clulab.grounding.{SVOGrounding, sparqlResult}
+import org.clulab.grounding.{SVOGrounding, sparqlResult, sparqlWikiResult}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.json4s.jackson.Json
@@ -113,14 +113,14 @@ object GrFNParser {
     linkElement
   }
 
-  def mkTextLinkElement(elemType: String, source: String, content: String, contentType: String, svoQueryTerms: Seq[String], sentence: Seq[String]): ujson.Obj = {
+  def mkTextLinkElement(elemType: String, source: String, content: String, contentType: String, svoQueryTerms: Seq[String], sentenceString: String): ujson.Obj = {
     val linkElement = ujson.Obj(
       "type" -> elemType,
       "source" -> source,
       "content" -> content,
       "content_type" -> contentType,
       "svo_query_terms" -> svoQueryTerms,
-      "sentence" -> sentence
+      "sentenceString" -> sentenceString
     )
     linkElement
   }
@@ -153,6 +153,15 @@ object GrFNParser {
     linkElement
   }
 
+  def mkWikidataElement(grounding: sparqlWikiResult): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> "wikidata_grounding",
+      "source" -> "wikidata",
+      "content" -> sparqlWikiResultTouJson(grounding)
+    )
+    linkElement
+  }
+
   //losing the score from the sparqlResult bc the score goes to the hypothesis and not the link element
   def sparqlResultTouJson(grounding: sparqlResult): ujson.Obj = {
     val sparqlResuJson = ujson.Obj(
@@ -161,6 +170,17 @@ object GrFNParser {
       "source" -> grounding.source
     )
     sparqlResuJson
+  }
+
+  def sparqlWikiResultTouJson(grounding: sparqlWikiResult): ujson.Obj = {
+    val sparqlWikiResuJson = ujson.Obj(
+      "wikidata_label" -> grounding.conceptLabel,
+      "wikidata_id" -> grounding.conceptID,
+      "wikidata_alt_label" -> ujson.Str(grounding.alternativeLabel.getOrElse("No associated alternative label")),
+      "wikidata_description" -> ujson.Str(grounding.conceptDescription.getOrElse("No associated description")),
+      "source" -> grounding.source
+    )
+    sparqlWikiResuJson
   }
 
   def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = {
