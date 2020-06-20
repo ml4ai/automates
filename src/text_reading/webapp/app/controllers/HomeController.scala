@@ -162,7 +162,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   /**
     * Extract mentions from a serialized Document json. Expected fields in the json obj passed in:
-    *  'json' : path to the serialized Document json file
+    *  'json' : path to the Science Parse json file. In the curl post request, the data argument will look like this: "--data '{"json": "someDirectory/petpno_Penman.json"}'"
     * @return Seq[Mention] (json serialized)
     */
 
