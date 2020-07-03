@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+
 import csv
 import errno
 import logging
+
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,12 +16,10 @@ from PIL import Image
 
 import sys
 sys.path.append('/home/jkadowaki/im2markup/code/equation_extraction')
-from collect_data import render_tex, render_equation
-
 
 sys.path.append('/home/jkadowaki/im2markup/scripts/evaluation')
 sys.path.append('/home/jkadowaki/im2markup/utils')
-import render_latex, utils
+import render_latex
 
 try:
     import evaluate_image
