@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--logfile', default='/data/collect_data.log')
     parser.add_argument('--template', default='misc/template.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
-    parser.add_argument('--dump-pages', action='sre_true')
+    parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
     parser.add_argument('--pdfdir', help='directory with precompiled whole paper pdfs, if provided we will not regenerate them')
     parser.add_argument('--num-paragraphs', type=int, default=3, help='size of window above and below the eqn to save')
