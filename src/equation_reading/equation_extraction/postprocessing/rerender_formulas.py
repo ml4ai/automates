@@ -1,13 +1,13 @@
 import argparse
-import cv2
-import jinja2
 import os
-from skimage import io
 from itertools import izip
-from collect_data import render_equation, mk_template
-from utils import run_command
-from augmentation_arxiv import select_random_augmentation
 
+import cv2
+from skimage import io
+
+from collect_data import render_equation, mk_template
+from postprocessing.augmentation_utils import select_random_augmentation
+from utils import run_command
 
 
 def parse_args():
