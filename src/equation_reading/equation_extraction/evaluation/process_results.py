@@ -6,16 +6,18 @@
 # several files for analyzing the results: TODO details
 
 import argparse
-import sacrebleu
 import os
 import random
+
 import cv2
-from matplotlib import pyplot as plt
 import numpy as np
-from collect_data import render_equation, mk_template
-from utils import run_command, load_segments
-from image_utils import remove_background, resize, pixel_is_white
-from mpl_toolkits.axes_grid1 import ImageGrid
+import sacrebleu
+from matplotlib import pyplot as plt
+
+from data_collection.collect_data import render_equation, mk_template
+from utils import load_segments
+from utils.image_utils import remove_background, resize, pixel_is_white
+
 
 def parse_args():
     parser = argparse.ArgumentParser()

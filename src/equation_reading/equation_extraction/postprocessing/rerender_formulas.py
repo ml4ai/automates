@@ -5,7 +5,7 @@ from itertools import izip
 import cv2
 from skimage import io
 
-from collect_data import render_equation, mk_template
+from data_collection.collect_data import render_equation, mk_template
 from postprocessing.augmentation_utils import select_random_augmentation
 from utils import run_command
 
