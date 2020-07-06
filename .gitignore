@@ -76,4 +76,5 @@ Gemfile.lock
 # Program analysis stuff
 *modFileLog.json
 *--GrFN.pdf
+*_GrFN.json
 tmp
