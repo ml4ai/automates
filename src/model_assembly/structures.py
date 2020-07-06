@@ -20,6 +20,8 @@ class GenericIdentifier(ABC):
                 (_, ns, sc) = components
                 return ContainerIdentifier(ns, sc, "--")
             (_, ns, sc, n) = components
+            if sc != "@global":
+                n = f"{sc}.{n}"
             return ContainerIdentifier(ns, sc, n)
         elif type_str == "@type":
             (_, ns, sc, n) = components
@@ -63,9 +65,17 @@ class VariableIdentifier(GenericIdentifier):
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):
         (_, name, idx) = data.split("::")
-        return cls(con.namespace, con.scope, name, int(idx))
+        return cls(con.namespace, con.con_name, name, int(idx))
+
+    @classmethod
+    def from_str(cls, var_id: str):
+        (ns, sc, vn, ix) = var_id.split("::")
+        return cls(ns, sc, vn, int(ix))
 
     def __str__(self):
+        return f"{self.namespace}::{self.scope}::{self.var_name}::{self.index}"
+
+    def __print(self):
         var_str = f"{self.var_name}::{self.index}"
         return f"Var -- {var_str} ({self.namespace}.{self.scope})"
 
@@ -106,6 +116,17 @@ class VariableDefinition(GenericDefinition):
     domain_name: str
     domain_constraint: str
     source_refs: tuple
+
+    @classmethod
+    def from_identifier(cls, id: VariableIdentifier):
+        return cls(
+            id,
+            "type",
+            False,
+            "None",
+            "(and (> v -infty) (< v infty))",
+            tuple(),
+        )
 
 
 @dataclass(frozen=True)
@@ -177,12 +198,6 @@ class GenericContainer(ABC):
         else:
             raise ValueError(f"Unrecognized container type value: {con_type}")
 
-    # @abstractmethod
-    # def translate(
-    #     self, call_inputs: list, containers: dict, occurrences: dict
-    # ) -> GrFNSubgraph:
-    #     return NotImplemented
-
 
 class CondContainer(GenericContainer):
     def __init__(self, data: dict):
@@ -194,11 +209,6 @@ class CondContainer(GenericContainer):
     def __str__(self):
         base_str = super().__str__()
         return f"<COND Con> -- {self.identifier.con_name}\n{base_str}\n"
-
-    # def translate(
-    #     self, call_inputs: list, containers: dict, occurrences: dict
-    # ) -> GrFNSubgraph:
-    #     return NotImplemented
 
 
 class FuncContainer(GenericContainer):
@@ -212,15 +222,6 @@ class FuncContainer(GenericContainer):
         base_str = super().__str__()
         return f"<FUNC Con> -- {self.identifier.con_name}\n{base_str}\n"
 
-    # def translate(
-    #     self, call_inputs: list, containers: dict, occurrences: dict
-    # ) -> GrFNSubgraph:
-    #     if self.name not in occurrences:
-    #         occurrences[self.name] = 0
-    #
-    #     network_idx = occurrences[self.name]
-    #     new_network = GrFNSubgraph(self.name, network_idx, parent=None)
-
 
 class LoopContainer(GenericContainer):
     def __init__(self, data: dict):
@@ -233,42 +234,102 @@ class LoopContainer(GenericContainer):
         base_str = super().__str__()
         return f"<LOOP Con> -- {self.identifier.con_name}\n{base_str}\n"
 
-    # def translate(
-    #     self, call_inputs: list, containers: dict, occurrences: dict
-    # ) -> GrFNSubgraph:
-    #     if len(self.arguments) == len(call_inputs):
-    #         input_vars = {a: v for a, v in zip(self.arguments, call_inputs)}
-    #     elif len(self.arguments) > 0:
-    #         input_vars = {
-    #             a: (self.name,) + tuple(a.split("::")[1:])
-    #             for a in self.arguments
-    #         }
-    #
-    #     for stmt in self.statement_list:
-    #         # TODO: pickup translation here
-    #         stmt.translate(self, input_vars)
-    #         func_def = stmt["function"]
-    #         func_type = func_def["type"]
-    #         if func_type == "lambda":
-    #             process_wiring_statement(stmt, scope, input_vars, scope.name)
-    #         elif func_type == "container":
-    #             process_call_statement(stmt, scope, input_vars, scope.name)
-    #         else:
-    #             raise ValueError(f"Undefined function type: {func_type}")
-    #
-    #     scope_tree.add_node(scope.name, color="forestgreen")
-    #     if scope.parent is not None:
-    #         scope_tree.add_edge(scope.parent.name, scope.name)
-    #
-    #     return_list, updated_list = list(), list()
-    #     for var_name in scope.returns:
-    #         (_, basename, idx) = var_name.split("::")
-    #         return_list.append(make_variable_name(scope.name, basename, idx))
-    #
-    #     for var_name in scope.updated:
-    #         (_, basename, idx) = var_name.split("::")
-    #         updated_list.append(make_variable_name(scope.name, basename, idx))
-    #     return return_list, updated_list
+
+@unique
+class VarType(Enum):
+    BOOLEAN = auto()
+    STRING = auto()
+    INTEGER = auto()
+    SHORT = auto()
+    LONG = auto()
+    FLOAT = auto()
+    DOUBLE = auto()
+    ARRAY = auto()
+    STRUCT = auto()
+    UNION = auto()
+    NONE = auto()
+
+    def __str__(self):
+        return str(self.name).lower()
+
+    @classmethod
+    def from_name(cls, name: str):
+        name = name.lower()
+        if name == "float":
+            return cls.FLOAT
+        elif name == "string":
+            return cls.STRING
+        elif name == "boolean":
+            return cls.BOOLEAN
+        elif name == "integer":
+            return cls.INTEGER
+        elif name == "array":
+            return cls.ARRAY
+        elif name == "none":
+            return cls.NONE
+        else:
+            raise ValueError(f"VarType unrecognized name: {name}")
+
+
+@unique
+class DataType(Enum):
+    # NOTE: Refer to this stats data type blog post:
+    # https://towardsdatascience.com/data-types-in-statistics-347e152e8bee
+    NONE = auto()  # Used for undefined variable types
+    CATEGORICAL = auto()  # Labels used to represent a quality
+    BINARY = auto()  # Categorical measure with *only two* categories
+    NOMINAL = auto()  # Categorical measure with *many* categories
+    ORDINAL = auto()  # Categorical measure with many *ordered* categories
+    NUMERICAL = auto()  # Numbers used to express a quantity
+    DISCRETE = auto()  # Numerical measure with *countably infinite* options
+    CONTINUOUS = auto()  # Numerical measure w/ *uncountably infinite* options
+    INTERVAL = auto()  # Continuous measure *without* an absolute zero
+    RATIO = auto()  # Continuous measure *with* an absolute zero
+
+    def __str__(self):
+        return str(self.name).lower()
+
+    @classmethod
+    def from_name(cls, name: str):
+        name = name.lower()
+        if name == "float":
+            return cls.CONTINUOUS
+        elif name == "string":
+            return cls.NOMINAL
+        elif name == "boolean":
+            return cls.BINARY
+        elif name == "integer":
+            return cls.DISCRETE
+        elif name == "none" or name == "array":
+            return cls.NONE
+        else:
+            raise ValueError(f"DataType unrecognized name: {name}")
+
+    @classmethod
+    def from_type_str(cls, type_str: str):
+        type_str = type_str.lower()
+        if type_str == "catgorical":
+            return cls.CATEGORICAL
+        elif type_str == "binary":
+            return cls.BINARY
+        elif type_str == "nominal":
+            return cls.NOMINAL
+        elif type_str == "ordinal":
+            return cls.ORDINAL
+        elif type_str == "numerical":
+            return cls.NUMERICAL
+        elif type_str == "discrete":
+            return cls.DISCRETE
+        elif type_str == "continuous":
+            return cls.CONTINUOUS
+        elif type_str == "interval":
+            return cls.INTERVAL
+        elif type_str == "ratio":
+            return cls.RATIO
+        elif type_str == "none":
+            return cls.NONE
+        else:
+            raise ValueError(f"DataType unrecognized name: {type_str}")
 
 
 @unique
@@ -299,6 +360,21 @@ class LambdaType(Enum):
             return cls.PASS
         else:
             raise ValueError(f"Unrecognized lambda type name: {type_str}")
+
+    @classmethod
+    def from_str(cls, name: str):
+        if name == "ASSIGN":
+            return cls.ASSIGN
+        elif name == "CONDITION":
+            return cls.CONDITION
+        elif name == "DECISION":
+            return cls.DECISION
+        elif name == "LITERAL":
+            return cls.LITERAL
+        elif name == "PASS":
+            return cls.PASS
+        else:
+            raise ValueError(f"Unrecognized lambda type name: {name}")
 
 
 class GenericStmt(ABC):
@@ -354,32 +430,6 @@ class CallStmt(GenericStmt):
         generic_str = super().__str__()
         return f"<CallStmt>: {self.call_id}\n{generic_str}"
 
-    # def translate(
-    #     self,
-    #     container_inputs: dict,
-    #     network: GroundedFunctionNetwork,
-    #     containers: dict,
-    #     occurrences: dict,
-    # ) -> None:
-    #     new_container = containers[self.call_id]
-    #     if self.call_id not in occurrences:
-    #         occurrences[self.call_id] = 0
-    #
-    #     call_inputs = self.correct_input_list(container_inputs)
-    #     outputs = new_container.translate(call_inputs, containers, occurrences)
-    #
-    #     out_var_names = [n.name for n in outputs]
-    #     out_var_str = ",".join(out_var_names)
-    #     pass_func_str = f"lambda {out_var_str}:({out_var_str})"
-    #     func = network.add_lambda_node(LambdaType.PASS, pass_func_str, outputs)
-    #
-    #     out_nodes = [network.add_variable_node(var) for var in self.outputs]
-    #     network.add_hyper_edge(outputs, func, out_nodes)
-    #
-    #     caller_ret, caller_up = list(), list()
-    #
-    #     occurrences[self.call_id] += 1
-
 
 class LambdaStmt(GenericStmt):
     def __init__(self, stmt: dict, con: GenericContainer):
@@ -413,12 +463,3 @@ class LambdaStmt(GenericStmt):
             raise ValueError(
                 f"No recognized lambda type found from name string: {name}"
             )
-
-    # def translate(
-    #     self, container_inputs: dict, network: GroundedFunctionNetwork
-    # ) -> None:
-    #     corrected_inputs = self.correct_input_list(container_inputs)
-    #     in_nodes = [network.add_variable_node(var) for var in corrected_inputs]
-    #     out_nodes = [network.add_variable_node(var) for var in self.outputs]
-    #     func = network.add_lambda_node(self.type, self.func_str, in_nodes)
-    #     network.add_hyper_edge(in_nodes, func, out_nodes)

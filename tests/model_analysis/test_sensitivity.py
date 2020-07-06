@@ -1,10 +1,7 @@
 import os
 import pytest
 
-import numpy as np
-
 from model_analysis.sensitivity import SensitivityIndices, SensitivityAnalyzer
-from model_analysis.networks import GroundedFunctionNetwork as GrFN
 from test_GrFN import petpt_grfn, petasce_grfn
 
 

@@ -14,6 +14,7 @@ from .structures import (
     GenericStmt,
     GenericIdentifier,
     GenericDefinition,
+    VariableDefinition,
 )
 from .code_types import CodeType, build_code_type_decision_tree
 
@@ -100,10 +101,6 @@ class ImperativeInterpreter(SourceInterpreter):
             with open(python_file.replace(".py", "_AIR.json"), "w") as f:
                 json.dump(ir_dict, f, indent=2)
 
-            for con_data in ir_dict["containers"]:
-                new_container = GenericContainer.from_dict(con_data)
-                C[new_container.identifier] = new_container
-
             for var_data in ir_dict["variables"]:
                 new_var = GenericDefinition.from_dict(var_data)
                 V[new_var.identifier] = new_var
@@ -111,6 +108,13 @@ class ImperativeInterpreter(SourceInterpreter):
             for type_data in ir_dict["types"]:
                 new_type = GenericDefinition.from_dict(type_data)
                 T[new_type.identifier] = new_type
+
+            for con_data in ir_dict["containers"]:
+                new_container = GenericContainer.from_dict(con_data)
+                for in_var in new_container.arguments:
+                    if in_var not in V:
+                        V[in_var] = VariableDefinition.from_identifier(in_var)
+                C[new_container.identifier] = new_container
 
             filename = ir_dict["source"][0]
 

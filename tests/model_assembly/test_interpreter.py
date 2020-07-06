@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 
 from model_assembly.interpreter import ImperativeInterpreter
-from model_assembly.networks import GroundedFunctionNetwork
+from model_assembly.networks import GroundedFunctionNetwork, HyperEdge
 from model_assembly.structures import GenericIdentifier, LambdaStmt
 
 
@@ -54,8 +54,21 @@ def test_pet_files():
             for name in GrFN.input_name_map.keys()
         }
     )
-    res = outputs[0]
-    assert res[0] == np.float32(0.05697568)
+    res = outputs[0][0]
+    assert res == np.float32(0.05697568)
+
+    GrFN.to_json_file("./ASCE_GrFN.json")
+    G2 = GroundedFunctionNetwork.from_json("./ASCE_GrFN.json")
+    assert G2 == GrFN
+
+    outputs = G2(
+        {
+            name: np.array([1.0], dtype=np.float32)
+            for name in G2.input_name_map.keys()
+        }
+    )
+    res2 = outputs[0][0]
+    assert res == res2
 
 
 def test_single_file_analysis():
@@ -69,26 +82,14 @@ def test_single_file_analysis():
     PNO_GrFN = GroundedFunctionNetwork.from_AIR(
         petpno_con_id, ITP.containers, ITP.variables, ITP.types
     )
+    assert isinstance(PNO_GrFN, GroundedFunctionNetwork)
 
     A = PNO_GrFN.to_AGraph()
-    # A = nx.nx_agraph.to_agraph(PNO_GrFN)
     A.draw("PETPNO--GrFN.pdf", prog="dot")
-    # CAG = PNO_GrFN.CAG_to_AGraph()
-    # CAG.draw("PETPT--CAG.pdf", prog="dot")
-    # assert isinstance(PNO_GrFN, GroundedFunctionNetwork)
-    # assert len(PNO_GrFN.inputs) == 5
-    # assert len(PNO_GrFN.outputs) == 1
-    #
-    # outputs = PNO_GrFN.run(
-    #     {
-    #         name: np.array([1.0], dtype=np.float32)
-    #         for name in PNO_GrFN.input_name_map.keys()
-    #     }
-    # )
-    # res = outputs[0]
-    # assert res[0] == np.float32(0.02998372)
-    # os.remove("PETPT--GrFN.pdf")
-    # os.remove("PETPT--CAG.pdf")
+
+    PNO_GrFN.to_json_file("./PNO_GrFN.json")
+    G = GroundedFunctionNetwork.from_json("./PNO_GrFN.json")
+    assert G == PNO_GrFN
 
 
 def test_file_with_loops():
@@ -104,3 +105,7 @@ def test_file_with_loops():
     A = G.to_AGraph()
     A.draw("Gillespie-SD--GrFN.pdf", prog="dot")
     assert isinstance(G, GroundedFunctionNetwork)
+
+    G.to_json_file("./Gillespie_GrFN.json")
+    G2 = GroundedFunctionNetwork.from_json("./Gillespie_GrFN.json")
+    assert G == G2

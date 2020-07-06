@@ -778,7 +778,7 @@ class GroundedFunctionNetwork(ComputationalGraph):
 
         return {
             "uid": str(uuid.uuid4()),
-            "data_created": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "date_created": datetime.datetime.now().strftime("%Y-%m-%d"),
             "edges": edges,
             "functions": functions,
             "variables": variables,

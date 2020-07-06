@@ -2,13 +2,16 @@ from typing import List, Dict, Iterable, Any
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from dataclasses import dataclass
-from uuid import uuid4, UUID
+from uuid import uuid4
+import datetime
+import json
 
 import networkx as nx
 import numpy as np
 from networkx.algorithms.simple_paths import all_simple_paths
 from pygraphviz import AGraph
 
+from .sandbox import load_lambda_function
 from .structures import (
     GenericContainer,
     FuncContainer,
@@ -18,11 +21,14 @@ from .structures import (
     GenericStmt,
     CallStmt,
     LambdaStmt,
+    GenericIdentifier,
     ContainerIdentifier,
     VariableIdentifier,
     TypeIdentifier,
     VariableDefinition,
     TypeDefinition,
+    VarType,
+    DataType,
 )
 from utils.misc import choose_font
 
@@ -35,17 +41,18 @@ forestgreen = "#228b22"
 
 @dataclass(repr=False, frozen=False)
 class GenericNode(ABC):
-    uid: UUID
+    uid: str
+    reference: str
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return str(self.uid)
+        return self.uid
 
     @staticmethod
-    def create_node_id() -> UUID:
-        return uuid4()
+    def create_node_id() -> str:
+        return str(uuid4())
 
     @abstractmethod
     def get_kwargs(self):
@@ -60,13 +67,30 @@ class GenericNode(ABC):
 class VariableNode(GenericNode):
     identifier: VariableIdentifier
     value: Any
+    type: VarType
+    kind: DataType
+    domain: str
 
     def __hash__(self):
         return hash(self.uid)
 
+    def __eq__(self, other) -> bool:
+        return self.uid == other.uid
+
     @classmethod
-    def from_id(cls, id: VariableIdentifier):
-        return cls(GenericNode.create_node_id(), id, None)
+    def from_id(cls, id: VariableIdentifier, data: VariableDefinition):
+        # TODO: continue with the two functions below
+        var_type = VarType.from_name(data.domain_name)
+        var_kind = DataType.from_name(data.domain_name)
+        return cls(
+            GenericNode.create_node_id(),
+            "",
+            id,
+            None,
+            var_type,
+            var_kind,
+            data.domain_constraint,
+        )
 
     def get_fullname(self):
         return f"{self.name}\n({self.index})"
@@ -85,6 +109,29 @@ class VariableNode(GenericNode):
     def get_label(self):
         return self.identifier.var_name
 
+    @classmethod
+    def from_dict(cls, data: dict):
+        identifier = VariableIdentifier.from_str(data["identifier"])
+        return cls(
+            data["uid"],
+            data["reference"],
+            identifier,
+            None,
+            VarType.from_name(data["type"]),
+            DataType.from_type_str(data["kind"]),
+            data["domain"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "reference": self.reference,
+            "identifier": str(self.identifier),
+            "type": str(self.type),
+            "kind": str(self.kind),
+            "domain": self.domain,
+        }
+
 
 @dataclass(repr=False, frozen=False)
 class LambdaNode(GenericNode):
@@ -94,6 +141,9 @@ class LambdaNode(GenericNode):
 
     def __hash__(self):
         return hash(self.uid)
+
+    def __eq__(self, other) -> bool:
+        return self.uid == other.uid
 
     def __call__(self, *values) -> Iterable[np.ndarray]:
         expected_num_args = len(self.get_signature())
@@ -124,6 +174,29 @@ class LambdaNode(GenericNode):
     def get_signature(self):
         return self.function.__code__.co_varnames
 
+    @classmethod
+    def from_AIR(cls, lm_id: str, lm_type: str, lm_str: str):
+        lambda_fn = load_lambda_function(lm_str)
+        return cls(lm_id, "", lm_type, lm_str, lambda_fn)
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
+            data["uid"],
+            data["reference"],
+            LambdaType.from_str(data["type"]),
+            data["lambda"],
+            load_lambda_function(data["lambda"]),
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "reference": self.reference,
+            "type": str(self.func_type),
+            "lambda": self.func_str,
+        }
+
 
 @dataclass
 class HyperEdge:
@@ -135,6 +208,37 @@ class HyperEdge:
         result = self.lambda_fn(*[var.value for var in self.inputs])
         for i, out_val in enumerate(result):
             self.outputs[i].value = out_val
+
+    def __eq__(self, other) -> bool:
+        return (
+            self.lambda_fn == other.lambda_fn
+            and all([i1 == i2 for i1, i2 in zip(self.inputs, other.inputs)])
+            and all([o1 == o2 for o1, o2 in zip(self.outputs, other.outputs)])
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.lambda_fn.uid,
+                tuple([inp.uid for inp in self.inputs]),
+                tuple([out.uid for out in self.outputs]),
+            )
+        )
+
+    @classmethod
+    def from_dict(cls, data: dict, all_nodes: Dict[str, GenericNode]):
+        return cls(
+            [all_nodes[n_id] for n_id in data["inputs"]],
+            all_nodes[data["function"]],
+            [all_nodes[n_id] for n_id in data["outputs"]],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "inputs": [n.uid for n in self.inputs],
+            "function": self.lambda_fn.uid,
+            "outputs": [n.uid for n in self.outputs],
+        }
 
 
 @dataclass(repr=False)
@@ -156,6 +260,14 @@ class GrFNSubgraph:
         context = f"{self.namespace}.{self.scope}"
         return f"{self.basename}::{self.occurrence_num} ({context})"
 
+    def __eq__(self, other) -> bool:
+        return (
+            self.occurrence_num == other.occurrence_num
+            and self.border_color == other.border_color
+            and set([n.uid for n in self.nodes])
+            == set([n.uid for n in other.nodes])
+        )
+
     @classmethod
     def from_container(cls, con: GenericContainer, occ: int):
         if isinstance(con, CondContainer):
@@ -171,11 +283,35 @@ class GrFNSubgraph:
         id = con.identifier
         return cls(id.namespace, id.scope, id.con_name, occ, clr, [])
 
+    @classmethod
+    def from_dict(cls, data: dict, all_nodes: Dict[str, GenericNode]):
+        subgraph_nodes = [all_nodes[n_id] for n_id in data["nodes"]]
+        return cls(
+            data["namespace"],
+            data["scope"],
+            data["basename"],
+            data["occurrence_num"],
+            data["border_color"],
+            subgraph_nodes,
+        )
+
+    def to_dict(self):
+        return {
+            "namespace": self.namespace,
+            "scope": self.scope,
+            "basename": self.basename,
+            "occurrence_num": self.occurrence_num,
+            "border_color": self.border_color,
+            "nodes": [n.uid for n in self.nodes],
+        }
+
 
 class GroundedFunctionNetwork(nx.DiGraph):
     def __init__(
         self,
+        uid: str,
         id: ContainerIdentifier,
+        timestamp: str,
         G: nx.DiGraph,
         H: List[HyperEdge],
         S: nx.DiGraph,
@@ -184,6 +320,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
         self.hyper_edges = H
         self.subgraphs = S
 
+        self.uid = uid
+        self.date_created = timestamp
         self.namespace = id.namespace
         self.scope = id.scope
         self.name = id.con_name
@@ -210,6 +348,14 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other) -> bool:
+        return (
+            set(self.hyper_edges) == set(other.hyper_edges)
+            and set(self.subgraphs) == set(other.subgraphs)
+            and set(self.inputs) == set(other.inputs)
+            and set(self.outputs) == set(other.outputs)
+        )
 
     def __str__(self):
         L_sz = str(len(self.lambda_nodes))
@@ -265,16 +411,16 @@ class GroundedFunctionNetwork(nx.DiGraph):
         subgraphs = nx.DiGraph()
 
         def add_variable_node(id: VariableIdentifier) -> VariableNode:
-            node = VariableNode.from_id(id)
+            var_data = variables[id]
+            node = VariableNode.from_id(id, var_data)
             network.add_node(node, **(node.get_kwargs()))
             return node
 
         def add_lambda_node(
             lambda_type: LambdaType, lambda_str: str
         ) -> LambdaNode:
-            lambda_fn = eval(lambda_str)
-            node_id = GenericNode.create_node_id()
-            node = LambdaNode(node_id, lambda_type, lambda_str, lambda_fn)
+            lambda_id = GenericNode.create_node_id()
+            node = LambdaNode.from_AIR(lambda_id, lambda_type, lambda_str)
             network.add_node(node, **(node.get_kwargs()))
             return node
 
@@ -393,7 +539,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
         start_container = containers[con_id]
         Occs[con_id] = 0
         translate_container(start_container, [])
-        return cls(con_id, network, hyper_edges, subgraphs)
+        grfn_uid = str(uuid4())
+        date_created = datetime.datetime.now().strftime("%Y-%m-%d")
+        return cls(
+            grfn_uid, con_id, date_created, network, hyper_edges, subgraphs
+        )
 
     def to_FCG(self):
         G = nx.DiGraph()
@@ -605,3 +755,62 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         F.add_edges_from(main_edges)
         return F
+
+    def to_json(self) -> str:
+        """Outputs the contents of this GrFN to a JSON object string.
+
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+        """
+        data = {
+            "uid": self.uid,
+            "identifier": "::".join(
+                ["@container", self.namespace, self.scope, self.name]
+            ),
+            "date_created": self.date_created,
+            "hyper_edges": [edge.to_dict() for edge in self.hyper_edges],
+            "variables": [var.to_dict() for var in self.variables],
+            "functions": [func.to_dict() for func in self.lambdas],
+            "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
+        }
+        return json.dumps(data)
+
+    def to_json_file(self, json_path) -> None:
+        with open(json_path, "w") as outfile:
+            outfile.write(self.to_json())
+
+    @classmethod
+    def from_json(cls, json_path):
+        """Short summary.
+
+        :param type cls: Description of parameter `cls`.
+        :param type json_path: Description of parameter `json_path`.
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+
+        """
+        data = json.load(open(json_path, "r"))
+
+        # Re-create variable and function nodes from their JSON descriptions
+        V = {v["uid"]: VariableNode.from_dict(v) for v in data["variables"]}
+        F = {f["uid"]: LambdaNode.from_dict(f) for f in data["functions"]}
+
+        # Add all of the function and variable nodes to a new DiGraph
+        G = nx.DiGraph()
+        ALL_NODES = {**V, **F}
+        for grfn_node in ALL_NODES.values():
+            G.add_node(grfn_node, **(grfn_node.get_kwargs()))
+
+        # Re-create the hyper-edges/subgraphs using the node lookup list
+        S = [GrFNSubgraph.from_dict(s, ALL_NODES) for s in data["subgraphs"]]
+        H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
+
+        # Add edges to the new DiGraph using the re-created hyper-edge objects
+        for edge in H:
+            G.add_edges_from([(var, edge.lambda_fn) for var in edge.inputs])
+            G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
+
+        identifier = GenericIdentifier.from_str(data["identifier"])
+        return cls(data["uid"], identifier, data["date_created"], G, H, S)
