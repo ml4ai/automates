@@ -159,7 +159,10 @@ class LambdaNode(GenericNode):
             if isinstance(res, tuple):
                 return [np.array(item) for item in res]
             else:
-                res = [np.array(res)]
+                if len(values) == 0:
+                    res = [np.array(res, dtype=np.float32)]
+                else:
+                    res = [np.array(res)]
             return res
         except Exception as e:
             print(f"Exception occured in {self.func_str}")

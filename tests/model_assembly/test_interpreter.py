@@ -5,8 +5,8 @@ import numpy as np
 import networkx as nx
 
 from model_assembly.interpreter import ImperativeInterpreter
-from model_assembly.networks import GroundedFunctionNetwork, HyperEdge
-from model_assembly.structures import GenericIdentifier, LambdaStmt
+from model_assembly.networks import GroundedFunctionNetwork
+from model_assembly.structures import GenericIdentifier
 
 
 @pytest.mark.skip("Need to handle constants in function call")
@@ -38,35 +38,41 @@ def test_pet_files():
         A.draw(outfile, prog="dot")
         return G
 
-    GrFN = interpreter_test(
+    G = interpreter_test(
         "tests/data/program_analysis/PETASCE_simple.for",
         "@container::PETASCE_simple::@global::petasce",
         "PETASCE--GrFN.pdf",
     )
 
-    assert isinstance(GrFN, GroundedFunctionNetwork)
-    assert len(GrFN.inputs) == 13
-    assert len(GrFN.outputs) == 1
+    assert isinstance(G, GroundedFunctionNetwork)
+    assert len(G.inputs) == 13
+    assert len(G.outputs) == 1
 
-    outputs = GrFN(
-        {
-            name: np.array([1.0], dtype=np.float32)
-            for name in GrFN.input_name_map.keys()
-        }
-    )
+    values = {
+        "doy": np.array([20.0], dtype=np.float32),
+        "meevp": np.array(["A"], dtype=np.str),
+        "msalb": np.array([0.5], dtype=np.float32),
+        "srad": np.array([15.0], dtype=np.float32),
+        "tmax": np.array([10.0], dtype=np.float32),
+        "tmin": np.array([-10.0], dtype=np.float32),
+        "xhlai": np.array([10.0], dtype=np.float32),
+        "tdew": np.array([20.0], dtype=np.float32),
+        "windht": np.array([5.0], dtype=np.float32),
+        "windrun": np.array([450.0], dtype=np.float32),
+        "xlat": np.array([45.0], dtype=np.float32),
+        "xelev": np.array([3000.0], dtype=np.float32),
+        "canht": np.array([2.0], dtype=np.float32),
+    }
+
+    outputs = G(values)
     res = outputs[0][0]
-    assert res == np.float32(0.05697568)
+    assert res == np.float32(1.3980656099985995)
 
-    GrFN.to_json_file("tmp/ASCE_GrFN.json")
+    G.to_json_file("tmp/ASCE_GrFN.json")
     G2 = GroundedFunctionNetwork.from_json("tmp/ASCE_GrFN.json")
-    assert G2 == GrFN
+    assert G2 == G
 
-    outputs = G2(
-        {
-            name: np.array([1.0], dtype=np.float32)
-            for name in G2.input_name_map.keys()
-        }
-    )
+    outputs = G2(values)
     res2 = outputs[0][0]
     assert res == res2
 
