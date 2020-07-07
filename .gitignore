@@ -72,3 +72,8 @@ Gemfile.lock
 
 # Adding lib files for TR webapp
 !src/text_reading/webapp/public/brat/client/lib
+
+# Program analysis stuff
+*modFileLog.json
+*--GrFN.pdf
+tmp
