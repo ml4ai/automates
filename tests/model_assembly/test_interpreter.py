@@ -57,8 +57,8 @@ def test_pet_files():
     res = outputs[0][0]
     assert res == np.float32(0.05697568)
 
-    GrFN.to_json_file("./ASCE_GrFN.json")
-    G2 = GroundedFunctionNetwork.from_json("./ASCE_GrFN.json")
+    GrFN.to_json_file("tmp/ASCE_GrFN.json")
+    G2 = GroundedFunctionNetwork.from_json("tmp/ASCE_GrFN.json")
     assert G2 == GrFN
 
     outputs = G2(
@@ -87,8 +87,8 @@ def test_single_file_analysis():
     A = PNO_GrFN.to_AGraph()
     A.draw("PETPNO--GrFN.pdf", prog="dot")
 
-    PNO_GrFN.to_json_file("./PNO_GrFN.json")
-    G = GroundedFunctionNetwork.from_json("./PNO_GrFN.json")
+    PNO_GrFN.to_json_file("tmp/PNO_GrFN.json")
+    G = GroundedFunctionNetwork.from_json("tmp/PNO_GrFN.json")
     assert G == PNO_GrFN
 
 
@@ -106,6 +106,44 @@ def test_file_with_loops():
     A.draw("Gillespie-SD--GrFN.pdf", prog="dot")
     assert isinstance(G, GroundedFunctionNetwork)
 
-    G.to_json_file("./Gillespie_GrFN.json")
-    G2 = GroundedFunctionNetwork.from_json("./Gillespie_GrFN.json")
+    G.to_json_file("tmp/Gillespie_GrFN.json")
+    G2 = GroundedFunctionNetwork.from_json("tmp/Gillespie_GrFN.json")
     assert G == G2
+
+
+def test_petpt():
+    ITP = ImperativeInterpreter.from_src_file(
+        "tests/data/program_analysis/PETPT.for"
+    )
+    con_id = GenericIdentifier.from_str("@container::PETPT::@global::petpt")
+
+    G = GroundedFunctionNetwork.from_AIR(
+        con_id, ITP.containers, ITP.variables, ITP.types
+    )
+    assert isinstance(G, GroundedFunctionNetwork)
+    A = G.to_AGraph()
+    A.draw("PETPT--GrFN.pdf", prog="dot")
+    assert len(G.inputs) == 5
+    assert len(G.outputs) == 1
+
+
+@pytest.mark.skip("Not testing FIBs yet")
+def test_FIB_formation():
+    petpno_fib = ForwardInfluenceBlanket.from_GrFN(petpno_grfn, petpen_grfn)
+    CAG = petpno_fib.CAG_to_AGraph()
+    CAG.draw("PETPNO_FIB--CAG.pdf", prog="dot")
+    os.remove("PETPNO_FIB--CAG.pdf")
+
+
+def test_crop_yield_creation():
+    ITP = ImperativeInterpreter.from_src_file(
+        "tests/data/program_analysis/crop_yield.f"
+    )
+    con_id = GenericIdentifier.from_str(
+        "@container::crop_yield::@global::crop_yield"
+    )
+
+    G = GroundedFunctionNetwork.from_AIR(
+        con_id, ITP.containers, ITP.variables, ITP.types
+    )
+    assert isinstance(G, GroundedFunctionNetwork)

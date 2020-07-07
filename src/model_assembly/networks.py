@@ -637,6 +637,52 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         return A
 
+    def to_CAG(self):
+        # TODO: finish this implementation
+        """ Export to a Causal Analysis Graph (CAG) PyGraphviz AGraph object.
+        The CAG shows the influence relationships between the variables and
+        elides the function nodes."""
+
+        G = nx.DiGraph()
+        for grfn_node in self.nodes:
+            if isinstance(grfn_node, VariableNode):
+                cag_name = grfn_node.identifier.var_name
+                G.add_node(cag_name, **attrs)
+                for pred_fn in self.predecessors(name):
+                    for pred_var in self.predecessors(pred_fn):
+                        v_attrs = self.nodes[pred_var]
+                        v_name = v_attrs["cag_label"]
+                        G.add_node(v_name, **self.nodes[pred_var])
+                        G.add_edge(v_name, cag_name)
+
+        return G
+
+    def CAG_to_AGraph(self):
+        # TODO: finish this implementation
+        """Returns a variable-only view of the GrFN in the form of an AGraph.
+
+        Returns:
+            type: A CAG constructed via variable influence in the GrFN object.
+
+        """
+        CAG = self.to_CAG()
+        for name, data in CAG.nodes(data=True):
+            CAG.nodes[name]["label"] = data["cag_label"]
+        A = nx.nx_agraph.to_agraph(CAG)
+        A.graph_attr.update(
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+        )
+        A.node_attr.update(
+            {
+                "shape": "rectangle",
+                "color": "#650021",
+                "style": "rounded",
+                "fontname": "Menlo",
+            }
+        )
+        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+        return A
+
     def to_FIB(self, G2):
         """ Creates a ForwardInfluenceBlanket object representing the
         intersection of this model with the other input model.
