@@ -2,21 +2,21 @@
 
 from __future__ import division, print_function
 
+import argparse
+import fcntl
+import itertools
+import json
 import os
 import sys
-import json
-import fcntl
-import argparse
-import subprocess
+from datetime import datetime
+
 import cv2
 import jinja2
-import itertools
 import numpy as np
-from skimage import img_as_ubyte
 from pdf2image import convert_from_path
-from latex import LatexTokenizer, find_main_tex_file
+
+from data_collection.latex import LatexTokenizer, find_main_tex_file
 from utils import run_command
-from datetime import datetime
 
 
 def parse_args():
@@ -25,7 +25,6 @@ def parse_args():
     parser.add_argument('--outdir', default='/data/output')
     parser.add_argument('--logfile', default='/data/collect_data.log')
     parser.add_argument('--template', default='misc/template.tex')
-    parser.add_argument('--template-im2markup', default='misc/template_im2markup.tex')
     parser.add_argument('--rescale-factor', type=float, default=1, help='rescale pages to speedup template matching')
     parser.add_argument('--dump-pages', action='store_true')
     parser.add_argument('--keep-intermediate-files', action='store_true')
@@ -247,7 +246,7 @@ def error_msg(paper_name, msg, equations=[]):
 def get_paper_id(dirname):
     return os.path.basename(os.path.normpath(dirname))  # e.g., 1807.07834
 
-def process_paper(dirname, template, template_im2markup, outdir, rescale_factor, dump, keep_intermediate, pdfdir, num_paragraphs):
+def process_paper(dirname, template, outdir, rescale_factor, dump, keep_intermediate, pdfdir, num_paragraphs):
     # keep a poor man's log of what failed, if anything
     info_log = ''
 
@@ -276,7 +275,6 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
         pages = get_pages(pdf_name, dump, outdir)
         # load jinja2 templates
         template = mk_template(template)
-        template_im2markup = mk_template(template_im2markup)
         # keep track of which eqns failed or were skipped, to hopefully later recover
         failed_eqns = []
         skipped_eqns = []
@@ -300,9 +298,7 @@ def process_paper(dirname, template, template_im2markup, outdir, rescale_factor,
                 # make pdf
                 fname = os.path.join(outdir, eq_name, 'equation.tex')
                 equation = render_equation(dict(equation=eq_tex), template, fname, keep_intermediate)
-                # also render using the template from im2markup
-                fname_im2markup = os.path.join(outdir, eq_name, 'equation_im2markup.tex')
-                render_equation(dict(equation=eq_tex), template_im2markup, fname_im2markup, keep_intermediate)
+
                 if equation is None:
                     # equation couldn't be rendered
                     failed_eqns.append(eq_name)
@@ -328,7 +324,7 @@ if __name__ == '__main__':
     with open(args.logfile, 'a') as logfile:
         print('processing', args.indir, '...')
         try:
-            paper_errors = process_paper(args.indir, args.template, args.template_im2markup, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir, args.num_paragraphs)
+            paper_errors = process_paper(args.indir, args.template, args.outdir, args.rescale_factor, args.dump_pages, args.keep_intermediate_files, args.pdfdir, args.num_paragraphs)
         except KeyboardInterrupt:
             raise
         except:
