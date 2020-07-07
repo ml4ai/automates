@@ -37,10 +37,10 @@ RUN pip3 install wheel
 # Common-use and testing packages
 RUN pip3 install \
   antlr4-python3-runtime==4.8 \
-  pytest==5.4.1 \
+  pytest==5.4.3 \
   pytest-cov==2.8.1 \
   Pygments==2.3.1 \
-  tqdm==4.29.0
+  tqdm==4.46.0
 
 # Adding PyTorch separately due to memory constraints
 RUN pip3 install \
@@ -50,8 +50,8 @@ RUN pip3 install \
 # Scientific computing packages
 RUN pip3 install \
   networkx==2.4 \
-  numpy==1.18.2 \
-  pandas==1.0.3 \
+  numpy==1.18.4 \
+  pandas==1.0.4 \
   sympy==1.5.1 \
   scikit_learn==0.22.2.post1 \
   SALib==1.3.8 \

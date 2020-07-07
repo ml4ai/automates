@@ -1,0 +1,631 @@
+{
+  "containers": [
+    {
+      "name": "@container::derived-types-02::@global::main",
+      "source_refs": [],
+      "type": "function",
+      "arguments": [],
+      "updated": [],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "derived_types_02__main__assign__x__0",
+            "type": "lambda",
+            "code": "lambda :[0] * (3 - 0)"
+          },
+          "input": [],
+          "output": [
+            "@variable::x::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__assign__var__i__0",
+            "type": "lambda",
+            "code": "lambda :3"
+          },
+          "input": [],
+          "output": [
+            "@variable::var__i::-2"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__assign__z__0",
+            "type": "lambda",
+            "code": "lambda var__i:i"
+          },
+          "input": [
+            "@variable::var__i::-2"
+          ],
+          "output": [
+            "@variable::z::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::derived-types-02::main::loop$0",
+            "type": "container"
+          },
+          "input": [
+            "@variable::var__i::0"
+          ],
+          "output": [],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::derived-types-02::main::loop$2",
+            "type": "container"
+          },
+          "input": [
+            "@variable::var__i::1"
+          ],
+          "output": [],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::derived-types-02::main::loop$0",
+      "source_refs": [],
+      "type": "loop",
+      "arguments": [
+        "@variable::var__i::-1"
+      ],
+      "updated": [],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__assign__i__0",
+            "type": "lambda",
+            "code": "lambda :1"
+          },
+          "input": [],
+          "output": [
+            "@variable::i::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__condition__IF_0__0",
+            "type": "lambda",
+            "code": "lambda i,var__i:0 <= i < var__i+1"
+          },
+          "input": [
+            "@variable::i::0",
+            "@variable::var__i::-1"
+          ],
+          "output": [
+            "@variable::IF_0::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__decision__EXIT__0",
+            "type": "lambda",
+            "code": "lambda IF_0_0:(not IF_0_0)"
+          },
+          "input": [
+            "@variable::IF_0::0"
+          ],
+          "output": [
+            "@variable::EXIT::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__assign__a_i__0",
+            "type": "lambda",
+            "code": "lambda a,i,var__i:(a.__setitem__(i,(i+i)),a)[1]"
+          },
+          "input": [
+            "@variable::a::-1",
+            "@variable::i::0",
+            "@variable::var__i::0"
+          ],
+          "output": [
+            "@variable::a::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::derived-types-02::main.loop$0::loop$1",
+            "type": "container"
+          },
+          "input": [
+            "@variable::var__i::0",
+            "@variable::a::0",
+            "@variable::i::0"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::a::1"
+          ]
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__assign__i__1",
+            "type": "lambda",
+            "code": "lambda i:i + 1"
+          },
+          "input": [
+            "@variable::i::0"
+          ],
+          "output": [
+            "@variable::i::1"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::derived-types-02::main.loop$0::loop$1",
+      "source_refs": [],
+      "type": "loop",
+      "arguments": [
+        "@variable::var__i::-1",
+        "@variable::a::-1",
+        "@variable::i::-1"
+      ],
+      "updated": [
+        "@variable::a::0"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__loop_1__assign__j__0",
+            "type": "lambda",
+            "code": "lambda :1"
+          },
+          "input": [],
+          "output": [
+            "@variable::j::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__loop_1__condition__IF_0__0",
+            "type": "lambda",
+            "code": "lambda j,var__i:0 <= j < var__i+1"
+          },
+          "input": [
+            "@variable::j::0",
+            "@variable::var__i::-1"
+          ],
+          "output": [
+            "@variable::IF_0::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__loop_1__decision__EXIT__0",
+            "type": "lambda",
+            "code": "lambda IF_0_0:(not IF_0_0)"
+          },
+          "input": [
+            "@variable::IF_0::0"
+          ],
+          "output": [
+            "@variable::EXIT::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__loop_1__assign__a_j__0",
+            "type": "lambda",
+            "code": "lambda a,j,i:(a.__setitem__(j,((i+j)/2.0)),a)[1]"
+          },
+          "input": [
+            "@variable::a::-1",
+            "@variable::j::0",
+            "@variable::i::-1"
+          ],
+          "output": [
+            "@variable::a::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_0__loop_1__assign__j__1",
+            "type": "lambda",
+            "code": "lambda j:j + 1"
+          },
+          "input": [
+            "@variable::j::0"
+          ],
+          "output": [
+            "@variable::j::1"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::derived-types-02::main::loop$2",
+      "source_refs": [],
+      "type": "loop",
+      "arguments": [
+        "@variable::var__i::-1"
+      ],
+      "updated": [],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_2__assign__i__0",
+            "type": "lambda",
+            "code": "lambda :1"
+          },
+          "input": [],
+          "output": [
+            "@variable::i::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_2__condition__IF_0__0",
+            "type": "lambda",
+            "code": "lambda i,var__i:0 <= i < var__i+1"
+          },
+          "input": [
+            "@variable::i::0",
+            "@variable::var__i::-1"
+          ],
+          "output": [
+            "@variable::IF_0::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_2__decision__EXIT__0",
+            "type": "lambda",
+            "code": "lambda IF_0_0:(not IF_0_0)"
+          },
+          "input": [
+            "@variable::IF_0::0"
+          ],
+          "output": [
+            "@variable::EXIT::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "derived_types_02__main__loop_2__assign__i__1",
+            "type": "lambda",
+            "code": "lambda i:i + 1"
+          },
+          "input": [
+            "@variable::i::0"
+          ],
+          "output": [
+            "@variable::i::1"
+          ],
+          "updated": []
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "@variable::derived-types-02::main::x::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          4
+        ],
+        "elem_type": "mytype",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main::var__i::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main::z::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0::a::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          4
+        ],
+        "elem_type": "float",
+        "mutable": true
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::a::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          4
+        ],
+        "elem_type": "float",
+        "mutable": true
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::var__i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::a::-1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          4
+        ],
+        "elem_type": "float",
+        "mutable": true
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0::a::1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          4
+        ],
+        "elem_type": "float",
+        "mutable": true
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::j::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::IF_0::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::EXIT::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0.loop$1::j::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0::var__i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0::i::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0::IF_0::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0::EXIT::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$0::i::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$2::var__i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$2::i::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$2::IF_0::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$2::EXIT::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::derived-types-02::main.loop$2::i::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    }
+  ],
+  "start": [
+    "@container::derived-types-02::@global::main"
+  ],
+  "grounding": [],
+  "types": [
+    {
+      "name": "@type::derived-types-02::@global::mytype",
+      "type": "type",
+      "attributes": [
+        {
+          "name": "i",
+          "type": "integer"
+        },
+        {
+          "name": "a",
+          "type": "Array",
+          "elem_type": "float",
+          "dimensions": [
+            4
+          ]
+        }
+      ],
+      "code": "@dataclass\nclass mytype:\n\ti: int\n\ta:List[float]"
+    }
+  ],
+  "source": [
+    "derived-types-02.f"
+  ],
+  "source_comments": {
+    "$file_head": [
+      "C File: derived-types-02.f\n",
+      "C Illustrates more complex derived types involving fields that\n",
+      "C are aggregates (in this case, 1-D arrays)\n",
+      "C \n",
+      "C This code is adapted from \n",
+      "C https://courses.physics.illinois.edu/phys466/sp2013/comp_info/derived.html\n",
+      "C\n",
+      "C The generated output is:\n",
+      "C  1   4.000   1.000   1.500   2.000\n",
+      "C  2   5.000   1.500   2.000   2.500\n",
+      "C  3   6.000   2.000   2.500   3.000\n",
+      "\n",
+      "      \n"
+    ],
+    "$file_foot": []
+  },
+  "system": {
+    "name": "derived-types-02",
+    "components": [
+      {
+        "grfn_source": "./derived-types-02_AIR.json",
+        "code_source": [
+          "tests/data/program_analysis/derived-types/derived-types-02.f"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}
