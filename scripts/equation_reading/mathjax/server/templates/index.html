@@ -1,9 +1,3 @@
-
-<!-- IF I comment out these template directives, nothing displays...
-{% extends "header.html" %}
-{% block body %}
--->
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,16 +6,7 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript">
-        $(function() {
-            $( 'a#process_input' ).bind('click', function() {
-                $.getJSON('/background_process', {
-                    proglang: $( 'input[name="proglang"]' ).val(),
-                }, function(data) {
-                    $("#result").text(data.result);
-                });
-                return false;
-            });
-        });
+
     </script>
 </head>
 
@@ -36,7 +21,5 @@
     </div>
 </body>
 
+  <script src="{{ url_for('static', filename='js/controller.js') }}"></script>
 </html>
-<!--
-{% endblock %}
--->
