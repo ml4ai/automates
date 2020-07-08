@@ -3,20 +3,26 @@
 
 <head>
     <meta charset="utf-8">
-
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/xml-formatter@2.1.0/dist/browser/xml-formatter.js"></script> -->
+    <script>
+        MathJax = {
+        loader: {load: ['input/tex']}
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js"></script>
 </head>
 
-<body class="body">
-    <div class="container">
-        <h3>Which is the best programming language of them all?</h3>
-        <form>
-            <input type="text" size="5" name="proglang">
-            <a href="#" id="process_input"><button class="btn btn-default">Submit</button></a>
-        </form>
-        <p id="result"></p>
-    </div>
+<body>
+    <div id="latex_source">x = {-b \pm \sqrt{b^2-4ac} \over 2a}.</div>
+    <!-- <input type="button" value="Convert TeX" id="render" onclick="convert()" /> -->
+    <a href="#" id="process_input"><button class="btn btn-default">Convert TeX to MathML</button></a>
+    <div id="output"></div>
+    <p id="result"></p>
 </body>
-
-  <script src="{{ url_for('static', filename='js/controller.js') }}"></script>
+<script src="../static/js/controller.js"></script>
+<!-- <script src="{{ url_for('static', filename='js/controller.js') }}"></script> -->
 </html>

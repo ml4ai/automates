@@ -9,7 +9,7 @@ def index():
 
 
 # then end '/' is necessary...
-@app.route("/interactive")
+@app.route("/interactive/")
 def interactive():
     try:
         print("Calling interactive()")
@@ -31,6 +31,16 @@ def background_process():
             return jsonify(result="You are wise.")
         else:
             return jsonify(result="Try again.")
+    except Exception as e:
+        return str(e)
+
+
+@app.route("/latex_to_mml")
+def latex_to_mml():
+    try:
+        print('Calling latex_to_mml()')
+        mml = request.args.get('latex_source', 0, type=str)
+        return jsonify(result=mml)
     except Exception as e:
         return str(e)
 
