@@ -40,6 +40,7 @@ def latex_to_mml():
     try:
         print('Calling latex_to_mml()')
         mml = request.args.get('latex_source', 0, type=str)
+        print(mml)
         return jsonify(result=mml)
     except Exception as e:
         return str(e)

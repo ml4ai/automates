@@ -60,7 +60,7 @@ $(function() {
         console.log($("#output"));
 
         $.getJSON('/latex_to_mml', {
-            latex_source: $("#output")
+            latex_source: $("#output").val()
         }, function(data) {
             $("#result").text(data.result);
         });
