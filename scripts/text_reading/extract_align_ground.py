@@ -13,7 +13,7 @@ pet_eqns = f"{mini_spam}/eqns/SPAM/PET"
 
 
 def call_pdf_to_mentions(doc_name, out_name):
-    doc_file = f"{pet_docs}/{doc_name}.pdf"
+    doc_file = f"{pet_docs}/{doc_name}"
     if not os.path.isfile(doc_file):
         raise RuntimeError(f"Document not found: {doc_name}")
 
@@ -69,7 +69,10 @@ def call_groundMentionsToSVO(mentions_name, out_name):
 
 
 if __name__ == "__main__":
-    call_pdf_to_mentions("petasce", "ASCE-mentions")
+    call_pdf_to_mentions(
+        "ASCE-2005-The ASCE Standardized Reference-TechReport-petasce.pdf",
+        "ASCE-mentions",
+    )
     call_pdf_to_mentions("petpt_2012", "PT-mentions")
     call_pdf_to_mentions("petpno_Penman", "PNO-mentions")
     call_pdf_to_mentions("petpen_PM", "PEN-mentions")
