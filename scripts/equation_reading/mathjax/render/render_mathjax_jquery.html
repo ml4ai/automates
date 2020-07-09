@@ -8,25 +8,28 @@
   <link rel="stylesheet" href="static/css/style.css">
   
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
+  <!-- jquery -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <!-- XML Formatter (for pretty-printing MathML) -->
   <script src="https://cdn.jsdelivr.net/npm/xml-formatter@2.1.0/dist/browser/xml-formatter.js"></script>
 
+  <!-- Configure and start MathJax -->
   <script>
     MathJax = {
       loader: {load: ['input/tex']}
     };
   </script>
-
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js"></script>
 
   <!-- Load the data -->
   <script src="latex_data_dev.js"></script>
 
-  <!-- Define path to data -->
-  <script>
-    const data_path = "latex_data_dev.json"
-  </script>
-  
+  <!-- Define path to JSON data of LaTeX source (and MathML) -->
+  <script> const data_path = "latex_data_dev.json" </script>
+
+  <!-- Generate the table (will execute after following HTML completes rendering) -->
   <script src="static/js/generate-table.js"></script>
   <!-- ><script src="static/js/generate-table-no-jquery.js"></script> -->
 
@@ -35,7 +38,7 @@
 <body>
   <table id="table">
     <thead>
-      <tr><th width=400>LaTeX</th><th>Equation</th><th width=500>MathML</th></tr>
+      <tr><th width=400>LaTeX</th><th>MathJax render MathML</th><th width=500>MathML</th></tr>
     </thead>
   </table>
 </body>
