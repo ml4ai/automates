@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, jsonify
+import json
 
 app = Flask(__name__)
 
@@ -35,11 +36,22 @@ def background_process():
         return str(e)
 
 
-@app.route("/latex_to_mml")
-def latex_to_mml():
+@app.route("/latex2mml")
+def latex2mml():
+    latex_strs = json.load(open("static/data/latex_data_dev.json", "r"))
+    return jsonify({"latex": latex_strs[0]})
+
+
+@app.route("/tex_to_mml")
+def tex_to_mml():
+    pass
+
+
+@app.route("/send_mml")
+def send_mml():
     try:
-        print('Calling latex_to_mml()')
-        mml = request.args.get('latex_source', 0, type=str)
+        print("Calling latex_to_mml()")
+        mml = request.args.get("latex_source", 0, type=str)
         print(mml)
         return jsonify(result=mml)
     except Exception as e:
