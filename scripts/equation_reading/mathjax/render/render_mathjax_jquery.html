@@ -26,19 +26,28 @@
   <!-- Load the data -->
   <script src="latex_data_dev.js"></script>
 
-  <!-- Define path to JSON data of LaTeX source (and MathML) -->
-  <script> const data_path = "latex_data_dev.json" </script>
+  <!-- Constants used in script -->
+  <script>
+    // Sadly, cannot get loading of json directly from file :/
+    // const data_path = "latex_data_dev.json";
+
+    // path to images
+    const images_path = "images";
+
+    // extension type of image
+    const images_ext = "png";
+  </script>
 
   <!-- Generate the table (will execute after following HTML completes rendering) -->
   <script src="static/js/generate-table.js"></script>
-  <!-- ><script src="static/js/generate-table-no-jquery.js"></script> -->
+  <!-- <script src="static/js/generate-table-no-jquery.js"></script> -->
 
 </head>
 
 <body>
   <table id="table">
     <thead>
-      <tr><th width=400>LaTeX</th><th>MathJax render MathML</th><th width=500>MathML</th></tr>
+    <tr><th width=400>LaTeX</th><th>LaTeX render</th><th>MathJax render MathML</th><th width=500>MathML</th></tr>
     </thead>
   </table>
 </body>
