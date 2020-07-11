@@ -10,7 +10,9 @@
   "author": "Paul D. Hein",
   "license": "ISC",
   "dependencies": {
+    "async": "^3.2.0",
     "express": "^4.17.1",
+    "lodash": "^4.17.19",
     "mathjax-node": "^2.1.1"
   }
 }
