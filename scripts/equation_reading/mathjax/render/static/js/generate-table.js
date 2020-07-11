@@ -1,4 +1,4 @@
-// Assumes latex_data.js has already been loaded, providing latex_source variable
+// Assumes data_path has already been defined (in render_mathjax_jquery.hmtl)
 
 // Version of table generation script that uses jquery to construct table rows
 
@@ -10,12 +10,27 @@ $(document).ready(function(){
   let table = $("#table");
   let i = 0;
 
-  // For each latex source datum in latex_source:
+  // load eqn_src from json in data_path
+  var eqn_src = (function() {
+    var json = null;
+    $.ajax({
+      'async': false,
+      'global': false,
+      'url': data_path,
+      'dataType': "json",
+      'success': function (data) {
+        json = data;
+      }
+    });
+    return json;
+  })();
+
+  // For each latex source datum in data:
   //   generate a table row, with
   //     <td> for original latex source (as plain text)
   //     <td> that has innerHTML as raw mml -- available to be rendered by MathJax
   //     <td> that contains pre-formatted MathML
-  for (let element of latex_source) {
+  for (let element of eqn_src) {
     let row = $("<tr/>",{ class: "datum" });
     var cell = $("<td/>", { id: `tex_src_${i}`,
                             text: `${element["src"]}` });

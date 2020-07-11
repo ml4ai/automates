@@ -2,8 +2,11 @@
 
 ### Installation
 - Install node/npm: `brew install nodejs`
-- Initialize the node modules: `npm install`
+- Initialize the node modules: 
+  - in the same directory as the server.js, run `npm install`
 
+### Python prerequisits
+- `pip install requests`
 
 ### Run the app
 - In one terminal shell (in this directory) run: `node server.js`
