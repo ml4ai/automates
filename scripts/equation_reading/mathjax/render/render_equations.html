@@ -24,12 +24,12 @@
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js"></script>
 
   <!-- Load the data -->
-  <!-- <script src="latex_data_dev.js"></script> -->
+  <script src="latex_data_dev.js"></script>
 
   <!-- Constants used in script -->
   <script>
     // filepath for data
-    const data_path = "latex_data_dev.json";
+    // const data_path = "latex_data_dev.json";
 
     // path to images
     const images_path = "images";
@@ -39,9 +39,9 @@
   </script>
 
   <!-- Generate the table (will execute after following HTML completes rendering) -->
-  <script src="{{ url_for('static', filename='js/generate-table.js') }}"></script>
-  <!-- <script src="static/js/generate-table.js"></script> -->
+  <script src="static/js/generate-table.js"></script>
   <!-- <script src="static/js/generate-table-no-jquery.js"></script> -->
+  <!-- <script src="{{ url_for('static', filename='js/generate-table.js') }}"></script> -->
 
 </head>
 
