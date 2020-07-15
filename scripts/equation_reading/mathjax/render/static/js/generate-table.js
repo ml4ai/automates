@@ -22,8 +22,9 @@ function build_table(eqn_src) {
                             text: `${i}: ${element["src"]}` });
     row.append(cell);
 
+    // image_path = `${images_path}/${i}.${images_ext}`;
     // image_path = `../${images_path}/${i}.${images_ext}`;
-    // image_path = `\{\{ url_for('${images_path}', filename='${i}.${images_ext}') \}\}`;
+    image_path = `\{\{ url_for('static', filename='${images_path}/${i}.${images_ext}') \}\}`;
     cell = $("<td/>", { id: `tex_img_${i}` }).append(`<img src="${image_path}" alt="${image_path}" width="200">`);
     row.append(cell);
 
