@@ -1,6 +1,7 @@
 def json2js(json_data, output_file, var_name='eqn_src'):
     """
-    Helper function to write 'json' version of latex source data as a javascript list of dicts
+    Helper function to write 'json' version of latex source data as a javascript list of dicts.
+    Use json.load() to read the json into python object.
     Args:
         json_data: Assumed format: [ {"src": <string>, "mml": <string>}, ... ]
         output_file: Path to .js output file
