@@ -5,12 +5,17 @@ import sys
 def dfs_traversal(nodes: list):
     for node in nodes:
         if isinstance(node, ast.FunctionDef):
+            print(type(node), vars(node))
             print(
                 f"{node.name} --> {len(node.args.args)} args\t{len(node.body)} lines"
             )
         elif isinstance(node, ast.Assign):
             print(f"{node.lineno}\t{node.targets[0].id} = {node.value}")
-            return
+            continue
+        elif isinstance(node, ast.AugAssign):
+            op = "+=" if isinstance(node.op, ast.Add) else "-="
+            print(f"{node.lineno}\t{node.target.id} {op} {node.value}")
+            continue
         else:
             print(type(node), vars(node))
         dfs_traversal(ast.iter_child_nodes(node))
