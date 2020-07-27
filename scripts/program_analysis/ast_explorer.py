@@ -5,7 +5,6 @@ import sys
 def dfs_traversal(nodes: list):
     for node in nodes:
         if isinstance(node, ast.FunctionDef):
-            print(type(node), vars(node))
             print(
                 f"{node.name} --> {len(node.args.args)} args\t{len(node.body)} lines"
             )
