@@ -5,7 +5,7 @@ from model_analysis.networks import GroundedFunctionNetwork
 
 
 G = GroundedFunctionNetwork.from_fortran_file(
-    f"../../tests/data/program_analysis/PETPT.for"
+    "tests/data/program_analysis/PETPT.for"
 )
 B = {
     "tmax": [-30.0, 60.0],
