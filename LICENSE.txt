@@ -1,5 +1,7 @@
-(C)2020 Arizona Board of Regends on behalf of the University of Arizona
-Released under the Apache 2 License (below)
+Copyright 2020 Arizona Board of Regents on behalf of the University of
+Arizona
+
+Licensed under the Apache 2 License (below)
 
 ** For Commercial License, contact lewish@tla.arizona.edu **
 
