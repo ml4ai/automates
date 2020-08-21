@@ -12,7 +12,7 @@ import numpy as np
 import networkx as nx
 from tqdm import tqdm
 
-from model_analysis.networks import ComputationalGraph, GroundedFunctionNetwork
+from model_assembly.networks import GroundedFunctionNetwork
 from model_analysis.utils import timeit
 
 
@@ -130,7 +130,7 @@ class SensitivityAnalyzer(object):
         def convert_bounds(bound):
             num_bounds = len(bound)
             if num_bounds == 0:
-                raise ValueError(f"Found input variable with 0 bounds")
+                raise ValueError("Found input variable with 0 bounds")
             elif num_bounds == 1:
                 # NOTE: still going to use a zero to 1 range for now
                 return [0, 1]
@@ -190,7 +190,7 @@ class SensitivityAnalyzer(object):
             for name, vector in zip(problem["names"], vectorized_sample_list)
         }
 
-        outputs = CG.run(vectorized_input_samples)
+        outputs = CG(vectorized_input_samples)
         Y = outputs[0]
         Y = Y.reshape((Y.shape[0],))
         return Y
@@ -199,7 +199,7 @@ class SensitivityAnalyzer(object):
     def Si_from_Sobol(
         cls,
         N: int,
-        G: ComputationalGraph,
+        G: GroundedFunctionNetwork,
         B: dict,
         C: dict = None,
         V: dict = None,
@@ -212,7 +212,7 @@ class SensitivityAnalyzer(object):
         """Generates Sensitivity indices using the Sobol method
         Args:
             N: The number of samples to analyze when generating Si
-            G: The ComputationalGraph to analyze
+            G: The GroundedFunctionNetwork to analyze
             B: A dictionary of bound information for the inputs of G
             C: A dictionary of cover values for use when G is a FIB
             V: A dictionary of GrFN input variable types
@@ -254,7 +254,7 @@ class SensitivityAnalyzer(object):
     def Si_from_FAST(
         cls,
         N: int,
-        G: ComputationalGraph,
+        G: GroundedFunctionNetwork,
         B: dict,
         C: dict = None,
         V: dict = None,
@@ -287,7 +287,7 @@ class SensitivityAnalyzer(object):
     def Si_from_RBD_FAST(
         cls,
         N: int,
-        G: ComputationalGraph,
+        G: GroundedFunctionNetwork,
         B: dict,
         C: dict = None,
         V: dict = None,

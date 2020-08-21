@@ -70,8 +70,17 @@ preprocessed*
 # Ruby stuff
 Gemfile.lock
 
+# NodeJS webservice stuff
+*node_modules
+*package-lock.json
+
 # Adding lib files for TR webapp
 !src/text_reading/webapp/public/brat/client/lib
 
 # Jupyter notebook checkpoints
 *-checkpoint.ipynb
+
+# Program analysis stuff
+*modFileLog.json
+*--GrFN.pdf
+tmp
