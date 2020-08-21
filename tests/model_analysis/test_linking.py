@@ -3,7 +3,7 @@ import json
 
 import networkx as nx
 
-from model_analysis.linking import (
+from model_assembly.linking import (
     build_link_graph,
     extract_link_tables,
     print_table_data,

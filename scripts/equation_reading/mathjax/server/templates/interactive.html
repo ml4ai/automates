@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body class="body">
+    <div class="container">
+        <h3>Which is the best programming language of them all?</h3>
+        <form>
+            <input type="text" size="5" name="proglang">
+            <a href="#" id="process_input"><button class="btn btn-default">Submit</button></a>
+        </form>
+        <p id="result"></p>
+    </div>
+</body>
+
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+
+</html>

@@ -1,4 +1,12 @@
-                                 Apache License
+Copyright 2020 Arizona Board of Regents on behalf of the University of
+Arizona
+
+Licensed under the Apache 2 License (below)
+
+** For Commercial License, contact lewish@tla.arizona.edu **
+
+
+                                Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 

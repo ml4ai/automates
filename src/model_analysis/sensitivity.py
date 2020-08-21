@@ -1,10 +1,18 @@
 from numbers import Number
-import SALib as SAL
-from SALib.sample import saltelli
-from SALib.analyze import sobol
-import numpy as np
+from copy import deepcopy
+from uuid import uuid4
 import json
-from model_analysis.networks import ComputationalGraph
+import inspect
+import re
+
+import SALib as SAL
+from SALib.sample import saltelli, latin
+from SALib.analyze import sobol, fast, rbd_fast
+import numpy as np
+import networkx as nx
+from tqdm import tqdm
+
+from model_assembly.networks import GroundedFunctionNetwork
 from model_analysis.utils import timeit
 
 
@@ -122,7 +130,7 @@ class SensitivityAnalyzer(object):
         def convert_bounds(bound):
             num_bounds = len(bound)
             if num_bounds == 0:
-                raise ValueError(f"Found input variable with 0 bounds")
+                raise ValueError("Found input variable with 0 bounds")
             elif num_bounds == 1:
                 # NOTE: still going to use a zero to 1 range for now
                 return [0, 1]
@@ -182,7 +190,7 @@ class SensitivityAnalyzer(object):
             for name, vector in zip(problem["names"], vectorized_sample_list)
         }
 
-        outputs = CG.run(vectorized_input_samples)
+        outputs = CG(vectorized_input_samples)
         Y = outputs[0]
         Y = Y.reshape((Y.shape[0],))
         return Y
@@ -191,7 +199,7 @@ class SensitivityAnalyzer(object):
     def Si_from_Sobol(
         cls,
         N: int,
-        G: ComputationalGraph,
+        G: GroundedFunctionNetwork,
         B: dict,
         C: dict = None,
         V: dict = None,
@@ -204,7 +212,7 @@ class SensitivityAnalyzer(object):
         """Generates Sensitivity indices using the Sobol method
         Args:
             N: The number of samples to analyze when generating Si
-            G: The ComputationalGraph to analyze
+            G: The GroundedFunctionNetwork to analyze
             B: A dictionary of bound information for the inputs of G
             C: A dictionary of cover values for use when G is a FIB
             V: A dictionary of GrFN input variable types
@@ -246,7 +254,7 @@ class SensitivityAnalyzer(object):
     def Si_from_FAST(
         cls,
         N: int,
-        G: ComputationalGraph,
+        G: GroundedFunctionNetwork,
         B: dict,
         C: dict = None,
         V: dict = None,
@@ -265,12 +273,7 @@ class SensitivityAnalyzer(object):
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
 
         (S, analyze_time) = cls.__run_analysis(
-            SAL.analyze.fast.analyze,
-            prob_def,
-            Y,
-            M=M,
-            print_to_console=False,
-            seed=seed,
+            fast.analyze, prob_def, Y, M=M, print_to_console=False, seed=seed,
         )
 
         Si = SensitivityIndices(S, prob_def)
@@ -284,7 +287,7 @@ class SensitivityAnalyzer(object):
     def Si_from_RBD_FAST(
         cls,
         N: int,
-        G: ComputationalGraph,
+        G: GroundedFunctionNetwork,
         B: dict,
         C: dict = None,
         V: dict = None,
@@ -297,7 +300,7 @@ class SensitivityAnalyzer(object):
         prob_def = cls.setup_problem_def(G, B)
 
         (samples, sample_time) = cls.__run_sampling(
-            SAL.sample.latin.sample, prob_def, N, seed=seed
+            latin.sample, prob_def, N, seed=seed
         )
 
         X = samples
@@ -305,10 +308,10 @@ class SensitivityAnalyzer(object):
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
 
         (S, analyze_time) = cls.__run_analysis(
-            SAL.analyze.rbd_fast.analyze,
+            rbd_fast.analyze,
             prob_def,
-            Y,
             X,
+            Y,
             M=M,
             print_to_console=False,
             seed=seed,
@@ -320,3 +323,174 @@ class SensitivityAnalyzer(object):
             if not save_time
             else (Si, (sample_time, exec_time, analyze_time))
         )
+
+
+def ISA(
+    model: GroundedFunctionNetwork,
+    bounds: dict,
+    sample_size: int,
+    sa_method: callable,
+    max_iterations: int = 5,
+) -> dict:
+    MAX_GRAPH = nx.DiGraph()
+    VAR_POI = dict()
+    COLORS = [
+        "#ffffff",
+        "#ffffcc",
+        "#ffeda0",
+        "#fed976",
+        "#feb24c",
+        "#fd8d3c",
+        "#fc4e2a",
+        "#e31a1c",
+        "#bd0026",
+        "#800026",
+    ]
+    PBAR = tqdm(total=sum([3 ** i for i in range(max_iterations)]))
+
+    def __add_max_var_node(
+        max_var: str, max_s1_val: float, S1_scores: list
+    ) -> str:
+        node_id = uuid4()
+        clr_idx = round(max_s1_val * 10)
+        MAX_GRAPH.add_node(
+            node_id,
+            fillcolor=COLORS[clr_idx],
+            fontcolor="white" if clr_idx > 5 else "black",
+            style="filled",
+            label=f"{max_var}\n({max_s1_val:.2f})",
+            S1_data=S1_scores,
+        )
+
+        return node_id
+
+    def __get_max_S1(cur_bounds: dict) -> list:
+        Si = sa_method(sample_size, model, cur_bounds, save_time=False)
+
+        S1_tuples = list(zip(Si.parameter_list, list(Si.O1_indices)))
+        return S1_tuples
+
+    def __get_var_bound_breaks(cur_bounds: list, partitions: int = 3):
+        num_bounds = len(cur_bounds)
+        if num_bounds < 2:
+            raise RuntimeError(f"Improper number of bounds: {num_bounds}")
+        elif num_bounds == 2:
+            (lower, upper) = cur_bounds
+            interval_sz = (upper - lower) / partitions
+            return [
+                (lower + (i * interval_sz), lower + ((i + 1) * interval_sz))
+                for i in range(partitions)
+            ]
+        else:
+            return list(zip(cur_bounds[:-1], cur_bounds[1:]))
+
+    def __get_new_bound_sets(bbreaks: list, cur_var: str, cur_bounds: dict):
+        new_bounds_container = list()
+        for bound in bbreaks:
+            new_bounds = deepcopy(cur_bounds)
+            new_bounds[cur_var] = deepcopy(bound)
+            new_bounds_container.append(new_bounds)
+        return new_bounds_container
+
+    def __static_analysis_on_var(max_var: str) -> list:
+        if max_var in VAR_POI:
+            return VAR_POI[max_var]
+
+        # Search over all function nodes that include max_var as an input
+        model_max_node = model.input_name_map[max_var]
+        succ_funcs = list(model.successors(model_max_node))
+        new_poi_list = list()
+        for succ_func_name in succ_funcs:
+            func_ref = model.nodes[succ_func_name]["lambda_fn"]
+            (def_line, cond_line, _) = inspect.getsource(func_ref).split("\n")
+
+            # Stop search if not conditional statement
+            if re.search(r"__condition__", def_line) is None:
+                continue
+
+            # Extract the simple conditional portion
+            numeric = r"-?[0-9]+\.?[0-9]*"
+            variable = r"[A-Za-z][_A-za-z]*"
+            var_or_num = rf"({variable}|{numeric})"
+            bool_ops = r"<|>|==|<=|>="
+            cond = re.search(
+                rf"{var_or_num} ({bool_ops}) {var_or_num}", cond_line,
+            )
+
+            # No simple conditional found
+            if cond is None:
+                continue
+
+            # Extract the boolean comparison operand and operators
+            cond = cond.group()
+            operator = re.search(bool_ops, cond).group()
+            (op1, op2) = [op.strip() for op in re.split(operator, cond)]
+
+            # Create a new point-of-interest for max_var
+            is_first_numeric = re.match(numeric, op1) is not None
+            is_second_numeric = re.match(numeric, op2) is not None
+            if is_first_numeric and not is_second_numeric:
+                new_poi_list.append(float(op1))
+            elif not is_first_numeric and is_second_numeric:
+                new_poi_list.append(float(op2))
+
+        VAR_POI[max_var] = new_poi_list
+        return new_poi_list
+
+    def __iterate_with_bounds(
+        cur_bounds: dict,
+        parent_id: str,
+        pass_number: int,
+        parent_var: str = None,
+    ):
+        # start by getting the current max S1 var and value
+        S1_tuples = __get_max_S1(cur_bounds)
+        (max_var, s1_val) = max(S1_tuples, key=lambda tup: tup[1])
+
+        max_var_id = __add_max_var_node(max_var, float(s1_val), S1_tuples)
+        if parent_var is not None:
+            (l_b, u_b) = cur_bounds[parent_var]
+            edge_label = f"[{l_b:.2f}, {u_b:.2f}]"
+        else:
+            edge_label = ""
+        MAX_GRAPH.add_edge(
+            parent_id, max_var_id, label=edge_label, object=cur_bounds
+        )
+
+        # Stop recursion with max iterations
+        if pass_number == max_iterations:
+            # PBAR.update(1)
+            return
+
+        if parent_var is not None:
+            if max_var == parent_var:
+                PBAR.update(1 + 3 ** (max_iterations - pass_number))
+                return
+
+        new_vals = __static_analysis_on_var(max_var)
+        interval_points = deepcopy(list(cur_bounds[max_var]))
+        (l_b, u_b) = cur_bounds[max_var]
+        for val in new_vals:
+            if l_b < val < u_b:
+                interval_points.append(val)
+        interval_points.sort()
+        bound_breaks = __get_var_bound_breaks(interval_points)
+        new_bound_sets = __get_new_bound_sets(
+            bound_breaks, max_var, cur_bounds
+        )
+
+        for new_bounds in new_bound_sets:
+            PBAR.update(1)
+            __iterate_with_bounds(
+                new_bounds, max_var_id, pass_number + 1, parent_var=max_var,
+            )
+
+    root_id = str(uuid4())
+    root_label = "\n".join(
+        [f"{v}: [{b[0]}, {b[1]}]" for v, b in bounds.items()]
+    )
+
+    MAX_GRAPH.add_node(root_id, shape="rectangle", label=root_label)
+    __iterate_with_bounds(bounds, root_id, 1)
+    PBAR.close()
+    return MAX_GRAPH
