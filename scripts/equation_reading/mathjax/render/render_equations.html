@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width">
+  
+  <link rel="stylesheet" href="static/css/style.css">
+  
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
+  <!-- jquery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <!-- XML Formatter (for pretty-printing MathML) -->
+  <script src="https://cdn.jsdelivr.net/npm/xml-formatter@2.1.0/dist/browser/xml-formatter.js"></script>
+
+  <!-- Configure and start MathJax -->
+  <script>
+    MathJax = {
+      loader: {load: ['input/tex']}
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js"></script>
+
+  <!-- Load the data -->
+  <script src="latex_data_dev.js"></script>
+
+  <!-- Constants used in script -->
+  <script>
+    // filepath for data
+    // const data_path = "latex_data_dev.json";
+
+    // path to images
+    const images_path = "images";
+
+    // extension type of image
+    const images_ext = "png";
+  </script>
+
+  <!-- Generate the table (will execute after following HTML completes rendering) -->
+  <script src="static/js/generate-table.js"></script>
+  <!-- <script src="static/js/generate-table-no-jquery.js"></script> -->
+  <!-- <script src="{{ url_for('static', filename='js/generate-table.js') }}"></script> -->
+
+</head>
+
+<body>
+  <table id="table">
+    <thead>
+    <tr><th width=400>LaTeX</th><th>LaTeX render</th><th>MathJax render MathML</th><th width=500>MathML</th></tr>
+    </thead>
+  </table>
+</body>
+
+</html>
