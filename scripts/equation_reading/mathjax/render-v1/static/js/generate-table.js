@@ -1,11 +1,10 @@
-// Assumes eqn_src has already been defined 
-// (loaded from latex_data_dev.js in render_equations.html)
+// Assumes data_path has already been defined (in render_mathjax_jquery.hmtl)
 
 // Version of table generation script that uses jquery to construct table rows
 
 const format_xml = require('xml-formatter');
 
-function build_table() {
+function build_table(eqn_src) {
 
   let table = $("#table");
   let i = 0;
@@ -23,9 +22,9 @@ function build_table() {
                             text: `${i}: ${element["src"]}` });
     row.append(cell);
 
-    image_path = `${images_path}/${i}.${images_ext}`;
+    // image_path = `${images_path}/${i}.${images_ext}`;
     // image_path = `../${images_path}/${i}.${images_ext}`;
-    // image_path = `\{\{ url_for('static', filename='${images_path}/${i}.${images_ext}') \}\}`;
+    image_path = `\{\{ url_for('static', filename='${images_path}/${i}.${images_ext}') \}\}`;
     cell = $("<td/>", { id: `tex_img_${i}` }).append(`<img src="${image_path}" alt="${image_path}" width="200">`);
     row.append(cell);
 
@@ -58,14 +57,10 @@ function build_table() {
 $(document).ready(function() {
 
   // load eqn_src from json in data_path
-  /*
   $.getJSON('/load_data',
     { filepath: data_path },  // data_path defined in templates/index.html
     function (data) {
       build_table(data);
     });
-  */
-  
-  build_table();
 
 });
