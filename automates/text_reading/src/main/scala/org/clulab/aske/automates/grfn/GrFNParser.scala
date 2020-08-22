@@ -3,7 +3,7 @@ package org.clulab.aske.automates.grfn
 import ai.lum.common.FileUtils._
 import java.io.File
 
-import org.clulab.grounding.{Grounding, sparqlResult}
+import org.clulab.grounding.{SVOGrounding, sparqlResult}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.json4s.jackson.Json
@@ -14,7 +14,10 @@ import scala.collection.mutable.ArrayBuffer
 object GrFNParser {
 
   def addHypotheses(grfn: Value, hypotheses: Seq[Obj]): Value = {
-    grfn("grounding") = hypotheses.toList
+    //adding to exisitng grounding; intended to help with running complementary endpoints (instead of the full pipeline)
+    grfn("grounding") =  if (grfn.obj.get("grounding").isDefined) {
+      (grfn("grounding").arr ++ hypotheses.toList).distinct
+    } else hypotheses.distinct
     grfn
   }
 
@@ -32,11 +35,10 @@ object GrFNParser {
 
     val sourceCommentObject = grfn("source_comments").obj
     val commentTextObjects = new ArrayBuffer[Obj]()
-//
+
     val keys = sourceCommentObject.keys
     for (k <- keys) {
       if (sourceCommentObject(k).isInstanceOf[Value.Arr]) {
-//        println("TRUE")
         val text = sourceCommentObject(k).arr.map(_.str).mkString("")
         if (text.length > 0) {
           commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, ""))
@@ -46,7 +48,6 @@ object GrFNParser {
           val value = item._2
           for (str <- value.arr) if (value.arr.length > 0) {
             val text = str.str
-//            println("HERE " + text)
             if (text.length > 0) {
               commentTextObjects.append(mkCommentTextElement(text, grfn("source").arr.head.str, k, item._1))
             }
@@ -112,6 +113,16 @@ object GrFNParser {
     linkElement
   }
 
+  def mkTextLinkElement(elemType: String, source: String, content: String, contentType: String, svoQueryTerms: Seq[String]): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> elemType,
+      "source" -> source,
+      "content" -> content,
+      "content_type" -> contentType,
+      "svo_query_terms" -> svoQueryTerms
+    )
+    linkElement
+  }
 
   def mkCommentTextElement(text: String, source: String, container: String, location: String): ujson.Obj = {
     val commentTextElement = ujson.Obj(
@@ -132,7 +143,7 @@ object GrFNParser {
     linkElement
   }
 
-  def mkSVOElement(grounding: Grounding): ujson.Obj = {
+  def mkSVOElement(grounding: SVOGrounding): ujson.Obj = {
     val linkElement = ujson.Obj(
       "type" -> "svo_grounding",
       "source" -> "svo_ontology",

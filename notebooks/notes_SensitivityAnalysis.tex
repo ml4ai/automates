@@ -1,0 +1,131 @@
+%\documentclass{article}
+\documentclass[prb,superscriptaddress,amsmath]{revtex4}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{color}
+
+\bibliographystyle{unsrt}
+\begin{document}
+
+\title{Automating Sensitivity Analysis in the Delphi pipeline}
+
+\maketitle
+
+\section{Introduction}
+
+There exist a growing need to  quantitatively understand  the scope and behavior of
+physical models that aim to study complex phenomena. However, an over-abundance of such
+models can often present challenges as they span a wide range of parameter
+spaces. Further, the complexity of such mechanistic models, both dynamic
+and static, make the structural relationship between the parameters and model output
+non-trivial thereby preventing one from identifying and estimating the effects
+of the most relevant parameters. Senstitivity analysis provides a route for
+overcoming this challenge by determining the effects of parameter uncertainty
+on models in a non-intrusive manner which extends its applicability to any
+general system.
+
+The aim of the AutoMATES initiative is to integrate different
+computational models under a common semantically rich representation from  a
+variety of sources (text, equations, and source code) that will
+allow domain experts to perform interesting analysis on scientific models \cite{Adarsh20a}. This
+typically involves four different components viz., Extraction, Grounding,
+Comparison, and Augmentation.
+Extraction and Grounding together are responsible for creating a generalized intermediate
+representation (Grounded Function Network - GrFN) of source codes that are linked to information about the
+underlying models, equations, as well as the
+physical variables extracted from scientific documents and other relevant text. Once such a unified framework has been
+created, independent models can be compared (Comparison) and even augmented (Augmentation) for validation purposes.
+Through our GrFN representation,
+we can analyze the structural and functional properties of the network that will allow us to
+identify regions of parameter spaces where
+our selected models display similar features/properties.
+
+
+\section{Sensitivity Analysis}
+
+The robustness of any model that is dependent on a set of input variables can be tested by performing a sensitivity analysis.
+Sensitivity analysis is a measurement of the influence of the input parameters
+on the variability in model output. It therefore not only allows the experimenter to
+understand the structural relationship between the input and output but also
+acts a filtering mechanism to identify the most dominant input parameters 
+in model uncertaintiy quantification.
+In general, there are two types of sensitivity analysis - i) local, ii) global.
+Local sensitivity analysis refers to the measurement of model output
+variability as a result of perturbations within a single input parameter.
+Global sensitivity analysis involves the estimation of changes in the response
+function due to variations in the entire input parameter space.
+In this article, we shall restrict ourselves to the discussion of global
+sensitivity methods. Again, there are multiple methods that perform  global
+sensitivity analysis \cite{Saltelli07a}, namely, weighted average local sensitivity analysis,  partial
+rank correlation coefficient, multiparameteric sensitivity  analysis, Fourier
+amplitude sensitivity analysis (FAST) \cite{Saltelli99a, Chan97a} and lastly, Sobol's method
+\cite{Sobol01a, Saltelli02a, Saltelli10a}. 
+Sobol's method is based on ANOVA (Analysis of Variances) represenation wherein
+the model output is decomposed into summands of
+variance in the  input parameters with different dimensions \cite{Sobol90a}. This global method 
+is particularly useful as it can determine the relative contributins of
+individual parameters as well as the interaction between them, as given by
+the integrands of higher dimensions, to the overall output variance.
+The decomposition of the generalized model output $f(x)$ is shown below.
+
+\begin{equation}
+f(x) = f_0 + \sum_i f_i(x_i) + \sum_{i < j} f_{ij}(x_i, x_j) + ... + f_{12
+...n} (x_1, x_2, ..., x_n)
+\end{equation}
+
+Here, $x_1, x_2, ... x_n$ are the $n$ independent model input parameters that
+span a unit-dimensional hypercube. 
+Under the assumption that $f(x)$ is square integrable, in addition to the constraint
+below (ANOVA representation), 
+\begin{equation}
+\int_{0}^{1} f_{i_1 ...i_s} (x_{i_1},...x_{i_s}) dx_k = 0
+\label{ANOVA}
+\end{equation}
+ where $k = i_1, ... i_s$, one computes the variances of $f(x)$ ($D$) and $f_{i_1, ... , i_s} (x_{i_1}, ...,
+x_{i_s})$ ($D_{i_1 ... i_s}$) to be the following:
+\newline
+\begin{equation}
+D = \int f^2 dx - f_o^2
+\end{equation}
+and
+\begin{equation}
+D_{i_1, ..., i_s} = \int f^2_{i_1, ..., i_s} dx_{i_1}, ... dx_{i_s}
+\end{equation}
+
+The global sensitivity indices are now given by $S_{i_1}...{i_s}$ in the equation
+below:
+
+\begin{equation}
+S_{i_1}...{i_s} = \frac {D_{i_1}...{i_s}}{D}
+\end{equation}
+
+The integer ``s'' is the dimension or the order of the sensitivity index.
+Since, the sensitivity indices are essentially a measure of the output
+variance as a function of the input features, they must be non-negative.
+Under the assumption of independent input variables, the sum of all sensitivity
+indices should be one \cite{Sobol01a, Glen12a}.
+
+The first order Sobol index which measures the direct influence of a single
+parameter on the output variance is therefore given by $S_i = \frac{D_i}{D}$
+or alternatively, $S_i = \frac{\mathbb{V}(\mathbb{E}(Y|X_i))}{\mathbb{V}(Y)}$.
+$Y$ ($X_i$) is the output (input), $\mathbb{E}(Y|X_i)$ measures the conditional
+expectation of $Y$ with $X_i$ fixed whereas $\mathbb{V}(Q)$ is the variance of
+$Q$ \cite{Saltelli10a}.
+While one can in principle calculate the indices upto all possible orders, for
+practical purposes, computation of first ($S_1$) and second ($S_2$) order as
+well as the total ($S_T$)
+Sobol indices is considered to be standard. 
+
+Computation of Sobol indices is done through a quasi-Monte Carlo method. The
+first step involves the generation of a quasi-random, low discrepancy sequence
+of numbers that are sampled uniformly which lead to faster convergence and
+higher accuracy  than a
+naive Monte Carlo approach. These sequences are known as Sobol sequences \cite{Sobol67a}.
+Following this, the model output is evaluated from the sampled data points.
+This process is repeated thousands of times to yield the expectation and
+variance from the sets of model outputs. The number of samples required to
+achieve a high  degree of accuracy depend on the number of input parameters.   
+
+\bibliography{sensitivity}
+
+\end{document}

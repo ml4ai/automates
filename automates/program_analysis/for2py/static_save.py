@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 """
-File: 
+File:
     static_save.py
-Purpose: 
+Purpose:
     A decorator function to initialize a list of static variables to a None.
 
 Usage:
@@ -28,4 +28,5 @@ def static_vars(var_list):
         for var in var_list:
             setattr(func, var["name"], var["call"])
         return func
+
     return decorate

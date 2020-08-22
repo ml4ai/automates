@@ -12,5 +12,5 @@ rules:
 #    action: looksLikeAVariable #don't use this action here---the illegal "vars" should have been
     #filtered out in the entity rule
     pattern: |
-       @variable:Variable (?<definition> [word = /.*/ & !tag="-LRB-"]+)
+      @variable:Variable (?<definition> [word = /.*\w+.*/ & !tag="-LRB-"]+)
 

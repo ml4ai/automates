@@ -6,6 +6,7 @@ import ai.lum.common.ConfigUtils._
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.apache.commons.text.similarity.LevenshteinDistance
+import org.clulab.aske.automates.apps.AlignmentBaseline
 
 case class AlignmentHandler(editDistance: VariableEditDistanceAligner, w2v: PairwiseW2VAligner) {
   def this(w2vPath: String, relevantArgs: Set[String]) =
@@ -31,6 +32,17 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
       score = 1.0 / (editDistance(src, dst) + 1.0) // todo: is this good for long-term?
+    } yield Alignment(i, j, score)
+    // redundant but good for debugging
+    exhaustiveScores
+  }
+
+  def alignEqAndTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
+    val exhaustiveScores = for {
+      (src, i) <- srcTexts.zipWithIndex
+      rendered = AlignmentBaseline.renderForAlign(src)
+      (dst, j) <- dstTexts.zipWithIndex
+      score = 1.0 / (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term? next thing to try: only align if rendered starts with the same letter as actual---might need to make this output an option in case if there are no alignments
     } yield Alignment(i, j, score)
     // redundant but good for debugging
     exhaustiveScores
@@ -98,10 +110,14 @@ object Aligner {
     }
   }
 
-  def topKBySrc(alignments: Seq[Alignment], k: Int, scoreThreshold: Double = 0.0): Seq[Seq[Alignment]] = {
+  def topKBySrc(alignments: Seq[Alignment], k: Int, scoreThreshold: Double = 0.0, debug: Boolean = false): Seq[Seq[Alignment]] = {
+    def debugPrint(debug: Boolean, srcIdx: Int, alignments: Seq[Alignment]) {
+      if (debug) println(s"srcIdx: ${srcIdx}, alignments: ${alignments}")
+    }
     val grouped = alignments.groupBy(_.src).toSeq
     for {
       (srcIdx, aa) <- grouped
+      _ = debugPrint(debug, srcIdx, alignments)
       topK = aa.sortBy(-_.score).slice(0,k).filter(_.score > scoreThreshold) //filter out those with the score below the threshold; threshold is 0 by default
       if topK.nonEmpty
     } yield topK

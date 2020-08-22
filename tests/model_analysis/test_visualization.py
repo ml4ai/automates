@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from automates.model_analysis.networks import GroundedFunctionNetwork as GrFN
+from automates.model_analysis.networks import GroundedFunctionNetwork
 from automates.model_analysis.sensitivity import SensitivityAnalyzer
 from automates.model_analysis.visualization import SensitivityVisualizer
 
@@ -11,7 +11,9 @@ from automates.model_analysis.visualization import SensitivityVisualizer
 def sensitivity_visualizer():
 
     N = [10, 100, 1000, 10000]
-    tG = GrFN.from_fortran_file("tests/data/program_analysis/PETPT.for")
+    tG = GroundedFunctionNetwork.from_json(
+        "tests/data/model_analysis/PT_GrFN.json"
+    )
     var_bounds = {
         "tmax": [-30.0, 60.0],
         "tmin": [-30.0, 60.0],

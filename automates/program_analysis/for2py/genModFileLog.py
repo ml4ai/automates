@@ -18,12 +18,11 @@ Author: Terrence J. Lim
 """
 
 import os
-import re
 import sys
 import json
 import argparse
 from os.path import isfile
-from . import syntax, preprocessor
+from automates.program_analysis.for2py import syntax, preprocessor
 
 
 def parse_args():
@@ -144,6 +143,7 @@ def populate_mappers(
     module_summary = {}
     procedure_functions = {}
     derived_types = {}
+    symbol_types = {}
 
     # Checks if file contains "end module" or "endmodule",
     # which only appears in case of module declaration.
@@ -156,11 +156,30 @@ def populate_mappers(
         preprocessed_lines = preprocessor.preprocess_lines(
             org_lines, file_path, True
         )
+        current_module = None
         for line in preprocessed_lines:
             line = line.lower()
             match = syntax.line_starts_pgm(line)
             if match[0] and match[1] == "module":
                 module_names.append(match[2])
+                current_module = match[2]
+                symbol_types[current_module] = {}
+            isVarDec = syntax.variable_declaration(line)
+            if current_module and isVarDec[0]:
+                variables = extract_variable_name(isVarDec[2])
+                if "function" not in line:
+                    for var in variables:
+                        variable = var.strip()
+                        if "=" in var:
+                            variable = var.split("=")[0].strip()
+                        isArray = syntax.line_has_implicit_array(var)
+                        if isArray[0]:
+                            variable = isArray[1]
+                        symbol_types[current_module][variable] = isVarDec[1]
+
+            match = syntax.pgm_end(line)
+            if match[0] and match[2] == current_module:
+                current_module = None
 
         # Map current file to modules that it uses.
         module_names_lowered = [mod.lower() for mod in module_names]
@@ -170,8 +189,8 @@ def populate_mappers(
         )
 
         # If current file has subroutines, then extract subroutine information
-        # that are declared within the scope of any module and store in the module
-        # summary dictionary.
+        # that are declared within the scope of any module and store in the
+        # module summary dictionary.
         if syntax.has_subroutine(file_content.lower()):
             populate_module_summary(
                 preprocessed_lines,
@@ -180,12 +199,12 @@ def populate_mappers(
                 derived_types,
             )
 
-    # Using collected function information, populate interface function information
-    # by each module.
+    # Using collected function information, populate interface function
+    # information by each module.
     populate_procedure_functions(procedure_functions, module_summary)
 
     # Populate actual module information (summary)
-    # that will be written to thee JSONN file.
+    # that will be written to thee JSON file.
     for mod in module_names_lowered:
         mod_to_file_mapper[mod] = [file_path]
         mod_info_dict[mod] = {
@@ -195,6 +214,8 @@ def populate_mappers(
             "interface_functions": {},
             "derived_type_list": [],
         }
+        if mod in symbol_types:
+            mod_info_dict[mod]["symbol_types"] = symbol_types[mod]
         if mod in module_summary:
             mod_info_dict[mod]["interface_functions"] = procedure_functions[
                 mod
@@ -277,7 +298,8 @@ def populate_module_summary(
             pass
 
         # If currently processing line of code is within the scope of module,
-        # we need to extract subroutine, interface, and derived type information.
+        # we need to extract subroutine, interface, and derived type
+        # information.
         if current_modu:
             current_subr = extract_subroutine_info(
                 pgm,
@@ -342,21 +364,9 @@ def extract_subroutine_info(
                 var_type = variable_dec[1]
                 variables = variable_dec[2]
 
-            # Handle syntax like:
-            #   precision, dimension(0:tmax) :: means, vars
-            #   precision, parameter :: var = 1.234
-            if "precision" in variables or "dimension" in variables:
-                # Handle dimension (array)
-                if "dimension" in variables:
-                    var_type = "Array"
-                # Extract only variable names follow by '::'
-                variables = variables.partition("::")[-1].strip()
-                if "=" in variables:
-                    # Remove assignment syntax and only extract variable names
-                    variables = variables.partition("=")[0].strip()
+            variables = extract_variable_name(variables)
 
-            var_list = variables.split(",")
-            for var in var_list:
+            for var in variables:
                 # Search for an implicit array variable declaration
                 arrayVar = syntax.line_has_implicit_array(var)
                 if arrayVar[0]:
@@ -374,6 +384,32 @@ def extract_subroutine_info(
     else:
         pass
     return current_subr
+
+
+def extract_variable_name(variables):
+    # Handle syntax like:
+    #   precision, dimension(0:tmax) :: means, vars
+    #   precision, parameter :: var = 1.234
+    if (
+        "precision" in variables
+        or "parameter" in variables
+        or "dimension" in variables
+    ):
+        # Handle dimension (array)
+        if "dimension" in variables:
+            var_type = "Array"
+        # Extract only variable names follow by '::'
+        variables = variables.partition("::")[-1].strip()
+        variables = variables.split(",")
+        variable_list = []
+        for var in variables:
+            if "=" in var:
+                # Remove assignment syntax and only extract variable names
+                variable_list.append(var.partition("=")[0].strip())
+        return variable_list
+    else:
+        variables = variables.split(",")
+    return variables
 
 
 def extract_interface_info(
@@ -408,7 +444,8 @@ def extract_interface_info(
             #   module procedure __function_name__ , __function_name__ , ...
             # by keyword procedure. Then, only extract function names, which
             # always will be located at [-1] after partitioning. Finally, split
-            # the string of function names by comma and store in the functions list.
+            # the string of function names by comma and store in the
+            # functions list.
             functions = line.partition("procedure")[-1].split(",")
             for func in functions:
                 func = func.strip()

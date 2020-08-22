@@ -14,12 +14,13 @@ from automates.program_analysis.for2py.tmp.m_interface03_mod import *
 
 
 def main():
-    
-    control_arg =  controltype()
-    iswitch_arg =  switchtype()
+
+    control_arg = controltype()
+    iswitch_arg = switchtype()
     get_control(control_arg)
     get_iswitch(iswitch_arg)
     put_control(control_arg)
     put_iswitch(iswitch_arg)
+
 
 main()

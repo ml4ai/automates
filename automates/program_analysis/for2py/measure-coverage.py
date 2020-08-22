@@ -20,10 +20,11 @@
 
 import os
 import sys
-import .preprocessor
+
+import preprocessor
 from .syntax import *
 
-FORTRAN_EXTENSIONS = ['.f', '.f90', '.for']
+FORTRAN_EXTENSIONS = [".f", ".f90", ".for"]
 
 ################################################################################
 #                                                                              #
@@ -38,7 +39,9 @@ FORTRAN_EXTENSIONS = ['.f', '.f90', '.for']
 FN_START = r"\s*(\w*\s*){0,2}function\s+(\w+)\s*\("
 RE_FN_START = re.compile(FN_START, re.I)
 
-PGM_UNIT = r"\s*\w*\s*(program|module|subroutine|(\w*\s*){0,2}function)\s+(\w+)"
+PGM_UNIT = (
+    r"\s*\w*\s*(program|module|subroutine|(\w*\s*){0,2}function)\s+(\w+)"
+)
 RE_PGM_UNIT_START = re.compile(PGM_UNIT, re.I)
 
 PGM_UNIT_SEP = r"\s+contains(\W+)"
@@ -138,6 +141,7 @@ HANDLED = [
 KEYWD = r"\s*(\d+|&)?\s*([a-z]+).*"
 RE_KEYWD = re.compile(KEYWD)
 
+
 def line_is_handled(line):
     unhandled_keywds, unhandled_lines = set(), set()
     for handled_construct in HANDLED:
@@ -164,6 +168,7 @@ def line_is_handled(line):
 #                                                                              #
 ################################################################################
 
+
 def get_code_lines(fname):
     try:
         print("@@@ FILE: " + fname)
@@ -171,17 +176,19 @@ def get_code_lines(fname):
         lines = f.readlines()
         f.close()
     except IOError:
-        errmsg(f"ERROR: Could not open file {fname}")	
+        errmsg(f"ERROR: Could not open file {fname}")
     else:
         enum_lines = list(enumerate(lines, 1))
 
         # Discard empty lines. While these are technically comments, they provide
-        # no semantic content.  
+        # no semantic content.
         enum_lines = [line for line in enum_lines if line[1].rstrip() != ""]
 
         enum_lines = preprocessor.separate_trailing_comments(enum_lines)
         enum_lines = preprocessor.merge_continued_lines(enum_lines)
-        code_lines = [line[1] for line in enum_lines if not line_is_comment(line[1])]
+        code_lines = [
+            line[1] for line in enum_lines if not line_is_comment(line[1])
+        ]
 
         return code_lines
 
@@ -195,7 +202,7 @@ def process_lines(lines):
         if handled:
             nhandled += 1
         else:
-            unhandled_keywds|= u_keywds
+            unhandled_keywds |= u_keywds
             unhandled_lines |= u_lines
 
     return (nlines, nhandled, unhandled_keywds, unhandled_lines)
@@ -213,7 +220,7 @@ def process_dir(dirname):
 
     abs_path = os.path.abspath(dirname)
     print(f"processing: {dirname}")
-    
+
     list_of_files = os.listdir(dirname)
     for fname in list_of_files:
         full_path_to_file = abs_path + "/" + fname
@@ -226,15 +233,19 @@ def process_dir(dirname):
             unhandled_lines |= ul1
         else:
             _, fext = os.path.splitext(fname)
-            if fext in FORTRAN_EXTENSIONS: 
-                ftot, fhandled, u_keywds, u_lines = process_file(full_path_to_file)
+            if fext in FORTRAN_EXTENSIONS:
+                ftot, fhandled, u_keywds, u_lines = process_file(
+                    full_path_to_file
+                )
                 ntot += ftot
                 nhandled += fhandled
                 unhandled_keywds |= u_keywds
                 unhandled_lines |= u_lines
                 nfiles += 1
             else:
-                sys.stderr.write(f"    *** Ignoring {fname} [unrecognized extension]\n")
+                sys.stderr.write(
+                    f"    *** Ignoring {fname} [unrecognized extension]\n"
+                )
 
     return (nfiles, ntot, nhandled, unhandled_keywds, unhandled_lines)
 
@@ -250,8 +261,10 @@ def errmsg(msg):
 
 def print_results(results):
     nfiles, ntot, nhandled, u_keywds, u_lines = results
-    pct_handled = nhandled/ntot * 100
-    print(f"Files: {nfiles}; total lines: {ntot}; handled: {nhandled} [{pct_handled:.1f}%]\n")
+    pct_handled = nhandled / ntot * 100
+    print(
+        f"Files: {nfiles}; total lines: {ntot}; handled: {nhandled} [{pct_handled:.1f}%]\n"
+    )
 
     if u_keywds != set():
         print("UNHANDLED KEYWORDS:")
@@ -264,7 +277,6 @@ def print_results(results):
         print("---------------")
         for item in u_lines:
             print(f"    {item}")
-
 
 
 def main():

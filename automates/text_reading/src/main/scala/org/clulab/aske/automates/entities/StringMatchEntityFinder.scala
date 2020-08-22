@@ -10,9 +10,10 @@ import com.typesafe.config.Config
 import org.clulab.aske.automates.grfn.{GrFNDocument, GrFNParser}
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
+import org.clulab.utils.AlignmentJsonUtils
 
 class StringMatchEntityFinder(strings: Set[String], label: String, taxonomyPath: String) extends EntityFinder {
-  println(strings)
+  println(s"from StringMatchEntityFinder: $strings")
   val regexBuilder = new RegexBuilder()
   regexBuilder.add(strings.toSeq:_*)
   val regex = regexBuilder.mkPattern
@@ -69,7 +70,11 @@ object GrFNEntityFinder {
     val grfn = ujson.read(grfnFile.readString())
 
     // The variable names only (excluding the scope info)
-    val variableShortNames = GrFNParser.getVariableShortNames(grfn)
+    val variableShortNames = if (grfn.obj.get("variables").isDefined) {
+      GrFNParser.getVariableShortNames(grfn)
+    } else {
+      AlignmentJsonUtils.getVariableShortNames(grfn)
+    }
 
     // Make a StringMatchEF based on the variable names
     // todo: send in the taxonomy path

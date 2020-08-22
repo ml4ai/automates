@@ -1,10 +1,12 @@
 import sys
+import os
 from typing import List
 import math
 from automates.program_analysis.for2py.format import *
 from automates.program_analysis.for2py.arrays import *
 from automates.program_analysis.for2py.static_save import *
 from automates.program_analysis.for2py.strings import *
+from automates.program_analysis.for2py import intrinsics
 from dataclasses import dataclass
 from automates.program_analysis.for2py.types_ext import Float32
 import automates.program_analysis.for2py.math_ext as math
@@ -13,14 +15,14 @@ from random import random
 
 
 def myadd(arg1: List[int], arg2: List[int], arg3: List[int]):
-    arg3[0] = (arg1[0] + arg2[0])
-    
+    arg3[0] = arg1[0] + arg2[0]
+
 
 def main():
     format_10: List[str] = [None]
-    format_10 = ['3(X,I3)']
+    format_10 = ["3(x,i3)"]
     format_10_obj = Format(format_10)
-    
+
     x: List[int] = [None]
     y: List[int] = [None]
     z: List[int] = [None]
@@ -30,6 +32,6 @@ def main():
     write_list_stream = [x[0], y[0], z[0]]
     write_line = format_10_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    
+
 
 main()

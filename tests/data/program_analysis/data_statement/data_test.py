@@ -14,37 +14,37 @@ from random import random
 
 def main():
     format_10: List[str] = [None]
-    format_10 = ['A', 'I1', '2X', 'A', 'I1', '2X', 'A', 'I1']
+    format_10 = ["A", "I1", "2X", "A", "I1", "2X", "A", "I1"]
     format_10_obj = Format(format_10)
-    
+
     format_11: List[str] = [None]
     format_11 = ["''"]
     format_11_obj = Format(format_11)
-    
+
     format_20: List[str] = [None]
-    format_20 = ['A', 'A']
+    format_20 = ["A", "A"]
     format_20_obj = Format(format_20)
-    
+
     format_25: List[str] = [None]
-    format_25 = ['A']
+    format_25 = ["A"]
     format_25_obj = Format(format_25)
-    
+
     format_30: List[str] = [None]
-    format_30 = ['A', 'F3.1']
+    format_30 = ["A", "F3.1"]
     format_30_obj = Format(format_30)
-    
+
     format_35: List[str] = [None]
-    format_35 = ['F3.1']
+    format_35 = ["F3.1"]
     format_35_obj = Format(format_35)
-    
+
     format_40: List[str] = [None]
-    format_40 = ['4(F3.1,2X)']
+    format_40 = ["4(F3.1,2X)"]
     format_40_obj = Format(format_40)
-    
+
     format_45: List[str] = [None]
-    format_45 = ['2(F3.1,2X)']
+    format_45 = ["2(F3.1,2X)"]
     format_45_obj = Format(format_45)
-    
+
     a: List[int] = [None]
     b: List[int] = [None]
     c: List[int] = [None]
@@ -80,8 +80,8 @@ def main():
     pair3.set_((2), 2.0)
     i_iterator: List[int] = [None]
     j_iterator: List[int] = [None]
-    for i_iterator[0] in range(1, 5+1):
-        for j_iterator[0] in range(1, 4+1):
+    for i_iterator[0] in range(1, 5 + 1):
+        for j_iterator[0] in range(1, 4 + 1):
             multi.set_((i_iterator[0], j_iterator[0]), 2.5)
     mult_a.set_((1, 1), 1.0)
     mult_a.set_((2, 1), 2.0)
@@ -118,7 +118,7 @@ def main():
     write_list_stream = ["VEC: "]
     write_line = format_25_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    for i[0] in range(1, 5+1):
+    for i[0] in range(1, 5 + 1):
         write_list_stream = [vec.get_((i[0]))]
         write_line = format_35_obj.write_line(write_list_stream)
         sys.stdout.write(write_line)
@@ -134,7 +134,7 @@ def main():
     write_list_stream = ["PAIR1: "]
     write_line = format_25_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    for i[0] in range(1, 2+1):
+    for i[0] in range(1, 2 + 1):
         write_list_stream = [pair1.get_((i[0]))]
         write_line = format_35_obj.write_line(write_list_stream)
         sys.stdout.write(write_line)
@@ -144,7 +144,7 @@ def main():
     write_list_stream = ["PAIR2: "]
     write_line = format_25_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    for i[0] in range(1, 2+1):
+    for i[0] in range(1, 2 + 1):
         write_list_stream = [pair2.get_((i[0]))]
         write_line = format_35_obj.write_line(write_list_stream)
         sys.stdout.write(write_line)
@@ -154,7 +154,7 @@ def main():
     write_list_stream = ["PAIR3: "]
     write_line = format_25_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    for i[0] in range(1, 2+1):
+    for i[0] in range(1, 2 + 1):
         write_list_stream = [pair3.get_((i[0]))]
         write_line = format_35_obj.write_line(write_list_stream)
         sys.stdout.write(write_line)
@@ -164,8 +164,13 @@ def main():
     write_list_stream = ["MULTI: "]
     write_line = format_25_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    for i[0] in range(1, 5+1):
-        write_list_stream = [multi.get_((i[0], 1)), multi.get_((i[0], 2)), multi.get_((i[0], 3)), multi.get_((i[0], 4))]
+    for i[0] in range(1, 5 + 1):
+        write_list_stream = [
+            multi.get_((i[0], 1)),
+            multi.get_((i[0], 2)),
+            multi.get_((i[0], 3)),
+            multi.get_((i[0], 4)),
+        ]
         write_line = format_40_obj.write_line(write_list_stream)
         sys.stdout.write(write_line)
     write_list_stream = []
@@ -174,7 +179,7 @@ def main():
     write_list_stream = ["MULT_A: "]
     write_line = format_25_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    for i[0] in range(1, 2+1):
+    for i[0] in range(1, 2 + 1):
         write_list_stream = [mult_a.get_((i[0], 1)), mult_a.get_((i[0], 2))]
         write_line = format_45_obj.write_line(write_list_stream)
         sys.stdout.write(write_line)
@@ -187,17 +192,10 @@ def main():
     write_list_stream = ["MULT_B: "]
     write_line = format_25_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-    for i[0] in range(1, 2+1):
+    for i[0] in range(1, 2 + 1):
         write_list_stream = [mult_b.get_((i[0], 1)), mult_b.get_((i[0], 2))]
         write_line = format_45_obj.write_line(write_list_stream)
         sys.stdout.write(write_line)
-    
-    
-    
-    
-    
-    
-    
-    
+
 
 main()

@@ -17,6 +17,7 @@ RUN apt-get -y --no-install-recommends install \
   python3-dev \
   python3-pip \
   openjdk-8-jdk \
+  antlr4 \
   graphviz \
   libgraphviz-dev \
   doxygen
@@ -36,10 +37,10 @@ RUN pip3 install wheel
 # Common-use and testing packages
 RUN pip3 install \
   antlr4-python3-runtime==4.8 \
-  pytest==5.4.1 \
+  pytest==5.4.3 \
   pytest-cov==2.8.1 \
   Pygments==2.3.1 \
-  tqdm==4.29.0
+  tqdm==4.46.0
 
 # Adding PyTorch separately due to memory constraints
 RUN pip3 install \
@@ -49,8 +50,8 @@ RUN pip3 install \
 # Scientific computing packages
 RUN pip3 install \
   networkx==2.4 \
-  numpy==1.18.2 \
-  pandas==1.0.3 \
+  numpy==1.18.4 \
+  pandas==1.0.4 \
   sympy==1.5.1 \
   scikit_learn==0.22.2.post1 \
   SALib==1.3.8 \
@@ -70,6 +71,9 @@ RUN pip3 install \
   flask_codemirror==1.1 \
   flask_wtf==0.14.3 \
   WTForms==2.2.1
+
+# Unassigned other stuff
+RUN pip3 install SPARQLWrapper==1.8.5
 # ==============================================================================
 
 # ==============================================================================

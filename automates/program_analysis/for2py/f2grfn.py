@@ -21,6 +21,8 @@ import os
 import re
 import sys
 import ast
+import io
+import tokenize
 import json
 import argparse
 import pickle
@@ -30,7 +32,7 @@ import xml.etree.ElementTree as ET
 from os.path import isfile
 from typing import Dict, List, Tuple
 
-from . import (
+from automates.program_analysis.for2py import (
     preprocessor,
     translate,
     get_comments,
@@ -172,7 +174,11 @@ def generate_outputdict(rectified_tree, preprocessed_fortran_file) -> Dict:
 
 
 def generate_python_sources(
-    output_dictionary, python_files, main_python_file, temp_dir,
+    output_dictionary,
+    python_files,
+    main_python_file,
+    temp_dir,
+    module_log_file_path,
 ) -> List[Tuple]:
     """This function generates Python source file from generated Python source
     list. This function will return this list back to the caller for GrFN
@@ -182,10 +188,10 @@ def generate_python_sources(
         output_dictionary (dict): A dictionary of XML generated
         by translate.py.
         python_files: A list of python file names.
-        python_file_name (str): A file name where translated python strings
+        main_python_file (str): A file name where translated python strings
         will be written to.
         temp_dir (str): Temporary directory to store the translated files.
-
+        module_log_file_path (str): Path to the Module Log file.
     Returns:
         str: A string of generated Python code.
     """
@@ -193,7 +199,9 @@ def generate_python_sources(
     (
         python_sources,
         variable_map,
-    ) = pyTranslate.get_python_sources_and_variable_map(output_dictionary)
+    ) = pyTranslate.get_python_sources_and_variable_map(
+        output_dictionary, module_log_file_path, temp_dir
+    )
 
     with open(main_python_file.replace(".py", "_variable_map.pkl"), "wb") as f:
         pickle.dump(variable_map, f)
@@ -207,7 +215,6 @@ def generate_python_sources(
 
         with open(file_path, "w") as f:
             f.write(python_src_tuple[0])
-
         python_files.append(file_path)
 
     return python_sources
@@ -268,33 +275,42 @@ def generate_grfn(
     module_mapper = mod_index_generator.get_index(xml_file, mod_log_file_path)
     module_import_paths = {}
 
-    # Build GrFN and lambdas
-    asts = [ast.parse(python_source_string)]
+    # Get all the comments
+    comments = {}
+    buf = io.StringIO(python_source_string)
 
+    for line in tokenize.generate_tokens(buf.readline):
+        if line.type == tokenize.COMMENT:
+            comments[line.start[0]] = line.string
+
+    # Build GrFN and lambdas
     grfn_dict = genPGM.create_grfn_dict(
         lambdas_file_path,
-        asts,
+        python_source_string,
         python_file_path,
         module_mapper,
         original_fortran_file,
         mod_log_file_path,
+        comments,
         module_file_exists,
         module_import_paths,
     )
 
-    grfn_file = python_file_path.replace(".py", "_GrFN.json")
+    grfn_file = python_file_path.replace(".py", "_AIR.json")
     if module_file_exists:
         python_file_path = path + file_name + ".py"
     grfn_filepath_list.append(grfn_file)
 
     # Cleanup GrFN.
     del grfn_dict["date_created"]
-    for item in grfn_dict["variables"]:
-        if "gensym" in item:
-            del item["gensym"]
-    for item in grfn_dict["containers"]:
-        if "gensym" in item:
-            del item["gensym"]
+    if grfn_dict.get("variables"):
+        for item in grfn_dict["variables"]:
+            if "gensym" in item:
+                del item["gensym"]
+    if grfn_dict.get("containers"):
+        for item in grfn_dict["containers"]:
+            if "gensym" in item:
+                del item["gensym"]
 
     # Load logs from the module log file.
     with open(mod_log_file_path) as json_f:
@@ -311,7 +327,39 @@ def generate_grfn(
 
     grfn_dict["system"] = system_def
 
+    container_list = []
+    for container in grfn_dict["containers"]:
+        container_list.append(container["name"])
+
+    if system_def["components"][0]["imports"]:
+        for path in system_def["components"][0]["imports"]:
+            with open(path) as json_f:
+                module_grfn = json.load(json_f)
+                for container in module_grfn["containers"]:
+                    if container not in container_list:
+                        grfn_dict["containers"].append(container)
+                    else:
+                        pass
+                # Extend grfn
+                extend_grfn(grfn_dict, module_grfn["variables"], "variables")
+                extend_grfn(grfn_dict, module_grfn["start"], "start")
+                extend_grfn(grfn_dict, module_grfn["types"], "types")
+                extend_grfn(grfn_dict, module_grfn["grounding"], "grounding")
+                extend_grfn(grfn_dict, module_grfn["source"], "source")
+                # TODO: Currently, I'm ignoring "source_comments".
+
     return grfn_dict
+
+
+def extend_grfn(grfn_dict, module_grfn, attrib):
+    if module_grfn:
+        for elem in module_grfn:
+            if elem not in grfn_dict[attrib]:
+                grfn_dict[attrib].append(elem)
+            else:
+                pass
+    else:
+        pass
 
 
 def is_module_file(filename):
@@ -406,7 +454,8 @@ def fortran_to_grfn(
             'python_src': A string of Python code,
             'python_file': A file name of generated python script,
             'lambdas_file': A file name where lambdas will be,
-            'mode_mapper_dict': mapper of file info (i.e. filename, module, and exports, etc).
+            'mode_mapper_dict': mapper of file info (i.e. filename, module,
+            and exports, etc).
         }
     """
     current_dir = "."
@@ -442,8 +491,6 @@ def fortran_to_grfn(
             temp_dir, os.W_OK
         ), f"Directory {temp_dir} is not writable.\n\
             Please, provide the directory name to hold files."
-
-    print(f"*** ALL OUTPUT FILES LIVE IN [{temp_dir}]")
 
     # Output files
     python_file = temp_dir + "/" + base + ".py"
@@ -481,8 +528,6 @@ def fortran_to_grfn(
                 processing_modules,
                 save_intermediate_files=save_intermediate_files,
             )
-        processing_modules = False
-
     # Generate separate list of modules file.
     generator = mod_index_generator.ModuleGenerator()
     mode_mapper_dict = generator.analyze(rectified_tree, module_log_file_path)
@@ -501,13 +546,35 @@ def fortran_to_grfn(
     translated_python_files = []
     # Create a list of tuples with information about the Python source files.
     python_sources = generate_python_sources(
-        output_dict, translated_python_files, python_file, temp_dir,
+        output_dict,
+        translated_python_files,
+        python_file,
+        temp_dir,
+        module_log_file_path,
     )
 
     if not save_intermediate_files:
         os.remove(preprocessed_fortran_file)
         for translated_python_file in translated_python_files:
             os.remove(translated_python_file)
+
+    if processing_modules:
+        python_file_num = 0
+        for python_file in translated_python_files:
+            lambdas_file_path = python_file.replace(".py", "_lambdas.py")
+            grfn_dict = generate_grfn(
+                python_sources[python_file_num][0],
+                python_file,
+                lambdas_file_path,
+                mode_mapper_dict[0],
+                original_fortran_file,
+                module_log_file_path,
+                processing_modules,
+            )
+            with open(python_file.replace(".py", "_AIR.json"), "w") as f:
+                json.dump(grfn_dict, f, indent=2)
+            python_file_num += 1
+        processing_modules = False
 
     return (
         python_sources,

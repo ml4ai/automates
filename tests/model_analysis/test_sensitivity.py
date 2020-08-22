@@ -1,11 +1,11 @@
 import os
 import pytest
 
-import numpy as np
-
-from automates.model_analysis.sensitivity import SensitivityIndices, SensitivityAnalyzer
-from automates.model_analysis.networks import GroundedFunctionNetwork as GrFN
-from test_GrFN import petpt_grfn, petasce_grfn
+from automates.model_analysis.sensitivity import (
+    SensitivityIndices,
+    SensitivityAnalyzer,
+)
+from automates.model_analysis.networks import GroundedFunctionNetwork
 
 
 @pytest.fixture
@@ -77,7 +77,7 @@ def test_roundtrip_json_serialization(Si_Obj):
     os.remove(json_filepath)
 
 
-def test_Sobol(petpt_grfn):
+def test_Sobol():
     N = 1000
     B = {
         "tmax": [0.0, 40.0],
@@ -86,7 +86,9 @@ def test_Sobol(petpt_grfn):
         "msalb": [0.0, 1.0],
         "xhlai": [0.0, 20.0],
     }
-
+    petpt_grfn = GroundedFunctionNetwork.from_json(
+        "tests/data/model_analysis/PT_GrFN.json"
+    )
     (indices, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
         N, petpt_grfn, B, save_time=True
     )

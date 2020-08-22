@@ -54,14 +54,20 @@ class SensitivityVisualizer(object):
 
         fig, ax = plt.subplots(figsize=(12, 8))
 
-        for col in cols:
+        for i, col in enumerate(cols):
             S1_dataframe.reset_index().plot(
                 kind="scatter", x="index", y=col, ax=ax, c="r", s=50
             )
-            S1_dataframe.reset_index().plot(
-                kind="line", x="index", y=col, ax=ax
-            )
-            plt.legend(loc="right", fontsize=20)
+            if i < len(cols) // 2:
+                S1_dataframe.reset_index().plot(
+                    kind="line", x="index", y=col, ax=ax
+                )
+            else:
+                S1_dataframe.reset_index().plot(
+                    kind="line", x="index", y=col, ax=ax, linestyle='--'
+                )
+
+            plt.legend(loc="upper right", fontsize=20)
             plt.xlim(min(self.N) - 1, max(self.N) + 1)
             plt.xlabel("$log_{10}N$", fontsize=30)
             plt.ylabel("$S_i$", fontsize=30)
@@ -71,7 +77,7 @@ class SensitivityVisualizer(object):
             plt.ylim(-0.2, 1.0)
 
         plt.savefig(filename)
-
+        return plt
 
     def create_S2_plot(self, filename = "s2_plot.pdf"):
         """ Creates gridplot with second order Sobol index matrices for largest sample
@@ -86,16 +92,18 @@ class SensitivityVisualizer(object):
         S2_mat = self.S2_dataframe[elem].to_dict()
         df = pd.DataFrame(S2_mat)
         max_val = max(df.max(axis=0).values)
-        var_names = sorted(df.columns)
+        var_names = df.columns
 
         if len(df.columns) < 10:
             plt.figure(figsize=(12, 12))
         else:
             plt.figure(figsize=(15, 15))
         cmap = sns.diverging_palette(240, 10, n=9)
+        mask = np.triu(np.ones_like(df, dtype=np.bool))
         g = sns.heatmap(
             df,
             cmap=cmap,
+            mask=mask,
             annot=True,
             xticklabels=var_names,
             yticklabels=var_names,
@@ -110,6 +118,7 @@ class SensitivityVisualizer(object):
         plt.yticks(fontsize=15, rotation=0)
 
         plt.savefig(filename)
+        return plt
 
     def create_clocktime_plot(self, filename = "clocktime_plot.pdf"):
         """ Creates plot of runtime (Sample Time, Execution Time, and Analysis Time)
@@ -133,3 +142,5 @@ class SensitivityVisualizer(object):
         plt.xticks(fontsize=20)
         plt.yticks(fontsize=20)
         plt.savefig(filename)
+
+        return plt
