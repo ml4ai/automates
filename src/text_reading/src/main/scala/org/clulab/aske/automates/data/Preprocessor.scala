@@ -42,7 +42,8 @@ object EdgeCaseParagraphPreprocessor {
 class PassThroughPreprocessor() extends Preprocessor {
   def cleanUp(text: String): String = {
     val loseVerticalText = text.split("\n").filter(t => t.length > 6).mkString("\n")
-    val cleanerText = loseVerticalText.replaceAll("\n", " ")
+    val loseExtraLongFalseWords = loseVerticalText.split(" ").filter(w => w.length < 25).mkString(" ")
+    val cleanerText = loseExtraLongFalseWords.replaceAll("\n", " ")
     cleanerText
   }
 }

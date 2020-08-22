@@ -411,7 +411,7 @@ object ExpansionHandler {
     "^nmod_since".r,
     "^nmod_without$".r,
     "nummod".r,
-//    "^nsubj".r,
+    "^nsubj".r,
     "^punct".r,
     "^ref$".r,
     "appos".r
