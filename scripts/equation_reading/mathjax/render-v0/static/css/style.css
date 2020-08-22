@@ -1,0 +1,18 @@
+mjx-container[display="block"] {
+  display: block;
+  margin: 1em 0;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+div.pre {
+  width: 500px;
+  height: 300px;
+  overflow: scroll;
+}
