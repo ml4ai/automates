@@ -8,23 +8,26 @@ import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.AlignmentHandler
-import org.clulab.aske.automates.apps.ExtractAndAlign
+import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
 import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
+import ujson.Value
 //import org.clulab.odin._
 import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.utils.DisplayUtils
+import org.clulab.utils.{DisplayUtils, AlignmentJsonUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
 import play.api.mvc._
 import play.api.libs.json._
 
+import org.json4s.JsonAST
 
 
 /**
@@ -46,6 +49,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val numAlignments: Int = 5
   private val numAlignmentsSrcToComment: Int = 3
   private val scoreThreshold: Double = 0.0
+  private val maxSVOgroundingsPerVarDefault: Int = 5
+  private val groundToSVODefault = true
+  private val appendToGrFNDefault = true
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -76,16 +82,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
     source.close()
 
-    // NOTE: Masha's original method
-    // val string = request.body.asText.get
-    // val jval = json4s.jackson.parseJson(string)
     
     val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Definition")
 //    val grfnPath = json("grfn").str
 //    val grfnFile = new File(grfnPath)
 //    val grfn = ujson.read(grfnFile.readString())
 //    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
-    println("len mentions: " + defMentions.length)
     val result = SVOGrounder.mentionsToGroundingsJson(defMentions,k)   //slice for debugging to avoid overloading the server: defMentions.slice(0,10), k)
     Ok(result).as(JSON)
   }
@@ -187,35 +189,64 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
-    val data = request.body.asJson.get.toString()
-    val json = ujson.read(data)
-    // Load the mentions
-    val textMentions = JSONSerializer.toMentions(new File(json("mentions").str))
-    // get the equations
-    val equationFile = json("equations").str
-    val equationChunksAndSource = ExtractAndAlign.loadEquations(equationFile)
 
-    // Get the GrFN
-    val grfnPath = json("grfn").str
-    val grfnFile = new File(grfnPath)
-    val grfn = ujson.read(grfnFile.readString())
-    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
-    // ground!
-    val groundedGrfn = ExtractAndAlign.groundMentionsToGrfn(
-      textMentions,
-      grfn,
-      localCommentReader,
-      equationChunksAndSource,
-      alignmentHandler,
-      numAlignments,
-      numAlignmentsSrcToComment,
-      scoreThreshold
-    )
-    // FIXME: add a conversion method for ujson <--> play json
-    val groundedGrfnAsString = ujson.write(groundedGrfn)
-    val groundedGrfnJson4s = json4s.jackson.parseJson(groundedGrfnAsString)
-    Ok(PlayUtils.toPlayJson(groundedGrfnJson4s))
+    val data = request.body.asJson.get.toString()
+    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
+    val jsonPath = pathJson("pathToJson").str
+    val jsonFile = new File(jsonPath)
+    val json = ujson.read(jsonFile.readString())
+
+    val jsonKeys = json.obj.keys.toList
+
+
+    //if toggles and arguments are not provided in the input, use class defaults (this is to be able to process the previously used GrFN format input)
+    val groundToSVO = if (jsonKeys.contains("toggles")) {
+      json("toggles").obj("groundToSVO").bool
+    } else groundToSVODefault
+
+    val appendToGrFN = if (jsonKeys.contains("toggles")) {
+      json("toggles").obj("appendToGrFN").bool
+    } else appendToGrFNDefault
+
+    val maxSVOgroundingsPerVar = if (jsonKeys.contains("arguments")) {
+      json("arguments").obj("maxSVOgroundingsPerVar").num.toInt
+    } else maxSVOgroundingsPerVarDefault
+
+
+    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
+    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
+      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
+
+      // ground!
+      val groundings = ExtractAndAlign.groundMentions(
+        json,
+        argsForGrounding.variableNames,
+        argsForGrounding.variableShortNames,
+        argsForGrounding.definitionMentions,
+        argsForGrounding.commentDefinitionMentions,
+        argsForGrounding.equationChunksAndSource,
+        argsForGrounding.svoGroundings,
+        groundToSVO,
+        maxSVOgroundingsPerVar,
+        alignmentHandler,
+        Some(numAlignments),
+        Some(numAlignmentsSrcToComment),
+        scoreThreshold,
+        appendToGrFN
+      )
+
+
+      val groundingsAsString = ujson.write(groundings, indent = 4)
+
+      val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
+      Ok(groundingsJson4s)
+    } else {
+      logger.warn(s"Nothing to do for keys: $jsonKeys")
+      Ok("")
+    }
+
   }
+
 
   // -----------------------------------------------------------------
   //               Backend methods that do stuff :)

@@ -43,6 +43,20 @@ class LinkNode(ABC):
 
 @dataclass(repr=False, frozen=True)
 class CodeVarNode(LinkNode):
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        (_, namespace, scope, basename, index) = self.content.split("::")
+        return "\n".join(
+            [
+                f"NAMESPACE: {namespace}",
+                f"SCOPE: {scope}",
+                f"NAME: {basename}",
+                f"INDEX: {index}",
+            ]
+        )
+
     def get_varname(self) -> str:
         (_, _, _, basename, _) = self.content.split("::")
         return basename
@@ -83,6 +97,21 @@ class TextVarNode(LinkNode):
 
 @dataclass(repr=False, frozen=True)
 class CommSpanNode(LinkNode):
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        tokens = self.content.strip().split()
+        if len(tokens) <= 4:
+            return " ".join(tokens)
+
+        new_content = ""
+        while len(tokens) > 4:
+            new_content += "\n" + " ".join(tokens[:4])
+            tokens = tokens[4:]
+        new_content += "\n" + " ".join(tokens)
+        return new_content
+
     def get_comment_location(self):
         (filename, sub_name, place) = self.source.split("; ")
         filename = filename[: filename.rfind(".f")]
@@ -105,6 +134,21 @@ class CommSpanNode(LinkNode):
 
 @dataclass(repr=False, frozen=True)
 class TextSpanNode(LinkNode):
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        tokens = self.content.strip().split()
+        if len(tokens) <= 4:
+            return " ".join(tokens)
+
+        new_content = ""
+        while len(tokens) > 4:
+            new_content += "\n" + " ".join(tokens[:4])
+            tokens = tokens[4:]
+        new_content += "\n" + " ".join(tokens)
+        return new_content
+
     def __data_from_source(self) -> tuple:
         path_pieces = self.source.split("/")
         doc_data = path_pieces[-1]
@@ -248,12 +292,7 @@ def extract_link_tables(L: DiGraph) -> dict:
         if var_name not in tables:
             table_rows = var_node.get_table_rows(L)
             table_rows.sort(
-                key=lambda r: (
-                    r["link_score"],
-                    r["vc_score"],
-                    r["ct_score"],
-                    r["te_score"],
-                ),
+                key=lambda r: (r["vc_score"], r["ct_score"], r["te_score"]),
                 reverse=True,
             )
             tables[var_name] = table_rows

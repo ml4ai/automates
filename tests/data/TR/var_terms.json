@@ -1,0 +1,23 @@
+[
+  {
+    "text_var": "Rn",
+    "svo_query_terms": [
+      "Net_radiation"
+    ]
+  },
+  {
+    "text_var": "h",
+    "svo_query_terms": [
+    ]
+  },
+  {
+    "text_var": "ET",
+    "svo_query_terms": [
+      "ET",
+      "rn",
+      "lai",
+      "input",
+      "variable"
+    ]
+  }
+]

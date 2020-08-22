@@ -3,7 +3,7 @@ package org.clulab.aske.automates.grfn
 import ai.lum.common.FileUtils._
 import java.io.File
 
-import org.clulab.grounding.{Grounding, sparqlResult}
+import org.clulab.grounding.{SVOGrounding, sparqlResult}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.json4s.jackson.Json
@@ -14,7 +14,10 @@ import scala.collection.mutable.ArrayBuffer
 object GrFNParser {
 
   def addHypotheses(grfn: Value, hypotheses: Seq[Obj]): Value = {
-    grfn("grounding") = hypotheses.toList
+    //adding to exisitng grounding; intended to help with running complementary endpoints (instead of the full pipeline)
+    grfn("grounding") =  if (grfn.obj.get("grounding").isDefined) {
+      (grfn("grounding").arr ++ hypotheses.toList).distinct
+    } else hypotheses.distinct
     grfn
   }
 
@@ -140,7 +143,7 @@ object GrFNParser {
     linkElement
   }
 
-  def mkSVOElement(grounding: Grounding): ujson.Obj = {
+  def mkSVOElement(grounding: SVOGrounding): ujson.Obj = {
     val linkElement = ujson.Obj(
       "type" -> "svo_grounding",
       "source" -> "svo_ontology",
