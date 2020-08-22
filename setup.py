@@ -80,10 +80,6 @@ setup(
     extras_require=EXTRAS_REQUIRE,
     python_requires=">=3.6",
     entry_points={
-        "console_scripts": [
-            "delphi = delphi.apps.cli:main",
-            "delphi_rest_api = delphi.apps.rest_api.run:main",
-            "codex = delphi.apps.CodeExplorer.app:main",
-        ]
+        "console_scripts": ["codex = automates.apps.CodeExplorer.app:main",]
     },
 )
