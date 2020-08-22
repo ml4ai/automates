@@ -16,9 +16,9 @@ from random import random
 
 def main():
     format_10: List[str] = [None]
-    format_10 = ["a", '"; "', "a"]
+    format_10 = ['a', '"; "', 'a']
     format_10_obj = Format(format_10)
-
+    
     str1 = String(10)
     str2 = String(5)
     str1.set_("abcdefgh")
@@ -27,8 +27,7 @@ def main():
     write_list_stream = [str1, str2]
     write_line = format_10_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-
+    
     return
-
 
 main()

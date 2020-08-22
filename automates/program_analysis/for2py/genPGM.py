@@ -13,6 +13,7 @@ from .genCode import genCode, PrintState
 from .mod_index_generator import get_index
 from .get_comments import get_comments
 from . import For2PyError
+from . import syntax
 from typing import List, Dict, Iterable, Optional
 from collections import OrderedDict
 from itertools import chain, product

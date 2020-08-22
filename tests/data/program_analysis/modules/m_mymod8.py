@@ -16,8 +16,7 @@ from random import random
 
 x: List[int] = [1234]
 
-
 def myadd(y: List[int]):
     myadd_return: List[int] = [None]
-    myadd_return[0] = x[0] + y[0]
+    myadd_return[0] = (x[0] + y[0])
     return myadd_return[0]

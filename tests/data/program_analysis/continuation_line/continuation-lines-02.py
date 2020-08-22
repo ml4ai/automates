@@ -15,14 +15,14 @@ from random import random
 
 
 def myadd(arg1: List[int], arg2: List[int], arg3: List[int]):
-    arg3[0] = arg1[0] + arg2[0]
-
+    arg3[0] = (arg1[0] + arg2[0])
+    
 
 def main():
     format_10: List[str] = [None]
-    format_10 = ["3(x,i3)"]
+    format_10 = ['3(x,i3)']
     format_10_obj = Format(format_10)
-
+    
     x: List[int] = [None]
     y: List[int] = [None]
     z: List[int] = [None]
@@ -32,6 +32,6 @@ def main():
     write_list_stream = [x[0], y[0], z[0]]
     write_line = format_10_obj.write_line(write_list_stream)
     sys.stdout.write(write_line)
-
+    
 
 main()

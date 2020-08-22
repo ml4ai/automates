@@ -19,57 +19,32 @@ def triple_nested():
     date: List[int] = [None]
     day: List[int] = [None]
     month[0] = 1
-    while month[0] <= 12:
+    while (month[0] <= 12):
         date[0] = 1
-        while date[0] <= 7:
+        while (date[0] <= 7):
             day[0] = 1
-            while day[0] <= date[0]:
-                if day[0] == 1:
+            while (day[0] <= date[0]):
+                if (day[0] == 1):
                     print("month: ", month, " day: ", day, ", sunday")
                 else:
-                    if day[0] == 2:
+                    if (day[0] == 2):
                         print("month: ", month, " day: ", day, ", monday")
                     else:
-                        if day[0] == 3:
+                        if (day[0] == 3):
                             print("month: ", month, " day: ", day, ", tuesday")
                         else:
-                            if day[0] == 4:
-                                print(
-                                    "month: ",
-                                    month,
-                                    " day: ",
-                                    day,
-                                    ", wednesday",
-                                )
+                            if (day[0] == 4):
+                                print("month: ", month, " day: ", day, ", wednesday")
                             else:
-                                if day[0] == 5:
-                                    print(
-                                        "month: ",
-                                        month,
-                                        " day: ",
-                                        day,
-                                        ", thursday",
-                                    )
+                                if (day[0] == 5):
+                                    print("month: ", month, " day: ", day, ", thursday")
                                 else:
-                                    if day[0] == 6:
-                                        print(
-                                            "month: ",
-                                            month,
-                                            " day: ",
-                                            day,
-                                            ", friday",
-                                        )
+                                    if (day[0] == 6):
+                                        print("month: ", month, " day: ", day, ", friday")
                                     else:
-                                        print(
-                                            "month: ",
-                                            month,
-                                            " day: ",
-                                            day,
-                                            ", saturday",
-                                        )
-                day[0] = day[0] + 1
-            date[0] = date[0] + 1
-        month[0] = month[0] + 1
-
+                                        print("month: ", month, " day: ", day, ", saturday")
+                day[0] = (day[0] + 1)
+            date[0] = (date[0] + 1)
+        month[0] = (month[0] + 1)
 
 triple_nested()

@@ -30,7 +30,7 @@ from .structures import (
     VarType,
     DataType,
 )
-from utils.misc import choose_font
+from ..utils.misc import choose_font
 
 
 FONT = choose_font()

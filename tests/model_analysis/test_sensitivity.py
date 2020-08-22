@@ -5,7 +5,7 @@ from automates.model_analysis.sensitivity import (
     SensitivityIndices,
     SensitivityAnalyzer,
 )
-from automates.model_analysis.networks import GroundedFunctionNetwork
+from automates.model_assembly.networks import GroundedFunctionNetwork
 
 
 @pytest.fixture

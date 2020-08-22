@@ -14,16 +14,18 @@ from numbers import Real
 from random import random
 
 
+
 def foo_int(x: List[int], result: List[int]):
     result[0] = int(((47 * x[0]) + 23))
-
+    
 
 def foo_real(x: List[Real], result: List[int]):
     result[0] = int(((int(x[0]) * 31) + 17))
-
+    
 
 def foo_bool(x: List[bool], result: List[int]):
     if x[0]:
         result[0] = 937
     else:
         result[0] = -(732)
+    

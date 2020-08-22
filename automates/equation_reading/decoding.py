@@ -5,7 +5,7 @@ from typing import Union
 
 from sympy.parsing.latex import parse_latex, LaTeXParsingError
 
-from equation_reading.latex_tokenizer import LatexTokenizer, Token
+from automates.equation_reading.latex_tokenizer import LatexTokenizer, Token
 
 
 RESERVED_WORDS = {

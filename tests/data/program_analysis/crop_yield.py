@@ -14,15 +14,12 @@ from numbers import Real
 from random import random
 
 
-def update_est(
-    rain: List[float], total_rain: List[float], yield_est: List[float]
-):
-    total_rain[0] = total_rain[0] + rain[0]
-    if total_rain[0] <= 40:
-        yield_est[0] = -((((total_rain[0] - 40) ** 2) / 16)) + 100
+def update_est(rain: List[float], total_rain: List[float], yield_est: List[float]):
+    total_rain[0] = (total_rain[0] + rain[0])
+    if (total_rain[0] <= 40):
+        yield_est[0] = (-((((total_rain[0] - 40) ** 2) / 16)) + 100)
     else:
-        yield_est[0] = -(total_rain[0]) + 140
-
+        yield_est[0] = (-(total_rain[0]) + 140)
 
 def crop_yield():
     day: List[int] = [None]
@@ -37,13 +34,10 @@ def crop_yield():
     absorption[0] = 0.6
     yield_est[0] = 0
     total_rain[0] = 0
-    for day[0] in range(1, 31 + 1):
-        rain[0] = (
-            -((((day[0] - 16) ** 2) / consistency[0])) + max_rain[0]
-        ) * absorption[0]
+    for day[0] in range(1, 31+1):
+        rain[0] = ((-((((day[0] - 16) ** 2) / consistency[0])) + max_rain[0]) * absorption[0])
         update_est(rain, total_rain, yield_est)
         print("day ", day, " estimate: ", yield_est)
     print("crop yield(%): ", yield_est)
-
 
 crop_yield()

@@ -12,8 +12,8 @@ import numpy as np
 import networkx as nx
 from tqdm import tqdm
 
-from model_assembly.networks import GroundedFunctionNetwork
-from model_analysis.utils import timeit
+from automates.model_assembly.networks import GroundedFunctionNetwork
+from .utils import timeit
 
 
 class InputError(Exception):

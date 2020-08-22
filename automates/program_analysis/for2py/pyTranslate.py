@@ -2099,6 +2099,7 @@ def get_python_sources_and_variable_map(
         "from automates.program_analysis.for2py.arrays import *",
         "from automates.program_analysis.for2py.static_save import *",
         "from automates.program_analysis.for2py.strings import *",
+        "from automates.program_analysis.for2py import intrinsics",
         "from dataclasses import dataclass",
         "from automates.program_analysis.for2py.types_ext import Float32",
         "import automates.program_analysis.for2py.math_ext as math",

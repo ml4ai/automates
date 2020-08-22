@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from automates.model_analysis.networks import GroundedFunctionNetwork
+from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.model_analysis.sensitivity import SensitivityAnalyzer
 from automates.model_analysis.visualization import SensitivityVisualizer
 

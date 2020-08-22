@@ -13,17 +13,12 @@ import automates.program_analysis.for2py.math_ext as math
 from numbers import Real
 from random import random
 
-
 @dataclass
 class mytype:
-    simcontrol = String(
-        120,
-        "                                                                                                        ",
-    )
+    simcontrol = String(120, "                                                                                                        ")
 
 
 def main():
     test = String(20, "hello world")
-
 
 main()

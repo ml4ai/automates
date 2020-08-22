@@ -10,21 +10,21 @@ from dataclasses import dataclass
 @dataclass
 class mytype_123:
     def __init__(self):
-        self.a: int
+        self.a : int
 
 
-@static_vars([{"name": "w", "call": mytype_123(), "type": "derived"}])
+@static_vars([{'name': 'w', 'call': mytype_123(), 'type': 'derived'}])
 def f(n: List[int], x: List[int]):
-    if n[0] == 0:
+    if (n[0] == 0):
         f.w.a = 111
     else:
         f.w.a = int((2 * f.w.a))
     x[0] = f.w.a
 
 
-@static_vars([{"name": "w", "call": [None], "type": "variable"}])
+@static_vars([{'name': 'w', 'call': [None], 'type': 'variable'}])
 def g(n: List[int], x: List[int]):
-    if n[0] == 0:
+    if (n[0] == 0):
         g.w[0] = 999
     else:
         g.w[0] = int((g.w[0] / 3))
@@ -33,7 +33,7 @@ def g(n: List[int], x: List[int]):
 
 def main():
     format_10: List[str] = [None]
-    format_10 = ['"a = "', "I5", '";   b = "', "I5"]
+    format_10 = ['"a = "', 'I5', '";   b = "', 'I5']
     format_10_obj = Format(format_10)
 
     a: List[int] = [None]

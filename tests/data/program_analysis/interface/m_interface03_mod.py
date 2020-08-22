@@ -13,7 +13,6 @@ import automates.program_analysis.for2py.math_ext as math
 from numbers import Real
 from random import random
 
-
 @dataclass
 class controltype:
     mesic = String(1)
@@ -39,7 +38,6 @@ class controltype:
     yrdif: int
     yrdoy: int
     yrsim: int
-
 
 @dataclass
 class switchtype:
@@ -84,7 +82,6 @@ class switchtype:
     fmopt = String(1)
     nswi: int
 
-
 @dataclass
 class transfertype:
     control = controltype
@@ -104,18 +101,18 @@ class transfertype:
 maxfiles: List[int] = [500]
 save_data = transfertype
 
-
 def get_control(control_arg: List[controltype]):
     control_arg[0] = save_data.control
-
+    
 
 def put_control(control_arg: List[controltype]):
     save_data.control = control_arg[0]
-
+    
 
 def get_iswitch(iswitch_arg: List[switchtype]):
     iswitch_arg[0] = save_data.iswitch
-
+    
 
 def put_iswitch(iswitch_arg: List[switchtype]):
     save_data.iswitch = iswitch_arg[0]
+    
