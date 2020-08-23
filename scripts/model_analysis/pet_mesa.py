@@ -1,4 +1,4 @@
-from model_analysis.mesa import mesa
+from automates.model_analysis.mesa import mesa
 
 
 def main():
@@ -10,5 +10,5 @@ def main():
     print(aligned_asce)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
