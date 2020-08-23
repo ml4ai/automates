@@ -24,7 +24,8 @@
 # -----------------------------------------------------------------------------
 
 import os
-import src.equation_reading.equation_extraction.render_image_from_latex as rifl
+import automates.utils.parameters as parameters
+import automates.equation_reading.equation_extraction.render_image_from_latex as rifl
 
 
 # -----------------------------------------------------------------------------
@@ -32,9 +33,9 @@ import src.equation_reading.equation_extraction.render_image_from_latex as rifl
 # -----------------------------------------------------------------------------
 
 # NOTE: Must be updated to your local!
-ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
+ASKE_GOOGLE_DRIVE_ROOT = parameters.get()['AUTOMATES_DATA']
 
-MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
+MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Mini-SPAM/eqns/SPAM/PET')
 PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
 PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
 PETDYN_ROOT = os.path.join(MODEL_ROOT, 'PETDYN')

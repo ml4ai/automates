@@ -4,7 +4,7 @@ import json
 from datetime import date
 import pytest
 
-from program_analysis.for2py import genPGM, f2grfn
+from automates.program_analysis.for2py import f2grfn
 
 from pathlib import Path
 from typing import Dict
@@ -16,8 +16,6 @@ TEMP_DIR = "."
 
 def cleanup(filepath):
     program_name = filepath.stem
-    if os.path.exists(program_name + "_lambdas.py"):
-        os.remove(program_name + "_lambdas.py")
     os.remove(f"{TEMP_DIR}/rectified_{program_name}.xml")
     os.remove(f"{TEMP_DIR}/{program_name}_variable_map.pkl")
     os.remove(f"{TEMP_DIR}/{program_name}_modFileLog.json")
@@ -285,7 +283,7 @@ def test_crop_yield_pythonIR_generation(crop_yield_python_IR_test):
     assert crop_yield_python_IR_test[0] == python_src
 
 
-@pytest.mark.skip("This is already being tested by test_GrFN.py")
+@pytest.mark.skip("This is already being tested by test_AIR.py")
 def test_PETPT_pythonIR_generation(PETPT_python_IR_test):
     with open(f"{DATA_DIR}/PETPT.py", "r") as f:
         python_src = f.read()
@@ -311,7 +309,7 @@ def test_do_while_pythonIR_generation(do_while_python_IR_test):
 
 
 def test_derived_type_pythonIR_generation(derived_type_python_IR_test):
-    with open(f"{DATA_DIR}/derived-types-04.py", "r") as f:
+    with open(f"{DATA_DIR}/derived-types/derived-types-04.py", "r") as f:
         python_src = f.read()
     assert derived_type_python_IR_test[0] == python_src
 
@@ -347,10 +345,6 @@ def test_module_pythonIR_generation(module_python_IR_test):
     with open(f"{DATA_DIR}/modules/test_module_08.py", "r") as f:
         python_src = f.read()
     assert src[1][0] == python_src
-
-    with open(f"{DATA_DIR}/modules/m_mymod8.py", "r") as f:
-        python_src = f.read()
-    assert src[0][0] == python_src
 
 
 def test_cycle_exit_pythonIR_generation(cycle_exit_python_IR_test):
@@ -430,75 +424,32 @@ def test_derived_type_with_default_pythonIR_generation(
 ############################################################################
 
 
-@pytest.mark.skip("TODO: use similar tests once AIR JSON form is standardized")
 def test_multidimensional_array_grfn_generation(multidimensional_array_test):
-    with open(f"{DATA_DIR}/arrays/arrays-basic-06_GrFN.json", "r") as f:
+    with open(f"{DATA_DIR}/arrays/arrays-basic-06_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert multidimensional_array_test[0] == grfn_dict
-
-    with open(f"{DATA_DIR}/arrays/arrays-basic-06_lambdas.py", "r") as f:
-        target_lambda_functions = f.read()
-    with open(f"{TEMP_DIR}/{multidimensional_array_test[1]}", "r") as l:
-        generated_lambda_functions = l.read()
-    assert str(target_lambda_functions) == str(generated_lambda_functions)
 
 
 @pytest.mark.skip("FIXME")
 def test_sir_gillespie_sd_multi_grfn_generation(sir_gillespie_sd_multi_test):
-    with open(f"{DATA_DIR}/SIR-Gillespie-SD_multi_module_GrFN.json", "r") as f:
+    with open(f"{DATA_DIR}/SIR-Gillespie-SD_multi_module_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert sir_gillespie_sd_multi_test[0] == grfn_dict
 
-    with open(
-        f"{DATA_DIR}/SIR-Gillespie-SD_multi_module_lambdas.py", "r"
-    ) as f:
-        target_lambda_functions = f.read()
-    with open(f"{TEMP_DIR}/{sir_gillespie_sd_multi_test[1]}", "r") as l:
-        generated_lambda_functions = l.read()
-    assert str(target_lambda_functions) == str(generated_lambda_functions)
 
-
-@pytest.mark.skip("TODO: use similar tests once AIR JSON form is standardized")
 def test_derived_type_grfn_generation(derived_type_grfn_test):
-    with open(
-        f"{DATA_DIR}/derived-types/derived-types-04_GrFN.json", "r"
-    ) as f:
+    with open(f"{DATA_DIR}/derived-types/derived-types-04_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert derived_type_grfn_test[0] == grfn_dict
 
-    with open(
-        f"{DATA_DIR}/derived-types/derived-types-04_lambdas.py", "r"
-    ) as f:
-        target_lambda_functions = f.read()
-    with open(f"{TEMP_DIR}/{derived_type_grfn_test[1]}", "r") as l:
-        generated_lambda_functions = l.read()
-    assert str(target_lambda_functions) == str(generated_lambda_functions)
 
-
-@pytest.mark.skip("TODO: use similar tests once AIR JSON form is standardized")
 def test_derived_type_array_grfn_generation(derived_type_array_grfn_test):
-    with open(
-        f"{DATA_DIR}/derived-types/derived-types-02_GrFN.json", "r"
-    ) as f:
+    with open(f"{DATA_DIR}/derived-types/derived-types-02_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert derived_type_array_grfn_test[0] == grfn_dict
 
-    with open(
-        f"{DATA_DIR}/derived-types/derived-types-02_lambdas.py", "r"
-    ) as f:
-        target_lambda_functions = f.read()
-    with open(f"{TEMP_DIR}/{derived_type_array_grfn_test[1]}", "r") as l:
-        generated_lambda_functions = l.read()
-    assert str(target_lambda_functions) == str(generated_lambda_functions)
-
 
 def test_select_case_grfn_generation(select_case_grfn_test):
-    with open(f"{DATA_DIR}/select_case/select02_GrFN.json", "r") as f:
+    with open(f"{DATA_DIR}/select_case/select02_AIR.json", "r") as f:
         grfn_dict = json.load(f)
     assert select_case_grfn_test[0] == grfn_dict
-
-    with open(f"{DATA_DIR}/select_case/select02_lambdas_numpy.py", "r") as f:
-        target_lambda_functions = f.read()
-    with open(f"{TEMP_DIR}/{select_case_grfn_test[1]}", "r") as l:
-        generated_lambda_functions = l.read()
-    assert str(target_lambda_functions) == str(generated_lambda_functions)

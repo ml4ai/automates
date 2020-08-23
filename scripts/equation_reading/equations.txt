@@ -1,0 +1,25 @@
+ORIGINAL:		ET_{SZ} = \frac{0.408 \Delta (R_n - G) + \gamma \frac{C_n}{T + 273} u_2 (e_s - e_a)}{\Delta + \gamma (1 + C_d u_2)}
+SANITIZED:		 \frac{0.408 \f (e - c) + \a \frac{k}{g + 273} b (j - d)}{\f + \a (1 + h b)}
+TRANSLATED:		(gamma*((C_n/(T + 273))*u_2(-e_a + e_s)) + 0.408*Delta(-G + R_n))/(Delta + gamma(u_2*C_d + 1))
+
+
+ORIGINAL:		T = \frac{T_{max} + T_{min}}{2}
+SANITIZED:		 \frac{b + a}{2}
+TRANSLATED:		(T_min + T_max)/2
+
+
+ORIGINAL:		P = 101.3 \left( \frac{293 - 0.0065 z}{293} \right)^{5.26}
+SANITIZED:		 101.3 ( \frac{293 - 0.0065 a}{293} )^{5.26}
+TRANSLATED:		101.3*((293 - 0.0065*z)/293)**5.26
+
+
+ORIGINAL:		\gamma = 0.000665 P
+SANITIZED:		 0.000665 a
+TRANSLATED:		0.000665*P
+
+
+ORIGINAL:		\Delta = \frac{2503 \exp \left( \frac{17.27 T}{T + 237.3} \right)}{\left( T + 237.3 \right)^2}
+SANITIZED:		 \frac{2503 \exp ( \frac{17.27 a}{a + 237.3} )}{( a + 237.3 )^2}
+TRANSLATED:		(2503*exp((17.27*T)/(T + 237.3)))/(T + 237.3)**2
+
+

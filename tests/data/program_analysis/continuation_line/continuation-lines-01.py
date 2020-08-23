@@ -1,13 +1,15 @@
 import sys
+import os
 from typing import List
 import math
-from program_analysis.for2py.format import *
-from program_analysis.for2py.arrays import *
-from program_analysis.for2py.static_save import *
-from program_analysis.for2py.strings import *
+from automates.program_analysis.for2py.format import *
+from automates.program_analysis.for2py.arrays import *
+from automates.program_analysis.for2py.static_save import *
+from automates.program_analysis.for2py.strings import *
+from automates.program_analysis.for2py import intrinsics
 from dataclasses import dataclass
-from program_analysis.for2py.types_ext import Float32
-import program_analysis.for2py.math_ext as math
+from automates.program_analysis.for2py.types_ext import Float32
+import automates.program_analysis.for2py.math_ext as math
 from numbers import Real
 from random import random
 
@@ -18,7 +20,7 @@ def myadd(arg1: List[int], arg2: List[int], arg3: List[int]):
 
 def main():
     format_10: List[str] = [None]
-    format_10 = ['3(X,I3)']
+    format_10 = ['3(x,i3)']
     format_10_obj = Format(format_10)
     
     x: List[int] = [None]
