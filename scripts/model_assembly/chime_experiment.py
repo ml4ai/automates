@@ -1,7 +1,7 @@
 import json
 import os
 
-from model_assembly.interfaces import TextReadingInterface
+from  automates.model_assembly.interfaces import TextReadingInterface
 
 cur_dir = os.getcwd()
 DATA = os.environ["AUTOMATES_DATA"]

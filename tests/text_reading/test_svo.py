@@ -2,7 +2,7 @@ import pytest
 import json
 import os
 
-from text_reading.sparql.query_svo import (
+from automates.text_reading.sparql.query_svo import (
     QueryConductor,
     process_text_var_terms,
 )
