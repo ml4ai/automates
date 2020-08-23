@@ -1,0 +1,55 @@
+{
+  "Rn": {
+    "Net_radiation": []
+  },
+  "h": {},
+  "ET": {
+    "ET": [
+      [
+        "ashton-et-al_approach_angle_asymmetry_parameter",
+        "Property"
+      ],
+      [
+        "ashton-et-al_approach_angle_asymmetry_parameter",
+        "Quantitative Property"
+      ],
+      [
+        "ashton-et-al_approach_angle_asymmetry_parameter",
+        "Standardized Property"
+      ],
+      [
+        "ashton-et-al_approach_angle_highness_parameter",
+        "Property"
+      ],
+      [
+        "ashton-et-al_approach_angle_highness_parameter",
+        "Quantitative Property"
+      ],
+      [
+        "ashton-et-al_approach_angle_highness_parameter",
+        "Standardized Property"
+      ],
+      [
+        "sea_shoreline_wave~incoming~deepwater__ashton-et-al_approach_angle_asymmetry_parameter",
+        "Variable"
+      ],
+      [
+        "sea_shoreline_wave~incoming~deepwater__ashton-et-al_approach_angle_highness_parameter",
+        "Variable"
+      ]
+    ],
+    "rn": [],
+    "lai": [],
+    "input": [],
+    "variable": [
+      [
+        "variable_area_flow",
+        "Flow-Type Assumptions"
+      ],
+      [
+        "variable_area_flow",
+        "Assumption"
+      ]
+    ]
+  }
+}

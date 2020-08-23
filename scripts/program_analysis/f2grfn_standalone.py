@@ -23,7 +23,7 @@ Author: Terrence J. Lim
 
 import json
 import argparse
-from program_analysis.for2py import f2grfn
+from automates.program_analysis.for2py import f2grfn
 
 if __name__ == "__main__":
     """This function is for a safe command line
@@ -43,13 +43,12 @@ if __name__ == "__main__":
         "-d",
         "--directory",
         help="A temporary directory for generated files to be stored.",
-        default=".",
+        default="tmp",
     )
 
     parser.add_argument(
         "-r",
         "--root",
-        nargs="*",
         help="A root directory to begin file scanning.",
         default=".",
     )
@@ -57,7 +56,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m",
         "--moduleLog",
-        nargs="*",
         help="Module log file name.",
         default="modFileLog.json",
     )
@@ -77,6 +75,7 @@ if __name__ == "__main__":
         args.moduleLog,
         save_intermediate_files=True,
     )
+
     python_file_num = 0
     for python_file in translated_python_files:
         lambdas_file_path = python_file.replace(".py", "_lambdas.py")
@@ -89,6 +88,7 @@ if __name__ == "__main__":
             module_log_file_path,
             processing_modules,
         )
-        with open(python_file.replace(".py", "_GrFN.json"), "w") as f:
+
+        with open(python_file.replace(".py", "_AIR.json"), "w") as f:
             json.dump(grfn_dict, f, indent=2)
         python_file_num += 1

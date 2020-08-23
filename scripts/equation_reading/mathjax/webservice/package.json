@@ -1,0 +1,18 @@
+{
+  "name": "mathjax-webservice",
+  "version": "1.0.0",
+  "description": "A simple service to provide access to MathJax LaTeX conversion capabilities",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Paul D. Hein",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.0",
+    "express": "^4.17.1",
+    "lodash": "^4.17.19",
+    "mathjax-node": "^2.1.1"
+  }
+}
