@@ -55,8 +55,8 @@ ASKE-AutoMATES/Data/Mini-SPAM/
 ```
 (*) PETPT —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petpt_2012.pdf
 (*) PETASCE —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petasce.pdf
-() PETPNO —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petpno_Penman.pdf
-() PETPEN —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petpen_PM.pdf
-() PETDYN —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petdyn_modern.pdf
-() PETMEY —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petmey.pdf
+(*) PETPNO —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petpno_Penman.pdf
+(*) PETPEN —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petpen_PM.pdf
+(*) PETDYN —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petdyn_modern.pdf
+(*) PETMEY —> ASKE-AutoMATES/Data/Mini-SPAM/docs/SPAM/PET/petmey.pdf
 ```
