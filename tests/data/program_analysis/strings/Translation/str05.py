@@ -1,5 +1,5 @@
-from program_analysis.translators.for2py.format import *
-from program_analysis.translators.for2py.strings import *
+from automates.program_analysis.for2py.format import *
+from automates.program_analysis.for2py.strings import *
 
 def main():
     str1 = String(10)

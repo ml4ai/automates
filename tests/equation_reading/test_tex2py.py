@@ -1,6 +1,6 @@
 import pytest
 
-from equation_reading.decoding import tex2py
+from automates.equation_reading.decoding import tex2py
 
 
 def test_tex2py():

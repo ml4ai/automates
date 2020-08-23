@@ -14,21 +14,25 @@ import json
 import sys
 import csv
 
-from model_analysis.linking import build_link_graph, extract_link_tables
+from  automates.model_assembly.linking import build_link_graph, extract_link_tables
 
 
 def main():
     filepath = sys.argv[1]
+    NUM_ROWS = int(sys.argv[2])
     grfn_with_hypotheses = json.load(open(filepath, "r"))
 
     L = build_link_graph(grfn_with_hypotheses["grounding"])
     tables = extract_link_tables(L)
-    outpath = filepath.replace(".json", "--links.csv")
+    outpath = filepath.replace("-alignment.json", "-link-tables.csv")
     with open(outpath, "w", newline="") as csvfile:
         link_writer = csv.writer(csvfile, dialect="excel")
 
         for var_name, var_data in tables.items():
-            (_, namespace, sub_name, basename, idx) = var_name.split("::")
+            (_, sub_name_str, basename_str, idx_str) = var_name.split("\n")
+            (_, sub_name) = sub_name_str.split(": ")
+            (_, basename) = basename_str.split(": ")
+            (_, idx) = idx_str.split(": ")
             short_varname = "::".join([sub_name, basename, idx])
             link_writer.writerow([short_varname])
             link_writer.writerow(
@@ -42,7 +46,8 @@ def main():
                     "Equation Symbol",
                 ]
             )
-            for link_data in var_data:
+            rows_to_print = min(len(var_data), NUM_ROWS)
+            for link_data in var_data[:rows_to_print]:
                 link_writer.writerow(
                     [
                         link_data["link_score"],

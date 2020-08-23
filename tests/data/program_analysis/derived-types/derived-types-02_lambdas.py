@@ -1,9 +1,9 @@
 from numbers import Real
 from random import random
-from program_analysis.translators.for2py.strings import *
+from automates.program_analysis.for2py.strings import *
 import numpy as np
-from program_analysis.translators.for2py import intrinsics
-import program_analysis.translators.for2py.math_ext as math
+from automates.program_analysis.for2py import intrinsics
+import automates.program_analysis.for2py.math_ext as math
 
 def derived_types_02__main__assign__x__0():
     x = [0] * (3 - 0)

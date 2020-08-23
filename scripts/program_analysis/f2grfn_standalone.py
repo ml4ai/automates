@@ -23,7 +23,7 @@ Author: Terrence J. Lim
 
 import json
 import argparse
-from program_analysis.translators.for2py import f2grfn
+from automates.program_analysis.for2py import f2grfn
 
 if __name__ == "__main__":
     """This function is for a safe command line

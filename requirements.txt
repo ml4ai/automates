@@ -2,9 +2,11 @@ antlr4-python3-runtime==4.8
 Flask==1.1.1
 flask_codemirror==1.1
 flask_wtf==0.14.3
+future==0.18.2
 matplotlib==3.2.1
 networkx==2.4
 nltk==3.4.5
+notebook==6.0.3
 numpy==1.18.2
 pandas==1.0.3
 plotly==4.5.4
