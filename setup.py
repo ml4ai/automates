@@ -59,7 +59,7 @@ setup(
         "numpy==1.18.2",
         "pandas==1.0.3",
         "plotly==4.5.4",
-        # "pygraphviz==1.5",
+        "pygraphviz==1.5",
         "pytest==5.4.1",
         "pytest-cov==2.8.1",
         "Pygments==2.3.1",
