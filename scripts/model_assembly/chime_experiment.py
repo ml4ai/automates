@@ -1,12 +1,12 @@
 import json
 import os
 
-from  automates.model_assembly.interfaces import TextReadingInterface
+from automates.model_assembly.interfaces import TextReadingInterface
 
 cur_dir = os.getcwd()
 DATA = os.environ["AUTOMATES_DATA"]
-EQN_PATH = f"{DATA}/COVID-19/CHIME/Equations/2000/2000_equations.txt"
-DOC_PATH = f"{DATA}/COVID-19/CHIME/Literature/2000 - The Mathematics of Infectious Diseases.pdf"
+EQN_PATH = f"{DATA}/COVID-19/CHIME/eqns/2000/2000_equations.txt"
+DOC_PATH = f"{DATA}/COVID-19/CHIME/docs/2000 - The Mathematics of Infectious Diseases.pdf"
 AIR_PATH = "../../tests/data/model_analysis/CHIME-SIR_AIR.json"
 
 
