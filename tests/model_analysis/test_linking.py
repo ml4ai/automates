@@ -3,7 +3,7 @@ import json
 
 import networkx as nx
 
-from  automates.model_assembly.linking import (
+from automates.model_assembly.linking import (
     build_link_graph,
     extract_link_tables,
     print_table_data,

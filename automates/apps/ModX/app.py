@@ -31,7 +31,7 @@ from apps.CodeExplorer.cyjs import (
 from program_analysis.for2py import preprocessor, translate, get_comments
 from program_analysis.for2py import pyTranslate, genPGM, For2PyError
 from model_analysis.networks import GroundedFunctionNetwork
-from  automates.model_assembly.linking import make_link_tables
+from automates.model_assembly.linking import make_link_tables
 
 
 os.makedirs("/tmp/automates/", exist_ok=True)
