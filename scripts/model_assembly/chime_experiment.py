@@ -15,7 +15,6 @@ def main():
 
     mention_path = f"{cur_dir}/CHIME-mentions.json"
     mention_data = caller.extract_mentions(DOC_PATH, mention_path)
-    print(mention_data)
 
     hypothesis_data = caller.get_link_hypotheses(
         mention_path, EQN_PATH, AIR_PATH
