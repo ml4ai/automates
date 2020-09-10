@@ -1,12 +1,42 @@
 import ast
 import sys
+from functools import singledispatch
 
 import networkx as nx
 
 
-def dfs_traversal(nodes: list, G: nx.DiGraph, cur_node: str = "Root"):
+def main():
+    code = load_python_code(sys.argv[1])
+    Mod = ast.parse(code)
+    CAST = nodes2tree(list(ast.iter_child_nodes(Mod)), nx.DiGraph())
+    A = create_graph_viz(CAST)
+    A.draw("PID--CAST.pdf", prog="dot")
+
+
+def create_graph_viz(T: nx.DiGraph):
+    A = nx.nx_agraph.to_agraph(T)
+    A.graph_attr.update(
+        {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+    )
+    A.node_attr.update(
+        {
+            "shape": "rectangle",
+            "color": "#650021",
+            "style": "rounded",
+            "fontname": "Menlo",
+        }
+    )
+    A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+    return A
+
+
+def load_python_code(path: str) -> str:
+    with open(path, "r") as infile:
+        return "".join(infile.readlines())
+
+
+def nodes2tree(nodes: list, G: nx.DiGraph, cur_node: str = "Root"):
     for node in nodes:
-        node_name = ""
         if any(
             [
                 isinstance(node, x)
@@ -30,58 +60,95 @@ def dfs_traversal(nodes: list, G: nx.DiGraph, cur_node: str = "Root"):
             ]
         ):
             continue
-        elif isinstance(node, ast.FunctionDef):
-            node_name = node.name
-            # print(
-            #     f"{node.name} --> {len(node.args.args)} args\t{len(node.body)} lines"
-            # )
-        elif isinstance(node, ast.arguments):
-            node_name = "<ARGS>"
-        elif isinstance(node, ast.arg):
-            node_name = f"{node.arg}\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.Assign):
-            node_name = f"=\n({node.lineno}, {node.col_offset})"
-            # print(f"{node.lineno}\t{node.targets[0].id} = {node.value}")
-            # continue
-        elif isinstance(node, ast.AugAssign):
-            node_name = f"{node.op}\n({node.lineno}, {node.col_offset})"
-            op = "+=" if isinstance(node.op, ast.Add) else "-="
-            # print(f"{node.lineno}\t{node.target.id} {op} {node.value}")
-            # continue
-        elif isinstance(node, ast.Call):
-            node_name = f"<CALL>\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.Return):
-            node_name = f"<RETURN>\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.If):
-            node_name = f"<IF>\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.BinOp):
-            node_name = f"<{node.op.__class__.__name__.upper()}>\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.UnaryOp):
-            node_name = f"<{node.op.__class__.__name__.upper()}>\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.Compare):
-            node_name = f"<{node.ops[0].__class__.__name__.upper()}>\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.Name):
-            node_name = f"{node.id}\n({node.lineno}, {node.col_offset})"
-        elif isinstance(node, ast.Num):
-            node_name = f"{node.n}\n({node.lineno}, {node.col_offset})"
-        else:
-            node_name = node.__class__.__name__
-            print(type(node), vars(node))
+
+        if isinstance(node, ast.arguments) and len(node.args) == 0:
+            continue
+
+        node_name = get_node_str(node)
         G.add_edge(cur_node, node_name)
-        dfs_traversal(list(ast.iter_child_nodes(node)), G, node_name)
+        nodes2tree(list(ast.iter_child_nodes(node)), G, node_name)
     return G
 
 
-def main():
-    code = ""
-    with open(sys.argv[1], "r") as infile:
-        code = "".join(infile.readlines())
+@singledispatch
+def get_node_str(node):
+    raise NotImplementedError(f"Unknown node type: {type(node)}\n{vars(node)}")
 
-    tree = ast.parse(code)
-    G = dfs_traversal(list(ast.iter_child_nodes(tree)), nx.DiGraph())
 
-    A = nx.nx_agraph.to_agraph(G)
-    A.draw("trajectory--CAST.pdf", prog="dot")
+@get_node_str.register
+def _(node: ast.FunctionDef) -> str:
+    return node.name
+
+
+@get_node_str.register
+def _(node: ast.arguments) -> str:
+    return f"<ARGS>\n({node.args[0].lineno})"
+
+
+@get_node_str.register
+def _(node: ast.arg) -> str:
+    return f"{node.arg}\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.Tuple) -> str:
+    return f"<TUPLE>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.Assign) -> str:
+    return f"<ASSIGN>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.AugAssign) -> str:
+    cmd = "<ADD>" if isinstance(node.op, ast.Add) else "<SUB>"
+    return f"{cmd}\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.Call) -> str:
+    return f"<CALL>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.Return) -> str:
+    return f"<RETURN>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.If) -> str:
+    return f"<IF>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.While) -> str:
+    return f"<WHILE>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.BinOp) -> str:
+    return f"<{node.op.__class__.__name__.upper()}>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.UnaryOp) -> str:
+    return f"<{node.op.__class__.__name__.upper()}>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.Compare) -> str:
+    return f"<{node.ops[0].__class__.__name__.upper()}>\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.Name) -> str:
+    return f"{node.id}\n({node.lineno}, {node.col_offset})"
+
+
+@get_node_str.register
+def _(node: ast.Num) -> str:
+    return f"{node.n}\n({node.lineno}, {node.col_offset})"
 
 
 if __name__ == "__main__":
