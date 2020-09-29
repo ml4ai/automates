@@ -103,12 +103,26 @@ object GrFNParser {
   //     Methods for creating GrFNDocuments
   //------------------------------------------------------
 
-  def mkLinkElement(elemType: String, source: String, content: String, contentType: String): ujson.Obj = {
+  def mkLinkElement(id: String, elemType: String, source: String, content: String, contentType: String): ujson.Obj = {
     val linkElement = ujson.Obj(
+      "id" -> id,
       "type" -> elemType,
       "source" -> source,
       "content" -> content,
       "content_type" -> contentType
+    )
+    linkElement
+  }
+
+
+  def mkTextVarLinkElement(uid: String, elemType: String, source: String, identifier: String, definition: String): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "uid" -> uid,
+      "type" -> elemType,
+      "source" -> source,
+      "identifier" -> identifier,
+      "definition" -> definition
+//      "svo_query_terms" -> svoQueryTerms
     )
     linkElement
   }
@@ -162,15 +176,17 @@ object GrFNParser {
     sparqlResuJson
   }
 
-  def mkHypothesis(elem1: ujson.Obj, elem2: ujson.Obj, score: Double): ujson.Obj = {
+  def mkHypothesis(elem1: String, elem2: String, score: Double): ujson.Obj = {
+    val el1 = elem1.split("::")(0)
+    val el2 = elem2.split("::")(0)
+    //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
     val hypothesis = ujson.Obj(
-      "element_1" -> elem1,
-      "element_2" -> elem2,
+      "element_1" -> el1,
+      "element_2" -> el2,
       "score" -> score
     )
     hypothesis
   }
-
 
   def mkDocument(file: File): GrFNDocument = {
     val json = ujson.read(file.readString())
