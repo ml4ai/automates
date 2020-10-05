@@ -46,6 +46,12 @@ PETPNO_ROOT = os.path.join(MODEL_ROOT_PET, 'PETPNO')
 MODEL_ROOT_COVID = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'COVID-19')
 CHIME_ROOT = os.path.join(MODEL_ROOT_COVID, 'CHIME/eqns/2020-08-04-CHIME-docs')
 
+MODEL_ROOT_ASKEE = os.path.join(os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'ASKE-E'), 'epi-platform-wg')
+ASKEE_SEIR_7_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-7')
+ASKEE_SEIR_8_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-8')
+ASKEE_SEIR_9_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-9')
+
+
 # -----------------------------------------------------------------------------
 # Render image from latex
 # -----------------------------------------------------------------------------
@@ -76,3 +82,6 @@ if __name__ == '__main__':
     # render_images_for_model(PETPEN_ROOT, 'PETPEN', verbose=True, test_p=False)
     # render_images_for_model(PETPNO_ROOT, 'PETPNO', verbose=True, test_p=False)
     # render_images_for_model(CHIME_ROOT, '2020-08-04-CHIME-docs', verbose=True, test_p=False)
+    # render_images_for_model(ASKEE_SEIR_7_ROOT, 'SEIR-7', verbose=True, test_p=False)
+    # render_images_for_model(ASKEE_SEIR_8_ROOT, 'SEIR-8', verbose=True, test_p=False)
+    # render_images_for_model(ASKEE_SEIR_9_ROOT, 'SEIR-9', verbose=True, test_p=False)
