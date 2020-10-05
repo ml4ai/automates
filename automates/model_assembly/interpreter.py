@@ -253,9 +253,11 @@ class ImperativeInterpreter(SourceInterpreter):
             set(all_containers) - set(called_containers)
         )
         if len(possible_root_containers) > 1:
-            raise RuntimeWarning("Multiple possible root containers found.")
+            raise RuntimeWarning(
+                f"Multiple possible root containers found:\n{possible_root_containers}"
+            )
         elif len(possible_root_containers) == 0:
-            raise RuntimeError("No possible root containers found.")
+            raise RuntimeError("No possible root containers found:.")
         return possible_root_containers[0]
 
     def gather_container_stats(self):

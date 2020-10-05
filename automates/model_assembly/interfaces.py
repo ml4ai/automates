@@ -55,20 +55,24 @@ class TextReadingInterface:
             raise ValueError("/align expects comments to be a JSON file")
 
         grfn_data = json.load(open(grfn_path, "r"))
-        variables = list(
-            set(
-                [
-                    {
-                        "name": "::".join(v["identifier"].split("::")[:-1])
-                        + "::0"
-                    }
-                    for v in grfn_data["variables"]
-                ]
-            )
+
+        unique_var_names = list(
+            {
+                "::".join(var_def["identifier"].split("::")[:-1]) + "::0"
+                for var_def in grfn_data["variables"]
+            }
         )
+        variables = [{"name": var_name} for var_name in unique_var_names]
+
+        equations = list()
+        with open(eqns_path, "r") as infile:
+            for eqn_line in infile.readlines():
+                equations.append(eqn_line.strip())
+
         payload = {
             "mentions": mentions_path,
-            "equations": eqns_path,
+            "documents": mentions_path,
+            "equations": equations,
             "source_code": {
                 "variables": variables,
                 "comments": json.load(open(comments_path, "r")),
@@ -76,8 +80,8 @@ class TextReadingInterface:
             "toggles": {"groundToSVO": False, "appendToGrFN": False},
             "arguments": {"maxSVOgroundingsPerVar": 5},
         }
-        payload_path = "align_payload.json"
-        json.dump(payload, open("payload_path", "w"))
+        payload_path = f"{os.getcwd()}/align_payload.json"
+        json.dump(payload, open(payload_path, "w"))
 
         res = requests.post(
             f"{self.webservice}/align",

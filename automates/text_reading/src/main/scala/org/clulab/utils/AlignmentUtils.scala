@@ -1,5 +1,9 @@
 package org.clulab.utils
 
+import java.io.File
+
+import ai.lum.common.ConfigUtils._
+import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
@@ -26,7 +30,10 @@ object AlignmentJsonUtils {
 
     // load text mentions
     val definitionMentions =  if (jsonKeys.contains("mentions")) {
-      val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+      val mentionsPath = json("mentions").str
+      val mentionsFile = new File(mentionsPath)
+      val ujsonMentions = ujson.read(mentionsFile.readString())
+      // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
       //transform the mentions into json4s format, used by mention serializer
       val jvalueMentions = upickle.default.transform(
         ujsonMentions
@@ -128,4 +135,3 @@ object AlignmentJsonUtils {
   }
 
 }
-

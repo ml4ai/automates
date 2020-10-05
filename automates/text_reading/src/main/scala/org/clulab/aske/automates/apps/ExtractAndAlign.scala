@@ -120,7 +120,7 @@ object ExtractAndAlign {
 
   def processEquations(equationsVal: Value): Seq[(String, String)] = {
     val equationDataLoader = new TokenizedLatexDataLoader
-    val pdfAlignDir = "/home/alexeeva/Repos/automates/src/apps/pdfalign"
+    val pdfAlignDir = "/Users/paulh/repos/aske/automates/automates/apps/pdfalign"
     val equations = equationsVal.arr.map(_.str)
     // tuple pairing each chunk with the original latex equation it came from
     for {
