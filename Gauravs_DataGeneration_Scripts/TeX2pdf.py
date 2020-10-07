@@ -6,7 +6,7 @@ from func_timeout import func_timeout, FunctionTimedOut
 
 # for creating pdf files 
 def run_pdflatex(tf, texfile):
-    command = ['pdflatex','-interaction', 'nonstopmode',os.path.join(tf,texfile)]
+    command = ['pdflatex','-interaction=batchmode', 'nonstopmode',os.path.join(tf,texfile)]
     output = subprocess.run(command)
     return output
 
