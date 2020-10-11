@@ -65,14 +65,14 @@ rules:
       #todo: check why -LRB- stopped working; maybe try to have both in the rule?
 
 
-  - name: definition_var_appos
+  - name: definition_var_appos_unit
     label: Definition
     priority: ${priority}
     type: token
     example: "In APSIM, water uptake (Ta, mm d−1) is determined from..."
     action: ${action}
     pattern: |
-      @definition:Concept [word = "("] (@variable:Variable [!entity = /B-unit/]) #[word = /,|\)/]
+      @definition:Concept [word = "("] (@variable:Variable) [word = /,|\)/] [entity="B-unit"]
 
   - name: definition_computed_appos
     label: Definition
@@ -143,7 +143,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
 
   - name: comma_appos_var
     label: Definition
@@ -154,9 +154,22 @@ rules:
     pattern: |
       (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  "," @variable:Variable ","
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/)
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"])
+      |
+      @definition: Concept "," @variable:Variable (?! [lemma = "be"])
+
+  - name: def_comma_var_appos
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "Susceptible individuals, S, are infected by infected individuals, i,"
+    action: ${action}
+    pattern: |
+      trigger = [lemma=/,/]
+      variable:Variable = <punct >appos
+      definition: Concept = <punct
 
   - name: def_is_given_by
     label: Definition

@@ -254,6 +254,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         case _ => ???
       }
       if definText.text.filter(c => valid contains c).length.toFloat / definText.text.length > 0.60
+      // make sure there's at least one noun; there may be more nominal pos that will need to be included
+      if m.tags.get.exists(_.contains("N"))
+
     } yield m
   }
 
