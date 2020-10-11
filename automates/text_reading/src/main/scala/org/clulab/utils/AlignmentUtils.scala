@@ -1,7 +1,7 @@
 package org.clulab.utils
 
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, hasUnitArg}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
@@ -37,6 +37,41 @@ object AlignmentJsonUtils {
         .filter(m => m.label matches "Definition")
         .filter(hasRequiredArgs))
     } else None
+
+
+    val parameterSettingMentions =  if (jsonKeys.contains("mentions")) {
+      val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+      //transform the mentions into json4s format, used by mention serializer
+      val jvalueMentions = upickle.default.transform(
+        ujsonMentions
+      ).to(Json4sJson)
+      val textMentions = JSONSerializer.toMentions(jvalueMentions)
+
+      Some(textMentions
+        .filter(m => m.label matches "ParameterSetting"))
+//        .filter(hasRequiredArgs))
+    } else None
+
+    val unitMentions =  if (jsonKeys.contains("mentions")) {
+      val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+      //transform the mentions into json4s format, used by mention serializer
+      val jvalueMentions = upickle.default.transform(
+        ujsonMentions
+      ).to(Json4sJson)
+      val textMentions = JSONSerializer.toMentions(jvalueMentions)
+
+      Some(textMentions
+        .filter(m => m.label matches "Unit")
+        .filter(hasUnitArg))
+    } else None
+
+    println("Unit mentions should be printed here: ")
+    for (um <- unitMentions.get) {
+      println(um.text)
+      println(um.arguments("unit").head.text)
+      println(um.arguments("variable").head.text)
+    }
+
 
     // get the equations
     val equationChunksAndSource = if (jsonKeys.contains("equations")) {
@@ -78,7 +113,7 @@ object AlignmentJsonUtils {
 
 
 
-    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource, svoGroundings)
+    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")

@@ -103,10 +103,10 @@ object GrFNParser {
   //     Methods for creating GrFNDocuments
   //------------------------------------------------------
 
-  def mkLinkElement(id: String, elemType: String, source: String, content: String, contentType: String): ujson.Obj = {
+  def mkLinkElement(id: String, source: String, content: String, contentType: String): ujson.Obj = {
     val linkElement = ujson.Obj(
       "id" -> id,
-      "type" -> elemType,
+//      "type" -> elemType,
       "source" -> source,
       "content" -> content,
       "content_type" -> contentType
@@ -115,13 +115,16 @@ object GrFNParser {
   }
 
 
-  def mkTextVarLinkElement(uid: String, elemType: String, source: String, identifier: String, definition: String): ujson.Obj = {
+  def mkTextVarLinkElement(uid: String, source: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value): ujson.Obj = {
     val linkElement = ujson.Obj(
       "uid" -> uid,
-      "type" -> elemType,
+//      "type" -> elemType,
       "source" -> source,
       "identifier" -> identifier,
-      "definition" -> definition
+      "definition" -> definition,
+      "svo_terms" -> svo_terms,
+      "unit" -> unit,
+      "paramSetting" -> paramSetting
 //      "svo_query_terms" -> svoQueryTerms
     )
     linkElement

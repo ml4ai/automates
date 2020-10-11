@@ -1,6 +1,7 @@
 package org.clulab.aske.automates.apps
 
 import java.io.{File, PrintWriter}
+import java.util.UUID
 
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
@@ -9,7 +10,7 @@ import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDat
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement, mkTextVarLinkElement}
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.apps.AlignmentBaseline.{word2greekDict, greek2wordDict}
+import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
 import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
@@ -22,9 +23,10 @@ import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s
 import java.util.UUID.randomUUID
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-case class alignmentArguments(json: Value, variableNames: Option[Seq[String]], variableShortNames: Option[Seq[String]], commentDefinitionMentions: Option[Seq[Mention]], definitionMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[Map[String, Seq[sparqlResult]]])
+case class alignmentArguments(json: Value, variableNames: Option[Seq[String]], variableShortNames: Option[Seq[String]], commentDefinitionMentions: Option[Seq[Mention]], definitionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[Map[String, Seq[sparqlResult]]])
 
 object ExtractAndAlign {
   val COMMENT = "comment"
@@ -32,14 +34,20 @@ object ExtractAndAlign {
   val TEXT_VAR = "text_var"
   val SOURCE = "source"
   val EQUATION = "equation"
+  val FULL_TEXT_EQUATION = "fullTextEquation"
   val SVO_GROUNDING = "SVOgrounding"
   val SRC_TO_COMMENT = "sourceToComment"
+  val TEXT_TO_UNIT = "textToUnit"
+  val TEXT_TO_UNIT_THROUGH_DEFINITION = "textToUnitThroughDefinition"
+  val TEXT_TO_PARAM_SETTING = "textToParamSetting"
   val EQN_TO_TEXT = "equationToText"
   val COMMENT_TO_TEXT = "commentToText"
   val TEXT_TO_SVO = "textToSVO"
   val DEFINITION = "definition"
   val VARIABLE = "variable"
   val DEF_LABEL = "Definition"
+  val PARAMETER_SETTING_LABEL = "ParameterSetting"
+  val UNIT_LABEL = "Unit"
 
   val logger = LoggerFactory.getLogger(this.getClass())
 
@@ -48,6 +56,8 @@ object ExtractAndAlign {
                       variableNames: Option[Seq[String]],
                       variableShortNames: Option[Seq[String]],
                       definitionMentions: Option[Seq[Mention]],
+                      parameterSettingMention: Option[Seq[Mention]],
+                      unitMentions: Option[Seq[Mention]],
                       commentDefinitionMentions: Option[Seq[Mention]],
                       equationChunksAndSource: Option[Seq[(String, String)]],
                       SVOgroundings: Option[Map[String, Seq[sparqlResult]]],
@@ -68,6 +78,8 @@ object ExtractAndAlign {
     val alignments = alignElements(
       alignmentHandler,
       definitionMentions, //fixme: here and in get linkElements---pass all mentions, only definition mentions, other types?
+      parameterSettingMention,
+      unitMentions,
       equationChunksAndSource,
       commentDefinitionMentions,
       variableShortNames,
@@ -79,6 +91,12 @@ object ExtractAndAlign {
     var outputJson = ujson.Obj()
 
     val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
+
+    linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION))
+
+//    for (le <- linkElements(TEXT_VAR)) println(le)
+    linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
+    for (le <- linkElements(TEXT_VAR)) println(le)
 
 //    for (link <- linkElements) println("link: " + link)
     println("LINK ELEMENTS: ", linkElements.keys)
@@ -96,7 +114,7 @@ object ExtractAndAlign {
 
     // maybe hypotheses can have both elements field and then hypotheses field? {elements: {'comment_span': {id: {'actual element'}}, hypotheses: {{el1,el2,score}}}
 //    var hypotheses = getLinkHypotheses(linkElements, alignments)
-    outputJson("links") = getLinkHypotheses(linkElements, alignments)
+    outputJson("links") = getLinkHypotheses(linkElements.toMap, alignments)
 
 
 //    def deduplicateElements(hypotheses: Seq[Obj]): Seq[Obj] = {
@@ -142,25 +160,109 @@ object ExtractAndAlign {
 
   }
 
+  def updateTextVariable(textVarLinkElementString: String, update: String): String = {
+    textVarLinkElementString + "::" + update
+
+  }
+
+  def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
+
+
+    for (topK <- textToUnitAlignments) {
+      println(topK.head.src + " " + topK.head.dst)
+      for (al <- topK) {
+        println("text var link el: " + textVarLinkElements(al.src))
+        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
+        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
+
+      }
+    }
+
+    val updatedTextVars = if (textToUnitAlignments.length > 0) {
+
+      for {
+        topK <- textToUnitAlignments
+        alignment <- topK
+        textVarLinkElement = textVarLinkElements(alignment.src)
+        unit = if (hasArg(unitMentions.get(alignment.dst), "unit")) {
+          unitMentions.get(alignment.dst).arguments("unit").head.text
+        } else "None"
+
+
+        score = alignment.score
+      } yield updateTextVariable(textVarLinkElement, unit)
+    } else textVarLinkElements
+
+
+
+    updatedTextVars
+
+  }
+
+  def hasArg(mention: Mention, arg: String): Boolean = {
+    mention.arguments.contains(arg)
+  }
+
+  def updateTextVarsWithParamSettings(textVarLinkElements: Seq[String], paramSettingMentions: Option[Seq[Mention]], textToParamSettingAlignments: Seq[Seq[Alignment]]): Seq[String] = {
+
+    val updatedTextVars = for {
+      topK <- textToParamSettingAlignments
+      alignment <- topK
+      textVarLinkElement = textVarLinkElements(alignment.src)
+      value = if (hasArg(paramSettingMentions.get(alignment.dst), "value")) {
+        paramSettingMentions.get(alignment.dst).arguments("value").head.text
+      } else "None"
+
+      valueLeast = if (hasArg(paramSettingMentions.get(alignment.dst), "valueLeast")) {
+        paramSettingMentions.get(alignment.dst).arguments("valueLeast").head.text
+      } else "None"
+
+      valueMost = if (hasArg(paramSettingMentions.get(alignment.dst), "valueMost")) {
+        paramSettingMentions.get(alignment.dst).arguments("valueMost").head.text
+      } else "None"
+
+
+      update = value + "::" + valueLeast + "::" + valueMost
+
+      //todo  AND OTHERS eg value least, check what's there
+      score = alignment.score
+    } yield updateTextVariable(textVarLinkElement, update)
+    updatedTextVars
+
+  }
+
   def rehydrateLinkElement(element: String): ujson.Obj = {
 
     val splitElStr = element.split("::")
-    println("element: " + element)
+//    println("element: " + element)
     val elType = splitElStr(1)
-    println("el type: " + elType)
+//    println("el type: " + elType)
     elType match {
       case "text_var" => {
         val id = splitElStr(0)
         val source = splitElStr(2)
         val identifier = splitElStr(3)
         val definition = splitElStr(4)
+        val svo_terms = splitElStr(6)
+        val unit = splitElStr(7)
+        val value = splitElStr(8)
+        val valueLeast = splitElStr(9)
+        val valueMost = splitElStr(10)
+        val paramSetting = ujson.Obj(
+          "value" -> value,
+          "valueLeast" -> valueLeast,
+          "valueMost" -> valueMost
+        )
 
         mkTextVarLinkElement(
           uid = id,
-          elemType = elType,
+//          elemType = elType,
           source = source,
           identifier = identifier,
-          definition = definition
+          definition = definition,
+          svo_terms = svo_terms,
+          unit = unit,
+          paramSetting = paramSetting
         )
 
       }
@@ -169,16 +271,29 @@ object ExtractAndAlign {
         val id = splitElStr(0)
         val source = splitElStr(2)
         val identifier = splitElStr.takeRight(3)(0)
-        println("identifier: " + identifier)
+//        println("identifier: " + identifier)
 
 
         mkLinkElement(
           id = id,
-          elemType = elType,
+//          elemType = elType,
           source = source,
           content = identifier,
           contentType = "null"
         )
+      }
+      case "fullTextEquation" => {
+        val id = splitElStr(0)
+        val equation = splitElStr(2)
+
+        mkLinkElement(
+          id = id,
+//          elemType = elType,
+          source = "text",
+          content = equation,
+          contentType = "null"
+        )
+
       }
       case _ => {
         val id = splitElStr(0)
@@ -188,7 +303,7 @@ object ExtractAndAlign {
 
         mkLinkElement(
           id = id,
-          elemType = elType,
+//          elemType = elType,
           source = source,
           content = content,
           contentType = "null"
@@ -202,6 +317,8 @@ object ExtractAndAlign {
   }
 
   def hasRequiredArgs(m: Mention): Boolean = m.arguments.contains(VARIABLE) && m.arguments.contains(DEFINITION)
+
+  def hasUnitArg(m: Mention): Boolean = m.arguments.contains("unit")
 
   def loadEquations(filename: String): Seq[(String, String)] = {
     val equationDataLoader = new TokenizedLatexDataLoader
@@ -232,7 +349,7 @@ object ExtractAndAlign {
       .filter(chunk => !chunk.matches("&?\\\\\\w+&?")) //to eliminate standalone latex control sequences, e.g., \\times (they can have ampersands on each side)
   }
 
-  def getTextDefinitionMentions(textReader: OdinEngine, dataLoader: DataLoader, textRouter: TextRouter, files: Seq[File]): Seq[Mention] = {
+  def getTextMentions(textReader: OdinEngine, dataLoader: DataLoader, textRouter: TextRouter, files: Seq[File]): (Seq[Mention], Seq[Mention], Seq[Mention]) = {
     val textMentions = files.par.flatMap { file =>
       logger.info(s"Extracting from ${file.getName}")
       val texts: Seq[String] = dataLoader.loadFile(file)
@@ -240,8 +357,8 @@ object ExtractAndAlign {
       texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName)))
     }
     logger.info(s"Extracted ${textMentions.length} text mentions")
-
-    textMentions.seq.filter(_ matches DEF_LABEL)
+    val onlyEventsAndRelations = textMentions.seq.filter(m => m.matches("EventMention") || m.matches("RelationMention"))
+    (onlyEventsAndRelations.filter(_ matches DEF_LABEL), onlyEventsAndRelations.filter(_ matches PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches UNIT_LABEL))
   }
 
   def getCommentDefinitionMentions(commentReader: OdinEngine, alignmentInputFile: Value, variableShortNames: Option[Seq[String]], source: Option[String]): Seq[Mention] = {
@@ -268,6 +385,8 @@ object ExtractAndAlign {
   def alignElements(
     alignmentHandler: AlignmentHandler,
     textDefinitionMentions: Option[Seq[Mention]],
+    parameterSettingMentions: Option[Seq[Mention]],
+    unitMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
     commentDefinitionMentions: Option[Seq[Mention]],
     variableShortNames: Option[Seq[String]],
@@ -283,6 +402,34 @@ object ExtractAndAlign {
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
     }
+
+    /** Align text variable to unit variable
+      * this should take care of unit relaions like this: "T = daily mean air temperature [°C]"
+      */
+    if (textDefinitionMentions.isDefined && unitMentions.isDefined) {
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), unitMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+      // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
+      alignments(TEXT_TO_UNIT) = Aligner.topKBySrc(varNameAlignments, 1)
+    }
+
+    /** Align text definition to unit variable
+      * this should take care of unit relaions like this: The density of water is taken as 1.0 Mg m-3.
+      */
+    if (textDefinitionMentions.isDefined && unitMentions.isDefined) {
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("definition"))).map(_.toLowerCase), unitMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+      // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
+      alignments(TEXT_TO_UNIT_THROUGH_DEFINITION) = Aligner.topKBySrc(varNameAlignments, 1)
+    }
+
+    /** Align text variable to param setting variable
+      * this should take care of unit relaions like this: The density of water is taken as 1.0 Mg m-3.
+      */
+    if (textDefinitionMentions.isDefined && unitMentions.isDefined) {
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), parameterSettingMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+      // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
+      alignments(TEXT_TO_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
+    }
+
 
     /** Align the equation chunks to the text definitions */
       if (equationChunksAndSource.isDefined && textDefinitionMentions.isDefined) {
@@ -308,7 +455,7 @@ object ExtractAndAlign {
     commentDefinitionMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
     variableNames: Option[Seq[String]]
-  ): Map[String, Seq[String]] = {
+  ): mutable.HashMap[String, Seq[String]] = {
     // Make Comment Spans from the comment variable mentions
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
 
@@ -344,21 +491,21 @@ object ExtractAndAlign {
     }
 
 
-    // Repeat for text variables
-//    if (textDefinitionMentions.isDefined) {
-//      linkElements(TEXT) = textDefinitionMentions.get.map { mention =>
-//        val docId = mention.document.id.getOrElse("unk_text_file")
-//        val sent = mention.sentence
-//        val offsets = mention.tokenInterval.toString()
-//        randomUUID + "::" + "text_span" +"::" +  s"${docId}_sent${sent}_$offsets" + "::" + mention.arguments(DEFINITION).head.text + "::" + "null"
-////        mkLinkElement(
-////          elemType = "text_span",
-////          source = s"${docId}_sent${sent}_$offsets",
-////          content = mention.arguments(DEFINITION).head.text,
-////          contentType = "null"
-////        )
-//      }
-//    }
+//     Repeat for text variables
+    if (textDefinitionMentions.isDefined) {
+      linkElements(TEXT) = textDefinitionMentions.get.map { mention =>
+        val docId = mention.document.id.getOrElse("unk_text_file")
+        val sent = mention.sentence
+        val offsets = mention.tokenInterval.toString()
+        randomUUID + "::" + "text_span" +"::" +  s"${docId}_sent${sent}_$offsets" + "::" + mention.arguments(DEFINITION).head.text + "::" + "null"
+//        mkLinkElement(
+//          elemType = "text_span",
+//          source = s"${docId}_sent${sent}_$offsets",
+//          content = mention.arguments(DEFINITION).head.text,
+//          contentType = "null"
+//        )
+      }
+    }
 
     if (textDefinitionMentions.isDefined) {
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
@@ -367,6 +514,8 @@ object ExtractAndAlign {
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
         val definition = mention.arguments(DEFINITION).head.text
+
+
         randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty)
 //        mkTextLinkElement(
 //          elemType = "text_var",
@@ -382,20 +531,30 @@ object ExtractAndAlign {
 
     // Repeat for Eqn Variables
     if (equationChunksAndSource.isDefined) {
+      val equation2uuid = mutable.Map[String, UUID]()
       linkElements(EQUATION) = equationChunksAndSource.get.map { case (chunk, orig) =>
+        if (equation2uuid.contains(orig)) {
+          randomUUID + "::" + "equation_span" + "::" + equation2uuid(orig) + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
+        } else {
+          val id = randomUUID
+          equation2uuid(orig) = id
+          randomUUID + "::" + "equation_span" + "::" + id + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
+        }
 
-        randomUUID + "::" + "equation_span" + "::" + orig + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
 //        mkLinkElement(
 //          elemType = "equation_span",
 //          source = orig,
 //          content = AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap),
 //          contentType = "null"
 //        )
+
       }
+
+      linkElements(FULL_TEXT_EQUATION) = equation2uuid.keys.map(key => equation2uuid(key).toString() + "::" + "fullTextEquation" + "::" + key ).toSeq
     }
 
 
-    linkElements.toMap
+    linkElements
   }
 
   def mkLinkHypothesisTextVarDef(variables: Seq[String], definitions: Seq[String]): Seq[Obj] = {
@@ -550,20 +709,25 @@ object ExtractAndAlign {
     val commentDefinitionMentions = getCommentDefinitionMentions(localCommentReader, grfn, variableShortNames, source)
       .filter(hasRequiredArgs)
 
-    val textDefinitionMentions = if (loadMentions) {
-      val mentionsFile = config[String]("apps.mentionsFile")
-    JSONSerializer.toMentions(new File(mentionsFile)).filter(_.label matches "Definition")
+    val allUsedTextMentions = if (loadMentions) {
+      val mentionsFile = new File(config[String]("apps.mentionsFile"))
+      (JSONSerializer.toMentions(mentionsFile).filter(_.label matches "Definition"),
+        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "ParameterSetting"),
+        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "Unit"))
     } else {
       val inputDir = config[String]("apps.inputDirectory")
       val inputType = config[String]("apps.inputType")
       val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
       val files = FileUtils.findFiles(inputDir, dataLoader.extension)
-      getTextDefinitionMentions(textReader, dataLoader, textRouter, files)
+      getTextMentions(textReader, dataLoader, textRouter, files)
   //    val source = scala.io.Source.fromFile()
   //    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
   //    source.close()
 
     }
+    val textDefinitionMentions = allUsedTextMentions._1
+    val parameterSettingMentions = allUsedTextMentions._2
+    val unitMentions = allUsedTextMentions._3
     logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
 
     // Load equations and "extract" variables/chunks (using heuristics)
@@ -579,6 +743,8 @@ object ExtractAndAlign {
       variableNames,
       variableShortNames,
       Some(textDefinitionMentions),
+      Some(parameterSettingMentions),
+      Some(unitMentions),
       Some(commentDefinitionMentions),
       equationChunksAndSource,
       None, //not passing svo groundings from grfn
