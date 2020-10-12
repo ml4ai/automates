@@ -384,6 +384,13 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
+  val t1e = "Since eS is not a linear function of temperature"
+  passingTest should s"find NO definitions from t1e: ${t1e}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t5a)
+    testDefinitionEvent(mentions, desired)
+  }
+
 
 //  val t9c = "Assuming no sink or source (S = 0) and no gravitational or osmotic component (H = h), Eq. [4] reduces to..."
 //  failingTest should s"find definitions from t9c: ${t9c}" taggedAs(Somebody) in {

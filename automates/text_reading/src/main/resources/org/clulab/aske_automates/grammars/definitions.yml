@@ -100,6 +100,7 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "and W represents the soil limitation to water uptake of each layer."
 #    action: looksLikeAVariable #//whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
 #    action: ${action}
@@ -168,7 +169,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma=/,/]
-      variable:Variable = <punct >appos
+      variable:Variable = <punct >appos [!entity="B-unit"]
       definition: Concept = <punct
 
   - name: def_is_given_by

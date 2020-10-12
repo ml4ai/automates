@@ -139,6 +139,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val word = v.words.head
       if (freqWords.contains(word.toLowerCase())) return false //filter out potential variables that are freq words
       if (word.length > 6) return false
+      // a variable cannot be a unit
+      if (v.entities.get.exists(_ == "B-unit")) return false
       val tag = v.tags.get.head
       return (
         word.toLowerCase != word // mixed case or all UPPER
@@ -186,6 +188,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     //and the variable and the definition don't overlap
     for {
       m <- mentions
+      if !m.words.contains("not") //make sure, the definition is not negative
+
       variableMention = m.arguments.getOrElse("variable", Seq())
       defMention = m.arguments.getOrElse("definition", Seq())
       if (
@@ -253,6 +257,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         case em: EventMention => m.arguments.getOrElse("definition", Seq()).head
         case _ => ???
       }
+
       if definText.text.filter(c => valid contains c).length.toFloat / definText.text.length > 0.60
       // make sure there's at least one noun; there may be more nominal pos that will need to be included
       if m.tags.get.exists(_.contains("N"))

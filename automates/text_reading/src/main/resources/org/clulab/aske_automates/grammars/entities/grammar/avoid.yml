@@ -130,6 +130,9 @@ rules:
     pattern: |
       [lemma = /.*@.*\..*/]
 
-
-
-
+  - name: "pages"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [word = "pp"] (?<=[tag=/CD|:|./]+)
