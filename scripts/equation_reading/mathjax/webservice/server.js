@@ -26,7 +26,9 @@ function tex2mml(tex) {
 app.post('/tex2mml', function (req, res) {
   // Access the LaTeX source from the request object
   var tex_str = JSON.parse(req.body.tex_src)
-  tex2mml(tex_str).then((data) => { res.send(JSON.stringify(data.mml)); });
+  tex2mml(tex_str)
+    .then((data) => { res.send(JSON.stringify(data.mml)); })
+    .catch((err) => { res.send(JSON.stringify(`FAILED::${err}::${tex_str}`)); });
 });
 
 // Process a batch of TeX equation strings into corresponding MathML strings

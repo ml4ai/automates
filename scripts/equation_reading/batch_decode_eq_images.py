@@ -47,6 +47,10 @@ PETPNO_ROOT = os.path.join(MODEL_ROOT_PET, 'PETPNO')
 MODEL_ROOT_COVID = os.path.join(ASKE_GOOGLE_DRIVE_DATA_ROOT, 'COVID-19')
 CHIME_ROOT = os.path.join(MODEL_ROOT_COVID, 'CHIME/eqns/2020-08-04-CHIME-docs')
 
+MODEL_ROOT_ASKEE = os.path.join(os.path.join(ASKE_GOOGLE_DRIVE_DATA_ROOT, 'ASKE-E'), 'epi-platform-wg')
+ASKEE_SEIR_7_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-7')
+ASKEE_SEIR_8_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-8')
+ASKEE_SEIR_9_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-9')
 
 # -----------------------------------------------------------------------------
 # Utilities
@@ -180,3 +184,6 @@ if __name__ == '__main__':
     # process_model(PETPEN_ROOT, verbose=True, test_p=False)
     # process_model(PETPNO_ROOT, verbose=True, test_p=False)
     # process_model(CHIME_ROOT, verbose=True, test_p=False)
+    # process_model(ASKEE_SEIR_7_ROOT, verbose=True, test_p=False)
+    # process_model(ASKEE_SEIR_8_ROOT, verbose=True, test_p=False)
+    process_model(ASKEE_SEIR_9_ROOT, verbose=True, test_p=False)
