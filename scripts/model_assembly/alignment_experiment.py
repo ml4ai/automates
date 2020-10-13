@@ -1,17 +1,23 @@
 import json
+import sys
 import os
 
 from automates.model_assembly.interfaces import TextReadingInterface
 
-cur_dir = os.getcwd()
-DATA = os.environ["AUTOMATES_DATA"]
-MODEL_NAME = "PETPNO"
-EQN_PATH = f"{DATA}/Mini-SPAM/eqns/SPAM/PET/PETPNO/PETPNO_equations.txt"
-DOC_PATH = f"{DATA}/ASKE-E/integration-wg/DSSAT-evapotranspiration-models/PNO-model/PNO-2006-Simplified Versions for the Penman Evap Equation Using Routine Weather Data-petpno_Penman.pdf"
-GrFN_PATH = f"{cur_dir}/{MODEL_NAME}--GrFN.json"
-COMM_PATH = f"{cur_dir}/{MODEL_NAME}--documentation.json"
-MENTIONS_PATH = f"{cur_dir}/{MODEL_NAME}-mentions.json"
-ALIGNMENT_PATH = f"{cur_dir}/{MODEL_NAME}-alignment.json"
+CUR_DIR = os.getcwd()
+
+GrFN_PATH = sys.argv[1]
+EQN_PATH = sys.argv[2]
+DOC_PATH = sys.argv[3]
+COMM_PATH = sys.argv[4]
+
+MODEL_NAME = GrFN_PATH[
+    GrFN_PATH.rfind("/") + 1 : GrFN_PATH.rfind("--GrFN.json")
+]
+
+
+MENTIONS_PATH = f"{CUR_DIR}/{MODEL_NAME}-mentions.json"
+ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}-alignment.json"
 
 
 def main():
