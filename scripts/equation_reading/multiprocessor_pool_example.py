@@ -13,7 +13,7 @@ def run_individual(params):
 
     # any logging to a single log file BEFORE individual run should be here...
     lock.acquire()
-    print(f"exp {params['num']} START at {start_time}")
+    print(f"task {params['num']} START at {start_time}")
     lock.release()
 
     # run individual
@@ -25,10 +25,10 @@ def run_individual(params):
 
     # any logging to a single log file AFTER individual run should be here...
     lock.acquire()
-    print(f"exp {params['num']} END at {end_time}, dur={duration}, ret={ret}")
+    print(f"task {params['num']} END at {end_time}, dur={duration}, ret={ret}")
     lock.release()
 
-    return f'exp{params["num"]} dur={duration}'
+    return f'task {params["num"]} dur={duration}'
 
 
 def run_batch(pool_size, parameters):
@@ -55,7 +55,13 @@ EXAMPLE_PARAMS = list()
 for i in range(20):
     EXAMPLE_PARAMS.append({'num': i, 'command': 'date +%s'})
 
+print("TASKS:")
+for task in EXAMPLE_PARAMS:
+    print('    ', task)
+print("----------")
+
 num_cores = multiprocessing.cpu_count()
+print(f"TOTAL number of CORES: {num_cores}")
 cores_to_use = num_cores - 2
 
 run_batch(cores_to_use, EXAMPLE_PARAMS)
