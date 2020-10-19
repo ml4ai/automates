@@ -142,6 +142,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // a variable cannot be a unit
       if (v.entities.get.exists(_ == "B-unit")) return false
       val tag = v.tags.get.head
+      if (tag == "POS") return false
       return (
         word.toLowerCase != word // mixed case or all UPPER
         |
@@ -259,8 +260,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
       if definText.text.filter(c => valid contains c).length.toFloat / definText.text.length > 0.60
-      // make sure there's at least one noun; there may be more nominal pos that will need to be included
-      if m.tags.get.exists(_.contains("N"))
+      // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded def like "Susceptible (S)"
+//      if m.tags.get.exists(_.contains("N"))
 
     } yield m
   }

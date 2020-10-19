@@ -85,6 +85,17 @@ rules:
       definition:Concept = nsubjpass
       variable:Variable = nmod_in appos
 
+  - name: definition_interpreted
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:..."
+#    action: ${action}
+    pattern: |
+      trigger = [lemma="interpret"]
+      definition:Concept = nmod_as
+      variable:Variable = nsubjpass
+
 #   todo: a promising pattern; needs work
 #  - name: definition_of_var_equals
 #    label: Definition
@@ -146,6 +157,17 @@ rules:
       variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
 
+  - name: def_cop_var
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    action: ${action}
+    pattern: |
+      trigger = [lemma="be"]
+      definition:Concept = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      variable:Variable = <cop [!entity = /NUMBER|B-unit/ ]
+
   - name: comma_appos_var
     label: Definition
     priority: ${priority}
@@ -160,6 +182,10 @@ rules:
       (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"])
       |
       @definition: Concept "," @variable:Variable (?! [lemma = "be"])
+      |
+      @definition: Concept "(" @variable:Variable ")" (?! [lemma = "be"])
+      |
+      @definition: Concept "," "or" @variable:Variable (?! [lemma = "be"])
 
   - name: def_comma_var_appos
     label: Definition
