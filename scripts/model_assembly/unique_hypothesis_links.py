@@ -9,9 +9,9 @@ def main():
 
     G = nx.Graph()
     link_data = json.load(open(links_file, "r"))
-    for link in link_data:
-        var1_name = f"{link['element_1']['type']}::{link['element_1']['source']}::{link['element_1']['content']}"
-        var2_name = f"{link['element_2']['type']}::{link['element_2']['source']}::{link['element_2']['content']}"
+    for link in link_data["grounding"]:
+        var1_name = f"{link['element_1']['type']}:-:{link['element_1']['source']}:-:{link['element_1']['content']}"
+        var2_name = f"{link['element_2']['type']}:-:{link['element_2']['source']}:-:{link['element_2']['content']}"
         G.add_edge(var1_name, var2_name)
 
     equations = list()
@@ -20,7 +20,8 @@ def main():
     text_spans = list()
     text_vars = list()
     for node_name in G.nodes:
-        (link_type, link_src, link_content) = node_name.split("::")
+        print(node_name)
+        (link_type, link_src, link_content) = node_name.split(":-:")
         if link_type == "text_span":
             doc_only_src = link_src[link_src.rfind("/") + 1 :]
             text_spans.append((doc_only_src, link_content))
@@ -36,7 +37,7 @@ def main():
         else:
             raise TypeError(f"Unidentified link type: {link_type}")
 
-    outfile = links_file.replace("-hypotheses.json", "-links.json")
+    outfile = links_file.replace("-alignment.json", "-links.json")
     json.dump(
         {
             "equations": equations,

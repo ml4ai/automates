@@ -12,7 +12,10 @@ fortran_path = sys.argv[1]
 ITP = ImperativeInterpreter.from_src_file(fortran_path)
 con_id = ITP.find_root_container()
 GrFN = GroundedFunctionNetwork.from_AIR(
-    con_id, ITP.containers, ITP.variables, ITP.types,
+    con_id,
+    ITP.containers,
+    ITP.variables,
+    ITP.types,
 )
 A = GrFN.to_AGraph()
 
