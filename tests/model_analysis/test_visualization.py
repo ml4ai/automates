@@ -2,9 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from model_assembly.networks import GroundedFunctionNetwork
-from model_analysis.sensitivity import SensitivityAnalyzer
-from model_analysis.visualization import SensitivityVisualizer
+from automates.model_assembly.networks import GroundedFunctionNetwork
+from automates.model_analysis.sensitivity import SensitivityAnalyzer
+from automates.model_analysis.visualization import SensitivityVisualizer
 
 
 @pytest.fixture

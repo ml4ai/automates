@@ -1,0 +1,238 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+####DEFINITIONS####
+
+
+  - name: var_equals_def_token #needed bc of bad parse
+    label: Definition
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
+    pattern: |
+      @variable:Variable "=" (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter"]{1,5})
+      |
+      @variable:Variable "(" [word = /[\w\d]*/]{1,5} ")" "=" (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter"]{1,5})
+#
+
+  - name: var_equals_def #needed bc of bad parse
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
+    pattern: |
+      trigger = [word = "="]
+      variable: Variable = ("nmod:npmod" | <amod compound?)?
+      definition: Concept = (dobj | <amod)? [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      #<amod results in a definition where var and def are the same entity in this example: "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with "
+      #don't add 'dep' here---too unpredictable
+
+#  - name: var_equals_def #needed bc of bad parse
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
+#    pattern: |
+#      trigger = [word = "="]
+#      variable: Variable = (<dep | "nmod:npmod" | <amod compound?)?
+#      definition: Concept = (dobj | dep | <amod) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+#      #<amod results in a definition where var and def are the same entity in this example: "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with "
+##
+
+  - name: sort_of_appos
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
+    action: ${action}
+    pattern: |
+      (?<= [word = /a|the|,/])? (?<definition> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Variable #(?! [chunk = I-NP])
+      #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
+
+  - name: var_definition_appos_bidir
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+    #action: variableArguments
+    action: definitionActionFlowSpecialCase
+    pattern: |
+      @c1:Concept "(" @c2:Concept ")"
+      #todo: check why -LRB- stopped working; maybe try to have both in the rule?
+
+
+  - name: definition_var_appos_unit
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "In APSIM, water uptake (Ta, mm d−1) is determined from..."
+    action: ${action}
+    pattern: |
+      @definition:Concept [word = "("] (@variable:Variable) [word = /,|\)/] [entity="B-unit"]
+
+  - name: definition_computed_appos
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:..."
+    action: ${action}
+    pattern: |
+      trigger = [word=/computed/]
+      definition:Concept = nsubjpass
+      variable:Variable = nmod_in appos
+
+  - name: definition_interpreted
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:..."
+#    action: ${action}
+    pattern: |
+      trigger = [lemma="interpret"]
+      definition:Concept = nmod_as
+      variable:Variable = nsubjpass
+
+#   todo: a promising pattern; needs work
+#  - name: definition_of_var_equals
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "The fit yields a bulk resistivity of ρinf = 238 nΩ m"
+#    action: ${action}
+#    pattern: |
+#      @definition:Concept [word = "of"] (@variable:Variable [!entity = /B-unit/]) [word = "="]
+#
+
+  - name: var_verb
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "and W represents the soil limitation to water uptake of each layer."
+#    action: looksLikeAVariable #//whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
+#    action: ${action}
+    pattern: |
+      trigger = [word=/(?i)represent|denote/]
+      variable:Concept = /${agents}/
+      definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
+      #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
+
+
+  - name: var_is_defined
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance; where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
+    action: ${action}
+    pattern: |
+      trigger = [lemma=/define/]
+      variable:Concept = nsubjpass | advcl nsubj
+      definition:Concept = nmod_as [!entity = "NUMBER"]
+      #fixme: need to limit to 'find first nsubj you find' to account for the second example
+
+
+  - name: var_cop_definition_greek
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    action: looksLikeAVariableWithGreek
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
+
+  - name: var_cop_definition
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    action: ${action}
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
+
+  - name: def_cop_var
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    action: ${action}
+    pattern: |
+      trigger = [lemma="be"]
+      definition:Concept = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      variable:Variable = <cop [!entity = /NUMBER|B-unit/ ]
+
+  - name: comma_appos_var
+    label: Definition
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "Susceptible individuals, S, are infected by infected individuals, I..."
+    pattern: |
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"])
+      |
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"])
+      |
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"])
+      |
+      @definition: Concept "," @variable:Variable (?! [lemma = "be"])
+      |
+      @definition: Concept "(" @variable:Variable ")" (?! [lemma = "be"])
+      |
+      @definition: Concept "," "or" @variable:Variable (?! [lemma = "be"])
+
+  - name: def_comma_var_appos
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "Susceptible individuals, S, are infected by infected individuals, i,"
+    action: ${action}
+    pattern: |
+      trigger = [lemma=/,/]
+      variable:Variable = <punct >appos [!entity="B-unit"]
+      definition: Concept = <punct
+
+  - name: def_is_given_by
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "The Toomre factor varies with radius and is given by Q(r)."
+    action: ${action}
+    pattern: |
+      trigger = [lemma=/give/]
+      variable:Variable = nmod_agent
+      definition: Concept = nsubjpass
+
+
+#todo: revisit
+#  - name: where_var_def
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the soil limitation to water uptake of each layer."
+##    action: looksLikeAVariable
+#    pattern: |
+#      trigger = [word = /[Ww]here/]
+#      variable: Variable = <advmod nsubj conj_and?
+#      definition: Concept = <advmod
+#      #fixme: does not catch the second var ("s2")
+      #todo: why does definition_var_appos trump this rule in "where t is time (d)"?
+      #is that bc of 'keep longest'?
+
+#  - name: def_is_known_as_var
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "TThe fraction, α, of the solar radiation reflected by the surface is known as the albedo."
+#    #action: looksLikeAVariable
+#    pattern: |
+#      trigger = [word=/known/]
+#      variable:Concept = nmod_as
+#      definition: Concept = nsubjpass
+

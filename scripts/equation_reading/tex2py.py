@@ -11,7 +11,7 @@ Author: Paul D. Hein, Marco Valenzuela
 
 import sys
 
-from equation_reading.decoding import tex2py
+from automates.equation_reading.decoding import tex2py
 
 
 def main():

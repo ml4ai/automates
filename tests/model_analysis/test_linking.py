@@ -3,7 +3,7 @@ import json
 
 import networkx as nx
 
-from model_assembly.linking import (
+from automates.model_assembly.linking import (
     build_link_graph,
     extract_link_tables,
     print_table_data,
@@ -12,7 +12,7 @@ from model_assembly.linking import (
 
 @pytest.fixture
 def pno_alignment():
-    return json.load(open("tests/data/model_analysis/PEN-alignment.json", "r"))
+    return json.load(open("tests/data/model_analysis/PNO-alignment.json", "r"))
 
 
 def test_link_graph_and_tables(pno_alignment):

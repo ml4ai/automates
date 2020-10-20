@@ -77,7 +77,13 @@ Gemfile.lock
 # Adding lib files for TR webapp
 !src/text_reading/webapp/public/brat/client/lib
 
+# Jupyter notebook checkpoints
+*-checkpoint.ipynb
+
 # Program analysis stuff
 *modFileLog.json
 *--GrFN.pdf
 tmp
+
+# Model assembly stuff
+*align_payload.json

@@ -1,8 +1,8 @@
 import sys
 from typing import List
 import math
-from program_analysis.translators.for2py.format import *
-from program_analysis.translators.for2py.arrays import *
+from automates.program_analysis.for2py.format import *
+from automates.program_analysis.for2py.arrays import *
 from dataclasses import dataclass
 
 

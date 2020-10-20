@@ -1,9 +1,9 @@
 from numbers import Real
 from random import random
-from program_analysis.translators.for2py.strings import *
+from automates.program_analysis.for2py.strings import *
 import numpy as np
-from program_analysis.translators.for2py import intrinsics
-import program_analysis.translators.for2py.math_ext as math
+from automates.program_analysis.for2py import intrinsics
+import automates.program_analysis.for2py.math_ext as math
 
 def select02__main__loop_0__assign__inc__0():
     return 1

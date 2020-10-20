@@ -1,0 +1,2981 @@
+{
+  "containers": [
+    {
+      "name": "@container::CHIME-SIR::@global::get_beta",
+      "source_refs": [],
+      "type": "function",
+      "arguments": [
+        "@variable::intrinsic_growth_rate::-1",
+        "@variable::gamma::-1",
+        "@variable::susceptible::-1",
+        "@variable::relative_contact_rate::-1"
+      ],
+      "updated": [
+        "@variable::beta::0"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__get_beta__assign__inv_contact_rate__0",
+            "type": "lambda",
+            "code": "lambda relative_contact_rate:(1.0-relative_contact_rate)"
+          },
+          "input": [
+            "@variable::relative_contact_rate::-1"
+          ],
+          "output": [
+            "@variable::inv_contact_rate::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__get_beta__assign__updated_growth_rate__0",
+            "type": "lambda",
+            "code": "lambda intrinsic_growth_rate,gamma:(intrinsic_growth_rate+gamma)"
+          },
+          "input": [
+            "@variable::intrinsic_growth_rate::-1",
+            "@variable::gamma::-1"
+          ],
+          "output": [
+            "@variable::updated_growth_rate::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__get_beta__assign__beta__0",
+            "type": "lambda",
+            "code": "lambda updated_growth_rate,susceptible,inv_contact_rate:((updated_growth_rate/susceptible)*inv_contact_rate)"
+          },
+          "input": [
+            "@variable::updated_growth_rate::0",
+            "@variable::susceptible::-1",
+            "@variable::inv_contact_rate::0"
+          ],
+          "output": [
+            "@variable::beta::0"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::@global::get_growth_rate",
+      "source_refs": [],
+      "type": "function",
+      "arguments": [
+        "@variable::doubling_time::-1"
+      ],
+      "updated": [
+        "@variable::growth_rate::0"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::get_growth_rate::IF_0",
+            "type": "container"
+          },
+          "input": [
+            "@variable::doubling_time::-1"
+          ],
+          "updated": [
+            "@variable::growth_rate::0"
+          ],
+          "output": []
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::get_growth_rate::IF_0",
+      "source_refs": [],
+      "type": "if-block",
+      "arguments": [
+        "@variable::doubling_time::-1"
+      ],
+      "updated": [
+        "@variable::growth_rate::2"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__get_growth_rate__IF_0__condition__COND_0_0__0",
+            "type": "lambda",
+            "code": "lambda doubling_time:(doubling_time == 0.0)"
+          },
+          "input": [
+            "@variable::doubling_time::-1"
+          ],
+          "output": [
+            "@variable::COND_0_0::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__get_growth_rate__IF_0__assign__growth_rate__0",
+            "type": "lambda",
+            "code": "lambda :0.0"
+          },
+          "input": [],
+          "output": [
+            "@variable::growth_rate::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__get_growth_rate__IF_0__assign__growth_rate__1",
+            "type": "lambda",
+            "code": "lambda doubling_time:((2.0**(1.0/doubling_time))-1.0)"
+          },
+          "input": [
+            "@variable::doubling_time::-1"
+          ],
+          "output": [
+            "@variable::growth_rate::1"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__get_growth_rate__IF_0__decision__growth_rate__2",
+            "type": "lambda",
+            "code": "lambda COND_0,growth_rate_0,growth_rate_1:growth_rate_0 if COND_0 else growth_rate_1"
+          },
+          "input": [
+            "@variable::COND_0_0::0",
+            "@variable::growth_rate::0",
+            "@variable::growth_rate::1"
+          ],
+          "output": [
+            "@variable::growth_rate::2"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::@global::sir",
+      "source_refs": [],
+      "type": "function",
+      "arguments": [
+        "@variable::s::-1",
+        "@variable::i::-1",
+        "@variable::r::-1",
+        "@variable::beta::-1",
+        "@variable::gamma::-1",
+        "@variable::n::-1"
+      ],
+      "updated": [
+        "@variable::s::0",
+        "@variable::i::0",
+        "@variable::r::0"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__sir__assign__s_n__0",
+            "type": "lambda",
+            "code": "lambda beta,s,i:(-(((beta*s)*i))+s)"
+          },
+          "input": [
+            "@variable::beta::-1",
+            "@variable::s::-1",
+            "@variable::i::-1"
+          ],
+          "output": [
+            "@variable::s_n::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sir__assign__i_n__0",
+            "type": "lambda",
+            "code": "lambda beta,s,i,gamma:((((beta*s)*i)-(gamma*i))+i)"
+          },
+          "input": [
+            "@variable::beta::-1",
+            "@variable::s::-1",
+            "@variable::i::-1",
+            "@variable::gamma::-1"
+          ],
+          "output": [
+            "@variable::i_n::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sir__assign__r_n__0",
+            "type": "lambda",
+            "code": "lambda gamma,i,r:((gamma*i)+r)"
+          },
+          "input": [
+            "@variable::gamma::-1",
+            "@variable::i::-1",
+            "@variable::r::-1"
+          ],
+          "output": [
+            "@variable::r_n::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sir__assign__scale__0",
+            "type": "lambda",
+            "code": "lambda n,s_n,i_n,r_n:(n/((s_n+i_n)+r_n))"
+          },
+          "input": [
+            "@variable::n::-1",
+            "@variable::s_n::0",
+            "@variable::i_n::0",
+            "@variable::r_n::0"
+          ],
+          "output": [
+            "@variable::scale::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sir__assign__s__0",
+            "type": "lambda",
+            "code": "lambda s_n,scale:(s_n*scale)"
+          },
+          "input": [
+            "@variable::s_n::0",
+            "@variable::scale::0"
+          ],
+          "output": [
+            "@variable::s::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sir__assign__i__0",
+            "type": "lambda",
+            "code": "lambda i_n,scale:(i_n*scale)"
+          },
+          "input": [
+            "@variable::i_n::0",
+            "@variable::scale::0"
+          ],
+          "output": [
+            "@variable::i::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sir__assign__r__0",
+            "type": "lambda",
+            "code": "lambda r_n,scale:(r_n*scale)"
+          },
+          "input": [
+            "@variable::r_n::0",
+            "@variable::scale::0"
+          ],
+          "output": [
+            "@variable::r::0"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::@global::sim_sir",
+      "source_refs": [],
+      "type": "function",
+      "arguments": [
+        "@variable::s_n::-1",
+        "@variable::i_n::-1",
+        "@variable::r_n::-1",
+        "@variable::gamma::-1",
+        "@variable::i_day::-1",
+        "@variable::n_p::-1",
+        "@variable::n_t::-1",
+        "@variable::betas::-1",
+        "@variable::days::-1",
+        "@variable::t::-1",
+        "@variable::s::-1",
+        "@variable::e::-1",
+        "@variable::i::-1",
+        "@variable::r::-1"
+      ],
+      "updated": [
+        "@variable::s_n::0",
+        "@variable::i_n::0",
+        "@variable::r_n::0",
+        "@variable::t::1",
+        "@variable::s::1",
+        "@variable::i::1",
+        "@variable::r::1"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__assign__n__0",
+            "type": "lambda",
+            "code": "lambda s_n,i_n,r_n:((s_n+i_n)+r_n)"
+          },
+          "input": [
+            "@variable::s_n::-1",
+            "@variable::i_n::-1",
+            "@variable::r_n::-1"
+          ],
+          "output": [
+            "@variable::n::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__assign__d__0",
+            "type": "lambda",
+            "code": "lambda i_day:i_day"
+          },
+          "input": [
+            "@variable::i_day::-1"
+          ],
+          "output": [
+            "@variable::d::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__assign__idx__0",
+            "type": "lambda",
+            "code": "lambda :1"
+          },
+          "input": [],
+          "output": [
+            "@variable::idx::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::sim_sir::loop$0",
+            "type": "container"
+          },
+          "input": [
+            "@variable::n_p::-1",
+            "@variable::betas::-1",
+            "@variable::days::-1",
+            "@variable::t::-1",
+            "@variable::idx::0",
+            "@variable::d::0",
+            "@variable::s::-1",
+            "@variable::s_n::-1",
+            "@variable::i::-1",
+            "@variable::i_n::-1",
+            "@variable::r::-1",
+            "@variable::r_n::-1",
+            "@variable::gamma::-1",
+            "@variable::n::0"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::beta::0",
+            "@variable::n_d::0",
+            "@variable::t::0",
+            "@variable::s::0",
+            "@variable::i::0",
+            "@variable::r::0",
+            "@variable::idx::1",
+            "@variable::s_n::0",
+            "@variable::i_n::0",
+            "@variable::r_n::0",
+            "@variable::d::1"
+          ]
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__assign__t_idx__1",
+            "type": "lambda",
+            "code": "lambda t,idx,d:(t.__setitem__(idx,int(d)),t)[1]"
+          },
+          "input": [
+            "@variable::t::0",
+            "@variable::idx::1",
+            "@variable::d::1"
+          ],
+          "output": [
+            "@variable::t::1"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__assign__s_idx__1",
+            "type": "lambda",
+            "code": "lambda s,idx,s_n:(s.__setitem__(idx,Float32(s_n)),s)[1]"
+          },
+          "input": [
+            "@variable::s::0",
+            "@variable::idx::1",
+            "@variable::s_n::0"
+          ],
+          "output": [
+            "@variable::s::1"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__assign__i_idx__1",
+            "type": "lambda",
+            "code": "lambda i,idx,i_n:(i.__setitem__(idx,Float32(i_n)),i)[1]"
+          },
+          "input": [
+            "@variable::i::0",
+            "@variable::idx::1",
+            "@variable::i_n::0"
+          ],
+          "output": [
+            "@variable::i::1"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__assign__r_idx__1",
+            "type": "lambda",
+            "code": "lambda r,idx,r_n:(r.__setitem__(idx,Float32(r_n)),r)[1]"
+          },
+          "input": [
+            "@variable::r::0",
+            "@variable::idx::1",
+            "@variable::r_n::0"
+          ],
+          "output": [
+            "@variable::r::1"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::sim_sir::loop$0",
+      "source_refs": [],
+      "type": "loop",
+      "arguments": [
+        "@variable::n_p::-1",
+        "@variable::betas::-1",
+        "@variable::days::-1",
+        "@variable::t::-1",
+        "@variable::idx::-1",
+        "@variable::d::-1",
+        "@variable::s::-1",
+        "@variable::s_n::-1",
+        "@variable::i::-1",
+        "@variable::i_n::-1",
+        "@variable::r::-1",
+        "@variable::r_n::-1",
+        "@variable::gamma::-1",
+        "@variable::n::-1"
+      ],
+      "updated": [
+        "@variable::beta::0",
+        "@variable::n_d::0",
+        "@variable::t::0",
+        "@variable::s::0",
+        "@variable::i::0",
+        "@variable::r::0",
+        "@variable::idx::0",
+        "@variable::s_n::0",
+        "@variable::i_n::0",
+        "@variable::r_n::0",
+        "@variable::d::0"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__assign__p_idx__0",
+            "type": "lambda",
+            "code": "lambda :1"
+          },
+          "input": [],
+          "output": [
+            "@variable::p_idx::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__condition__IF_0__0",
+            "type": "lambda",
+            "code": "lambda p_idx,n_p:0 <= p_idx < n_p+1"
+          },
+          "input": [
+            "@variable::p_idx::0",
+            "@variable::n_p::-1"
+          ],
+          "output": [
+            "@variable::IF_0::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__decision__EXIT__0",
+            "type": "lambda",
+            "code": "lambda IF_0_0:(not IF_0_0)"
+          },
+          "input": [
+            "@variable::IF_0::0"
+          ],
+          "output": [
+            "@variable::EXIT::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__assign__beta__0",
+            "type": "lambda",
+            "code": "lambda p_idx:betas[p_idx]"
+          },
+          "input": [
+            "@variable::betas::-1",
+            "@variable::p_idx::0"
+          ],
+          "output": [
+            "@variable::beta::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__assign__n_d__0",
+            "type": "lambda",
+            "code": "lambda p_idx:days[p_idx]"
+          },
+          "input": [
+            "@variable::days::-1",
+            "@variable::p_idx::0"
+          ],
+          "output": [
+            "@variable::n_d::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::sim_sir.loop$0::loop$1",
+            "type": "container"
+          },
+          "input": [
+            "@variable::n_d::0",
+            "@variable::t::-1",
+            "@variable::idx::-1",
+            "@variable::d::-1",
+            "@variable::s::-1",
+            "@variable::s_n::-1",
+            "@variable::i::-1",
+            "@variable::i_n::-1",
+            "@variable::r::-1",
+            "@variable::r_n::-1",
+            "@variable::beta::0",
+            "@variable::gamma::-1",
+            "@variable::n::-1"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::t::0",
+            "@variable::s::0",
+            "@variable::i::0",
+            "@variable::r::0",
+            "@variable::idx::0",
+            "@variable::s_n::0",
+            "@variable::i_n::0",
+            "@variable::r_n::0",
+            "@variable::d::0"
+          ]
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__assign__p_idx__1",
+            "type": "lambda",
+            "code": "lambda p_idx:p_idx + 1"
+          },
+          "input": [
+            "@variable::p_idx::0"
+          ],
+          "output": [
+            "@variable::p_idx::1"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::sim_sir.loop$0::loop$1",
+      "source_refs": [],
+      "type": "loop",
+      "arguments": [
+        "@variable::n_d::-1",
+        "@variable::t::-1",
+        "@variable::idx::-1",
+        "@variable::d::-1",
+        "@variable::s::-1",
+        "@variable::s_n::-1",
+        "@variable::i::-1",
+        "@variable::i_n::-1",
+        "@variable::r::-1",
+        "@variable::r_n::-1",
+        "@variable::beta::-1",
+        "@variable::gamma::-1",
+        "@variable::n::-1"
+      ],
+      "updated": [
+        "@variable::t::0",
+        "@variable::s::0",
+        "@variable::i::0",
+        "@variable::r::0",
+        "@variable::idx::0",
+        "@variable::s_n::0",
+        "@variable::i_n::0",
+        "@variable::r_n::0",
+        "@variable::d::0"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__d_idx__0",
+            "type": "lambda",
+            "code": "lambda :1"
+          },
+          "input": [],
+          "output": [
+            "@variable::d_idx::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__condition__IF_0__0",
+            "type": "lambda",
+            "code": "lambda d_idx,n_d:0 <= d_idx < n_d+1"
+          },
+          "input": [
+            "@variable::d_idx::0",
+            "@variable::n_d::-1"
+          ],
+          "output": [
+            "@variable::IF_0::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__decision__EXIT__0",
+            "type": "lambda",
+            "code": "lambda IF_0_0:(not IF_0_0)"
+          },
+          "input": [
+            "@variable::IF_0::0"
+          ],
+          "output": [
+            "@variable::EXIT::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__t_idx__0",
+            "type": "lambda",
+            "code": "lambda t,idx,d:(t.__setitem__(idx,int(d)),t)[1]"
+          },
+          "input": [
+            "@variable::t::-1",
+            "@variable::idx::-1",
+            "@variable::d::-1"
+          ],
+          "output": [
+            "@variable::t::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__s_idx__0",
+            "type": "lambda",
+            "code": "lambda s,idx,s_n:(s.__setitem__(idx,Float32(s_n)),s)[1]"
+          },
+          "input": [
+            "@variable::s::-1",
+            "@variable::idx::-1",
+            "@variable::s_n::-1"
+          ],
+          "output": [
+            "@variable::s::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__i_idx__0",
+            "type": "lambda",
+            "code": "lambda i,idx,i_n:(i.__setitem__(idx,Float32(i_n)),i)[1]"
+          },
+          "input": [
+            "@variable::i::-1",
+            "@variable::idx::-1",
+            "@variable::i_n::-1"
+          ],
+          "output": [
+            "@variable::i::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__r_idx__0",
+            "type": "lambda",
+            "code": "lambda r,idx,r_n:(r.__setitem__(idx,Float32(r_n)),r)[1]"
+          },
+          "input": [
+            "@variable::r::-1",
+            "@variable::idx::-1",
+            "@variable::r_n::-1"
+          ],
+          "output": [
+            "@variable::r::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__idx__0",
+            "type": "lambda",
+            "code": "lambda idx:(idx+1)"
+          },
+          "input": [
+            "@variable::idx::-1"
+          ],
+          "output": [
+            "@variable::idx::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::@global::sir",
+            "type": "container"
+          },
+          "input": [
+            "@variable::s_n::-1",
+            "@variable::i_n::-1",
+            "@variable::r_n::-1",
+            "@variable::beta::-1",
+            "@variable::gamma::-1",
+            "@variable::n::-1"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::s_n::0",
+            "@variable::i_n::0",
+            "@variable::r_n::0"
+          ]
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__d__0",
+            "type": "lambda",
+            "code": "lambda d:(d+1)"
+          },
+          "input": [
+            "@variable::d::-1"
+          ],
+          "output": [
+            "@variable::d::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__sim_sir__loop_0__loop_1__assign__d_idx__1",
+            "type": "lambda",
+            "code": "lambda d_idx:d_idx + 1"
+          },
+          "input": [
+            "@variable::d_idx::0"
+          ],
+          "output": [
+            "@variable::d_idx::1"
+          ],
+          "updated": []
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::@global::main",
+      "source_refs": [],
+      "type": "function",
+      "arguments": [],
+      "updated": [],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__i_day__0",
+            "type": "lambda",
+            "code": "lambda :17"
+          },
+          "input": [],
+          "output": [
+            "@variable::i_day::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__n_days__0",
+            "type": "lambda",
+            "code": "lambda :20"
+          },
+          "input": [],
+          "output": [
+            "@variable::n_days::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__n_p__0",
+            "type": "lambda",
+            "code": "lambda :3"
+          },
+          "input": [],
+          "output": [
+            "@variable::n_p::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__n_t__0",
+            "type": "lambda",
+            "code": "lambda :121"
+          },
+          "input": [],
+          "output": [
+            "@variable::n_t::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__infectious_days__0",
+            "type": "lambda",
+            "code": "lambda :14"
+          },
+          "input": [],
+          "output": [
+            "@variable::infectious_days::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__relative_contact_rate__0",
+            "type": "lambda",
+            "code": "lambda :0.05"
+          },
+          "input": [],
+          "output": [
+            "@variable::relative_contact_rate::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__gamma__0",
+            "type": "lambda",
+            "code": "lambda infectious_days:(1.0/infectious_days)"
+          },
+          "input": [
+            "@variable::infectious_days::0"
+          ],
+          "output": [
+            "@variable::gamma::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__policy_betas__0",
+            "type": "lambda",
+            "code": "lambda n_p:[0] * (n_p - 1)"
+          },
+          "input": [],
+          "output": [
+            "@variable::policy_betas::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__policy_days__0",
+            "type": "lambda",
+            "code": "lambda n_p:[0] * (n_p - 1)"
+          },
+          "input": [],
+          "output": [
+            "@variable::policy_days::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__t__0",
+            "type": "lambda",
+            "code": "lambda n_t:[0] * (n_t - 1)"
+          },
+          "input": [],
+          "output": [
+            "@variable::t::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__s__0",
+            "type": "lambda",
+            "code": "lambda n_t:[0] * (n_t - 1)"
+          },
+          "input": [],
+          "output": [
+            "@variable::s::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__e__0",
+            "type": "lambda",
+            "code": "lambda n_t:[0] * (n_t - 1)"
+          },
+          "input": [],
+          "output": [
+            "@variable::e::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__i__0",
+            "type": "lambda",
+            "code": "lambda n_t:[0] * (n_t - 1)"
+          },
+          "input": [],
+          "output": [
+            "@variable::i::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__r__0",
+            "type": "lambda",
+            "code": "lambda n_t:[0] * (n_t - 1)"
+          },
+          "input": [],
+          "output": [
+            "@variable::r::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__s_n__0",
+            "type": "lambda",
+            "code": "lambda :1000"
+          },
+          "input": [],
+          "output": [
+            "@variable::s_n::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__i_n__0",
+            "type": "lambda",
+            "code": "lambda :0"
+          },
+          "input": [],
+          "output": [
+            "@variable::i_n::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__assign__r_n__0",
+            "type": "lambda",
+            "code": "lambda :0"
+          },
+          "input": [],
+          "output": [
+            "@variable::r_n::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::main::loop$2",
+            "type": "container"
+          },
+          "input": [
+            "@variable::n_p::0",
+            "@variable::gamma::0",
+            "@variable::s_n::0",
+            "@variable::relative_contact_rate::0",
+            "@variable::policy_betas::0",
+            "@variable::policy_days::0"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::doubling_time::0",
+            "@variable::growth_rate::0",
+            "@variable::beta::0",
+            "@variable::policy_betas::1",
+            "@variable::policy_days::1"
+          ]
+        },
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::@global::sim_sir",
+            "type": "container"
+          },
+          "input": [
+            "@variable::s_n::0",
+            "@variable::i_n::0",
+            "@variable::r_n::0",
+            "@variable::gamma::0",
+            "@variable::i_day::0",
+            "@variable::n_p::0",
+            "@variable::n_t::0",
+            "@variable::policy_betas::1",
+            "@variable::policy_days::1",
+            "@variable::t::0",
+            "@variable::s::0",
+            "@variable::e::0",
+            "@variable::i::0",
+            "@variable::r::0"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::s_n::1",
+            "@variable::i_n::1",
+            "@variable::r_n::1",
+            "@variable::t::1",
+            "@variable::s::1",
+            "@variable::i::1",
+            "@variable::r::1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@container::CHIME-SIR::main::loop$2",
+      "source_refs": [],
+      "type": "loop",
+      "arguments": [
+        "@variable::n_p::-1",
+        "@variable::gamma::-1",
+        "@variable::s_n::-1",
+        "@variable::relative_contact_rate::-1",
+        "@variable::policy_betas::-1",
+        "@variable::policy_days::-1"
+      ],
+      "updated": [
+        "@variable::doubling_time::0",
+        "@variable::growth_rate::0",
+        "@variable::beta::0",
+        "@variable::policy_betas::0",
+        "@variable::policy_days::0"
+      ],
+      "return_value": [],
+      "body": [
+        {
+          "function": {
+            "name": "CHIME_SIR__main__loop_2__assign__p_idx__0",
+            "type": "lambda",
+            "code": "lambda :1"
+          },
+          "input": [],
+          "output": [
+            "@variable::p_idx::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__loop_2__condition__IF_0__0",
+            "type": "lambda",
+            "code": "lambda p_idx,n_p:0 <= p_idx < n_p+1"
+          },
+          "input": [
+            "@variable::p_idx::0",
+            "@variable::n_p::-1"
+          ],
+          "output": [
+            "@variable::IF_0::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__loop_2__decision__EXIT__0",
+            "type": "lambda",
+            "code": "lambda IF_0_0:(not IF_0_0)"
+          },
+          "input": [
+            "@variable::IF_0::0"
+          ],
+          "output": [
+            "@variable::EXIT::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__loop_2__assign__doubling_time__0",
+            "type": "lambda",
+            "code": "lambda p_idx:((p_idx-1.0)*5.0)"
+          },
+          "input": [
+            "@variable::p_idx::0"
+          ],
+          "output": [
+            "@variable::doubling_time::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::@global::get_growth_rate",
+            "type": "container"
+          },
+          "input": [
+            "@variable::doubling_time::0"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::growth_rate::0"
+          ]
+        },
+        {
+          "function": {
+            "name": "@container::CHIME-SIR::@global::get_beta",
+            "type": "container"
+          },
+          "input": [
+            "@variable::growth_rate::0",
+            "@variable::gamma::-1",
+            "@variable::s_n::-1",
+            "@variable::relative_contact_rate::-1"
+          ],
+          "output": [],
+          "updated": [
+            "@variable::beta::0"
+          ]
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__loop_2__assign__policy_betas_p_idx__0",
+            "type": "lambda",
+            "code": "lambda policy_betas,p_idx,beta:(policy_betas.__setitem__(p_idx,Float32(beta)),policy_betas)[1]"
+          },
+          "input": [
+            "@variable::policy_betas::-1",
+            "@variable::p_idx::0",
+            "@variable::beta::0"
+          ],
+          "output": [
+            "@variable::policy_betas::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__loop_2__assign__policy_days_p_idx__0",
+            "type": "lambda",
+            "code": "lambda policy_days,p_idx:(policy_days.__setitem__(p_idx,int(int((n_days*p_idx)))),policy_days)[1]"
+          },
+          "input": [
+            "@variable::policy_days::-1",
+            "@variable::p_idx::0"
+          ],
+          "output": [
+            "@variable::policy_days::0"
+          ],
+          "updated": []
+        },
+        {
+          "function": {
+            "name": "CHIME_SIR__main__loop_2__assign__p_idx__1",
+            "type": "lambda",
+            "code": "lambda p_idx:p_idx + 1"
+          },
+          "input": [
+            "@variable::p_idx::0"
+          ],
+          "output": [
+            "@variable::p_idx::1"
+          ],
+          "updated": []
+        }
+      ]
+    }
+  ],
+  "start": [
+    "@container::CHIME-SIR::@global::main"
+  ],
+  "variables": [
+    {
+      "name": "@variable::CHIME-SIR::get_beta::intrinsic_growth_rate::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_beta::gamma::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_beta::susceptible::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_beta::relative_contact_rate::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_beta::beta::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_beta::inv_contact_rate::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_beta::updated_growth_rate::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_beta::beta::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate::doubling_time::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate::growth_rate::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate.IF_0::COND_0_0::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate.IF_0::growth_rate::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate.IF_0::growth_rate::1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate.IF_0::doubling_time::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate.IF_0::growth_rate::2",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::get_growth_rate::growth_rate::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::s::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::r::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::beta::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::gamma::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::s_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::i_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::r_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::scale::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::s::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::i::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sir::r::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::s_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::i_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::r_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::gamma::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::i_day::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::n_p::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::n_t::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::betas::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::days::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::t::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::s::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::e::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::r::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::d::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::idx::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::beta::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::n_d::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::t::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::s::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::i::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::r::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::idx::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::s_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::i_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::r_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::d::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::n_d::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::t::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::idx::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::d::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::s::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::s_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::i_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::r::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::r_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::beta::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::gamma::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::t::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::s::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::i::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::r::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::idx::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::s_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::i_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::r_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::d::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::d_idx::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::IF_0::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::EXIT::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0.loop$1::d_idx::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::n_p::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::betas::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::days::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::t::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::idx::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::d::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::s::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::s_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::i::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::i_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::r::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::r_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::gamma::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::beta::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::n_d::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::t::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::s::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::i::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::r::0",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::idx::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::s_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::i_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::r_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::d::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::p_idx::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::IF_0::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::EXIT::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir.loop$0::p_idx::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::t::1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::s::1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::i::1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::sim_sir::r::1",
+      "source_refs": [],
+      "domain": {
+        "name": "Array",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::i_day::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::n_days::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::n_p::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::n_t::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::infectious_days::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::relative_contact_rate::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::gamma::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::policy_betas::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::policy_days::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "int",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::t::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "int",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::s::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::e::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::i::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::r::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::s_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::i_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::r_n::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::doubling_time::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::growth_rate::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::beta::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::policy_betas::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::policy_days::0",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "int",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::n_p::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::gamma::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::s_n::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::relative_contact_rate::-1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::policy_betas::-1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::policy_days::-1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "int",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::doubling_time::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::growth_rate::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::beta::0",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::policy_betas::1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::policy_days::1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_p"
+        ],
+        "elem_type": "int",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::p_idx::0",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::IF_0::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::EXIT::0",
+      "source_refs": [],
+      "domain": {
+        "name": "boolean",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main.loop$2::p_idx::1",
+      "source_refs": [],
+      "domain": {
+        "name": "integer",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::s_n::1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::i_n::1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::r_n::1",
+      "source_refs": [],
+      "domain": {
+        "name": "float",
+        "type": "type",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::t::1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "int",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::s::1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::i::1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "name": "@variable::CHIME-SIR::main::r::1",
+      "source_refs": [],
+      "domain": {
+        "index": 0,
+        "dimensions": [
+          "n_t"
+        ],
+        "elem_type": "float",
+        "mutable": false
+      },
+      "domain_constraint": "(and (> v -infty) (< v infty))"
+    }
+  ],
+  "grounding": [],
+  "types": [],
+  "source": [
+    "CHIME-SIR.for"
+  ],
+  "source_comments": {
+    "$file_head": [
+      "C      module PolicyMod\n",
+      "C        implicit none\n",
+      "C        type Policy\n",
+      "C          real beta\n",
+      "C          integer num_days\n",
+      "C        end type Policy\n",
+      "C      end module PolicyMod\n",
+      "\n"
+    ],
+    "$file_foot": [],
+    "@container::CHIME-SIR::@global::get_beta": {
+      "head": [
+        "C      module PolicyMod\n",
+        "C        implicit none\n",
+        "C        type Policy\n",
+        "C          real beta\n",
+        "C          integer num_days\n",
+        "C        end type Policy\n",
+        "C      end module PolicyMod\n",
+        "\n"
+      ],
+      "neck": [],
+      "foot": [
+        "\n"
+      ],
+      "internal": {}
+    },
+    "@container::CHIME-SIR::@global::get_growth_rate": {
+      "head": [
+        "\n"
+      ],
+      "neck": [],
+      "foot": [
+        "\n"
+      ],
+      "internal": {}
+    },
+    "@container::CHIME-SIR::@global::sir": {
+      "head": [
+        "\n"
+      ],
+      "neck": [],
+      "foot": [
+        "\n"
+      ],
+      "internal": {}
+    },
+    "@container::CHIME-SIR::@global::sim_sir": {
+      "head": [
+        "\n"
+      ],
+      "neck": [
+        "C        use PolicyMod\n"
+      ],
+      "foot": [],
+      "internal": {}
+    }
+  },
+  "system": {
+    "name": "CHIME-SIR",
+    "components": [
+      {
+        "grfn_source": "./tmp/CHIME-SIR_AIR.json",
+        "code_source": [
+          "tests/data/model_analysis/CHIME-SIR.for"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}

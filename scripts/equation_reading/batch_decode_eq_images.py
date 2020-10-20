@@ -1,8 +1,29 @@
+# -----------------------------------------------------------------------------
+# Script to batch decode PNG images equations to extract equation latex
+#
+# NOTE: Assumes eqdec app is running. See:
+# https://github.com/ml4ai/automates/blob/master/src/equation_reading/equation_translation/eqdec/readme.txt
+#
+# Also, includes running render_image_from_latex, which requires:
+#     pdflatex
+#     ImageMagick (for the 'convert' command): https://imagemagick.org/index.php
+#
+# Usage:
+# TODO provide better cli interface
+# Currently: comment out the line(s) for the corresponding model(s)
+#   under __main__ that you want to process
+#
+# What it does:
+# Executes eqdec across the PNGs under the specified <model>/manual_eqn_images/
+# Then calls render_decoded_eqns on the extracted json (containing the decoded latex
+# -----------------------------------------------------------------------------
+
 import os
 import json
 import re
-import src.equation_reading.equation_translation.img_translator as decode
-import src.equation_reading.equation_extraction.render_image_from_latex as rifl
+import automates.utils.parameters as parameters
+import automates.equation_reading.equation_translation.img_translator as decode
+import automates.equation_reading.equation_extraction.render_image_from_latex as rifl
 
 # -----------------------------------------------------------------------------
 # NOTE: Must have eqdec app running. See:
@@ -13,13 +34,23 @@ import src.equation_reading.equation_extraction.render_image_from_latex as rifl
 # PATHS
 # -----------------------------------------------------------------------------
 
-# NOTE: Must be updated to your local!
-ASKE_GOOGLE_DRIVE_ROOT = '/Users/claytonm/Google Drive/ASKE-AutoMATES'
+ASKE_GOOGLE_DRIVE_DATA_ROOT = parameters.get()['AUTOMATES_DATA']
 
-MODEL_ROOT = os.path.join(ASKE_GOOGLE_DRIVE_ROOT, 'Data/Mini-SPAM/eqns/SPAM/PET')
-PETPT_ROOT = os.path.join(MODEL_ROOT, 'PETPT')
-PETASCE_ROOT = os.path.join(MODEL_ROOT, 'PETASCE')
+MODEL_ROOT_PET = os.path.join(ASKE_GOOGLE_DRIVE_DATA_ROOT, 'Mini-SPAM/eqns/SPAM/PET')
+PETPT_ROOT = os.path.join(MODEL_ROOT_PET, 'PETPT')
+PETASCE_ROOT = os.path.join(MODEL_ROOT_PET, 'PETASCE')
+PETDYN_ROOT = os.path.join(MODEL_ROOT_PET, 'PETDYN')
+PETMEY_ROOT = os.path.join(MODEL_ROOT_PET, 'PETMEY')
+PETPEN_ROOT = os.path.join(MODEL_ROOT_PET, 'PETPEN')
+PETPNO_ROOT = os.path.join(MODEL_ROOT_PET, 'PETPNO')
 
+MODEL_ROOT_COVID = os.path.join(ASKE_GOOGLE_DRIVE_DATA_ROOT, 'COVID-19')
+CHIME_ROOT = os.path.join(MODEL_ROOT_COVID, 'CHIME/eqns/2020-08-04-CHIME-docs')
+
+MODEL_ROOT_ASKEE = os.path.join(os.path.join(ASKE_GOOGLE_DRIVE_DATA_ROOT, 'ASKE-E'), 'epi-platform-wg')
+ASKEE_SEIR_7_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-7')
+ASKEE_SEIR_8_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-8')
+ASKEE_SEIR_9_ROOT = os.path.join(MODEL_ROOT_ASKEE, 'eqns/SEIR-9')
 
 # -----------------------------------------------------------------------------
 # Utilities
@@ -85,7 +116,7 @@ def batch_decode(img_src_root, dec_dst_root, verbose=False):
 
     for file in files:
 
-        if file in []:  # ['47.png']:  # HACK: skip list
+        if file in []:  # ['1.png', '2.png'] # ['47.png']:  # HACK: skip list
 
             latex_src_list.append('None')
 
@@ -128,6 +159,15 @@ def render_decoded_eqns(decoded_images_root, verbose, test_p):
                                  verbose=verbose, test_p=test_p)
 
 
+def process_model(model_root, verbose, test_p):
+    if verbose:
+        print('='*20, f'\nBatch decode equation images: {model_root}')
+    PETASCE_EQN_IMG_SRC_ROOT = os.path.join(model_root, 'manual_eqn_images')
+    PETASCE_DECODED_ROOT = os.path.join(model_root, 'decoded_images')
+    batch_decode(PETASCE_EQN_IMG_SRC_ROOT, PETASCE_DECODED_ROOT, verbose=verbose)
+    render_decoded_eqns(PETASCE_DECODED_ROOT, verbose=verbose, test_p=test_p)
+
+
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
@@ -135,14 +175,15 @@ def render_decoded_eqns(decoded_images_root, verbose, test_p):
 if __name__ == '__main__':
     # TODO: provide proper cli interface
 
-    '''
-    PETPT_EQN_IMG_SRC_ROOT = os.path.join(PETPT_ROOT, 'manual_eqn_images')
-    PETPT_DECODED_ROOT = os.path.join(PETPT_ROOT, 'decoded_images')
-    batch_decode(PETPT_EQN_IMG_SRC_ROOT, PETPT_DECODED_ROOT, verbose=True)
-    render_decoded_eqns(PETPT_DECODED_ROOT, verbose=True, test_p=False)
-    '''
-
-    PETASCE_EQN_IMG_SRC_ROOT = os.path.join(PETASCE_ROOT, 'manual_eqn_images')
-    PETASCE_DECODED_ROOT = os.path.join(PETASCE_ROOT, 'decoded_images')
-    batch_decode(PETASCE_EQN_IMG_SRC_ROOT, PETASCE_DECODED_ROOT, verbose=True)
-    render_decoded_eqns(PETASCE_DECODED_ROOT, verbose=True, test_p=False)
+    print('batch_decode_eq_images(): NEED TO UNCOMMENT')
+    # uncomment the line(s) for the model(s) you want to process
+    # process_model(PETPT_ROOT, verbose=True, test_p=False)
+    # process_model(PETASCE_ROOT, verbose=True, test_p=False)
+    # process_model(PETDYN_ROOT, verbose=True, test_p=False)
+    # process_model(PETMEY_ROOT, verbose=True, test_p=False)
+    # process_model(PETPEN_ROOT, verbose=True, test_p=False)
+    # process_model(PETPNO_ROOT, verbose=True, test_p=False)
+    # process_model(CHIME_ROOT, verbose=True, test_p=False)
+    # process_model(ASKEE_SEIR_7_ROOT, verbose=True, test_p=False)
+    # process_model(ASKEE_SEIR_8_ROOT, verbose=True, test_p=False)
+    process_model(ASKEE_SEIR_9_ROOT, verbose=True, test_p=False)
