@@ -14,7 +14,10 @@ import json
 import sys
 import csv
 
-from  automates.model_assembly.linking import build_link_graph, extract_link_tables
+from automates.model_assembly.linking import (
+    build_link_graph,
+    extract_link_tables,
+)
 
 
 def main():
@@ -24,7 +27,7 @@ def main():
 
     L = build_link_graph(grfn_with_hypotheses["grounding"])
     tables = extract_link_tables(L)
-    outpath = filepath.replace("-alignment.json", "-link-tables.csv")
+    outpath = filepath.replace("-links.json", "-link-tables.csv")
     with open(outpath, "w", newline="") as csvfile:
         link_writer = csv.writer(csvfile, dialect="excel")
 

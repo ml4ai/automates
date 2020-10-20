@@ -4,9 +4,9 @@ import os
 import numpy as np
 import networkx as nx
 
-from  automates.model_assembly.interpreter import ImperativeInterpreter
-from  automates.model_assembly.networks import GroundedFunctionNetwork
-from  automates.model_assembly.structures import GenericIdentifier
+from automates.model_assembly.interpreter import ImperativeInterpreter
+from automates.model_assembly.networks import GroundedFunctionNetwork
+from automates.model_assembly.structures import GenericIdentifier
 
 
 @pytest.mark.skip("Need to handle constants in function call")

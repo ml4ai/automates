@@ -42,6 +42,10 @@ object ExtractAndAlign {
 
   val logger = LoggerFactory.getLogger(this.getClass())
 
+
+  val config = ConfigFactory.load()
+  val pdfAlignDir = config[String]("apps.pdfalignDir")
+
   def groundMentions(
                       grfn: Value,
                       variableNames: Option[Seq[String]],
@@ -120,7 +124,6 @@ object ExtractAndAlign {
 
   def processEquations(equationsVal: Value): Seq[(String, String)] = {
     val equationDataLoader = new TokenizedLatexDataLoader
-    val pdfAlignDir = "/home/alexeeva/Repos/automates/src/apps/pdfalign"
     val equations = equationsVal.arr.map(_.str)
     // tuple pairing each chunk with the original latex equation it came from
     for {
