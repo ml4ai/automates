@@ -124,18 +124,14 @@ def main(path):
         for TF in os.listdir(tf):
             temp.append([tf, TF, PNG_dst])
        
-        i=0
         # Mapping the tasks to pool of cores along with timer of 5sec
         with ProcessPool(max_workers = multiprocessing.cpu_count() - 6) as pool:
-            i+=1
-            print(i)
             future = pool.map(run_pdflatex, temp, timeout=5)
             iterator = future.result()
             
             #file.add_done_callback(task_done)
             running = True
             while running:
-            
                 try:
                     result = next(iterator)
                 except StopIteration:
