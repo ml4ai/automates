@@ -75,7 +75,7 @@ class TestParameterSetting  extends ExtractionTest {
 
   val t6a = "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed " +
     "measurements to a standard height of 2.0 m"
-  failingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t6a: ${t6a}" taggedAs(Somebody) in {
     val desired = Seq(
       "wind speed measurements" -> Seq("2.0") //todo: attaching value and unit? - finding variables when they are spelled out? - yes.
       //todo: rule with trigger "adjust"
@@ -196,7 +196,7 @@ class TestParameterSetting  extends ExtractionTest {
 
 
   val t3b = "The density of water (ρw) is taken as 1.0 Mg m-3."
-  failingTest should s"extract the parameter setting(s) from t3b: ${t3b}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from t3b: ${t3b}" taggedAs(Somebody) in {
     val desired = Seq(
       "ρw" -> Seq("1.0")
     )

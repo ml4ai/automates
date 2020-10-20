@@ -31,8 +31,8 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
 
-  val inputDir = config[String]("apps.inputDirectory")
-  val outputDir = config[String]("apps.outputDirectory")
+  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR"
+  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR"
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
@@ -55,6 +55,37 @@ object ExtractAndExport extends App {
     val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
     //The version of mention that includes routing between text vs. comment
 //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
+
+    val defMentions = mentions.filter(_ matches "Definition")
+
+    println("Definition mentions: ")
+    for (dm <- defMentions) {
+      println("----------------")
+      println(dm.text)
+      for (arg <- dm.arguments) {
+        println("arg: " + arg._1 + ": " + dm.arguments(arg._1).head.text)
+      }
+    }
+    val paramSettingMentions = mentions.filter(_ matches "ParameterSetting")
+
+    println("Param setting mentions: ")
+    for (m <- paramSettingMentions) {
+      println("----------------")
+      println(m.text)
+      for (arg <- m.arguments) {
+        println("arg: " + arg._1 + ": " + m.arguments(arg._1).head.text)
+      }
+    }
+    val unitMentions = mentions.filter(_ matches "Unit")
+    println("Param setting mentions: ")
+    for (m <- unitMentions) {
+      println("----------------")
+      println(m.text)
+      for (arg <- m.arguments) {
+        println("arg: " + arg._1 + ": " + m.arguments(arg._1).head.text)
+      }
+    }
+
     // 4. Export to all desired formats
     exportAs.foreach { format =>
         val exporter = getExporter(format, s"$outputDir/${file.getName}")

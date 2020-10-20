@@ -202,6 +202,8 @@ class ExpansionHandler() extends LazyLogging {
         if math.abs(tok - nextTok) < maxHopLength //limit the possible length of hops (in tokens)---helps with bad parses
         if state.mentionsFor(sent, nextTok).isEmpty
         if hasValidIncomingDependencies(nextTok, incomingRelations)
+        // avoid expanding if there is a stray opening paren
+        if !sentence.words.slice(tok, nextTok).contains(")")
       } yield nextTok
       traverseOutgoingLocal(tokens ++ newTokens, newNewTokens, outgoingRelations, incomingRelations, remainingHops - 1, maxHopLength, sent, state, sentence)
     }

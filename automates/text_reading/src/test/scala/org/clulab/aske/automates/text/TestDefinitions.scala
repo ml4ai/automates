@@ -164,7 +164,7 @@ class TestDefinitions extends ExtractionTest {
 
   val t3b = "This means that kl represents a maximum supply determined by r and the resistance to water flow " +
     "(Passioura, 1983; Monteith, 1986)"
-  failingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t3b: ${t3b}" taggedAs(Somebody) in {
     val desired = Seq(
       "kl" -> Seq("maximum supply determined by r and the resistance to water flow")
     )
@@ -221,7 +221,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t9b = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
-  failingTest should s"find NO definitions from t9b: ${t9b}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t9b: ${t9b}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t9b)
     testDefinitionEvent(mentions, desired)
@@ -315,7 +315,7 @@ class TestDefinitions extends ExtractionTest {
 
     }
   val t4c = "Segment size (dr) was chosen smaller near the root and larger at greater distance, according to"
-  failingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
       val desired = Seq(
         "dr" -> Seq("Segment size") //fixme: filtered out by looksLikeAVar action
       )
@@ -381,6 +381,13 @@ class TestDefinitions extends ExtractionTest {
       "ρw" -> Seq("density of water")
     )
     val mentions = extractMentions(t1d)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t1e = "Since eS is not a linear function of temperature"
+  passingTest should s"find NO definitions from t1e: ${t1e}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t5a)
     testDefinitionEvent(mentions, desired)
   }
 

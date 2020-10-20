@@ -38,7 +38,7 @@ class TestVariables extends ExtractionTest {
 
   val t2a = "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 " +
     "(Sau et al., 2004; Thorp et al., 2010), and Kcs is the DSSAT-CSM crop coefficient. "
-  failingTest should s"extract variables from t2a: ${t2a}" taggedAs(Becky) in {
+  passingTest should s"extract variables from t2a: ${t2a}" taggedAs(Becky) in {
 
     // TODO:  Is DSSAT-CSM a variable? - Yes
     // todo(discuss)
@@ -204,7 +204,7 @@ class TestVariables extends ExtractionTest {
   }
 
   val t8b = "Finally, Ta is calculated using s and L, Cp and Tp:"
-  failingTest should s"extract variables from t8b: ${t8b}" taggedAs(Somebody) in {
+  passingTest should s"extract variables from t8b: ${t8b}" taggedAs(Somebody) in {
     val desired = Seq("Ta", "s", "L", "Cp", "Tp") //'s' is not found (or is filtered out?)
     val mentions = extractMentions(t8b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
