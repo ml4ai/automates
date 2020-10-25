@@ -1,0 +1,126 @@
+
+# TeX file to pdf converter
+
+import os, subprocess, random
+import logging
+import json
+import multiprocessing
+import time
+
+from multiprocessing import Pool, Lock, TimeoutError
+
+
+# Defining global lock 
+lock = Lock()
+
+
+# Setting up Logger - To get log files
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(name)s:%(message)s')
+
+file_handler = logging.FileHandler('tex2pdf_TimeoutError_files.log')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+
+
+def pdf2png(pdf_file, png_name, PNG_dst):
+    
+    os.chdir(PNG_dst)
+    try:
+        
+        command_args = ['convert','-background', 'white', '-alpha','remove', '-alpha', 'off',
+                        '-density', '200','-quality', '100',pdf_file, f'{PNG_dst}/{png_name}.png']
+        
+        subprocess.Popen(command_args, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        
+        '''
+        try:
+            os.remove(pdf_file)
+            os.remove(f'{pdf_file.split(".")[0]}.log')
+        except:
+            pass
+        try:
+            os.remove(f'{pdf_file.split(".")[0]}.aux')
+        except:
+            pass
+        '''
+    except:
+        print(f"OOPS!!... This {pdf_file} file couldn't convert to png.")
+
+# This function will run pdflatex
+def run_pdflatex(run_pdflatex_list):
+    
+    global lock
+    
+    #print("run_pdflatex")
+    
+    (folder, type_of_folder, texfile, PDF_dst) = run_pdflatex_list
+    os.chdir(PDF_dst)
+    command = ['pdflatex', '-interaction=nonstopmode', '-halt-on-error',os.path.join(type_of_folder,texfile)]
+    
+    try:
+        output = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        stdout, stderr = output.communicate(timeout=5)
+        
+        #print(stdout)
+        # Calling pdf2png
+        pdf2png(f'{texfile.split(".")[0]}.pdf', texfile.split(".")[0], PDF_dst)
+            
+    except TimeoutError:
+        print(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
+        
+        
+
+def main(path):
+    
+    global lock
+        
+    # Folder path to TeX files
+    TexFolderPath = os.path.join(path, "tex_files")
+    #folder="/projects/temporary/automates/er/gaurav/1402_results/tex_files/1402.0505"
+    FF = []
+    for number in range(500):
+        FF.append(f'1402.3{number:03d}')
+    
+    for folder in FF:#os.listdir(TexFolderPath):
+        
+        if os.path.exists(os.path.join(TexFolderPath, folder)):
+            print(folder)
+            #print(folder)
+            # make results PNG directories
+            #pdf_dst_root = os.path.join(path, f"latex_images/{folder}")
+            pdf_dst_root = os.path.join(path, f"temp/{folder}")
+            PDF_Large = os.path.join(pdf_dst_root, "Large_eqns")
+            PDF_Small = os.path.join(pdf_dst_root, "Small_eqns")
+            for F in [pdf_dst_root, PDF_Large, PDF_Small]:
+                if not os.path.exists(F):
+                    subprocess.call(['mkdir', F])
+
+            # Paths to Large and Small TeX files
+            #Large_tex_files = os.path.join(TexFolderPath, f"{folder}/Large_eqns")
+            #Small_tex_files = os.path.join(TexFolderPath, f"{folder}/Small_eqns")
+            Large_tex_files = os.path.join(os.path.join(TexFolderPath, folder), "Large_eqns")
+            Small_tex_files = os.path.join(os.path.join(TexFolderPath, folder), "Small_eqns")
+
+            for type_of_folder in [Large_tex_files, Small_tex_files]: 
+                PDF_dst = PDF_Large if type_of_folder == Large_tex_files else PDF_Small
+            
+                # array to store pairs of [type_of_folder, file in type_of_folder] Will be used as arguments in pool.map            
+                temp = []
+                for texfile in os.listdir(type_of_folder):
+                    temp.append([folder, type_of_folder, texfile, PDF_dst])
+                    
+                with Pool(multiprocessing.cpu_count()-6) as pool:
+                    result = pool.map(run_pdflatex, temp)
+                    
+if __name__ == "__main__":
+    
+    #for dir in ["1402", "1403", "1404", "1405"]:
+    dir = "1402"
+    print(dir)
+    path = f"/projects/temporary/automates/er/gaurav/{dir}_results"
+    main(path)
