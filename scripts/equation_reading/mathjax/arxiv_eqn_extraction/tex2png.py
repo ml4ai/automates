@@ -36,18 +36,16 @@ def pdf2png(pdf_file, png_name, PNG_dst):
                         '-density', '200','-quality', '100',pdf_file, f'{PNG_dst}/{png_name}.png']
         
         subprocess.Popen(command_args, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        
-        '''
-        try:
-            os.remove(pdf_file)
-            os.remove(f'{pdf_file.split(".")[0]}.log')
-        except:
-            pass
-        try:
+
+        # Removing pdf, log and aux file if exist
+
+        os.remove(pdf_file)
+        os.remove(f'{pdf_file.split(".")[0]}.log')      
+        try:  
             os.remove(f'{pdf_file.split(".")[0]}.aux')
         except:
-            pass
-        '''
+            print(f"{pdf_file.split(".")[0]}.aux doesn't exists.")
+        
     except:
         print(f"OOPS!!... This {pdf_file} file couldn't convert to png.")
 
@@ -56,9 +54,13 @@ def run_pdflatex(run_pdflatex_list):
     
     global lock
     
-    #print("run_pdflatex")
-    
     (folder, type_of_folder, texfile, PDF_dst) = run_pdflatex_list
+    
+    lock.acquire()
+    print(" ========== Currently running ==========")
+    print(f"{folder}:{type_of_folder}:{texfile}")
+    lock.release()
+    
     os.chdir(PDF_dst)
     command = ['pdflatex', '-interaction=nonstopmode', '-halt-on-error',os.path.join(type_of_folder,texfile)]
     
@@ -66,7 +68,11 @@ def run_pdflatex(run_pdflatex_list):
         output = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = output.communicate(timeout=5)
         
-        #print(stdout)
+        lock.acquire()
+        print(" ============= " * 25)
+        print(stdout)
+        lock.release()
+        
         # Calling pdf2png
         pdf2png(f'{texfile.split(".")[0]}.pdf', texfile.split(".")[0], PDF_dst)
             
@@ -81,19 +87,10 @@ def main(path):
         
     # Folder path to TeX files
     TexFolderPath = os.path.join(path, "tex_files")
-    #folder="/projects/temporary/automates/er/gaurav/1402_results/tex_files/1402.0505"
-    FF = []
-    for number in range(500):
-        FF.append(f'1402.3{number:03d}')
-    
-    for folder in FF:#os.listdir(TexFolderPath):
-        
-        if os.path.exists(os.path.join(TexFolderPath, folder)):
-            print(folder)
-            #print(folder)
+    for folder in os.listdir(TexFolderPath):
+                
             # make results PNG directories
-            #pdf_dst_root = os.path.join(path, f"latex_images/{folder}")
-            pdf_dst_root = os.path.join(path, f"temp/{folder}")
+            pdf_dst_root = os.path.join(path, f"latex_images/{folder}")
             PDF_Large = os.path.join(pdf_dst_root, "Large_eqns")
             PDF_Small = os.path.join(pdf_dst_root, "Small_eqns")
             for F in [pdf_dst_root, PDF_Large, PDF_Small]:
@@ -101,10 +98,8 @@ def main(path):
                     subprocess.call(['mkdir', F])
 
             # Paths to Large and Small TeX files
-            #Large_tex_files = os.path.join(TexFolderPath, f"{folder}/Large_eqns")
-            #Small_tex_files = os.path.join(TexFolderPath, f"{folder}/Small_eqns")
-            Large_tex_files = os.path.join(os.path.join(TexFolderPath, folder), "Large_eqns")
-            Small_tex_files = os.path.join(os.path.join(TexFolderPath, folder), "Small_eqns")
+            Large_tex_files = os.path.join(TexFolderPath, f"{folder}/Large_eqns")
+            Small_tex_files = os.path.join(TexFolderPath, f"{folder}/Small_eqns")
 
             for type_of_folder in [Large_tex_files, Small_tex_files]: 
                 PDF_dst = PDF_Large if type_of_folder == Large_tex_files else PDF_Small
@@ -119,8 +114,7 @@ def main(path):
                     
 if __name__ == "__main__":
     
-    #for dir in ["1402", "1403", "1404", "1405"]:
-    dir = "1402"
-    print(dir)
-    path = f"/projects/temporary/automates/er/gaurav/{dir}_results"
-    main(path)
+    for dir in ["1402", "1403", "1404", "1405"]:
+        print(dir)
+        path = f"/projects/temporary/automates/er/gaurav/{dir}_results"
+        main(path)
