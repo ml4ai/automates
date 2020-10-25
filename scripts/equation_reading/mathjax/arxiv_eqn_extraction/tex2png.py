@@ -13,21 +13,21 @@ from multiprocessing import Pool, Lock, TimeoutError
 # Defining global lock 
 lock = Lock()
 
-
 # Setting up Logger - To get log files
+Log_Format = '%(levelname)s:%(message)s'
+
+logging.basicConfig(filename = 'tex2png.log', 
+                    level = logging.DEBUG, 
+                    format = Log_Format, 
+                    filemode = 'w')
+
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(name)s:%(message)s')
-
-file_handler = logging.FileHandler('tex2pdf_TimeoutError_files.log')
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
 
 
+# Function to convert PDFs to PNGs
 def pdf2png(pdf_file, png_name, PNG_dst):
+    
+    global lock 
     
     os.chdir(PNG_dst)
     try:
@@ -44,11 +44,16 @@ def pdf2png(pdf_file, png_name, PNG_dst):
         try:  
             os.remove(f'{pdf_file.split(".")[0]}.aux')
         except:
+            lock.acquire()              
+            
             print(f"{pdf_file.split(".")[0]}.aux doesn't exists.")
-        
+            lock.release()
+                  
     except:
+        lock.acquire()
         print(f"OOPS!!... This {pdf_file} file couldn't convert to png.")
-
+        lock.release()
+                  
 # This function will run pdflatex
 def run_pdflatex(run_pdflatex_list):
     
@@ -77,8 +82,9 @@ def run_pdflatex(run_pdflatex_list):
         pdf2png(f'{texfile.split(".")[0]}.pdf', texfile.split(".")[0], PDF_dst)
             
     except TimeoutError:
+        lock.acquire()
         print(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
-        
+        lock.release()
         
 
 def main(path):
