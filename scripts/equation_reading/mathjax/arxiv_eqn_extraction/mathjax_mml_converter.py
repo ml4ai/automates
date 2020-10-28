@@ -131,7 +131,7 @@ if __name__ == "__main__":
     # Paths
     root = "/projects/temporary/automates/er/gaurav/results_file"
     # Path to directory containing correct latex eqns
-    folder_correct_latex_eqns = os.path.join(root, "latex_correct_equations")
+    folder_correct_latex_eqns = os.path.join(root, "latex_images")
     # Path to directory contain MathML eqns
     mml_dir = os.path.join(root, "Mathjax_mml")
     
