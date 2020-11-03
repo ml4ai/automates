@@ -5,7 +5,8 @@ from functools import singledispatch, reduce
 from collections import defaultdict
 
 from cast_control_flow_utils import (
-    visit_control_flow_container
+    visit_control_flow_container,
+    for_loop_to_while
 )
 
 from cast_utils import (
@@ -66,9 +67,9 @@ class CAST2GrFN(ast.NodeVisitor):
         # Use our python AST visitor to fill out AIR data
         self.visit(self.cast)
 
-        # from pprint import pprint
-        # pprint(self.containers)
-        # pprint(self.variables)
+        from pprint import pprint
+        pprint(self.containers)
+        pprint(self.variables)
 
         C, V, T, D = dict(), dict(), dict(), dict()
 
@@ -194,11 +195,20 @@ class CAST2GrFN(ast.NodeVisitor):
         )
 
     def visit_For(self, node: ast.For):
-        # TODO: Implement this function
-        return NotImplemented
+        # Return tuple with first position as new variable declaration
+        # functions before loop and second position is the while loop ast
+        # node
+        while_loop_translation = for_loop_to_while(node, self)
+
+        while_loop_function = visit_control_flow_container(
+            while_loop_translation[1],
+            self,
+            ContainerType.WHILE
+        )
+
+        return while_loop_translation[0] + while_loop_function
 
     def visit_While(self, node: ast.While):
-        # TODO: Implement this function
         return visit_control_flow_container(
             node,
             self,
@@ -401,6 +411,26 @@ class CAST2GrFN(ast.NodeVisitor):
             + reduce(lambda c1, c2: c1 + c2,  [c.var_names for c in comparators])
 
         return ExprInfo(var_names, input_vars, lambda_function)
+
+    def visit_Subscript(self, node: ast.Subscript):
+        value_translated = self.visit(node.value)
+        slice_translated = self.visit(node.slice)
+
+        lambda_expr = f"{value_translated.lambda_expr}[{slice_translated.lambda_expr}]"
+
+        return ExprInfo(
+            value_translated.var_names + slice_translated.var_names, 
+            value_translated.var_identifiers_used + slice_translated.var_identifiers_used, 
+            lambda_expr)
+
+    def visit_Index(self, node: ast.Index):
+        return self.visit(node.value)
+
+    def visit_Slice(self, node: ast.Slice):
+        return None
+
+    def visit_ExtSlice(self, node: ast.ExtSlice):
+        return None
 
     # Expression leaf nodes
     def visit_Name(self, node: ast.Name):

@@ -10,7 +10,6 @@ from cast_utils import (
     generate_decision_name, 
     generate_decision_lambda,
     generate_lambda,
-    create_or_update_variable,
     generate_variable_cond_name,
     create_variable,
     op_to_lambda,
@@ -177,15 +176,13 @@ def _(node: ast.For, cast_visitor, container_name, cur_cf_type):
     return handle_cf_finished_loop(node, cast_visitor, container_name, cur_cf_type)
 
 def keep_most_updated_vars(cast_visitor, container_name):
-    max_updated = defaultdict(lambda: (-1, "", ""))
+    max_updated = {}
     for updated in cast_visitor.containers[container_name]["updated"]:
         (identifier, name, ver) = updated.rsplit("::", 2)
-        if max_updated[name][0] < int(ver):
+        if not name in max_updated or max_updated[name][0] < int(ver):
             max_updated[name] = (int(ver), identifier, name)
-
+        
     cast_visitor.containers[container_name]["updated"] = [x[1] + "::" + x[2] + "::" + str(x[0]) for x in max_updated.values()]
-
-
 
 def visit_control_flow_container(node, cast_visitor, container_type):
     # Determine the current control flow # we are in within the parent container and
@@ -282,3 +279,63 @@ def visit_control_flow_container(node, cast_visitor, container_type):
     return [generate_function_object(container_name, "container", 
         input_var_ids=cast_visitor.containers[container_name]["arguments"], 
         updated_var_ids=cast_visitor.containers[container_name]["updated"])]
+
+
+def for_loop_to_while(node, cast_visitor):
+    for_loop_name = "FOR_" + str(cast_visitor.cur_control_flow) + "_" 
+
+    # Create variable holding list
+    extracted_list_name_str = for_loop_name + "list"
+    iterated_list_assign = ast.Assign(
+        targets=[ast.Name(extracted_list_name_str, ctx=ast.Store())], 
+        value=node.iter)
+    # Create iterator var
+    iterator_var_name_str = for_loop_name + "i"
+    iterator_var_name = ast.Name(
+        id=iterator_var_name_str, 
+        ctx=ast.Store())
+    iterator_var_assign = ast.Assign(
+        targets=[iterator_var_name], 
+        value=ast.Constant(value=1))
+
+    # These are done before the loop, so visit them
+    declaration_functions = cast_visitor.visit_node_list([iterated_list_assign, 
+        iterator_var_assign])
+
+    # Place statement at start of loop body to retrieve next item from list
+    extracted_list_name_load = ast.Name(extracted_list_name_str, ctx=ast.Load())
+    node.body.insert(0, 
+        ast.Assign(
+            targets=[node.target], 
+            value=ast.Subscript(
+                value=extracted_list_name_load,
+                slice=ast.Index(value=iterator_var_name),
+                ctx=ast.Load()
+            )))
+
+    # Append iterator increment to end of list
+    node.body.append(
+        ast.AugAssign(
+            iterator_var_name, 
+            ast.Add(), 
+            ast.Constant(value=1)))
+
+    # Create new while loop node with transformed values from For loop
+    transformed_while_test = ast.Compare(
+        left=ast.Name(
+            id=iterator_var_name_str, 
+            ctx=ast.Load()),
+        ops=[ast.Lt()],
+        comparators=[
+            ast.Call(
+                func=ast.Name(id="len", ctx=ast.Load()),
+                args=[extracted_list_name_load]
+            )])
+
+    return (declaration_functions, 
+        ast.While(
+            transformed_while_test,
+            node.body,
+            node.orelse
+    ))
+        
