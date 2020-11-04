@@ -26,7 +26,7 @@ import java.util.UUID.randomUUID
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-case class alignmentArguments(json: Value, variableNames: Option[Seq[String]], variableShortNames: Option[Seq[String]], commentDefinitionMentions: Option[Seq[Mention]], definitionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[Map[String, Seq[sparqlResult]]])
+case class alignmentArguments(json: Value, variableNames: Option[Seq[String]], variableShortNames: Option[Seq[String]], commentDefinitionMentions: Option[Seq[Mention]], definitionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]])
 
 object ExtractAndAlign {
   val COMMENT = "comment"
@@ -60,7 +60,7 @@ object ExtractAndAlign {
                       unitMentions: Option[Seq[Mention]],
                       commentDefinitionMentions: Option[Seq[Mention]],
                       equationChunksAndSource: Option[Seq[(String, String)]],
-                      SVOgroundings: Option[Map[String, Seq[sparqlResult]]],
+                      SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]],
                       groundToSVO: Boolean,
                       maxSVOgroundingsPerVar: Int,
                       alignmentHandler: AlignmentHandler,
@@ -83,6 +83,7 @@ object ExtractAndAlign {
       equationChunksAndSource,
       commentDefinitionMentions,
       variableShortNames,
+      SVOgroundings,
       numAlignments,
       numAlignmentsSrcToComment,
       scoreThreshold
@@ -96,10 +97,14 @@ object ExtractAndAlign {
 
 //    for (le <- linkElements(TEXT_VAR)) println(le)
     linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
-    for (le <- linkElements(TEXT_VAR)) println(le)
 
+    println("REACHED HERE")
+    linkElements(TEXT_VAR) = updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
+
+        for (le <- linkElements(TEXT_VAR)) println("HERE: " + le)
+//
 //    for (link <- linkElements) println("link: " + link)
-    println("LINK ELEMENTS: ", linkElements.keys)
+//    println("LINK ELEMENTS: ", linkElements.keys)
     for (le <- linkElements.keys) {
 //      for (item <- linkElements(le)) {
 //
@@ -169,13 +174,13 @@ object ExtractAndAlign {
 
 
     for (topK <- textToUnitAlignments) {
-      println(topK.head.src + " " + topK.head.dst)
-      for (al <- topK) {
-        println("text var link el: " + textVarLinkElements(al.src))
-        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
-        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
-
-      }
+//      println(topK.head.src + " " + topK.head.dst)
+//      for (al <- topK) {
+//        println("text var link el: " + textVarLinkElements(al.src))
+//        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
+//        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
+//
+//      }
     }
 
     val updatedTextVars = if (textToUnitAlignments.length > 0) {
@@ -185,6 +190,40 @@ object ExtractAndAlign {
         alignment <- topK
         textVarLinkElement = textVarLinkElements(alignment.src)
         unit = if (hasArg(unitMentions.get(alignment.dst), "unit")) {
+          unitMentions.get(alignment.dst).arguments("unit").head.text
+        } else "None"
+
+
+        score = alignment.score
+      } yield updateTextVariable(textVarLinkElement, unit)
+    } else textVarLinkElements
+
+
+
+    updatedTextVars
+
+  }
+
+  def updateTextVarsWithSVO(textVarLinkElements: Seq[String], SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]], textToSVOAlignments: Seq[Seq[Alignment]]): Seq[String] = {
+
+
+    for (topK <- textToSVOAlignments) {
+      //      println(topK.head.src + " " + topK.head.dst)
+      //      for (al <- topK) {
+      //        println("text var link el: " + textVarLinkElements(al.src))
+      //        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
+      //        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
+      //
+      //      }
+    }
+
+    val updatedTextVars = if (textToSVOAlignments.length > 0) {
+
+      for {
+        topK <- textToSVOAlignments
+        alignment <- topK
+        textVarLinkElement = textVarLinkElements(alignment.src)
+        svoGrounding = if (SVOgroundings) {
           unitMentions.get(alignment.dst).arguments("unit").head.text
         } else "None"
 
@@ -248,6 +287,7 @@ object ExtractAndAlign {
         val value = splitElStr(8)
         val valueLeast = splitElStr(9)
         val valueMost = splitElStr(10)
+//        val
         val paramSetting = ujson.Obj(
           "value" -> value,
           "valueLeast" -> valueLeast,
@@ -390,6 +430,7 @@ object ExtractAndAlign {
     equationChunksAndSource: Option[Seq[(String, String)]],
     commentDefinitionMentions: Option[Seq[Mention]],
     variableShortNames: Option[Seq[String]],
+    SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]],
     numAlignments: Option[Int],
     numAlignmentsSrcToComment: Option[Int],
     scoreThreshold: Double): Map[String, Seq[Seq[Alignment]]] = {
@@ -410,6 +451,15 @@ object ExtractAndAlign {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), unitMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(TEXT_TO_UNIT) = Aligner.topKBySrc(varNameAlignments, 1)
+    }
+
+    /** Align text variable to unit variable
+      * this should take care of unit relaions like this: "T = daily mean air temperature [°C]"
+      */
+    if (textDefinitionMentions.isDefined && SVOgroundings.isDefined) {
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), SVOgroundings.get.map(_._1))
+      // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
+      alignments(TEXT_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
     }
 
     /** Align text definition to unit variable

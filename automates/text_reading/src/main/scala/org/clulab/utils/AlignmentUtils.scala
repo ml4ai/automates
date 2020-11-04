@@ -65,12 +65,12 @@ object AlignmentJsonUtils {
         .filter(hasUnitArg))
     } else None
 
-    println("Unit mentions should be printed here: ")
-    for (um <- unitMentions.get) {
-      println(um.text)
-      println(um.arguments("unit").head.text)
-      println(um.arguments("variable").head.text)
-    }
+//    println("Unit mentions should be printed here: ")
+//    for (um <- unitMentions.get) {
+//      println(um.text)
+//      println(um.arguments("unit").head.text)
+//      println(um.arguments("variable").head.text)
+//    }
 
 
     // get the equations
@@ -106,7 +106,7 @@ object AlignmentJsonUtils {
     //deserialize svo groundings if a) grounding svo and b) if svo groundings have been provided in the input
     val svoGroundings = if (groundToSVO) {
       if (jsonKeys.contains("SVOgroundings")) {
-        Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).toMap)
+        Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).map(item => (item._1, item._2)))
       } else None
 
     } else None
