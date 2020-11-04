@@ -20,11 +20,11 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
     vars:
-      priority: 4
+      priority: 5
 
   - import: "org/clulab/aske_automates/grammars/units.yml"
     vars:
-      priority: 5
+      priority: 4
 
   - import: "org/clulab/aske_automates/grammars/unitRels.yml"
     vars:

@@ -72,3 +72,12 @@ rules:
       variable: Variable = <amod
       unit: Unit = dep
 
+  - name: var_of_value_unit
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "We expect the time T of 5-10 days"
+    pattern: |
+      @variable:Variable [word="of"] [entity="NUMBER"] @unit: Unit
+
+

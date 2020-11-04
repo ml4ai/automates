@@ -135,3 +135,11 @@ rules:
       trigger = [word=/(?i)adjust/]
       variable:Concept = dobj
       value:Value = nmod_to nmod_of nummod
+
+  - name: of_param_setting
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    example: "We expect the time T of 5-10 days"
+    pattern: |
+      @variable:Variable [word="of"] @value:Value (?=@unit:Unit)

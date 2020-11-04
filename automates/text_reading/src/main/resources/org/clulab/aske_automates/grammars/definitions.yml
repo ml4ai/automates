@@ -51,6 +51,9 @@ rules:
     action: ${action}
     pattern: |
       (?<= [word = /a|the|,/])? (?<definition> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Variable #(?! [chunk = I-NP])
+#      |
+#      (?<definition> [word = /.*/]) (?<variable> [entity = "B-GreekLetter"])
+
       #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
 
   - name: var_definition_appos_bidir
@@ -165,7 +168,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      definition:Concept = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition:Concept = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = "," & !word = "which"]
       variable:Variable = <cop [!entity = /NUMBER|B-unit/ ]
 
   - name: comma_appos_var
@@ -175,28 +178,28 @@ rules:
     action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      @definition: Concept "," @variable:Variable (?! [lemma = "be"])
+      @definition: Concept "," @variable:Variable (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      @definition: Concept "(" @variable:Variable ")" (?! [lemma = "be"])
+      @definition: Concept "(" @variable:Variable ")" (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      @definition: Concept "," "or" @variable:Variable (?! [lemma = "be"])
+      @definition: Concept "," "or" @variable:Variable (?! [lemma = "be"]) (?! [chunk = "I-NP"])
 
-  - name: def_comma_var_appos
-    label: Definition
-    priority: ${priority}
-    type: dependency
-    example: "Susceptible individuals, S, are infected by infected individuals, i,"
-    action: ${action}
-    pattern: |
-      trigger = [lemma=/,/]
-      variable:Variable = <punct >appos [!entity="B-unit"]
-      definition: Concept = <punct
+#  - name: def_comma_var_appos
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "Susceptible individuals, S, are infected by infected individuals, i,"
+#    action: ${action}
+#    pattern: |
+#      trigger = [lemma=/,/]
+#      variable:Variable = <punct >appos [!entity="B-unit"]
+#      definition: Concept = <punct
 
   - name: def_is_given_by
     label: Definition

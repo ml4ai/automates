@@ -31,8 +31,8 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
 
-  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR"
-  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR"
+  val inputDir = "/home/alexeeva/Repos/automates/automates/text_reading/input/SIR/text"
+  val outputDir = "/home"
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
