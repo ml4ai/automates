@@ -64,8 +64,10 @@ class VariableIdentifier(GenericIdentifier):
 
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):
-        (_, name, idx) = data.split("::")
-        return cls(con.namespace, con.con_name, name, int(idx))
+        # TODO remove module and scope?
+        (_, ns, sc, name, idx) = data.split("::")
+        # return cls(con.namespace, con.con_name, name, int(idx))
+        return cls(ns, sc, name, int(idx))
 
     @classmethod
     def from_str(cls, var_id: str):
@@ -198,6 +200,11 @@ class GenericContainer(ABC):
         else:
             raise ValueError(f"Unrecognized container type value: {con_type}")
 
+    def get_input_pass_node_info(self, inputs):
+        in_var_names = set([n.identifier.var_name for n in inputs])
+        in_var_str = ",".join(in_var_names)
+        pass_func_str =  f"lambda {in_var_str}:({in_var_str})"
+        return (pass_func_str, self.arguments)
 
 class CondContainer(GenericContainer):
     def __init__(self, data: dict):
@@ -234,6 +241,12 @@ class LoopContainer(GenericContainer):
         base_str = super().__str__()
         return f"<LOOP Con> -- {self.identifier.con_name}\n{base_str}\n"
 
+    def get_input_pass_node_info(self, inputs):
+        in_var_names = set([n.identifier.var_name for n in inputs])
+        in_var_str = ",".join(in_var_names)
+        pass_func_str =  f"lambda {in_var_str}:({in_var_str})"
+        output_ids = [id for id in self.arguments if not id in self.updated]
+        return (pass_func_str, output_ids)
 
 @unique
 class VarType(Enum):
@@ -339,6 +352,7 @@ class LambdaType(Enum):
     CONDITION = auto()
     DECISION = auto()
     PASS = auto()
+    LOOP = auto()
 
     def __str__(self):
         return str(self.name)

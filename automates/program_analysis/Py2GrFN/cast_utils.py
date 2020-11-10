@@ -102,6 +102,7 @@ def create_container_object(containers, container_name, container_type):
     if not container_name in containers:
         containers[container_name] = defaultdict(lambda: list())
         containers[container_name]["arguments"] = set()
+        containers[container_name]["container_call_args"] = set()
         containers[container_name]["name"] = container_name
         containers[container_name]["type"] = container_type
     return containers

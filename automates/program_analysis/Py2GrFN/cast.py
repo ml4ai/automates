@@ -4,12 +4,12 @@ import re
 from functools import singledispatch, reduce
 from collections import defaultdict
 
-from cast_control_flow_utils import (
+from .cast_control_flow_utils import (
     visit_control_flow_container,
     for_loop_to_while
 )
 
-from cast_utils import (
+from .cast_utils import (
     ContainerType,
     generate_container_name,
     generate_function_name, 
@@ -91,8 +91,15 @@ class CAST2GrFN(ast.NodeVisitor):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        # TODO Identify starting container?
-        con_id = GenericIdentifier.from_str(list(self.containers.keys())[0])
+        # Use funbction container in "initial" named "main" as the primary
+        # container. If this does not exist, use the last defined function
+        # container in the list, as this will be the furthest down defined
+        # function and will be a good guess to the starting point.
+        if "@container::initial::@global::main" in self.containers:
+            con_id = GenericIdentifier.from_str("@container::initial::@global::main")
+        else:
+            con = list(filter(lambda c: c["type"] == "function", self.containers.values()))[-1]
+            con_id = GenericIdentifier.from_str(con["name"])
         grfn = GroundedFunctionNetwork.from_AIR(
             con_id, C, V, T
         )
