@@ -39,7 +39,7 @@ def pdf2png(pdf_file, png_name, PNG_dst):
 
         # Removing pdf, log and aux file if exist
 
-        os.remove(pdf_file)
+        #os.remove(pdf_file)
         os.remove(f'{pdf_file.split(".")[0]}.log')      
         try:  
             os.remove(f'{pdf_file.split(".")[0]}.aux')
