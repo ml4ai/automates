@@ -460,13 +460,13 @@ class GroundedFunctionNetwork(nx.DiGraph):
             con: GenericContainer,
             inputs: Iterable[VariableNode],
             parent: GrFNSubgraph = None,
+            live_variables: dict = {}
         ) -> Iterable[VariableNode]:
             con_name = con.identifier
             if con_name not in Occs:
                 Occs[con_name] = 0
 
             con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name])
-            live_variables = dict()
             input_pass_func = None
             if len(inputs) > 0:
                 (pass_func_str, output_node_ids) = con.get_input_pass_node_info(inputs)
@@ -478,6 +478,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
                     {id: node for id, node in zip(output_node_ids, out_nodes)}
                 )
             else:
+                pass_func_str = "lambda : None"
+                input_pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
                 live_variables.update(
                     {id: add_variable_node(id) for id in con.arguments}
                 )
@@ -492,26 +494,32 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if parent is not None:
                 subgraphs.add_edge(parent, con_subgraph)
 
-            if len(inputs) > 0:
-                # Do this only if this is not the starting container
-                returned_vars = [live_variables[id] for id in con.returns]
-                update_vars = [live_variables[id] for id in con.updated]
-                output_vars = returned_vars + update_vars
+            # if len(inputs) > 0:
+            # Do this only if this is not the starting container
+            returned_vars = [live_variables[id] for id in con.returns]
+            update_vars = [live_variables[id] for id in con.updated]
+            output_vars = returned_vars + update_vars
 
-                # Add edge from variables updated in a loop to its pass function
-                if type(con) == LoopContainer and input_pass_func:
-                    updated_in_loop = [live_variables[id] for id in con.arguments \
-                        if id in con.updated]
-                    add_hyper_edge(updated_in_loop, input_pass_func, [],
-                        input_style={"style": "dashed", "overlap": "false"})
+            # Add edge from variables updated in a loop to its pass function
+            if type(con) == LoopContainer and input_pass_func:
+                updated_in_loop = [live_variables[id] for id in con.arguments \
+                    if id in con.updated]
+                add_hyper_edge(updated_in_loop, input_pass_func, [],
+                    input_style={"style": "dashed", "overlap": "false"})
 
-                out_var_names = [n.identifier.var_name for n in output_vars]
-                out_var_str = ",".join(out_var_names)
-                pass_func_str = f"lambda {out_var_str}:({out_var_str})"
-                pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
-                con_subgraph.nodes.append(input_pass_func)
+            out_var_names = [n.identifier.var_name for n in output_vars]
+            out_var_str = ",".join(out_var_names)
+            pass_func_str = f"lambda {out_var_str}:({out_var_str})"
+            pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
+            con_subgraph.nodes.append(input_pass_func)
 
-                return (output_vars, pass_func)
+            return (output_vars, pass_func)
+            # else:
+            #     pass_func_str = "lambda : None"
+            #     pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
+            #     con_subgraph.nodes.append(input_pass_func)
+
+            #     return ([], pass_func)
 
         @singledispatch
         def translate_stmt(
@@ -538,7 +546,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
                       if not (type(new_con) == LoopContainer and id in new_con.updated)]
 
             (con_outputs, pass_func) = translate_container(
-                new_con, inputs, subgraph
+                new_con, inputs, subgraph, live_variables
             )
             Occs[stmt.call_id] += 1
             out_nodes = [add_variable_node(var) for var in stmt.outputs]
@@ -554,8 +562,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
+            print(stmt.inputs)
+            print(live_variables)
             inputs = [live_variables[id] for id in stmt.inputs]
-
             out_nodes = [add_variable_node(id) for id in stmt.outputs]
             func = add_lambda_node(stmt.type, stmt.func_str)
 
@@ -649,21 +658,21 @@ class GroundedFunctionNetwork(nx.DiGraph):
             )
 
             input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
-            container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+            container_subgraph.add_subgraph(list(input_var_nodes))
 
             for new_subgraph in self.subgraphs.successors(subgraph):
                 populate_subgraph(new_subgraph, container_subgraph)
 
             for func_set in self.function_sets:
                 func_set = list(func_set.intersection(set(subgraph.nodes)))
-                container_subgraph.add_subgraph(func_set, rank="same")
+                container_subgraph.add_subgraph(func_set)
                 output_var_nodes = list()
                 for func_node in func_set:
                     succs = list(self.successors(func_node))
                     output_var_nodes.extend(succs)
                 output_var_nodes = set(output_var_nodes) - output_nodes
                 var_nodes = output_var_nodes.intersection(subgraph.nodes)
-                container_subgraph.add_subgraph(list(var_nodes), rank="same")
+                container_subgraph.add_subgraph(list(var_nodes))
 
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)

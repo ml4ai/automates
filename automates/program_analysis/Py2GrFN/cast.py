@@ -20,6 +20,7 @@ from .cast_utils import (
     generate_variable_object,
     create_container_object,
     generate_function_object,
+    generate_assign_function_name,
     flatten
 )
 
@@ -160,14 +161,16 @@ class CAST2GrFN(ast.NodeVisitor):
         self.visit(node.args)
 
         # Translate child nodes
-        # body = reduce(lambda l1, l2: l1 + [l2], self.visit_node_list(node.body), [])
-        body = self.visit_node_list(node.body)
-        # self.containers[self.cur_containers[-1]]["body"].extend(body)
+        self.visit_node_list(node.body)
 
         # Pop current container off of scope
         self.cur_containers = self.cur_containers[:-1]
         # Pop the current functions scope off
         self.cur_scope = self.cur_scope[:-1]
+
+        # Clear variable table
+        # TODO KEEP GLOBALS / Things above this functions scope
+        self.variable_table = defaultdict(lambda: { 'version' : -1 })
 
     def visit_arguments(self, node: ast.arguments):
         # TODO handle defaults for positional arguments? (in node.defaults)
@@ -246,33 +249,32 @@ class CAST2GrFN(ast.NodeVisitor):
     #
     # ==========================================================================
 
-    def visit_Assign(self, node: ast.Assign):        
+    def visit_Assign(self, node: ast.Assign):     
         value_translated = self.visit(node.value)
 
         # Generate outputs post value translation in order to update the version
         # of the output variables.
         targets_translated_list = self.visit_node_list(node.targets)
-        var_names_assigned = reduce(lambda t1, t2: t1 + t2.var_names, targets_translated_list, [])
-        for name in var_names_assigned:
-            create_or_update_variable(name, self.cur_scope, self.cur_module, self.variable_table)  
-        outputs = [name for var in node.targets for name in self.visit(var).var_identifiers_used]
-
-        for output in outputs:
+        for target in targets_translated_list:
+            print(target.var_names)
+            var_name_assigned = target.var_names[0]
+            target_identifiers_used = target.var_identifiers_used
+            output = create_or_update_variable(var_name_assigned, self.cur_scope, self.cur_module, self.variable_table)
             self.variables[output] = generate_variable_object(output)
 
-        functions = [{
-            "function": {
-                "name": generate_function_name(node, self.cur_module, self.cur_scope, 
-                    self.variable_table),
-                "type": "lambda",
-                "code": "lambda " + ",".join(value_translated.var_names) \
-                    + ":" + value_translated.lambda_expr,
-            },
-            "input": value_translated.var_identifiers_used,
-            "output": outputs,
-            "updated": list()
-        }]
-        self.containers[self.cur_containers[-1]]["body"].extend(functions)
+            functions = [{
+                "function": {
+                    "name": generate_assign_function_name(var_name_assigned, \
+                        self.cur_module, self.cur_scope, self.variable_table),
+                    "type": "lambda",
+                    "code": "lambda " + ",".join(set(value_translated.var_names)) \
+                        + ":" + value_translated.lambda_expr,
+                },
+                "input": value_translated.var_identifiers_used + target_identifiers_used,
+                "output": [output],
+                "updated": list()
+            }]
+            self.containers[self.cur_containers[-1]]["body"].extend(functions)   
 
     def visit_AnnAssign(self, node: ast.AnnAssign):
         output = self.visit(node.target)
@@ -281,25 +283,22 @@ class CAST2GrFN(ast.NodeVisitor):
 
     def visit_AugAssign(self, node: ast.AugAssign):
         value_translated = self.visit(node.value)
-        
         target_translated = self.visit(node.target)
         # There can only be one target, so select only var name from 
         # target result to update for assign
         inputted_aug_var = target_translated.var_identifiers_used[0]
-        output = create_or_update_variable(target_translated.var_names[0], self.cur_scope, self.cur_module, 
-            self.variable_table)  
-        
+        output = create_or_update_variable(target_translated.var_names[0], self.cur_scope, \
+            self.cur_module, self.variable_table)  
         # Add the new variable id to var table
         self.variables[output] = generate_variable_object(output)
 
         lambda_expr_str = f"({target_translated.var_names[0]}){op_to_lambda(node.op)}({value_translated.lambda_expr})"
-
         functions = [{
             "function": {
                 "name": generate_function_name(node, self.cur_module, self.cur_scope, 
                     self.variable_table),
                 "type": "lambda",
-                "code": "lambda " + ",".join(target_translated.var_names) \
+                "code": "lambda " + ",".join(set(target_translated.var_names)) \
                     + ":" + lambda_expr_str,
             },
             "input": value_translated.var_identifiers_used + [inputted_aug_var],
@@ -321,7 +320,7 @@ class CAST2GrFN(ast.NodeVisitor):
                     "name": generate_function_name(node, self.cur_module, self.cur_scope, 
                         self.variable_table),
                     "type": "lambda",
-                    "code": "lambda " + ",".join(translated.var_names) + ":" + translated.lambda_expr,
+                    "code": "lambda " + ",".join(set(translated.var_names)) + ":" + translated.lambda_expr,
                 },
                 "input": translated.var_identifiers_used,
                 "output": list(),
@@ -414,6 +413,9 @@ class CAST2GrFN(ast.NodeVisitor):
 
         return ExprInfo(vars_used, inputs, lambda_function)
 
+    def visit_ListComp(self, node: ast.ListComp):
+        pass
+
     # BINOPS
     def visit_BinOp(self, node: ast.BinOp):
         left_translated = self.visit(node.left)
@@ -468,7 +470,7 @@ class CAST2GrFN(ast.NodeVisitor):
         lambda_expr = f"{value_translated.lambda_expr}[{slice_translated.lambda_expr}]"
 
         return ExprInfo(
-            value_translated.var_names + slice_translated.var_names, 
+            value_translated.var_names, 
             value_translated.var_identifiers_used + slice_translated.var_identifiers_used, 
             lambda_expr)
 
@@ -481,14 +483,48 @@ class CAST2GrFN(ast.NodeVisitor):
     def visit_ExtSlice(self, node: ast.ExtSlice):
         return None
 
-    # Expression leaf nodes
+    # Expression literals/leaf nodes
+
+    def visit_List(self, node: ast.List):
+        elems = self.visit_node_list(node.elts)
+        vars_used = reduce(lambda a1, a2: a1 + a2, [elem.var_names for elem in elems], [])
+        inputs = reduce(lambda a1, a2: a1 + a2, [elem.var_identifiers_used for elem in elems], [])
+        lambda_function = "[" + ",".join([elem.lambda_expr for elem in elems]) + "]"
+        return ExprInfo(vars_used, inputs, lambda_function)
+
+    def visit_Tuple(self, node: ast.Tuple):
+        elems = self.visit_node_list(node.elts)
+        vars_used = reduce(lambda a1, a2: a1 + a2, [elem.var_names for elem in elems], [])
+        inputs = []
+        # Gather inputs as we are creating new tuple to be assigned with their values
+        if type(node.ctx) == ast.Load:
+            inputs = reduce(lambda a1, a2: a1 + a2, [elem.var_identifiers_used for elem in elems], [])
+            lambda_function = "(" + ",".join([elem.lambda_expr for elem in elems]) + ")"
+        elif type(node.ctx) == ast.Store:
+            # TODO we have to assign each element somehow... 
+            res = []
+            for elem in elems:
+                res.append(ExprInfo(elem.var_names, elem.var_identifiers_used, elem.lambda_expr))
+            return res
+        
+        return ExprInfo(vars_used, inputs, lambda_function)
+
+    def visit_Set(self, node: ast.Set):
+        pass
+
     def visit_Name(self, node: ast.Name):
         name = generate_variable_name(node, self.cur_module, self.cur_scope, self.variable_table)
-        return ExprInfo([node.id], [name], str(node.id))
+        var_identifiers_used = []
+        # We only use/have inputed var identifier if we are loading this
+        # var, not storing/creating a new version of a var
+        if name:
+            var_identifiers_used.append(name)
+        return ExprInfo([node.id], var_identifiers_used, str(node.id))
 
     def visit_Attribute(self, node: ast.Attribute):
-        name = generate_variable_name(node, self.cur_module, self.cur_scope, self.variable_table)
-        return ExprInfo([node.attr], [name], str(node.attr))
+        value_translated = self.visit(node.value)
+        return ExprInfo(value_translated.var_names, value_translated.var_identifiers_used, \
+            value_translated.lambda_expr + "." + str(node.attr))
 
     def visit_Constant(self, node: ast.Constant):
         return ExprInfo(list(), list(), str(node.value))

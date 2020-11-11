@@ -116,16 +116,19 @@ def generate_lambda(input_variable_identifiers, expr):
 
 # NOTE For loops, the decision should have just on input car (the calculated
 # condition var) and one output var (the exit var)
+@singledispatch
 def generate_decision_lambda(node: ast.For, cond_vars, conditions_updating_var, name, \
         is_val_set_in_else):
     return "lambda " + cond_vars[0] + ": not (" + cond_vars[0] + ")"
 
-def generate_decision_lambda(node: ast.While, cond_vars, conditions_updating_var, name, \
+@generate_decision_lambda.register
+def _(node: ast.While, cond_vars, conditions_updating_var, name, \
         is_val_set_in_else):
     return "lambda " + cond_vars[0] + ": not (" + cond_vars[0] + ")"
 
+@generate_decision_lambda.register
 # NOTE cond_vars must be sorted in order of appearing conditions in source
-def generate_decision_lambda(node: ast.If, cond_vars, conditions_updating_var, name, \
+def _(node: ast.If, cond_vars, conditions_updating_var, name, \
         is_val_set_in_else):
     all_vars = []
 
@@ -200,12 +203,6 @@ def _(node: ast.While, module, scope, variable_table):
     return module + "__" + scope_to_string(scope) + "__condition__COND" 
 
 @generate_function_name.register
-def _(node: ast.Assign, module, scope, variable_table):
-    # TODO we can assign to multiple vars at once
-    assign_name = generate_variable_name(node.targets[0], module, scope, variable_table)
-    return module + "__" + scope_to_string(scope) + "__assign__" + assign_name
-
-@generate_function_name.register
 def _(node: ast.AugAssign, module, scope, variable_table):
     assign_name = generate_variable_name(node.target, module, scope, variable_table)
     return module + "__" + scope_to_string(scope) + "__assign__" + assign_name
@@ -219,6 +216,9 @@ def _(node: ast.Return, module, scope, variable_table):
 def _(node: ast.Expr, module, scope, variable_table):
     return module + "__" + scope_to_string(scope) + "__assign__expr"
 
+def generate_assign_function_name(name, module, scope, variable_table):
+    assign_name = generate_variable_name(name, module, scope, variable_table)
+    return module + "__" + scope_to_string(scope) + "__assign__" + assign_name
 
 # TODO fix naming and document all the variable string methods
 def generate_variable_string(name, scope, module):
@@ -272,8 +272,10 @@ def generate_variable_name(node, module, scope, variable_table):
 @generate_variable_name.register
 def _(node: str, module, scope, variable_table):
     variable_identifier = get_largest_scope_variable_identifier(node, scope, module, variable_table)
-    return variable_identifier \
-         + "::" + str(variable_table[variable_identifier]['version'])
+    if variable_identifier:
+        return variable_identifier \
+            + "::" + str(variable_table[variable_identifier]['version'])
+    return ""
 
 @generate_variable_name.register
 def _(node: ast.arg, module, scope, variable_table):
@@ -282,6 +284,11 @@ def _(node: ast.arg, module, scope, variable_table):
 @generate_variable_name.register
 def _(node: ast.Name, module, scope, variable_table):
     return generate_variable_name(node.id, module, scope, variable_table)
+
+@generate_variable_name.register
+def _(node: ast.Subscript, module, scope, variable_table):
+    return generate_variable_name(node.value, module, scope, variable_table)
+
 
 def create_variable(name, scope, module, variable_table, version=-1):
     var_id = generate_variable_string(name, scope, module)
