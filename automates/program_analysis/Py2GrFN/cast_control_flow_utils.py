@@ -203,8 +203,8 @@ def visit_control_flow_container(node, cast_visitor, container_type):
     )
     
     # Generate functions for body of control flow
-    statements = cast_visitor.visit_node_list(node.body)
-    statements.append(condition)
+    cast_visitor.visit_node_list(node.body)
+    cast_visitor.containers[container_name]["body"].append(condition)
 
     # Pop the current condition number off of scope
     cast_visitor.cur_scope = cast_visitor.cur_scope[:-1]
@@ -219,18 +219,20 @@ def visit_control_flow_container(node, cast_visitor, container_type):
         cond_name = "ELSE_" + str(cur_cf_type)
         cast_visitor.cur_scope.append(cond_name)
         # Handle else body nodes
-        statements.extend(cast_visitor.visit_node_list(else_nodes))
+        # statements.extend(
+        cast_visitor.visit_node_list(else_nodes)
+            # )
         # Pop the else condition number off of scope
         cast_visitor.cur_scope = cast_visitor.cur_scope[:-1]
 
     # Add all control flow / else body statements into our control
     # flow container body
-    cast_visitor.containers[container_name]["body"].extend(statements)
+    # cast_visitor.containers[container_name]["body"].extend(statements)
 
     # Set the input variables. Find what variables we use as 
     # inputs that were defined in different scope than ours
     external_input_variables = set(filter_variables_without_scope( \
-        flatten([x["input"] for x in statements]), cast_visitor.cur_scope))
+        flatten([x["input"] for x in cast_visitor.containers[container_name]["body"]]), cast_visitor.cur_scope))
     for key in ["container_call_args", "arguments"]:
         cast_visitor.containers[container_name][key].update(external_input_variables)
 
@@ -284,7 +286,7 @@ def for_loop_to_while(node, cast_visitor):
         value=ast.Constant(value=1))
 
     # These are done before the loop, so visit them
-    declaration_functions = cast_visitor.visit_node_list([iterated_list_assign, 
+    cast_visitor.visit_node_list([iterated_list_assign, 
         iterator_var_assign])
 
     # Place statement at start of loop body to retrieve next item from list
@@ -317,10 +319,9 @@ def for_loop_to_while(node, cast_visitor):
                 args=[extracted_list_name_load]
             )])
 
-    return (declaration_functions, 
-        ast.While(
+    return ast.While(
             transformed_while_test,
             node.body,
             node.orelse
-    ))
+    )
         

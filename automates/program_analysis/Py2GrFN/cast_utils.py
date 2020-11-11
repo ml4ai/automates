@@ -81,9 +81,9 @@ def generate_function_object(name, func_type, input_var_ids=list(), \
             "type": func_type,
             "code": lambda_str,
         },
-        "input": input_var_ids,
-        "output": output_var_ids,
-        "updated": updated_var_ids,
+        "input": input_var_ids.copy(),
+        "output": output_var_ids.copy(),
+        "updated": updated_var_ids.copy(),
     }
 
 def generate_variable_object(name):
@@ -220,7 +220,7 @@ def _(node: ast.Expr, module, scope, variable_table):
     return module + "__" + scope_to_string(scope) + "__assign__expr"
 
 
-# TODO fix naming and document all the vartiable string methods
+# TODO fix naming and document all the variable string methods
 def generate_variable_string(name, scope, module):
     return "@variable::" + module + "::" + scope_to_string(scope) + "::" + name
 

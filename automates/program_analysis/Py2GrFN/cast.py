@@ -19,6 +19,7 @@ from .cast_utils import (
     op_to_lambda,
     generate_variable_object,
     create_container_object,
+    generate_function_object,
     flatten
 )
 
@@ -64,6 +65,9 @@ class CAST2GrFN(ast.NodeVisitor):
         self.cur_scope = ["@global"]
 
     def to_grfn(self):
+        initial_container_name = "initial::@global"
+        create_container_object(self.containers, initial_container_name, "function")
+        self.cur_containers.append(initial_container_name)
         # Use our python AST visitor to fill out AIR data
         self.visit(self.cast)
 
@@ -119,6 +123,14 @@ class CAST2GrFN(ast.NodeVisitor):
 
     def visit_Module(self, node: ast.Module):
         """ Module has a list of nodes representing its body """
+        # Fill out function definitions in case a function is called
+        function_defs = [n for n in node.body if type(n) == ast.FunctionDef]
+        for function_def in function_defs:
+            function_name = generate_container_name(function_def, self.cur_module, 
+                self.cur_scope, self.variable_table)
+            create_container_object(self.containers, function_name, "function")
+
+        # Visit node bodies
         self.visit_node_list(node.body)
 
     def visit_Expression(self, node: ast.Expression):
@@ -139,7 +151,7 @@ class CAST2GrFN(ast.NodeVisitor):
         # assumption is true
         function_name = generate_container_name(node, self.cur_module, self.cur_scope, 
             self.variable_table)
-        self.containers = create_container_object(self.containers, function_name, "function")
+        create_container_object(self.containers, function_name, "function")
 
         self.cur_containers.append(function_name)
         self.cur_scope.append(node.name)
@@ -148,8 +160,9 @@ class CAST2GrFN(ast.NodeVisitor):
         self.visit(node.args)
 
         # Translate child nodes
-        body = reduce(lambda l1, l2: l1 + [l2], self.visit_node_list(node.body), [])
-        self.containers[self.cur_containers[-1]]["body"] = body
+        # body = reduce(lambda l1, l2: l1 + [l2], self.visit_node_list(node.body), [])
+        body = self.visit_node_list(node.body)
+        # self.containers[self.cur_containers[-1]]["body"].extend(body)
 
         # Pop current container off of scope
         self.cur_containers = self.cur_containers[:-1]
@@ -159,7 +172,7 @@ class CAST2GrFN(ast.NodeVisitor):
     def visit_arguments(self, node: ast.arguments):
         # TODO handle defaults for positional arguments? (in node.defaults)
         # padded_default_arg_valeus = [None] * (len(self.args) - len(self.defaults)) + self.defaults
-        return self.visit_node_list(node.args)
+        self.visit_node_list(node.args)
 
         # TODO handle kwonlyargs, need to handle default values as well?
         # Keyword only arguments are named from *args
@@ -195,11 +208,12 @@ class CAST2GrFN(ast.NodeVisitor):
     # ==========================================================================
 
     def visit_If(self, node: ast.If):
-        return visit_control_flow_container(
+        functions = visit_control_flow_container(
             node,
             self,
             ContainerType.IF
         )
+        self.containers[self.cur_containers[-1]]["body"].extend(functions)
 
     def visit_For(self, node: ast.For):
         # Return tuple with first position as new variable declaration
@@ -208,19 +222,20 @@ class CAST2GrFN(ast.NodeVisitor):
         while_loop_translation = for_loop_to_while(node, self)
 
         while_loop_function = visit_control_flow_container(
-            while_loop_translation[1],
+            while_loop_translation,
             self,
             ContainerType.WHILE
         )
 
-        return while_loop_translation[0] + while_loop_function
+        self.containers[self.cur_containers[-1]]["body"].extend(while_loop_function)
 
     def visit_While(self, node: ast.While):
-        return visit_control_flow_container(
+        functions = visit_control_flow_container(
             node,
             self,
             ContainerType.WHILE
         )
+        self.containers[self.cur_containers[-1]]["body"].extend(functions)
 
     # ==========================================================================
 
@@ -245,7 +260,7 @@ class CAST2GrFN(ast.NodeVisitor):
         for output in outputs:
             self.variables[output] = generate_variable_object(output)
 
-        return [{
+        functions = [{
             "function": {
                 "name": generate_function_name(node, self.cur_module, self.cur_scope, 
                     self.variable_table),
@@ -257,6 +272,7 @@ class CAST2GrFN(ast.NodeVisitor):
             "output": outputs,
             "updated": list()
         }]
+        self.containers[self.cur_containers[-1]]["body"].extend(functions)
 
     def visit_AnnAssign(self, node: ast.AnnAssign):
         output = self.visit(node.target)
@@ -278,7 +294,7 @@ class CAST2GrFN(ast.NodeVisitor):
 
         lambda_expr_str = f"({target_translated.var_names[0]}){op_to_lambda(node.op)}({value_translated.lambda_expr})"
 
-        return [{
+        functions = [{
             "function": {
                 "name": generate_function_name(node, self.cur_module, self.cur_scope, 
                     self.variable_table),
@@ -290,6 +306,7 @@ class CAST2GrFN(ast.NodeVisitor):
             "output": [output],
             "updated": list()
         }]
+        self.containers[self.cur_containers[-1]]["body"].extend(functions)
 
 
     # NOTE: Represents a statement consisting of only one Expr where the result 
@@ -299,7 +316,7 @@ class CAST2GrFN(ast.NodeVisitor):
     # @translate.register
     def visit_Expr(self, node: ast.Expr):
         translated = self.visit(node.value)
-        return [{
+        functions = [{
                 "function": {
                     "name": generate_function_name(node, self.cur_module, self.cur_scope, 
                         self.variable_table),
@@ -310,6 +327,8 @@ class CAST2GrFN(ast.NodeVisitor):
                 "output": list(),
                 "updated": list(),
             }]
+        self.containers[self.cur_containers[-1]]["body"].extend(functions)
+        # return functions
 
     def visit_expr(self, node: ast.expr):
         # TODO: Implement this function
@@ -332,21 +351,29 @@ class CAST2GrFN(ast.NodeVisitor):
         pass
 
     def visit_Return(self, node: ast.Return):
-        # TODO what if the return is an expression?
-        return []
-        # translated = self.visit(node.value)
-        # return [{
-        #         "function": {
-        #             "name": generate_function_name(node, self.cur_module, self.cur_scope, 
-        #                 self.variable_table),
-        #             "type": "lambda",
-        #             # TODO 
-        #             "code": "lambda :" + translated.lambda_expr,
-        #         },
-        #         "input": translated.var_identifiers_used,
-        #         "output": list(),
-        #         "updated": list(),
-        #     }]
+        translated = self.visit(node.value)
+        
+        # For now, create a variable that we output the return expression to.
+        # This is because we expect a named variable for the return of a container.
+        output_var_name = "RETURN"
+        output = create_or_update_variable(output_var_name, self.cur_scope, 
+            self.cur_module, self.variable_table)  
+        self.variables[output] = generate_variable_object(output)
+
+        functions = [{
+                "function": {
+                    "name": generate_function_name(node, self.cur_module, self.cur_scope, 
+                        self.variable_table),
+                    "type": "lambda",
+                    "code": "lambda :" + translated.lambda_expr,
+                },
+                "input": translated.var_identifiers_used,
+                "output": [output],
+                "updated": list(),
+            }]
+
+        self.containers[self.cur_containers[-1]]["body"].extend(functions)
+        self.containers[self.cur_containers[-1]]["return_value"].append(output)
 
     # ==========================================================================
 
@@ -358,16 +385,31 @@ class CAST2GrFN(ast.NodeVisitor):
     # ==========================================================================
 
     def visit_Call(self, node: ast.Call):
+        # TODO handle keyword args and *args
         args_translated = self.visit_node_list(node.args)
         # Note: Function node is usually a ast.Name node which is also used for
         # variable names. So, we ignore the first field in the resulting tuple
         func_translated = self.visit(node.func)
-
-        # TODO handle keyword args and *args
-
-        # TODO how do we handle the lambda for this? Need to link to function?
-        lambda_function = func_translated.lambda_expr + "(" + ",".join([arg.lambda_expr for arg in args_translated]) + ")"
         inputs = reduce(lambda a1, a2: a1 + a2, [arg.var_identifiers_used for arg in args_translated], [])
+
+        # TODO this could break in some cases
+        # Find function id with called func name
+        function_ids = [c for c in self.containers.keys()
+            if c.rsplit("::", 1)[1] == func_translated.var_names[0]]
+        if len(function_ids) > 0:
+            function_id = function_ids[0]
+            output_var_name = function_id.rsplit("::", 1)[1] + "_RESULT"
+            output = create_or_update_variable(output_var_name, self.cur_scope, 
+                self.cur_module, self.variable_table)  
+            self.variables[output] = generate_variable_object(output)
+
+            # Add container func to cur body to body
+            func_obj = generate_function_object(function_id, "container", 
+                input_var_ids=inputs, output_var_ids=[output])
+            self.containers[self.cur_containers[-1]]["body"].append(func_obj)
+            inputs.append(output)
+
+        lambda_function = func_translated.lambda_expr + "(" + ",".join([arg.lambda_expr for arg in args_translated]) + ")"
         vars_used = reduce(lambda a1, a2: a1 + a2, [arg.var_names for arg in args_translated], [])
 
         return ExprInfo(vars_used, inputs, lambda_function)

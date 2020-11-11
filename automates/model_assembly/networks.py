@@ -535,7 +535,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             # the function, ignore these
             inputs = [live_variables[id] \
                       for id in stmt.inputs \
-                      if not type(new_con) == LoopContainer or not id in new_con.updated]
+                      if not (type(new_con) == LoopContainer and id in new_con.updated)]
 
             (con_outputs, pass_func) = translate_container(
                 new_con, inputs, subgraph
