@@ -47,7 +47,7 @@ class CodeVarNode(LinkNode):
         return self.__str__()
 
     def __str__(self):
-        (_, namespace, scope, basename, index) = self.content.split("::")
+        (namespace, scope, basename, index) = self.content.split("::")
         return "\n".join(
             [
                 f"NAMESPACE: {namespace}",

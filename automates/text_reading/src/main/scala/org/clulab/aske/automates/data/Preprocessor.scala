@@ -45,14 +45,13 @@ object EdgeCaseParagraphPreprocessor {
 class PassThroughPreprocessor() extends Preprocessor {
 
   def looksLikeLanguage(string: String): Boolean = {
+
     //exclude spaces from the calculation
     val stringNoSpaces = string.replace(" ","")
     return (stringNoSpaces.count(_.isLetter).toDouble / stringNoSpaces.length) > .6
   }
   def cleanUp(text: String): String = {
     for (w<-text.split("\n")) println(w)
-
-
     val loseVerticalText = text.split("\n").filter(t => t.length > 6).filter(t => looksLikeLanguage(t)).mkString("\n")
     val loseExtraLongFalseWords = loseVerticalText.split(" ").filter(w => w.length < 23).mkString(" ")
     val cleanerText = loseExtraLongFalseWords.replaceAll("\n", " ")

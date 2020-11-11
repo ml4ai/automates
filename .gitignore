@@ -84,3 +84,6 @@ Gemfile.lock
 *modFileLog.json
 *--GrFN.pdf
 tmp
+
+# Model assembly stuff
+*align_payload.json
