@@ -101,7 +101,7 @@ object ExtractAndAlign {
     println("REACHED HERE")
     linkElements(TEXT_VAR) = updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
 
-        for (le <- linkElements(TEXT_VAR)) println("HERE: " + le)
+//        for (le <- linkElements(TEXT_VAR)) println("HERE: " + le)
 //
 //    for (link <- linkElements) println("link: " + link)
 //    println("LINK ELEMENTS: ", linkElements.keys)
@@ -170,6 +170,19 @@ object ExtractAndAlign {
 
   }
 
+  def updateTextVariable(textVarLinkElementString: String, update: Object): String = {
+    println("-> " + update)
+    val updateString = update.toString()
+    println(updateString)
+//    val updateJson = ujson.read(updateString)
+//    println("back to json: " + updateJson)
+//    val results = updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "source" -> sr("source").str))
+//    println("SR results: " + results)
+
+    textVarLinkElementString + "::" + updateString
+
+  }
+
   def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
 
@@ -223,14 +236,16 @@ object ExtractAndAlign {
         topK <- textToSVOAlignments
         alignment <- topK
         textVarLinkElement = textVarLinkElements(alignment.src)
-        svoGrounding = if (SVOgroundings) {
-          unitMentions.get(alignment.dst).arguments("unit").head.text
+        svoGrounding = if (SVOgroundings.nonEmpty) {
+          ujson.Obj("grounding" -> SVOgroundings.get(alignment.dst)._2.map(sr => GrFNParser.sparqlResultTouJson(sr)))
+//          unitMentions.get(alignment.dst).arguments("unit").head.text
         } else "None"
 
 
+
         score = alignment.score
-      } yield updateTextVariable(textVarLinkElement, unit)
-    } else textVarLinkElements
+      } yield updateTextVariable(textVarLinkElement, svoGrounding)
+    } else textVarLinkElements.map(tvle => updateTextVariable(tvle, "None"))
 
 
 
@@ -287,6 +302,12 @@ object ExtractAndAlign {
         val value = splitElStr(8)
         val valueLeast = splitElStr(9)
         val valueMost = splitElStr(10)
+        val svoString = splitElStr(11)
+        val updateJson = ujson.read(svoString)
+//        println("back to json: " + updateJson)
+        val results = ujson.Arr(updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "source" -> sr("source").str)))
+//        println("SR results: " + results)
+//        println("SVO in updated text var in rehydrate: " + svo)
 //        val
         val paramSetting = ujson.Obj(
           "value" -> value,
@@ -302,7 +323,8 @@ object ExtractAndAlign {
           definition = definition,
           svo_terms = svo_terms,
           unit = unit,
-          paramSetting = paramSetting
+          paramSetting = paramSetting,
+          svo = results
         )
 
       }
@@ -458,6 +480,7 @@ object ExtractAndAlign {
       */
     if (textDefinitionMentions.isDefined && SVOgroundings.isDefined) {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), SVOgroundings.get.map(_._1))
+      println("svo search terms? " + SVOgroundings.get.map(_._1))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(TEXT_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
     }

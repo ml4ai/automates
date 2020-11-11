@@ -115,7 +115,7 @@ object GrFNParser {
   }
 
 
-  def mkTextVarLinkElement(uid: String, source: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value): ujson.Obj = {
+  def mkTextVarLinkElement(uid: String, source: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value): ujson.Obj = {
     val linkElement = ujson.Obj(
       "uid" -> uid,
 //      "type" -> elemType,
@@ -124,7 +124,8 @@ object GrFNParser {
       "definition" -> definition,
       "svo_terms" -> svo_terms,
       "unit" -> unit,
-      "paramSetting" -> paramSetting
+      "paramSetting" -> paramSetting,
+      "svo_groundings" -> svo
 //      "svo_query_terms" -> svoQueryTerms
     )
     linkElement
