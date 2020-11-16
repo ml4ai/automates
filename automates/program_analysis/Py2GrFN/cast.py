@@ -256,7 +256,6 @@ class CAST2GrFN(ast.NodeVisitor):
         # of the output variables.
         targets_translated_list = self.visit_node_list(node.targets)
         for target in targets_translated_list:
-            print(target.var_names)
             var_name_assigned = target.var_names[0]
             target_identifiers_used = target.var_identifiers_used
             output = create_or_update_variable(var_name_assigned, self.cur_scope, self.cur_module, self.variable_table)
@@ -506,7 +505,7 @@ class CAST2GrFN(ast.NodeVisitor):
             for elem in elems:
                 res.append(ExprInfo(elem.var_names, elem.var_identifiers_used, elem.lambda_expr))
             return res
-        
+
         return ExprInfo(vars_used, inputs, lambda_function)
 
     def visit_Set(self, node: ast.Set):
@@ -533,6 +532,7 @@ class CAST2GrFN(ast.NodeVisitor):
         return ExprInfo(list(), list(), str(node.n))
 
     def visit_Str(self, node: ast.Str):
-        return ExprInfo(list(), list(), "\"" + str(node.s) + "\"")
+        str_newline_escaped = node.s.replace("\n", "\\n")
+        return ExprInfo(list(), list(), "\"" + str_newline_escaped + "\"")
 
     # ==========================================================================

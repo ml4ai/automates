@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from uuid import uuid4
 import datetime
 import json
+import itertools
 
 import networkx as nx
 import numpy as np
@@ -468,58 +469,63 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
             con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name])
             input_pass_func = None
-            if len(inputs) > 0:
-                (pass_func_str, output_node_ids) = con.get_input_pass_node_info(inputs)
-                input_pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
-                out_nodes = [add_variable_node(id) for id in output_node_ids]
-                add_hyper_edge(inputs, input_pass_func, out_nodes)
-                con_subgraph.nodes.append(input_pass_func)
-                live_variables.update(
-                    {id: node for id, node in zip(output_node_ids, out_nodes)}
-                )
+            if parent:
+                if len(inputs) > 0:
+                    (pass_func_str, output_node_ids) = con.get_input_pass_node_info(inputs)
+                    input_pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
+                    out_nodes = [add_variable_node(id) for id in output_node_ids]
+                    add_hyper_edge(inputs, input_pass_func, out_nodes)
+                    con_subgraph.nodes.append(input_pass_func)
+                    live_variables.update(
+                        {id: node for id, node in zip(output_node_ids, out_nodes)}
+                    )
+                else:
+                    pass_func_str = "lambda : None"
+                    input_pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
             else:
-                pass_func_str = "lambda : None"
-                input_pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
                 live_variables.update(
                     {id: add_variable_node(id) for id in con.arguments}
                 )
 
             con_subgraph.nodes.extend(list(live_variables.values()))
 
+            prev_nodes = None
             for stmt in con.statements:
-                translate_stmt(stmt, live_variables, con_subgraph)
+                nodes = translate_stmt(stmt, live_variables, con_subgraph)
+
+                # TODO Creates invisible edges to force top down flow between containers
+                # if prev_nodes:
+                #     network.add_edges_from(
+                #         zip(prev_nodes, nodes), style="invis"
+                #     )
+                # prev_nodes = nodes
+                 
 
             subgraphs.add_node(con_subgraph)
 
             if parent is not None:
                 subgraphs.add_edge(parent, con_subgraph)
 
-            # if len(inputs) > 0:
-            # Do this only if this is not the starting container
-            returned_vars = [live_variables[id] for id in con.returns]
-            update_vars = [live_variables[id] for id in con.updated]
-            output_vars = returned_vars + update_vars
+            if parent:
+                # Do this only if this is not the starting container
+                returned_vars = [live_variables[id] for id in con.returns]
+                update_vars = [live_variables[id] for id in con.updated]
+                output_vars = returned_vars + update_vars
 
-            # Add edge from variables updated in a loop to its pass function
-            if type(con) == LoopContainer and input_pass_func:
-                updated_in_loop = [live_variables[id] for id in con.arguments \
-                    if id in con.updated]
-                add_hyper_edge(updated_in_loop, input_pass_func, [],
-                    input_style={"style": "dashed", "overlap": "false"})
+                # Add edge from variables updated in a loop to its pass function
+                if type(con) == LoopContainer and input_pass_func:
+                    updated_in_loop = [live_variables[id] for id in con.arguments \
+                        if id in con.updated]
+                    add_hyper_edge(updated_in_loop, input_pass_func, [],
+                        input_style={"style": "dashed", "overlap": "false"})
 
-            out_var_names = [n.identifier.var_name for n in output_vars]
-            out_var_str = ",".join(out_var_names)
-            pass_func_str = f"lambda {out_var_str}:({out_var_str})"
-            pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
-            con_subgraph.nodes.append(input_pass_func)
+                out_var_names = [n.identifier.var_name for n in output_vars]
+                out_var_str = ",".join(out_var_names)
+                pass_func_str = f"lambda {out_var_str}:({out_var_str})"
+                pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
+                con_subgraph.nodes.append(pass_func)
 
-            return (output_vars, pass_func)
-            # else:
-            #     pass_func_str = "lambda : None"
-            #     pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
-            #     con_subgraph.nodes.append(input_pass_func)
-
-            #     return ([], pass_func)
+                return (output_vars, pass_func)
 
         @singledispatch
         def translate_stmt(
@@ -556,14 +562,14 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
 
+            return out_nodes
+
         @translate_stmt.register
         def _(
             stmt: LambdaStmt,
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-            print(stmt.inputs)
-            print(live_variables)
             inputs = [live_variables[id] for id in stmt.inputs]
             out_nodes = [add_variable_node(id) for id in stmt.outputs]
             func = add_lambda_node(stmt.type, stmt.func_str)
@@ -575,6 +581,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
             for output_node in out_nodes:
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
+
+            return [func]
 
         start_container = containers[con_id]
         Occs[con_id] = 0
@@ -633,9 +641,20 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         A = nx.nx_agraph.to_agraph(self)
         A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+            {
+                "dpi": 227, 
+                "fontsize": 20, 
+                "fontname": "Menlo", 
+                "constaint":"false",
+                # "newrank":"true", 
+                "rankdir": "TB",
+                "rank":"min",
+            }
         )
-        A.node_attr.update({"fontname": "Menlo"})
+        A.node_attr.update({
+            "fontname": "Menlo", 
+            "rank":"min"
+        })
         # A.add_subgraph(input_nodes, rank="same")
         # A.add_subgraph(output_nodes, rank="same")
 
@@ -654,6 +673,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 label=subgraph.basename,
                 style="bold, rounded",
                 rankdir="TB",
+                rank="min",
                 color=subgraph.border_color,
             )
 
