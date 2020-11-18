@@ -301,6 +301,8 @@ object ExtractAndAlign {
 
   def rehydrateLinkElement(element: String): ujson.Obj = {
 
+    //todo: add more informative source by type, e.g., for text var it's "text" (check with ph about this)
+
     val splitElStr = element.split("::")
 //    println("element: " + element)
     val elType = splitElStr(1)
@@ -601,6 +603,7 @@ object ExtractAndAlign {
     }
 
     if (textDefinitionMentions.isDefined) {
+      // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
