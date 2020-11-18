@@ -115,11 +115,12 @@ object GrFNParser {
   }
 
 
-  def mkTextVarLinkElement(uid: String, source: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value): ujson.Obj = {
+  def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value): ujson.Obj = {
     val linkElement = ujson.Obj(
       "uid" -> uid,
 //      "type" -> elemType,
       "source" -> source,
+      "original_sentence" -> originalSentence,
       "identifier" -> identifier,
       "definition" -> definition,
       "svo_terms" -> svo_terms,
@@ -175,6 +176,7 @@ object GrFNParser {
     val sparqlResuJson = ujson.Obj(
       "osv_term" -> grounding.osvTerm,
       "class_name" -> grounding.className,
+      "score" -> grounding.score.get,
       "source" -> grounding.source
     )
     sparqlResuJson

@@ -93,10 +93,15 @@ object ExtractAndAlign {
 
     val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
 
+    println("text vars before update with units:" + linkElements(TEXT_VAR))
     linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION))
+    println("text vars after update with units:" + linkElements(TEXT_VAR))
+
+
 
 //    for (le <- linkElements(TEXT_VAR)) println(le)
     linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
+    println("text vars after update with param settings:" + linkElements(TEXT_VAR))
 
     println("REACHED HERE")
     linkElements(TEXT_VAR) = updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
@@ -166,6 +171,8 @@ object ExtractAndAlign {
   }
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
+    println("text var link el string: " + textVarLinkElementString)
+    println("update: " + update)
     textVarLinkElementString + "::" + update
 
   }
@@ -186,16 +193,17 @@ object ExtractAndAlign {
   def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
 
-    for (topK <- textToUnitAlignments) {
-//      println(topK.head.src + " " + topK.head.dst)
-//      for (al <- topK) {
-//        println("text var link el: " + textVarLinkElements(al.src))
-//        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
-//        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
-//
-//      }
-    }
+//    for (topK <- textToUnitAlignments) {
+////      println(topK.head.src + " " + topK.head.dst)
+////      for (al <- topK) {
+////        println("text var link el: " + textVarLinkElements(al.src))
+////        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
+////        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
+////
+////      }
+//    }
 
+    println("len unit alignments: " + textToUnitAlignments.length)
     val updatedTextVars = if (textToUnitAlignments.length > 0) {
 
       for {
@@ -209,7 +217,7 @@ object ExtractAndAlign {
 
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, unit)
-    } else textVarLinkElements
+    } else textVarLinkElements.map(el => updateTextVariable(el, "None"))
 
 
 
@@ -219,6 +227,8 @@ object ExtractAndAlign {
 
   def updateTextVarsWithSVO(textVarLinkElements: Seq[String], SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]], textToSVOAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
+    println(textVarLinkElements.mkString("|") + "<<<<")
+    println(textToSVOAlignments + "< svo alignment")
 
     for (topK <- textToSVOAlignments) {
       //      println(topK.head.src + " " + topK.head.dst)
@@ -259,30 +269,34 @@ object ExtractAndAlign {
 
   def updateTextVarsWithParamSettings(textVarLinkElements: Seq[String], paramSettingMentions: Option[Seq[Mention]], textToParamSettingAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
-    val updatedTextVars = for {
-      topK <- textToParamSettingAlignments
-      alignment <- topK
-      textVarLinkElement = textVarLinkElements(alignment.src)
-      value = if (hasArg(paramSettingMentions.get(alignment.dst), "value")) {
-        paramSettingMentions.get(alignment.dst).arguments("value").head.text
-      } else "None"
 
-      valueLeast = if (hasArg(paramSettingMentions.get(alignment.dst), "valueLeast")) {
-        paramSettingMentions.get(alignment.dst).arguments("valueLeast").head.text
-      } else "None"
+    println("len unit alignments: " + textToParamSettingAlignments.length)
+    val updatedTextVars = if (textToParamSettingAlignments.nonEmpty) {
+      for {
+        topK <- textToParamSettingAlignments
+        alignment <- topK
+        textVarLinkElement = textVarLinkElements(alignment.src)
+        value = if (hasArg(paramSettingMentions.get(alignment.dst), "value")) {
+          paramSettingMentions.get(alignment.dst).arguments("value").head.text
+        } else "None"
 
-      valueMost = if (hasArg(paramSettingMentions.get(alignment.dst), "valueMost")) {
-        paramSettingMentions.get(alignment.dst).arguments("valueMost").head.text
-      } else "None"
+        valueLeast = if (hasArg(paramSettingMentions.get(alignment.dst), "valueLeast")) {
+          paramSettingMentions.get(alignment.dst).arguments("valueLeast").head.text
+        } else "None"
+
+        valueMost = if (hasArg(paramSettingMentions.get(alignment.dst), "valueMost")) {
+          paramSettingMentions.get(alignment.dst).arguments("valueMost").head.text
+        } else "None"
 
 
-      update = value + "::" + valueLeast + "::" + valueMost
+        update = value + "::" + valueLeast + "::" + valueMost
 
-      //todo  AND OTHERS eg value least, check what's there
-      score = alignment.score
-    } yield updateTextVariable(textVarLinkElement, update)
+        //todo  AND OTHERS eg value least, check what's there
+        score = alignment.score
+      } yield updateTextVariable(textVarLinkElement, update)
+    } else textVarLinkElements.map(el => updateTextVariable(el, "None::None::None"))
+
     updatedTextVars
-
   }
 
   def rehydrateLinkElement(element: String): ujson.Obj = {
@@ -296,16 +310,19 @@ object ExtractAndAlign {
         val id = splitElStr(0)
         val source = splitElStr(2)
         val identifier = splitElStr(3)
-        val definition = splitElStr(4)
-        val svo_terms = splitElStr(6)
-        val unit = splitElStr(7)
-        val value = splitElStr(8)
-        val valueLeast = splitElStr(9)
-        val valueMost = splitElStr(10)
-        val svoString = splitElStr(11)
+        val originalSentence = splitElStr(4)
+        val definition = splitElStr(5)
+        val svo_terms = splitElStr(7)
+        val unit = splitElStr(8)
+        val value = splitElStr(9)
+        val valueLeast = splitElStr(10)
+        val valueMost = splitElStr(11)
+        val svoString = splitElStr(12)
         val updateJson = ujson.read(svoString)
 //        println("back to json: " + updateJson)
-        val results = ujson.Arr(updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "source" -> sr("source").str)))
+        val results = ujson.Arr(updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "score" -> sr("score").num, "source" -> sr("source").str)))
+        //fixme: toggle for whether or not ground on the fly
+//        val results = SVOGrounder.groundTermsToSVOandRank(identifier, svo_terms.split(","), 3)
 //        println("SR results: " + results)
 //        println("SVO in updated text var in rehydrate: " + svo)
 //        val
@@ -319,6 +336,7 @@ object ExtractAndAlign {
           uid = id,
 //          elemType = elType,
           source = source,
+          originalSentence = originalSentence,
           identifier = identifier,
           definition = definition,
           svo_terms = svo_terms,
@@ -469,6 +487,7 @@ object ExtractAndAlign {
     /** Align text variable to unit variable
       * this should take care of unit relaions like this: "T = daily mean air temperature [°C]"
       */
+    // todo: add these to updateTextVarsWithUnits; currently, just linking through definitions
     if (textDefinitionMentions.isDefined && unitMentions.isDefined) {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), unitMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
@@ -479,8 +498,9 @@ object ExtractAndAlign {
       * this should take care of unit relaions like this: "T = daily mean air temperature [°C]"
       */
     if (textDefinitionMentions.isDefined && SVOgroundings.isDefined) {
-      val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), SVOgroundings.get.map(_._1))
-      println("svo search terms? " + SVOgroundings.get.map(_._1))
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), SVOgroundings.get.map(_._1.toLowerCase))
+      println("variables with svos " + SVOgroundings.get.map(_._1))
+      println("svo search results " + SVOgroundings.get.map(_._2))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(TEXT_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
     }
@@ -584,12 +604,13 @@ object ExtractAndAlign {
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
+        val originalSentence = mention.sentenceObj.words.mkString(" ")
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
         val definition = mention.arguments(DEFINITION).head.text
 
 
-        randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty)
+        randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",")
 //        mkTextLinkElement(
 //          elemType = "text_var",
 //          source = s"${docId}_sent${sent}_$offsets",
@@ -713,10 +734,10 @@ object ExtractAndAlign {
     // TextVar -> TextDef (text_span)
 
     //taken care of while creating link elements
-//    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.toSeq.contains(TEXT)) {
-//
-//      hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT)))
-//    }
+    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.toSeq.contains(TEXT)) {
+
+      hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT)))
+    }
 //
 //     Text -> SVO grounding
 //     hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
