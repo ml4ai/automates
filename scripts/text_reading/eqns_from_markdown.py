@@ -34,8 +34,10 @@ def process_markdown(filepath, outfile):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', type=str, default='README.md', help='Input file.')
-    parser.add_argument('--output', type=str, default=None, help='Output file.')
+    parser.add_argument('--input', type=str, default='README.md',
+                        help='Input filepath. (Default: README.md)')
+    parser.add_argument('--output', type=str, default=None,
+                        help='Output filepath. (Default: Print to stdout)')
     args = parser.parse_args()
     process_markdown(args.input, args.output)
 
