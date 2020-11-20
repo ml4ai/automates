@@ -54,7 +54,17 @@ rules:
 #      |
 #      (?<definition> [word = /.*/]) (?<variable> [entity = "B-GreekLetter"])
 
-      #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
+
+  - name: var_stands_for_def
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "V stands for vendetta."
+    action: ${action}
+    pattern: |
+      trigger = [lemma="stand"]
+      definition:Concept = nmod_for
+      variable:Variable = nsubj
 
   - name: var_definition_appos_bidir
     label: Definition
@@ -167,7 +177,7 @@ rules:
     example: "LAI is the actual leaf area index"
     action: ${action}
     pattern: |
-      trigger = [lemma="be"]
+      trigger = (?<!"that") [lemma="be"]
       definition:Concept = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = "," & !word = "which"]
       variable:Variable = <cop [!entity = /NUMBER|B-unit/ ]
 
