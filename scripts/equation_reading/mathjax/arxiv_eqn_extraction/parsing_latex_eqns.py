@@ -231,10 +231,8 @@ def Cleaning_writing_eqn(root, dictionary, Final_EqnNum_LineNum_dict, encoding, 
 def main(args_list):
     
     # Unpacking args_list
-    (results_dir, matrix_cmds, equation_cmds, unknown_iconv, relational_operators, greek_letters, tex_folder) = args_list
+    (results_dir, matrix_cmds, equation_cmds, unknown_iconv, relational_operators, greek_letters, tex_folder_path) = args_list
     
-    
-    tex_folder_path = os.path.join(dir_path, tex_folder)
     tex_file = [file for file in os.listdir(tex_folder_path) if ".tex" in file]
     # considering folders/papers with inly single tex file
     if len(tex_file) == 1:
@@ -484,8 +482,9 @@ if __name__ == "__main__":
     temp = []
     
     for tex_folder in os.listdir(dir_path):
-
-        temp.append([results_dir, matrix_cmds, equation_cmds, unknown_iconv, relational_operators, greek_letters, tex_folder])
+        
+        tex_folder_path = os.path.join(dir_path, tex_folder)
+        temp.append([results_dir, matrix_cmds, equation_cmds, unknown_iconv, relational_operators, greek_letters, tex_folder_path])
             
     with Pool(multiprocessing.cpu_count()-6) as pool:
         unknown_encoding_tex = pool.map(main, temp)    
