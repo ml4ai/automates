@@ -6,6 +6,7 @@ from uuid import uuid4
 import datetime
 import json
 import itertools
+import traceback
 
 import networkx as nx
 import numpy as np
@@ -448,10 +449,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
             output_style = {}
         ) -> None:
             network.add_edges_from(
-                [(in_node, lambda_node) for in_node in inputs], **input_style
+                [(in_node, lambda_node) for in_node in inputs], **input_style, headport="n"
             )
             network.add_edges_from(
-                [(lambda_node, out_node) for out_node in outputs], **output_style
+                [(lambda_node, out_node) for out_node in outputs], **output_style, headport="n"
             )
             edge = HyperEdge(inputs, lambda_node, outputs)
             hyper_edges.append(edge)
@@ -469,12 +470,15 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
             con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name])
             input_pass_func = None
+            out_nodes = []
             if parent:
                 if len(inputs) > 0:
                     (pass_func_str, output_node_ids) = con.get_input_pass_node_info(inputs)
                     input_pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
                     out_nodes = [add_variable_node(id) for id in output_node_ids]
-                    add_hyper_edge(inputs, input_pass_func, out_nodes)
+                    add_hyper_edge(inputs, input_pass_func, out_nodes, 
+                        input_style={"weight": 2},
+                        output_style={"weight": 2})
                     con_subgraph.nodes.append(input_pass_func)
                     live_variables.update(
                         {id: node for id, node in zip(output_node_ids, out_nodes)}
@@ -487,23 +491,14 @@ class GroundedFunctionNetwork(nx.DiGraph):
                     {id: add_variable_node(id) for id in con.arguments}
                 )
 
-            con_subgraph.nodes.extend(list(live_variables.values()))
+            con_subgraph.nodes.extend(out_nodes)
 
-            prev_nodes = None
             for stmt in con.statements:
-                nodes = translate_stmt(stmt, live_variables, con_subgraph)
-
-                # TODO Creates invisible edges to force top down flow between containers
-                # if prev_nodes:
-                #     network.add_edges_from(
-                #         zip(prev_nodes, nodes), style="invis"
-                #     )
-                # prev_nodes = nodes
-                 
+                translate_stmt(stmt, live_variables, con_subgraph)
 
             subgraphs.add_node(con_subgraph)
 
-            if parent is not None:
+            if parent:
                 subgraphs.add_edge(parent, con_subgraph)
 
             if parent:
@@ -525,7 +520,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
                 con_subgraph.nodes.append(pass_func)
 
-                return (output_vars, pass_func)
+                return (output_vars, pass_func, con_subgraph)
 
         @singledispatch
         def translate_stmt(
@@ -544,16 +539,20 @@ class GroundedFunctionNetwork(nx.DiGraph):
             new_con = containers[stmt.call_id]
             if stmt.call_id not in Occs:
                 Occs[stmt.call_id] = 0
-
             # Loops may use variables updated in the body as inputs to
             # the function, ignore these
             inputs = [live_variables[id] \
                       for id in stmt.inputs \
                       if not (type(new_con) == LoopContainer and id in new_con.updated)]
-
-            (con_outputs, pass_func) = translate_container(
-                new_con, inputs, subgraph, live_variables
+            
+            # Filter down to only the live variables used in the container to not mess with
+            # the node structure
+            container_live_vars = {k:v for k,v in live_variables.items() if v in inputs}
+            (con_outputs, pass_func, con_subgraph) = translate_container(
+                new_con, inputs, subgraph, container_live_vars
             )
+            live_variables.update(container_live_vars)
+
             Occs[stmt.call_id] += 1
             out_nodes = [add_variable_node(var) for var in stmt.outputs]
             subgraph.nodes.extend(out_nodes)
@@ -562,7 +561,13 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
 
-            return out_nodes
+            network.add_edges_from(
+                itertools.product(inputs, [pass_func]), 
+                style="invis",
+                color="green", 
+                lhead="cluster_" + str(con_subgraph), 
+                weight=2
+            )
 
         @translate_stmt.register
         def _(
@@ -581,8 +586,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
             for output_node in out_nodes:
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
-
-            return [func]
 
         start_container = containers[con_id]
         Occs[con_id] = 0
@@ -645,10 +648,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 "dpi": 227, 
                 "fontsize": 20, 
                 "fontname": "Menlo", 
-                "constaint":"false",
-                # "newrank":"true", 
+                "compound": "true",
+                "splines": "true",
                 "rankdir": "TB",
-                "rank":"min",
+                "ranksep": 1,
             }
         )
         A.node_attr.update({
@@ -673,12 +676,13 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 label=subgraph.basename,
                 style="bold, rounded",
                 rankdir="TB",
-                rank="min",
+                ranksep=2,
                 color=subgraph.border_color,
             )
 
-            input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
-            container_subgraph.add_subgraph(list(input_var_nodes))
+            # input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
+            # container_subgraph.add_subgraph(list(input_var_nodes))
+            container_subgraph.add_subgraph(subgraph.nodes)
 
             for new_subgraph in self.subgraphs.successors(subgraph):
                 populate_subgraph(new_subgraph, container_subgraph)
