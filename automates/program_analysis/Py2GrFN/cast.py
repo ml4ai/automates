@@ -24,9 +24,9 @@ from .cast_utils import (
     flatten
 )
 
-from model_assembly.networks import GroundedFunctionNetwork
+from automates.model_assembly.networks import GroundedFunctionNetwork
 
-from model_assembly.structures import (
+from automates.model_assembly.structures import (
     GenericContainer,
     GenericStmt,
     GenericIdentifier,

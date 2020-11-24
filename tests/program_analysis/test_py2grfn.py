@@ -33,11 +33,11 @@ def get_new_uuid_func():
 #                                                                          #
 ############################################################################
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_boolean_expr_and():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/boolean_expr/boolean_expr_and.py")
     
@@ -59,11 +59,11 @@ def get_new_uuid_func():
 #     # Cleanup
 #     cleanup(temp_json)
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_boolean_expr_or():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/boolean_expr/boolean_expr_or.py")
     
@@ -85,11 +85,11 @@ def get_new_uuid_func():
 #     # Cleanup
     # cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_boolean_expr_not():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/boolean_expr/boolean_expr_not.py")
     
@@ -111,11 +111,11 @@ def test_boolean_expr_not():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_boolean_expr_large():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/boolean_expr/boolean_expr_large.py")
     
@@ -138,11 +138,11 @@ def test_boolean_expr_large():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_assignment_expr():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/assignment/assignment_expr.py")
     
@@ -165,11 +165,11 @@ def test_assignment_expr():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_assignment_literal():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/assignment/assignment_literal.py")
     
@@ -192,11 +192,11 @@ def test_assignment_literal():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_assignment_to_var():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/assignment/assignment_to_var.py")
     
@@ -219,11 +219,11 @@ def test_assignment_to_var():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_binary_operators_add():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/binary_operators/binary_operators_add.py")
     
@@ -246,11 +246,11 @@ def test_binary_operators_add():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_binary_operators_sub():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/binary_operators/binary_operators_sub.py")
     
@@ -273,11 +273,11 @@ def test_binary_operators_sub():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_binary_operators_divide():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/binary_operators/binary_operators_divide.py")
     
@@ -300,11 +300,11 @@ def test_binary_operators_divide():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_binary_operators_mul():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/binary_operators/binary_operators_mul.py")
     
@@ -327,11 +327,11 @@ def test_binary_operators_mul():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_binary_operators_large():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/binary_operators/binary_operators_large.py")
     
@@ -354,11 +354,11 @@ def test_binary_operators_large():
     # Cleanup
     cleanup(temp_json)
 
-@patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-@patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+@patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+@patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 def test_binary_operators_with_vars():
-    model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-    model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+    automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+    automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
     filepath = Path(f"{DATA_DIR}/binary_operators/binary_operators_with_vars.py")
     
@@ -381,11 +381,11 @@ def test_binary_operators_with_vars():
     # Cleanup
     cleanup(temp_json)
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_tuples_assign():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/tuples/tuples_assign.py")
     
@@ -409,11 +409,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_tuples_return():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/tuples/tuples_return.py")
     
@@ -436,11 +436,11 @@ def test_binary_operators_with_vars():
 #     # Cleanup
 #     cleanup(temp_json)
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_while_loops_basic():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/while_loops/while_loops_basic.py")
     
@@ -464,11 +464,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_while_loops_large_expression():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/while_loops/while_loops_large_expression.py")
     
@@ -492,11 +492,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_while_loops_nested():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/while_loops/while_loops_nested.py")
     
@@ -520,11 +520,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_for_loops_basic():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/for_loops/for_loops_basic.py")
     
@@ -548,11 +548,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_for_loops_nested():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/for_loops/for_loops_nested.py")
     
@@ -576,11 +576,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_all_variable_def_types():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_all_variable_def_types.py")
     
@@ -604,11 +604,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_elif():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_elif.py")
     
@@ -632,11 +632,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_elif_else():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_elif_else.py")
     
@@ -660,11 +660,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_elif_else_large():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_elif_else_large.py")
     
@@ -688,11 +688,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_elif_large():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_elif_large.py")
     
@@ -716,11 +716,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_else():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_else.py")
     
@@ -744,11 +744,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_multiple_assigns_body():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_multiple_assigns_body.py")
     
@@ -772,11 +772,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_if_multiple_variables_body():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/if_multiple_variables_body.py")
     
@@ -800,11 +800,11 @@ def test_binary_operators_with_vars():
 #     cleanup(temp_json)
 
 
-# @patch.object(model_assembly.networks, 'uuid', Mock(wraps=uuid))
-# @patch.object(model_assembly.networks, 'datetime', Mock(wraps=datetime))
+# @patch.object(automates.model_assembly.networks, 'uuid', Mock(wraps=uuid))
+# @patch.object(automates.model_assembly.networks, 'datetime', Mock(wraps=datetime))
 # def test_nested_if():
-#     model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
-#     model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
+#     automates.model_assembly.networks.datetime.datetime.now.return_value = datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+#     automates.model_assembly.networks.uuid.uuid4 = get_new_uuid_func()
 
 #     filepath = Path(f"{DATA_DIR}/if/nested_if.py")
     
