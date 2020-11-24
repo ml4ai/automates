@@ -140,7 +140,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance; where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
-    action: ${action}
+#    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
       variable:Concept = nsubjpass | advcl nsubj

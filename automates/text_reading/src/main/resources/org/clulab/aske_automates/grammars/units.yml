@@ -21,7 +21,7 @@ rules:
     example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
     Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
     pattern: |
-      [word = /.*/] [word = "-"] [tag = "CD"]
+      [word = /[A-Za-z]/ ] [word = "-"] [tag = "CD"]
 
   - name: number_unit
     label: Unit
