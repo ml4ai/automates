@@ -183,7 +183,7 @@ class GrobidEntityFinder(val grobidClient: GrobidQuantitiesClient, private var t
 object GrobidEntityFinder {
   // Odin Mention labels
   val RAW_VALUE_LABEL: String = "Value"
-  val UNIT_LABEL: String = "Unit"
+  val UNIT_LABEL: String = "UnitRelation"
   val VALUE_AND_UNIT: String = "ValueAndUnit"
   val INTERVAL_LABEL: String = "Interval"
   // Argument names

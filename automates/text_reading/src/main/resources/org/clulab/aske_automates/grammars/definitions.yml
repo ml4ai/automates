@@ -224,6 +224,26 @@ rules:
       definition: Concept = nsubjpass
 
 
+  - name: multiplied_by_def_var
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "which is the transmissibility τ multiplied by the average number of people exposed c."
+    action: ${action}
+    pattern: |
+      trigger = [word="multiplied"]
+      definition:Concept = nmod_by
+      variable:Variable = nmod_by nmod_of acl nmod | <acl dep
+
+  - name: number_of_def_val
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
+    action: ${action}
+    pattern: |
+       (?<definition> [word = "number"] [word="of"] [word=/[a-z]*/]{1,5}) @variable:Variable
+
 #todo: revisit
 #  - name: where_var_def
 #    label: Definition

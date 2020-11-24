@@ -144,4 +144,9 @@ rules:
     pattern: |
       [tag = "NN"] "(" [word = "s" & tag = "NNS"] ")"
 
-
+  - name: "states"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      (?<= [entity="LOCATION"]) [word=","] [word=/[A-Z]/]

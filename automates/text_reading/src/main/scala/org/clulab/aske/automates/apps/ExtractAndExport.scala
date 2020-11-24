@@ -88,7 +88,7 @@ object ExtractAndExport extends App {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
     }
-    val unitMentions = mentions.filter(_ matches "Unit")
+    val unitMentions = mentions.filter(_ matches "UnitRelation")
     println("Unit setting mentions: ")
     for (m <- unitMentions) {
       println("----------------")

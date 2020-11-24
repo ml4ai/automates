@@ -139,7 +139,7 @@ object OdinEngine {
   val VALUE_LABEL: String = "Value"
   val VARIABLE_LABEL: String = "Variable"
   val VARIABLE_GAZETTEER_LABEL: String = "VariableGazetteer"
-  val UNIT_LABEL: String = "Unit"
+  val UNIT_LABEL: String = "UnitRelation"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"

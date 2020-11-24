@@ -75,7 +75,7 @@ rules:
       (?<=product of|values for) @variable:Concept and @variable:Concept
 
   - name: var_model
-    label: Model # should this be a Model instead?
+    label: Model
     priority: ${priority}
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
@@ -90,7 +90,15 @@ rules:
     example: "a per-capita rate γ"
     pattern: |
       [entity="B-GreekLetter"]
-#
+
+  - name: end_of_sent_var
+    label: Variable
+    priority: ${priority}
+    type: token
+    example: "a per-capita rate γ"
+    pattern: |
+      [word=/[A-Za-z]\./]
+
 #  - name: var_greek_and_latin
 #    label: Variable
 #    priority: ${priority}
