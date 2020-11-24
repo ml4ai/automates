@@ -57,7 +57,7 @@ def op_to_lambda(op):
         ast.Pow : "**",
         ast.UAdd : "+",
         ast.USub : "-",
-        ast.Not : " not ",
+        ast.Not : "not ",
         ast.Invert : "~",
         ast.And : " and ",
         ast.Or : " or ",

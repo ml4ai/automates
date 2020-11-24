@@ -2,7 +2,8 @@ from typing import List, Dict, Iterable, Any
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from dataclasses import dataclass
-from uuid import uuid4
+import uuid
+import random
 import datetime
 import json
 import itertools
@@ -32,7 +33,7 @@ from .structures import (
     VarType,
     DataType,
 )
-from utils.misc import choose_font
+from ..utils.misc import choose_font
 
 
 FONT = choose_font()
@@ -40,6 +41,15 @@ FONT = choose_font()
 dodgerblue3 = "#1874CD"
 forestgreen = "#228b22"
 
+# -------------------------------------------
+# Remove this block to generate different
+# UUIDs everytime you run this code.
+# This block should be right below the uuid
+# import.
+rd = random.Random()
+rd.seed(0)
+uuid.uuid4 = lambda: uuid.UUID(int=rd.getrandbits(128))
+# -------------------------------------------
 
 @dataclass(repr=False, frozen=False)
 class GenericNode(ABC):
@@ -54,7 +64,7 @@ class GenericNode(ABC):
 
     @staticmethod
     def create_node_id() -> str:
-        return str(uuid4())
+        return str(uuid.uuid4())
 
     @abstractmethod
     def get_kwargs(self):
@@ -590,10 +600,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
         start_container = containers[con_id]
         Occs[con_id] = 0
         translate_container(start_container, [])
-        grfn_uid = str(uuid4())
-        date_created = datetime.datetime.now().strftime("%Y-%m-%d")
+        grfn_uid = str(uuid.uuid4())
+
         return cls(
-            grfn_uid, con_id, date_created, network, hyper_edges, subgraphs
+            grfn_uid, con_id, datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"), network, hyper_edges, subgraphs
         )
 
     def to_FCG(self):

@@ -1,0 +1,45 @@
+{
+    "date_created": "2020-01-01T00:00:00.000000",
+    "functions": [
+        {
+            "lambda": "lambda :(10)*(20)",
+            "reference": "",
+            "type": "LITERAL",
+            "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+        }
+    ],
+    "hyper_edges": [
+        {
+            "function": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+            "inputs": [],
+            "outputs": [
+                "e3e70682-c209-4cac-629f-6fbed82c07cd"
+            ]
+        }
+    ],
+    "identifier": "@container::initial::@global::main",
+    "subgraphs": [
+        {
+            "basename": "main",
+            "border_color": "forestgreen",
+            "namespace": "initial",
+            "nodes": [
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                "e3e70682-c209-4cac-629f-6fbed82c07cd"
+            ],
+            "occurrence_num": 0,
+            "scope": "@global"
+        }
+    ],
+    "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+    "variables": [
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::x::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd"
+        }
+    ]
+}
