@@ -30,6 +30,8 @@ libraryDependencies ++= {
     "com.typesafe.play" %% "play-json" % "2.7.0",
     "org.json4s" %% "json4s-jackson" % "0.1.0",
     "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
+//    "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.5",
+//    "org.apache.spark" %% "spark-sql" % "3.0.0" % "compile"
 
 
   )

@@ -11,12 +11,15 @@ import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
 import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
-import org.clulab.aske.automates.data.ScienceParsedDataLoader
+import org.clulab.aske.automates.data.{PlainTextDataLoader, ScienceParsedDataLoader}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
 import ujson.Value
+
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 //import org.clulab.odin._
 import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
@@ -159,6 +162,38 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
     val outFile = json("outfile").str
     mentions.saveJSON(outFile, pretty=true)
+    Ok("")
+  }
+
+  def parquetJson_to_mentions: Action[AnyContent] = Action { request =>
+    val data = request.body.asJson.get.toString()
+    val json = ujson.read(data)
+    val parquetJson = json("pathToJson").str
+    logger.info(s"Extracting mentions from $parquetJson")
+//    val scienceParseDoc = scienceParse.parsePdf(pdfFile)
+    val jsonFile = new File(parquetJson)
+    val lines = Source.fromFile(jsonFile).getLines
+//    val fullJson = new ujson.Obj("documents" -> lines.map(l => ujson.read(l))))
+
+    val linesAsArray = new ArrayBuffer[ujson.Value]()
+    for (l <- lines) {
+//      val lineAsJson = json4s.jackson.prettyJson(json4s.jackson.parseJson(l))
+      val lineAsUjson = ujson.read(l)
+      linesAsArray.append(lineAsUjson)
+      println(lineAsUjson)
+    }
+
+    val linesAsUjson = new ujson.Arr(linesAsArray)
+    val fullDocJson = ujson.Obj("sections" -> linesAsUjson)
+    println(fullDocJson)
+//    val contents =
+//    val texts = if (scienceParseDoc.sections.isDefined)  {
+//      scienceParseDoc.sections.get.map(_.headingAndText) ++ scienceParseDoc.abstractText
+//    } else scienceParseDoc.abstractText.toSeq
+//    logger.info("Finished converting to text")
+//    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
+//    val outFile = json("outfile").str
+//    mentions.saveJSON(outFile, pretty=true)
     Ok("")
   }
 
