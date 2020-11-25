@@ -176,23 +176,33 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 //    val fullJson = new ujson.Obj("documents" -> lines.map(l => ujson.read(l))))
 
     val linesAsArray = new ArrayBuffer[ujson.Value]()
+    val texts = new ArrayBuffer[String]()
     for (l <- lines) {
 //      val lineAsJson = json4s.jackson.prettyJson(json4s.jackson.parseJson(l))
       val lineAsUjson = ujson.read(l)
       linesAsArray.append(lineAsUjson)
-      println(lineAsUjson)
+//      println(lineAsUjson)
+      texts.append(lineAsUjson.obj("content").str)
     }
 
     val linesAsUjson = new ujson.Arr(linesAsArray)
     val fullDocJson = ujson.Obj("sections" -> linesAsUjson)
-    println(fullDocJson)
+//    println(fullDocJson)
 //    val contents =
 //    val texts = if (scienceParseDoc.sections.isDefined)  {
 //      scienceParseDoc.sections.get.map(_.headingAndText) ++ scienceParseDoc.abstractText
 //    } else scienceParseDoc.abstractText.toSeq
 //    logger.info("Finished converting to text")
-//    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
-//    val outFile = json("outfile").str
+    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some("parquetJson")))
+    val mentionsWithArgs = mentions.filter(m => m.arguments.nonEmpty)
+    for (dm <- mentionsWithArgs) {
+      println("----------------")
+      println(dm.text)
+      for (arg <- dm.arguments) {
+        println("arg: " + arg._1 + ": " + dm.arguments(arg._1).head.text)
+      }
+    }
+//    val outFile = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/double_epidemic_model_COSMOS/documents/mentions_from_sample.json"
 //    mentions.saveJSON(outFile, pretty=true)
     Ok("")
   }
