@@ -6,19 +6,36 @@ import logging
 import json
 import multiprocessing
 import time
+import argparse
 
+from datetime import datetime
 from multiprocessing import Pool, Lock, TimeoutError
 from threading import Timer
 from pdf2image import convert_from_path
 
+# Printing starting time
+print(' ')
+start_time = datetime.now()
+print('Starting at:  ', start_time)
 
 # Defining global lock 
 lock = Lock()
 
+# Argument Parser
+parser = argparse.ArgumentParser(description='Parsing LaTeX equations from arxiv source codes')
+parser.add_argument('-src', '--source', type=str, metavar='', required=True, help='Source path to arxiv folder')
+parser.add_argument('-dir', '--directories', nargs="+",type=int, metavar='', required=True, help='directories to run seperated by space')
+parser.add_argument('-yr', '--year', type=int, metavar='', required=True, help='year of the directories')
+
+group = parser.add_mutually_exclusive_group()
+group.add_argument('-v', '--verbose', action='store_true', help='print verbose')
+args = parser.parse_args()
+
+
 # Setting up Logger - To get log files
 Log_Format = '%(levelname)s:%(message)s'
 
-logging.basicConfig(filename = 'tex2png.log', 
+logging.basicConfig(filename = f'tex2png{str(args.year)}.log', 
                     level = logging.DEBUG, 
                     format = Log_Format, 
                     filemode = 'w')
@@ -27,46 +44,58 @@ logger = logging.getLogger()
 
 
 # Function to kill process if TimeoutError occurs
-kill = lambda process: process.kill()
+#kill = lambda process: process.kill()
+def kill():
+    
+    lambda process: process.kill()
+    
+    if args.verbose:
+        lock.acquire()
+        print(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
+        lock.release()
+   
+    logger.warning(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
 
 # Function to convert PDFs to PNGs
-def pdf2png(folder, pdf_file, png_name, PNG_dst):
+def pdf2png(folder, pdf_file, png_name, PNG_dst, type_of_folder):
     
     global lock 
-    #print(pdf_file)
-    os.chdir(PNG_dst)
     
-    #print(os.path.join(PNG_dst, pdf_file))
+    os.chdir(PNG_dst)
     
     try:
         
-        command_args = ['convert','-background', 'white', '-alpha','remove', '-alpha', 'off',
-                        '-density', '200','-quality', '100',pdf_file, f'{PNG_dst}/{png_name}.png']
+        command_args = ['convert','-background', 'white', 
+                        '-alpha', 'remove', 'off','-density', 
+                        '200','-quality', '100',pdf_file, 
+                        f'{PNG_dst}/{png_name}.png']
         
         subprocess.Popen(command_args, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         
+        # Removing log and aux file if exist
         
-        #convert_from_path(os.path.join(PNG_dst, pdf_file), fmt = 'png', output_folder = PNG_dst, output_file=f'{png_name}.png')
-        
-        # Removing pdf, log and aux file if exist
-        
-        #os.remove(f'{pdf_file.split(".")[0]}.pdf')
         os.remove(f'{pdf_file.split(".")[0]}.log')      
+        
         try:  
             os.remove(f'{pdf_file.split(".")[0]}.aux')
         except:
-            pass
-        
-        
-            #lock.acquire()              
-            #print(f'{pdf_file.split(".")[0]}.aux doesn\'t exists.')
-            #lock.release()
-                  
+            
+            if args.verbose:
+                lock.acquire()              
+                print(f'{pdf_file.split(".")[0]}.aux doesn\'t exists.')
+                lock.release()
+                
+            logger.warning(f'{folder}:{type_of_folder}:{pdf_file.split(".")[0]}.aux doesn\'t exists.')
+                      
     except:
-    
-        lock.acquire()
-        print(f"OOPS!!... This {folder}:{PNG_dst}:{pdf_file} file couldn't convert to png.")
-        lock.release()
+        
+        if args.verbose:
+            lock.acquire()
+            print(f"OOPS!!... This {folder}:{PNG_dst}:{pdf_file} file couldn't convert to png.")
+            lock.release()
+        
+        logger.warning(f"{folder}:{PNG_dst}:{pdf_file} file couldn't convert to png.")
+
                   
 # This function will run pdflatex
 def run_pdflatex(run_pdflatex_list):
@@ -83,29 +112,18 @@ def run_pdflatex(run_pdflatex_list):
     os.chdir(PDF_dst)
     command = ['pdflatex', '-interaction=nonstopmode', '-halt-on-error', os.path.join(type_of_folder,texfile)]
     
-    #try:
     output = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    #stdout, stderr = output.communicate(timeout=5)
     my_timer = Timer(5, kill, [output])
     
     try:
         my_timer.start()
         stdout, stderr = output.communicate()
-     
-        #lock.acquire()
-        #print(" ============= " * 25)
-        #print(stdout)
-        #lock.release()
         
         # Calling pdf2png
-        pdf2png(folder, f'{texfile.split(".")[0]}.pdf', texfile.split(".")[0], PDF_dst)
+        pdf2png(folder, f'{texfile.split(".")[0]}.pdf', texfile.split(".")[0], PDF_dst, type_of_folder)
     
     finally:
         my_timer.cancel()
-    #except TimeoutError:
-    #    lock.acquire()
-    #    print(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
-    #    lock.release()
         
 
 def main(path):
@@ -114,7 +132,7 @@ def main(path):
         
     # Folder path to TeX files
     TexFolderPath = os.path.join(path, "tex_files")
-    #folder = "1402.1282"
+    
     for folder in os.listdir(TexFolderPath):
         
         # make results PNG directories
@@ -137,13 +155,22 @@ def main(path):
             for texfile in os.listdir(type_of_folder):
                 temp.append([folder, type_of_folder, texfile, PDF_dst])
                 
-            with Pool(multiprocessing.cpu_count()-15) as pool:
+            with Pool(multiprocessing.cpu_count()) as pool:
                 result = pool.map(run_pdflatex, temp)
         
 if __name__ == "__main__":
     
-    #for dir in ["1402", "1403", "1404", "1405"]:
-    #    print(dir)
-    dir = "1402"
-    path = f'/xdisk/claytonm/projects/automates/er/gaurav/{DIR}'
-    main(path)
+    for DIR in args.directories:
+        
+        print(DIR)
+        DIR = str(DIR)
+        year = str(args.year)
+        
+        src_path = args.source
+        path = os.path.join(src_path, f'{year}/{DIR}')
+                
+        latex_images = os.path.join(path, 'latex_images')
+        if not os.path.exists(latex_images):
+            subprocess.call(['mkdir', latex_images])
+        
+        main(path)
