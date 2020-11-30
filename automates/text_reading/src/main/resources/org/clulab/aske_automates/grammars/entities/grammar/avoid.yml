@@ -130,6 +130,16 @@ rules:
     pattern: |
       [lemma = /.*@.*\..*/]
 
+  - name: "pages"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [word = "pp"] (?<=[tag=/CD|:|./]+)
 
-
-
+  - name: "paren_plural"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [tag = "NN"] "(" [word = "s" & tag = "NNS"] ")"

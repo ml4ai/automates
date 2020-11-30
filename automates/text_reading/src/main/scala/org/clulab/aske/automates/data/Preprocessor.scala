@@ -39,10 +39,24 @@ object EdgeCaseParagraphPreprocessor {
 }
 
 
+
+
 class PassThroughPreprocessor() extends Preprocessor {
+
+  def looksLikeLanguage(string: String): Boolean = {
+//    println(string)
+//    println(string.count(_.isLetter))
+//    println(string.length)
+//    val lang = string.count(_.isLetter).toDouble / string.length
+//    println("lang: " + lang)
+//    if ((string.count(_.isLetter).toDouble / string.length) > .6) println("LANGUAGE") else {println("NOT LANGUAGE")}
+    return (string.count(_.isLetter).toDouble / string.length) > .6
+  }
   def cleanUp(text: String): String = {
-    val loseVerticalText = text.split("\n").filter(t => t.length > 6).mkString("\n")
-    val loseExtraLongFalseWords = loseVerticalText.split(" ").filter(w => w.length < 25).mkString(" ")
+
+
+    val loseVerticalText = text.split("\n").filter(t => t.length > 6).filter(t => looksLikeLanguage(t)).mkString("\n")
+    val loseExtraLongFalseWords = loseVerticalText.split(" ").filter(w => w.length < 23).mkString(" ")
     val cleanerText = loseExtraLongFalseWords.replaceAll("\n", " ")
     cleanerText
   }

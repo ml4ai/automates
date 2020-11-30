@@ -12,6 +12,7 @@ from .networks import GroundedFunctionNetwork
 from .structures import (
     GenericContainer,
     GenericStmt,
+    CallStmt,
     GenericIdentifier,
     GenericDefinition,
     VariableDefinition,
@@ -240,6 +241,24 @@ class ImperativeInterpreter(SourceInterpreter):
         #   (2) accessor assignment vs math assignment
         #   (3) data change assignment vs regular math assignment
         return NotImplemented
+
+    def find_root_container(self):
+        all_containers = list(self.containers.keys())
+        called_containers = list()
+        for con in self.containers.values():
+            for stmt in con.statements:
+                if isinstance(stmt, CallStmt):
+                    called_containers.append(stmt.call_id)
+        possible_root_containers = list(
+            set(all_containers) - set(called_containers)
+        )
+        if len(possible_root_containers) > 1:
+            raise RuntimeWarning(
+                f"Multiple possible root containers found:\n{possible_root_containers}"
+            )
+        elif len(possible_root_containers) == 0:
+            raise RuntimeError("No possible root containers found:.")
+        return possible_root_containers[0]
 
     def gather_container_stats(self):
         """

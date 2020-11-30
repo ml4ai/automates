@@ -24,7 +24,11 @@ class TextReadingInterface:
         return json.load(open(out_path, "r"))
 
     def get_link_hypotheses(
-        self, mentions_path: str, eqns_path: str, air_path: str
+        self,
+        mentions_path: str,
+        eqns_path: str,
+        grfn_path: str,
+        comments_path: str,
     ) -> dict:
         if not os.path.isfile(mentions_path):
             raise RuntimeError(f"Mentions not found: {mentions_path}")
@@ -32,8 +36,11 @@ class TextReadingInterface:
         if not os.path.isfile(eqns_path):
             raise RuntimeError(f"Equations not found: {eqns_path}")
 
-        if not os.path.isfile(air_path):
-            raise RuntimeError(f"AIR not found: {air_path}")
+        if not os.path.isfile(grfn_path):
+            raise RuntimeError(f"GrFN not found: {grfn_path}")
+
+        if not os.path.isfile(comments_path):
+            raise RuntimeError(f"Comments not found: {comments_path}")
 
         if not mentions_path.endswith(".json"):
             raise ValueError("/align expects mentions to be a JSON file")
@@ -41,37 +48,47 @@ class TextReadingInterface:
         if not eqns_path.endswith(".txt"):
             raise ValueError("/align expects equations to be a text file")
 
-        if not air_path.endswith(".json"):
-            raise ValueError("/align expects AIR to be a JSON file")
+        if not grfn_path.endswith(".json"):
+            raise ValueError("/align expects GrFN to be a JSON file")
 
-        air_data = json.load(open(air_path, "r"))
-        air_variables = list(
-            set(
-                [
-                    {"name": "::".join(v["name"].split("::")[:-1]) + "::0"}
-                    for v in air_data["variables"]
-                ]
-            )
+        if not comments_path.endswith(".json"):
+            raise ValueError("/align expects comments to be a JSON file")
+
+        grfn_data = json.load(open(grfn_path, "r"))
+
+        unique_var_names = list(
+            {
+                "::".join(var_def["identifier"].split("::")[:-1]) + "::0"
+                for var_def in grfn_data["variables"]
+            }
         )
+        variables = [{"name": var_name} for var_name in unique_var_names]
+
+        equations = list()
+        with open(eqns_path, "r") as infile:
+            for eqn_line in infile.readlines():
+                equations.append(eqn_line.strip())
+
         payload = {
             "mentions": mentions_path,
-            "equations": eqns_path,
+            "documents": mentions_path,
+            "equations": equations,
             "source_code": {
-                "variables": air_variables,
-                "comments": air_data["source_comments"],
+                "variables": variables,
+                "comments": json.load(open(comments_path, "r")),
             },
             "toggles": {"groundToSVO": False, "appendToGrFN": False},
             "arguments": {"maxSVOgroundingsPerVar": 5},
         }
-        payload_path = "align_payload.json"
-        json.dump(payload, open("payload_path", "w"))
+        payload_path = f"{os.getcwd()}/align_payload.json"
+        json.dump(payload, open(payload_path, "w"))
 
         res = requests.post(
             f"{self.webservice}/align",
             headers={"Content-type": "application/json"},
             json={"pathToJson": payload_path},
         )
-        print(f"HTTP {res} for /align on:\n\t{mentions_path}\n\t{air_path}\n")
+        print(f"HTTP {res} for /align on:\n\t{mentions_path}\n\t{grfn_path}\n")
         json_dict = res.json()
         return json_dict
 
