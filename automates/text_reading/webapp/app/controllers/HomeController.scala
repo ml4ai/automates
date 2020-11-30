@@ -237,9 +237,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         appendToGrFN
       )
 
-
-
-
       val groundingsAsString = ujson.write(groundings, indent = 4)
 
       val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))

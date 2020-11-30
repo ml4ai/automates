@@ -73,11 +73,10 @@ object ExtractAndAlign {
     // =============================================
     // Alignment
     // =============================================
-    // add in SVO
 
     val alignments = alignElements(
       alignmentHandler,
-      definitionMentions, //fixme: here and in get linkElements---pass all mentions, only definition mentions, other types?
+      definitionMentions,
       parameterSettingMention,
       unitMentions,
       equationChunksAndSource,
@@ -93,86 +92,35 @@ object ExtractAndAlign {
 
     val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
 
-    println("text vars before update with units:" + linkElements(TEXT_VAR))
-    linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION))
-    println("text vars after update with units:" + linkElements(TEXT_VAR))
+    linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION), alignments(TEXT_TO_UNIT))
 
-
-
-//    for (le <- linkElements(TEXT_VAR)) println(le)
     linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
-    println("text vars after update with param settings:" + linkElements(TEXT_VAR))
 
-    println("REACHED HERE")
-    linkElements(TEXT_VAR) = updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
+    linkElements(TEXT_VAR) =  if (groundToSVO) {
+      // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
+      if (alignments.contains("TEXT_TO_SVO")) {
+        updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
+      } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
 
-//        for (le <- linkElements(TEXT_VAR)) println("HERE: " + le)
-//
-//    for (link <- linkElements) println("link: " + link)
-//    println("LINK ELEMENTS: ", linkElements.keys)
+    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
+
     for (le <- linkElements.keys) {
-//      for (item <- linkElements(le)) {
-//
-//        println(item)
-//        val elLink = rehydrateLinkElement(item)
-//        println(elLink)
-//      }
-      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element)}
+      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar)}
     }
 
-//    println(outputJson)
-
-    // maybe hypotheses can have both elements field and then hypotheses field? {elements: {'comment_span': {id: {'actual element'}}, hypotheses: {{el1,el2,score}}}
-//    var hypotheses = getLinkHypotheses(linkElements, alignments)
-    outputJson("links") = getLinkHypotheses(linkElements.toMap, alignments)
-
-
-//    def deduplicateElements(hypotheses: Seq[Obj]): Seq[Obj] = {
-//
-//      val elements = new ArrayBuffer[Obj]()
-//      for (hyp <- hypotheses) {
-//        for (element <- hyp.obj) {
-//
-//
-//
-//        }
-//      }
-//
-//
-//
-//    }
-
-
-//    if (groundToSVO) {
-//      if (SVOgroundings.isDefined) {
-//        logger.info("Making Text-variable/SVO link hypotheses")
-//        //this means they have been read in from json during getArgsForAlignment
-//        val svo_hypotheses = mkLinkHypotheses(SVOgroundings.get)
-//        hypotheses = hypotheses ++ svo_hypotheses
-//      } else {
-//        logger.warn("No svo groundings provided in json; querying the SVO ontology with Sparql")
-//        //query svo here
-//        val groundings = SVOGrounder.groundHypothesesToSVO(hypotheses, maxSVOgroundingsPerVar)
-//        if (groundings.isDefined) {
-//          hypotheses = hypotheses ++ mkLinkHypotheses(groundings.get)
-//        }
-//
-//      }
-//    } else logger.warn("SVO grounding is disabled")
-//
+    val hypotheses = getLinkHypotheses(linkElements.toMap, alignments)
+    outputJson("links") = hypotheses
 
     // the produced hypotheses can be either appended to the input file as "groundings" or returned as a separate ujson object
-//    if (appendToGrFN) {
-//      // Add the grounding links to the GrFN
-//      GrFNParser.addHypotheses(grfn, hypotheses)
-//    } else outputJson
-    outputJson
-
+    if (appendToGrFN) {
+      // Add the grounding links to the GrFN
+      GrFNParser.addHypotheses(grfn, hypotheses)
+    } else outputJson
   }
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
-    println("text var link el string: " + textVarLinkElementString)
-    println("update: " + update)
+//    println("text var link el string: " + textVarLinkElementString)
+//    println("update: " + update)
     textVarLinkElementString + "::" + update
 
   }
@@ -181,64 +129,56 @@ object ExtractAndAlign {
     println("-> " + update)
     val updateString = update.toString()
     println(updateString)
-//    val updateJson = ujson.read(updateString)
-//    println("back to json: " + updateJson)
-//    val results = updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "source" -> sr("source").str))
-//    println("SR results: " + results)
+
 
     textVarLinkElementString + "::" + updateString
 
   }
 
-  def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
+  def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitThroughDefAlignments: Seq[Seq[Alignment]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
-
-//    for (topK <- textToUnitAlignments) {
+//    println("through def: ")
+//    for ((topKThroughDef, i) <- textToUnitThroughDefAlignments.zipWithIndex) {
 ////      println(topK.head.src + " " + topK.head.dst)
-////      for (al <- topK) {
-////        println("text var link el: " + textVarLinkElements(al.src))
-////        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
-////        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
-////
-////      }
+//      for (al <- topKThroughDef) {
+//        println("i: " + i)
+//        println("text var link el: " + textVarLinkElements(al.src))
+//        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
+//        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
+//
+//      }
+//    }
+//    println("through var: ")
+//    for ((topKThroughDef, i) <- textToUnitAlignments.zipWithIndex) {
+//      //      println(topK.head.src + " " + topK.head.dst)
+//      for (al <- topKThroughDef) {
+//        println("i: " + i)
+//        println("text var link el: " + textVarLinkElements(al.src))
+//        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
+//        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
+//
+//      }
 //    }
 
-    println("len unit alignments: " + textToUnitAlignments.length)
-    val updatedTextVars = if (textToUnitAlignments.length > 0) {
+    val updatedTextVars = if (textToUnitThroughDefAlignments.length > 0) {
 
       for {
-        topK <- textToUnitAlignments
+        topK <- textToUnitThroughDefAlignments
         alignment <- topK
         textVarLinkElement = textVarLinkElements(alignment.src)
         unit = if (hasArg(unitMentions.get(alignment.dst), "unit")) {
           unitMentions.get(alignment.dst).arguments("unit").head.text
         } else "None"
 
-
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, unit)
     } else textVarLinkElements.map(el => updateTextVariable(el, "None"))
-
-
 
     updatedTextVars
 
   }
 
   def updateTextVarsWithSVO(textVarLinkElements: Seq[String], SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]], textToSVOAlignments: Seq[Seq[Alignment]]): Seq[String] = {
-
-    println(textVarLinkElements.mkString("|") + "<<<<")
-    println(textToSVOAlignments + "< svo alignment")
-
-    for (topK <- textToSVOAlignments) {
-      //      println(topK.head.src + " " + topK.head.dst)
-      //      for (al <- topK) {
-      //        println("text var link el: " + textVarLinkElements(al.src))
-      //        println("Unit: " + unitMentions.get(al.dst).arguments("unit").head.text)
-      //        println("updated: " + updateTextVariable(textVarLinkElements(al.src), unitMentions.get(al.dst).arguments("unit").head.text))
-      //
-      //      }
-    }
 
     val updatedTextVars = if (textToSVOAlignments.length > 0) {
 
@@ -248,11 +188,7 @@ object ExtractAndAlign {
         textVarLinkElement = textVarLinkElements(alignment.src)
         svoGrounding = if (SVOgroundings.nonEmpty) {
           ujson.Obj("grounding" -> SVOgroundings.get(alignment.dst)._2.map(sr => GrFNParser.sparqlResultTouJson(sr)))
-//          unitMentions.get(alignment.dst).arguments("unit").head.text
         } else "None"
-
-
-
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, svoGrounding)
     } else textVarLinkElements.map(tvle => updateTextVariable(tvle, "None"))
@@ -290,8 +226,6 @@ object ExtractAndAlign {
 
 
         update = value + "::" + valueLeast + "::" + valueMost
-
-        //todo  AND OTHERS eg value least, check what's there
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, update)
     } else textVarLinkElements.map(el => updateTextVariable(el, "None::None::None"))
@@ -299,14 +233,13 @@ object ExtractAndAlign {
     updatedTextVars
   }
 
-  def rehydrateLinkElement(element: String): ujson.Obj = {
+  def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int): ujson.Obj = {
 
     //todo: add more informative source by type, e.g., for text var it's "text" (check with ph about this)
 
     val splitElStr = element.split("::")
-//    println("element: " + element)
     val elType = splitElStr(1)
-//    println("el type: " + elType)
+
     elType match {
       case "text_var" => {
         val id = splitElStr(0)
@@ -320,14 +253,17 @@ object ExtractAndAlign {
         val valueLeast = splitElStr(10)
         val valueMost = splitElStr(11)
         val svoString = splitElStr(12)
-        val updateJson = ujson.read(svoString)
-//        println("back to json: " + updateJson)
-        val results = ujson.Arr(updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "score" -> sr("score").num, "source" -> sr("source").str)))
-        //fixme: toggle for whether or not ground on the fly
-//        val results = SVOGrounder.groundTermsToSVOandRank(identifier, svo_terms.split(","), 3)
-//        println("SR results: " + results)
-//        println("SVO in updated text var in rehydrate: " + svo)
-//        val
+
+        val results = if (groundToSvo) {
+          if (svoString != "None") {
+            val updateJson = ujson.read(svoString)
+            ujson.Arr(updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "score" -> sr("score").num, "source" -> sr("source").str)))
+          } else {
+            logger.info("Querying SVO server")
+            SVOGrounder.groundTermsToSVOandRank(identifier, svo_terms.split(","), maxSVOgroundingsPerVar)
+          }
+        } else ujson.Str("N/A")
+
         val paramSetting = ujson.Obj(
           "value" -> value,
           "valueLeast" -> valueLeast,
@@ -336,7 +272,6 @@ object ExtractAndAlign {
 
         mkTextVarLinkElement(
           uid = id,
-//          elemType = elType,
           source = source,
           originalSentence = originalSentence,
           identifier = identifier,
@@ -353,12 +288,9 @@ object ExtractAndAlign {
         val id = splitElStr(0)
         val source = splitElStr(2)
         val identifier = splitElStr.takeRight(3)(0)
-//        println("identifier: " + identifier)
-
 
         mkLinkElement(
           id = id,
-//          elemType = elType,
           source = source,
           content = identifier,
           contentType = "null"
@@ -370,7 +302,6 @@ object ExtractAndAlign {
 
         mkLinkElement(
           id = id,
-//          elemType = elType,
           source = "text",
           content = equation,
           contentType = "null"
@@ -391,11 +322,8 @@ object ExtractAndAlign {
           contentType = "null"
         )
 
-
       }
     }
-
-
   }
 
   def hasRequiredArgs(m: Mention): Boolean = m.arguments.contains(VARIABLE) && m.arguments.contains(DEFINITION)
@@ -508,7 +436,7 @@ object ExtractAndAlign {
     }
 
     /** Align text definition to unit variable
-      * this should take care of unit relaions like this: The density of water is taken as 1.0 Mg m-3.
+      * this should take care of unit relations like this: The density of water is taken as 1.0 Mg m-3.
       */
     if (textDefinitionMentions.isDefined && unitMentions.isDefined) {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("definition"))).map(_.toLowerCase), unitMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
@@ -519,10 +447,10 @@ object ExtractAndAlign {
     /** Align text variable to param setting variable
       * this should take care of unit relaions like this: The density of water is taken as 1.0 Mg m-3.
       */
-    if (textDefinitionMentions.isDefined && unitMentions.isDefined) {
+    if (textDefinitionMentions.isDefined && parameterSettingMentions.isDefined) {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), parameterSettingMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-      alignments(TEXT_TO_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
+      alignments(TEXT_TO_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
     }
 
 
@@ -560,13 +488,6 @@ object ExtractAndAlign {
 
       }
 
-
-//        mkLinkElement(
-//          elemType = "comment_span",
-//          source = commentMention.document.id.getOrElse("unk_file"),
-//          content = commentMention.arguments(DEFINITION).head.text,
-//          contentType = "null"
-//        )
       }
     }
 
@@ -576,12 +497,7 @@ object ExtractAndAlign {
       linkElements(SOURCE) = variableNames.get.map { varName =>
 
         randomUUID + "::" + "identifier" + "::" + varName.split("::")(1) + "::" + varName + "::" + "null"
-//        mkLinkElement(
-//          elemType = "identifier",
-//          source = varName.split("::")(1),
-//          content = varName,
-//          contentType = "null"
-//        )
+
       }
     }
 
@@ -593,12 +509,6 @@ object ExtractAndAlign {
         val sent = mention.sentence
         val offsets = mention.tokenInterval.toString()
         randomUUID + "::" + "text_span" +"::" +  s"${docId}_sent${sent}_$offsets" + "::" + mention.arguments(DEFINITION).head.text + "::" + "null"
-//        mkLinkElement(
-//          elemType = "text_span",
-//          source = s"${docId}_sent${sent}_$offsets",
-//          content = mention.arguments(DEFINITION).head.text,
-//          contentType = "null"
-//        )
       }
     }
 
@@ -614,14 +524,6 @@ object ExtractAndAlign {
 
 
         randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",")
-//        mkTextLinkElement(
-//          elemType = "text_var",
-//          source = s"${docId}_sent${sent}_$offsets",
-//          content = mention.arguments(VARIABLE).head.text,
-//          contentType = "null",
-//          svoQueryTerms = SVOGrounder.getTerms(mention).getOrElse(Seq.empty)
-//          //todo: need something that will link unit and param setting mention, maybe by now, have a var to unit and var to param settings done
-//        )
       }
     }
 
@@ -637,19 +539,10 @@ object ExtractAndAlign {
           equation2uuid(orig) = id
           randomUUID + "::" + "equation_span" + "::" + id + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
         }
-
-//        mkLinkElement(
-//          elemType = "equation_span",
-//          source = orig,
-//          content = AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap),
-//          contentType = "null"
-//        )
-
       }
 
       linkElements(FULL_TEXT_EQUATION) = equation2uuid.keys.map(key => equation2uuid(key).toString() + "::" + "fullTextEquation" + "::" + key ).toSeq
     }
-
 
     linkElements
   }
@@ -673,54 +566,16 @@ object ExtractAndAlign {
   }
 
 
-//  def mkLinkHypotheses(groundings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
-//
-//    //todo: groundings with Nones should not make it here
-//    logger.info("Making link hypotheses for svo groundings")
-////    println("groundings length: " + groundings.keys.toList.length)
-////    println(s"groundings inside mkling hypotheses: $groundings")
-//    val groundingObjects = for {
-//      //each grounding is a mapping from text variable to seq of possible svo groundings (as sparqlResults)
-//      v <- groundings.keys //variable
-//      gr <- groundings(v)
-//      //text link element//text link element
-//      srcLinkElement = mkLinkElement(
-//        elemType = "text_var",
-//        source = v match {
-//          case v if v.contains("::") => v.split("::").last
-//          case _ => "text_pdf"
-//        },
-//        content = v match {
-//          case v if v.contains("::") => v.split("::").head
-//          case _ => v
-//        }, //the variable associated with the definition that we used for grounding; if we get the variable from other link hypotheses, it also includes the name of the pdf it came from in this format <variable_name>::<source_pdf>; todo: include that info in the svo grounding endpoint? or is it already there?
-//        contentType = "null"
-//      )
-//      dstLinkElement = GrFNParser.mkSVOElement(gr)
-//
-//    } yield mkHypothesis(srcLinkElement, dstLinkElement, gr.score.get)
-//
-////    println(s"grounding objects: ${groundingObjects.mkString(" || ")}")
-//    groundingObjects.toSeq
-//  }
-
   def getLinkHypotheses(linkElements: Map[String, Seq[String]], alignments: Map[String, Seq[Seq[Alignment]]]): Seq[Obj] = {//, SVOGroungings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
-    println("GETTING HYPOTHESES")
     // Store them all here
     val hypotheses = new ArrayBuffer[ujson.Obj]()
     val linkElKeys = linkElements.keys.toSeq
-    println("Link el keys in get link hypotheses: " + linkElKeys)
     // Comment -> Text
     if (linkElKeys.contains(COMMENT) && linkElKeys.contains(TEXT_VAR)) {
-      println("has comments and text")
-
-      //since we got rid of TEXT element link, we instead use text_var; the type of alignment stays comment_to_text bc that's the type of alignment we need and the elements of text_var and text_span should be in the same order bc they come from same text definitions //todo: double-check this
       hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(TEXT_VAR), alignments(COMMENT_TO_TEXT)))
-//      hypotheses.appendAll(mkLinkHypothesisWithIDs(linkElements(COMMENT), linkElements(TEXT), alignments(COMMENT_TO_TEXT), COMMENT, TEXT))
     }
 
 
-//
     // Src Variable -> Comment
     if (linkElKeys.contains(SOURCE) && linkElKeys.contains(COMMENT)) {
       println("has source and comment")
@@ -735,16 +590,10 @@ object ExtractAndAlign {
     }
 
     // TextVar -> TextDef (text_span)
-
     //taken care of while creating link elements
     if (linkElKeys.contains(TEXT_VAR) && linkElKeys.toSeq.contains(TEXT)) {
-
       hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT)))
     }
-//
-//     Text -> SVO grounding
-//     hypotheses.appendAll(mkLinkHypothesis(SVOGroungings))
-
 
     hypotheses
   }
@@ -817,9 +666,6 @@ object ExtractAndAlign {
       val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
       val files = FileUtils.findFiles(inputDir, dataLoader.extension)
       getTextMentions(textReader, dataLoader, textRouter, files)
-  //    val source = scala.io.Source.fromFile()
-  //    val mentionsJson4s = json4s.jackson.parseJson(source.getLines().toArray.mkString(" "))
-  //    source.close()
 
     }
     val textDefinitionMentions = allUsedTextMentions._1
