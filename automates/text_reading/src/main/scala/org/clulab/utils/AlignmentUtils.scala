@@ -2,7 +2,6 @@ package org.clulab.utils
 
 import java.io.File
 
-import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, hasUnitArg}
@@ -29,7 +28,7 @@ object AlignmentJsonUtils {
 
 
     // load text mentions
-    val definitionMentions =  if (jsonKeys.contains("mentions")) {
+    val allMentions =  if (jsonKeys.contains("mentions")) {
       val mentionsPath = json("mentions").str
       val mentionsFile = new File(mentionsPath)
       val ujsonMentions = ujson.read(mentionsFile.readString())
@@ -38,47 +37,32 @@ object AlignmentJsonUtils {
       val jvalueMentions = upickle.default.transform(
         ujsonMentions
       ).to(Json4sJson)
-      println("-->" + jvalueMentions)
       val textMentions = JSONSerializer.toMentions(jvalueMentions)
+      Some(textMentions)
 
-      Some(textMentions
+    } else None
+
+
+    val definitionMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
         .filter(m => m.label matches "Definition")
         .filter(hasRequiredArgs))
     } else None
 
-
-    val parameterSettingMentions =  if (jsonKeys.contains("mentions")) {
-      val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
-      //transform the mentions into json4s format, used by mention serializer
-      val jvalueMentions = upickle.default.transform(
-        ujsonMentions
-      ).to(Json4sJson)
-      val textMentions = JSONSerializer.toMentions(jvalueMentions)
-
-      Some(textMentions
-        .filter(m => m.label matches "ParameterSetting"))
-//        .filter(hasRequiredArgs))
+    val parameterSettingMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
+        .filter(m => m.label matches "ParameterSetting")
+        .filter(hasRequiredArgs))
     } else None
 
-    val unitMentions =  if (jsonKeys.contains("mentions")) {
-      val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
-      //transform the mentions into json4s format, used by mention serializer
-      val jvalueMentions = upickle.default.transform(
-        ujsonMentions
-      ).to(Json4sJson)
-      val textMentions = JSONSerializer.toMentions(jvalueMentions)
-
-      Some(textMentions
+    val unitMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
         .filter(m => m.label matches "Unit")
-        .filter(hasUnitArg))
+        .filter(hasRequiredArgs))
     } else None
-
-//    println("Unit mentions should be printed here: ")
-//    for (um <- unitMentions.get) {
-//      println(um.text)
-//      println(um.arguments("unit").head.text)
-//      println(um.arguments("variable").head.text)
-//    }
 
 
     // get the equations
