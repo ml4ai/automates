@@ -223,6 +223,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.variableNames,
         argsForGrounding.variableShortNames,
         argsForGrounding.definitionMentions,
+        argsForGrounding.parameterSettingMentions,
+        argsForGrounding.unitMentions,
         argsForGrounding.commentDefinitionMentions,
         argsForGrounding.equationChunksAndSource,
         argsForGrounding.svoGroundings,
@@ -234,7 +236,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         scoreThreshold,
         appendToGrFN
       )
-
 
       val groundingsAsString = ujson.write(groundings, indent = 4)
 

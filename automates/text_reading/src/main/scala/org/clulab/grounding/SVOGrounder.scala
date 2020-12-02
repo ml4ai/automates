@@ -12,6 +12,7 @@ import scala.sys.process.Process
 import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
+import org.clulab.aske.automates.grfn.GrFNParser
 //todo: pass the python query file from configs
 //todo: document in wiki
 
@@ -146,6 +147,18 @@ object SVOGrounder {
 
 
     } else None
+  }
+
+  def groundTermsToSVOandRank(variable: String, terms: Seq[String], k: Int): ujson.Arr = {
+    val resultsFromAllTerms = groundTerms(terms)
+    val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
+    if (svoGroundings.isDefined) {
+      return ujson.Arr(svoGroundings.get.map(_._2).flatten.map(sr => GrFNParser.sparqlResultTouJson(sr)))
+
+
+//
+    } else ujson.Arr("None")
+
   }
 
   /** grounding one mention; return a map from the name if the variable from the mention to its svo grounding */

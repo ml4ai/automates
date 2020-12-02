@@ -2,10 +2,9 @@ package org.clulab.utils
 
 import java.io.File
 
-import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, hasUnitArg}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
@@ -29,7 +28,7 @@ object AlignmentJsonUtils {
 
 
     // load text mentions
-    val definitionMentions =  if (jsonKeys.contains("mentions")) {
+    val allMentions =  if (jsonKeys.contains("mentions")) {
       val mentionsPath = json("mentions").str
       val mentionsFile = new File(mentionsPath)
       val ujsonMentions = ujson.read(mentionsFile.readString())
@@ -39,11 +38,32 @@ object AlignmentJsonUtils {
         ujsonMentions
       ).to(Json4sJson)
       val textMentions = JSONSerializer.toMentions(jvalueMentions)
+      Some(textMentions)
 
-      Some(textMentions
+    } else None
+
+
+    val definitionMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
         .filter(m => m.label matches "Definition")
         .filter(hasRequiredArgs))
     } else None
+
+    val parameterSettingMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
+        .filter(m => m.label matches "ParameterSetting")
+        .filter(hasRequiredArgs))
+    } else None
+
+    val unitMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
+        .filter(m => m.label matches "Unit")
+        .filter(hasRequiredArgs))
+    } else None
+
 
     // get the equations
     val equationChunksAndSource = if (jsonKeys.contains("equations")) {
@@ -78,14 +98,14 @@ object AlignmentJsonUtils {
     //deserialize svo groundings if a) grounding svo and b) if svo groundings have been provided in the input
     val svoGroundings = if (groundToSVO) {
       if (jsonKeys.contains("SVOgroundings")) {
-        Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).toMap)
+        Some(json("SVOgroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlResult(gr("searchTerm").str, gr("osvTerm").str, gr("className").str, Some(gr("score").arr.head.num), gr("source").str)).toSeq).map(item => (item._1, item._2)))
       } else None
 
     } else None
 
 
 
-    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, equationChunksAndSource, svoGroundings)
+    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")

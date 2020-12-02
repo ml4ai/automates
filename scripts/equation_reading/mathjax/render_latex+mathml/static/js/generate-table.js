@@ -8,7 +8,7 @@ const format_xml = require('xml-formatter');
 function build_table() {
 
   let table = $("#table");
-  let i = 0;
+  //let i = 0;
 
   // For each latex source datum in data:
   //   generate a table row, with
@@ -17,6 +17,9 @@ function build_table() {
   //     <td> that has innerHTML as raw mml -- available to be rendered by MathJax
   //     <td> that contains pre-formatted MathML
   for (let element of eqn_src) {
+
+    let i = element["eqn_num"];
+    //console.log(i);
 
     let row = $("<tr/>",{ class: "datum" });
     var cell = $("<td/>", { id: `tex_src_${i}`,
@@ -35,6 +38,7 @@ function build_table() {
     row.append(cell);
 
     // xml-formatter options to display xml more compactly
+//    mml_formatted = mml
     mml_formatted = format_xml(mml, {
       indentation: '  ',
       collapseContent: true,
