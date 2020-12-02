@@ -292,6 +292,8 @@ object ExtractAndAlign {
     linkElements.toMap
   }
 
+
+
   def mkLinkHypothesisTextVarDef(variables: Seq[Obj], definitions: Seq[Obj]): Seq[Obj] = {
     assert(variables.length == definitions.length)
     for {
@@ -374,6 +376,12 @@ object ExtractAndAlign {
     hypotheses
   }
 
+
+  def get2PaperLinkHypotheses(paper1LinkElements: Seq[Obj], paper2LinkElements: Seq[Obj], alignment: Seq[Seq[Alignment]]): Seq[Obj] = {
+    val hypotheses = new ArrayBuffer[ujson.Obj]()
+    hypotheses.appendAll(mkLinkHypothesis(paper1LinkElements, paper2LinkElements, alignment))
+    hypotheses
+  }
 
   def is_balanced(string: String): Boolean = {
     is_balanced_delim(string, "(", ")") && is_balanced_delim(string, "{", "}") && is_balanced_delim(string, "[", "]")

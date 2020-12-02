@@ -62,7 +62,7 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   def this(w2vPath: String, relevantArgs: Set[String]) = this(new Word2Vec(w2vPath), relevantArgs)
 
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
-    alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs)), dstMentions.map(Aligner.getRelevantText(_, relevantArgs)))
+    alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()), dstMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()))
   }
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
@@ -70,6 +70,7 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
       score = compare(src, dst) + 2 * (1.0 / (editDistance(src, dst) + 1.0))
+//      score =  (1.0 / (editDistance(src, dst) + 1.0))
     } yield Alignment(i, j, score)
     // redundant but good for debugging
     exhaustiveScores

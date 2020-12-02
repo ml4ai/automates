@@ -7,7 +7,7 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.alignment.AlignmentHandler
+import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
 import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
@@ -17,6 +17,10 @@ import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
 import ujson.Value
+import ujson.json4s.Json4sJson
+
+import scala.collection.immutable.ListMap
+import scala.collection.mutable
 //import org.clulab.odin._
 import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
@@ -247,6 +251,83 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   }
 
+  def readMentionsFromJson(pathToMentionsFile: String, mentionType: String): Seq[Mention] = {
+    val mentionsFile = new File(pathToMentionsFile)
+    val ujsonMentions = ujson.read(mentionsFile.readString())
+    // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+    //transform the mentions into json4s format, used by mention serializer
+    val jvalueMentions = upickle.default.transform(
+      ujsonMentions
+    ).to(Json4sJson)
+    val textMentions = JSONSerializer.toMentions(jvalueMentions)
+
+    val mentions = textMentions
+      .filter(m => m.label matches mentionType)
+      .filter(hasRequiredArgs)
+    mentions
+  }
+
+  def alignMentionsFromTwoModels: Action[AnyContent] = Action { request =>
+
+    println("HERE")
+    val data = request.body.asJson.get.toString()
+    println(data)
+    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
+    val jsonPath = pathJson("pathToJson").str
+    val jsonFile = new File(jsonPath)
+    val json = ujson.read(jsonFile.readString())
+
+    val jsonKeys = json.obj.keys.toList
+
+    val mentions1Path = json("mentionsPaper1").str
+    val mentions2Path = json("mentionsPaper2").str
+    val defMentionsPaper1 = readMentionsFromJson(mentions1Path, "Definition")
+    val defMentionsPaper2 = readMentionsFromJson(mentions2Path, "Definition")
+    val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
+
+//    def docFreq(word: String, defTexts: Seq[Array[String]]): Int = {
+//      var counter = 0
+//      for (dt <- defTexts) {
+//        if (dt.contains(word)) counter += 1
+//      }
+//      counter
+//    }
+//    def getIdfs(mentions: Seq[Mention]): Map[String, Double] = {
+//      val defTexts = mentions.map(m => m.arguments("definition").head.text.toLowerCase().split(" "))
+//      val vocab = defTexts.flatten.distinct.map(_.toLowerCase())
+//      val word2idf = mutable.Map[String, Double]()
+//      val n_docs = defTexts.length
+//      for (w <- vocab) {
+//        println("df: " + w + " " + docFreq(w, defTexts))
+//        val idf = math.log((1+n_docs)/(1 + docFreq(w.toLowerCase(), defTexts)))
+//        word2idf += (w -> idf)
+//      }
+//      word2idf.toMap
+//    }
+//
+//
+//    val perWordIdf = getIdfs(defMentionsPaper1 ++ defMentionsPaper2)
+
+//    for (w <- ListMap(perWordIdf.toSeq.sortBy(_._2):_*)) println(w._1 + " " + w._2)
+
+    val alignments = modelCompAlignmentHandler.w2v.alignMentions(defMentionsPaper1, defMentionsPaper2)
+    // group by src idx, and keep only top k (src, dst, score) for each src idx
+    val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug = false)
+
+    val linkElements1 = defMentionsPaper1.map(m => GrFNParser.mkModelComparisonTextLinkElement(ExtractAndAlign.TEXT_VAR, mentions1Path.split("/").last, m.arguments("variable").head.text, m.arguments("definition").head.text, m.sentenceObj.getSentenceText))
+    val linkElements2 = defMentionsPaper2.map(m => GrFNParser.mkModelComparisonTextLinkElement(ExtractAndAlign.TEXT_VAR, mentions2Path.split("/").last, m.arguments("variable").head.text, m.arguments("definition").head.text, m.sentenceObj.getSentenceText))
+
+    for (le <- linkElements1) println(le)
+    val hypotheses = ExtractAndAlign.get2PaperLinkHypotheses(linkElements1, linkElements2, topKAlignments)
+
+
+      val groundingsAsString = ujson.write(hypotheses, indent = 4)
+
+      val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
+      Ok(groundingsJson4s)
+
+
+  }
 
   // -----------------------------------------------------------------
   //               Backend methods that do stuff :)

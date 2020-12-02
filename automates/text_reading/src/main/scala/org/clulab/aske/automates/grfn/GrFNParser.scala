@@ -124,6 +124,17 @@ object GrFNParser {
     linkElement
   }
 
+  def mkModelComparisonTextLinkElement(elemType: String, source: String, identifier: String, definition: String, sentence: String): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> elemType,
+      "source" -> source,
+      "identifier" -> identifier,
+      "definition" -> definition,
+      "sentence" -> sentence
+    )
+    linkElement
+  }
+
   def mkCommentTextElement(text: String, source: String, container: String, location: String): ujson.Obj = {
     val commentTextElement = ujson.Obj(
       "text" -> text,
