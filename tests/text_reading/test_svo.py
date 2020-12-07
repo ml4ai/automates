@@ -8,11 +8,13 @@ from automates.text_reading.sparql.query_svo import (
 )
 
 
+@pytest.mark.skip("SPARQL no longer allows queries")
 def test_QueryConductor():
     qc = QueryConductor()
     assert hasattr(qc, "SPARQL_CONN")
 
 
+@pytest.mark.skip("SPARQL no longer allows queries")
 def test_process_text_var_terms():
     with pytest.raises(RuntimeError, match=r".* JSON files"):
         process_text_var_terms("some/path/foo.jsn", "other/path/bar.txt")
