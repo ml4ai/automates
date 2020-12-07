@@ -107,6 +107,15 @@ rules:
     pattern: |
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
 
+  - name: conj_el
+    label: Conj
+    priority: ${priority}
+    type: dependency
+    example: "R(t)"
+    pattern: |
+      trigger = [word=/\w*/]
+      conj:Concept+ = conj_and
+
 #  - name: var_greek_and_latin
 #    label: Variable
 #    priority: ${priority}
