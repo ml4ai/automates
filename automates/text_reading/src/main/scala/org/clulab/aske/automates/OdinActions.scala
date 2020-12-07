@@ -27,8 +27,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       val (expandable, other) = mentions.partition(m => m matches "Definition")
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
-//      keepLongest(expanded) ++ other
-        expanded ++ other
+      keepLongest(expanded) ++ other
+//        expanded ++ other
 
       //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
       //val result = mostComplete ++ textBounds
