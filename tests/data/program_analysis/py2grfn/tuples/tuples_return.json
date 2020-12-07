@@ -1,0 +1,212 @@
+{
+    "date_created": "2020-01-01T00:00:00.000000",
+    "functions": [
+        {
+            "lambda": "lambda : None",
+            "reference": "",
+            "type": "PASS",
+            "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd"
+        },
+        {
+            "lambda": "lambda :2",
+            "reference": "",
+            "type": "LITERAL",
+            "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662"
+        },
+        {
+            "lambda": "lambda y:(1,y,3)",
+            "reference": "",
+            "type": "ASSIGN",
+            "uid": "e443df78-9558-867f-5ba9-1faf7a024204"
+        },
+        {
+            "lambda": "lambda RETURN:(RETURN)",
+            "reference": "",
+            "type": "PASS",
+            "uid": "23a7711a-8133-2876-37eb-dcd9e87a1613"
+        },
+        {
+            "lambda": "lambda func_RESULT:func()",
+            "reference": "",
+            "type": "ASSIGN",
+            "uid": "b4862b21-fb97-d435-8856-1712e8e5216a"
+        },
+        {
+            "lambda": "lambda func_RESULT:func()",
+            "reference": "",
+            "type": "ASSIGN",
+            "uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9"
+        },
+        {
+            "lambda": "lambda func_RESULT:func()",
+            "reference": "",
+            "type": "ASSIGN",
+            "uid": "5a921187-19c7-8df4-8f4f-f31e78de5857"
+        },
+        {
+            "lambda": "lambda x,y,z:((x)+(y))+(z)",
+            "reference": "",
+            "type": "ASSIGN",
+            "uid": "8d723104-f773-83c1-3458-a748e9bb17bc"
+        }
+    ],
+    "hyper_edges": [
+        {
+            "function": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+            "inputs": [],
+            "outputs": [
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+            ]
+        },
+        {
+            "function": "e443df78-9558-867f-5ba9-1faf7a024204",
+            "inputs": [
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+            ],
+            "outputs": [
+                "f7c1bd87-4da5-e709-d471-3d60c8a70639"
+            ]
+        },
+        {
+            "function": "23a7711a-8133-2876-37eb-dcd9e87a1613",
+            "inputs": [
+                "f7c1bd87-4da5-e709-d471-3d60c8a70639"
+            ],
+            "outputs": [
+                "1846d424-c17c-6279-23c6-612f48268673"
+            ]
+        },
+        {
+            "function": "b4862b21-fb97-d435-8856-1712e8e5216a",
+            "inputs": [
+                "1846d424-c17c-6279-23c6-612f48268673"
+            ],
+            "outputs": [
+                "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c"
+            ]
+        },
+        {
+            "function": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+            "inputs": [
+                "1846d424-c17c-6279-23c6-612f48268673"
+            ],
+            "outputs": [
+                "259f4329-e6f4-590b-9a16-4106cf6a659e"
+            ]
+        },
+        {
+            "function": "5a921187-19c7-8df4-8f4f-f31e78de5857",
+            "inputs": [
+                "1846d424-c17c-6279-23c6-612f48268673"
+            ],
+            "outputs": [
+                "5487ce1e-af19-922a-d9b8-a714e61a441c"
+            ]
+        },
+        {
+            "function": "8d723104-f773-83c1-3458-a748e9bb17bc",
+            "inputs": [
+                "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                "5487ce1e-af19-922a-d9b8-a714e61a441c"
+            ],
+            "outputs": [
+                "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2"
+            ]
+        }
+    ],
+    "identifier": "@container::initial::@global::main",
+    "subgraphs": [
+        {
+            "basename": "func",
+            "border_color": "forestgreen",
+            "namespace": "initial",
+            "nodes": [
+                "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                "e443df78-9558-867f-5ba9-1faf7a024204",
+                "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+                "23a7711a-8133-2876-37eb-dcd9e87a1613"
+            ],
+            "occurrence_num": 0,
+            "scope": "@global"
+        },
+        {
+            "basename": "main",
+            "border_color": "forestgreen",
+            "namespace": "initial",
+            "nodes": [
+                "1846d424-c17c-6279-23c6-612f48268673",
+                "b4862b21-fb97-d435-8856-1712e8e5216a",
+                "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+                "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                "5487ce1e-af19-922a-d9b8-a714e61a441c",
+                "8d723104-f773-83c1-3458-a748e9bb17bc",
+                "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2"
+            ],
+            "occurrence_num": 0,
+            "scope": "@global"
+        }
+    ],
+    "uid": "85776e9a-dd84-f39e-7154-5a137a1d5006",
+    "variables": [
+        {
+            "domain": "",
+            "identifier": "initial::@global.func::y::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.func::RETURN::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::func_RESULT::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "1846d424-c17c-6279-23c6-612f48268673"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::x::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::y::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "259f4329-e6f4-590b-9a16-4106cf6a659e"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::z::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "5487ce1e-af19-922a-d9b8-a714e61a441c"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::RETURN::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2"
+        }
+    ]
+}

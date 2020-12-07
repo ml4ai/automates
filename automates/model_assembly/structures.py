@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto, unique
 from dataclasses import dataclass
+from collections import OrderedDict
 import re
 
 from .code_types import CodeType
@@ -201,7 +202,8 @@ class GenericContainer(ABC):
             raise ValueError(f"Unrecognized container type value: {con_type}")
 
     def get_input_pass_node_info(self, inputs):
-        in_var_names = set([n.identifier.var_name for n in inputs])
+        # Create unique keys while maintaining order
+        in_var_names = list(OrderedDict([(n.identifier.var_name, None) for n in inputs]).keys())
         in_var_str = ",".join(in_var_names)
         pass_func_str =  f"lambda {in_var_str}:({in_var_str})"
         return (pass_func_str, self.arguments)
@@ -242,7 +244,8 @@ class LoopContainer(GenericContainer):
         return f"<LOOP Con> -- {self.identifier.con_name}\n{base_str}\n"
 
     def get_input_pass_node_info(self, inputs):
-        in_var_names = set([n.identifier.var_name for n in inputs])
+        # Create unique keys while maintaining order
+        in_var_names = list(OrderedDict([(n.identifier.var_name, None) for n in inputs]).keys())
         in_var_str = ",".join(in_var_names)
         pass_func_str =  f"lambda {in_var_str}:({in_var_str})"
         output_ids = [id for id in self.arguments if not id in self.updated]

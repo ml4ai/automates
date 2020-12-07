@@ -1,7 +1,7 @@
 import ast
 from functools import singledispatch
-from collections.abc import Sequence
-from collections import defaultdict
+from collections.abc import Sequence, Iterable
+from collections import defaultdict, OrderedDict
 from enum import Enum
 
 class ContainerType(Enum): 
@@ -101,11 +101,26 @@ def generate_variable_object(name):
 def create_container_object(containers, container_name, container_type):
     if not container_name in containers:
         containers[container_name] = defaultdict(lambda: list())
-        containers[container_name]["arguments"] = set()
-        containers[container_name]["container_call_args"] = set()
+        containers[container_name]["arguments"] = list()
+        containers[container_name]["container_call_args"] = list()
         containers[container_name]["name"] = container_name
         containers[container_name]["type"] = container_type
     return containers
+
+def add_argument_to_container(to_add, arguments):
+    """
+        Allows us to add an argument to a list of a containers arguments
+        while protecting from duplicates AND maintaining the order that
+        the arguments appear in.
+    """
+    if isinstance(to_add, Iterable) and not isinstance(to_add, (str, bytes)):
+        for arg in to_add:
+            if not arg in arguments:
+                arguments.append(arg)
+        return
+
+    if not to_add in arguments:
+        arguments.append(to_add)
 
 def scope_to_string(scope_list):
     return ".".join(scope_list)
@@ -256,9 +271,25 @@ def get_largest_scope_variable_identifier(id, scope, module, variable_table):
             return False
         (_, _, _, name) = x.split("::")
         return name == id
-
     vars_with_name = [x for x in variable_table.keys() if is_valid_var(x)]
-    for var in vars_with_name:
+
+    t = {}
+    for i in range(0, len(scope)):
+        if "LOOP_" in scope[i] or "IF_" in scope[i]:
+            t[scope[i]] = scope[i + 1] 
+
+    def in_current_conditions(var):
+        for (k,v) in t.items(): 
+            if k in var:
+                return (k + "." + v) in var
+        return True 
+
+    # We need to ignore variable defined in different bodies of this conditional. 
+    # So for each IF_x.COND_x_y / LOOP_x.COND_x_y, only allow variables in the 
+    # following condition that we are in.
+    vars_without_other_conditions = [v for v in vars_with_name if in_current_conditions(v)]
+
+    for var in vars_without_other_conditions:
         if variable_table[var]["version"] >= highest_version:
             highest_version = variable_table[var]["version"]
             variable_identifier = var

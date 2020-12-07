@@ -16,7 +16,9 @@ from .cast_utils import (
     create_container_object,
     filter_variables_without_scope,
     find_variable_name_at_scope_or_higher,
-    flatten
+    flatten,
+    add_argument_to_container,
+    scope_to_string
 )
 
 @singledispatch
@@ -29,18 +31,22 @@ def _(node: ast.If, cast_visitor, container_name, cur_cf_type):
     # highest version assignment for each output variable within each 
     # cond body
     cf_body_statements = cast_visitor.containers[cast_visitor.cur_containers[-1]]["body"]
-    output_vars = set(flatten([x["output"] for x in cf_body_statements]))
     cast_visitor.containers[container_name]["updated"].extend(flatten([x["updated"] for x in cf_body_statements]))
+
+    new_vars_in_body = list(set(flatten([x["output"] for x in cf_body_statements])))
+    new_vars_in_body.extend(flatten([x["updated"] for x in cf_body_statements]))
+    # Sort the output vars so the produced order is deterministic for testing
+    new_vars_in_body.sort()
 
     scoped_id_to_ver = defaultdict(lambda: [-1])
     name_to_max_ver = defaultdict(lambda: -1)
     name_to_conds = defaultdict(lambda: defaultdict(lambda: -1))
 
-    for (id, name, version) in [name.rsplit("::", 2) for name in output_vars]:
+    for (id, name, version) in [name.rsplit("::", 2) for name in new_vars_in_body]:
         # Track the max variables version outputted for each cond
         if "COND" in name:
             (_, _, condition_num) = name.split("_")
-            vars_updated_in_condition = [var for var in output_vars if id + "." + name in var]
+            vars_updated_in_condition = [var for var in new_vars_in_body if id + "." + name in var]
             for var in vars_updated_in_condition:   
                 (_, cond_var_name, _) = var.rsplit("::", 2)
                 name_to_conds[cond_var_name][name] = max(name_to_conds[cond_var_name][name], int(condition_num))
@@ -49,14 +55,13 @@ def _(node: ast.If, cast_visitor, container_name, cur_cf_type):
             cur_scope_ver = scoped_id_to_ver[identifier][0]
             scoped_id_to_ver[identifier] = (max(int(version), cur_scope_ver), name)
             name_to_max_ver[name] = max(int(version), name_to_max_ver[name])
-
     for name, max_ver in name_to_max_ver.items():
-        output_vars = []
+        new_output_vars = []
 
         new_var_name = create_variable(name, cast_visitor.cur_scope, cast_visitor.cur_module, cast_visitor.variable_table, version=max_ver+1)
         cast_visitor.variables[new_var_name] = generate_variable_object(new_var_name)
         cast_visitor.containers[container_name]["updated"].append(new_var_name)
-        output_vars.append(new_var_name)
+        new_output_vars.append(new_var_name)
 
         inputted_body_vars = [k + "::" + str(v[0]) for k,v in scoped_id_to_ver.items() if v[1] == name]
         
@@ -78,7 +83,8 @@ def _(node: ast.If, cast_visitor, container_name, cur_cf_type):
             is_val_set_in_else = True
         elif external_var != "":
             for key in ["container_call_args", "arguments"]:
-                cast_visitor.containers[container_name][key].add(external_var)
+                add_argument_to_container(external_var, cast_visitor.containers[container_name][key])
+                # cast_visitor.containers[container_name][key].add(external_var)
             inputted_body_vars.append(external_var)
             is_val_set_in_else = True
 
@@ -87,7 +93,7 @@ def _(node: ast.If, cast_visitor, container_name, cur_cf_type):
         decision_function = generate_function_object(
             generate_decision_name(cast_visitor.cur_module, cast_visitor.cur_scope, name, max_ver, \
                 is_loop=False), 
-            "lambda", input_var_ids=inputted_body_vars, output_var_ids=output_vars, 
+            "lambda", input_var_ids=inputted_body_vars, output_var_ids=new_output_vars, 
             lambda_str=generate_decision_lambda(node, cond_names, conditions_updating_var, name, \
                 is_val_set_in_else)
         )
@@ -117,7 +123,8 @@ def handle_cf_finished_loop(node, cast_visitor, container_name, cur_cf_type):
     # we must use the updated value in the next iteration of the loop, so set 
     # the updated value as an argument to this loop container
     updated_var_arguments = [x[2] for x in scoped_id_to_ver.values() if x[1] in names_of_external_inputs]
-    cast_visitor.containers[container_name]["arguments"].update(updated_var_arguments)
+    add_argument_to_container(updated_var_arguments, cast_visitor.containers[container_name]["arguments"])
+    # cast_visitor.containers[container_name]["arguments"].update(updated_var_arguments)
 
     # NOTE keep this code even though it looks bad. Will be used when we have multiple conditions
     # for breaks/continues
@@ -202,9 +209,16 @@ def visit_control_flow_container(node, cast_visitor, container_type):
         lambda_str=generate_lambda(condition_input_identifiers, condition_translate.lambda_expr)
     )
     
+    cur_scope_str = scope_to_string(cast_visitor.cur_scope[:-1])
+    filtered = dict((k,v) for (k,v) in cast_visitor.variable_table.items() if cur_scope_str in k)
+    cast_visitor.variable_table = dict((k,v) for (k,v) in cast_visitor.variable_table.items() if not cur_scope_str in k)
+
     # Generate functions for body of control flow
     cast_visitor.visit_node_list(node.body)
     cast_visitor.containers[container_name]["body"].append(condition)
+
+    for (k,v) in filtered.items():
+        cast_visitor.variable_table[k] = v
 
     # Pop the current condition number off of scope
     cast_visitor.cur_scope = cast_visitor.cur_scope[:-1]
@@ -219,22 +233,17 @@ def visit_control_flow_container(node, cast_visitor, container_type):
         cond_name = "ELSE_" + str(cur_cf_type)
         cast_visitor.cur_scope.append(cond_name)
         # Handle else body nodes
-        # statements.extend(
         cast_visitor.visit_node_list(else_nodes)
-            # )
         # Pop the else condition number off of scope
         cast_visitor.cur_scope = cast_visitor.cur_scope[:-1]
 
-    # Add all control flow / else body statements into our control
-    # flow container body
-    # cast_visitor.containers[container_name]["body"].extend(statements)
-
     # Set the input variables. Find what variables we use as 
     # inputs that were defined in different scope than ours
-    external_input_variables = set(filter_variables_without_scope( \
+    external_input_variables = list(filter_variables_without_scope( \
         flatten([x["input"] for x in cast_visitor.containers[container_name]["body"]]), cast_visitor.cur_scope))
     for key in ["container_call_args", "arguments"]:
-        cast_visitor.containers[container_name][key].update(external_input_variables)
+        add_argument_to_container(external_input_variables, cast_visitor.containers[container_name][key])
+        # cast_visitor.containers[container_name][key].update(external_input_variables)
 
     # Perform end of control flow node tasks if we are at the end of the 
     # control flow statement. We know we are at the end if
@@ -257,8 +266,15 @@ def visit_control_flow_container(node, cast_visitor, container_type):
     cast_visitor.cur_control_flow = cur_cf_type
     cast_visitor.cur_condition = cur_cf_cond + 1
 
-    elif_nodes = [x for x in node.orelse if isinstance(x, ast.If)]
-    cast_visitor.visit_node_list(elif_nodes)
+    for n in node.orelse:
+        if isinstance(n, ast.If):
+            visit_control_flow_container(
+                n,
+                cast_visitor,
+                ContainerType.IF
+            )
+    # elif_nodes = [x for x in node.orelse if isinstance(x, ast.If)]
+    # cast_visitor.visit_node_list(elif_nodes)
 
     cast_visitor.cur_control_flow = cur_cf_type + 1
     cast_visitor.cur_condition = 0

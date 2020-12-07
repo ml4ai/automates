@@ -56,52 +56,10 @@
             "uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"
         },
         {
-            "lambda": "lambda y,x:(y,x)",
-            "reference": "",
-            "type": "PASS",
-            "uid": "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c"
-        },
-        {
-            "lambda": "lambda y:1",
-            "reference": "",
-            "type": "ASSIGN",
-            "uid": "38c1962e-9148-624f-eac1-c14f30e9c5cc"
-        },
-        {
-            "lambda": "lambda x: (x)==(0)",
-            "reference": "",
-            "type": "CONDITION",
-            "uid": "1759edc3-72ae-2244-8b01-63c1cd9d2b7d"
-        },
-        {
-            "lambda": "lambda y:2",
-            "reference": "",
-            "type": "ASSIGN",
-            "uid": "7d41e602-eece-328b-ff7b-118e820865d6"
-        },
-        {
-            "lambda": "lambda x: (x)==(1)",
-            "reference": "",
-            "type": "CONDITION",
-            "uid": "552f233a-8c25-166a-1ff3-9849b4e1357d"
-        },
-        {
-            "lambda": "lambda COND_0_0,y_0,COND_0_1,y_1,y_2: y_0 if COND_0_0 else y_1 if COND_0_1 else y_2",
-            "reference": "",
-            "type": "DECISION",
-            "uid": "8c1745a7-9a6a-5f92-cca7-4147f6be1f72"
-        },
-        {
-            "lambda": "lambda y:(y)",
-            "reference": "",
-            "type": "PASS",
-            "uid": "1775336d-71ea-cd05-49a3-e80e966e1277"
-        },
-        {
             "lambda": "lambda y:y",
             "reference": "",
             "type": "ASSIGN",
-            "uid": "0870e15c-2fcd-81b5-d24b-ace4307bf326"
+            "uid": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545"
         }
     ],
     "hyper_edges": [
@@ -189,81 +147,12 @@
             ]
         },
         {
-            "function": "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c",
+            "function": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
             "inputs": [
-                "23a7711a-8133-2876-37eb-dcd9e87a1613",
-                "1846d424-c17c-6279-23c6-612f48268673"
+                "b5d32b16-6619-4cb1-d710-37d1b83e90ec"
             ],
             "outputs": [
-                "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
-                "baf3897a-3e70-f16a-5548-5822de1b372a"
-            ]
-        },
-        {
-            "function": "38c1962e-9148-624f-eac1-c14f30e9c5cc",
-            "inputs": [
-                "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545"
-            ],
-            "outputs": [
-                "101fbccc-ded7-33e8-b421-eaeb534097ca"
-            ]
-        },
-        {
-            "function": "1759edc3-72ae-2244-8b01-63c1cd9d2b7d",
-            "inputs": [
-                "baf3897a-3e70-f16a-5548-5822de1b372a"
-            ],
-            "outputs": [
-                "247a8333-f7b0-b7d2-cda8-056c3d15eef7"
-            ]
-        },
-        {
-            "function": "7d41e602-eece-328b-ff7b-118e820865d6",
-            "inputs": [
-                "101fbccc-ded7-33e8-b421-eaeb534097ca"
-            ],
-            "outputs": [
-                "e005b860-51ef-1922-fe43-c49e149818d1"
-            ]
-        },
-        {
-            "function": "552f233a-8c25-166a-1ff3-9849b4e1357d",
-            "inputs": [
-                "baf3897a-3e70-f16a-5548-5822de1b372a"
-            ],
-            "outputs": [
-                "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711"
-            ]
-        },
-        {
-            "function": "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
-            "inputs": [
-                "247a8333-f7b0-b7d2-cda8-056c3d15eef7",
-                "101fbccc-ded7-33e8-b421-eaeb534097ca",
-                "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
-                "e005b860-51ef-1922-fe43-c49e149818d1",
-                "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545"
-            ],
-            "outputs": [
-                "3405095c-8a50-06c1-ec18-8efbd080e66e"
-            ]
-        },
-        {
-            "function": "1775336d-71ea-cd05-49a3-e80e966e1277",
-            "inputs": [
-                "3405095c-8a50-06c1-ec18-8efbd080e66e"
-            ],
-            "outputs": [
-                "5129fb7c-6288-e1a5-cc45-782198a6416d"
-            ]
-        },
-        {
-            "function": "0870e15c-2fcd-81b5-d24b-ace4307bf326",
-            "inputs": [
-                "5129fb7c-6288-e1a5-cc45-782198a6416d"
-            ],
-            "outputs": [
-                "2f120554-4a53-08cc-3dfa-bc08935ddd72"
+                "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c"
             ]
         }
     ],
@@ -302,38 +191,14 @@
                 "f7c1bd87-4da5-e709-d471-3d60c8a70639",
                 "eb1167b3-67a9-c378-7c65-c1e582e2e662",
                 "b5d32b16-6619-4cb1-d710-37d1b83e90ec",
-                "5129fb7c-6288-e1a5-cc45-782198a6416d",
-                "0870e15c-2fcd-81b5-d24b-ace4307bf326",
-                "2f120554-4a53-08cc-3dfa-bc08935ddd72"
+                "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
+                "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c"
             ],
             "occurrence_num": 0,
             "scope": "@global"
-        },
-        {
-            "basename": "@global.main.IF_0",
-            "border_color": "orange",
-            "namespace": "initial",
-            "nodes": [
-                "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c",
-                "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
-                "baf3897a-3e70-f16a-5548-5822de1b372a",
-                "38c1962e-9148-624f-eac1-c14f30e9c5cc",
-                "101fbccc-ded7-33e8-b421-eaeb534097ca",
-                "1759edc3-72ae-2244-8b01-63c1cd9d2b7d",
-                "247a8333-f7b0-b7d2-cda8-056c3d15eef7",
-                "7d41e602-eece-328b-ff7b-118e820865d6",
-                "e005b860-51ef-1922-fe43-c49e149818d1",
-                "552f233a-8c25-166a-1ff3-9849b4e1357d",
-                "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
-                "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
-                "3405095c-8a50-06c1-ec18-8efbd080e66e",
-                "1775336d-71ea-cd05-49a3-e80e966e1277"
-            ],
-            "occurrence_num": 1,
-            "scope": "@global.main"
         }
     ],
-    "uid": "42930b33-a81a-d477-fb36-75b89cdeb3e6",
+    "uid": "baf3897a-3e70-f16a-5548-5822de1b372a",
     "variables": [
         {
             "domain": "",
@@ -417,75 +282,11 @@
         },
         {
             "domain": "",
-            "identifier": "initial::@global.main::y::-1",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545"
-        },
-        {
-            "domain": "",
-            "identifier": "initial::@global.main::x::-1",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "baf3897a-3e70-f16a-5548-5822de1b372a"
-        },
-        {
-            "domain": "",
-            "identifier": "initial::@global.main.IF_0.COND_0_0::y::0",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "101fbccc-ded7-33e8-b421-eaeb534097ca"
-        },
-        {
-            "domain": "",
-            "identifier": "initial::@global.main.IF_0::COND_0_0::0",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "247a8333-f7b0-b7d2-cda8-056c3d15eef7"
-        },
-        {
-            "domain": "",
-            "identifier": "initial::@global.main.IF_0.COND_0_1::y::1",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "e005b860-51ef-1922-fe43-c49e149818d1"
-        },
-        {
-            "domain": "",
-            "identifier": "initial::@global.main.IF_0::COND_0_1::0",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711"
-        },
-        {
-            "domain": "",
-            "identifier": "initial::@global.main.IF_0::y::2",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "3405095c-8a50-06c1-ec18-8efbd080e66e"
-        },
-        {
-            "domain": "",
-            "identifier": "initial::@global.main.IF_0::y::2",
-            "kind": "none",
-            "reference": "",
-            "type": "none",
-            "uid": "5129fb7c-6288-e1a5-cc45-782198a6416d"
-        },
-        {
-            "domain": "",
             "identifier": "initial::@global.main::RETURN::-1",
             "kind": "none",
             "reference": "",
             "type": "none",
-            "uid": "2f120554-4a53-08cc-3dfa-bc08935ddd72"
+            "uid": "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c"
         }
     ]
 }

@@ -14,7 +14,7 @@ def main():
         y = x + x
         y = x + 1
         x = 3
-        z = 2
+        z = 20
     elif x == 2:
         y = x * x
     else:

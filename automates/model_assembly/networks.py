@@ -459,10 +459,14 @@ class GroundedFunctionNetwork(nx.DiGraph):
             output_style = {}
         ) -> None:
             network.add_edges_from(
-                [(in_node, lambda_node) for in_node in inputs], **input_style, headport="n"
+                [(in_node, lambda_node) for in_node in inputs], 
+                **input_style, 
+                headport="n"
             )
             network.add_edges_from(
-                [(lambda_node, out_node) for out_node in outputs], **output_style, headport="n"
+                [(lambda_node, out_node) for out_node in outputs], 
+                **output_style, 
+                headport="n"
             )
             edge = HyperEdge(inputs, lambda_node, outputs)
             hyper_edges.append(edge)
@@ -549,14 +553,17 @@ class GroundedFunctionNetwork(nx.DiGraph):
             new_con = containers[stmt.call_id]
             if stmt.call_id not in Occs:
                 Occs[stmt.call_id] = 0
+            print("AAAAA")
+            print(stmt.inputs)
             # Loops may use variables updated in the body as inputs to
             # the function, ignore these
             inputs = [live_variables[id] \
                       for id in stmt.inputs \
-                      if not (type(new_con) == LoopContainer and id in new_con.updated)]
-            
-            # Filter down to only the live variables used in the container to not mess with
-            # the node structure
+                      if not (type(new_con) == LoopContainer \
+                            and id in new_con.updated)]
+
+            # Filter down to only the live variables used in the container so nodes not
+            # used in the container are not redefined inside this sub container
             container_live_vars = {k:v for k,v in live_variables.items() if v in inputs}
             (con_outputs, pass_func, con_subgraph) = translate_container(
                 new_con, inputs, subgraph, container_live_vars

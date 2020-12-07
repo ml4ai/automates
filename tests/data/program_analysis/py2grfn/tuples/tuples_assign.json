@@ -1,0 +1,94 @@
+{
+    "date_created": "2020-01-01T00:00:00.000000",
+    "functions": [
+        {
+            "lambda": "lambda :1",
+            "reference": "",
+            "type": "LITERAL",
+            "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+        },
+        {
+            "lambda": "lambda :2",
+            "reference": "",
+            "type": "LITERAL",
+            "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639"
+        },
+        {
+            "lambda": "lambda a,b:(a,b,3)",
+            "reference": "",
+            "type": "ASSIGN",
+            "uid": "23a7711a-8133-2876-37eb-dcd9e87a1613"
+        }
+    ],
+    "hyper_edges": [
+        {
+            "function": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+            "inputs": [],
+            "outputs": [
+                "e3e70682-c209-4cac-629f-6fbed82c07cd"
+            ]
+        },
+        {
+            "function": "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+            "inputs": [],
+            "outputs": [
+                "eb1167b3-67a9-c378-7c65-c1e582e2e662"
+            ]
+        },
+        {
+            "function": "23a7711a-8133-2876-37eb-dcd9e87a1613",
+            "inputs": [
+                "e3e70682-c209-4cac-629f-6fbed82c07cd",
+                "eb1167b3-67a9-c378-7c65-c1e582e2e662"
+            ],
+            "outputs": [
+                "e443df78-9558-867f-5ba9-1faf7a024204"
+            ]
+        }
+    ],
+    "identifier": "@container::initial::@global::main",
+    "subgraphs": [
+        {
+            "basename": "main",
+            "border_color": "forestgreen",
+            "namespace": "initial",
+            "nodes": [
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                "e3e70682-c209-4cac-629f-6fbed82c07cd",
+                "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+                "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "23a7711a-8133-2876-37eb-dcd9e87a1613",
+                "e443df78-9558-867f-5ba9-1faf7a024204"
+            ],
+            "occurrence_num": 0,
+            "scope": "@global"
+        }
+    ],
+    "uid": "1846d424-c17c-6279-23c6-612f48268673",
+    "variables": [
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::a::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::b::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662"
+        },
+        {
+            "domain": "",
+            "identifier": "initial::@global.main::x::-1",
+            "kind": "none",
+            "reference": "",
+            "type": "none",
+            "uid": "e443df78-9558-867f-5ba9-1faf7a024204"
+        }
+    ]
+}

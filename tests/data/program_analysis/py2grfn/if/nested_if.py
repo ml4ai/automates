@@ -7,6 +7,7 @@ def main():
 
     if x == 0:
         y = 2
+        # z = 2
         if y > 2:
             y = 2
             if z == 4:

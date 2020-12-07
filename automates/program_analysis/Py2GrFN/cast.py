@@ -2,7 +2,7 @@ import ast
 import re
 
 from functools import singledispatch, reduce
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from .cast_control_flow_utils import (
     visit_control_flow_container,
@@ -21,7 +21,8 @@ from .cast_utils import (
     create_container_object,
     generate_function_object,
     generate_assign_function_name,
-    flatten
+    flatten,
+    add_argument_to_container
 )
 
 from automates.model_assembly.networks import GroundedFunctionNetwork
@@ -37,8 +38,9 @@ from automates.model_assembly.structures import (
 class ExprInfo:
     def __init__(self, var_names: list, var_identifiers_used: list, lambda_expr: str):
         # Cast to set list of names should be unique
-        self.var_names = list(set(var_names))
-        self.var_identifiers_used = list(set(var_identifiers_used))
+        OrderedDict([(k, None) for k in var_names]).keys()
+        self.var_names = list(OrderedDict([(k, None) for k in var_names]).keys())
+        self.var_identifiers_used = list(OrderedDict([(k, None) for k in var_identifiers_used]).keys())
         self.lambda_expr = lambda_expr
 
 class CAST2GrFN(ast.NodeVisitor):
@@ -52,7 +54,7 @@ class CAST2GrFN(ast.NodeVisitor):
 
         # AIR data
         self.containers = dict()
-        self.variables = dict()
+        self.variables = OrderedDict()
         self.types = dict()
         self.cur_control_flow = 0
         self.cur_condition = 0
@@ -97,7 +99,7 @@ class CAST2GrFN(ast.NodeVisitor):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        # Use funbction container in "initial" named "main" as the primary
+        # Use function container in "initial" named "main" as the primary
         # container. If this does not exist, use the last defined function
         # container in the list, as this will be the furthest down defined
         # function and will be a good guess to the starting point.
@@ -188,7 +190,8 @@ class CAST2GrFN(ast.NodeVisitor):
         create_variable(node.arg, self.cur_scope, self.cur_module, self.variable_table)
         arg_name = generate_variable_name(node, self.cur_module, self.cur_scope, self.variable_table)
 
-        self.containers[self.cur_containers[-1]]['arguments'].add(arg_name)
+        add_argument_to_container(arg_name, self.containers[self.cur_containers[-1]]['arguments'])
+        # self.containers[self.cur_containers[-1]]['arguments'].add(arg_name)
         self.variables[arg_name] = generate_variable_object(arg_name)
 
     def visit_Import(self, node: ast.Import):
@@ -345,7 +348,7 @@ class CAST2GrFN(ast.NodeVisitor):
                     "name": generate_function_name(node, self.cur_module, self.cur_scope, 
                         self.variable_table),
                     "type": "lambda",
-                    "code": "lambda " + ",".join(set(var_names_sorted)) + ":" + translated.lambda_expr,
+                    "code": "lambda " + ",".join(list(var_names_sorted)) + ":" + translated.lambda_expr,
                 },
                 "input": translated.var_identifiers_used,
                 "output": list(),
