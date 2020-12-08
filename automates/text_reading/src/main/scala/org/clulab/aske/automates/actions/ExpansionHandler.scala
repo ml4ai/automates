@@ -247,12 +247,12 @@ class ExpansionHandler() extends LazyLogging {
     traverseIncomingLocal(Set.empty, m.tokenInterval.toSet, incomingRelations = incoming, numHops, maxHopLength, m.sentence, stateFromAvoid, sentence)
   }
 
-  def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.dependencies match {
+  def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.universalEnhancedDependencies match {
     case None => sys.error("sentence has no dependencies")
     case Some(dependencies) => dependencies.outgoingEdges
   }
 
-  def incomingEdges(s: Sentence): Array[Array[(Int, String)]] = s.dependencies match {
+  def incomingEdges(s: Sentence): Array[Array[(Int, String)]] = s.universalEnhancedDependencies match {
     case None => sys.error("sentence has no dependencies")
     case Some(dependencies) => dependencies.incomingEdges
   }
@@ -451,7 +451,8 @@ object ExpansionHandler {
 //    "^compound$".r//,
     "nmod_at".r,
     "^nmod_of".r,
-    "nmod_under".r
+    "nmod_under".r,
+    "nmod_in".r
   )
 
   def apply() = new ExpansionHandler()

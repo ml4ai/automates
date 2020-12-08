@@ -42,15 +42,27 @@ class TestConjunctions extends ExtractionTest {
   }
 
 
-  val t4 = "while b, c and d are the removal rate of individuals in class I, IP and E respectively"
+  val t4 = "Where S is the stock of susceptible population, I is the stock of infected, and R is the stock of " +
+    "recovered population."
   failingTest should s"find definitions from t4: ${t4}" taggedAs (Somebody) in {
 
     val desired = Seq(
-      "b" -> Seq("removal rate of individuals in class B"),
-      "c" -> Seq("removal rate of individuals in class C"),
-      "d" -> Seq("removal rate of individuals in class D")
+      "S" -> Seq("stock of susceptible population"),
+      "I" -> Seq("stock of infected population"),
+      "R" -> Seq("stock of recovered population")
     )
     val mentions = extractMentions(t4)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t5 = "S(0) and R(0) are the initial numbers of, respectively, susceptible and removed subjects."
+  failingTest should s"find definitions from t5: ${t5}" taggedAs (Somebody) in {
+
+    val desired = Seq(
+      "S(0)" -> Seq("initial numbers of susceptible subjects"),
+      "R(0)" -> Seq("initial numbers of removed subjects")
+    )
+    val mentions = extractMentions(t5)
     testDefinitionEvent(mentions, desired)
   }
 }

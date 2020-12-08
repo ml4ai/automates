@@ -160,12 +160,12 @@ class RuleBasedEntityFinder(
     traverseOutgoing(Set.empty, m.tokenInterval.toSet, outgoingRelations = outgoing, incomingRelations = incoming, numHops)
   }
 
-  def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.dependencies match {
+  def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.universalEnhancedDependencies match {
     case None => sys.error("sentence has no dependencies")
     case Some(dependencies) => dependencies.outgoingEdges
   }
 
-  def incomingEdges(s: Sentence): Array[Array[(Int, String)]] = s.dependencies match {
+  def incomingEdges(s: Sentence): Array[Array[(Int, String)]] = s.universalEnhancedDependencies match {
     case None => sys.error("sentence has no dependencies")
     case Some(dependencies) => dependencies.incomingEdges
   }

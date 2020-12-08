@@ -553,7 +553,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val rels = doc.sentences.flatMap { sent =>
       var relId = 0
-      val deps = sent.dependencies.get // lets assume that dependencies are always available
+      val deps = sent.universalEnhancedDependencies.get // lets assume that dependencies are always available
       val rels = for {
         governor <- deps.outgoingEdges.indices
         (dependent, label) <- deps.outgoingEdges(governor)

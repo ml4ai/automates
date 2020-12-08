@@ -159,28 +159,41 @@ rules:
       variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
 
-  - name: var_cop_definition_conj
+#  - name: var_cop_definition_conj
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "LAI is the actual leaf area index"
+##    action: ${action}
+#    # the action should get to aligned elements somehow. the subjs are fine but what about conj el within defs?..
+#    pattern: |
+#      trigger = [lemma="be"]
+#      variable:Conj = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+#      definition: Conj = <cop nmod_of? nmod_in?
+#      definition:Conj = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
+
+#  - name: var_cop_definition
+#    label: Definition
+#    priority: ${priority}
+#    type: dependency
+#    example: "LAI is the actual leaf area index"
+#    action: ${action}
+#    pattern: |
+#      trigger = [lemma="be"]
+#      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+#      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
+
+
+  - name: var_cop_definition1
     label: Definition
     priority: ${priority}
     type: dependency
     example: "LAI is the actual leaf area index"
 #    action: ${action}
-    # the action should get to aligned elements somehow. the subjs are fine but what about conj el within defs?..
     pattern: |
       trigger = [lemma="be"]
-      variable:Conj = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition:Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
-
-  - name: var_cop_definition
-    label: Definition
-    priority: ${priority}
-    type: dependency
-    example: "LAI is the actual leaf area index"
-    action: ${action}
-    pattern: |
-      trigger = [lemma="be"]
-      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
+      variable:Concept = <cop nsubj [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop nmod_of nmod_in conj_and
 
   - name: def_cop_var
     label: Definition

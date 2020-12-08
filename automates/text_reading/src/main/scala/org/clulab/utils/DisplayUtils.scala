@@ -85,8 +85,8 @@ object DisplayUtils {
   def attachmentsString(mods: Set[Attachment]): String = s"${mods.mkString(", ")}"
 
   def syntacticDependenciesToString(s:Sentence): String = {
-    if (s.dependencies.isDefined) {
-      s.dependencies.get.toString
+    if (s.universalEnhancedDependencies.isDefined) {
+      s.universalEnhancedDependencies.get.toString
     } else "[Dependencies not defined]"
   }
 

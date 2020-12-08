@@ -114,7 +114,7 @@ rules:
     example: "R(t)"
     pattern: |
       trigger = [word=/\w*/]
-      conj:Concept+ = conj_and
+      conj:Concept+ = conj_and | conj_or
 
 #  - name: var_greek_and_latin
 #    label: Variable
