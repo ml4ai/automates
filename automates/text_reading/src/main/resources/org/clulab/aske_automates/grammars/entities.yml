@@ -74,13 +74,6 @@ rules:
     pattern: |
       (?<=product of|values for) @variable:Concept and @variable:Concept
 
-  - name: var_model
-    label: Model
-    priority: ${priority}
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    pattern: |
-      [word=/^DSSAT|^CSM/]
 
 
   - name: var_greek
@@ -106,6 +99,7 @@ rules:
     example: "R(t)"
     pattern: |
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
+
 
 #  - name: var_greek_and_latin
 #    label: Variable

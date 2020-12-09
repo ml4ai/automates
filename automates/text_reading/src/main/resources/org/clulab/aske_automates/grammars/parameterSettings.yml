@@ -33,14 +33,14 @@ rules:
     pattern: |
       (@variable:Variable|@variable:Concept [!tag="CD"]) (?<trigger> [word="="]) @value:Value
 
-  - name: var_&equals_val
-    label: ParameterSetting
-    priority: ${priority}
-    type: token
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    pattern: |
-      # @trigger:Concept "=" @Value:Value
-      (@variable:Variable|@variable:Concept) [word="&"] [word="="] @value:Value
+#  - name: var_&equals_val
+#    label: ParameterSetting
+#    priority: ${priority}
+#    type: token
+#    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+#    pattern: |
+#      # @trigger:Concept "=" @Value:Value
+#      (@variable:Variable|@variable:Concept) [word="&"] [word="="] @value:Value
 
 
   - name: var-vary_between
