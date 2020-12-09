@@ -132,6 +132,25 @@ object GrFNParser {
     linkElement
   }
 
+  def mkTextVarLinkElementForModelComparison(uid: String, source: String, originalSentence: String, identifier: String, definition: String, debug: Boolean): ujson.Obj = {
+    val linkElement = if (debug) {
+      ujson.Obj(
+        "uid" -> uid,
+        "source" -> source,
+        "original_sentence" -> originalSentence,
+        "identifier" -> identifier,
+        "definition" -> definition,
+      )
+    } else {
+      ujson.Obj(
+        "uid" -> uid,
+        "identifier" -> identifier
+      )
+    }
+
+    linkElement
+  }
+
   def mkTextLinkElement(elemType: String, source: String, content: String, contentType: String, svoQueryTerms: Seq[String]): ujson.Obj = {
     val linkElement = ujson.Obj(
       "type" -> elemType,
@@ -193,15 +212,27 @@ object GrFNParser {
     sparqlResuJson
   }
 
-  def mkHypothesis(elem1: String, elem2: String, score: Double): ujson.Obj = {
-    val el1 = elem1.split("::")(0)
-    val el2 = elem2.split("::")(0)
+  def mkHypothesis(elem1: String, elem2: String, score: Double, debug: Boolean): ujson.Obj = {
+    val splitEl1 = elem1.split("::")
+    val splitEl2 = elem2.split("::")
+    val el1 = splitEl1(0)
+    val el2 = splitEl2(0)
     //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
-    val hypothesis = ujson.Obj(
-      "element_1" -> el1,
-      "element_2" -> el2,
-      "score" -> score
-    )
+    val hypothesis = if (debug) {
+      val idAndIdentifier1 = splitEl1(0) + "::" + splitEl1(3) + "::" + splitEl1(4)
+      val idAndIdentifier2 = splitEl2(0) + "::" + splitEl2(3) + "::" + splitEl2(4)
+      ujson.Obj(
+        "element_1" -> idAndIdentifier1,
+        "element_2" -> idAndIdentifier2,
+        "score" -> score
+      )
+    } else {
+      ujson.Obj(
+        "element_1" -> el1,
+        "element_2" -> el2,
+        "score" -> score
+      )
+    }
     hypothesis
   }
 

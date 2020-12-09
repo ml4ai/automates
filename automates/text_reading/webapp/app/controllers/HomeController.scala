@@ -9,7 +9,7 @@ import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, rehydrateLinkElement}
 import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.grfn.GrFNParser
@@ -56,6 +56,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val maxSVOgroundingsPerVarDefault: Int = 5
   private val groundToSVODefault = true
   private val appendToGrFNDefault = true
+  private val debugDefault = false
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -201,6 +202,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val json = ujson.read(jsonFile.readString())
 
     val jsonKeys = json.obj.keys.toList
+    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
 
 
     //if toggles and arguments are not provided in the input, use class defaults (this is to be able to process the previously used GrFN format input)
@@ -238,7 +240,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         Some(numAlignments),
         Some(numAlignmentsSrcToComment),
         scoreThreshold,
-        appendToGrFN
+        appendToGrFN,
+        debug
       )
 
       val groundingsAsString = ujson.write(groundings, indent = 4)
@@ -270,15 +273,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def alignMentionsFromTwoModels: Action[AnyContent] = Action { request =>
 
-    println("HERE")
     val data = request.body.asJson.get.toString()
     println(data)
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
     val jsonPath = pathJson("pathToJson").str
     val jsonFile = new File(jsonPath)
     val json = ujson.read(jsonFile.readString())
-
     val jsonKeys = json.obj.keys.toList
+
+    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
 
     val mentions1Path = json("mentionsPaper1").str
     val mentions2Path = json("mentionsPaper2").str
@@ -286,47 +289,27 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val defMentionsPaper2 = readMentionsFromJson(mentions2Path, "Definition")
     val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
 
-//    def docFreq(word: String, defTexts: Seq[Array[String]]): Int = {
-//      var counter = 0
-//      for (dt <- defTexts) {
-//        if (dt.contains(word)) counter += 1
-//      }
-//      counter
-//    }
-//    def getIdfs(mentions: Seq[Mention]): Map[String, Double] = {
-//      val defTexts = mentions.map(m => m.arguments("definition").head.text.toLowerCase().split(" "))
-//      val vocab = defTexts.flatten.distinct.map(_.toLowerCase())
-//      val word2idf = mutable.Map[String, Double]()
-//      val n_docs = defTexts.length
-//      for (w <- vocab) {
-//        println("df: " + w + " " + docFreq(w, defTexts))
-//        val idf = math.log((1+n_docs)/(1 + docFreq(w.toLowerCase(), defTexts)))
-//        word2idf += (w -> idf)
-//      }
-//      word2idf.toMap
-//    }
-//
-//
-//    val perWordIdf = getIdfs(defMentionsPaper1 ++ defMentionsPaper2)
-
-//    for (w <- ListMap(perWordIdf.toSeq.sortBy(_._2):_*)) println(w._1 + " " + w._2)
-
+    // get alignments
     val alignments = modelCompAlignmentHandler.w2v.alignMentions(defMentionsPaper1, defMentionsPaper2)
+
     // group by src idx, and keep only top k (src, dst, score) for each src idx
     val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug = false)
 
-    val linkElements1 = defMentionsPaper1.map(m => GrFNParser.mkModelComparisonTextLinkElement(ExtractAndAlign.TEXT_VAR, mentions1Path.split("/").last, m.arguments("variable").head.text, m.arguments("definition").head.text, m.sentenceObj.getSentenceText))
-    val linkElements2 = defMentionsPaper2.map(m => GrFNParser.mkModelComparisonTextLinkElement(ExtractAndAlign.TEXT_VAR, mentions2Path.split("/").last, m.arguments("variable").head.text, m.arguments("definition").head.text, m.sentenceObj.getSentenceText))
+    // id link elements
+    val linkElements = ExtractAndAlign.get2ModelComparisonLinkElements(defMentionsPaper1, defMentionsPaper2)
 
-    for (le <- linkElements1) println(le)
-    val hypotheses = ExtractAndAlign.get2PaperLinkHypotheses(linkElements1, linkElements2, topKAlignments)
+    val hypotheses = ExtractAndAlign.get2PaperLinkHypotheses(linkElements, topKAlignments, debug)
+    var outputJson = ujson.Obj()
 
+    for (le <- linkElements.keys) {
+      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, false, 3, debug)} // fixme: make maxSVOGroundingsPerVar optional
+    }
 
-      val groundingsAsString = ujson.write(hypotheses, indent = 4)
+    outputJson("links") = hypotheses
+    val groundingsAsString = ujson.write(outputJson, indent = 4)
 
-      val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
-      Ok(groundingsJson4s)
-
+    val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
+    Ok(groundingsJson4s)
 
   }
 
