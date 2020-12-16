@@ -189,11 +189,10 @@ rules:
     priority: ${priority}
     type: dependency
     example: "LAI is the actual leaf area index"
-#    action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      variable:Concept = <cop nsubj [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop nmod_of nmod_in conj_and
+      variable:Variable+ = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop nmod_of? nmod_in? conj_and?
 
   - name: def_cop_var
     label: Definition

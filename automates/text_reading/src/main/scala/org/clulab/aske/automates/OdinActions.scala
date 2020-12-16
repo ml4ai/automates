@@ -9,14 +9,17 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.entities.EntityHelper
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
+import scala.collection.mutable.ArrayBuffer
 import scala.io.{BufferedSource, Source}
 
 
 
 class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler], validArgs: List[String], freqWords: Array[String]) extends Actions with LazyLogging {
 
+  val proc = new FastNLPProcessor()
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
     if (expansionHandler.nonEmpty) {
@@ -37,6 +40,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
   }
 
+//  def untangleConj(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+//    val defMentions, other = mentions.partition(_ matches "Definition")
+//    val groupedBySpan = defMentions.groupBy(_.tokenInterval)
+//
+//  }
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val mns: Iterable[Mention] = for {
@@ -50,6 +58,66 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield longest
     mns.toVector.distinct
   }
+
+
+  def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
+//    val (conjDef, other) = mentions.partition(_ matches "ConjDefinition")
+//    println(conjDef.length)
+
+    val mostComplete = mentions.maxBy(_.arguments.toSeq.length)
+    println(mostComplete.text)
+    val headDef = mostComplete.arguments("definition").head
+    println("head def: " + headDef.text)
+    val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
+    val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
+    println(tokenWithOutgoingConj)
+
+    val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+    println(incomingConjNodes.mkString("||"))
+    val previousIndices = new ArrayBuffer[Int]()
+
+    val newDefinitions = new ArrayBuffer[Mention]()
+    for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
+      println("prev indices: " + previousIndices)
+      var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
+      println("defs" + int + " " + newDefTokenInt)
+      if (previousIndices.nonEmpty) {
+
+          for (pi <- previousIndices.reverse) {
+
+            newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
+
+          }
+        }
+        println("new def tok in: " + newDefTokenInt)
+      val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
+      val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
+      val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
+      newDefinitions.append(newDef)
+      println(defText.mkString(" "))
+      previousIndices.append(int)
+      }
+
+    val toReturn = new ArrayBuffer[Mention]()
+    val variables = mostComplete.arguments("variable")
+    for ((v, i) <- variables.zipWithIndex) {
+      val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+      val newDefMen = copyWithArgs(mostComplete, newArgs)
+      toReturn.append(newDefMen)
+    }
+
+//    println(outgoingEdgesmkString("|"))
+//    println("paths: " + parsed
+//    println(conjPathsInDef.toSeq.length)
+//    for (p <- deps) {
+//      println(p.outgoingEdges.head.filter(_._2.contains("conj_and")).mkString("||"))
+//    }
+
+    toReturn //++ other
+  }
+
+
 
   def addArgument(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     for {

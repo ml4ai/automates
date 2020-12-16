@@ -45,14 +45,15 @@ rules:
     pattern: |
       (@Concept [word = /.*/]) (?= in equation)
 
-  - name: var_equals
+
+  - name: var_a_comma
     label: Variable
     priority: ${priority}
     type: token
     action: variableArguments
-    example: "T = daily mean air temperature [°C]"
+    example: "while a, aP and b are..."
     pattern: |
-      @variable:Concept (?= "=")
+      [word="a"] (?= ",")
 
 
   - name: var_where-dep
