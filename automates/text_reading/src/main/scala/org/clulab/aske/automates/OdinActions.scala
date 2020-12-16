@@ -62,6 +62,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
+    // todo: only conj defs should get here
+    // todo: if overlap, take most complete
+    // todo: if conj is outside def but overlap, take longest - but how? i only annotated the def itself... maybe combine all defs if there are more than one?
 //    val (conjDef, other) = mentions.partition(_ matches "ConjDefinition")
 //    println(conjDef.length)
 
