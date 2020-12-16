@@ -179,9 +179,7 @@ class GenericContainer(ABC):
     @abstractmethod
     def __str__(self):
         args_str = "\n".join([f"\t{arg}" for arg in self.arguments])
-        outputs_str = "\n".join(
-            [f"\t{var}" for var in self.returns + self.updated]
-        )
+        outputs_str = "\n".join([f"\t{var}" for var in self.returns + self.updated])
         return f"Inputs:\n{args_str}\nVariables:\n{outputs_str}"
 
     @staticmethod
@@ -203,10 +201,13 @@ class GenericContainer(ABC):
 
     def get_input_pass_node_info(self, inputs):
         # Create unique keys while maintaining order
-        in_var_names = list(OrderedDict([(n.identifier.var_name, None) for n in inputs]).keys())
+        in_var_names = list(
+            OrderedDict([(n.identifier.var_name, None) for n in inputs]).keys()
+        )
         in_var_str = ",".join(in_var_names)
-        pass_func_str =  f"lambda {in_var_str}:({in_var_str})"
+        pass_func_str = f"lambda {in_var_str}:({in_var_str})"
         return (pass_func_str, self.arguments)
+
 
 class CondContainer(GenericContainer):
     def __init__(self, data: dict):
@@ -245,11 +246,14 @@ class LoopContainer(GenericContainer):
 
     def get_input_pass_node_info(self, inputs):
         # Create unique keys while maintaining order
-        in_var_names = list(OrderedDict([(n.identifier.var_name, None) for n in inputs]).keys())
+        in_var_names = list(
+            OrderedDict([(n.identifier.var_name, None) for n in inputs]).keys()
+        )
         in_var_str = ",".join(in_var_names)
-        pass_func_str =  f"lambda {in_var_str}:({in_var_str})"
+        pass_func_str = f"lambda {in_var_str}:({in_var_str})"
         output_ids = [id for id in self.arguments if not id in self.updated]
         return (pass_func_str, output_ids)
+
 
 @unique
 class VarType(Enum):
@@ -411,12 +415,8 @@ class GenericStmt(ABC):
 
     @abstractmethod
     def __str__(self):
-        inputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.inputs]
-        )
-        outputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.outputs]
-        )
+        inputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.inputs])
+        outputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.outputs])
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
     @staticmethod
