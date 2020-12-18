@@ -16,7 +16,9 @@ import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLo
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
+import org.clulab.odin.SynPath
 import org.clulab.odin.serialization.json.JSONSerializer
+import org.clulab.struct.Interval
 import ujson.Value
 //import org.clulab.odin._
 import org.clulab.odin.serialization.json._
@@ -193,9 +195,37 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val cosmosFileStr = json("path_to_cosmos_json").str
     logger.info(s"Extracting mentions from $jsonFile")
     val loader = new CosmosJsonDataLoader
-    val texts = loader.loadFile(cosmosFileStr)
+    val textsAndLocations = loader.loadFile(cosmosFileStr)
+    val texts = textsAndLocations.map(_.split("::").head)
+    val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location here is the location of the text block in the pdf; currently just page num but will incl bb as well
     val fullText = texts.mkString(" ")
-    val mentions = ieSystem.extractFromText(fullText, true, Some("some pdf"))
+//    val mentions = ieSystem.extractFromText(fullText, true, Some("some pdf"))
+    val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
+    val menWInd = mentions.zipWithIndex
+    for (tuple <- menWInd) {
+      val menInTextBlocks = tuple._1
+      val id = tuple._2
+      val loc = locations(id)
+      for (m <- menInTextBlocks) {
+        val newMen = new Mention {
+          override def labels: Seq[String] = m.labels
+
+          override def tokenInterval: Interval = m.tokenInterval
+
+          override def sentence: Int = ???
+
+          override def document: Document = ???
+
+          override def keep: Boolean = ???
+
+          override val arguments: Map[String, Seq[Mention]] = _
+          override val attachments: Set[Attachment] = _
+          override val paths: Map[String, Map[Mention, SynPath]] = _
+
+          override def foundBy: String = ???
+        }
+      }
+    }
 
     //pass sep texts
     //load file can output both texts and bounding boxes (and page and maybe other info)
@@ -204,7 +234,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 //    for (t<-texts) println(t)
 //    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
-    val mentionsJson = serializer.jsonAST(mentions)
+    val mentionsJson = serializer.jsonAST(mentions.flatten)
     val parsed_output = PlayUtils.toPlayJson(mentionsJson)
     Ok(parsed_output)
   }

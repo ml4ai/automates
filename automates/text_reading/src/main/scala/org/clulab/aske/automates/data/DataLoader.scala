@@ -71,7 +71,7 @@ class CosmosJsonDataLoader extends DataLoader {
     //the heading and the text of the section are currently combined; might need to be revisted
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
 //    if (cosmosDoc.cosmosOjects.nonEmpty)  {
-      cosmosDoc.cosmosOjects.map(_.content.get)
+      cosmosDoc.cosmosOjects.map(co => co.content.get + "::" + co.pageNum)
 //    } else cosmosDoc.abstractText.toSeq
   }
   override val extension: String = "json"
