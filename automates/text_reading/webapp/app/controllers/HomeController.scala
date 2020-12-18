@@ -11,7 +11,8 @@ import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
 import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
-import org.clulab.aske.automates.data.ScienceParsedDataLoader
+import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
+import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLoader}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
@@ -181,6 +182,32 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(parsed_output)
   }
 
+
+  def cosmos_json_to_mentions: Action[AnyContent] = Action { request =>
+    val data = request.body.asJson.get.toString()
+    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
+    val jsonPath = pathJson("pathToJson").str
+    val jsonFile = new File(jsonPath)
+    val json = ujson.read(jsonFile.readString())
+    val jsonKeys = json.obj.keys.toList
+    val cosmosFileStr = json("path_to_cosmos_json").str
+    logger.info(s"Extracting mentions from $jsonFile")
+    val loader = new CosmosJsonDataLoader
+    val texts = loader.loadFile(cosmosFileStr)
+    val fullText = texts.mkString(" ")
+    val mentions = ieSystem.extractFromText(fullText, true, Some("some pdf"))
+
+    //pass sep texts
+    //load file can output both texts and bounding boxes (and page and maybe other info)
+    // get mentions per text, dont flatten
+    // for through seq of seq of mentions (dont flatten map when getting mentions) and for each mention in seq of seq, create a new mention but with "sentence" field updated with page num and bb info sep by ::
+
+//    for (t<-texts) println(t)
+//    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
+    val mentionsJson = serializer.jsonAST(mentions)
+    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+    Ok(parsed_output)
+  }
   /**
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:
     *  'mentions' : file path to Odin serialized mentions

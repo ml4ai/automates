@@ -13,7 +13,7 @@ POST    /process_text               controllers.HomeController.process_text
 POST    /pdf_to_mentions            controllers.HomeController.pdf_to_mentions
 POST    /align                      controllers.HomeController.align
 POST    /jsonDoc_to_mentions        controllers.HomeController.jsonDoc_to_mentions
-
+POST    /cosmos_json_to_mentions    controllers.HomeController.cosmos_json_to_mentions
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

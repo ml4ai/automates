@@ -6,7 +6,7 @@ import ai.lum.common.StringUtils._
 import org.clulab.aske.automates.apps.AlignmentBaseline
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.utils.FileUtils.getTextFromFile
-
+import org.clulab.aske.automates.cosmosjson._
 import scala.collection.mutable
 import scala.util.matching.Regex
 
@@ -57,6 +57,25 @@ class ScienceParsedDataLoader extends DataLoader {
   override val extension: String = "json"
 }
 
+
+class CosmosJsonDataLoader extends DataLoader {
+  /**
+    * Loader for documents which have been pre-processed with science parse (v1).  Each file contains a json representation
+    * of the paper sections, here we will return the strings from each section as a Seq[String].
+    *
+    * @param f the File being loaded
+    * @return string content of each section in the parsed pdf paper (as determined by science parse)
+    */
+  def loadFile(f: File): Seq[String] = {
+    // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
+    //the heading and the text of the section are currently combined; might need to be revisted
+    val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
+//    if (cosmosDoc.cosmosOjects.nonEmpty)  {
+      cosmosDoc.cosmosOjects.map(_.content.get)
+//    } else cosmosDoc.abstractText.toSeq
+  }
+  override val extension: String = "json"
+}
 
 class PDFDataLoader extends DataLoader {
 
