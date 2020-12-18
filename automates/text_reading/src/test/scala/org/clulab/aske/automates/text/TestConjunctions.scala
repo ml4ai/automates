@@ -66,3 +66,16 @@ class TestConjunctions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 }
+
+
+// Panels ( C ) and ( D ) shows virus uptake for the same cells as in panels A and B respectively .
+// where k ~ 1z1 = T c is the total branching factor and k A , k B are the isolated branching factors of layer A and B respectively .
+// Panels A , B , and C illustrate the three separate multi-site , farrow-to-finish production flows within the pork production system which are referred to as flows A , B , and C respectively .
+// Based on the best fitted distributions , the estimated median incubation periods were 4.4 ( 95 % CI 3.8 – 5.1 ) days , 4.7 ( 95 % CI 4.5 – 5.1 ) days and 5.7 ( 95 % CI 4.6 – 7.0 ) days for children in kindergartens , primary schools and secondary schools respectively .
+// Protomer A and B are denoted as P1 and P2 respectively .
+//Y0 and B are the minimum and maximum fraction of triplex formation respectively .
+//HSA and E-AFP are the negative control and positive control respectively .
+// For clinical URTI , n = 55 and n = 51 in the gargling and control groups respectively . - good example for param setting where same var has diff values
+// neg example	Closed and open circles respectively indicate methylated and unmethylated CpG sites .
+//Here r and r P are related to the infection rate of disease A and B respectively , while a , a P and b are the removal rate of individuals in class I , I P and E respectively .
+// The mean FICO 2 values at rest were 8.2 mmHg , 10.7 mmHg and 7.8 mmHg for the participants without mask , with mask , and with mask and MF respectively .
