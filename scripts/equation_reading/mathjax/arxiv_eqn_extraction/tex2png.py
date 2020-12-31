@@ -5,7 +5,6 @@ import os, subprocess, random
 import logging
 import json
 import multiprocessing
-import time
 import argparse
 
 from datetime import datetime
@@ -35,7 +34,9 @@ args = parser.parse_args()
 # Setting up Logger - To get log files
 Log_Format = '%(levelname)s:%(message)s'
 
-logging.basicConfig(filename = f'tex2png{str(args.year)}.log', 
+logFile_dst = os.path.join(args.source, str(args.year))
+
+logging.basicConfig(filename = os.path.join(logFile_dst, 'tex2png2016.log'),
                     level = logging.DEBUG, 
                     format = Log_Format, 
                     filemode = 'w')
@@ -44,17 +45,18 @@ logger = logging.getLogger()
 
 
 # Function to kill process if TimeoutError occurs
-#kill = lambda process: process.kill()
-def kill():
+kill = lambda process: process.kill()
+#def Kill():
     
-    lambda process: process.kill()
+#    lambda process: process.kill()
     
-    if args.verbose:
-        lock.acquire()
-        print(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
-        lock.release()
-   
-    logger.warning(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
+#    if args.verbose:
+#        lock.acquire()
+#        print(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
+#        lock.release()
+    
+#    logger.warning(f"{folder}:{type_of_folder}:{texfile} --> Took more than 5 seconds to run.")
+    
 
 # Function to convert PDFs to PNGs
 def pdf2png(folder, pdf_file, png_name, PNG_dst, type_of_folder):
@@ -96,7 +98,7 @@ def pdf2png(folder, pdf_file, png_name, PNG_dst, type_of_folder):
         
         logger.warning(f"{folder}:{PNG_dst}:{pdf_file} file couldn't convert to png.")
 
-                  
+
 # This function will run pdflatex
 def run_pdflatex(run_pdflatex_list):
     
@@ -104,27 +106,37 @@ def run_pdflatex(run_pdflatex_list):
     
     (folder, type_of_folder, texfile, PDF_dst) = run_pdflatex_list
     
-    lock.acquire()
-    #print(" ========== Currently running ==========")
-    #print(f"{folder}:{type_of_folder}:{texfile}")
-    lock.release()
+    if args.verbose:
+        lock.acquire()
+        print(' ')
+        print(f"Running --> {folder}:{type_of_folder}:{texfile}")
+        lock.release()
     
     os.chdir(PDF_dst)
     command = ['pdflatex', '-interaction=nonstopmode', '-halt-on-error', os.path.join(type_of_folder,texfile)]
     
     output = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    
+    # Kill the process if takes more than 5 seconds
     my_timer = Timer(5, kill, [output])
+    #my_timer = Timer(5, Kill, [output])
     
     try:
         my_timer.start()
         stdout, stderr = output.communicate()
+        
+        if args.verbose:
+            lock.acquire()
+            print(' ')
+            print('Subprocess Popen Output:  ', stdout)
+            lock.release()
         
         # Calling pdf2png
         pdf2png(folder, f'{texfile.split(".")[0]}.pdf', texfile.split(".")[0], PDF_dst, type_of_folder)
     
     finally:
         my_timer.cancel()
-        
+    
 
 def main(path):
     
@@ -135,11 +147,15 @@ def main(path):
     
     for folder in os.listdir(TexFolderPath):
         
+        if args.verbose:
+            print("Folder:  ", folder)
+        
         # make results PNG directories
-        pdf_dst_root = os.path.join(path, f"latex_images/{folder}")
+        latex_images = os.path.join(path, 'latex_images')
+        pdf_dst_root = os.path.join(latex_images, folder)
         PDF_Large = os.path.join(pdf_dst_root, "Large_eqns")
         PDF_Small = os.path.join(pdf_dst_root, "Small_eqns")
-        for F in [pdf_dst_root, PDF_Large, PDF_Small]:
+        for F in [latex_images, pdf_dst_root, PDF_Large, PDF_Small]:
             if not os.path.exists(F):
                 subprocess.call(['mkdir', F])
 
@@ -155,22 +171,32 @@ def main(path):
             for texfile in os.listdir(type_of_folder):
                 temp.append([folder, type_of_folder, texfile, PDF_dst])
                 
-            with Pool(multiprocessing.cpu_count()) as pool:
+            with Pool(multiprocessing.cpu_count()-10) as pool:
                 result = pool.map(run_pdflatex, temp)
         
 if __name__ == "__main__":
+    
+    src_path = args.source
+    year_path = os.path.join(src_path, str(args.year))    
     
     for DIR in args.directories:
         
         print(DIR)
         DIR = str(DIR)
-        year = str(args.year)
         
-        src_path = args.source
-        path = os.path.join(src_path, f'{year}/{DIR}')
+        if args.verbose:
+            print(" ==+== "*20)
+            print('Directory:  ', DIR)
+            
+        #for path in os.listdir(os.path.join(year_path, DIR)):
+        #    print(path)
+        #    if '.log' not in path:
+        main(os.path.join(year_path, DIR))
+    
+    # Printing stoping time
+    print(' ')
+    stop_time = datetime.now()
+    print('Stoping at:  ', stop_time)
+    print(' ')
+    print('parsing latex equations completed.')
                 
-        latex_images = os.path.join(path, 'latex_images')
-        if not os.path.exists(latex_images):
-            subprocess.call(['mkdir', latex_images])
-        
-        main(path)
