@@ -24,6 +24,7 @@ from .structures import (
     GenericStmt,
     CallStmt,
     LambdaStmt,
+    BoxedStmt,
     GenericIdentifier,
     ContainerIdentifier,
     VariableIdentifier,
@@ -552,6 +553,31 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         @translate_stmt.register
         def _(
+            stmt: BoxedStmt,
+            live_variables: Dict[VariableIdentifier, VariableNode],
+            subgraph: GrFNSubgraph,
+        ) -> None:
+            new_con = containers[stmt.call_id]
+            inputs = [
+                live_variables[id]
+                for id in stmt.inputs
+                if not (type(new_con) == LoopContainer and id in new_con.updated)
+            ]
+
+            boxed_node = add_lambda_node(LambdaType.BOX, stmt.func_str)
+            subgraph.nodes.append(boxed_node)
+
+            out_nodes = [add_variable_node(var) for var in stmt.outputs]
+            subgraph.nodes.extend(out_nodes)
+
+            add_hyper_edge(inputs, boxed_node, out_nodes)
+
+            for output_node in out_nodes:
+                var_id = output_node.identifier
+                live_variables[var_id] = output_node
+
+        @translate_stmt.register
+        def _(
             stmt: CallStmt,
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
@@ -573,10 +599,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 k: v for k, v in live_variables.items() if v in inputs
             }
 
-            print("========= before translate call stmt container =============")
-            print(container_live_vars)
-            print(live_variables)
-
             (con_outputs, pass_func, con_subgraph) = translate_container(
                 new_con, inputs, subgraph, container_live_vars
             )
@@ -590,10 +612,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
 
+            # These additional invisible edges help ensure a top down ordering of call
+            # container nodes when generating a visualization of the graph
             network.add_edges_from(
                 itertools.product(inputs, [pass_func]),
                 style="invis",
-                color="green",
                 lhead="cluster_" + str(con_subgraph),
                 weight=2,
             )
@@ -604,9 +627,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-            print("======================")
-            print(stmt.inputs)
-            print(live_variables)
             inputs = [live_variables[id] for id in stmt.inputs]
             out_nodes = [add_variable_node(id) for id in stmt.outputs]
             func = add_lambda_node(stmt.type, stmt.func_str)

@@ -360,6 +360,7 @@ class LambdaType(Enum):
     DECISION = auto()
     PASS = auto()
     LOOP = auto()
+    BOX = auto()
 
     def __str__(self):
         return str(self.name)
@@ -426,6 +427,8 @@ class GenericStmt(ABC):
             return LambdaStmt(stmt_data, container)
         elif func_type == "container":
             return CallStmt(stmt_data, container)
+        elif func_type == "boxed":
+            return BoxedStmt(stmt_data, container)
         else:
             raise ValueError(f"Undefined statement type: {func_type}")
 
@@ -446,6 +449,21 @@ class CallStmt(GenericStmt):
     def __str__(self):
         generic_str = super().__str__()
         return f"<CallStmt>: {self.call_id}\n{generic_str}"
+
+
+class BoxedStmt(GenericStmt):
+    def __init__(self, stmt: dict, con: GenericContainer):
+        super().__init__(stmt, con)
+
+        self.call_id = GenericIdentifier.from_str(stmt["function"]["name"])
+        self.func_str = stmt["function"]["code"]
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        generic_str = super().__str__()
+        return f"<BoxedStmt>: {self.call_id}\n{generic_str}"
 
 
 class LambdaStmt(GenericStmt):

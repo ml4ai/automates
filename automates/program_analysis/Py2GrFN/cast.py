@@ -69,6 +69,7 @@ class CAST2GrFN(ast.NodeVisitor):
         self.variables = OrderedDict()
         self.types = dict()
         self.classes = dict()
+        self.imports = list()
         self.cur_control_flow = 0
         self.cur_condition = 0
 
@@ -227,6 +228,11 @@ class CAST2GrFN(ast.NodeVisitor):
         # TODO KEEP GLOBALS / Things above this functions scope
         self.variable_table = defaultdict(lambda: {"version": -1})
 
+    def visit_Lambda(self, node: ast.Lambda):
+
+        # has args and body
+        print(type(node.body))
+
     def visit_arguments(self, node: ast.arguments):
         # TODO handle defaults for positional arguments? (in node.defaults)
         # padded_default_arg_valeus = [None] * (len(self.args) - len(self.defaults)) + self.defaults
@@ -251,18 +257,20 @@ class CAST2GrFN(ast.NodeVisitor):
         self.variables[arg_name] = generate_variable_object(arg_name, "")
 
     def visit_Import(self, node: ast.Import):
-        # TODO: finish implementing this function
-        aliases = [self.visit(name) for name in node.names]
-        return NotImplemented
+        imports = [
+            {**res, "name": None, "module": res["name"]}
+            for res in self.visit_node_list(node.names)
+        ]
+        self.imports.extend(imports)
 
     def visit_ImportFrom(self, node: ast.ImportFrom):
-        # TODO: finish implementing this function
-        module_names = [self.visit(name) for name in node.names]
-        return NotImplemented
+        imports = [
+            {**res, "module": node.module} for res in self.visit_node_list(node.names)
+        ]
+        self.imports.extend(imports)
 
     def visit_alias(self, node: ast.alias):
-        # TODO: finish implementing this function
-        return NotImplemented
+        return {"name": node.name, "alias": node.asname, "module": None}
 
     # ==========================================================================
 
@@ -340,9 +348,7 @@ class CAST2GrFN(ast.NodeVisitor):
             outputs = []
             updates = []
 
-            identifiers = (
-                value_translated.var_identifiers_used + target_identifiers_used
-            )
+            identifiers = value_translated.var_identifiers_used
             identifiers.sort()
             var_names_sorted = []
             for id in identifiers:
@@ -351,7 +357,7 @@ class CAST2GrFN(ast.NodeVisitor):
                     var_names_sorted.append(name)
 
             if target.type == "dict":
-                dict_name = target.var_identifiers_used[0]
+                dict_name = target_identifiers_used[0]
                 existing_dict_to_update = self.variables[dict_name]
                 next_instance = int(self.variables[dict_name]["instances"][-1]) + 1
                 existing_dict_to_update["instances"].append(next_instance)
@@ -364,9 +370,12 @@ class CAST2GrFN(ast.NodeVisitor):
                 existing_dict_to_update["key_instances"][str(next_instance)] = {
                     "add": add,
                     "update": update,
+                    "delete": [],
                 }
 
                 updates.append(dict_name)
+                identifiers.extend(target_identifiers_used)
+
             else:
                 output = create_or_update_variable(
                     var_name_assigned,
@@ -583,10 +592,10 @@ class CAST2GrFN(ast.NodeVisitor):
         args_translated = self.visit_node_list(node.args)
 
         inputs = []
+        # If we called a function from an object, input that object var into this container
         if type(node.func) == ast.Attribute:
-            print("ahhh")
-            print(func_translated.var_identifiers_used)
             inputs.extend(func_translated.var_identifiers_used)
+
         inputs.extend(
             reduce(
                 lambda a1, a2: a1 + a2,
@@ -615,7 +624,6 @@ class CAST2GrFN(ast.NodeVisitor):
         # Extend with potential function calls from a class
 
         func_result_type = ""
-        func_result_identifier = ""
         if len(function_ids) == 1:
             function_id = function_ids[0]
             output_var_name = function_id.rsplit("::", 1)[1] + "_RESULT"
@@ -630,7 +638,6 @@ class CAST2GrFN(ast.NodeVisitor):
                 function_id, "container", input_var_ids=inputs, output_var_ids=[output]
             )
             self.containers[self.cur_containers[-1]]["body"].append(func_call_obj)
-            func_result_identifier = output
 
             if len(potential_classes) > 0:
                 func_result_type = potential_classes[0][1]
@@ -638,39 +645,97 @@ class CAST2GrFN(ast.NodeVisitor):
                 return_var = self.containers[function_id]["return_value"][0]
                 func_result_type = self.variables[return_var]["domain"]["type"]
 
-            func_result_name = func_result_identifier.rsplit("::", 1)[1]
+            func_result_name = output.rsplit("::", 1)[1]
             return ExprInfo(
                 [func_result_name],
-                [func_result_identifier],
+                [output],
                 func_result_name,
                 type=func_result_type,
             )
 
         elif len(function_ids) == 0:
-            # Could be a library function
-            lambda_function = (
-                func_translated.lambda_expr
-                + "("
-                + ",".join([arg.lambda_expr for arg in args_translated])
-                + ")"
+
+            # Could be a library function, loop over the imported libraries and check
+            # if we are using a name/alias imported from a module or using an attribute
+            # from an imported modules name/alias
+            output = ""
+            for i in self.imports:
+                module = i["module"]
+                name = i["name"]
+                alias = i["alias"]
+                if name:
+                    library_call = alias if alias else name
+                    if func_translated.lambda_expr.startswith(library_call):
+                        func_translated.lambda_expr = (
+                            func_translated.lambda_expr.replace(library_call, name)
+                        )
+                        break
+                else:
+                    library_call = alias + "." if alias else module + "."
+                    if func_translated.lambda_expr.startswith(library_call):
+                        func_translated.lambda_expr = (
+                            func_translated.lambda_expr.replace(
+                                library_call, module + "."
+                            )
+                        )
+                        break
+
+            # TODO outputs
+            output_var_name = func_translated.lambda_expr.replace(".", "_") + "_RESULT"
+            output = create_or_update_variable(
+                output_var_name,
+                self.cur_scope,
+                self.cur_module,
+                self.variable_table,
             )
+            self.variables[output] = generate_variable_object(output, "")
+
             vars_used = reduce(
                 lambda a1, a2: a1 + a2, [arg.var_names for arg in args_translated], []
             )
             vars_used.extend(func_translated.var_names)
 
+            box_assign_func_name = generate_assign_function_name(
+                output_var_name,
+                self.cur_module,
+                self.cur_scope,
+                self.variable_table,
+            )
+
+            # TODO sort inputs
+            lambda_function = (
+                "lambda "
+                + ",".join(inputs)
+                + ": "
+                + func_translated.lambda_expr
+                + "("
+                + ",".join([arg.lambda_expr for arg in args_translated])
+                + ")"
+            )
+
+            boxed_obj = {
+                "function": {
+                    "name": box_assign_func_name,
+                    "type": "boxed",
+                    "code": lambda_function,
+                },
+                "input": inputs,
+                "output": [output],
+                "updated": [],
+            }
+
+            self.containers[self.cur_containers[-1]]["body"].append(boxed_obj)
+
+            func_result_name = output.rsplit("::", 1)[1]
+
             return ExprInfo(
-                flatten([a.var_names for a in args_translated]),
-                flatten([a.var_identifiers_used for a in args_translated]),
-                lambda_function,
+                [output_var_name],
+                [output],
+                output_var_name,
                 type=func_result_type,
             )
 
-        elif len(function_ids) > 1:
-            # TODO handle errors
-            print("Error!")
-
-        # TODO I think we need to return expr info here/????
+        print("Error: Unable to resolve function call.")
         return
 
     def visit_ListComp(self, node: ast.ListComp):
@@ -773,7 +838,10 @@ class CAST2GrFN(ast.NodeVisitor):
         return self.visit(node.value)
 
     def visit_Slice(self, node: ast.Slice):
-        return None
+        self.visit(node.lower)
+        self.visit(node.upper)
+        self.visit(node.step)
+        return ExprInfo([], [], "")
 
     def visit_ExtSlice(self, node: ast.ExtSlice):
         return None
@@ -793,7 +861,36 @@ class CAST2GrFN(ast.NodeVisitor):
 
     def visit_Dict(self, node: ast.Dict):
         keys = self.visit_node_list(node.keys)
-        values = self.visit_node_list(node.values)
+
+        vals_with_exprs_precomputed = []
+        i = 0
+        for val in node.values:
+            # If we are dealing with a simple expression, do not precompute
+            if (
+                type(val) == ast.Name
+                or type(val) == ast.Num
+                or type(val) == ast.Constant
+                or type(val) == ast.Str
+            ):
+                vals_with_exprs_precomputed.append(val)
+            else:
+
+                dict_precompute_name = "grfn_dict_precompute_field_" + str(i)
+                dict_precompute_var_name_store = ast.Name(
+                    id=dict_precompute_name, ctx=ast.Store()
+                )
+                dict_precompute_var_assign = ast.Assign(
+                    targets=[dict_precompute_var_name_store], value=val
+                )
+                self.visit(dict_precompute_var_assign)
+
+                dict_precompute_var_name_load = ast.Name(
+                    id=dict_precompute_name, ctx=ast.Store()
+                )
+                vals_with_exprs_precomputed.append(dict_precompute_var_name_load)
+                i += 1
+
+        values = self.visit_node_list(vals_with_exprs_precomputed)
 
         # Determine all vars used in the keys/values
         vars_used = reduce(lambda a1, a2: a1 + a2, [k.var_names for k in keys], [])
@@ -866,7 +963,6 @@ class CAST2GrFN(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute):
         expr_type = ""
-        funcs_called = []
 
         value_translated = self.visit(node.value)
         var_identifiers_used = value_translated.var_identifiers_used
@@ -882,11 +978,17 @@ class CAST2GrFN(ast.NodeVisitor):
                     for v in self.containers.keys()
                     if value_translated.type + "::" + attr_name in v
                 ]
+
+                # We are calling a funciton
                 if len(class_funcs) == 1:
+                    # TODO get result type of function
                     # expr_type = class_funcs[0]["type"]
                     var_names.append(class_funcs[0])
-                elif len(class_funcs) == 1:
-                    print("field")
+
+                # We are accessing a class field
+                else:
+                    var_names.append(attr_name)
+                    # var_identifiers_used.append()
 
         return ExprInfo(
             var_names,
