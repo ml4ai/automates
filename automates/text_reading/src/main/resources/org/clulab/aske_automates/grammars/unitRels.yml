@@ -5,7 +5,7 @@ rules:
   ####UNIT RELATIONS####
 
   - name: var_unit_rel
-    label: Unit
+    label: UnitRelation
     priority: ${priority}
     type: token
     example: "T = daily mean air temperature [°C]"
@@ -14,7 +14,7 @@ rules:
       @variable:Variable [word=/.*/ & !word = /,|\]|\./]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
 #
   - name: concept_paren_unit
-    label: Unit
+    label: UnitRelation
     priority: ${priority}
     type: token
     example: "In one type, water uptake is a function of the difference in water potentials ( , J kg−1) and
@@ -24,7 +24,7 @@ rules:
       @variable:Concept [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
 
   - name: concept_unit
-    label: Unit
+    label: UnitRelation
     priority: ${priority}
     type: dependency
     example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
@@ -38,7 +38,7 @@ rules:
 
 
   - name: var_taken_as_unit
-    label: Unit
+    label: UnitRelation
     priority: ${priority}
     type: dependency
     example: "The density of water (ρw) is taken as 1.0 Mg m-3."
@@ -50,7 +50,7 @@ rules:
       #todo: this rule is looking specifically for a variable and not a concept to attach the unit to; can combine with similar rules in future
 
   - name: concept_value_unit
-    label: Unit
+    label: UnitRelation
     priority: ${priority}
     type: dependency
     example: "...a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23.
@@ -62,7 +62,7 @@ rules:
       unit: Unit = <nummod
 
   - name: var_equals_value_unit
-    label: Unit
+    label: UnitRelation
     priority: ${priority}
     type: dependency
     example: "For example for a soil with pwp = 0.1 m3 m-3..."
@@ -71,4 +71,13 @@ rules:
       trigger = [word = "="]
       variable: Variable = <amod
       unit: Unit = dep
+
+  - name: var_of_value_unit
+    label: UnitRelation
+    priority: ${priority}
+    type: token
+    example: "We expect the time T of 5-10 days"
+    pattern: |
+      @variable:Variable [word="of"] [entity="NUMBER"] @unit: Unit
+
 
