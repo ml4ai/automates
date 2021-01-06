@@ -130,7 +130,7 @@ rules:
 #    action: ${action}
     pattern: |
       trigger = [word=/(?i)represent|denote/]
-      variable:Concept = /${agents}/
+      variable:Variable = /${agents}/
       definition: Concept = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
