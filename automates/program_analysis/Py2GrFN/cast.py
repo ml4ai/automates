@@ -70,13 +70,14 @@ class CAST2GrFN(ast.NodeVisitor):
         self.types = dict()
         self.classes = dict()
         self.imports = list()
-        self.cur_control_flow = 0
-        self.cur_condition = 0
 
         # Memoized data for computing AIR
         self.cur_statements = list()
         self.cur_containers = list()
         self.variable_table = defaultdict(lambda: {"version": -1})
+        self.cur_control_flow = 0
+        self.cur_condition = 0
+        self.cur_lambda_num = 0
 
         # TODO set the default module to initial as we cannot determine input module.
         self.cur_module = "initial"
@@ -89,10 +90,10 @@ class CAST2GrFN(ast.NodeVisitor):
         # Use our python AST visitor to fill out AIR data
         self.visit(self.cast)
 
-        from pprint import pprint
+        # from pprint import pprint
 
-        pprint(self.containers)
-        pprint(self.variables)
+        # pprint(self.containers)
+        # pprint(self.variables)
 
         C, V, T, D = dict(), dict(), dict(), dict()
 
@@ -170,6 +171,14 @@ class CAST2GrFN(ast.NodeVisitor):
     def visit_Interactive(self, node: ast.Interactive):
         pass
 
+    def visit_Global(self, node: ast.Global):
+        print("test")
+        print(node.names)
+
+    def visit_Nonlocal(self, node: ast.Nonlocal):
+        print("test")
+        print(node.names)
+
     # ==========================================================================
 
     # ==========================================================================
@@ -226,12 +235,27 @@ class CAST2GrFN(ast.NodeVisitor):
 
         # Clear variable table
         # TODO KEEP GLOBALS / Things above this functions scope
-        self.variable_table = defaultdict(lambda: {"version": -1})
+        for key in self.variable_table.keys():
+            if function_name in key:
+                del self.variable_table[key]
 
     def visit_Lambda(self, node: ast.Lambda):
 
-        # has args and body
-        print(type(node.body))
+        # lambda_func_def_name = "lambda_" + str(self.cur_lambda_num)
+        # lambda_as_func_def = ast.FunctionDef(
+        #     name=lambda_func_def_name, args=node.args, body=[node.body]
+        # )
+        # self.visit(lambda_as_func_def)
+        # self.cur_lambda_num += 1
+
+        # TODO should set up the lambda function
+        return ExprInfo(
+            [],
+            [],
+            "1",
+            type="lambda_func"
+            # , func_ref=lambda_func_def_name
+        )
 
     def visit_arguments(self, node: ast.arguments):
         # TODO handle defaults for positional arguments? (in node.defaults)
@@ -357,9 +381,9 @@ class CAST2GrFN(ast.NodeVisitor):
                     var_names_sorted.append(name)
 
             if target.type == "dict":
-                dict_name = target_identifiers_used[0]
-                existing_dict_to_update = self.variables[dict_name]
-                next_instance = int(self.variables[dict_name]["instances"][-1]) + 1
+                output = target_identifiers_used[0]
+                existing_dict_to_update = self.variables[output]
+                next_instance = int(self.variables[output]["instances"][-1]) + 1
                 existing_dict_to_update["instances"].append(next_instance)
 
                 cur_keys = build_dict_key_list(existing_dict_to_update)
@@ -373,7 +397,7 @@ class CAST2GrFN(ast.NodeVisitor):
                     "delete": [],
                 }
 
-                updates.append(dict_name)
+                updates.append(output)
                 identifiers.extend(target_identifiers_used)
 
             else:
@@ -386,6 +410,10 @@ class CAST2GrFN(ast.NodeVisitor):
                 self.variables[output] = generate_variable_object(
                     output, value_translated.type
                 )
+
+                # TODO we are only handling these assignment types in the scenario
+                # that we are not assigning to a dict/list field. We should do better than
+                # this but also need to implement new type system to handle.
                 if value_translated.type == "dict":
                     self.variables[output].update(
                         {
@@ -397,6 +425,9 @@ class CAST2GrFN(ast.NodeVisitor):
                             },
                         }
                     )
+                elif value_translated.type == "lambda_func":
+                    self.variables[output].update({"func_node": node.value})
+
                 outputs.append(output)
 
             functions = [
@@ -591,6 +622,14 @@ class CAST2GrFN(ast.NodeVisitor):
         # TODO handle keyword args and *args
         args_translated = self.visit_node_list(node.args)
 
+        # For args passed that are lambda functions, pass the function reference into
+        # the arguments in the function
+        i = 0
+        for arg in args_translated:
+            if arg.type == "lambda_func":
+                print("lambda func passed")
+            i += 1
+
         inputs = []
         # If we called a function from an object, input that object var into this container
         if type(node.func) == ast.Attribute:
@@ -682,6 +721,11 @@ class CAST2GrFN(ast.NodeVisitor):
 
             # TODO outputs
             output_var_name = func_translated.lambda_expr.replace(".", "_") + "_RESULT"
+            if type(node.func) == ast.Attribute:
+                output_var_name = (
+                    func_translated.lambda_expr.rsplit(".", 1)[-1] + "_RESULT"
+                )
+
             output = create_or_update_variable(
                 output_var_name,
                 self.cur_scope,
@@ -703,9 +747,13 @@ class CAST2GrFN(ast.NodeVisitor):
             )
 
             # TODO sort inputs
+            input_to_lambda = flatten(
+                [arg.var_names for arg in args_translated if len(arg.var_names) > 0]
+            )
+
             lambda_function = (
                 "lambda "
-                + ",".join(inputs)
+                + ",".join(input_to_lambda)
                 + ": "
                 + func_translated.lambda_expr
                 + "("
@@ -713,16 +761,13 @@ class CAST2GrFN(ast.NodeVisitor):
                 + ")"
             )
 
-            boxed_obj = {
-                "function": {
-                    "name": box_assign_func_name,
-                    "type": "boxed",
-                    "code": lambda_function,
-                },
-                "input": inputs,
-                "output": [output],
-                "updated": [],
-            }
+            boxed_obj = generate_function_object(
+                box_assign_func_name,
+                "boxed",
+                input_var_ids=inputs,
+                output_var_ids=[output],
+                lambda_str=lambda_function,
+            )
 
             self.containers[self.cur_containers[-1]]["body"].append(boxed_obj)
 
@@ -838,13 +883,30 @@ class CAST2GrFN(ast.NodeVisitor):
         return self.visit(node.value)
 
     def visit_Slice(self, node: ast.Slice):
-        self.visit(node.lower)
-        self.visit(node.upper)
-        self.visit(node.step)
-        return ExprInfo([], [], "")
+        lambda_expr = ""
+        var_names = []
+        var_identifiers_used = []
+
+        index = 0
+        for part in (node.lower, node.upper, node.step):
+            if part:
+                res = self.visit(part)
+                var_names.extend(res.var_names)
+                var_identifiers_used.extend(res.var_identifiers_used)
+                lambda_expr += res.lambda_expr
+            if index == 0 or (index == 1 and node.step):
+                lambda_expr += ":"
+            index += 1
+
+        return ExprInfo(var_names, var_identifiers_used, lambda_expr)
 
     def visit_ExtSlice(self, node: ast.ExtSlice):
-        return None
+        dims_res = self.visit_node_list(node.dims)
+        return ExprInfo(
+            flatten([d.var_names for d in dims_res]),
+            flatten([d.var_identifiers_used for d in dims_res]),
+            ",".join([d.lambda_expr for d in dims_res]),
+        )
 
     # Expression literals/leaf nodes
 
@@ -979,7 +1041,7 @@ class CAST2GrFN(ast.NodeVisitor):
                     if value_translated.type + "::" + attr_name in v
                 ]
 
-                # We are calling a funciton
+                # We are calling a function
                 if len(class_funcs) == 1:
                     # TODO get result type of function
                     # expr_type = class_funcs[0]["type"]
