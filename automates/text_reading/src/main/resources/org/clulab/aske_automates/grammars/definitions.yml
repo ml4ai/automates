@@ -135,18 +135,6 @@ rules:
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
 
-  - name: var_is_defined
-    label: Definition
-    priority: ${priority}
-    type: dependency
-    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance; where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
-#    action: ${action}
-    pattern: |
-      trigger = [lemma=/define/]
-      variable:Concept = nsubjpass | advcl nsubj
-      definition:Concept = nmod_as [!entity = "NUMBER"]
-      #fixme: need to limit to 'find first nsubj you find' to account for the second example
-
 
   - name: var_cop_definition_greek
     label: Definition
@@ -159,16 +147,6 @@ rules:
       variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
 
-  - name: var_cop_definition
-    label: Definition
-    priority: ${priority}
-    type: dependency
-    example: "LAI is the actual leaf area index"
-    action: ${action}
-    pattern: |
-      trigger = [lemma="be"]
-      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
 
   - name: def_cop_var
     label: Definition
