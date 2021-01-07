@@ -45,13 +45,14 @@ logger = logging.getLogger()
 
 def main():
     
+    year = str(args.year)
+    src_path = args.source
+    
     for DIR in args.directories:
     
         print(DIR)
         DIR = str(DIR)
-        year = str(args.year)
         
-        src_path = args.source
         path = os.path.join(src_path, f'{year}/{DIR}')
                 
         latex_images = os.path.join(path, 'latex_images')
