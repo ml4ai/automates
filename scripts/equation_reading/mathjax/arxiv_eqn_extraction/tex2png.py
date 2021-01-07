@@ -68,29 +68,29 @@ def pool_path(path):
     TexFolderPath = os.path.join(path, "tex_files")
     
     for folder in os.listdir(TexFolderPath):
-        if folder == '1601.02509':
-            # make results PNG directories
-            pdf_dst_root = os.path.join(path, f"latex_images/{folder}")
-            PDF_Large = os.path.join(pdf_dst_root, "Large_eqns")
-            PDF_Small = os.path.join(pdf_dst_root, "Small_eqns")
-            for F in [pdf_dst_root, PDF_Large, PDF_Small]:
-                if not os.path.exists(F):
-                    subprocess.call(['mkdir', F])
-    
-            # Paths to Large and Small TeX files
-            Large_tex_files = os.path.join(TexFolderPath, f"{folder}/Large_eqns")
-            Small_tex_files = os.path.join(TexFolderPath, f"{folder}/Small_eqns")
-    
-            for type_of_folder in [Large_tex_files, Small_tex_files]: 
-                PDF_dst = PDF_Large if type_of_folder == Large_tex_files else PDF_Small
-            
-                # array to store pairs of [type_of_folder, file in type_of_folder] Will be used as arguments in pool.map            
-                temp = []
-                for texfile in os.listdir(type_of_folder):
-                    temp.append([folder, type_of_folder, texfile, PDF_dst])
-                    
-                with Pool(multiprocessing.cpu_count()) as pool:
-                    result = pool.map(run_pdflatex, temp)
+        
+        # make results PNG directories
+        pdf_dst_root = os.path.join(path, f"latex_images/{folder}")
+        PDF_Large = os.path.join(pdf_dst_root, "Large_eqns")
+        PDF_Small = os.path.join(pdf_dst_root, "Small_eqns")
+        for F in [pdf_dst_root, PDF_Large, PDF_Small]:
+            if not os.path.exists(F):
+                subprocess.call(['mkdir', F])
+
+        # Paths to Large and Small TeX files
+        Large_tex_files = os.path.join(TexFolderPath, f"{folder}/Large_eqns")
+        Small_tex_files = os.path.join(TexFolderPath, f"{folder}/Small_eqns")
+
+        for type_of_folder in [Large_tex_files, Small_tex_files]: 
+            PDF_dst = PDF_Large if type_of_folder == Large_tex_files else PDF_Small
+
+            # array to store pairs of [type_of_folder, file in type_of_folder] Will be used as arguments in pool.map            
+            temp = []
+            for texfile in os.listdir(type_of_folder):
+                temp.append([folder, type_of_folder, texfile, PDF_dst])
+
+            with Pool(multiprocessing.cpu_count()) as pool:
+                result = pool.map(run_pdflatex, temp)
 
 # This function will run pdflatex
 def run_pdflatex(run_pdflatex_list):
