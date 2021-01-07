@@ -113,7 +113,6 @@ def run_pdflatex(run_pdflatex_list):
 
     # Kill the process if takes more than 5 seconds
     my_timer = Timer(5, kill, [output])
-    #my_timer = Timer(5, Kill, [output])
 
     try:
         my_timer.start()
@@ -153,9 +152,11 @@ def pdf2png(folder, pdf_file, png_name, PNG_dst, type_of_folder):
             if args.verbose:
                 lock.acquire()
                 print(f'{pdf_file.split(".")[0]}.aux doesn\'t exists.')
-                    lock.release()
+                lock.release()
 
+            lock.acquire()
             logger.warning(f'{folder}:{type_of_folder}:{pdf_file.split(".")[0]}.aux doesn\'t exists.')
+            lock.release()
 
     except:
 
@@ -164,8 +165,10 @@ def pdf2png(folder, pdf_file, png_name, PNG_dst, type_of_folder):
             print(f"OOPS!!... This {folder}:{PNG_dst}:{pdf_file} file couldn't convert to png.")
             lock.release()
 
+        lock.acquire()
         logger.warning(f"{folder}:{PNG_dst}:{pdf_file} file couldn't convert to png.")
-
+        lock.release()
+        
 # Function to kill process if TimeoutError occurs
 kill = lambda process: process.kill()
 
