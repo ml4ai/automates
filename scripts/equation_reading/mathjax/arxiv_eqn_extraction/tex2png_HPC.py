@@ -183,4 +183,4 @@ if __name__ == "__main__":
     stop_time = datetime.now()
     print('Stoping at:  ', stop_time)
     print(' ')
-    print('parsing latex equations completed.')
+    print('Tex2Png -- completed.')
