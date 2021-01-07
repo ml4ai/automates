@@ -131,65 +131,65 @@ def Creating_final_equations(args_list):
         
             if '.png' in eqn:
         
-                #try:
-                file_name = eqn.split("-")[0].split(".")[0] 
-                
-                EqnsType = "Large_eqns" if type_of_folder == Large_eqns else "Small_eqns"
-                file_path = os.path.join(root, f"latex_equations/{folder}/{EqnsType}/{file_name}.txt")
-                
-                final_eqn = ""
-                
-                text_eqn = open(file_path, "r").readlines()[0]
-                Macros_in_eqn = [kw for kw in keyword_Macro_dict.keys() if kw in text_eqn]
-                DMOs_in_eqn = [kw for kw in keyword_dict.keys() if kw in text_eqn]
-                    
-                # Writing Macros, DMOs, and text_eqn as one string
-                MiE, DiE = "", ""
-                for macro in Macros_in_eqn:
-                    MiE = MiE + keyword_Macro_dict[macro] + " "
-                for dmo in DMOs_in_eqn:
-                    DiE = DiE +  keyword_dict[dmo] + " "    
-                
-                string = MiE + DiE + text_eqn
-                
-                # Removing unsupported keywords 
-                for tr in ["\\ensuremath", "\\xspace", "\\aligned", "\\endaligned", "\\span"]:
-                    string = string.replace(tr, "")
-                
-                # Correcting keywords written in an incorrect way
-                for sub in string.split(" "):
-                    if "cong" in sub:
-                        sub = sub.replace("\\cong", "{\\cong}")
-                    if "mathbb" in sub:
-                        if sub[sub.find("\\mathbb")+7] != "{":
-                            mathbb_parameter = sub[sub.find("\\newcommand")+12 : sub.find("}")].replace("\\", "")
-                            sub = sub[:sub.find("\\mathbb")+7] + "{" + mathbb_parameter + "}" + sub[sub.find("\\mathbb")+7+len(mathbb_parameter):]
-                    if "mathbf" in sub:
-                        if sub[sub.find("\\mathbf")+7] != "{":
-                            mathbf_parameter = sub[sub.find("\\newcommand")+12 : sub.find("}")].replace("\\", "")
-                            sub = sub[:sub.find("\\mathbf")+7] + "{" + mathbf_parameter + "}" + sub[sub.find("\\mathbf")+7+len(mathbf_parameter):]
-                    
-                    final_eqn += sub + " "     
-                
-                # Printing the final equation string
-                if args.verbose:
+                try:
+                    file_name = eqn.split("-")[0].split(".")[0] 
+
+                    EqnsType = "Large_eqns" if type_of_folder == Large_eqns else "Small_eqns"
+                    file_path = os.path.join(root, f"latex_equations/{folder}/{EqnsType}/{file_name}.txt")
+
+                    final_eqn = ""
+
+                    text_eqn = open(file_path, "r").readlines()[0]
+                    Macros_in_eqn = [kw for kw in keyword_Macro_dict.keys() if kw in text_eqn]
+                    DMOs_in_eqn = [kw for kw in keyword_dict.keys() if kw in text_eqn]
+
+                    # Writing Macros, DMOs, and text_eqn as one string
+                    MiE, DiE = "", ""
+                    for macro in Macros_in_eqn:
+                        MiE = MiE + keyword_Macro_dict[macro] + " "
+                    for dmo in DMOs_in_eqn:
+                        DiE = DiE +  keyword_dict[dmo] + " "    
+
+                    string = MiE + DiE + text_eqn
+
+                    # Removing unsupported keywords 
+                    for tr in ["\\ensuremath", "\\xspace", "\\aligned", "\\endaligned", "\\span"]:
+                        string = string.replace(tr, "")
+
+                    # Correcting keywords written in an incorrect way
+                    for sub in string.split(" "):
+                        if "cong" in sub:
+                            sub = sub.replace("\\cong", "{\\cong}")
+                        if "mathbb" in sub:
+                            if sub[sub.find("\\mathbb")+7] != "{":
+                                mathbb_parameter = sub[sub.find("\\newcommand")+12 : sub.find("}")].replace("\\", "")
+                                sub = sub[:sub.find("\\mathbb")+7] + "{" + mathbb_parameter + "}" + sub[sub.find("\\mathbb")+7+len(mathbb_parameter):]
+                        if "mathbf" in sub:
+                            if sub[sub.find("\\mathbf")+7] != "{":
+                                mathbf_parameter = sub[sub.find("\\newcommand")+12 : sub.find("}")].replace("\\", "")
+                                sub = sub[:sub.find("\\mathbf")+7] + "{" + mathbf_parameter + "}" + sub[sub.find("\\mathbf")+7+len(mathbf_parameter):]
+
+                        final_eqn += sub + " "     
+
+                    # Printing the final equation string
+                    if args.verbose:
+                        lock.acquire()
+                        print("final equation is  ", final_eqn)
+                        lock.release()
+
+                    MML = Large_MML if type_of_folder == Large_eqns else Small_MML
+
+                    MjxMML(file_name, folder, final_eqn, type_of_folder, MML)
+
+                except:
                     lock.acquire()
-                    print("final equation is  ", final_eqn)
+                    if args.verbose:
+                      print( " " )
+                      print(f' {type_of_folder}/{file_name}: can not be converted.')
+                      print( " =============================================================== " )
+
+                    logger.warning(f'{type_of_folder}/{file_name}: can not be converted.')
                     lock.release()
-                
-                MML = Large_MML if type_of_folder == Large_eqns else Small_MML
-                
-                MjxMML(file_name, folder, final_eqn, type_of_folder, MML)
-                    
-                #except:
-                lock.acquire()
-                if args.verbose:
-                  print( " " )
-                  print(f' {type_of_folder}/{file_name}: can not be converted.')
-                  print( " =============================================================== " )
-                
-                logger.warning(f'{type_of_folder}/{file_name}: can not be converted.')
-                lock.release()
                     
     
 def MjxMML(file_name, folder, final_eqn, type_of_folder, mml_path):
