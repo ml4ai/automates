@@ -70,6 +70,7 @@ class CAST2GrFN(ast.NodeVisitor):
         self.types = dict()
         self.classes = dict()
         self.imports = list()
+        self.source_comments = defaultdict(lambda: defaultdict(lambda: list()))
 
         # Memoized data for computing AIR
         self.cur_statements = list()
@@ -126,6 +127,7 @@ class CAST2GrFN(ast.NodeVisitor):
                 filter(lambda c: c["type"] == "function", self.containers.values())
             )[-1]
             con_id = GenericIdentifier.from_str(con["name"])
+
         grfn = GroundedFunctionNetwork.from_AIR(
             con_id,
             C,
@@ -133,7 +135,7 @@ class CAST2GrFN(ast.NodeVisitor):
             T,
         )
 
-        return grfn
+        return (grfn, self.source_comments)
 
     def visit_node_list(self, node_list):
         """
@@ -172,11 +174,11 @@ class CAST2GrFN(ast.NodeVisitor):
         pass
 
     def visit_Global(self, node: ast.Global):
-        print("test")
+        print("Global")
         print(node.names)
 
     def visit_Nonlocal(self, node: ast.Nonlocal):
-        print("test")
+        print("Nonlocal")
         print(node.names)
 
     # ==========================================================================
@@ -240,22 +242,14 @@ class CAST2GrFN(ast.NodeVisitor):
                 del self.variable_table[key]
 
     def visit_Lambda(self, node: ast.Lambda):
-
         # lambda_func_def_name = "lambda_" + str(self.cur_lambda_num)
         # lambda_as_func_def = ast.FunctionDef(
         #     name=lambda_func_def_name, args=node.args, body=[node.body]
         # )
         # self.visit(lambda_as_func_def)
         # self.cur_lambda_num += 1
-
         # TODO should set up the lambda function
-        return ExprInfo(
-            [],
-            [],
-            "1",
-            type="lambda_func"
-            # , func_ref=lambda_func_def_name
-        )
+        return ExprInfo([], [], "1", type="lambda_func")
 
     def visit_arguments(self, node: ast.arguments):
         # TODO handle defaults for positional arguments? (in node.defaults)
@@ -507,11 +501,20 @@ class CAST2GrFN(ast.NodeVisitor):
     #   is not used or stored. For instance,
     #       print(a + 1)
     #   would be an Expr with child nodes for the internal expression type expr
-    # @translate.register
     def visit_Expr(self, node: ast.Expr):
         translated = self.visit(node.value)
 
+        if type(node.value) == ast.Str:
+            container_comments_dict = self.source_comments[self.cur_containers[-1]]
+            # In this case, we are at the head comment because nothing is in the container body yet
+            if len(self.containers[self.cur_containers[-1]]["body"]) == 0:
+                container_comments_dict["neck"].append(translated.lambda_expr)
+            else:
+                container_comments_dict["internal"].append(translated.lambda_expr)
+            return
+
         translated.var_identifiers_used.sort()
+        # TODO this little var name sort is used in a lot of places, abstract to function
         var_names_sorted = []
         for id in translated.var_identifiers_used:
             name = id.rsplit("::", 2)[1]
