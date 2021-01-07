@@ -56,14 +56,18 @@ for directory in args.directories:
             subprocess.call(['mkdir', path])
         
         
-def main(DIR):    
+def main():    
     
-    Mathml_path = f'{args.source}/{str(args.year)}/{DIR}/Simplified_mml'
+    for DIR in args.directories:
     
-    args_array = pooling(DIR, Mathml_path)
+        print(DIR)
     
-    with Pool(multiprocessing.cpu_count()-10) as pool:
-        result = pool.map(etree, args_array)
+        Mathml_path = f'{args.source}/{str(args.year)}/{DIR}/Simplified_mml'
+        
+        args_array = pooling(DIR, Mathml_path)
+        
+        with Pool(multiprocessing.cpu_count()-10) as pool:
+            result = pool.map(etree, args_array)
     
     
 def pooling(DIR, Mathml_path):
@@ -147,11 +151,7 @@ def Create_Folders(subDIR, tyf, etree_path, sample_etree_path):
             
 
 if __name__ == "__main__":
-    
-    for DIR in args.directories:
-        
-        print(DIR)
-        main(str(DIR))
+    main()
         
     
     # Printing stoping time
