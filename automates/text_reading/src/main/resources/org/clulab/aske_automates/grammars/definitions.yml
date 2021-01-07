@@ -51,7 +51,20 @@ rules:
     action: ${action}
     pattern: |
       (?<= [word = /a|the|,/])? (?<definition> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Variable #(?! [chunk = I-NP])
-      #the !b-variable helps find greek letters as coefficients by avoiding finding variables preceeded by greek letters
+#      |
+#      (?<definition> [word = /.*/]) (?<variable> [entity = "B-GreekLetter"])
+
+
+  - name: var_stands_for_def
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "V stands for vendetta."
+    action: ${action}
+    pattern: |
+      trigger = [lemma="stand"]
+      definition:Concept = nmod_for
+      variable:Variable = nsubj
 
   - name: var_definition_appos_bidir
     label: Definition
@@ -127,7 +140,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance; where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
-    action: ${action}
+#    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
       variable:Concept = nsubjpass | advcl nsubj
@@ -164,9 +177,9 @@ rules:
     example: "LAI is the actual leaf area index"
     action: ${action}
     pattern: |
-      trigger = [lemma="be"]
-      definition:Concept = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      variable:Variable = <cop [!entity = /NUMBER|B-unit/ ]
+      trigger = (?<!"that") [lemma="be"]
+      definition:Concept = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = "," & !word = "which"]
+      variable:Variable =  <cop  [!entity = /NUMBER|B-unit/ ]
 
   - name: comma_appos_var
     label: Definition
@@ -175,28 +188,29 @@ rules:
     action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      @definition: Concept "," @variable:Variable (?! [lemma = "be"])
+      @definition: Concept "," @variable:Variable (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      @definition: Concept "(" @variable:Variable ")" (?! [lemma = "be"])
+      @definition: Concept "(" @variable:Variable ")" (?! [lemma = "be"]) (?! [chunk = "I-NP"])
       |
-      @definition: Concept "," "or" @variable:Variable (?! [lemma = "be"])
+      @definition: Concept "," "or" @variable:Variable (?! [lemma = "be"]) (?! [chunk = "I-NP"])
 
-  - name: def_comma_var_appos
-    label: Definition
-    priority: ${priority}
-    type: dependency
-    example: "Susceptible individuals, S, are infected by infected individuals, i,"
-    action: ${action}
-    pattern: |
-      trigger = [lemma=/,/]
-      variable:Variable = <punct >appos [!entity="B-unit"]
-      definition: Concept = <punct
+#  - name: def_comma_var_appos
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "Susceptible individuals, S, are infected by infected individuals, i,"
+#    action: ${action}
+#    pattern: |
+#      trigger = [lemma=/,/]
+#      variable:Variable = <punct >appos [!entity="B-unit"]
+#      definition: Concept = <punct
+
 
   - name: def_is_given_by
     label: Definition
@@ -209,6 +223,37 @@ rules:
       variable:Variable = nmod_agent
       definition: Concept = nsubjpass
 
+
+  - name: multiplied_by_def_var
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "which is the transmissibility τ multiplied by the average number of people exposed c."
+    action: ${action}
+    pattern: |
+      trigger = [word="multiplied"]
+      definition:Concept = nmod_by
+      variable:Variable = nmod_by nmod_of acl nmod | <acl dep
+
+# results in false pos, e.g., in number of infectives in class I (should just be class I)
+#  - name: number_of_def_val
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "the average number of people exposed c."
+#    action: ${action}
+#    pattern: |
+#       (?<definition> [word = "number"] [word="of"] [word=/[a-z]*/]{1,5}) @variable:Variable
+
+
+  - name: def_with_amod
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "the average number of people exposed c."
+    action: ${action}
+    pattern: |
+      [word=/a|an|the/] (?<definition> [tag=/JJ|VBN/] [tag=/^N/] ) @variable:Variable (?![tag=/^N/])
 
 #todo: revisit
 #  - name: where_var_def

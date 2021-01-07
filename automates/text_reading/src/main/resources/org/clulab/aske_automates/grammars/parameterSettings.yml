@@ -5,6 +5,25 @@ rules:
 
   ####VALUES####
 
+  - name: var-equals_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    pattern: |
+      trigger = [lemma='=']
+      variable:Variable = nsubj
+      value:Value = dobj
+
+  - name: var-equals_value2
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    pattern: |
+      trigger = [lemma='=']
+      variable:Variable = <amod
+      value:Value = dep
 
   - name: var_equals_val
     label: ParameterSetting
@@ -12,8 +31,16 @@ rules:
     type: token
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
-      # @trigger:Concept "=" @Value:Value
-      (@variable:Variable|@variable:Concept) (?<trigger> [word="="]) @value:Value
+      (@variable:Variable|@variable:Concept [!tag="CD"]) (?<trigger> [word="="]) @value:Value
+
+#  - name: var_&equals_val
+#    label: ParameterSetting
+#    priority: ${priority}
+#    type: token
+#    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+#    pattern: |
+#      # @trigger:Concept "=" @Value:Value
+#      (@variable:Variable|@variable:Concept) [word="&"] [word="="] @value:Value
 
 
   - name: var-vary_between
@@ -135,3 +162,11 @@ rules:
       trigger = [word=/(?i)adjust/]
       variable:Concept = dobj
       value:Value = nmod_to nmod_of nummod
+
+  - name: of_param_setting
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    example: "We expect the time T of 5-10 days"
+    pattern: |
+      @variable:Variable [word="of"] @value:Value (?=@unit:Unit)

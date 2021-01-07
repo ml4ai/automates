@@ -21,7 +21,7 @@ rules:
     example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
     Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
     pattern: |
-      [word = /.*/] [word = "-"] [tag = "CD"]
+      [word = /[A-Za-z]/ ] [word = "-"] [tag = "CD"]
 
   - name: number_unit
     label: Unit
@@ -30,8 +30,18 @@ rules:
     action: looksLikeAUnit
     example: "a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23"
     pattern: |
-      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = "CD" & !word = /\(|\)|-LRB-|-RRB-|to|and|\]/]+
+      (?<= [entity = "NUMBER"]) [chunk = "I-NP" & !tag = /CD|CC/ & !word = /\(|\)|-LRB-|-RRB-|to|and|\]/]+
+      |
+      (?<= [entity = "NUMBER"]) [entity="DURATION"]
       #required for non-standard units, e.g., s m-1
+
+  - name: duration
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "It's been 7-10 days."
+    pattern: |
+      (?<= [tag = "CD"]) [entity="DURATION"]
 
   - name: unit_from_fragments
     label: Unit

@@ -30,7 +30,6 @@ def main():
             for field_key, row_data in parquet_data.items():
                 for row_idx, datum in row_data.items():
                     row_idx_num = int(row_idx)
-                    row_order_parquet_data[row_idx_num][field_key] = datum
 
             if filename == "documents.parquet":
                 # Sorts the content sections by page number and then by
@@ -93,7 +92,7 @@ def main():
                     row_order_parquet_data.insert(
                         edit_dict["ins_idx"], edit_dict["val"]
                     )
-
+            
             parquet_json_filepath = parquet_filepath.replace(
                 ".parquet", ".json"
             )
