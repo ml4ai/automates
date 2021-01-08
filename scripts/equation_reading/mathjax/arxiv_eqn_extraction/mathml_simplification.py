@@ -44,115 +44,33 @@ logging.basicConfig(filename = os.path.join(logFile_dst, f'{begin_month}-{end_mo
 Unicode_logger = logging.getLogger()
 
 
-def Unicode(MMLcode, running_path):
+def main():
     
-    global lock
-    
-    code_dict = {}
-    
-    symbol_index = [i for i,c in enumerate(MMLcode.split()) if ';<!--' in c and '&#x' in c]
-    
-    if args.verbose:
-        lock.acquire()
-        print(' ===+=== '*10)
-        print('running_path:  ', running_path)
-        lock.release()
-    
-    if len(symbol_index) != 0:
-    
-        for si in symbol_index:
-            
-            split_0 = MMLcode.split()[si]
-            
-            # grabbing part which has '#x<ascii-code>' in it.
-            ind = [i for i, c in enumerate(split_0.split(';')) if '#x' in c]
-            split_1 = split_0.split(";")[ind[0]]
-            
-            code = split_1.split('x')[1]
-            
-            ascii_code, Unicode = code, MMLcode.split()[si+1]
-            Unicode_logger.info(f'{running_path} -- {Unicode}:{ascii_code}')
+    for DIR in args.directories:
         
-        # Printing final MML code
-        if args.verbose:
-            lock.acquire()
-            print(f'{running_path} -- {Unicode}:{ascii_code}')
-            lock.release()
+        source_path = args.source
+        year, DIR = str(args.year), str(DIR)
+        
+        print('Directory running:  ', DIR)
+        
+        DIR_path = os.path.join(source_path, f'{year}/{DIR}')
+        MathJax_MML_path = os.path.join(DIR_path, 'Mathjax_mml')
+        
+        # Making new directory for Simplified MML
+        Simp_MML_path = os.path.join(DIR_path, 'Simplified_mml')
+        if not os.path.exists(Simp_MML_path):
+            subprocess.call(['mkdir', Simp_MML_path])
+        
+        # Creating array fro pooling
+        temp = []
+        
+        for folder in os.listdir(MathJax_MML_path):
+            temp.append([os.path.join(MathJax_MML_path, folder), folder, Simp_MML_path])
+        
+        with Pool(multiprocessing.cpu_count()-30) as pool:
+                result = pool.map(Simplification, temp)
 
-# Removing unnecessary information or attributes having default values 
-def Attribute_Definition(MMLcode, ELEMENTS, Attr_tobeRemoved, Attr_tobeChecked, running_path):
-    
-    global lock 
-    
-    # Defining array to keep Attribute definition
-    Definition_array = []
-    
-    for ele in ELEMENTS:
-        
-        # Getting indices of the position of the element in the MML code
-        position = [i for i in re.finditer(r'\b%s\b' % re.escape(ele), MMLcode)]
-        
-        
-        for p in position:
 
-            # Attribute begining and ending indices
-            (Attr_begin, Attr_end) = p.span()
-            
-            # Length of the definition of the attribute
-            Length = MMLcode[Attr_end:].find(">")   
-        
-            if Length >0:
-                
-                # Grabbing definition
-                Definition = MMLcode[Attr_end: Attr_end+Length]
-                
-                if args.verbose:
-                    lock.acquire()
-                    print("MathML element:  ", ele)
-                    print("Defnition:  ", Definition)
-                    lock.release()
-                    
-                # Append unique definition
-                if Definition not in Definition_array:
-                    Definition_array.append(Definition)
-    
-    
-    for Darr in Definition_array:
-        
-        #try:
-        if '=' in Darr:
-        # Attribute and its value -- of the element 
-            AttributeParameter = Darr.replace(" ", "").split("=")[0]
-            AttributeValue = Darr.replace(" ", "").split("=")[1]
-            
-            # If Attribute has a defualt value, we can remove it
-            # Checking which attributes can be removed
-            if AttributeParameter not in Attr_tobeRemoved:
-                
-                if AttributeParameter in Attr_tobeChecked.keys():
-                    
-                    if AttributeValue.replace('\\','').replace('"', '') == Attr_tobeChecked[AttributeParameter]:
-                        
-                        MMLcode = MMLcode.replace(Darr, '')         
-            else:
-                MMLcode = MMLcode.replace(Darr, '')
-        
-        #except:
-            
-        #    if args.verbose:
-        #        lock.acquire()
-        #        print(f'{running_path} can\'t be simplified')
-        #        lock.release(f'{running_path} can\'t be simplified')
-                  
-        #    Error_logger.warning(f'{running_path} can\'t be simplified')      
-    
-    
-    # Replacing greek symbols with their unicodes
-    
-    
-    return MMLcode
-    
-    
 def Simplification(pooling_list):
   
     global lock
@@ -174,18 +92,12 @@ def Simplification(pooling_list):
         
         type_of_folder_path = os.path.join(folder_path, type_of_folder)
         
-        lock.acquire()
-        #print(type_of_folder)
-        lock.release()
-        
         # Making directories in Simplified MML
         tyf_path = os.path.join(Simp_MML_folder_path, type_of_folder)
         if not os.path.exists(tyf_path):
             subprocess.call(['mkdir', tyf_path])
         
         for FILE in os.listdir(type_of_folder_path):
-            
-            #try:
             
             MMLorg_LineList = open(os.path.join(type_of_folder_path, FILE), 'r').readlines()
             
@@ -194,7 +106,6 @@ def Simplification(pooling_list):
                 MMLorg = MMLorg_LineList[0]
         
                 if args.verbose:
-                    
                     lock.acquire()
                     # Printing original MML
                     print('Curently running folder:  ', folder)
@@ -249,7 +160,6 @@ def Simplification(pooling_list):
                 MMLmod = Attribute_Definition(MMLorg, ELEMENTS, Attr_tobeRemoved, Attr_tobeChecked, os.path.join(type_of_folder_path, FILE))    
                  
                 if args.verbose:
-                    
                     lock.acquire()
                     print("=============== Printing Modified MML ================")
                     print("Modified: \n")
@@ -262,39 +172,112 @@ def Simplification(pooling_list):
                     subprocess.call(['mkdir', tyf_path])
                     
                 mod_FILE_path = os.path.join(tyf_path, FILE)
-                MMLmod_FILE = open(mod_FILE_path, 'w')
-                MMLmod_FILE.write(MMLmod)
+                with open(mod_FILE_path, 'w') as MMLmod_FILE:
+                    MMLmod_FILE.write(MMLmod)
                     
-                #except:
-                #    running_path = os.path.join(type_of_folder_path, FILE)
-                #    print(running_path) 
-                #    Error_logger.warning(f' {running_path} can\'t be simplified.')
 
-if __name__ == '__main__':
+def Unicode(MMLcode, running_path):
     
-    for DIR in args.directories:
+    global lock
+    
+    code_dict = {}
+    
+    symbol_index = [i for i,c in enumerate(MMLcode.split()) if ';<!--' in c and '&#x' in c]
+    
+    if args.verbose:
+        lock.acquire()
+        print(' ===+=== '*10)
+        print('running_path:  ', running_path)
+        lock.release()
+    
+    if len(symbol_index) != 0:
+    
+        for si in symbol_index:
+            
+            split_0 = MMLcode.split()[si]
+            
+            # grabbing part which has '#x<ascii-code>' in it.
+            ind = [i for i, c in enumerate(split_0.split(';')) if '#x' in c]
+            split_1 = split_0.split(";")[ind[0]]
+            
+            code = split_1.split('x')[1]
+            
+            ascii_code, Unicode = code, MMLcode.split()[si+1]
+            
+            lock.acquire()
+            Unicode_logger.info(f'{running_path} -- {Unicode}:{ascii_code}')
+            lock.release()
         
-        source_path = args.source
-        year, DIR = str(args.year), str(DIR)
         
-        print('Directory running:  ', DIR)
+        # Printing final MML code
+        if args.verbose:
+            lock.acquire()
+            print(f'{running_path} -- {Unicode}:{ascii_code}')
+            lock.release()
+
+# Removing unnecessary information or attributes having default values 
+def Attribute_Definition(MMLcode, ELEMENTS, Attr_tobeRemoved, Attr_tobeChecked, running_path):
+    
+    global lock 
+    
+    # Defining array to keep Attribute definition
+    Definition_array = []
+    
+    for ele in ELEMENTS:
         
-        DIR_path = os.path.join(source_path, f'{year}/{DIR}')
-        MathJax_MML_path = os.path.join(DIR_path, 'Mathjax_mml')
+        # Getting indices of the position of the element in the MML code
+        position = [i for i in re.finditer(r'\b%s\b' % re.escape(ele), MMLcode)]
         
-        # Making new directory for Simplified MML
-        Simp_MML_path = os.path.join(DIR_path, 'Simplified_mml')
-        if not os.path.exists(Simp_MML_path):
-            subprocess.call(['mkdir', Simp_MML_path])
         
-        # Creating array fro pooling
-        temp = []
+        for p in position:
+
+            # Attribute begining and ending indices
+            (Attr_begin, Attr_end) = p.span()
+            
+            # Length of the definition of the attribute
+            Length = MMLcode[Attr_end:].find(">")   
         
-        for folder in os.listdir(MathJax_MML_path):
-            temp.append([os.path.join(MathJax_MML_path, folder), folder, Simp_MML_path])
+            if Length >0:
+                
+                # Grabbing definition
+                Definition = MMLcode[Attr_end: Attr_end+Length]
+                
+                if args.verbose:
+                    lock.acquire()
+                    print("MathML element:  ", ele)
+                    print("Defnition:  ", Definition)
+                    lock.release()
+                    
+                # Append unique definition
+                if Definition not in Definition_array:
+                    Definition_array.append(Definition)
+    
+    
+    for Darr in Definition_array:
+    
+        if '=' in Darr:
         
-        with Pool(multiprocessing.cpu_count()-30) as pool:
-                result = pool.map(Simplification, temp)
+        # Attribute and its value -- of the element 
+            AttributeParameter = Darr.replace(" ", "").split("=")[0]
+            AttributeValue = Darr.replace(" ", "").split("=")[1]
+            
+            # If Attribute has a defualt value, we can remove it
+            # Checking which attributes can be removed
+            if AttributeParameter not in Attr_tobeRemoved:
+                
+                if AttributeParameter in Attr_tobeChecked.keys():
+                    
+                    if AttributeValue.replace('\\','').replace('"', '') == Attr_tobeChecked[AttributeParameter]:
+                        
+                        MMLcode = MMLcode.replace(Darr, '')         
+            else:
+                MMLcode = MMLcode.replace(Darr, '')
+    
+    return MMLcode
+    
+    
+if __name__ == '__main__':
+    main()
             
     # Printing stoping time
     print(' ')
