@@ -572,14 +572,11 @@ object ExtractAndAlign {
                        Seq[Mention],
                        defMention2: Seq[Mention]
                      ): Map[String, Seq[String]] = {
-    // Make Comment Spans from the comment variable mentions
+
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
 
 
-
-
-
-      // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
+      // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph - do not merge
       linkElements("TEXT_VAR1") = defMentions1.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
@@ -592,10 +589,6 @@ object ExtractAndAlign {
         randomUUID + "::" + "text_var_for_model_comparison" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}"
       }
 
-
-
-
-      // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
       linkElements("TEXT_VAR2") = defMention2.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
@@ -608,6 +601,47 @@ object ExtractAndAlign {
         randomUUID + "::" + "text_var_for_model_comparison" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}"
       }
 
+    linkElements.toMap
+  }
+
+  def get2ModelComparisonLinkElements(
+                                       paper1Objects:
+                                       Seq[ujson.Value],
+                                       paper1id: String,
+                                       paper2Objects: Seq[ujson.Value],
+                                       paper2id: String
+                                     ): Map[String, Seq[ujson.Value]] = {
+
+    val linkElements = scala.collection.mutable.HashMap[String, Seq[ujson.Value]]()
+
+
+    // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph - do not merge
+    val updatedWithPaperId1 = for {
+      o <- paper1Objects
+      updated = ujson.Obj(
+      "var_uid" -> o.obj("var_uid"),
+      "code_identifier"-> o.obj("code_identifier"),
+      "text_definition"-> o.obj("text_definition"),
+      "text_identifier"-> o.obj("text_identifier"),
+        "grfn_uid" -> paper1id
+      )
+    } yield updated
+
+    val updatedWithPaperId2 = for {
+      o <- paper2Objects
+      updated = ujson.Obj(
+        "var_uid" -> o.obj("var_uid"),
+        "code_identifier"-> o.obj("code_identifier"),
+        "text_definition"-> o.obj("text_definition"),
+        "text_identifier"-> o.obj("text_identifier"),
+        "grfn_uid" -> paper2id
+      )
+    } yield updated
+
+
+    linkElements("TEXT_VAR1") = updatedWithPaperId1
+
+    linkElements("TEXT_VAR2") = updatedWithPaperId2
     linkElements.toMap
   }
 
@@ -635,6 +669,20 @@ object ExtractAndAlign {
       score = alignment.score
     } yield mkHypothesis(srcLinkElement, dstLinkElement, score, debug)
   }
+
+  def mkLinkHypothesisFromValueSequences(srcElements: Seq[Value], dstElements: Seq[Value], alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+
+    //    println("len src el1 " + srcElements.length)
+    //    println("len dst el2 " + dstElements.length)
+    for {
+      topK <- alignments
+      alignment <- topK
+      srcLinkElement = srcElements(alignment.src)
+      dstLinkElement = dstElements(alignment.dst)
+      score = alignment.score
+    } yield mkHypothesis(srcLinkElement, dstLinkElement, score, debug)
+  }
+
 
 
   def getLinkHypotheses(linkElements: Map[String, Seq[String]], alignments: Map[String, Seq[Seq[Alignment]]], debug: Boolean): Seq[Obj] = {//, SVOGroungings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
@@ -675,6 +723,14 @@ object ExtractAndAlign {
     val paper2LinkElements = linkElements("TEXT_VAR2")
     val hypotheses = new ArrayBuffer[ujson.Obj]()
     hypotheses.appendAll(mkLinkHypothesis(paper1LinkElements, paper2LinkElements, alignment, debug))
+    hypotheses
+  }
+
+  def get2PaperLinkHypothesesWithValues(linkElements: Map[String, Seq[Value]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+    val paper1LinkElements = linkElements("TEXT_VAR1")
+    val paper2LinkElements = linkElements("TEXT_VAR2")
+    val hypotheses = new ArrayBuffer[ujson.Obj]()
+    hypotheses.appendAll(mkLinkHypothesisFromValueSequences(paper1LinkElements, paper2LinkElements, alignment, debug))
     hypotheses
   }
 

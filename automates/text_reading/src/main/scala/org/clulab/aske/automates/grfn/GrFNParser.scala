@@ -236,6 +236,26 @@ object GrFNParser {
     hypothesis
   }
 
+  def mkHypothesis(elem1: Value, elem2: Value, score: Double, debug: Boolean): ujson.Obj = {
+
+    //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
+    val hypothesis = if (debug) {
+      // for debugging, need to make a string with the obj as strings
+      ujson.Obj(
+        "element_1" -> elem1.obj.mkString("||"),
+        "element_2" -> elem2.obj.mkString("||"),
+        "score" -> score
+      )
+    } else {
+      ujson.Obj(
+        "element_1" -> elem1("grfn1_var_uid"),
+        "element_2" -> elem2("grfn1_var_uid"),
+        "score" -> score
+      )
+    }
+    hypothesis
+  }
+
   def mkDocument(file: File): GrFNDocument = {
     val json = ujson.read(file.readString())
     mkDocument(json)

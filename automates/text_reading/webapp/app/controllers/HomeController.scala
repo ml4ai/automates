@@ -16,6 +16,7 @@ import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
+import play.libs.F.Tuple
 import ujson.Value
 import ujson.json4s.Json4sJson
 
@@ -271,6 +272,27 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     mentions
   }
 
+  def readDefTextsFromJsonForModelComparison(pathToModelComparisonInput: String): Tuple[Map[String, Seq[ujson.Value]], Map[String, Seq[ujson.Value]]] = {
+
+    val modelComparisonInputFile = new File(pathToModelComparisonInput)
+    val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
+    val paper1obj = ujsonObj.head.obj // keys: grfn_uid, "variable_defs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
+    Tuple(Map(paper1obj("grfn_uid").str -> paper1obj("variable_defs").arr), Map(paper2obj("grfn_uid") -> paper2obj("variable_defs")))
+    // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+    //transform the mentions into json4s format, used by mention serializer
+//    val jvalueMentions = upickle.default.transform(
+//      ujsonMentions
+//    ).to(Json4sJson)
+//    val textMentions = JSONSerializer.toMentions(jvalueMentions)
+//
+//    val mentions = textMentions
+//      .filter(m => m.label matches mentionType)
+//      .filter(hasRequiredArgs)
+//    mentions
+  }
+
+
   def alignMentionsFromTwoModels: Action[AnyContent] = Action { request =>
 
     val data = request.body.asJson.get.toString()
@@ -283,26 +305,34 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
 
-    val mentions1Path = json("mentionsPaper1").str
-    val mentions2Path = json("mentionsPaper2").str
-    val defMentionsPaper1 = readMentionsFromJson(mentions1Path, "Definition")
-    val defMentionsPaper2 = readMentionsFromJson(mentions2Path, "Definition")
+    val inputFilePath = json("input_file").str
+//    val mentions2Path = json("mentionsPaper2").str
+    val paperTuple  = readDefTextsFromJsonForModelComparison(inputFilePath)
+//    val defMentionsPaper2 = readMentionsFromJson(mentions2Path, "Definition")
     val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
+    val paper1id = paperTuple._1("grfn_uid").str
+    val paper2id = paperTuple._2("grfn_uid").str
+    val paper1values = paperTuple._1("variable_defs")
+    val paper2values = paperTuple._2("variable_defs")
+    val paper1texts = paper1values.map(v => v.obj("text_identifier") + " " + v.obj("text_definition")) // maybe also add "code_identifier"
+    val paper2texts = paper2values.map(v => v.obj("text_identifier") + " " + v.obj("text_definition")) // maybe also add "code_identifier"
+
 
     // get alignments
-    val alignments = modelCompAlignmentHandler.w2v.alignMentions(defMentionsPaper1, defMentionsPaper2)
+    val alignments = modelCompAlignmentHandler.w2v.alignTexts(paper1texts, paper2texts)
 
     // group by src idx, and keep only top k (src, dst, score) for each src idx
     val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug = false)
 
     // id link elements
-    val linkElements = ExtractAndAlign.get2ModelComparisonLinkElements(defMentionsPaper1, defMentionsPaper2)
+    val linkElements = ExtractAndAlign.get2ModelComparisonLinkElements(paper1values, paper1id, paper2values, paper2id)
 
-    val hypotheses = ExtractAndAlign.get2PaperLinkHypotheses(linkElements, topKAlignments, debug)
+    val hypotheses = ExtractAndAlign.get2PaperLinkHypothesesWithValues(linkElements, topKAlignments, debug)
     var outputJson = ujson.Obj()
 
     for (le <- linkElements.keys) {
-      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, false, 3, debug)} // fixme: make maxSVOGroundingsPerVar optional
+//      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, false, 3, debug)} // fixme: make maxSVOGroundingsPerVar optional
+      outputJson(le) = linkElements(le)
     }
 
     outputJson("links") = hypotheses
