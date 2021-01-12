@@ -237,19 +237,17 @@ object GrFNParser {
   }
 
   def mkHypothesis(elem1: Value, elem2: Value, score: Double, debug: Boolean): ujson.Obj = {
-
-    //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
     val hypothesis = if (debug) {
-      // for debugging, need to make a string with the obj as strings
+      // for debugging alignment quality; fixme: this is readable but not a pretty json
       ujson.Obj(
-        "element_1" -> elem1.obj.mkString("||"),
-        "element_2" -> elem2.obj.mkString("||"),
+        "grfn1_var_uid" -> elem1.obj.mkString(" "),
+        "grfn2_var_uid" -> elem2.obj.mkString(" "),
         "score" -> score
       )
     } else {
       ujson.Obj(
-        "element_1" -> elem1("grfn1_var_uid"),
-        "element_2" -> elem2("grfn1_var_uid"),
+        "grfn1_var_uid" -> elem1("var_uid"),
+        "grfn2_var_uid" -> elem2("var_uid"),
         "score" -> score
       )
     }

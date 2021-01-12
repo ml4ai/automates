@@ -623,7 +623,7 @@ object ExtractAndAlign {
       "code_identifier"-> o.obj("code_identifier"),
       "text_definition"-> o.obj("text_definition"),
       "text_identifier"-> o.obj("text_identifier"),
-        "grfn_uid" -> paper1id
+        "grfn1_var_uid" -> paper1id
       )
     } yield updated
 
@@ -634,14 +634,14 @@ object ExtractAndAlign {
         "code_identifier"-> o.obj("code_identifier"),
         "text_definition"-> o.obj("text_definition"),
         "text_identifier"-> o.obj("text_identifier"),
-        "grfn_uid" -> paper2id
+        "grfn2_var_uid" -> paper2id
       )
     } yield updated
 
 
-    linkElements("TEXT_VAR1") = updatedWithPaperId1
+    linkElements("grfn1_vars") = updatedWithPaperId1
 
-    linkElements("TEXT_VAR2") = updatedWithPaperId2
+    linkElements("grfn2_vars") = updatedWithPaperId2
     linkElements.toMap
   }
 
@@ -727,8 +727,8 @@ object ExtractAndAlign {
   }
 
   def get2PaperLinkHypothesesWithValues(linkElements: Map[String, Seq[Value]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
-    val paper1LinkElements = linkElements("TEXT_VAR1")
-    val paper2LinkElements = linkElements("TEXT_VAR2")
+    val paper1LinkElements = linkElements("grfn1_vars")
+    val paper2LinkElements = linkElements("grfn2_vars")
     val hypotheses = new ArrayBuffer[ujson.Obj]()
     hypotheses.appendAll(mkLinkHypothesisFromValueSequences(paper1LinkElements, paper2LinkElements, alignment, debug))
     hypotheses

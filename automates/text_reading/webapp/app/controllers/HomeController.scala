@@ -272,13 +272,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     mentions
   }
 
-  def readDefTextsFromJsonForModelComparison(pathToModelComparisonInput: String): Tuple[Map[String, Seq[ujson.Value]], Map[String, Seq[ujson.Value]]] = {
+  def readDefTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
 
     val modelComparisonInputFile = new File(pathToModelComparisonInput)
     val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
-    val paper1obj = ujsonObj.head.obj // keys: grfn_uid, "variable_defs"
+    val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_defs"
     val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
-    Tuple(Map(paper1obj("grfn_uid").str -> paper1obj("variable_defs").arr), Map(paper2obj("grfn_uid") -> paper2obj("variable_defs")))
+    (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_defs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_defs")))
     // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
     //transform the mentions into json4s format, used by mention serializer
 //    val jvalueMentions = upickle.default.transform(
@@ -304,25 +304,29 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonKeys = json.obj.keys.toList
 
     val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
+    val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
 
     val inputFilePath = json("input_file").str
-//    val mentions2Path = json("mentionsPaper2").str
-    val paperTuple  = readDefTextsFromJsonForModelComparison(inputFilePath)
-//    val defMentionsPaper2 = readMentionsFromJson(mentions2Path, "Definition")
-    val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
-    val paper1id = paperTuple._1("grfn_uid").str
-    val paper2id = paperTuple._2("grfn_uid").str
-    val paper1values = paperTuple._1("variable_defs")
-    val paper2values = paperTuple._2("variable_defs")
-    val paper1texts = paper1values.map(v => v.obj("text_identifier") + " " + v.obj("text_definition")) // maybe also add "code_identifier"
-    val paper2texts = paper2values.map(v => v.obj("text_identifier") + " " + v.obj("text_definition")) // maybe also add "code_identifier"
+    val modelComparisonInputFile = new File(inputFilePath)
+    val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
+    val paper1obj = ujsonObj.head.obj// keys: grfn_uid, "variable_defs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
+
+    val paper1id = paper1obj("grfn_uid").str
+    val paper2id = paper2obj("grfn_uid").str
+
+    val paper1values = paper1obj("variable_defs").arr
+    val paper2values = paper2obj("variable_defs").arr
+
+    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
+    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
 
 
     // get alignments
     val alignments = modelCompAlignmentHandler.w2v.alignTexts(paper1texts, paper2texts)
 
     // group by src idx, and keep only top k (src, dst, score) for each src idx
-    val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug = false)
+    val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug)
 
     // id link elements
     val linkElements = ExtractAndAlign.get2ModelComparisonLinkElements(paper1values, paper1id, paper2values, paper2id)
@@ -330,12 +334,16 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val hypotheses = ExtractAndAlign.get2PaperLinkHypothesesWithValues(linkElements, topKAlignments, debug)
     var outputJson = ujson.Obj()
 
-    for (le <- linkElements.keys) {
-//      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, false, 3, debug)} // fixme: make maxSVOGroundingsPerVar optional
-      outputJson(le) = linkElements(le)
+    if (debug) {
+      for (le <- linkElements.keys) {
+        outputJson(le) = linkElements(le)
+      }
     }
 
-    outputJson("links") = hypotheses
+    outputJson("grfn1") = paper1id
+    outputJson("grfn2") = paper2id
+
+    outputJson("variable_alignment") = hypotheses
     val groundingsAsString = ujson.write(outputJson, indent = 4)
 
     val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
