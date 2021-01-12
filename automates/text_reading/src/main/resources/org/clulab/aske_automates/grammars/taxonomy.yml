@@ -6,7 +6,8 @@
   - Measurement:
     - Value:
       - ValueAndUnit
-    - Unit
+    - Unit:
+        - UnitRelation
 - Event:
   - Causal
   - Definition

@@ -85,7 +85,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [word="i.e"]
+      [word="i.e"] | [word="i.e."]
 
   - name: "proper_noun" #eliminating a stand-alone 'person' doesn't work bc Kcbmin is found as PERSON
     label: Avoid
@@ -143,3 +143,10 @@ rules:
     type: token
     pattern: |
       [tag = "NN"] "(" [word = "s" & tag = "NNS"] ")"
+
+  - name: "states"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      (?<= [entity="LOCATION"]) [word=","] [word=/[A-Z]/]
