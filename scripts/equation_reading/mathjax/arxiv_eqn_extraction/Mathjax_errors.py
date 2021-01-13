@@ -45,8 +45,7 @@ def main():
 
 
 # finding 'not working' latex eqns and respective tokens
-# These tokens can be find in the lines having 'is either not supported by
-# MathJax or incorrectly written'
+# These tokens can be find in the lines having 'is either not supported by MathJax or incorrectly written'
 
 def Mjx_errors_and_not_working_tokens(log_file):
 
@@ -64,9 +63,8 @@ def Mjx_errors_and_not_working_tokens(log_file):
 
     for line in data:
 
-        # eqn_path: will tell us the equation path
-        # sentence: will be in the form -- '<token> is either not supported by
-        # MathJax or incorrectly written' or  '<error> is an error produced by MathJax webserver'
+        # eqn_path: will tell us the equation path sentence: will be in the form 
+        # -- '<token> is either not supported by MathJax or incorrectly written' or  '<error> is an error produced by MathJax webserver'
         (eqn_path, sentence) = line.split(':')[1], line.split(':')[-1]
 
         # PART 1 -- COLLECT ALL THE 'NOT WORKING' TOKENS
