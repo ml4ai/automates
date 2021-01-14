@@ -2,6 +2,7 @@ package controllers
 
 import java.io.File
 
+import org.clulab.struct.Interval
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -11,6 +12,7 @@ import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
 import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
+import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLoader}
 import org.clulab.aske.automates.grfn.GrFNParser
@@ -20,6 +22,8 @@ import org.clulab.odin.SynPath
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.struct.Interval
 import ujson.Value
+
+import scala.collection.mutable.ArrayBuffer
 //import org.clulab.odin._
 import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
@@ -201,16 +205,63 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val fullText = texts.mkString(" ")
 //    val mentions = ieSystem.extractFromText(fullText, true, Some("some pdf"))
     val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
+
     val menWInd = mentions.zipWithIndex
-    for (tuple <- menWInd) {
+    val mentionsWithLocations = new ArrayBuffer[Mention]()
+      for (tuple <- menWInd) {
       val menInTextBlocks = tuple._1
       val id = tuple._2
-      val loc = locations(id)
+//        println("===>" + locations(id))
+      val loc = locations(id).replace(":","").toDouble.toInt //fixme: why does an extra ":" show up before the number?
       for (m <- menInTextBlocks) {
-        val newMen = new Mention {
-          override def labels: Seq[String] = m.labels
 
-          override def tokenInterval: Interval = m.tokenInterval
+        val newMen = m.withAttachment(new MentionLocationAttachment(loc, m.sentence, "mentionLocation")) //offset zero or the human way?
+        mentionsWithLocations.append(newMen)
+        for (a <- newMen.attachments) println("ATT: " + a.toString + " men: " + m.text)
+      }
+    }
+
+    def mkTextBoundMention(
+      labels: Seq[String],
+      tokenInterval: Interval,
+      sentence: Int,
+      document: Document,
+      keep: Boolean,
+      foundBy: String,
+      attachments: Set[Attachment]
+                          ): TextBoundMention = {
+      new TextBoundMention(
+        labels = labels,
+        tokenInterval = tokenInterval,
+        sentence = sentence,
+        document = document,
+        keep = keep,
+        foundBy = foundBy,
+        attachments = attachments
+      )
+    }
+
+    //todo: need to store document, too...
+    def deserilizeMentions(json: Value.Value): Seq[Mention] = {
+      val menObjArray = json.arr.map(item => {
+        val objMap = item.obj
+        val menType = item.obj("type").str
+        val labels = objMap("labels").arr.map(_.str)
+        val tokenInts = objMap("tokenInterval").arr.map(_.num)
+        val tokenInterval = Interval(tokenInts.head.toInt, tokenInts.last.toInt)
+        val sentence = objMap("sentence").num
+        val document = objMap("document").str
+        val keep = objMap("keep").bool
+        val foundBy = objMap("foundBy").str
+        val attachments = Seq.empty
+//        val attachments = objMap("attachments").obj // this will be a map and then will need to deserialize based on the type---somehow; maybe same as type of mention here - get type of attachment and then have diff methods for deserializing diff types of attachments
+        menType match {
+          case "TextBoundMention" => mkTextBoundMention(labels, tokenInterval, sentence.toInt, document, keep, foundBy, Set.empty)
+        }
+        new Mention {
+          override def labels: Seq[String] = objMap("labels").arr.map(_.str)
+
+          override def tokenInterval: Interval = ???
 
           override def sentence: Int = ???
 
@@ -224,8 +275,16 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
           override def foundBy: String = ???
         }
-      }
+        }
+      )
     }
+    //just checking if can deserialize my mentions:
+    val newMenFile = "/home/alexeeva/Repos/automates/scripts/text_reading/masha3.json"
+    val mentionsFile = new File(newMenFile)
+    val ujsonMentions = ujson.read(mentionsFile.readString())
+
+    println("->" + ujsonMentions + "<<")
+
 
     //pass sep texts
     //load file can output both texts and bounding boxes (and page and maybe other info)
@@ -234,8 +293,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 //    for (t<-texts) println(t)
 //    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
-    val mentionsJson = serializer.jsonAST(mentions.flatten)
-    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+//    val mentionsJson = serializer.jsonAST(mentions.flatten)
+val parsed_output = JsonUtils.mkJsonFromMentions(mentionsWithLocations)
+//println(parsed_output)
+//    val mentionsJson = serializer.jsonAST(mentionsWithLocations)
+//    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
+//    println(parsed_output)
     Ok(parsed_output)
   }
   /**
