@@ -13,12 +13,13 @@ def main():
 
     root = '/projects/temporary/automates/er/gaurav/'
 
-    for yr in [14, 15, 16, 17, 18]:
+    for yr in [15, 16, 17, 18]:
 
         year = '20' + str(yr)
-
+        
+        print(' ==++== ' *10)
         print('Currently working on logs file of:  ', year)
-
+        
         # make directory 'combine logs' -- to store all of the results
         combine_logs_path = os.path.join(root, f'{year}/Logs/combine_logs')
         if not os.path.exists(combine_logs_path):
@@ -38,14 +39,17 @@ def main():
         # dumping counter dictionaries
         json.dump(token_counter, open(os.path.join(root, f'{year}/Logs/combine_logs/tokens_counter_dictionary.txt'),'w'))
         json.dump(error_counter, open(os.path.join(root, f'{year}/Logs/combine_logs/errors_counter_dictionary.txt'), 'w'))
-
+        json.dump(token_counter, open(os.path.join(root, f'{year}/Logs/combine_logs/top50_tokens_dictionary.txt'),'w'))
+        json.dump(error_counter, open(os.path.join(root, f'{year}/Logs/combine_logs/top50_errors_dictionary.txt'), 'w'))
+        
         # finding histogram distribution of token/error counter dictionaries
         # It helps to get an idea of the errors/tokens that are affecting most of the eqns
-        Distribution(sorted_token_counter, sorted_error_counter, top50_tokens, top50_errors)
+        Distribution(root, year, sorted_token_counter, sorted_error_counter, top50_tokens, top50_errors)
 
 
 # finding 'not working' latex eqns and respective tokens
-# These tokens can be find in the lines having 'is either not supported by MathJax or incorrectly written'
+# These tokens can be find in the lines having 'is either not supported by
+# MathJax or incorrectly written'
 
 def Mjx_errors_and_not_working_tokens(log_file):
 
@@ -53,6 +57,7 @@ def Mjx_errors_and_not_working_tokens(log_file):
     # tokens -- {latex_eqns:token} or errors -- {latyex_eqns:error}
     dict_token = {}
     dict_error = {}
+    
     # defining a dictionary to keep record of the frequency of a token or error
     # {token/error: total number of equations it has affected}
     token_counter = {}
@@ -63,14 +68,15 @@ def Mjx_errors_and_not_working_tokens(log_file):
 
     for line in data:
 
-        # eqn_path: will tell us the equation path sentence: will be in the form 
-        # -- '<token> is either not supported by MathJax or incorrectly written' or  '<error> is an error produced by MathJax webserver'
+        # eqn_path: will tell us the equation path
+        # sentence: will be in the form -- '<token> is either not supported by
+        # MathJax or incorrectly written' or  '<error> is an error produced by MathJax webserver'
         (eqn_path, sentence) = line.split(':')[1], line.split(':')[-1]
 
         # PART 1 -- COLLECT ALL THE 'NOT WORKING' TOKENS
         if 'is either not supported by MathJax or incorrectly written' in sentence:
 
-            #print('Part 1 --  ', line.split(':'))
+            print('Part 1 --  ', line.split(':'))
 
             eqn_path = eqn_path.replace('latex_images', 'latex_equations')
             latex_eqn = open((eqn_path+'.txt'), 'r').readlines()[0]
@@ -92,7 +98,7 @@ def Mjx_errors_and_not_working_tokens(log_file):
         # PART 2 -- COLLECT ALL THE 'ERRORS' PRODUCED BY MATHJAX SERVER
         if 'is an error produced by MathJax webserver' in sentence:
 
-            #print('Part 2 --  ', line.split(':'))
+            print('Part 2 --  ', line.split(':'))
 
             eqn_path = eqn_path.replace('latex_images', 'latex_equations')
             latex_eqn = open((eqn_path+'.txt'), 'r').readlines()[0]
@@ -115,7 +121,9 @@ def Mjx_errors_and_not_working_tokens(log_file):
 
 
 def Ranking(token_counter, error_counter):
-
+  
+    print('Ranking now')
+    
     # sorting the dictionaries based in values
     sorted_token_counter = Counter(token_counter)
     sorted_error_counter = Counter(error_counter)
@@ -132,26 +140,31 @@ def Ranking(token_counter, error_counter):
 
     return(sorted_token_counter, sorted_error_counter, top50_tokens, top50_errors)
 
-def Distribution(sorted_token_counter, sorted_error_counter, top50_tokens, top50_errors):
-
+def Distribution(root, year, sorted_token_counter, sorted_error_counter, top50_tokens, top50_errors):
+    
+    print('Distribution')
+    
     # histograms of token_counter and error_counter
     plt.figure(figsize=(15,5))
     plt.bar(list(sorted_token_counter.keys()), sorted_token_counter.values(), color='g')
+    plt.xticks(list(sorted_token_counter.keys()), rotation=90)
     plt.savefig(os.path.join(root, f'{year}/Logs/combine_logs/token_histogram.png'))
 
     plt.figure(figsize=(15,5))
     plt.bar(list(sorted_error_counter.keys()), sorted_error_counter.values(), color='b')
+    plt.xticks(list(sorted_error_counter.keys()), rotation=90)
     plt.savefig(os.path.join(root, f'{year}/Logs/combine_logs/error_histogram.png'))
-
+    
     # histograms of top50_token and top50_errors
     plt.figure(figsize=(15,5))
     plt.bar(list(top50_tokens.keys()), top50_tokens.values(), color='g')
+    plt.xticks(list(top50_tokens.keys()), rotation=90)
     plt.savefig(os.path.join(root, f'{year}/Logs/combine_logs/top50_token_histogram.png'))
 
     plt.figure(figsize=(15,5))
     plt.bar(list(top50_errors.keys()), top50_errors.values(), color='b')
+    plt.xticks(list(top50_errors.keys()), rotation=90)
     plt.savefig(os.path.join(root, f'{year}/Logs/combine_logs/top50_error_histogram.png'))
-
 
 if __name__ == "__main__":
     main()
