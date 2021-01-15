@@ -278,6 +278,7 @@ class GrFNSubgraph:
     def from_container(cls, con: GenericContainer, occ: int):
         id = con.identifier
         return cls(
+            uuid4(),
             id.namespace,
             id.scope,
             id.con_name,
@@ -458,8 +459,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if len(inputs) > 0:
                 in_var_names = [n.identifier.var_name for n in inputs]
                 in_var_str = ",".join(in_var_names)
-                pass_func_str = f"lambda {in_var_str}:({in_var_str})"
-                func = add_lambda_node(LambdaType.PASS, pass_func_str)
+                interface_func_str = f"lambda {in_var_str}:({in_var_str})"
+                func = add_lambda_node(LambdaType.INTERFACE, interface_func_str)
                 out_nodes = [add_variable_node(id) for id in con.arguments]
                 add_hyper_edge(inputs, func, out_nodes)
                 con_subgraph.nodes.append(func)
@@ -490,8 +491,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
                 out_var_names = [n.identifier.var_name for n in output_vars]
                 out_var_str = ",".join(out_var_names)
-                pass_func_str = f"lambda {out_var_str}:({out_var_str})"
-                func = add_lambda_node(LambdaType.PASS, pass_func_str)
+                interface_func_str = f"lambda {out_var_str}:({out_var_str})"
+                func = add_lambda_node(LambdaType.INTERFACE, interface_func_str)
                 con_subgraph.nodes.append(func)
                 return (output_vars, func)
 
@@ -514,11 +515,13 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 Occs[stmt.call_id] = 0
 
             inputs = [live_variables[id] for id in stmt.inputs]
-            (con_outputs, pass_func) = translate_container(new_con, inputs, subgraph)
+            (con_outputs, interface_func) = translate_container(
+                new_con, inputs, subgraph
+            )
             Occs[stmt.call_id] += 1
             out_nodes = [add_variable_node(var) for var in stmt.outputs]
             subgraph.nodes.extend(out_nodes)
-            add_hyper_edge(con_outputs, pass_func, out_nodes)
+            add_hyper_edge(con_outputs, interface_func, out_nodes)
             for output_node in out_nodes:
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
@@ -884,7 +887,7 @@ class CausalAnalysisGraph(nx.DiGraph):
         for var_node in GrFN.variables:
             G.add_node(var_node, **var_node.get_kwargs())
         for edge in GrFN.hyper_edges:
-            if edge.lambda_fn.func_type == LambdaType.PASS:
+            if edge.lambda_fn.func_type == LambdaType.INTERFACE:
                 G.add_edges_from(list(zip(edge.inputs, edge.outputs)))
             else:
                 G.add_edges_from(list(product(edge.inputs, edge.outputs)))

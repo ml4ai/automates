@@ -359,8 +359,8 @@ class LambdaType(Enum):
             return cls.CONDITION
         elif type_str == "decision":
             return cls.DECISION
-        elif type_str == "pass":
-            return cls.PASS
+        elif type_str == "interface":
+            return cls.INTERFACE
         else:
             raise ValueError(f"Unrecognized lambda type name: {type_str}")
 
