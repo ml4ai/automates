@@ -1,4 +1,4 @@
-# Automated Model Assembly from Text, Equations, and Software
+<h1 align="center">Automated Model Assembly<br>from Text, Equations, and Software</h1>
 
 <p align="center">
   <a href="https://github.com/ml4ai/automates">
