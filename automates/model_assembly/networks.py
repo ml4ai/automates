@@ -254,6 +254,7 @@ class GrFNSubgraph:
     basename: str
     occurrence_num: int
     parent: str
+    type: str
     border_color: str
     nodes: Iterable[GenericNode]
 
@@ -275,14 +276,17 @@ class GrFNSubgraph:
         )
 
     @classmethod
-    def from_container(cls, con: GenericContainer, occ: int):
+    def from_container(
+        cls, con: GenericContainer, occ: int, parent_subgraph: "GrFNSubgraph"
+    ):
         id = con.identifier
         return cls(
-            uuid4(),
+            str(uuid4()),
             id.namespace,
             id.scope,
             id.con_name,
             occ,
+            None if parent_subgraph is None else parent_subgraph.uid,
             con.__class__.__name__,
             cls.get_border_color(con.__class__.__name__),
             [],
@@ -309,17 +313,21 @@ class GrFNSubgraph:
             data["basename"],
             data["occurrence_num"],
             data["parent"],
-            data["border_color"],
+            data["type"],
+            cls.get_border_color(data["type"]),
             subgraph_nodes,
         )
 
     def to_dict(self):
         return {
+            "uid": self.uid,
             "namespace": self.namespace,
             "scope": self.scope,
             "basename": self.basename,
             "occurrence_num": self.occurrence_num,
+            "parent": self.parent,
             "type": self.type,
+            "border_color": self.border_color,
             "nodes": [n.uid for n in self.nodes],
         }
 
@@ -454,7 +462,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if con_name not in Occs:
                 Occs[con_name] = 0
 
-            con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name])
+            con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name], parent)
             live_variables = dict()
             if len(inputs) > 0:
                 in_var_names = [n.identifier.var_name for n in inputs]
@@ -814,6 +822,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "functions": [func.to_dict() for func in self.lambdas],
             "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
         }
+
         return json.dumps(data)
 
     def to_json_file(self, json_path) -> None:

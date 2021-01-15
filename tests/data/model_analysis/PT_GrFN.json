@@ -189,7 +189,7 @@
             "uid": "66d4c343-6129-4a42-abae-4267616c7f3b",
             "reference": "",
             "identifier": "PETPT::petpt::msalb::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -197,7 +197,7 @@
             "uid": "d8a4d5f9-924f-4d03-bd53-84a01cd611ab",
             "reference": "",
             "identifier": "PETPT::petpt::srad::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -205,7 +205,7 @@
             "uid": "fa8dd5ea-61c6-4e46-b011-e096885a7e28",
             "reference": "",
             "identifier": "PETPT::petpt::tmax::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -213,7 +213,7 @@
             "uid": "339809bf-eae1-48ff-9770-4dcf1fd79609",
             "reference": "",
             "identifier": "PETPT::petpt::tmin::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -221,7 +221,7 @@
             "uid": "589df67f-c563-4b04-b324-eb8efde744b4",
             "reference": "",
             "identifier": "PETPT::petpt::xhlai::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -229,7 +229,7 @@
             "uid": "1083c0cc-4bc8-409a-85ab-32dd43909aa9",
             "reference": "",
             "identifier": "PETPT::petpt::td::0",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -237,7 +237,7 @@
             "uid": "c3da18d1-8453-4921-a039-c914f124e9e5",
             "reference": "",
             "identifier": "PETPT::petpt.IF_0::xhlai::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -245,7 +245,7 @@
             "uid": "bcc908a6-da37-4dc6-b7f6-f93cee6146d8",
             "reference": "",
             "identifier": "PETPT::petpt.IF_0::msalb::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -253,7 +253,7 @@
             "uid": "d8ba0cd4-c327-488d-9843-18bc921774ce",
             "reference": "",
             "identifier": "PETPT::petpt.IF_0::COND_0_0::0",
-            "type": "boolean",
+            "data_type": "boolean",
             "kind": "binary",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -261,7 +261,7 @@
             "uid": "999d25b7-d756-4048-8a6c-5ae1a82faf35",
             "reference": "",
             "identifier": "PETPT::petpt.IF_0::albedo::0",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -269,7 +269,7 @@
             "uid": "3078f773-042d-4fba-9227-08e795c03c1f",
             "reference": "",
             "identifier": "PETPT::petpt.IF_0::albedo::1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -277,7 +277,7 @@
             "uid": "b317e72d-bbce-4520-8e2c-846ac60d3f29",
             "reference": "",
             "identifier": "PETPT::petpt.IF_0::albedo::2",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -285,7 +285,7 @@
             "uid": "5d5c6a49-05a3-43f8-8e58-9ec95b6717e0",
             "reference": "",
             "identifier": "PETPT::petpt::albedo::0",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -293,7 +293,7 @@
             "uid": "de6f9c94-608e-4f0c-9e8e-bf7bdacfa3e5",
             "reference": "",
             "identifier": "PETPT::petpt::slang::0",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -301,7 +301,7 @@
             "uid": "ccff5269-c960-4dce-bb31-79e1ddfc16ae",
             "reference": "",
             "identifier": "PETPT::petpt::eeq::0",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -309,7 +309,7 @@
             "uid": "c0693ca2-49d7-4097-8463-0264fb988dbb",
             "reference": "",
             "identifier": "PETPT::petpt::eo::0",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -317,7 +317,7 @@
             "uid": "b0d0825f-75a4-4ab0-b37e-56a7b0dc0b46",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::tmax::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -325,7 +325,7 @@
             "uid": "6fafe7ac-21f3-4db5-a29a-94e2f8760d99",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::eeq::-1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -333,7 +333,7 @@
             "uid": "64af669e-8df1-4385-acb1-5a10e3caf477",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::eo::-1",
-            "type": "none",
+            "data_type": "none",
             "kind": "none",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -341,7 +341,7 @@
             "uid": "f7240f5b-5a63-4a1b-a1a5-e7e5fc0ddc76",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::COND_1_0::0",
-            "type": "boolean",
+            "data_type": "boolean",
             "kind": "binary",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -349,7 +349,7 @@
             "uid": "4d99eb43-a136-431d-a05e-0874d37241d8",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::eo::0",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -357,7 +357,7 @@
             "uid": "0c6fafe2-860c-458e-8819-1dd6d1c1a080",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::COND_1_1::0",
-            "type": "boolean",
+            "data_type": "boolean",
             "kind": "binary",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -365,7 +365,7 @@
             "uid": "692f0c10-4696-47ec-a4b5-4ea1ff25018d",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::eo::1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -373,7 +373,7 @@
             "uid": "4c88d431-0849-495c-ac29-a5e3021fa195",
             "reference": "",
             "identifier": "PETPT::petpt.IF_1::eo::2",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -381,7 +381,7 @@
             "uid": "64f0650b-2dd1-4d0b-990a-d9a381636d08",
             "reference": "",
             "identifier": "PETPT::petpt::eo::1",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         },
@@ -389,7 +389,7 @@
             "uid": "ffdf87ef-c6cc-429f-b18b-9158d30b21af",
             "reference": "",
             "identifier": "PETPT::petpt::eo::2",
-            "type": "float",
+            "data_type": "float",
             "kind": "continuous",
             "domain": "(and (> v -infty) (< v infty))"
         }
@@ -506,6 +506,8 @@
     ],
     "subgraphs": [
         {
+            "uid": "ae8c1646-1a49-4f55-8ab1-7cbe3a8e6512",
+            "parent": "09ccc30e-38ea-4c18-8315-1d5a844b5431",
             "namespace": "PETPT",
             "scope": "petpt",
             "basename": "petpt.IF_0",
@@ -527,6 +529,8 @@
             ]
         },
         {
+            "uid": "09ccc30e-38ea-4c18-8315-1d5a844b5431",
+            "parent": null,
             "namespace": "PETPT",
             "scope": "@global",
             "basename": "petpt",
@@ -553,6 +557,8 @@
             ]
         },
         {
+            "uid": "743f5177-43c2-4a75-9d49-c0d5b5fe77cf",
+            "parent": "09ccc30e-38ea-4c18-8315-1d5a844b5431",
             "namespace": "PETPT",
             "scope": "petpt",
             "basename": "petpt.IF_1",
