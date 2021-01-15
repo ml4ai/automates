@@ -1,0 +1,33 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+
+  - name: model1
+    label: Model
+    priority: ${priority}
+    type: token
+    action: modelArguments
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+    pattern: |
+      [word=/^DSSAT|^CSM/] | [word=/[A-Z]*/] (?=[word=/[Mm]odel/])
+
+  - name: model2
+    label: Variable
+    priority: ${priority}
+    type: dependency
+    example: ""
+    action: modelArguments
+    pattern: |
+      trigger = [word = /[Mm]odel/]
+      variable:Variable = compound
+
+  - name: model3
+    label: Variable
+    priority: ${priority}
+    type: dependency
+    action: modelArguments
+    example: ""
+    pattern: |
+      trigger = [word = /[Mm]odel/]
+      variable:Concept = compound [word = /[A-Z]*/]
