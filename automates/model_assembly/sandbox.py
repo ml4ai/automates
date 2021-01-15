@@ -38,8 +38,8 @@ def load_lambda_function(func_str: str) -> Callable:
         raise UnsafeOperationError(f"found in lambda:\n{func_str}")
 
     # Checking for expected lambda expression header
-    if re.match(r"lambda [A-Za-z0-9_,]*:", func_str) is None:
-        raise RuntimeError(f"Unexpected form for lambda:\n{func_str}")
+    # if re.match(r"lambda [A-Za-z0-9_,]*:", func_str) is None:
+    # raise RuntimeError(f"Unexpected form for lambda:\n{func_str}")
 
     try:
         func_ref = eval(func_str)
@@ -61,9 +61,7 @@ def load_derived_type(type_str: str) -> None:
         raise UnsafeOperationError(f"found in derived-type:\n{type_str}")
 
     # Check for a dataclass structure match and extract the class name
-    type_name_match = re.match(
-        r"(?<=@dataclass\nclass )[A-Za-z_]+(?=:)", type_str
-    )
+    type_name_match = re.match(r"(?<=@dataclass\nclass )[A-Za-z_]+(?=:)", type_str)
     # Checking to see if the string starts with a dataclass
     if type_name_match is None:
         raise RuntimeError(f"Unexpected form for derived type:\n{type_str}")
