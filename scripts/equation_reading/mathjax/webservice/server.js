@@ -17,9 +17,18 @@ mjAPI.start();
  * this promise to be executed by the callee.
  * @param  {String} tex      The LaTeX equation string to be processed
  * @return {Promise}         A promise that includes the .mml attr after resolution
- */
+ *
+
+*/
+
 function tex2mml(tex) {
-  return mjAPI.typeset({ math: tex, format: "TeX", mml: true });
+  try {
+    my_promise = mjAPI.typeset({ math: tex, format: "TeX", mml: true });
+    
+  } catch (error) {
+    my_promise = new Promise(() => {throw `Error occurred during MJx typesetting:\n{error}`;});
+  }
+  return my_promise;
 }
 
 // Process a single TeX equation string into a MathML string
