@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from datetime import datetime
 from operator import itemgetter
-from collection import OrderedDict
+from collections import OrderedDict
 
 print('starting at:  ', datetime.now())
 
