@@ -20,13 +20,8 @@
       end subroutine get_beta
 
 
-      subroutine sir(s_c, i_c, r_c, doubling_time,
-     &               relative_contact_rate, gamma, n)
-        real relative_contact_rate, doubling_time
+      subroutine sir(s_c, i_c, r_c, beta, gamma, n, scale)
         real s_c, i_c, r_c, n, s_n, i_n, r_n, beta, gamma, scale
-
-        call get_beta(gamma, doubling_time, s_c, relative_contact_rate, beta)
-
         s_n = (-beta * s_c * i_c) + s_c
         i_n = (beta * s_c * i_c - gamma * i_c) + i_c
         r_n = gamma * i_c + r_c
@@ -37,3 +32,12 @@
         i_c = i_n * scale
         r_c = r_n * scale
       end subroutine sir
+
+      subroutine main(relative_contact_rate, doubling_time,
+     &                s_c, i_c, r_c, n, beta, gamma, scale)
+        real relative_contact_rate, doubling_time
+        real s_c, i_c, r_c, n, beta, gamma, scale
+
+        call get_beta(gamma, doubling_time, s_c, relative_contact_rate, beta)
+        call sir(s_c, i_c, r_c, beta, gamma, n, scale)
+      end subroutine main

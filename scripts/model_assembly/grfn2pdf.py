@@ -20,7 +20,7 @@ GrFN = GroundedFunctionNetwork.from_AIR(
 A = GrFN.to_AGraph()
 
 file_end_patt = r"\.[A-Za-z0-9]+\Z"
-grfn_name = fortran_path[fortran_path.rfind("/") + 1 :]
+grfn_name = fortran_path[fortran_path.rfind("/") + 1:]
 
 doc_name = re.sub(file_end_patt, "--documentation.json", grfn_name)
 json.dump(ITP.documentation, open(doc_name, "w"))
@@ -35,6 +35,9 @@ CAG = CausalAnalysisGraph.from_GrFN(GrFN)
 A_CAG = CAG.to_AGraph()
 cag_name = re.sub(file_end_patt, "--CAG.pdf", grfn_name)
 A_CAG.draw(cag_name, prog="dot")
+
+CAG_dot_name = re.sub(file_end_patt, ".dot", cag_name)
+A_CAG.write(CAG_dot_name)
 
 cag_json_name = re.sub(file_end_patt, "--CAG.json", grfn_name)
 CAG.to_json_file(cag_json_name)
