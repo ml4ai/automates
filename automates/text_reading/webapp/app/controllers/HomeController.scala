@@ -217,7 +217,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val loc = locations(id).replace(":","").toDouble.toInt //fixme: why does an extra ":" show up before the number?
       for (m <- menInTextBlocks) {
 
-        val newMen = m.withAttachment(new MentionLocationAttachment(loc, m.sentence, "mentionLocation")) //offset zero or the human way?
+        val newMen = m.withAttachment(new MentionLocationAttachment(loc, m.sentence, "mentionLocation")) //offset zero or the human way? - zero
         mentionsWithLocations.append(newMen)
 //        for (a <- newMen.attachments) println("ATT: " + a.toString + " men: " + m.text)
       }
@@ -244,6 +244,16 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 //    }
 
 //    //todo: need to store document, too...
+
+    val newSerializedMentionsFile= new File("/home/alexeeva/Repos/automates/scripts/text_reading/masha3.json")
+    val ujsonOfMenFile = ujson.read(newSerializedMentionsFile)
+//    println(ujsonOfMenFile("mentions") + "<<<<<<")
+    val documentUjson = ujsonOfMenFile("documents").obj
+    val doc89965379 = documentUjson("89965379")
+    println(doc89965379 + "<-<-")
+
+//    val mentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
+
 //    def deserilizeMentions(json: Value.Value): Seq[Mention] = {
 //      val menObjArray = json.arr.map(item => {
 //        val objMap = item.obj

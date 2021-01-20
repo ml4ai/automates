@@ -9,6 +9,37 @@ import org.clulab.processors.{Document, Sentence}
 object AutomatesJSONSerializer {
 
 
+//
+  def toMentions(menUJson: ujson.Value): Seq[Mention] = {
+
+    require(!menUJson("mentions").isNull, "\"mentions\" key missing from json")
+    require(!menUJson("documents").isNull, "\"documents\" key missing from json")
+
+    val docMap = mkDocumentMap(menUJson("documents"))
+    val mentionsUJson = menUJson("mentions")
+    mentionsUJson.arr.map(item => toMentions(item, docMap))
+
+  }
+
+  def mkDocumentMap(documentsUJson: ujson.Value): Map[String, Document] = {
+    val docHashToDocument = for {
+      (k,v) <- documentsUJson.obj //k is doc hash, v is all the stuff to make a document
+      if (!v("sentences").isNull)
+
+    } yield k -> toDocument(v)
+    docHashToDocument.toMap
+  }
+
+  def toDocument(docComponents: ujson.Value): Document = {
+    val sentences = docComponents("sentences").arr.map(toSentence(_))
+    val doc = Document(sentences)
+    doc
+  }
+
+  def toSentence(sentComponents: ujson.Value) = {
+
+  }
+
   def serializeMentions(mentions: Seq[Mention]): ujson.Value = {
     println("START serializing")
     println("len men inside serialize mentions: " + mentions.length)
@@ -16,9 +47,9 @@ object AutomatesJSONSerializer {
 //    for (m <- mentions) {
 //      toUJson(m)
 //    }
-    json("mentions") = ujson.Arr(mentions.map(m => toUJson(m)))
+    json("mentions") = mentions.map(m => toUJson(m))
     val distinctDocs = mentions.map(_.document).distinct
-    for (d <- distinctDocs) println("->" + d.text)
+//    for (d <- distinctDocs) println("->" + d.text)
 
     val docsAsUjsonObj = ujson.Obj()
     for (doc <- distinctDocs) {
@@ -93,7 +124,7 @@ object AutomatesJSONSerializer {
 
 
   def toUJson(em: EventMention): ujson.Value = {
-    println("doing an event mention")
+//    println("doing an event mention")
     ujson.Obj(
     "type" -> "EventMention",
 //      // used for paths map
@@ -125,7 +156,7 @@ object AutomatesJSONSerializer {
 
   def toUJson(document: Document): ujson.Value = {
 
-    val sentencesAsUJson = ujson.Arr(document.sentences.map(s => toUJson(s)).toList)
+    val sentencesAsUJson = document.sentences.map(s => toUJson(s)).toList
 
     ujson.Obj(
       "id" -> document.id.get,
