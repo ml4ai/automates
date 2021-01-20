@@ -212,6 +212,7 @@ class GrFNGenerator(object):
         # The annotate_map dictionary is used to map Python ast data types
         # into data types for the lambdas
         self.annotate_map = {
+            "NoneType": "undefined",
             "real": "Real",
             "float": "real",
             "Real": "real",
@@ -275,6 +276,7 @@ class GrFNGenerator(object):
             "ast.Load": self.process_load,
             "ast.Store": self.process_store,
             "ast.Index": self.process_index,
+            "ast.Constant": self.process_constant,
             "ast.Num": self.process_num,
             "ast.List": self.process_list_ast,
             "ast.Str": self.process_str,
@@ -719,6 +721,15 @@ class GrFNGenerator(object):
             handler.
         """
         self.gen_grfn(node.value, state, "index")
+
+    def process_constant(self, node, *_):
+        data_type = self.annotate_map.get(type(node.value).__name__)
+        if data_type:
+            # TODO Change this format. Since the spec has changed,
+            #  this format is no longer required. Go for a simpler format.
+            return [{"type": "literal", "dtype": data_type, "value": node.value}]
+        else:
+            assert False, f"Unidentified data type of variable: {node.value}"
 
     def process_num(self, node, *_):
         """
