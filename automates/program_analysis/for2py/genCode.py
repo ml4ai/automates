@@ -60,6 +60,7 @@ class genCode:
             "ast.Load": self._process_load,
             "ast.Store": self._process_store,
             "ast.Index": self.process_index,
+            "ast.Constant": self._process_constant,
             "ast.Num": self._process_num,
             "ast.List": self.process_list_ast,
             "ast.Str": self._process_str,
@@ -163,6 +164,11 @@ class genCode:
         return code_string
 
     @staticmethod
+    def _process_constant(node, _):
+        const = node.value
+        return f"\"{const}\"" if isinstance(const, str) else str(const)
+
+    @staticmethod
     def _process_num(node, *_):
         code_string = str(node.n)
         return code_string
@@ -197,7 +203,7 @@ class genCode:
 
     @staticmethod
     def _process_str(node, *_):
-        code_string = '"{0}"'.format(node.s)
+        code_string = f'"{node.s}"'
         return code_string
 
     def process_for(self, node, state):
