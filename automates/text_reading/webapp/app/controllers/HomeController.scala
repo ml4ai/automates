@@ -17,11 +17,13 @@ import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLoader}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
+import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.SynPath
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.struct.Interval
 import ujson.Value
+import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
 //import org.clulab.odin._
@@ -33,7 +35,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
 import play.api.mvc._
 import play.api.libs.json._
-import controllers.PlayUtils
 
 import org.json4s.JsonAST
 
@@ -218,29 +219,29 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
         val newMen = m.withAttachment(new MentionLocationAttachment(loc, m.sentence, "mentionLocation")) //offset zero or the human way?
         mentionsWithLocations.append(newMen)
-        for (a <- newMen.attachments) println("ATT: " + a.toString + " men: " + m.text)
+//        for (a <- newMen.attachments) println("ATT: " + a.toString + " men: " + m.text)
       }
     }
 
-    def mkTextBoundMention(
-      labels: Seq[String],
-      tokenInterval: Interval,
-      sentence: Int,
-      document: Document,
-      keep: Boolean,
-      foundBy: String,
-      attachments: Set[Attachment]
-                          ): TextBoundMention = {
-      new TextBoundMention(
-        labels = labels,
-        tokenInterval = tokenInterval,
-        sentence = sentence,
-        document = document,
-        keep = keep,
-        foundBy = foundBy,
-        attachments = attachments
-      )
-    }
+//    def mkTextBoundMention(
+//      labels: Seq[String],
+//      tokenInterval: Interval,
+//      sentence: Int,
+//      document: Document,
+//      keep: Boolean,
+//      foundBy: String,
+//      attachments: Set[Attachment]
+//                          ): TextBoundMention = {
+//      new TextBoundMention(
+//        labels = labels,
+//        tokenInterval = tokenInterval,
+//        sentence = sentence,
+//        document = document,
+//        keep = keep,
+//        foundBy = foundBy,
+//        attachments = attachments
+//      )
+//    }
 
 //    //todo: need to store document, too...
 //    def deserilizeMentions(json: Value.Value): Seq[Mention] = {
@@ -296,12 +297,14 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 //    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
 //    val mentionsJson = serializer.jsonAST(mentions.flatten)
 //val parsed_output = PlayUtils.toJson4s(JsonUtils.mkJsonFromMentions(mentionsWithLocations))
-    val parsed_output = JsonUtils.jsonAST(mentionsWithLocations)
+    val defMentionsWithLocation = mentionsWithLocations.filter(_ matches "Definition")
+    println(defMentionsWithLocation.length + "<<<<")
+    val parsed_output = AutomatesJSONSerializer.serializeMentions(defMentionsWithLocation)
 //println(parsed_output)
-    val mentionsJson = serializer.jsonAST(mentionsWithLocations)
+//    val mentionsJson = serializer.jsonAST(mentionsWithLocations)
 //    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
 //    println(parsed_output)
-    Ok(parsed_output)
+    Ok(write(parsed_output))
   }
   /**
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:

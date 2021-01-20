@@ -17,6 +17,10 @@ class MentionLocationAttachment(pageNum: Int, sentNum: Int, attType: String) ext
   override def toJson: JsValue =  Json.obj("pageNum" -> pageNum,
     "sentNum" -> sentNum,
     "attType" -> attType)
+
+  def toUJson: ujson.Value = ujson.Obj("pageNum" -> pageNum,
+  "sentNum" -> sentNum,
+  "attType" -> attType)
 }
 
 //object MentionLocationAttachment
