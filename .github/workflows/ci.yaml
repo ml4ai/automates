@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Continuous Integration
+    - name: AutoMATES Environment Setup
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -35,4 +35,6 @@ jobs:
         pip install --upgrade setuptools
         pip install wheel
         pip install -e .
-        make test
+        
+    - name: AutoMATES Unit Testing
+      run: make test
