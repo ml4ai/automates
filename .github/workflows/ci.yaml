@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: AutoMATES Environment Setup
+    - name: Run unit tests
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -35,6 +35,16 @@ jobs:
         pip install --upgrade setuptools
         pip install wheel
         pip install -e .
-        
-    - name: AutoMATES Unit Testing
-      run: make test
+        make test
+    
+        - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        # token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        flags: unittests
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        # path_to_write_report: ./coverage/codecov_report.txt
+        verbose: true
