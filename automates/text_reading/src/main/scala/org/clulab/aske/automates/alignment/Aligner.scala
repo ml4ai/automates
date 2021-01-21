@@ -70,7 +70,7 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
       score = compare(src, dst) + 2 * (1.0 / (editDistance(src, dst) + 1.0))
-//      score =  (1.0 / (editDistance(src, dst) + 1.0))
+//      score =  (1.0 / (editDistance(src, dst) + 1.0)) // score without using word embeddings
     } yield Alignment(i, j, score)
     // redundant but good for debugging
     exhaustiveScores

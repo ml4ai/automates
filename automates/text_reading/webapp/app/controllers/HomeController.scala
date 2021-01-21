@@ -329,9 +329,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug)
 
     // id link elements
-    val linkElements = ExtractAndAlign.get2ModelComparisonLinkElements(paper1values, paper1id, paper2values, paper2id)
+    val linkElements = ExtractAndAlign.getInterModelComparisonLinkElements(paper1values, paper1id, paper2values, paper2id)
 
-    val hypotheses = ExtractAndAlign.get2PaperLinkHypothesesWithValues(linkElements, topKAlignments, debug)
+    val hypotheses = ExtractAndAlign.getInterPaperLinkHypothesesWithValues(linkElements, topKAlignments, debug)
     var outputJson = ujson.Obj()
 
     if (debug) {

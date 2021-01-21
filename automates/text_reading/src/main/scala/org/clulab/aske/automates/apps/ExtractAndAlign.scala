@@ -124,8 +124,6 @@ object ExtractAndAlign {
   }
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
-//    println("text var link el string: " + textVarLinkElementString)
-//    println("update: " + update)
     textVarLinkElementString + "::" + update
 
   }
@@ -138,6 +136,7 @@ object ExtractAndAlign {
 
   def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitThroughDefAlignments: Seq[Seq[Alignment]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
+    // fixme: units can come through links directly to vars or to "definitions"; use this to analyze diff types of unit extractions
 //    println("through def: ")
 //    for ((topKThroughDef, i) <- textToUnitThroughDefAlignments.zipWithIndex) {
 ////      println(topK.head.src + " " + topK.head.dst)
@@ -238,7 +237,6 @@ object ExtractAndAlign {
 
     val splitElStr = element.split("::")
     val elType = splitElStr(1)
-//    println("EL type: " + elType)
 
     elType match {
       case "text_var" => {
@@ -396,13 +394,11 @@ object ExtractAndAlign {
       AlignmentJsonUtils.getCommentDocs(alignmentInputFile, source)
     } else GrFNParser.getCommentDocs(alignmentInputFile)
 
-//    for (cd <- commentDocs) println("comm doc: " + cd.text)
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
 
-//    for (cm <- commentMentions) println("com mention: " + cm.text)
     val definitions = commentMentions.seq.filter(_ matches DEF_LABEL)
-//    for (cm <- definitions) println("com def mention: " + cm.text)
+
     if (variableShortNames.isEmpty) return definitions
     val overlapsWithVariables = definitions.filter(
       m => variableShortNames.get
@@ -567,7 +563,7 @@ object ExtractAndAlign {
   }
 
 
-  def get2ModelComparisonLinkElements(
+  def getInterModelComparisonLinkElements(
                        defMentions1:
                        Seq[Mention],
                        defMention2: Seq[Mention]
@@ -604,7 +600,7 @@ object ExtractAndAlign {
     linkElements.toMap
   }
 
-  def get2ModelComparisonLinkElements(
+  def getInterModelComparisonLinkElements(
                                        paper1Objects:
                                        Seq[ujson.Value],
                                        paper1id: String,
@@ -659,8 +655,6 @@ object ExtractAndAlign {
 
   def mkLinkHypothesis(srcElements: Seq[String], dstElements: Seq[String], alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
 
-//    println("len src el1 " + srcElements.length)
-//    println("len dst el2 " + dstElements.length)
     for {
       topK <- alignments
       alignment <- topK
@@ -672,8 +666,6 @@ object ExtractAndAlign {
 
   def mkLinkHypothesisFromValueSequences(srcElements: Seq[Value], dstElements: Seq[Value], alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
 
-    //    println("len src el1 " + srcElements.length)
-    //    println("len dst el2 " + dstElements.length)
     for {
       topK <- alignments
       alignment <- topK
@@ -718,7 +710,7 @@ object ExtractAndAlign {
   }
 
 
-  def get2PaperLinkHypotheses(linkElements: Map[String, Seq[String]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+  def getInterPaperLinkHypotheses(linkElements: Map[String, Seq[String]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
     val paper1LinkElements = linkElements("TEXT_VAR1")
     val paper2LinkElements = linkElements("TEXT_VAR2")
     val hypotheses = new ArrayBuffer[ujson.Obj]()
@@ -726,7 +718,7 @@ object ExtractAndAlign {
     hypotheses
   }
 
-  def get2PaperLinkHypothesesWithValues(linkElements: Map[String, Seq[Value]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+  def getInterPaperLinkHypothesesWithValues(linkElements: Map[String, Seq[Value]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
     val paper1LinkElements = linkElements("grfn1_vars")
     val paper2LinkElements = linkElements("grfn2_vars")
     val hypotheses = new ArrayBuffer[ujson.Obj]()
