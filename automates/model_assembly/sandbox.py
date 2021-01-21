@@ -38,8 +38,8 @@ def load_lambda_function(func_str: str) -> Callable:
         raise UnsafeOperationError(f"found in lambda:\n{func_str}")
 
     # Checking for expected lambda expression header
-    # if re.match(r"lambda [A-Za-z0-9_,]*:", func_str) is None:
-    # raise RuntimeError(f"Unexpected form for lambda:\n{func_str}")
+    if re.match(r"lambda [A-Za-z0-9_,]*:", func_str) is None:
+        raise RuntimeError(f"Unexpected form for lambda:\n{func_str}")
 
     try:
         func_ref = eval(func_str)

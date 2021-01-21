@@ -627,7 +627,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             input_interface_funcs = [
                 n
                 for n in container.nodes
-                if type(n) == LambdaNode
+                if isinstance(n, LambdaNode)
                 and n.func_type == LambdaType.INTERFACE
                 and all(
                     [var_node in container.nodes for var_node in self.successors(n)]
