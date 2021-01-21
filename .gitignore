@@ -17,6 +17,9 @@ project/target
 # JetBrains (PyCharm)
 .idea
 
+# VS Code
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -69,6 +72,9 @@ preprocessed*
 
 # Ruby stuff
 Gemfile.lock
+
+# Scala stuff
+*.metals
 
 # NodeJS webservice stuff
 *node_modules
