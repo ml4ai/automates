@@ -252,7 +252,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val doc89965379 = documentUjson("89965379")
     println(doc89965379 + "<-<-")
 
-//    val mentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
+    val restoredMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
+    for (m <- restoredMentions) println(m.arguments("variable").head.text + "||" + m.arguments("definition").head.text + "<++++")
+
+
 
 //    def deserilizeMentions(json: Value.Value): Seq[Mention] = {
 //      val menObjArray = json.arr.map(item => {
