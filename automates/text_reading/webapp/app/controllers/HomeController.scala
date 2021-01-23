@@ -202,9 +202,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     logger.info(s"Extracting mentions from $jsonFile")
     val loader = new CosmosJsonDataLoader
     val textsAndLocations = loader.loadFile(cosmosFileStr)
+
+
     val texts = textsAndLocations.map(_.split("::").head)
-    val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location here is the location of the text block in the pdf; currently just page num but will incl bb as well
-    val fullText = texts.mkString(" ")
+    val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
+//    println("LOCATIONS: " + locations)
 //    val mentions = ieSystem.extractFromText(fullText, true, Some("some pdf"))
     val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
 
@@ -214,91 +216,30 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val menInTextBlocks = tuple._1
       val id = tuple._2
 //        println("===>" + locations(id))
-      val loc = locations(id).replace(":","").toDouble.toInt //fixme: why does an extra ":" show up before the number?
+      val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt) //fixme: why does an extra ":" show up before the number?
+        val pageNum = location.head
+        val blockIdx = location.last
+//        println("=> " + pageNum + " " + blockIdx)
       for (m <- menInTextBlocks) {
 
-        val newMen = m.withAttachment(new MentionLocationAttachment(loc, m.sentence, "mentionLocation")) //offset zero or the human way? - zero
+        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, m.sentence, "mentionLocation")) //offset zero or the human way? - zero
         mentionsWithLocations.append(newMen)
-//        for (a <- newMen.attachments) println("ATT: " + a.toString + " men: " + m.text)
+        for (a <- newMen.attachments) println("ATT: " + a.toString + " men: " + m.text)
       }
     }
 
-//    def mkTextBoundMention(
-//      labels: Seq[String],
-//      tokenInterval: Interval,
-//      sentence: Int,
-//      document: Document,
-//      keep: Boolean,
-//      foundBy: String,
-//      attachments: Set[Attachment]
-//                          ): TextBoundMention = {
-//      new TextBoundMention(
-//        labels = labels,
-//        tokenInterval = tokenInterval,
-//        sentence = sentence,
-//        document = document,
-//        keep = keep,
-//        foundBy = foundBy,
-//        attachments = attachments
-//      )
-//    }
 
-//    //todo: need to store document, too...
-
-    val newSerializedMentionsFile= new File("/home/alexeeva/Repos/automates/scripts/text_reading/masha3.json")
+    val newSerializedMentionsFile= new File("/home/alexeeva/Repos/automates/scripts/text_reading/masha4.json")
     val ujsonOfMenFile = ujson.read(newSerializedMentionsFile)
 //    println(ujsonOfMenFile("mentions") + "<<<<<<")
     val documentUjson = ujsonOfMenFile("documents").obj
     val doc89965379 = documentUjson("89965379")
-    println(doc89965379 + "<-<-")
+//    println(doc89965379 + "<-<-")
 
     val restoredMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
-    for (m <- restoredMentions) println(m.arguments("variable").head.text + "||" + m.arguments("definition").head.text + "<++++")
+    for (m <- restoredMentions.filter(_ matches "Definition")) println(m.text + " " + m.label + " pageNum: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("pageNum") + " idx: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("blockIdx"))//println(m.arguments("variable").head.text + "||" + m.arguments("definition").head.text + "<++++")
 
 
-
-//    def deserilizeMentions(json: Value.Value): Seq[Mention] = {
-//      val menObjArray = json.arr.map(item => {
-//        val objMap = item.obj
-//        val menType = item.obj("type").str
-//        val labels = objMap("labels").arr.map(_.str)
-//        val tokenInts = objMap("tokenInterval").arr.map(_.num)
-//        val tokenInterval = Interval(tokenInts.head.toInt, tokenInts.last.toInt)
-//        val sentence = objMap("sentence").num
-//        val document = objMap("document").str
-//        val keep = objMap("keep").bool
-//        val foundBy = objMap("foundBy").str
-//        val attachments = Seq.empty
-////        val attachments = objMap("attachments").obj // this will be a map and then will need to deserialize based on the type---somehow; maybe same as type of mention here - get type of attachment and then have diff methods for deserializing diff types of attachments
-//        menType match {
-//          case "TextBoundMention" => mkTextBoundMention(labels, tokenInterval, sentence.toInt, document, keep, foundBy, Set.empty)
-//        }
-//        new Mention {
-//          override def labels: Seq[String] = objMap("labels").arr.map(_.str)
-//
-//          override def tokenInterval: Interval = ???
-//
-//          override def sentence: Int = ???
-//
-//          override def document: Document = ???
-//
-//          override def keep: Boolean = ???
-//
-//          override val arguments: Map[String, Seq[Mention]] = _
-//          override val attachments: Set[Attachment] = _
-//          override val paths: Map[String, Map[Mention, SynPath]] = _
-//
-//          override def foundBy: String = ???
-//        }
-//        }
-//      )
-//    }
-////    //just checking if can deserialize my mentions:
-//    val newMenFile = "/home/alexeeva/Repos/automates/scripts/text_reading/masha3.json"
-//    val mentionsFile = new File(newMenFile)
-//    val ujsonMentions = ujson.read(mentionsFile.readString())
-//
-//    println("->" + ujsonMentions + "<<")
 
 
     //pass sep texts
@@ -312,7 +253,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 //val parsed_output = PlayUtils.toJson4s(JsonUtils.mkJsonFromMentions(mentionsWithLocations))
     val defMentionsWithLocation = mentionsWithLocations.filter(_ matches "Definition")
     println(defMentionsWithLocation.length + "<<<<")
-    val parsed_output = AutomatesJSONSerializer.serializeMentions(defMentionsWithLocation)
+    val parsed_output = AutomatesJSONSerializer.serializeMentions(mentionsWithLocations)
 //println(parsed_output)
 //    val mentionsJson = serializer.jsonAST(mentionsWithLocations)
 //    val parsed_output = PlayUtils.toPlayJson(mentionsJson)

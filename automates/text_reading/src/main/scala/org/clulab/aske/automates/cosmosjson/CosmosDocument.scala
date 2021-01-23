@@ -8,8 +8,8 @@ case class CosmosDocument(
 
 case class CosmosObject(
                        pdfName: Option[String],
-                       pageNum: Option[Double],
-//                       boundingBox: Option[Value],
+                       pageNum: Option[Int],
+                       blockIdx: Option[Int],
                        content: Option[String],
                        cls: Option[String], //postprocess_cls (class)
                        postprocessScore: Option[Double]

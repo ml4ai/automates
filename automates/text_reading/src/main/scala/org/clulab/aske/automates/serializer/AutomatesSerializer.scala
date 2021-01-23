@@ -10,6 +10,8 @@ import org.clulab.odin.serialization.json._
 import org.clulab.serialization.json.EdgeOps
 import org.json4s.{JArray, JNothing, JValue}
 
+import scala.collection.mutable.ArrayBuffer
+
 ///** JSON serialization utilities */
 object AutomatesJSONSerializer {
 
@@ -21,15 +23,24 @@ object AutomatesJSONSerializer {
     require(!menUJson("documents").isNull, "\"documents\" key missing from json")
 
     val docMap = mkDocumentMap(menUJson("documents"))
-    println("done with doc map")
+//    println("done with doc map")
 
     val mentionsUJson = menUJson("mentions")
-    println("done with men to ujson")
-    println(mentionsUJson + "<<::::")
+//    println("done with men to ujson")
+//    println(mentionsUJson + "<<::::")
     val toReturn = mentionsUJson.arr.map(item => toMention(item, docMap)).toSeq
-    println("done converting to mentions")
+//    println("done converting to mentions")
     toReturn
 
+  }
+
+  def toAttachment(json: ujson.Value): Attachment = {
+    val attType = json("attType").str
+    val toReturn = attType match {
+      case "mentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, json("sentNum").num.toInt, attType)
+      case _ => ???
+    }
+    toReturn
   }
 
   def toMention(mentionComponents: ujson.Value, docMap: Map[String, Document]): Mention = {
@@ -44,9 +55,24 @@ object AutomatesJSONSerializer {
     val foundBy = mentionComponents("foundBy").str
 //    val argObj = mentionComponents("arguments")
     val menType = mentionComponents("type").str
+    val attachments = new ArrayBuffer[Attachment]
+//    println("HERE")
+//    println(mentionComponents + "<HERE")
+
+      if (mentionComponents.obj.keys.toList.contains("attachments")) {
+//        println("NOT NULL")
+        val attObjArray = mentionComponents("attachments").arr
+//        println(attObjArray + "<<<<<")
+        for (ao <- attObjArray) {
+          val att = toAttachment(ao)
+          attachments.append(att)
+        }
+      }
+
+
+    val attAsSet = attachments.toSet
 
 //    val attachments = ???
-    println("line 49")
 
     def getArgs(argObj: ujson.Value): Map[String, Seq[Mention]] = {
       val args = for  {
@@ -65,7 +91,8 @@ object AutomatesJSONSerializer {
           sentence,
           document,
           keep,
-          foundBy
+          foundBy,
+          attachments = attAsSet
         )
       case "RelationMention" => {
         new RelationMention(
@@ -76,8 +103,10 @@ object AutomatesJSONSerializer {
           sentence,
           document,
           keep,
-          foundBy
+          foundBy,
+          attachments = attAsSet
         )
+
       }
       case "EventMention" => {
         new EventMention(
@@ -89,7 +118,8 @@ object AutomatesJSONSerializer {
           sentence,
           document,
           keep,
-          foundBy
+          foundBy,
+          attachments = attAsSet
         )
       }
 
@@ -100,7 +130,6 @@ object AutomatesJSONSerializer {
 
   def toPaths(mentionJson: ujson.Value, docMap: Map[String, Document]): Map[String, Map[Mention, odin.SynPath]] = {
 
-    println("line 103")
     /** Create mention from args json for given id */
     def findMention(mentionID: String, json: ujson.Value, docMap: Map[String, Document]): Option[Mention] = {
       // inspect arguments for matching ID
@@ -122,7 +151,6 @@ object AutomatesJSONSerializer {
       }
     }
 
-    println("line 125")
     // build paths
     mentionJson("paths") match {
       case ujson.Null => Map.empty[String, Map[Mention, odin.SynPath]]
@@ -153,7 +181,7 @@ object AutomatesJSONSerializer {
   def mkDocumentMap(documentsUJson: ujson.Value): Map[String, Document] = {
     val docHashToDocument = for {
       (k,v) <- documentsUJson.obj //k is doc hash, v is all the stuff to make a document
-      if (!v("sentences").isNull)
+      if !v("sentences").isNull
 
     } yield k -> toDocument(v)
     docHashToDocument.toMap
@@ -273,7 +301,7 @@ object AutomatesJSONSerializer {
 
 
   def toUJson(attachments: Set[Attachment]): ujson.Value = {
-    val attsAsUJson = ujson.Arr(attachments.map(toUJson(_)).toList)
+    val attsAsUJson = attachments.map(toUJson(_)).toList
     attsAsUJson
   }
 

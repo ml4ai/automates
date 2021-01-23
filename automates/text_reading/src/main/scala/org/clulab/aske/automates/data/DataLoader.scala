@@ -67,12 +67,8 @@ class CosmosJsonDataLoader extends DataLoader {
     * @return string content of each section in the parsed pdf paper (as determined by science parse)
     */
   def loadFile(f: File): Seq[String] = {
-    // todo: this approach should like be revisited to handle sections more elegantly, or to omit some, etc.
-    //the heading and the text of the section are currently combined; might need to be revisted
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
-//    if (cosmosDoc.cosmosOjects.nonEmpty)  {
-      cosmosDoc.cosmosOjects.map(co => co.content.get + "::" + co.pageNum.get)
-//    } else cosmosDoc.abstractText.toSeq
+    cosmosDoc.cosmosOjects.map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)
   }
   override val extension: String = "json"
 }
