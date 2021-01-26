@@ -5,10 +5,10 @@ import org.clulab.odin
 import org.clulab.odin.serialization.json.JSONSerializer.toMention
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct.{DirectedGraph, Edge, Interval}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap, Interval}
 import org.clulab.odin.serialization.json._
-import org.clulab.serialization.json.EdgeOps
-import org.json4s.{JArray, JNothing, JValue}
+import org.clulab.serialization.json.{DirectedGraphOps, EdgeOps, GraphMapOps}
+import org.json4s.{Extraction, JArray, JNothing, JValue}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -198,9 +198,23 @@ object AutomatesJSONSerializer {
       sentComponents("raw").arr.map(_.str).toArray,
       sentComponents("startOffsets").arr.map(_.num).map(_.toInt).toArray,
       sentComponents("endOffsets").arr.map(_.num).map(_.toInt).toArray,
-      sentComponents("words").arr.map(_.str).toArray
+      sentComponents("words").arr.map(_.str).toArray,
+
     )
+    s.tags = Some(sentComponents("tags").arr.map(_.str).toArray)
+    s.lemmas = Some(sentComponents("lemmas").arr.map(_.str).toArray)
+    s.entities = Some(sentComponents("entities").arr.map(_.str).toArray)
+    s.norms = Some(sentComponents("norms").arr.map(_.str).toArray)
+    s.chunks = Some(sentComponents("chunks").arr.map(_.str).toArray)
+    val graphs = sentComponents("graphs").obj.map(item => item._1 -> toDirectedGraph(item._2)).toMap
+    s.graphs = GraphMap(graphs)
     s
+  }
+
+  def toDirectedGraph(edgesAndRoots: ujson.Value): DirectedGraph[String] = {
+    val edges = edgesAndRoots.obj("edges").arr.map(item => new Edge(item.obj("source").num.toInt, item.obj("destination").num.toInt, item.obj("relation").str))
+    val roots = edgesAndRoots.obj("roots").arr.map(_.num.toInt).toSet
+    new DirectedGraph[String](edges.toList, roots)
   }
 
   def serializeMentions(mentions: Seq[Mention]): ujson.Value = {
@@ -365,9 +379,22 @@ object AutomatesJSONSerializer {
         "lemmas" -> s.lemmas.get.toList,
         "entities" -> s.entities.get.toList,
         "norms" -> s.norms.get.toList,
-        "chunks" -> s.chunks.get.toList
-//        "graphs" -> s.graphs.jsonAST)
+        "chunks" -> s.chunks.get.toList,
+        "graphs" -> s.graphs.toUJson
 
+    )
+  }
+
+  implicit class AutomatesGraphMapOps(gm: GraphMap) extends GraphMapOps(gm: GraphMap) {
+
+    def toUJson: ujson.Value = gm.toMap.mapValues(_.toUJson)
+
+  }
+
+  implicit class AutomatesDirectedGraphOps(dg: DirectedGraph[String]) extends DirectedGraphOps(dg: DirectedGraph[String]) {
+    def toUJson: ujson.Value = ujson.Obj(
+      "edges" -> dg.edges.map(_.toUJson),
+      "roots" -> dg.roots
     )
   }
 
@@ -389,6 +416,7 @@ object AutomatesJSONSerializer {
       )
     }
   }
+
 
 
   implicit class AutomatesRelationMentionOps(rm: RelationMention) extends RelationMentionOps(rm: RelationMention) {

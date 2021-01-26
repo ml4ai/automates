@@ -8,6 +8,7 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMenti
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
+import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.sparqlResult
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.processors.Document
@@ -29,15 +30,22 @@ object AlignmentJsonUtils {
 
     // load text mentions
     val allMentions =  if (jsonKeys.contains("mentions")) {
+      println("WORKING ON GETTING MENTIONS")
       val mentionsPath = json("mentions").str
       val mentionsFile = new File(mentionsPath)
-      val ujsonMentions = ujson.read(mentionsFile.readString())
-      // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
-      //transform the mentions into json4s format, used by mention serializer
-      val jvalueMentions = upickle.default.transform(
-        ujsonMentions
-      ).to(Json4sJson)
-      val textMentions = JSONSerializer.toMentions(jvalueMentions)
+//      val ujsonMentions = ujson.read(mentionsFile.readString())
+//      // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+//      //transform the mentions into json4s format, used by mention serializer
+//      val jvalueMentions = upickle.default.transform(
+//        ujsonMentions
+//      ).to(Json4sJson)
+//      val textMentions = JSONSerializer.toMentions(jvalueMentions)
+        val ujsonOfMenFile = ujson.read(mentionsFile)
+      //    println(ujsonOfMenFile("mentions") + "<<<<<<")
+
+      //    println(doc89965379 + "<-<-")
+
+      val textMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
       Some(textMentions)
 
     } else None

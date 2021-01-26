@@ -36,6 +36,7 @@ import org.json4s
 import play.api.mvc._
 import play.api.libs.json._
 
+
 import org.json4s.JsonAST
 
 
@@ -237,7 +238,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 //    println(doc89965379 + "<-<-")
 
     val restoredMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
-    for (m <- restoredMentions.filter(_ matches "Definition")) println(m.text + " " + m.label + " pageNum: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("pageNum") + " idx: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("blockIdx"))//println(m.arguments("variable").head.text + "||" + m.arguments("definition").head.text + "<++++")
+    for (m <- restoredMentions.filter(_ matches "Definition")) println(m.text + " " + m.label + " pageNum: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("pageNum") + " idx: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("blockIdx") + " " + m.synHead.get)//println(m.arguments("variable").head.text + "||" + m.arguments("definition").head.text + "<++++")
 
 
 
@@ -251,11 +252,14 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 //    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
 //    val mentionsJson = serializer.jsonAST(mentions.flatten)
 //val parsed_output = PlayUtils.toJson4s(JsonUtils.mkJsonFromMentions(mentionsWithLocations))
+
+
     val defMentionsWithLocation = mentionsWithLocations.filter(_ matches "Definition")
+
     println(defMentionsWithLocation.length + "<<<<")
     val parsed_output = AutomatesJSONSerializer.serializeMentions(mentionsWithLocations)
 //println(parsed_output)
-//    val mentionsJson = serializer.jsonAST(mentionsWithLocations)
+    val mentionsJson = serializer.jsonAST(mentionsWithLocations)
 //    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
 //    println(parsed_output)
     Ok(write(parsed_output))
