@@ -23,6 +23,8 @@ import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s
 import java.util.UUID.randomUUID
 
+import org.clulab.aske.automates.attachments.MentionLocationAttachment
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -252,11 +254,13 @@ object ExtractAndAlign {
         val originalSentence = splitElStr(4)
         val definition = splitElStr(5)
         val svo_terms = splitElStr(7)
-        val unit = splitElStr(8)
-        val value = splitElStr(9)
-        val valueLeast = splitElStr(10)
-        val valueMost = splitElStr(11)
-        val svoString = splitElStr(12)
+        val unit = splitElStr(9)
+        val value = splitElStr(10)
+        val valueLeast = splitElStr(11)
+        val valueMost = splitElStr(12)
+        val svoString = splitElStr(13)
+        val locationJsonStr = splitElStr(8)
+        val locationAsJson = ujson.read(locationJsonStr)
 
         val results = if (groundToSvo) {
           if (svoString != "None") {
@@ -283,7 +287,8 @@ object ExtractAndAlign {
           svo_terms = svo_terms,
           unit = unit,
           paramSetting = paramSetting,
-          svo = results
+          svo = results,
+          spans = locationAsJson
         )
 
       }
@@ -432,8 +437,8 @@ object ExtractAndAlign {
       */
     if (textDefinitionMentions.isDefined && SVOgroundings.isDefined) {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), SVOgroundings.get.map(_._1.toLowerCase))
-      println("variables with svos " + SVOgroundings.get.map(_._1))
-      println("svo search results " + SVOgroundings.get.map(_._2))
+//      println("variables with svos " + SVOgroundings.get.map(_._1))
+//      println("svo search results " + SVOgroundings.get.map(_._2))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(TEXT_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
     }
@@ -524,9 +529,26 @@ object ExtractAndAlign {
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
         val definition = mention.arguments(DEFINITION).head.text
+        val attAsJson = mention.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+        val page = attAsJson("pageNum").num.toInt
+        val block = attAsJson("blockIdx").num.toInt
+        val charBegin = mention.startOffset
+        val charEnd = mention.endOffset
+        // todo: this is for mentions that came from one block
+        // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
+        val continuousMenSpanJson = ujson.Obj(
+          "page" -> page,
+          "block" -> block,
+          "span" -> ujson.Obj(
+            "char_begin" -> charBegin,
+            "char_end" -> charEnd
+          )
+        )
 
 
-        randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",")
+
+
+        randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
       }
     }
 
