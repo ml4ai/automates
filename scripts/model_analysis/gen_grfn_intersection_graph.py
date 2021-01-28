@@ -15,10 +15,8 @@ def main():
     intersection_data = json.load(open(intersection_filename, "r"))
 
     GIG = GrFNIntersectionGraph.from_GrFN_comparison(G1, G2, intersection_data)
-    gig_filename = intersection_filename.replace(
-        "--comparison.json",
-        "--intersection-graph.json"
-    )
+    gig_filename = intersection_filename.replace("--comparison.json",
+                                                 "--intersection-graph.json")
     GIG.to_json_file(gig_filename)
 
 
