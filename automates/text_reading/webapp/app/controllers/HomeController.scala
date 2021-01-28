@@ -226,7 +226,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       }
     }
 
-    val defMentionsWithLocation = mentionsWithLocations.filter(_ matches "Definition")
     val parsed_output = AutomatesJSONSerializer.serializeMentions(mentionsWithLocations)
     Ok(write(parsed_output))
   }
