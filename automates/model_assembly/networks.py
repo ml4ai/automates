@@ -1,7 +1,7 @@
+from __future__ import annotations
 from typing import List, Dict, Iterable, Any
 from abc import ABC, abstractmethod
 from functools import singledispatch
-from __future__ import annotations
 from dataclasses import dataclass
 from itertools import product
 from copy import deepcopy
