@@ -72,7 +72,6 @@ object AutomatesJSONSerializer {
           attachments = attAsSet
         )
       case "RelationMention" => {
-        println("rel men rel comp: " + mentionComponents.toString())
         new RelationMention(
           labels,
           tokenInterval,
@@ -87,7 +86,6 @@ object AutomatesJSONSerializer {
 
       }
       case "EventMention" => {
-        println("event men rel comp: " + mentionComponents.toString())
         new EventMention(
           labels,
           tokenInterval,
@@ -107,7 +105,6 @@ object AutomatesJSONSerializer {
 
   def toPaths(mentionJson: ujson.Value, docMap: Map[String, Document]): Map[String, Map[Mention, odin.SynPath]] = {
 
-    println("doing toPaths")
     /** Create mention from args json for given id */
     def findMention(mentionID: String, json: ujson.Value, docMap: Map[String, Document]): Option[Mention] = {
       mentionJson("arguments") match {

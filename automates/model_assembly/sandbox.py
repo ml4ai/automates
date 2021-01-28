@@ -61,9 +61,7 @@ def load_derived_type(type_str: str) -> None:
         raise UnsafeOperationError(f"found in derived-type:\n{type_str}")
 
     # Check for a dataclass structure match and extract the class name
-    type_name_match = re.match(
-        r"(?<=@dataclass\nclass )[A-Za-z_]+(?=:)", type_str
-    )
+    type_name_match = re.match(r"(?<=@dataclass\nclass )[A-Za-z_]+(?=:)", type_str)
     # Checking to see if the string starts with a dataclass
     if type_name_match is None:
         raise RuntimeError(f"Unexpected form for derived type:\n{type_str}")

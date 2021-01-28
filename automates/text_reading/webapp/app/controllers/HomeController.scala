@@ -7,17 +7,23 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.alignment.AlignmentHandler
+import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
+
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLoader}
+
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, rehydrateLinkElement}
+import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
+
 import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
+import ujson.json4s.Json4sJson
 import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
@@ -52,6 +58,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val groundToSVODefault = true
   private val appendToGrFNDefault = true
   private val defaultTextInputFormat = "cosmos" // other - "science-parse"
+  private val debugDefault = false
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -239,6 +246,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val json = ujson.read(jsonFile.readString())
 
     val jsonKeys = json.obj.keys.toList
+    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
 
 
     //if toggles and arguments are not provided in the input, use class defaults (this is to be able to process the previously used GrFN format input)
@@ -284,7 +292,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         Some(numAlignmentsSrcToComment),
         scoreThreshold,
         appendToGrFN,
-        textInputFormat
+        textInputFormat,
+        debug
       )
 
       val groundingsAsString = ujson.write(groundings, indent = 4)
@@ -298,6 +307,99 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   }
 
+  def readMentionsFromJson(pathToMentionsFile: String, mentionType: String): Seq[Mention] = {
+    val mentionsFile = new File(pathToMentionsFile)
+    val ujsonMentions = ujson.read(mentionsFile.readString())
+    // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+    //transform the mentions into json4s format, used by mention serializer
+    val jvalueMentions = upickle.default.transform(
+      ujsonMentions
+    ).to(Json4sJson)
+    val textMentions = JSONSerializer.toMentions(jvalueMentions)
+
+    val mentions = textMentions
+      .filter(m => m.label matches mentionType)
+      .filter(hasRequiredArgs)
+    mentions
+  }
+
+  def readDefTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
+
+    val modelComparisonInputFile = new File(pathToModelComparisonInput)
+    val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
+    val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_defs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
+    (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_defs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_defs")))
+    // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+    //transform the mentions into json4s format, used by mention serializer
+//    val jvalueMentions = upickle.default.transform(
+//      ujsonMentions
+//    ).to(Json4sJson)
+//    val textMentions = JSONSerializer.toMentions(jvalueMentions)
+//
+//    val mentions = textMentions
+//      .filter(m => m.label matches mentionType)
+//      .filter(hasRequiredArgs)
+//    mentions
+  }
+
+
+  def alignMentionsFromTwoModels: Action[AnyContent] = Action { request =>
+
+    val data = request.body.asJson.get.toString()
+    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
+    val jsonPath = pathJson("pathToJson").str
+    val jsonFile = new File(jsonPath)
+    val json = ujson.read(jsonFile.readString())
+    val jsonKeys = json.obj.keys.toList
+
+    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
+    val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
+
+    val inputFilePath = json("input_file").str
+    val modelComparisonInputFile = new File(inputFilePath)
+    val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
+    val paper1obj = ujsonObj.head.obj// keys: grfn_uid, "variable_defs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
+
+    val paper1id = paper1obj("grfn_uid").str
+    val paper2id = paper2obj("grfn_uid").str
+
+    val paper1values = paper1obj("variable_defs").arr
+    val paper2values = paper2obj("variable_defs").arr
+
+    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
+    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
+
+
+    // get alignments
+    val alignments = modelCompAlignmentHandler.w2v.alignTexts(paper1texts, paper2texts)
+
+    // group by src idx, and keep only top k (src, dst, score) for each src idx
+    val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug)
+
+    // id link elements
+    val linkElements = ExtractAndAlign.getInterModelComparisonLinkElements(paper1values, paper1id, paper2values, paper2id)
+
+    val hypotheses = ExtractAndAlign.getInterPaperLinkHypothesesWithValues(linkElements, topKAlignments, debug)
+    var outputJson = ujson.Obj()
+
+    if (debug) {
+      for (le <- linkElements.keys) {
+        outputJson(le) = linkElements(le)
+      }
+    }
+
+    outputJson("grfn1") = paper1id
+    outputJson("grfn2") = paper2id
+
+    outputJson("variable_alignment") = hypotheses
+    val groundingsAsString = ujson.write(outputJson, indent = 4)
+
+    val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
+    Ok(groundingsJson4s)
+
+  }
 
   // -----------------------------------------------------------------
   //               Backend methods that do stuff :)
