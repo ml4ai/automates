@@ -1,6 +1,7 @@
 from typing import List, Dict, Iterable, Any
 from abc import ABC, abstractmethod
 from functools import singledispatch
+from __future__ import annotations
 from dataclasses import dataclass
 from itertools import product
 from copy import deepcopy
@@ -277,7 +278,7 @@ class GrFNSubgraph:
 
     @classmethod
     def from_container(
-        cls, con: GenericContainer, occ: int, parent_subgraph: "GrFNSubgraph"
+        cls, con: GenericContainer, occ: int, parent_subgraph: GrFNSubgraph
     ):
         id = con.identifier
         return cls(
