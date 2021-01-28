@@ -326,7 +326,6 @@ object ExtractAndAlign {
 
         mkLinkElement(
           id = id,
-//          elemType = elType,
           source = source,
           content = content,
           contentType = "null"

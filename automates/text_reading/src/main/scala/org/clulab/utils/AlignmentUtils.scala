@@ -26,29 +26,21 @@ object AlignmentJsonUtils {
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, textInputFormat: String): alignmentArguments = {
 
     val jsonKeys = json.obj.keys.toList
-
-
     // load text mentions
     val allMentions =  if (jsonKeys.contains("mentions")) {
       val mentionsPath = json("mentions").str
       val mentionsFile = new File(mentionsPath)
-
-//       val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
-      //transform the mentions into json4s format, used by mention serializer
-
       val textMentions =  if (textInputFormat == "cosmos") {
         val ujsonOfMenFile = ujson.read(mentionsFile)
         AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
       } else {
         val ujsonMentions = ujson.read(mentionsFile.readString())
+        //transform the mentions into json4s format, used by mention serializer
         val jvalueMentions = upickle.default.transform(
           ujsonMentions
         ).to(Json4sJson)
         JSONSerializer.toMentions(jvalueMentions)
       }
-
-
-        //fixme: use serializer depending on loader - for cosmos, use automatesJSONSerializer, for other inputs - json serializer. OR, switch everything to automates serializer, but that needs testing with other endpoints
 
       Some(textMentions)
 
@@ -84,7 +76,6 @@ object AlignmentJsonUtils {
     } else None
 
 //    for (item <- equationChunksAndSource.get) println(item._1 + " | " + item._2)
-
     val variableNames = if (jsonKeys.contains("source_code")) {
       Some(json("source_code").obj("variables").arr.map(_.obj("name").str))
     } else None
