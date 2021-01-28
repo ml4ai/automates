@@ -11,7 +11,6 @@ import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement, mkTextVarLinkElement}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
-import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
@@ -73,7 +72,8 @@ object ExtractAndAlign {
                       numAlignments: Option[Int],
                       numAlignmentsSrcToComment: Option[Int],
                       scoreThreshold: Double = 0.0,
-                      appendToGrFN: Boolean
+                      appendToGrFN: Boolean,
+                      textInputFormat: String
     ): Value = {
 
     // =============================================
@@ -96,7 +96,7 @@ object ExtractAndAlign {
 
     var outputJson = ujson.Obj()
 
-    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
+    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames, textInputFormat)
 
     linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION), alignments(TEXT_TO_UNIT))
 
@@ -260,6 +260,7 @@ object ExtractAndAlign {
         val valueMost = splitElStr(12)
         val svoString = splitElStr(13)
         val locationJsonStr = splitElStr(8)
+
         val locationAsJson = ujson.read(locationJsonStr)
 
         val results = if (groundToSvo) {
@@ -485,7 +486,8 @@ object ExtractAndAlign {
     Option[Seq[Mention]],
     commentDefinitionMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
-    variableNames: Option[Seq[String]]
+    variableNames: Option[Seq[String]],
+    textInputFormat: String
   ): mutable.HashMap[String, Seq[String]] = {
     // Make Comment Spans from the comment variable mentions
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
@@ -529,26 +531,35 @@ object ExtractAndAlign {
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
         val definition = mention.arguments(DEFINITION).head.text
-        val attAsJson = mention.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-        val page = attAsJson("pageNum").num.toInt
-        val block = attAsJson("blockIdx").num.toInt
         val charBegin = mention.startOffset
         val charEnd = mention.endOffset
-        // todo: this is for mentions that came from one block
-        // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
-        val continuousMenSpanJson = ujson.Obj(
-          "page" -> page,
-          "block" -> block,
-          "span" -> ujson.Obj(
-            "char_begin" -> charBegin,
-            "char_end" -> charEnd
+        val continuousMenSpanJson = if (textInputFormat == "cosmos") {
+          val attAsJson = mention.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+                    val page = attAsJson("pageNum").num.toInt
+                    val block = attAsJson("blockIdx").num.toInt
+
+                    // todo: this is for mentions that came from one block
+                    // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
+          ujson.Obj(
+            "page" -> page,
+            "block" -> block,
+            "span" -> ujson.Obj(
+              "char_begin" -> charBegin,
+              "char_end" -> charEnd
+                      )
+                    )
+        } else {
+          ujson.Obj(
+            "page" -> "N/A",
+            "block" -> "N/A",
+            "span" -> ujson.Obj(
+              "char_begin" -> charBegin,
+              "char_end" -> charEnd
+            )
           )
-        )
+        }
+          randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
 
-
-
-
-        randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
       }
     }
 
@@ -647,6 +658,7 @@ object ExtractAndAlign {
     val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     val loadMentions = config[Boolean]("apps.loadMentions")
     val appendToGrFN = config[Boolean]("apps.appendToGrFN")
+    val textInputFormat = config[String]("apps.textInputFormat")
 
 
     // =============================================
@@ -722,7 +734,8 @@ object ExtractAndAlign {
       Some(numAlignments),
       Some(numAlignments),
       scoreThreshold,
-      appendToGrFN
+      appendToGrFN,
+      textInputFormat
       )
 
 

@@ -2,7 +2,6 @@ package controllers
 
 import java.io.File
 
-import org.clulab.struct.Interval
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -10,23 +9,15 @@ import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.AlignmentHandler
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs}
-import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
-import org.clulab.aske.automates.cosmosjson.CosmosJsonProcessor
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLoader}
-import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.SVOGrounder
-import org.clulab.odin.SynPath
 import org.clulab.odin.serialization.json.JSONSerializer
-import org.clulab.struct.Interval
-import ujson.Value
 import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
-//import org.clulab.odin._
 import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
@@ -35,9 +26,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
 import play.api.mvc._
 import play.api.libs.json._
-
-
-import org.json4s.JsonAST
 
 
 /**
@@ -56,12 +44,14 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
   lazy val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  // fixme: these should come from config if possible
   private val numAlignments: Int = 5
   private val numAlignmentsSrcToComment: Int = 3
   private val scoreThreshold: Double = 0.0
   private val maxSVOgroundingsPerVarDefault: Int = 5
   private val groundToSVODefault = true
   private val appendToGrFNDefault = true
+  private val defaultTextInputFormat = "cosmos" // other - "science-parse"
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -201,67 +191,36 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonKeys = json.obj.keys.toList
     val cosmosFileStr = json("path_to_cosmos_json").str
     logger.info(s"Extracting mentions from $jsonFile")
+
+    // cosmos stores information about each block on each pdf page
+    // for each block, we load the text (content) and the location of the text (page_num and block order/index on the page)
     val loader = new CosmosJsonDataLoader
     val textsAndLocations = loader.loadFile(cosmosFileStr)
-
-
     val texts = textsAndLocations.map(_.split("::").head)
     val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
-//    println("LOCATIONS: " + locations)
-//    val mentions = ieSystem.extractFromText(fullText, true, Some("some pdf"))
+
+    // extract mentions form each text block
     val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
 
+    // store location information from cosmos as an attachment for each mention
     val menWInd = mentions.zipWithIndex
     val mentionsWithLocations = new ArrayBuffer[Mention]()
-      for (tuple <- menWInd) {
+    for (tuple <- menWInd) {
+      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
       val menInTextBlocks = tuple._1
       val id = tuple._2
-//        println("===>" + locations(id))
-      val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt) //fixme: why does an extra ":" show up before the number?
-        val pageNum = location.head
-        val blockIdx = location.last
-//        println("=> " + pageNum + " " + blockIdx)
+      val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt)
+      val pageNum = location.head
+      val blockIdx = location.last
+//
       for (m <- menInTextBlocks) {
-
-        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, m.sentence, "mentionLocation")) //offset zero or the human way? - zero
+        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "mentionLocation"))
         mentionsWithLocations.append(newMen)
-        for (a <- newMen.attachments) println("ATT: " + a.toString + " men: " + m.text)
       }
     }
 
-
-    val newSerializedMentionsFile= new File("/home/alexeeva/Repos/automates/scripts/text_reading/masha4.json")
-    val ujsonOfMenFile = ujson.read(newSerializedMentionsFile)
-//    println(ujsonOfMenFile("mentions") + "<<<<<<")
-    val documentUjson = ujsonOfMenFile("documents").obj
-    val doc89965379 = documentUjson("89965379")
-//    println(doc89965379 + "<-<-")
-
-    val restoredMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
-    for (m <- restoredMentions.filter(_ matches "Definition")) println(m.text + " " + m.label + " pageNum: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("pageNum") + " idx: " + m.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson("blockIdx") + " " + m.synHead.get)//println(m.arguments("variable").head.text + "||" + m.arguments("definition").head.text + "<++++")
-
-
-
-
-    //pass sep texts
-    //load file can output both texts and bounding boxes (and page and maybe other info)
-    // get mentions per text, dont flatten
-    // for through seq of seq of mentions (dont flatten map when getting mentions) and for each mention in seq of seq, create a new mention but with "sentence" field updated with page num and bb info sep by ::
-
-//    for (t<-texts) println(t)
-//    val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
-//    val mentionsJson = serializer.jsonAST(mentions.flatten)
-//val parsed_output = PlayUtils.toJson4s(JsonUtils.mkJsonFromMentions(mentionsWithLocations))
-
-
     val defMentionsWithLocation = mentionsWithLocations.filter(_ matches "Definition")
-
-    println(defMentionsWithLocation.length + "<<<<")
     val parsed_output = AutomatesJSONSerializer.serializeMentions(mentionsWithLocations)
-//println(parsed_output)
-    val mentionsJson = serializer.jsonAST(mentionsWithLocations)
-//    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-//    println(parsed_output)
     Ok(write(parsed_output))
   }
   /**
@@ -295,10 +254,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       json("arguments").obj("maxSVOgroundingsPerVar").num.toInt
     } else maxSVOgroundingsPerVarDefault
 
+    val textInputFormat = if (jsonKeys.contains("arguments")) {
+      val args = json("arguments")
+      if (args.obj.keys.toList.contains("text_input_format")) {
+        args.obj("text_input_format").str
+      } else defaultTextInputFormat
+    } else defaultTextInputFormat
+
 
     //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
     if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
-      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
+      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, textInputFormat)
 
       // ground!
       val groundings = ExtractAndAlign.groundMentions(
@@ -317,7 +283,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         Some(numAlignments),
         Some(numAlignmentsSrcToComment),
         scoreThreshold,
-        appendToGrFN
+        appendToGrFN,
+        textInputFormat
       )
 
       val groundingsAsString = ujson.write(groundings, indent = 4)

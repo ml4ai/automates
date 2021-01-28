@@ -2,34 +2,26 @@ package org.clulab.aske.automates.serializer
 
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.odin
-import org.clulab.odin.serialization.json.JSONSerializer.toMention
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, Interval}
 import org.clulab.odin.serialization.json._
 import org.clulab.serialization.json.{DirectedGraphOps, EdgeOps, GraphMapOps}
-import org.json4s.{Extraction, JArray, JNothing, JValue}
 
 import scala.collection.mutable.ArrayBuffer
 
-///** JSON serialization utilities */
 object AutomatesJSONSerializer {
 
+  // This is a ujson adaptation of org.clulab.odin.serialization.json.JSONSerializer
 
-//
   def toMentions(menUJson: ujson.Value): Seq[Mention] = {
 
     require(!menUJson("mentions").isNull, "\"mentions\" key missing from json")
     require(!menUJson("documents").isNull, "\"documents\" key missing from json")
 
     val docMap = mkDocumentMap(menUJson("documents"))
-//    println("done with doc map")
-
     val mentionsUJson = menUJson("mentions")
-//    println("done with men to ujson")
-//    println(mentionsUJson + "<<::::")
     val toReturn = mentionsUJson.arr.map(item => toMention(item, docMap)).toSeq
-//    println("done converting to mentions")
     toReturn
 
   }
@@ -37,7 +29,7 @@ object AutomatesJSONSerializer {
   def toAttachment(json: ujson.Value): Attachment = {
     val attType = json("attType").str
     val toReturn = attType match {
-      case "mentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, json("sentNum").num.toInt, attType)
+      case "mentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
       case _ => ???
     }
     toReturn
@@ -46,23 +38,17 @@ object AutomatesJSONSerializer {
   def toMention(mentionComponents: ujson.Value, docMap: Map[String, Document]): Mention = {
     val tokIntObj = mentionComponents("tokenInterval").obj
     val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
-//    val label = mentionComponents("label").str
     val labels = mentionComponents("labels").arr.map(_.str).toArray
     val sentence = mentionComponents("sentence").num.toInt
     val docHash = mentionComponents("document").str.toInt
     val document = docMap(docHash.toString)
     val keep = mentionComponents("keep").bool
     val foundBy = mentionComponents("foundBy").str
-//    val argObj = mentionComponents("arguments")
     val menType = mentionComponents("type").str
     val attachments = new ArrayBuffer[Attachment]
-//    println("HERE")
-//    println(mentionComponents + "<HERE")
 
       if (mentionComponents.obj.keys.toList.contains("attachments")) {
-//        println("NOT NULL")
         val attObjArray = mentionComponents("attachments").arr
-//        println(attObjArray + "<<<<<")
         for (ao <- attObjArray) {
           val att = toAttachment(ao)
           attachments.append(att)
@@ -71,8 +57,6 @@ object AutomatesJSONSerializer {
 
 
     val attAsSet = attachments.toSet
-
-//    val attachments = ???
 
     def getArgs(argObj: ujson.Value): Map[String, Seq[Mention]] = {
       val args = for  {
@@ -95,6 +79,7 @@ object AutomatesJSONSerializer {
           attachments = attAsSet
         )
       case "RelationMention" => {
+        println("rel men rel comp: " + mentionComponents.toString())
         new RelationMention(
           labels,
           tokenInterval,
@@ -109,6 +94,7 @@ object AutomatesJSONSerializer {
 
       }
       case "EventMention" => {
+        println("event men rel comp: " + mentionComponents.toString())
         new EventMention(
           labels,
           tokenInterval,
@@ -130,14 +116,12 @@ object AutomatesJSONSerializer {
 
   def toPaths(mentionJson: ujson.Value, docMap: Map[String, Document]): Map[String, Map[Mention, odin.SynPath]] = {
 
+    println("doing toPaths")
     /** Create mention from args json for given id */
     def findMention(mentionID: String, json: ujson.Value, docMap: Map[String, Document]): Option[Mention] = {
-      // inspect arguments for matching ID
       mentionJson("arguments") match {
-        // if we don't have arguments, we can't produce a Mention
         case ujson.Null => None
         case something =>
-          // flatten the Seq[Mention.jsonAST] for each arg
           val argsjson = for {
             mnsjson <- something.obj.values
             mjson <- mnsjson.arr
@@ -157,7 +141,6 @@ object AutomatesJSONSerializer {
       case contents => for {
         (argName, innermap) <- contents.obj.toMap
       } yield {
-        // make inner map (Map[Mention, odin.SynPath])
         val pathMap = for {
           (mentionID, pathJSON) <- innermap.obj.toList
           mOp = findMention(mentionID, mentionJson, docMap)
@@ -165,13 +148,7 @@ object AutomatesJSONSerializer {
           m = mOp.get
           edges = pathJSON.arr.map(hop => Edge(hop.obj("source").num.toInt, hop.obj("destination").num.toInt, hop.obj("relation").str))
           synPath: odin.SynPath = DirectedGraph.edgesToTriples(edges)
-          // were we able to recover a mention?
-//          if mOp.nonEmpty
-//          m = mOp.get
-//          edges: Seq[Edge[String]] = pathJSON
-//          synPath: odin.SynPath = DirectedGraph.edgesToTriples[String](edges)
         } yield m -> synPath
-//        // marry role with (arg -> path) info
         argName -> pathMap.toMap
       }
     }
@@ -180,7 +157,7 @@ object AutomatesJSONSerializer {
 
   def mkDocumentMap(documentsUJson: ujson.Value): Map[String, Document] = {
     val docHashToDocument = for {
-      (k,v) <- documentsUJson.obj //k is doc hash, v is all the stuff to make a document
+      (k,v) <- documentsUJson.obj
       if !v("sentences").isNull
 
     } yield k -> toDocument(v)
@@ -218,15 +195,9 @@ object AutomatesJSONSerializer {
   }
 
   def serializeMentions(mentions: Seq[Mention]): ujson.Value = {
-    println("START serializing")
-    println("len men inside serialize mentions: " + mentions.length)
     val json = ujson.Obj()
-//    for (m <- mentions) {
-//      toUJson(m)
-//    }
     json("mentions") = mentions.map(m => toUJson(m))
     val distinctDocs = mentions.map(_.document).distinct
-//    for (d <- distinctDocs) println("->" + d.text)
 
     val docsAsUjsonObj = ujson.Obj()
     for (doc <- distinctDocs) {
@@ -249,7 +220,6 @@ object AutomatesJSONSerializer {
 
 
   def toUJson(tb: TextBoundMention): ujson.Value = {
-//    println("toJson-ing text bound mention")
     ujson.Obj(
       "type" -> "TextBoundMention",
         "text" -> tb.text,
@@ -265,26 +235,6 @@ object AutomatesJSONSerializer {
   }
 
 
-  def toUJson(rm: RelationMention): ujson.Value = {
-    ujson.Obj(
-      "type" -> "RelationMention",
-      //      // used for paths map
-      //      ("id" -> em.id) ~
-      "text" -> rm.text,
-      "labels" -> rm.labels,
-      "arguments" -> argsToUJson(rm.arguments),
-      // paths are encoded as (arg name -> (mentionID -> path))
-//      "paths" -> pathsAsUJson(rm.paths),
-      "tokenInterval" -> Map("start" -> rm.tokenInterval.start, "end" -> rm.tokenInterval.end),
-      "characterStartOffset" -> rm.startOffset,
-      "characterEndOffset" -> rm.endOffset,
-      "sentence" -> rm.sentence,
-      "document" -> rm.document.equivalenceHash.toString,
-      "keep" -> rm.keep,
-      "foundBy" -> rm.foundBy,
-      "attachments" -> toUJson(rm.attachments)
-    )
-  }
 
   def pathsAsUJson(paths: Map[String, Map[Mention, odin.SynPath]]): ujson.Value = paths match {
     case gps if gps.nonEmpty => pathsToUJson(gps)
@@ -328,17 +278,12 @@ object AutomatesJSONSerializer {
 
 
   def toUJson(em: EventMention): ujson.Value = {
-//    println("doing an event mention")
     ujson.Obj(
     "type" -> "EventMention",
-//      // used for paths map
-//      ("id" -> em.id) ~
       "text" -> em.text,
       "labels" -> em.labels,
       "trigger" -> toUJson(em.trigger),
       "arguments" -> argsToUJson(em.arguments),
-      // paths are encoded as (arg name -> (mentionID -> path))
-//      ("paths" -> pathsAST(em.paths)) ~
       "tokenInterval" -> Map("start" -> em.tokenInterval.start, "end" -> em.tokenInterval.end),
       "characterStartOffset" -> em.startOffset,
       "characterEndOffset" -> em.endOffset,
@@ -424,14 +369,10 @@ object AutomatesJSONSerializer {
     def toUJson: ujson.Value = {
       ujson.Obj(
         "type" -> "RelationMention",
-        //      // used for paths map
-        //      ("id" -> em.id) ~
         "id" -> RelationMentionOps(rm).id,
         "text" -> rm.text,
         "labels" -> rm.labels,
         "arguments" -> argsToUJson(rm.arguments),
-        // paths are encoded as (arg name -> (mentionID -> path))
-        //      "paths" -> pathsAsUJson(rm.paths),
         "paths" -> AutomatesJSONSerializer.pathsAsUJson(rm.paths),
         "tokenInterval" -> Map("start" -> rm.tokenInterval.start, "end" -> rm.tokenInterval.end),
         "characterStartOffset" -> rm.startOffset,
@@ -454,10 +395,8 @@ object AutomatesJSONSerializer {
         "id" -> EventMentionOps(em).id,
         "text" -> em.text,
         "labels" -> em.labels,
-        "trigger" -> AutomatesJSONSerializer.toUJson(em.trigger),
+        "trigger" -> AutomatesTextBoundMentionOps(em.trigger).toUJson,
         "arguments" -> argsToUJson(em.arguments),
-        // paths are encoded as (arg name -> (mentionID -> path))
-        //      ("paths" -> pathsAST(em.paths)) ~
         "paths" -> AutomatesJSONSerializer.pathsAsUJson(em.paths),
         "tokenInterval" -> Map("start" -> em.tokenInterval.start, "end" -> em.tokenInterval.end),
         "characterStartOffset" -> em.startOffset,

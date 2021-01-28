@@ -23,7 +23,7 @@ object AlignmentJsonUtils {
     * other related methods are in GrFNParser*/
 
   /**get arguments for the aligner depending on what data are provided**/
-  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean): alignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, textInputFormat: String): alignmentArguments = {
 
     val jsonKeys = json.obj.keys.toList
 
@@ -32,18 +32,24 @@ object AlignmentJsonUtils {
     val allMentions =  if (jsonKeys.contains("mentions")) {
       val mentionsPath = json("mentions").str
       val mentionsFile = new File(mentionsPath)
-      val ujsonMentions = ujson.read(mentionsFile.readString())
-      // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
+
+//       val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
       //transform the mentions into json4s format, used by mention serializer
-//      val jvalueMentions = upickle.default.transform(
-//        ujsonMentions
-//      ).to(Json4sJson)
-//      val textMentions = JSONSerializer.toMentions(jvalueMentions)
+
+      val textMentions =  if (textInputFormat == "cosmos") {
+        val ujsonOfMenFile = ujson.read(mentionsFile)
+        AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
+      } else {
+        val ujsonMentions = ujson.read(mentionsFile.readString())
+        val jvalueMentions = upickle.default.transform(
+          ujsonMentions
+        ).to(Json4sJson)
+        JSONSerializer.toMentions(jvalueMentions)
+      }
+
 
         //fixme: use serializer depending on loader - for cosmos, use automatesJSONSerializer, for other inputs - json serializer. OR, switch everything to automates serializer, but that needs testing with other endpoints
-        val ujsonOfMenFile = ujson.read(mentionsFile)
 
-      val textMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
       Some(textMentions)
 
     } else None
