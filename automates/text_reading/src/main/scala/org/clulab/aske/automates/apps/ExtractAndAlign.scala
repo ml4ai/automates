@@ -452,8 +452,6 @@ object ExtractAndAlign {
     if (textDefinitionMentions.isDefined && SVOgroundings.isDefined) {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), SVOgroundings.get.map(_._1.toLowerCase))
 
-//      println("variables with svos " + SVOgroundings.get.map(_._1))
-//      println("svo search results " + SVOgroundings.get.map(_._2))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(TEXT_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
     }
@@ -549,11 +547,11 @@ object ExtractAndAlign {
         val charEnd = mention.endOffset
         val continuousMenSpanJson = if (textInputFormat == "cosmos") {
           val attAsJson = mention.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-                    val page = attAsJson("pageNum").num.toInt
-                    val block = attAsJson("blockIdx").num.toInt
+          val page = attAsJson("pageNum").num.toInt
+          val block = attAsJson("blockIdx").num.toInt
 
-                    // todo: this is for mentions that came from one block
-                    // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
+          // todo: this is for mentions that came from one block
+          // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
           ujson.Obj(
             "page" -> page,
             "block" -> block,
@@ -863,7 +861,6 @@ object ExtractAndAlign {
       appendToGrFN,
       textInputFormat,
       debug = false
-
       )
 
 
