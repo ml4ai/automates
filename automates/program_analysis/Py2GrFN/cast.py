@@ -304,7 +304,7 @@ class CAST2GrFN(ast.NodeVisitor):
         # In a ternary if exp, you can have a single expression in the body or
         # orelse portion, so add an assignment so it is produced out of the
         # ternary
-        ifexp_output_name = "IF_EXP_" + str(
+        ifexp_output_name = "TERN_RES_" + str(
             self.containers[self.cur_containers[-1]]["cur_if_exp"]
         )
         self.containers[self.cur_containers[-1]]["cur_if_exp"] += 1

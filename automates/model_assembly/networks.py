@@ -481,6 +481,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name])
             input_pass_func = None
             out_nodes = []
+            inputted_live_vars = None
             if parent:
                 if len(inputs) > 0:
                     (pass_func_str, output_node_ids) = con.get_input_pass_node_info(
@@ -496,16 +497,16 @@ class GroundedFunctionNetwork(nx.DiGraph):
                         output_style={"weight": 2},
                     )
                     con_subgraph.nodes.append(input_pass_func)
-                    live_variables.update(
-                        {id: node for id, node in zip(output_node_ids, out_nodes)}
-                    )
+                    inputted_live_vars = {
+                        id: node for id, node in zip(output_node_ids, out_nodes)
+                    }
+                    live_variables.update(inputted_live_vars)
                 else:
                     pass_func_str = "lambda : None"
                     input_pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
             else:
-                live_variables.update(
-                    {id: add_variable_node(id) for id in con.arguments}
-                )
+                inputted_live_vars = {id: add_variable_node(id) for id in con.arguments}
+                live_variables.update(inputted_live_vars)
 
             con_subgraph.nodes.extend(out_nodes)
 
@@ -540,6 +541,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 pass_func_str = f"lambda {out_var_str}:({out_var_str})"
                 pass_func = add_lambda_node(LambdaType.PASS, pass_func_str)
                 con_subgraph.nodes.append(pass_func)
+
+                if inputted_live_vars:
+                    for var in inputted_live_vars:
+                        del live_variables[var]
 
                 return (output_vars, pass_func, con_subgraph)
 
@@ -611,15 +616,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
             for output_node in out_nodes:
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
-
-            # These additional invisible edges help ensure a top down ordering of call
-            # container nodes when generating a visualization of the graph
-            network.add_edges_from(
-                itertools.product(inputs, [pass_func]),
-                style="invis",
-                lhead="cluster_" + str(con_subgraph),
-                weight=2,
-            )
 
         @translate_stmt.register
         def _(

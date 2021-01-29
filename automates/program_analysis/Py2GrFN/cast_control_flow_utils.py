@@ -381,8 +381,6 @@ def visit_control_flow_container(node, cast_visitor, container_type):
     for n in node.orelse:
         if isinstance(n, ast.If):
             visit_control_flow_container(n, cast_visitor, ContainerType.IF)
-    # elif_nodes = [x for x in node.orelse if isinstance(x, ast.If)]
-    # cast_visitor.visit_node_list(elif_nodes)
 
     cast_visitor.cur_control_flow = cur_cf_type + 1
     cast_visitor.cur_condition = 0
