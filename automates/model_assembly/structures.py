@@ -262,7 +262,7 @@ class VarType(Enum):
             return cls.BOOLEAN
         elif name == "integer":
             return cls.INTEGER
-        elif name == "array":
+        elif name == "list":
             return cls.ARRAY
         elif name == "object":
             return cls.OBJECT
@@ -342,6 +342,7 @@ class LambdaType(Enum):
     INTERFACE = auto()
     EXTRACT = auto()
     PACK = auto()
+    OPERATOR = auto()
 
     def __str__(self):
         return str(self.name)
@@ -380,6 +381,8 @@ class LambdaType(Enum):
             return cls.PACK
         elif name == "EXTRACT":
             return cls.EXTRACT
+        elif name == "OPERATOR":
+            return cls.OPERATOR
         elif name == "PASS":
             raise ValueError(
                 f'Using container interface node name {name}. Please update to "INTERFACE" '
