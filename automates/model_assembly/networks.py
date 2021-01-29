@@ -874,7 +874,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
 
         identifier = GenericIdentifier.from_str(data["identifier"])
-        return cls(data["uid"], identifier, data["date_created"], G, H, S)
+        return cls(data["uid"], identifier, data["timestamp"], G, H, S)
 
 
 class CausalAnalysisGraph(nx.DiGraph):
