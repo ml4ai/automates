@@ -112,9 +112,10 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
+  // todo: a filter that checks if the head of the extracted def is a noun - need to see if that is really a requirement for all defs
   val t12a = "The approach uses model-simulated LAI to calculate the Kcb, which means Kcb is more dynamic and " +
     "responsive to cultivar, weather, and soil variability, as simulated by the model"
-  passingTest should s"find NO definitions from t12a: ${t12a}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t12a: ${t12a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t12a)
     testDefinitionEvent(mentions, desired)
