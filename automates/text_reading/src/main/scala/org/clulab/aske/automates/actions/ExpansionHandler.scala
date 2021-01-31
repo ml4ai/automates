@@ -394,7 +394,7 @@ object ExpansionHandler {
   // avoid expanding along these dependencies
   val INVALID_OUTGOING = Set[scala.util.matching.Regex](
     //    "^nmod_including$".r,
-    "acl:relcl".r,
+//    "acl:relcl".r,
     "advcl_to".r,
     "^advcl_because".r,
     "advmod".r,
