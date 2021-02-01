@@ -5,12 +5,17 @@ from .cast_visitor import CASTVisitor
 from automates.utils.method_dispatch import methdispatch
 from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2AState,
-    C2AExpression,
+    C2ALambda,
+    C2ALambdaType,
+    C2AExpressionLambda,
     C2AVariable,
-    C2AFunction,
+    C2AFunctionDefContainer,
     C2ATypeDef,
+    C2AIdentifierInformation,
+    C2AIdentifierType,
     CASTToAIRException,
 )
+
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
@@ -51,147 +56,303 @@ class CASTToAIRVisitor(CASTVisitor):
         self.state = C2AState()
 
     def to_air(self):
+        """
+        TODO
+        """
         # TODO create a function visitor to grab function definitions
         self.visit_list(self.cast)
         return self.state.to_AIR()
 
     @methdispatch
     def visit(self, node: AstNode):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Assignment):
-
+        """
+        TODO
+        """
         left_res = self.visit(node.left)
         right_res = self.visit(node.right)
 
+        input_variables = right_res.input_variables
+        output_variables = list()
+        updated_variables = list()
         if isinstance(node.left, Var):
             # If we are assigning to strictly a var, create
             # the new version of the var
-            assigned_var_name = left_res.variables[0].name
+            assigned_var_name = left_res.input_variables[0].get_name()
             new_ver = self.state.find_next_var_version(assigned_var_name)
-            version = self.state.find_next_var_version()
             new_var = C2AVariable(
-                version,
+                C2AIdentifierInformation(
+                    assigned_var_name,
+                    self.state.scope_stack,
+                    self.state.current_module,
+                    C2AIdentifierType.VARIABLE,
+                ),
+                new_ver,
+                node.left.type,
             )
+            output_variables.append(new_var)
+            self.state.add_variable(new_var)
         else:
             raise CASTToAIRException(
                 f"Unable to handle left hand of assignment of type {type(node.left)}"
             )
 
-        return NotImplemented
+        # TODO ensure sorted order of lambda params
+        lambda_expr = f"lambda {','.join({v.get_name() for v in right_res.input_variables})}: {right_res.lambda_expr}"
+
+        return C2AExpressionLambda(
+            C2AIdentifierInformation(
+                C2ALambdaType.ASSIGN,
+                self.state.scope_stack,
+                self.state.current_module,
+                C2AIdentifierType.LAMBDA,
+            ),
+            input_variables,
+            output_variables,
+            updated_variables,
+            C2ALambdaType.ASSIGN,
+            lambda_expr,
+            node,
+        )
 
     @visit.register
     def _(self, node: Attribute):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: BinaryOp):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: BinaryOperator):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Call):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: ClassDef):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Dict):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Expr):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: FunctionDef):
+        """
+        TODO
+        """
         self.state.push_scope(node.name)
-        self.visit_list(node.args)
-        self.visit_list(node.body)
-        return
+
+        args_result = self.visit_list(node.args)
+        body_result = self.visit_list(node.body)
+
+        self.state.pop_scope()
+
+        func_con = C2AFunctionDefContainer(
+            C2AIdentifierInformation(
+                node.name,
+                self.state.scope_stack,
+                self.state.current_module,
+                C2AIdentifierType.CONTAINER,
+            ),
+            args_result,
+            [],
+            [],
+            body_result,
+            "",  # TODO
+        )
+        self.state.add_container(func_con)
 
     @visit.register
     def _(self, node: List):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Loop):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: ModelBreak):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: ModelContinue):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: ModelIf):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: ModelReturn):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Module):
+        """
+        TODO
+        """
         # TODO module cast node should be updated with name
         body_res = self.visit_list(node.body)
 
     @visit.register
     def _(self, node: Name):
+        """
+        TODO
+        """
         return node.val
 
     @visit.register
     def _(self, node: Number):
-        return NotImplemented
+        """
+        TODO
+        """
+        return C2AExpressionLambda(
+            C2AIdentifierInformation(
+                C2ALambdaType.UNKNOWN,
+                self.state.scope_stack,
+                self.state.current_module,
+                C2AIdentifierType.LAMBDA,
+            ),
+            [],
+            [],
+            [],
+            C2ALambdaType.UNKNOWN,
+            node.val,
+            node,
+        )
 
     @visit.register
     def _(self, node: Set):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: String):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Subscript):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Tuple):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: UnaryOp):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: UnaryOperator):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: VarType):
+        """
+        TODO
+        """
         return NotImplemented
 
     @visit.register
     def _(self, node: Var):
-        name = node.val.val
+        """
+        TODO
+        """
+        name = node.val
         var_obj = self.state.find_highest_version_var(name)
         if var_obj is None:
             var_obj = C2AVariable(
+                C2AIdentifierInformation(
+                    name,
+                    self.state.scope_stack,
+                    self.state.current_module,
+                    C2AIdentifierType.VARIABLE,
+                ),
                 -1,
-                name,
-                self.state.scope_stack,
-                self.state.current_module,
                 node.type,
             )
 
-        return C2AExpression([var_obj], name)
+        return C2AExpressionLambda(
+            C2AIdentifierInformation(
+                C2ALambdaType.UNKNOWN,
+                self.state.scope_stack,
+                self.state.current_module,
+                C2AIdentifierType.LAMBDA,
+            ),
+            [var_obj],
+            [],
+            [],
+            C2ALambdaType.UNKNOWN,
+            name,
+            node,
+        )

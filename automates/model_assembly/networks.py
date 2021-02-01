@@ -381,10 +381,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
         )
 
     def __str__(self):
-        L_sz = str(len(self.lambda_nodes))
-        V_sz = str(len(self.variable_nodes))
-        I_sz = str(len(self.input_variables))
-        O_sz = str(len(self.output_variables))
+        L_sz = str(len(self.lambdas))
+        V_sz = str(len(self.variables))
+        I_sz = str(len(self.inputs))
+        O_sz = str(len(self.outputs))
         size_str = f"< |L|: {L_sz}, |V|: {V_sz}, |I|: {I_sz}, |O|: {O_sz} >"
         return f"{self.label}\n{size_str}"
 
@@ -1000,7 +1000,6 @@ class CausalAnalysisGraph(nx.DiGraph):
             for new_subgraph in self.subgraphs.successors(subgraph):
                 populate_subgraph(new_subgraph, container_subgraph)
 
-        print(self.subgraphs)
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
         return A
