@@ -15,6 +15,7 @@ from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2AIdentifierType,
     CASTToAIRException,
 )
+
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
