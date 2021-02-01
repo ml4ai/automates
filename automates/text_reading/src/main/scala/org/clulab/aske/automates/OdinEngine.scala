@@ -91,7 +91,7 @@ class OdinEngine(
     //there could be multiple definitions for one variable, so don't eliminate any of definition mentions, even if there's overlap
 //    (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConjunctions(definitionMentions)).toVector
     (loadableAttributes.actions.keepLongest(other) ++ definitionMentions).toVector
-
+//    events
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {

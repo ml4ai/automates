@@ -22,20 +22,30 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   val proc = new FastNLPProcessor()
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
+    for (m <- mentions) println("BEG OF GL ACTION: " + m.text + " " + m.labels + " " + m.foundBy)
     if (expansionHandler.nonEmpty) {
       // expand arguments
       //val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
       //val expanded = expansionHandler.get.expandArguments(expandable, state)
       //keepLongest(expanded) ++ textBounds
 
+      for (e <- mentions) println("all-->" + e.text + " " + e.foundBy)
       val (expandable, other) = mentions.partition(m => m matches "Definition")
+      for (e <- other) println("o-->" + e.text + " " + e.foundBy)
+      for (e <- expandable) println("e-->" + e.text + " " + e.foundBy)
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
-      keepLongest(expanded) ++ other
-//        expanded ++ other
+      keepOneWithSameSpanAfterExpansion(expanded) ++ other
+//       keepLongest(expanded) ++ other
 
+//      other
+//    mentions
+//      expandable
+//      expanded
       //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
       //val result = mostComplete ++ textBounds
     } else {
+
+      for (e <- mentions) println("??-->" + e.text + " " + e.foundBy)
       mentions
     }
   }
@@ -50,15 +60,31 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
       (k, v) <- mentions.groupBy(m => (m.sentence, m.label))
+//      (k1, v1) <- v.groupBy(m => m.arguments("variable"))
       m <- v
       // for overlapping mentions starting at the same token, keep only the longest
-      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => ((m.end - m.start) + 0.1 * m.arguments.size))
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
       //      longest = v.filter(_.tokenInterval.start == m.tokenInterval.start).maxBy(m => ((m.end - m.start) + 0.1 * m.arguments.size))
 
     } yield longest
     mns.toVector.distinct
   }
 
+  /** Keeps the longest mention for each group of overlapping mentions **/
+  def keepOneWithSameSpanAfterExpansion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    for ((k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)) {
+      println("New group: ")
+      for (vi <- v) println("men!!: " + vi.text + " " + vi.labels + " " + vi.foundBy + " " + vi.tokenInterval.mkString("-") + " " + vi.arguments.map(_._1).mkString("+"))
+    }
+    val mns: Iterable[Mention] = for {
+      // find mentions of the same label and sentence overlap
+      (k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)
+
+    } yield v.head
+    val mens = mns.toList
+    println("num of groups: " + mentions.groupBy(_.tokenInterval).keys.toList.length + " mens returned: " + mns.toList.distinct.length + " " + mentions.length)
+    mens.toVector.distinct
+  }
 
   def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
