@@ -779,10 +779,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 and set(self.outputs) == set(other.outputs))
 
     def __str__(self):
-        L_sz = str(len(self.lambda_nodes))
-        V_sz = str(len(self.variable_nodes))
-        I_sz = str(len(self.input_variables))
-        O_sz = str(len(self.output_variables))
+        L_sz = str(len(self.lambdas))
+        V_sz = str(len(self.variables))
+        I_sz = str(len(self.inputs))
+        O_sz = str(len(self.outputs))
         size_str = f"< |L|: {L_sz}, |V|: {V_sz}, |I|: {I_sz}, |O|: {O_sz} >"
         return f"{self.label}\n{size_str}"
 
