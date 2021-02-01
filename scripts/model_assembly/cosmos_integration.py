@@ -23,34 +23,31 @@ def main():
 
             parquet_data_keys = list(parquet_data.keys())
             num_data_rows = max(
-                [int(k) for k in parquet_data[parquet_data_keys[0]]]
-            )
+                [int(k) for k in parquet_data[parquet_data_keys[0]]])
 
             row_order_parquet_data = [dict() for i in range(num_data_rows + 1)]
             for field_key, row_data in parquet_data.items():
                 for row_idx, datum in row_data.items():
                     row_idx_num = int(row_idx)
+                    row_order_parquet_data[row_idx_num][field_key] = datum
 
             if filename == "documents.parquet":
                 # Sorts the content sections by page number and then by
                 # bounding box location. Use x-pos first to account for
                 # multi-column documents and then sort by y-pos.
-                row_order_parquet_data.sort(
-                    key=lambda d: (
-                        d["page_num"],
-                        d["bounding_box"][0]
-                        // 500,  # allows for indentation while still catching items across the center line
-                        # (d["bounding_box"][0]) // 100
-                        # + round((d["bounding_box"][0] % 100 // 10) / 10),
-                        d["bounding_box"][1],
-                    )
-                )
+                row_order_parquet_data.sort(key=lambda d: (
+                    d["page_num"],
+                    d["bounding_box"][0] //
+                    500,  # allows for indentation while still catching items across the center line
+                    # (d["bounding_box"][0]) // 100
+                    # + round((d["bounding_box"][0] % 100 // 10) / 10),
+                    d["bounding_box"][1],
+                ))
 
                 edits = list()
                 for e1, extraction1 in enumerate(row_order_parquet_data):
-                    (ext1_x1, ext1_y1, ext1_x2, ext1_y2) = extraction1[
-                        "bounding_box"
-                    ]
+                    (ext1_x1, ext1_y1, ext1_x2,
+                     ext1_y2) = extraction1["bounding_box"]
                     # Don't bother processing for left-justified or centered
                     # content ... only right column content needs to be checked
                     if ext1_x1 < 500:
@@ -68,9 +65,8 @@ def main():
                         if ext1_page_num > ext2_page_num:
                             break
 
-                        (ext2_x1, ext2_y1, ext2_x2, ext2_y2) = extraction2[
-                            "bounding_box"
-                        ]
+                        (ext2_x1, ext2_y1, ext2_x2,
+                         ext2_y2) = extraction2["bounding_box"]
 
                         if ext1_y2 <= ext2_y1:
                             ext2_xspan = ext2_x2 - ext2_x1
@@ -80,22 +76,18 @@ def main():
                                 insertion_index = t1 - 1
                         t1 -= 1
                     if found_col_break:
-                        edits.append(
-                            {
-                                "del_idx": e1,
-                                "ins_idx": insertion_index,
-                                "val": extraction1,
-                            }
-                        )
+                        edits.append({
+                            "del_idx": e1,
+                            "ins_idx": insertion_index,
+                            "val": extraction1,
+                        })
                 for edit_dict in edits:
                     del row_order_parquet_data[edit_dict["del_idx"]]
-                    row_order_parquet_data.insert(
-                        edit_dict["ins_idx"], edit_dict["val"]
-                    )
-            
+                    row_order_parquet_data.insert(edit_dict["ins_idx"],
+                                                  edit_dict["val"])
+
             parquet_json_filepath = parquet_filepath.replace(
-                ".parquet", ".json"
-            )
+                ".parquet", ".json")
             json.dump(row_order_parquet_data, open(parquet_json_filepath, "w"))
 
 
