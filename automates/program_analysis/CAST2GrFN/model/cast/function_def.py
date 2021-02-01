@@ -32,11 +32,11 @@ class FunctionDef(AstNode):
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    swagger_types = {"name": "Name", "args": "list[Var]", "body": "list[AstNode]"}
+    swagger_types = {"name": "Name", "func_args": "list[Var]", "body": "list[AstNode]"}
     if hasattr(AstNode, "swagger_types"):
         swagger_types.update(AstNode.swagger_types)
 
-    attribute_map = {"name": "name", "args": "args", "body": "body"}
+    attribute_map = {"name": "name", "func_args": "func_args", "body": "body"}
     if hasattr(AstNode, "attribute_map"):
         attribute_map.update(AstNode.attribute_map)
 
@@ -45,13 +45,13 @@ class FunctionDef(AstNode):
     ):  # noqa: E501
         """FunctionDef - a model defined in Swagger"""  # noqa: E501
         self._name = None
-        self._args = None
+        self._func_args = None
         self._body = None
         self.discriminator = None
         if name is not None:
             self.name = name
         if func_args is not None:
-            self.args = func_args
+            self.func_args = func_args
         if body is not None:
             self.body = body
         AstNode.__init__(self, *args, **kwargs)
@@ -78,25 +78,25 @@ class FunctionDef(AstNode):
         self._name = name
 
     @property
-    def args(self):
-        """Gets the args of this FunctionDef.  # noqa: E501
+    def func_args(self):
+        """Gets the func_args of this FunctionDef.  # noqa: E501
 
 
-        :return: The args of this FunctionDef.  # noqa: E501
+        :return: The func_args of this FunctionDef.  # noqa: E501
         :rtype: list[Var]
         """
-        return self._args
+        return self._func_args
 
-    @args.setter
-    def args(self, args):
-        """Sets the args of this FunctionDef.
+    @func_args.setter
+    def func_args(self, func_args):
+        """Sets the func_args of this FunctionDef.
 
 
-        :param args: The args of this FunctionDef.  # noqa: E501
+        :param func_args: The func_args of this FunctionDef.  # noqa: E501
         :type: list[Var]
         """
 
-        self._args = args
+        self._func_args = func_args
 
     @property
     def body(self):

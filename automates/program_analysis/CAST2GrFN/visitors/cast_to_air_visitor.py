@@ -1,8 +1,8 @@
 import typing
 
-from .cast_visitor import CASTVisitor
-
 from automates.utils.method_dispatch import methdispatch
+
+from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2AState,
     C2ALambda,
@@ -15,7 +15,6 @@ from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2AIdentifierType,
     CASTToAIRException,
 )
-
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
@@ -48,11 +47,11 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 
 
 class CASTToAIRVisitor(CASTVisitor):
-    cast: typing.List[AstNode]
+    cast_nodes: typing.List[AstNode]
     state: C2AState
 
-    def __init__(self, cast):
-        self.cast = cast
+    def __init__(self, cast_nodes: typing.List[AstNode]):
+        self.cast_nodes = cast_nodes
         self.state = C2AState()
 
     def to_air(self):
@@ -60,7 +59,7 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
         # TODO create a function visitor to grab function definitions
-        self.visit_list(self.cast)
+        self.visit_list(self.cast_nodes)
         return self.state.to_AIR()
 
     @methdispatch

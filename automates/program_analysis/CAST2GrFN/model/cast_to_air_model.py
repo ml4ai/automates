@@ -22,7 +22,7 @@ class C2AIdentifierType(str, Enum):
     LAMBDA = "lambda"
 
 
-class C2AIdentifierInformation:
+class C2AIdentifierInformation(object):
 
     name: str
     scope: List[str]
@@ -45,7 +45,7 @@ class C2AIdentifierInformation:
         return f'@{self.identifier_type}::{self.module}::{".".join(self.scope)}::{self.name}'
 
 
-class C2AVariable:
+class C2AVariable(object):
 
     identifier_information: C2AIdentifierInformation
     version: int
@@ -94,7 +94,7 @@ class C2ALambdaType(str, Enum):
     DECISION = "decision"
 
 
-class C2ALambda:
+class C2ALambda(object):
     """
     Represents an executable container/ function to transition between states in AIR
 
@@ -219,7 +219,7 @@ class C2AContainerCallLambda(C2ALambda):
         return self
 
 
-class C2AContainerDef:
+class C2AContainerDef(object):
     """
     Represents a top level AIR container def. Has its arguments, outputs/ updates, and a body
 
@@ -308,7 +308,7 @@ class C2ABlockContainer(C2AContainerDef):
         return self
 
 
-class C2ATypeDef:
+class C2ATypeDef(object):
     class C2AType(Enum):
         INTEGER = 1
         FLOAT = 2
@@ -338,7 +338,7 @@ class C2ATypeDef:
         return self
 
 
-class C2AState:
+class C2AState(object):
     containers: List[C2AContainerDef]
     variables: List[C2AVariable]
     types: List[C2ATypeDef]
