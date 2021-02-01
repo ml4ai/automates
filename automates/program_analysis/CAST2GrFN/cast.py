@@ -1,4 +1,5 @@
 import json
+import typing
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -42,19 +43,55 @@ from automates.model_assembly.structures import (
     VariableDefinition,
 )
 
+CAST_NODES_TYPES_LIST = [
+    AstNode,
+    Assignment,
+    Attribute,
+    BinaryOp,
+    BinaryOperator,
+    Call,
+    ClassDef,
+    Dict,
+    Expr,
+    FunctionDef,
+    List,
+    Loop,
+    ModelBreak,
+    ModelContinue,
+    ModelIf,
+    ModelReturn,
+    Module,
+    Name,
+    Number,
+    Set,
+    String,
+    Subscript,
+    Tuple,
+    UnaryOp,
+    UnaryOperator,
+    VarType,
+    Var,
+]
 
-class CAST:
 
-    nodes = list()
+class CASTJsonException(Exception):
+    """
+    Class used to represent exceptions encountered when encoding/decoding CAST json
+    """
 
-    def __init__(self, nodes):
+    pass
+
+
+class CAST(object):
+    """
+    Represents the Common Abstract Syntax Tree (CAST) that will be used to generically represent
+    any languages AST.
+    """
+
+    nodes: typing.List[AstNode]
+
+    def __init__(self, nodes: typing.List[AstNode]):
         self.nodes = nodes
-
-    def to_json(self):
-        """
-        Returns a json structure object of the CAST
-        """
-        pass
 
     def to_GrFN(self):
         c2a_visitor = CASTToAIRVisitor(self.nodes)
@@ -88,13 +125,36 @@ class CAST:
         )
         return grfn
 
-    @classmethod
-    def from_python_ast(cls):
-        pass
+    def to_json(self):
+        """
+        Returns a json object string of the CAST
+        """
+        return json.dumps([n.to_dict() for n in self.nodes])
 
     @classmethod
     def from_json(cls, data):
         """
         Parses json CAST data object and returns the created CAST object
         """
+
+        if isinstance(data, list):
+            # If we see a list parse each one of its elements
+            return [cls.from_json(item) for item in data]
+        elif isinstance(data, str) or isinstance(data, int) or isinstance(data, float):
+            # If we see a primitave type, simply return its value
+            return data
+
+        # For each CAST node type, if the json objects fields are the same as the
+        # CAST nodes fields, then create that object with the values from its children nodes
+        for node_type in CAST_NODES_TYPES_LIST:
+            if node_type.attribute_map.keys() == data.keys():
+                node_results = {k: cls.from_json(v) for k, v in data.items()}
+                return node_type(**node_results)
+
+        raise CASTJsonException(
+            f"Unable to decode json CAST field with field names: {set(data.keys())}"
+        )
+
+    @classmethod
+    def from_python_ast(cls):
         pass
