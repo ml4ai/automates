@@ -401,6 +401,110 @@ class TestDefinitions extends ExtractionTest {
 //    testDefinitionEvent(mentions, desired)
 //  }
 
+// Tests from paper: 2020-08-04-CHIME-documentation
+
+  val t1f = "The CHIME (COVID-19 Hospital Impact Model for Epidemics) App"
+  failingTest should s"find definitions from t1f: ${t1f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "CHIME" -> Seq("COVID-19 Hospital Impact Model for Epidemics")
+    )
+    val mentions = extractMentions(t1f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t2f = "The model consists of individuals who are either Susceptible (S), Infected (I), or Recovered (R)."
+  failingTest should s"find definitions from t2f: ${t2f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "S" -> Seq("either Susceptible"), //fixme: it should be just Susceptible (either should be deleted)
+      "I" -> Seq("Infected"),
+      "R" -> Seq("Recovered") //fixme: Recovered is not captured as a concept
+    )
+    val mentions = extractMentions(t2f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t3f = "β can be interpreted as the effective contact rate: β=τ×c which is the transmissibility τ multiplied by the average number of people exposed c."
+  passingTest should s"find definitions from t3f: ${t3f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "β" -> Seq("effective contact rate"),
+      "τ" -> Seq("transmissibility"),
+      "c." -> Seq("average number of people exposed") //fixme: period(.) should be deleted after c & needs to check if it is average number or just number
+    )
+    val mentions = extractMentions(t3f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t4f = "γ is the inverse of the mean recovery time"
+  passingTest should s"find definitions from t4f: ${t4f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "γ" -> Seq("inverse of the mean recovery time")
+    )
+    val mentions = extractMentions(t4f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t5f = "An important descriptive parameter is the basic reproduction number, or R0."
+  passingTest should s"find definitions from t5f: ${t5f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "R0" -> Seq("basic reproduction number")
+    )
+    val mentions = extractMentions(t5f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t6f = "If this happens at time t, then the effective reproduction rate is Rt, which will be lower than R0."
+  passingTest should s"find definitions from t6f: ${t6f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "t" -> Seq("time"),
+      "Rt" -> Seq("effective reproduction rate")
+    )
+    val mentions = extractMentions(t6f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t7f = "The AHA says to expect a doubling time Td of 7-10 days."
+  passingTest should s"find definitions from t7f: ${t7f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Td" -> Seq("doubling time")
+    )
+    val mentions = extractMentions(t7f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t8f = "Since the rate of new infections in the SIR model is g = βS − γ and we've already computed γ,"
+  failingTest should s"find definitions from t8f: ${t8f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "g" -> Seq("rate of new infections")
+    )
+    val mentions = extractMentions(t8f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t9f = "This is the initial S (Susceptible) input in the SIR model."
+  passingTest should s"find definitions from t9f: ${t9f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "S" -> Seq("Susceptible")
+    )
+    val mentions = extractMentions(t9f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t10f = "This will affect projections for the number infected and the numbers requiring hospitalization, intensive care (ICU), and ventilation."
+  passingTest should s"find definitions from t10f: ${t10f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "ICU" -> Seq("intensive care")
+    )
+    val mentions = extractMentions(t10f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t11f = "The number of patients currently hospitalized with COVID-19 at your hospital(s)."
+  passingTest should s"find NO definitions from t11f: ${t11f}" taggedAs(Somebody) in {
+    val desired =  Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t11f)
+    testDefinitionEvent(mentions, desired)
+  }
+
 }
 
 
