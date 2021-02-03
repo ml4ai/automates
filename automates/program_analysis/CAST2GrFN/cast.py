@@ -31,7 +31,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 from automates.program_analysis.CAST2GrFN.visitors import (
-    CASTToJsonVisitor,
     CASTToAIRVisitor,
 )
 from automates.model_assembly.networks import GroundedFunctionNetwork
