@@ -120,7 +120,7 @@ class VariableNode(GenericNode):
             data["reference"] if "reference" in data else None,
             identifier,
             None,
-            VarType.from_name(data["data_type"]),
+            VarType.from_name(data["data_type"]) if "data_type" in data else None,
             DataType.from_type_str(data["kind"]) if "kind" in data else None,
             data["domain"] if "domain" in data else None,
         )
