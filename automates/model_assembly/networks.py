@@ -418,6 +418,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
             var_node.identifier.var_name: var_node
             for var_node in self.inputs
         }
+
+        self.output_name_map = {
+            var_node.identifier.var_name: var_node
+            for var_node in self.outputs
+        }
         self.FCG = self.to_FCG()
         self.function_sets = self.build_function_sets()
 
