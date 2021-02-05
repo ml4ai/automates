@@ -527,8 +527,6 @@ class TestDefinitions extends ExtractionTest {
 //   testDefinitionEvent(mentions, desired)
 // }
 
-
-
 }
 
 
