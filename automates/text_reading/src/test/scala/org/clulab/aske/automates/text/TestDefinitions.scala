@@ -505,6 +505,30 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
+// Tests from paper: 2003-A_double_epidemic_model_for_the_SARS_propagation
+
+  val t1g = "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection)" +
+    "which can be considered as a variant of the standard SIR."
+  failingTest should s"find definitions from t1g: ${t1g}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "SEIRP" -> Seq("variant of the standard SIR") // todo: check if this is the one that should be extracted here
+    )
+    val mentions = extractMentions(t1g)
+    testDefinitionEvent(mentions, desired)
+  }
+
+//  val t2g = "After the latent period ends, the individual enters the class I of infectives, " +
+//     "which includes those who have the disease A and can transmit it."
+//  passingTest should s"find definitions from t2g: ${t2g}" taggedAs(Somebody) in {
+//    val desired =  Seq(
+//      
+//    )
+//   val mentions = extractMentions(t2g)
+//   testDefinitionEvent(mentions, desired)
+// }
+
+
+
 }
 
 
