@@ -104,9 +104,12 @@ rules:
     label: Variable
     priority: ${priority}
     type: token
-    example: "R(t)"
+    example: "The density of water (ρw)"
     pattern: |
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
+      |
+      [entity="B-GreekLetter"] [word=/\w/]
+
 
 #  - name: conj_el
 #    label: Conj

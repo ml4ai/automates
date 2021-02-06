@@ -172,16 +172,16 @@ rules:
 #      definition: Conj = <cop nmod_of? nmod_in?
 #      definition:Conj = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
 
-#  - name: var_cop_definition
-#    label: Definition
-#    priority: ${priority}
-#    type: dependency
-#    example: "LAI is the actual leaf area index"
-#    action: ${action}
-#    pattern: |
-#      trigger = [lemma="be"]
-#      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-#      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
+  - name: var_cop_definition
+    label: Definition
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    action: ${action}
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
 
 
   - name: var_cop_definition1

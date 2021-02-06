@@ -103,9 +103,9 @@ object TestUtils {
     def testBinaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, desired: Seq[(String, Seq[String])]): Unit = {
       val found = mentions.filter(_ matches eventType)
       found.length should be(desired.size)
-      for (m <- found) {
-        println("-> " + m.text + " " + m.foundBy + " " + found.length)
-      }
+//      for (m <- found) {
+//        println("-> " + m.text + " " + m.foundBy + " " + found.length)
+//      }
 
 
       val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!

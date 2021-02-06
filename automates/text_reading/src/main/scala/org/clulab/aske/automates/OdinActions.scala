@@ -12,6 +12,7 @@ import org.clulab.aske.automates.entities.EntityHelper
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.{BufferedSource, Source}
 
@@ -22,17 +23,27 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   val proc = new FastNLPProcessor()
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
-    for (m <- mentions) println("BEG OF GL ACTION: " + m.text + " " + m.labels + " " + m.foundBy)
+//    for (m <- mentions) println("BEG OF GL ACTION: " + m.text + " " + m.labels + " " + m.foundBy)
     if (expansionHandler.nonEmpty) {
       // expand arguments
       //val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
       //val expanded = expansionHandler.get.expandArguments(expandable, state)
       //keepLongest(expanded) ++ textBounds
 
-      for (e <- mentions) println("all-->" + e.text + " " + e.foundBy)
-      val (expandable, other) = mentions.partition(m => m matches "Definition")
-      for (e <- other) println("o-->" + e.text + " " + e.foundBy)
-      for (e <- expandable) println("e-->" + e.text + " " + e.foundBy)
+//      def condition(m:Mention): Boolean = {
+//        m matches "Definition"
+//        m matches "EventMention"
+//      }
+//      for (e <- mentions) println("all-->" + e.text + " " + e.foundBy)
+      val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
+      println("variables: " + vars.map(_.text).mkString("\n"))
+      println("non-variables " + non_vars.map(_.text).mkString("\n"))
+      val expandedVars = keepLongestVariable(vars)
+      println("expanded vars: " + expandedVars.map(_.text).mkString("\n"))
+
+      val (expandable, other) = (expandedVars ++ non_vars).partition(m => m matches "Definition")
+//      for (e <- other) println("o-->" + e.text + " " + e.foundBy)
+//      for (e <- expandable) println("e-->" + e.text + " " + e.foundBy)
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepOneWithSameSpanAfterExpansion(expanded) ++ other
 //       keepLongest(expanded) ++ other
@@ -45,11 +56,88 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       //val result = mostComplete ++ textBounds
     } else {
 
-      for (e <- mentions) println("??-->" + e.text + " " + e.foundBy)
+//      for (e <- mentions) println("??-->" + e.text + " " + e.foundBy)
       mentions
     }
   }
 
+
+
+  def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
+    def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+      val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
+      for (m <- mentions) {
+        if (intervalMentionMap.isEmpty) {
+          println("++>" + intervalMentionMap)
+          intervalMentionMap += (m.tokenInterval -> Seq(m))
+        } else {
+          for (interval <- intervalMentionMap.map(_._1)) {
+            if (m.tokenInterval.intersect(interval).nonEmpty) {
+              println(m.text + " " + m.tokenInterval + " " + interval)
+              val currMen = intervalMentionMap(interval)
+              val updMen = currMen :+ m
+              intervalMentionMap += (interval -> updMen)
+            } else {
+              intervalMentionMap += (m.tokenInterval -> Seq(m))
+            }
+          }
+        }
+      }
+      intervalMentionMap.toMap
+    }
+
+    val maxInGroup = new ArrayBuffer[Mention]()
+    val groupedByIntercalOverlap = groupByTokenOverlap(mentions)
+    for (item <- groupedByIntercalOverlap) {
+      println(item._1)
+      for (m <- item._2) println("here: " + m.text)
+      val longest = item._2.maxBy(_.tokenInterval.length)
+      maxInGroup.append(longest)
+    }
+    maxInGroup.distinct
+
+
+  }
+
+
+  //this version handles rho w
+//  def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+//    println("orig vars")
+//    for (m <- mentions) println(m.text)
+//    val (vars, other) = mentions.partition(_ matches "Variable")
+//    for (v <- vars) println("->>> " + v.text)
+//    val groupedByStartOffset = vars.groupBy(_.startOffset)
+//    for (g <- groupedByStartOffset) {
+//      println("=>" + g._1)
+//      for (m <- g._2) {
+//        println("==>>" + m.text)
+//      }
+//    }
+//    val maxByStartOffset = new ArrayBuffer[Mention]()
+//    for (gr <- groupedByStartOffset) {
+//      println("---")
+//      for (g <- gr._2) {
+//        g.text + "-" + g.label
+//      }
+//      maxByStartOffset.append(gr._2.maxBy(_.tokenInterval.length))
+//    }
+//
+//    for (m <- maxByStartOffset) println("-< " + m.text)
+//    val groupByEndOffset = maxByStartOffset.groupBy(_.endOffset)
+//    val maxByEndOffset = new ArrayBuffer[Mention]()
+//    for (gr <- groupByEndOffset) {
+//      println("=====")
+//      for (g <- gr._2) {
+//        g.text + "-" + g.label
+//      }
+//      maxByEndOffset.append(gr._2.maxBy(_.tokenInterval.length))
+//    }
+//    println("max by offset")
+//    for (m <- maxByEndOffset) println(m.text)
+//    return maxByEndOffset
+//
+//  }
 //  def untangleConj(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 //    val defMentions, other = mentions.partition(_ matches "Definition")
 //    val groupedBySpan = defMentions.groupBy(_.tokenInterval)
@@ -73,8 +161,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepOneWithSameSpanAfterExpansion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     for ((k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)) {
-      println("New group: ")
-      for (vi <- v) println("men!!: " + vi.text + " " + vi.labels + " " + vi.foundBy + " " + vi.tokenInterval.mkString("-") + " " + vi.arguments.map(_._1).mkString("+"))
+//      println("New group: ")
+//      for (vi <- v) println("men!!: " + vi.text + " " + vi.labels + " " + vi.foundBy + " " + vi.tokenInterval.mkString("-") + " " + vi.arguments.map(_._1).mkString("+"))
     }
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
@@ -82,7 +170,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     } yield v.head
     val mens = mns.toList
-    println("num of groups: " + mentions.groupBy(_.tokenInterval).keys.toList.length + " mens returned: " + mns.toList.distinct.length + " " + mentions.length)
+//    println("num of groups: " + mentions.groupBy(_.tokenInterval).keys.toList.length + " mens returned: " + mns.toList.distinct.length + " " + mentions.length)
     mens.toVector.distinct
   }
 
@@ -95,22 +183,22 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 //    println(conjDef.length)
 
     val mostComplete = mentions.maxBy(_.arguments.toSeq.length)
-    println(mostComplete.text)
+//    println(mostComplete.text)
     val headDef = mostComplete.arguments("definition").head
-    println("head def: " + headDef.text)
+//    println("head def: " + headDef.text)
     val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
     val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
-    println(tokenWithOutgoingConj)
+//    println(tokenWithOutgoingConj)
 
     val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
-    println(incomingConjNodes.mkString("||"))
+//    println(incomingConjNodes.mkString("||"))
     val previousIndices = new ArrayBuffer[Int]()
 
     val newDefinitions = new ArrayBuffer[Mention]()
     for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
-      println("prev indices: " + previousIndices)
+//      println("prev indices: " + previousIndices)
       var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
-      println("defs" + int + " " + newDefTokenInt)
+//      println("defs" + int + " " + newDefTokenInt)
       if (previousIndices.nonEmpty) {
 
           for (pi <- previousIndices.reverse) {
@@ -119,12 +207,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
           }
         }
-        println("new def tok in: " + newDefTokenInt)
+//        println("new def tok in: " + newDefTokenInt)
       val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
       val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
       val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
       newDefinitions.append(newDef)
-      println(defText.mkString(" "))
+//      println(defText.mkString(" "))
       previousIndices.append(int)
       }
 
@@ -192,6 +280,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     def mkDefinitionMention(m: Mention): Seq[Mention] = {
       val outer = m.arguments("c1").head
       val inner = m.arguments("c2").head
+      if (outer.text.split(" ").last.length == 1 & inner.text.length == 1) return Seq.empty // this is a filter that helps avoid splitting of compound variables, e.g. the rate R(t) - t should not be extracted as a variable with a definition 'rate R'
       val sorted = Seq(outer, inner).sortBy(_.text.length)
       // The longest mention (i.e., the definition) should be at least 3 characters, else it's likely a false positive
       // todo: tune
@@ -310,7 +399,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def definitionActionFlowSpecialCase(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //select shorter as var is only applicable to one rule, so it can't be part of the regular def. action flow
-    val toReturn = definitionActionFlow(selectShorterAsVariable(mentions, state), state)
+    val varAndDef = selectShorterAsVariable(mentions, state)
+    val toReturn = if (varAndDef.nonEmpty) definitionActionFlow(varAndDef, state) else Seq.empty
     toReturn
   }
 

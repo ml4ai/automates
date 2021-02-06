@@ -6,7 +6,7 @@ class TestConjunctions extends ExtractionTest {
 
 
   // conj tests
-  val t1 = "individuals who are either Susceptible (S), Infected (I), or Recovered (R)"
+  val t1 = "The model consists of individuals who are either Susceptible (S), Infected (I), or Recovered (R)."
   failingTest should s"find definitions from t1: ${t1}" taggedAs (Somebody) in {
 
     val desired = Seq(
