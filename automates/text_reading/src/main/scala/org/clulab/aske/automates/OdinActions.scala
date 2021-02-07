@@ -36,10 +36,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 //      }
 //      for (e <- mentions) println("all-->" + e.text + " " + e.foundBy)
       val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
-      println("variables: " + vars.map(m => m.text + " " + m.label + " " + m.labels.mkString("||")).mkString("\n"))
-      println("non-variables " + non_vars.map(_.text).mkString("\n"))
+//      println("variables: " + vars.map(m => m.text + " " + m.label + " " + m.labels.mkString("||")).mkString("\n"))
+//      println("non-variables " + non_vars.map(_.text).mkString("\n"))
       val expandedVars = keepLongestVariable(vars)
-      println("expanded vars: " + expandedVars.map(_.text).mkString("\n"))
+//      println("expanded vars: " + expandedVars.map(_.text).mkString("\n"))
 
       val (expandable, other) = (expandedVars ++ non_vars).partition(m => m matches "Definition")
 //      for (e <- other) println("o-->" + e.text + " " + e.foundBy)
@@ -67,12 +67,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
     for (m <- mentions) {
       if (intervalMentionMap.isEmpty) {
-        println("++>" + intervalMentionMap)
+//        println("++>" + intervalMentionMap)
         intervalMentionMap += (m.tokenInterval -> Seq(m))
       } else {
         for (interval <- intervalMentionMap.map(_._1)) {
           if (m.tokenInterval.intersect(interval).nonEmpty) {
-            println(m.text + " " + m.tokenInterval + " " + interval)
+//            println(m.text + " " + m.tokenInterval + " " + interval)
             val currMen = intervalMentionMap(interval)
             val updMen = currMen :+ m
             intervalMentionMap += (interval -> updMen)
@@ -94,8 +94,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (gbs <- groupedBySent) {
       val groupedByIntercalOverlap = groupByTokenOverlap(gbs._2)
       for (item <- groupedByIntercalOverlap) {
-        println(item._1)
-        for (m <- item._2) println("here: " + m.text)
+//        println(item._1)
+//        for (m <- item._2) println("here: " + m.text)
         val longest = item._2.maxBy(_.tokenInterval.length)
         maxInGroup.append(longest)
       }
@@ -127,7 +127,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 ////      println("New group: ")
 ////      for (vi <- v) println("men!!: " + vi.text + " " + vi.labels + " " + vi.foundBy + " " + vi.tokenInterval.mkString("-") + " " + vi.arguments.map(_._1).mkString("+"))
 //    }
-    for (m <- mentions) println(">>>" + m.text + " " + m.label)
+//    for (m <- mentions) println(">>>" + m.text + " " + m.label)
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
       (k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)
@@ -178,37 +178,40 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 //      val untang = untangleOneConjunction(m)
 //      for (men <- untang) untangled.append(men)
 //    }
-    for (m <- untangleConjunctions(conjDefs)) toReturn.append(m)
+    for (m <- untangleConjunctions(conjDefs)) {
+      println("m returned " + m.text)
+      toReturn.append(m)
+    }
     for (m <- withoutConj) toReturn.append(m)
     for (m <- standardDefs) toReturn.append(m)
 
     for (m <- mentions) {
-      println("m: " + m.text )
-      println("ti: " + m.tokenInterval)
-      println("full deps: " + m.sentenceObj.dependencies.get.allEdges)
+//      println("m: " + m.text )
+//      println("ti: " + m.tokenInterval)
+//      println("full deps: " + m.sentenceObj.dependencies.get.allEdges)
 
       val onlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
-      println("only ours: " + onlyThisMen)
+//      println("only ours: " + onlyThisMen)
 
 
 
 //      println("mp filtered: " + m.sentenceObj.dependencies.get.incomingEdges.flatten.toList.filter(id => m.tokenInterval.contains(id._1)))
 
-      for (path <- m.paths) {
-        println("p: " + path)
-        for (x <- path._2) {
-          for (i <- x._2) {
-            println("----> " + x._1.text + " " + i._3)
-          }
-        }
-      }
+//      for (path <- m.paths) {
+////        println("p: " + path)
+//        for (x <- path._2) {
+//          for (i <- x._2) {
+//            println("----> " + x._1.text + " " + i._3)
+//          }
+//        }
+//      }
     }
     // Only Def mentions will be passed
 //    val (haveConj, no_conj) = mentions.partition(m => m.paths.map)
 //    for (hc <- haveConj) println("hc: " + hc.text)
 //    for (nc <- no_conj) println("nc: " + nc.text)
 
-    mentions
+    toReturn
   }
 
   def untangleOneConjunction(mention: Mention): Seq[Mention] = {
@@ -259,6 +262,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for ((v, i) <- variables.zipWithIndex) {
       val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
       val newDefMen = copyWithArgs(mention, newArgs)
+      println("new def men: " + newDefMen.text)
       toReturn.append(newDefMen)
     }
 
@@ -284,9 +288,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val toReturn = new ArrayBuffer[Mention]()
 
     val groupedBySent = mentions.groupBy(_.sentence)
-    for (gr <- groupedBySent) {
-      val groupedByIntervalOverlap = groupByTokenOverlap(gr._2)
-
+    for (gr1 <- groupedBySent) {
+      val groupedByIntervalOverlap = groupByTokenOverlap(gr1._2)
+      println("GR LEN: " + groupedByIntervalOverlap.keys)
       for (gr <- groupedByIntervalOverlap) {
         println("-->> " + gr._1 + " " + gr._2.length)
         for (m <- gr._2) println(m.text)
@@ -316,7 +320,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
             }
           }
-          //        println("new def tok in: " + newDefTokenInt)
+          println("new def tok in: " + newDefTokenInt)
           val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
           val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
           val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
@@ -331,12 +335,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           println("here: " + v.text + " " + i)
           val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
           val newDefMen = copyWithArgs(mostComplete, newArgs)
+          println("new def men line 335 "+newDefMen.text)
           toReturn.append(newDefMen)
         }
 
       }
 
     }
+
+    for (m <- toReturn) println("to ret 343 " + m.text)
 
     toReturn //++ other
   }
