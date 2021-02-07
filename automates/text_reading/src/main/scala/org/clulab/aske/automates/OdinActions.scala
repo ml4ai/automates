@@ -36,7 +36,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 //      }
 //      for (e <- mentions) println("all-->" + e.text + " " + e.foundBy)
       val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
-      println("variables: " + vars.map(_.text).mkString("\n"))
+      println("variables: " + vars.map(m => m.text + " " + m.label + " " + m.labels.mkString("||")).mkString("\n"))
       println("non-variables " + non_vars.map(_.text).mkString("\n"))
       val expandedVars = keepLongestVariable(vars)
       println("expanded vars: " + expandedVars.map(_.text).mkString("\n"))
@@ -47,6 +47,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepOneWithSameSpanAfterExpansion(expanded) ++ other
 //       keepLongest(expanded) ++ other
+//      expanded ++ other
 
 //      other
 //    mentions
@@ -61,88 +62,50 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
   }
 
-
-
-  def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-
-    def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
-      val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
-      for (m <- mentions) {
-        if (intervalMentionMap.isEmpty) {
-          println("++>" + intervalMentionMap)
-          intervalMentionMap += (m.tokenInterval -> Seq(m))
-        } else {
-          for (interval <- intervalMentionMap.map(_._1)) {
-            if (m.tokenInterval.intersect(interval).nonEmpty) {
-              println(m.text + " " + m.tokenInterval + " " + interval)
-              val currMen = intervalMentionMap(interval)
-              val updMen = currMen :+ m
-              intervalMentionMap += (interval -> updMen)
-            } else {
-              intervalMentionMap += (m.tokenInterval -> Seq(m))
-            }
+  def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
+    for (m <- mentions) {
+      if (intervalMentionMap.isEmpty) {
+        println("++>" + intervalMentionMap)
+        intervalMentionMap += (m.tokenInterval -> Seq(m))
+      } else {
+        for (interval <- intervalMentionMap.map(_._1)) {
+          if (m.tokenInterval.intersect(interval).nonEmpty) {
+            println(m.text + " " + m.tokenInterval + " " + interval)
+            val currMen = intervalMentionMap(interval)
+            val updMen = currMen :+ m
+            intervalMentionMap += (interval -> updMen)
+          } else {
+            intervalMentionMap += (m.tokenInterval -> Seq(m))
           }
         }
       }
-      intervalMentionMap.toMap
     }
+    intervalMentionMap.toMap
+  }
+
+  def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
+
 
     val maxInGroup = new ArrayBuffer[Mention]()
-    val groupedByIntercalOverlap = groupByTokenOverlap(mentions)
-    for (item <- groupedByIntercalOverlap) {
-      println(item._1)
-      for (m <- item._2) println("here: " + m.text)
-      val longest = item._2.maxBy(_.tokenInterval.length)
-      maxInGroup.append(longest)
-    }
-    maxInGroup.distinct
+    val groupedBySent = mentions.groupBy(_.sentence)
+    for (gbs <- groupedBySent) {
+      val groupedByIntercalOverlap = groupByTokenOverlap(gbs._2)
+      for (item <- groupedByIntercalOverlap) {
+        println(item._1)
+        for (m <- item._2) println("here: " + m.text)
+        val longest = item._2.maxBy(_.tokenInterval.length)
+        maxInGroup.append(longest)
+      }
 
+    }
+
+    maxInGroup.distinct
 
   }
 
 
-  //this version handles rho w
-//  def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-//    println("orig vars")
-//    for (m <- mentions) println(m.text)
-//    val (vars, other) = mentions.partition(_ matches "Variable")
-//    for (v <- vars) println("->>> " + v.text)
-//    val groupedByStartOffset = vars.groupBy(_.startOffset)
-//    for (g <- groupedByStartOffset) {
-//      println("=>" + g._1)
-//      for (m <- g._2) {
-//        println("==>>" + m.text)
-//      }
-//    }
-//    val maxByStartOffset = new ArrayBuffer[Mention]()
-//    for (gr <- groupedByStartOffset) {
-//      println("---")
-//      for (g <- gr._2) {
-//        g.text + "-" + g.label
-//      }
-//      maxByStartOffset.append(gr._2.maxBy(_.tokenInterval.length))
-//    }
-//
-//    for (m <- maxByStartOffset) println("-< " + m.text)
-//    val groupByEndOffset = maxByStartOffset.groupBy(_.endOffset)
-//    val maxByEndOffset = new ArrayBuffer[Mention]()
-//    for (gr <- groupByEndOffset) {
-//      println("=====")
-//      for (g <- gr._2) {
-//        g.text + "-" + g.label
-//      }
-//      maxByEndOffset.append(gr._2.maxBy(_.tokenInterval.length))
-//    }
-//    println("max by offset")
-//    for (m <- maxByEndOffset) println(m.text)
-//    return maxByEndOffset
-//
-//  }
-//  def untangleConj(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-//    val defMentions, other = mentions.partition(_ matches "Definition")
-//    val groupedBySpan = defMentions.groupBy(_.tokenInterval)
-//
-//  }
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val mns: Iterable[Mention] = for {
@@ -158,22 +121,157 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mns.toVector.distinct
   }
 
-  /** Keeps the longest mention for each group of overlapping mentions **/
   def keepOneWithSameSpanAfterExpansion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    for ((k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)) {
-//      println("New group: ")
-//      for (vi <- v) println("men!!: " + vi.text + " " + vi.labels + " " + vi.foundBy + " " + vi.tokenInterval.mkString("-") + " " + vi.arguments.map(_._1).mkString("+"))
-    }
+//    for ((k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)) {
+////      println("New group: ")
+////      for (vi <- v) println("men!!: " + vi.text + " " + vi.labels + " " + vi.foundBy + " " + vi.tokenInterval.mkString("-") + " " + vi.arguments.map(_._1).mkString("+"))
+//    }
+    for (m <- mentions) println(">>>" + m.text + " " + m.label)
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
       (k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)
-
-    } yield v.head
+      // conj defs have more vars, so from overlapping mentions, choose those that have most vars and...
+      maxNumOfVars = v.maxBy(_.arguments("variable").length).arguments("variable").length
+      //out of the ones with most vars, pick the longest
+    } yield v.filter(_.arguments("variable").length == maxNumOfVars).maxBy(_.text.length)//v.maxBy(_.text.length)
     val mens = mns.toList
 //    println("num of groups: " + mentions.groupBy(_.tokenInterval).keys.toList.length + " mens returned: " + mns.toList.distinct.length + " " + mentions.length)
     mens.toVector.distinct
   }
 
+  def getEdgesForMention(m: Mention): List[(Int, Int, String)] = {
+    // return only edges within the token interval of the mention
+    m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
+  }
+
+  def hasConj(m: Mention): Boolean = {
+    val onlyThisMenedges = getEdgesForMention(m)
+    onlyThisMenedges.map(_._3).exists(_.startsWith("conj"))
+  }
+  def untangleConj(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
+    // partition on those with and without conj
+    // if !conjDef, take out interval between conj node start and end, store interval (is it possible to get char offset here?)
+    // if conjdef, use conjDefinitions
+    // get rid of cc's and cc:preconj (maybe just all cc's?)
+    // account for cases when one conj is not part of the extracted definition
+    // if plural noun (eg entopies) - lemmatize
+    println("======" + mentions.length)
+
+
+
+    val (withConj, withoutConj) = mentions.partition(hasConj(_))
+
+    for (wc <- withConj) println("wc " + wc.text)
+    for (woc <- withoutConj) println("woc " + woc.text)
+
+    val (conjDefs, standardDefs) = withConj.partition(_.label matches "ConjDefinition")
+
+    for (wc <- conjDefs) println("conjdef " + wc.text)
+    for (woc <- standardDefs) println("standard def " + woc.text)
+
+    val toReturn = new ArrayBuffer[Mention]()
+
+    val untangled = new ArrayBuffer[Mention]()
+    for (m <- conjDefs) {
+      val untang = untangleOneConjunction(m)
+      for (men <- untang) untangled.append(men)
+    }
+    for (m <- untangled) toReturn.append(m)
+    for (m <- withoutConj) toReturn.append(m)
+    for (m <- standardDefs) toReturn.append(m)
+
+    for (m <- mentions) {
+      println("m: " + m.text )
+      println("ti: " + m.tokenInterval)
+      println("full deps: " + m.sentenceObj.dependencies.get.allEdges)
+
+      val onlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
+      println("only ours: " + onlyThisMen)
+
+
+
+//      println("mp filtered: " + m.sentenceObj.dependencies.get.incomingEdges.flatten.toList.filter(id => m.tokenInterval.contains(id._1)))
+
+      for (path <- m.paths) {
+        println("p: " + path)
+        for (x <- path._2) {
+          for (i <- x._2) {
+            println("----> " + x._1.text + " " + i._3)
+          }
+        }
+      }
+    }
+    // Only Def mentions will be passed
+//    val (haveConj, no_conj) = mentions.partition(m => m.paths.map)
+//    for (hc <- haveConj) println("hc: " + hc.text)
+//    for (nc <- no_conj) println("nc: " + nc.text)
+
+    mentions
+  }
+
+  def untangleOneConjunction(mention: Mention): Seq[Mention] = {
+
+    // todo: only conj defs should get here
+    // todo: if overlap, take most complete
+    // todo: if conj is outside def but overlap, take longest - but how? i only annotated the def itself... maybe combine all defs if there are more than one?
+    //    val (conjDef, other) = mentions.partition(_ matches "ConjDefinition")
+    //    println(conjDef.length)
+
+//    val mostComplete = mentions.maxBy(_.arguments.toSeq.length)
+//    //    println(mostComplete.text)
+//    val headDef = mostComplete.arguments("definition").head
+    //    println("head def: " + headDef.text)
+    val definition = mention.arguments("definition").head
+    val deps = proc.annotate(definition.text).sentences.head.universalEnhancedDependencies.get
+    val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
+    //    println(tokenWithOutgoingConj)
+
+    val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+    //    println(incomingConjNodes.mkString("||"))
+    val previousIndices = new ArrayBuffer[Int]()
+
+    val newDefinitions = new ArrayBuffer[Mention]()
+    for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
+      //      println("prev indices: " + previousIndices)
+      var newDefTokenInt = definition.tokenInterval.slice(0, int + 1)
+      //      println("defs" + int + " " + newDefTokenInt)
+      if (previousIndices.nonEmpty) {
+
+        for (pi <- previousIndices.reverse) {
+
+          newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
+
+        }
+      }
+      //        println("new def tok in: " + newDefTokenInt)
+      val wordsWIndex = definition.sentenceObj.words.zipWithIndex
+      val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
+      val newDef = new TextBoundMention(definition.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), definition.sentence, definition.document, definition.keep, definition.foundBy, definition.attachments)
+      newDefinitions.append(newDef)
+      println("text " + defText.mkString(" "))
+      previousIndices.append(int)
+    }
+
+    val toReturn = new ArrayBuffer[Mention]()
+    val variables = mention.arguments("variable")
+    for ((v, i) <- variables.zipWithIndex) {
+      val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+      val newDefMen = copyWithArgs(mention, newArgs)
+      toReturn.append(newDefMen)
+    }
+
+    //    println(outgoingEdgesmkString("|"))
+    //    println("paths: " + parsed
+    //    println(conjPathsInDef.toSeq.length)
+    //    for (p <- deps) {
+    //      println(p.outgoingEdges.head.filter(_._2.contains("conj_and")).mkString("||"))
+    //    }
+
+    toReturn //++ other
+  }
+
+  // this one worked separately but not when used within untangleConj
   def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
     // todo: only conj defs should get here
@@ -181,25 +279,30 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // todo: if conj is outside def but overlap, take longest - but how? i only annotated the def itself... maybe combine all defs if there are more than one?
 //    val (conjDef, other) = mentions.partition(_ matches "ConjDefinition")
 //    println(conjDef.length)
+    val toReturn = new ArrayBuffer[Mention]()
+    val groupedByIntervalOverlap = groupByTokenOverlap(mentions)
 
-    val mostComplete = mentions.maxBy(_.arguments.toSeq.length)
-//    println(mostComplete.text)
-    val headDef = mostComplete.arguments("definition").head
-//    println("head def: " + headDef.text)
-    val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
-    val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
-//    println(tokenWithOutgoingConj)
+    for (gr <- groupedByIntervalOverlap) {
+      println("-->> " + gr._1 + " " + gr._2.length)
+      for (m <- gr._2) println(m.text)
+      val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
+      println("most co,mplete: " + mostComplete.text)
+      val headDef = mostComplete.arguments("definition").head
+      //    println("head def: " + headDef.text)
+      val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
+      val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
+      //    println(tokenWithOutgoingConj)
 
-    val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
-//    println(incomingConjNodes.mkString("||"))
-    val previousIndices = new ArrayBuffer[Int]()
+      val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+      //    println(incomingConjNodes.mkString("||"))
+      val previousIndices = new ArrayBuffer[Int]()
 
-    val newDefinitions = new ArrayBuffer[Mention]()
-    for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
-//      println("prev indices: " + previousIndices)
-      var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
-//      println("defs" + int + " " + newDefTokenInt)
-      if (previousIndices.nonEmpty) {
+      val newDefinitions = new ArrayBuffer[Mention]()
+      for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
+        //      println("prev indices: " + previousIndices)
+        var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
+        //      println("defs" + int + " " + newDefTokenInt)
+        if (previousIndices.nonEmpty) {
 
           for (pi <- previousIndices.reverse) {
 
@@ -207,22 +310,27 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
           }
         }
-//        println("new def tok in: " + newDefTokenInt)
-      val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
-      val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
-      val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
-      newDefinitions.append(newDef)
-//      println(defText.mkString(" "))
-      previousIndices.append(int)
+        //        println("new def tok in: " + newDefTokenInt)
+        val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
+        val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
+        val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
+        newDefinitions.append(newDef)
+        println("text " + defText.mkString(" "))
+        previousIndices.append(int)
       }
 
-    val toReturn = new ArrayBuffer[Mention]()
-    val variables = mostComplete.arguments("variable")
-    for ((v, i) <- variables.zipWithIndex) {
-      val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
-      val newDefMen = copyWithArgs(mostComplete, newArgs)
-      toReturn.append(newDefMen)
+
+      val variables = mostComplete.arguments("variable")
+      for ((v, i) <- variables.zipWithIndex) {
+        println("here: " + v.text + " " + i)
+        val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+        val newDefMen = copyWithArgs(mostComplete, newArgs)
+        toReturn.append(newDefMen)
+      }
+
     }
+//    println("len mens: " + mentions.length)
+
 
 //    println(outgoingEdgesmkString("|"))
 //    println("paths: " + parsed
