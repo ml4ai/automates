@@ -63,6 +63,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    // has to be used for mentions in the same sentence - token intervals are per sentence
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
     for (m <- mentions) {
       if (intervalMentionMap.isEmpty) {
@@ -172,12 +173,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     val toReturn = new ArrayBuffer[Mention]()
 
-    val untangled = new ArrayBuffer[Mention]()
-    for (m <- conjDefs) {
-      val untang = untangleOneConjunction(m)
-      for (men <- untang) untangled.append(men)
-    }
-    for (m <- untangled) toReturn.append(m)
+//    val untangled = new ArrayBuffer[Mention]()
+//    for (m <- conjDefs) {
+//      val untang = untangleOneConjunction(m)
+//      for (men <- untang) untangled.append(men)
+//    }
+    for (m <- untangleConjunctions(conjDefs)) toReturn.append(m)
     for (m <- withoutConj) toReturn.append(m)
     for (m <- standardDefs) toReturn.append(m)
 
@@ -279,65 +280,63 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // todo: if conj is outside def but overlap, take longest - but how? i only annotated the def itself... maybe combine all defs if there are more than one?
 //    val (conjDef, other) = mentions.partition(_ matches "ConjDefinition")
 //    println(conjDef.length)
+    for (m <- mentions) println("Inside untangle conj: " + m.text + " " + m.label)
     val toReturn = new ArrayBuffer[Mention]()
-    val groupedByIntervalOverlap = groupByTokenOverlap(mentions)
 
-    for (gr <- groupedByIntervalOverlap) {
-      println("-->> " + gr._1 + " " + gr._2.length)
-      for (m <- gr._2) println(m.text)
-      val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
-      println("most co,mplete: " + mostComplete.text)
-      val headDef = mostComplete.arguments("definition").head
-      //    println("head def: " + headDef.text)
-      val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
-      val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
-      //    println(tokenWithOutgoingConj)
+    val groupedBySent = mentions.groupBy(_.sentence)
+    for (gr <- groupedBySent) {
+      val groupedByIntervalOverlap = groupByTokenOverlap(gr._2)
 
-      val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
-          println(">>" + incomingConjNodes.mkString("||"))
-      val previousIndices = new ArrayBuffer[Int]()
+      for (gr <- groupedByIntervalOverlap) {
+        println("-->> " + gr._1 + " " + gr._2.length)
+        for (m <- gr._2) println(m.text)
+        val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
+        println("most co,mplete: " + mostComplete.text)
+        val headDef = mostComplete.arguments("definition").head
+        //    println("head def: " + headDef.text)
+        val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
+        println("deps: " + deps)
+        val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
+        //    println(tokenWithOutgoingConj)
 
-      val newDefinitions = new ArrayBuffer[Mention]()
-      for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
-        //      println("prev indices: " + previousIndices)
-        var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
-        //      println("defs" + int + " " + newDefTokenInt)
-        if (previousIndices.nonEmpty) {
+        val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+        println(">>" + incomingConjNodes.mkString("||"))
+        val previousIndices = new ArrayBuffer[Int]()
 
-          for (pi <- previousIndices.reverse) {
+        val newDefinitions = new ArrayBuffer[Mention]()
+        for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
+          //      println("prev indices: " + previousIndices)
+          var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
+          //      println("defs" + int + " " + newDefTokenInt)
+          if (previousIndices.nonEmpty) {
 
-            newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
+            for (pi <- previousIndices.reverse) {
 
+              newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
+
+            }
           }
+          //        println("new def tok in: " + newDefTokenInt)
+          val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
+          val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
+          val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
+          newDefinitions.append(newDef)
+          println("text " + defText.mkString(" "))
+          previousIndices.append(int)
         }
-        //        println("new def tok in: " + newDefTokenInt)
-        val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
-        val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
-        val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
-        newDefinitions.append(newDef)
-        println("text " + defText.mkString(" "))
-        previousIndices.append(int)
-      }
 
 
-      val variables = mostComplete.arguments("variable")
-      for ((v, i) <- variables.zipWithIndex) {
-        println("here: " + v.text + " " + i)
-        val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
-        val newDefMen = copyWithArgs(mostComplete, newArgs)
-        toReturn.append(newDefMen)
+        val variables = mostComplete.arguments("variable")
+        for ((v, i) <- variables.zipWithIndex) {
+          println("here: " + v.text + " " + i)
+          val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+          val newDefMen = copyWithArgs(mostComplete, newArgs)
+          toReturn.append(newDefMen)
+        }
+
       }
 
     }
-//    println("len mens: " + mentions.length)
-
-
-//    println(outgoingEdgesmkString("|"))
-//    println("paths: " + parsed
-//    println(conjPathsInDef.toSeq.length)
-//    for (p <- deps) {
-//      println(p.outgoingEdges.head.filter(_._2.contains("conj_and")).mkString("||"))
-//    }
 
     toReturn //++ other
   }

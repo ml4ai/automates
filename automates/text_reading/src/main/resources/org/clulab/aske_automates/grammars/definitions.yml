@@ -4,6 +4,16 @@ rules:
 
 ####DEFINITIONS####
 
+  - name: var_cop_definition1
+    label: ConjDefinition
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Variable{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop nmod_of? nmod_in? conj_and?
+
 
   - name: var_equals_def_token #needed bc of bad parse
     label: Definition
@@ -180,19 +190,10 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      variable:Variable = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
 
 
-  - name: var_cop_definition1
-    label: Definition
-    priority: ${priority}
-    type: dependency
-    example: "LAI is the actual leaf area index"
-    pattern: |
-      trigger = [lemma="be"]
-      variable:Variable+ = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop nmod_of? nmod_in? conj_and?
 
   - name: def_cop_var
     label: Definition

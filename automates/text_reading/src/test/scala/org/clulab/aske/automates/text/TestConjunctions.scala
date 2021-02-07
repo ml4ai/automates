@@ -65,6 +65,17 @@ class TestConjunctions extends ExtractionTest {
     val mentions = extractMentions(t5)
     testDefinitionEvent(mentions, desired)
   }
+
+  val t6 = "where H(x) and H(y) are entropies of x and y,respectively."
+  failingTest should s"find definitions from t5: ${t6}" taggedAs (Somebody) in {
+
+    val desired = Seq(
+      "H(x)" -> Seq("entropies of x"), //fixme: ideally, should be entropy
+      "H(y)" -> Seq("entropies of y")
+    )
+    val mentions = extractMentions(t6)
+    testDefinitionEvent(mentions, desired)
+  }
 }
 
 
