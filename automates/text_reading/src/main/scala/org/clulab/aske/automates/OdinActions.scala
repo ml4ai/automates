@@ -294,7 +294,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       //    println(tokenWithOutgoingConj)
 
       val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
-      //    println(incomingConjNodes.mkString("||"))
+          println(">>" + incomingConjNodes.mkString("||"))
       val previousIndices = new ArrayBuffer[Int]()
 
       val newDefinitions = new ArrayBuffer[Mention]()

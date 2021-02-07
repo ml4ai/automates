@@ -86,11 +86,11 @@ class OdinEngine(
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
 
-    val (definitionMentions, other) = events.partition(_.label matches "Definition")
+    val (definitionMentions, other) = events.partition(_.label.contains("Definition"))
     // todo: some appropriate version of "keepMostComplete"
     //there could be multiple definitions for one variable, so don't eliminate any of definition mentions, even if there's overlap
-//    (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConjunctions(definitionMentions)).toVector
-    (loadableAttributes.actions.keepLongest(other) ++ definitionMentions).toVector
+    (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConjunctions(definitionMentions)).toVector
+//    (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConj(definitionMentions)).toVector
 //    events
   }
 
