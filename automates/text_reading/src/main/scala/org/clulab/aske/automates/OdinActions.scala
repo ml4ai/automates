@@ -296,7 +296,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         //fixme: try to do this without reannotating just using the method for finding deps for the edge
         val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
 //        println("deps: " + deps)
-        val tokenWithOutgoingConj = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1).head//assume one
+println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
+        val tokenWithOutgoingConjAll = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+
+//         val tokenWithOutgoingConj = tokenWithOutgoingConjAll.head//assume one
         //    println(tokenWithOutgoingConj)
 
         val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
@@ -304,35 +307,48 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val previousIndices = new ArrayBuffer[Int]()
 
         val newDefinitions = new ArrayBuffer[Mention]()
-        for (int <- (tokenWithOutgoingConj +: incomingConjNodes).sorted) {
-          //      println("prev indices: " + previousIndices)
-          var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
-          //      println("defs" + int + " " + newDefTokenInt)
-          if (previousIndices.nonEmpty) {
 
-            for (pi <- previousIndices.reverse) {
+        val allConjNodes = tokenWithOutgoingConjAll ++ incomingConjNodes
+        if (allConjNodes.length > 0) {
+          for (int <- (allConjNodes).sorted) {
+            //      println("prev indices: " + previousIndices)
+            var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
+            //      println("defs" + int + " " + newDefTokenInt)
+            if (previousIndices.nonEmpty) {
 
-              newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
+              for (pi <- previousIndices.reverse) {
 
+                newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
+
+              }
             }
+            //          println("new def tok in: " + newDefTokenInt)
+            val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
+            val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
+            val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
+            newDefinitions.append(newDef)
+            //          println("text " + defText.mkString(" "))
+            previousIndices.append(int)
           }
-//          println("new def tok in: " + newDefTokenInt)
-          val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
-          val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
-          val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
-          newDefinitions.append(newDef)
-//          println("text " + defText.mkString(" "))
-          previousIndices.append(int)
+
         }
 
 
         val variables = mostComplete.arguments("variable")
         for ((v, i) <- variables.zipWithIndex) {
 //          println("here: " + v.text + " " + i)
-          val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
-          val newDefMen = copyWithArgs(mostComplete, newArgs)
-//          println("new def men line 335 "+newDefMen.text)
-          toReturn.append(newDefMen)
+          if (newDefinitions.nonEmpty) {
+            val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            //          println("new def men line 335 "+newDefMen.text)
+            toReturn.append(newDefMen)
+          } else {
+            val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(headDef))
+            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            //          println("new def men line 335 "+newDefMen.text)
+            toReturn.append(newDefMen)
+          }
+
         }
 
       }
