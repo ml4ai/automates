@@ -286,7 +286,7 @@ class GrFNSubgraph:
             and set([n.uid for n in self.nodes]) == set([n.uid for n in other.nodes])
         )
 
-    def execute(
+    def __call__(
         self,
         grfn: GroundedFunctionNetwork,
         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
@@ -407,34 +407,6 @@ class GrFNSubgraph:
             )
         return {n for e in output_interface_hyper_edges for n in e.outputs}
 
-    def __call__(
-        self,
-        grfn: GroundedFunctionNetwork,
-        subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
-        node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
-        all_nodes_visited: Set[VariableNode],
-    ):
-        """
-        Handle a call statement on an object of type GrFNSubgraph
-
-        Args:
-            grfn (GroundedFucntioNetwork):
-                The GrFN we are operating on. Used to find successors of nodes.
-            subgraphs_to_hyper_edges (Dict[GrFNSubgraph, List[HyperEdge]]):
-                A list of a subgraph to the hyper edges with nodes in the
-                subgraph.
-            node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
-                nodes to the subgraph they are contained in.
-            visited_variables (Set[VariableNode]):
-                Holds the set of all variable nodes that have been visited
-        """
-        return self.execute(
-            grfn,
-            subgraphs_to_hyper_edges,
-            node_to_subgraph,
-            all_nodes_visited,
-        )
-
     @classmethod
     def from_container(
         cls, con: GenericContainer, occ: int, parent_subgraph: GrFNSubgraph
@@ -523,7 +495,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
                 subgraph.
             node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
                 nodes to the subgraph they are contained in.
-            visited_variables (Set[VariableNode]):
+            all_nodes_visited (Set[VariableNode]):
                 Holds the set of all variable nodes that have been visited
         """
 
@@ -545,7 +517,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
         # Loop until the exit value becomes true
         while not exit_var_node.value:
             initial_visited_nodes = all_nodes_visited.copy()
-            var_results = self.execute(
+            var_results = super().__call__(
                 grfn,
                 subgraphs_to_hyper_edges,
                 node_to_subgraph,
