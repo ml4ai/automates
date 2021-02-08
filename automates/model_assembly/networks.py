@@ -291,7 +291,7 @@ class GrFNSubgraph:
         grfn: GroundedFunctionNetwork,
         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
         node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
-        all_variable_nodes_visited: Set[VariableNode],
+        all_nodes_visited: Set[VariableNode],
     ) -> List[GenericNode]:
         """
         Handles the execution of the lambda functions within a subgraoh of
@@ -306,7 +306,7 @@ class GrFNSubgraph:
                 subgraph.
             node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
                 nodes to the subgraph they are contained in.
-            all_variable_nodes_visited (Set[VariableNode]):
+            all_nodes_visited (Set[VariableNode]):
                 Holds the set of all variable nodes that have been visited
 
         Raises:
@@ -353,7 +353,6 @@ class GrFNSubgraph:
         while node_execute_queue:
             node_to_execute = node_execute_queue.pop(0)
             visited_variables = set()
-
             if node_to_execute not in nodes_to_hyper_edge:
                 if node_to_execute.func_type == LambdaType.INTERFACE:
                     # We need to recurse into a new subgraph as the next node is an
@@ -361,23 +360,27 @@ class GrFNSubgraph:
                     # subgraph execution returns the updated output nodes so we can
                     # mark them as visited here in the parent in order to continue
                     # execution
-                    test = node_to_subgraph[node_to_execute](
-                        grfn,
-                        subgraphs_to_hyper_edges,
-                        node_to_subgraph,
-                        all_variable_nodes_visited,
+                    visited_variables.update(
+                        node_to_subgraph[node_to_execute](
+                            grfn,
+                            subgraphs_to_hyper_edges,
+                            node_to_subgraph,
+                            all_nodes_visited,
+                        )
                     )
-                    visited_variables.update(test)
                 else:
                     raise GrFNExecutionException(
                         "Error: Attempting to execute non-interface node"
                         + f" {node_to_execute} found in another subgraph."
                     )
-            elif all(
-                [
-                    n in all_variable_nodes_visited
-                    for n in nodes_to_hyper_edge[node_to_execute].inputs
-                ]
+            elif (
+                all(
+                    [
+                        n in all_nodes_visited
+                        for n in nodes_to_hyper_edge[node_to_execute].inputs
+                    ]
+                )
+                or node_to_execute.func_type == LambdaType.DECISION
             ):
                 # All of the input nodes have been visited, so the input values
                 # are initialized and we can execute. In the case of literal
@@ -389,15 +392,19 @@ class GrFNSubgraph:
                 # We still are waiting on input values to be computed, push to
                 # the back of the queue
                 node_execute_queue.append(node_to_execute)
-            for var in visited_variables:
-                succs = grfn.successors(var)
-                for succ in succs:
-                    if succ in self.nodes or succ.func_type == LambdaType.INTERFACE:
-                        # Add a node to execute if its in this subgraph or an
-                        # interface to a child subgraph
-                        node_execute_queue.append(succ)
-            all_variable_nodes_visited.update(visited_variables)
+                continue
 
+            all_nodes_visited.update(visited_variables)
+            all_nodes_visited.add(node_to_execute)
+            node_execute_queue.extend(
+                [
+                    succ
+                    for var in visited_variables
+                    for succ in grfn.successors(var)
+                    if (succ in self.nodes and succ not in all_nodes_visited)
+                    or succ.func_type == LambdaType.INTERFACE
+                ]
+            )
         return {n for e in output_interface_hyper_edges for n in e.outputs}
 
     def __call__(
@@ -405,7 +412,7 @@ class GrFNSubgraph:
         grfn: GroundedFunctionNetwork,
         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
         node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
-        all_variable_nodes_visited: Set[VariableNode],
+        all_nodes_visited: Set[VariableNode],
     ):
         """
         Handle a call statement on an object of type GrFNSubgraph
@@ -425,7 +432,7 @@ class GrFNSubgraph:
             grfn,
             subgraphs_to_hyper_edges,
             node_to_subgraph,
-            all_variable_nodes_visited,
+            all_nodes_visited,
         )
 
     @classmethod
@@ -433,7 +440,12 @@ class GrFNSubgraph:
         cls, con: GenericContainer, occ: int, parent_subgraph: GrFNSubgraph
     ):
         id = con.identifier
-        return cls(
+
+        class_to_create = cls
+        if isinstance(con, LoopContainer):
+            class_to_create = GrFNLoopSubgraph
+
+        return class_to_create(
             str(uuid4()),
             id.namespace,
             id.scope,
@@ -459,15 +471,21 @@ class GrFNSubgraph:
     @classmethod
     def from_dict(cls, data: dict, all_nodes: Dict[str, GenericNode]):
         subgraph_nodes = [all_nodes[n_id] for n_id in data["nodes"]]
-        return cls(
+        type_str = data["type"]
+
+        class_to_create = cls
+        if type_str == "LoopContainer":
+            class_to_create = GrFNLoopSubgraph
+
+        return class_to_create(
             data["uid"],
             data["namespace"],
             data["scope"],
             data["basename"],
             data["occurrence_num"],
             data["parent"],
-            data["type"],
-            cls.get_border_color(data["type"]),
+            type_str,
+            cls.get_border_color(type_str),
             subgraph_nodes,
         )
 
@@ -485,14 +503,14 @@ class GrFNSubgraph:
         }
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, eq=False)
 class GrFNLoopSubgraph(GrFNSubgraph):
     def __call__(
         self,
         grfn: GroundedFunctionNetwork,
         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
         node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
-        all_variable_nodes_visited: Set[VariableNode],
+        all_nodes_visited: Set[VariableNode],
     ):
         """
         Handle a call statement on an object of type GrFNSubgraph
@@ -508,7 +526,33 @@ class GrFNLoopSubgraph(GrFNSubgraph):
             visited_variables (Set[VariableNode]):
                 Holds the set of all variable nodes that have been visited
         """
-        pass
+
+        # First, find exit node within the subgraph
+        exit_var_nodes = [
+            n
+            for n in self.nodes
+            if isinstance(n, VariableNode) and n.identifier.var_name == "EXIT"
+        ]
+        if len(exit_var_nodes) != 1:
+            raise GrFNExecutionException(
+                "Found incorrect number of exit var nodes in loop subgraph during execution."
+                + f" Expected 1 but {len(exit_var_nodes)} were found."
+            )
+        exit_var_node = exit_var_nodes[0]
+
+        var_results = set()
+        initial_visited_nodes = set()
+        # Loop until the exit value becomes true
+        while not exit_var_node.value:
+            initial_visited_nodes = all_nodes_visited.copy()
+            var_results = self.execute(
+                grfn,
+                subgraphs_to_hyper_edges,
+                node_to_subgraph,
+                initial_visited_nodes,
+            )
+        all_nodes_visited = all_nodes_visited.union(initial_visited_nodes)
+        return var_results
 
 
 class GroundedFunctionNetwork(nx.DiGraph):
