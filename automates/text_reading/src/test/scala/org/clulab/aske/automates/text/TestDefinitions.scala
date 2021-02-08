@@ -534,7 +534,7 @@ class TestDefinitions extends ExtractionTest {
     "which can be considered as a variant of the standard SIR."
   failingTest should s"find definitions from t3g: ${t3g}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "SEIRP" -> Seq("variant of the standard SIR") // todo: check if this is the one that should be extracted here
+      "SEIRP" -> Seq("variant of the standard SIR") // todo: check if this is the one that should be extracted here. ask Paul.
     )
     val mentions = extractMentions(t3g)
     testDefinitionEvent(mentions, desired)
@@ -577,9 +577,9 @@ class TestDefinitions extends ExtractionTest {
       "under optimum soil water conditions, and achieving full production under the given climatic conditions."
   failingTest should s"find definitions from t3h: ${t3h}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "ETc" -> Seq("crop evapotranspiration under standard conditions")
-      // "ETc" -> Seq("evapotranspiration from disease-free, well-fertilized crops, grown in large fields, " + // issue: should this be also captured as the definition?
-      // "under optimum soil water conditions, and achieving full production under the given climatic conditions")
+      "ETc" -> Seq("crop evapotranspiration under standard conditions"),
+      "ETc" -> Seq("evapotranspiration from disease-free, well-fertilized crops, grown in large fields, " + // fixme: this should be captured as the definition.
+      "under optimum soil water conditions, and achieving full production under the given climatic conditions") // todo: need to allow two definitions per variable.
     )
     val mentions = extractMentions(t3h)
     testDefinitionEvent(mentions, desired)
@@ -615,16 +615,6 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-    val t2j = "(where S(0) and R(0) are the initial numbers of, respectively, susceptible and removed subjects)"
-  failingTest should s"find definitions from t2j: ${t2j}" taggedAs(Somebody) in {
-    val desired =  Seq(
-      "S(0)" -> Seq("initial number of susceptible subjects"), // issue: This test should be moved to conjunction once the file is made.
-      "R(0)" -> Seq("initial number of removed subjects")      // fixme: "S" only is captured as the variable here. Should be fixed to capture both S(0) and R(0) as variables. Definitions should be divided as well.
-    )
-    val mentions = extractMentions(t2j)
-    testDefinitionEvent(mentions, desired)
-  }
-
 // Tests from paper: PT-2012-ET Measurement and Estimation Using Modified PT in Maise with Mulching-petpt_2012
 
     val t1k = "where θ is soil water content in 0–1.0 m soil (cm3 cm−3), θF is field capacity (cm3 cm−3) and θw is wilting point (cm3 cm−3)."
@@ -635,19 +625,6 @@ class TestDefinitions extends ExtractionTest {
       "θw" -> Seq("wilting point")   // fixme: Definition of "θw" is not extracted.
     )
     val mentions = extractMentions(t1k)
-    testDefinitionEvent(mentions, desired)
-  }
-
-    val t2k = "where Rns and Rnc are net radiation obtained by soil surface and intercepted by crop canopy (W m−2), respectively; αs and αc are soil " +
-      "evaporation coefficient and crop transpiration coefficient, respectively."
-  failingTest should s"find definitions from t2k: ${t2k}" taggedAs(Somebody) in {
-    val desired =  Seq(
-      "Rns" -> Seq("net radiation obtained by soil surface"), // fixme: Only "Rns" is captured as variable here. The definition is also incomplete. ("net radiation")
-      "Rnc" -> Seq("net radiation intercepted by crop canopy"),
-      "αs" -> Seq("soil evaporation coefficient"), // fixme: Only "αs" is captured as variable here.
-      "αc" -> Seq("crop transpiration coefficient") // fixme: The definition for "αc" was not captured.
-    )
-    val mentions = extractMentions(t2k)
     testDefinitionEvent(mentions, desired)
   }
 

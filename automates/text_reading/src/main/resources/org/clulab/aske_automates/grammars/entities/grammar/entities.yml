@@ -12,6 +12,13 @@ rules:
       [chunk='B-NP' & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
       #todo: can we add parens in avoid without making it invisible in rules?
 
+  - name: single_capital_VP
+    label: Concept
+    priority: 1
+    type: token
+    pattern: |
+      [chunk='B-VP' & word = /[A-Z]/]
+
 
 #  - name: simple-vp
 #    label: Concept
