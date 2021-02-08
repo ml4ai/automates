@@ -367,7 +367,6 @@ class TestDefinitions extends ExtractionTest {
       "p" -> Seq("iteration level")
     )
     val mentions = extractMentions(t8c)
-    for (m <- mentions) println(m.text + m.label)
     testDefinitionEvent(mentions, desired)
   }
 
