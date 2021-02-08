@@ -76,13 +76,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (m <- mentions) {
       if (intervalMentionMap.isEmpty) {
 //        println("++>" + intervalMentionMap)
+        println("m tok int: " + m.tokenInterval)
         intervalMentionMap += (m.tokenInterval -> Seq(m))
       } else {
+        println("---->" + intervalMentionMap)
         if (intervalMentionMap.keys.exists(k => k.intersect(m.tokenInterval).nonEmpty)) {
           val interval = findOverlappingInterval(m.tokenInterval, intervalMentionMap.keys.toList)
           val currMen = intervalMentionMap(interval)
           val updMen = currMen :+ m
-          if (interval.length > m.tokenInterval.length) {
+          if (interval.length >= m.tokenInterval.length) {
             intervalMentionMap += (interval -> updMen)
           } else {
             intervalMentionMap += (m.tokenInterval -> updMen)
@@ -94,18 +96,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
       }
     }
+    println("---> " + intervalMentionMap.toMap)
     intervalMentionMap.toMap
   }
 
   def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
+    for (v <- mentions) println("here:: " + v.text + " " + v.label)
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
+    println("-> " + groupedBySent)
     for (gbs <- groupedBySent) {
-      val groupedByIntercalOverlap = groupByTokenOverlap(gbs._2)
-      for (item <- groupedByIntercalOverlap) {
-//        println(item._1)
-//        for (m <- item._2) println("here: " + m.text)
+      println("--> " + groupedBySent)
+      val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
+      println(groupedByIntervalOverlap)
+      for (item <- groupedByIntervalOverlap) {
+        println(item._1)
+        for (m <- item._2) println("here1: " + m.text)
         val longest = item._2.maxBy(_.tokenInterval.length)
         maxInGroup.append(longest)
       }
