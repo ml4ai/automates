@@ -241,10 +241,70 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       println("ti: " + m.tokenInterval)
 //      println("full deps: " + m.sentenceObj.dependencies.get.allEdges)
 
+
+      def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String)): Unit = {
+        // this should be the def text bound mention
+        def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Unit = {
+          val charOffsets = new ArrayBuffer[Array[Int]]
+          var spanStartAndEndOffset = new ArrayBuffer[Int]()
+          var prevTokenIndex = 0
+          for ((tokenInt, indexOnList) <- newTokenList.zipWithIndex) {
+            println("tok in and ind on list " + tokenInt + " " + indexOnList)
+            if (indexOnList == 0) {
+              spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
+              prevTokenIndex = tokenInt
+            } else {
+              if (!(prevTokenIndex + 1 == tokenInt) || indexOnList + 1 == newTokenList.length) {
+                //this means, we have found the the gap in the token int
+                // and the previous token was the end of previous part of the discont span, so we should get the endOffset of prev token
+                spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
+                charOffsets.append(spanStartAndEndOffset.toArray)
+                spanStartAndEndOffset = new ArrayBuffer[Int]()
+                spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
+                prevTokenIndex = tokenInt
+              } else {
+                prevTokenIndex = tokenInt
+              }
+            }
+
+          }
+          println("spans: ")
+          for (ch <- charOffsets) {
+            println("ch span " + ch.mkString(" "))
+            println("span text: " + m.document.text.get.slice(ch.head, ch.last))
+          }
+        }
+        val sortedConj = List(conjEdge._1, conjEdge._2).sorted
+        println("sorted conj: " + sortedConj)
+        val tokInAsList = m.tokenInterval.toList
+        val newTokenInt = tokInAsList.filter(idx => idx < sortedConj.head || idx >= sortedConj.last)
+        println("conj " + conjEdge)
+        println("M: " + m.text)
+        println("M orig token int " + tokInAsList)
+        println("M new " + newTokenInt)
+        println("m char offset: " + m.startOffset + " " + m.endOffset)
+
+
+        val charOffsets = new ArrayBuffer[Int]()
+        val wordsWIndex = m.sentenceObj.words.zipWithIndex
+
+        val defTextWordsWithInd = wordsWIndex.filter(w => newTokenInt.contains(w._2))
+        for (ind <- defTextWordsWithInd.map(_._2)) {
+          charOffsets.append(m.sentenceObj.startOffsets(ind))
+        }
+        val defText = defTextWordsWithInd.map(_._1)
+        println("_-_-_" + defText.mkString(" "))
+        println("words char offset " + charOffsets)
+        println("here:: " + m.document.text.get.slice(charOffsets.head, charOffsets(2)).mkString(""))
+        getDiscontCharOffset(m, newTokenInt)
+
+      }
+
       val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
       println("only ours: " + edgesForOnlyThisMen)
-      val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj") )
+      val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
       println(maxConj + "<<")
+      returnWithoutConj(m, maxConj)
 
 
 
@@ -308,7 +368,7 @@ println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
 
         val newDefinitions = new ArrayBuffer[Mention]()
 
-        val allConjNodes = tokenWithOutgoingConjAll ++ incomingConjNodes
+        val allConjNodes = tokenWithOutgoingConjAll.head +: incomingConjNodes
         if (allConjNodes.length > 0) {
           for (int <- (allConjNodes).sorted) {
             //      println("prev indices: " + previousIndices)
