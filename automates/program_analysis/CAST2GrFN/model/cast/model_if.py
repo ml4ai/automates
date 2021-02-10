@@ -32,7 +32,11 @@ class ModelIf(AstNode):
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    swagger_types = {"expr": "AstNode", "body": "list[AstNode]", "orelse": "AstNode"}
+    swagger_types = {
+        "expr": "AstNode",
+        "body": "list[AstNode]",
+        "orelse": "list[AstNode]",
+    }
     if hasattr(AstNode, "swagger_types"):
         swagger_types.update(AstNode.swagger_types)
 
@@ -104,7 +108,7 @@ class ModelIf(AstNode):
 
 
         :return: The orelse of this ModelIf.  # noqa: E501
-        :rtype: AstNode
+        :rtype: list[AstNode]
         """
         return self._orelse
 
@@ -114,7 +118,7 @@ class ModelIf(AstNode):
 
 
         :param orelse: The orelse of this ModelIf.  # noqa: E501
-        :type: AstNode
+        :type: list[AstNode]
         """
 
         self._orelse = orelse

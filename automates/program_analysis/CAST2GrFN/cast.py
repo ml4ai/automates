@@ -92,6 +92,14 @@ class CAST(object):
     def __init__(self, nodes: typing.List[AstNode]):
         self.nodes = nodes
 
+    def __eq__(self, other):
+        return len(self.nodes) == len(other.nodes) and all(
+            [
+                self_node == other_node
+                for self_node, other_node in zip(self.nodes, other.nodes)
+            ]
+        )
+
     def to_GrFN(self):
         c2a_visitor = CASTToAIRVisitor(self.nodes)
         air = c2a_visitor.to_air()
@@ -124,35 +132,90 @@ class CAST(object):
         )
         return grfn
 
-    def to_json(self):
+    def write_cast_object(self, cast_value):
+        if isinstance(cast_value, list):
+            return [self.write_cast_object(val) for val in cast_value]
+        elif not isinstance(cast_value, AstNode):
+            return cast_value
+
+        return dict(
+            {
+                attr: self.write_cast_object(getattr(cast_value, attr))
+                for attr in cast_value.attribute_map.keys()
+            },
+            **{"node_type": type(cast_value).__name__},
+        )
+
+    def to_json_object(self):
         """
-        Returns a json object string of the CAST
+        Returns a json object of the CAST
         """
-        return json.dumps([n.to_dict() for n in self.nodes])
+        return {"nodes": [self.write_cast_object(n) for n in self.nodes]}
+
+    def to_json_str(self):
+        """
+        Returns a json string of the CAST
+        """
+        return json.dumps(
+            self.to_json_object(),
+            sort_keys=True,
+            indent=4,
+        )
 
     @classmethod
-    def from_json(cls, data):
-        """
-        Parses json CAST data object and returns the created CAST object
-        """
-
+    def parse_cast_json(cls, data):
         if isinstance(data, list):
             # If we see a list parse each one of its elements
-            return [cls.from_json(item) for item in data]
-        elif isinstance(data, str) or isinstance(data, int) or isinstance(data, float):
+            return [cls.parse_cast_json(item) for item in data]
+        elif isinstance(data, float) or isinstance(data, int) or isinstance(data, str):
             # If we see a primitave type, simply return its value
             return data
 
-        # For each CAST node type, if the json objects fields are the same as the
-        # CAST nodes fields, then create that object with the values from its children nodes
+        # Create the object specified by "node_type" object with the values from its children nodes
         for node_type in CAST_NODES_TYPES_LIST:
-            if node_type.attribute_map.keys() == data.keys():
-                node_results = {k: cls.from_json(v) for k, v in data.items()}
+            if node_type.__name__ == data["node_type"]:
+                node_results = {
+                    k: cls.parse_cast_json(v)
+                    for k, v in data.items()
+                    if k != "node_type"
+                }
                 return node_type(**node_results)
 
         raise CASTJsonException(
             f"Unable to decode json CAST field with field names: {set(data.keys())}"
         )
+
+    @classmethod
+    def from_json_data(cls, json_data):
+        """
+        Parses json CAST data object and returns the created CAST object
+
+        Args:
+            data: JSON object with a "nodes" field containing a
+            list of the top level nodes
+
+        Returns:
+            CAST: The parsed CAST object.
+        """
+        nodes = cls.parse_cast_json(json_data["nodes"])
+        return cls(nodes)
+
+    @classmethod
+    def from_json_str(cls, json_str):
+        """
+        Parses json CAST string and returns the created CAST object
+
+        Args:
+            json_str: JSON string representing a CAST with a "nodes" field
+            containing a list of the top level nodes
+
+        Raises:
+            CASTJsonException: If we encounter an unknown CAST node
+
+        Returns:
+            CAST: The parsed CAST object.
+        """
+        return cls.from_json_data(json.loads(json_str))
 
     @classmethod
     def from_python_ast(cls):

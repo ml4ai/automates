@@ -20,17 +20,6 @@ class VarType(object):
 
     Do not edit the class manually.
     """
-
-    """
-    allowed enum values
-    """
-    UNKNOWN = "Unknown"
-    STRING = "String"
-    NUMBER = "Number"
-    LIST = "List"
-    DICT = "Dict"
-    SET = "Set"
-    TUPLE = "Tuple"
     """
     Attributes:
       swagger_types (dict): The key is attribute name

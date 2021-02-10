@@ -32,42 +32,42 @@ class Number(AstNode):
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    swagger_types = {"val": "float"}
+    swagger_types = {"number": "float"}
     if hasattr(AstNode, "swagger_types"):
         swagger_types.update(AstNode.swagger_types)
 
-    attribute_map = {"val": "val"}
+    attribute_map = {"number": "number"}
     if hasattr(AstNode, "attribute_map"):
         attribute_map.update(AstNode.attribute_map)
 
-    def __init__(self, val=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, number=None, *args, **kwargs):  # noqa: E501
         """Number - a model defined in Swagger"""  # noqa: E501
-        self._val = None
+        self._number = None
         self.discriminator = None
-        if val is not None:
-            self.val = val
+        if number is not None:
+            self.number = number
         AstNode.__init__(self, *args, **kwargs)
 
     @property
-    def val(self):
-        """Gets the val of this Number.  # noqa: E501
+    def number(self):
+        """Gets the number of this Number.  # noqa: E501
 
 
-        :return: The val of this Number.  # noqa: E501
+        :return: The number of this Number.  # noqa: E501
         :rtype: float
         """
-        return self._val
+        return self._number
 
-    @val.setter
-    def val(self, val):
-        """Sets the val of this Number.
+    @number.setter
+    def number(self, number):
+        """Sets the number of this Number.
 
 
-        :param val: The val of this Number.  # noqa: E501
+        :param number: The number of this Number.  # noqa: E501
         :type: float
         """
 
-        self._val = val
+        self._number = number
 
     def to_dict(self):
         """Returns the model properties as a dict"""

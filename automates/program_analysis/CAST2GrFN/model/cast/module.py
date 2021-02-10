@@ -32,21 +32,45 @@ class Module(AstNode):
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    swagger_types = {"body": "list[AstNode]"}
+    swagger_types = {"name": "str", "body": "list[AstNode]"}
     if hasattr(AstNode, "swagger_types"):
         swagger_types.update(AstNode.swagger_types)
 
-    attribute_map = {"body": "body"}
+    attribute_map = {"name": "name", "body": "body"}
     if hasattr(AstNode, "attribute_map"):
         attribute_map.update(AstNode.attribute_map)
 
-    def __init__(self, body=None, *args, **kwargs):  # noqa: E501
+    def __init__(self, name=None, body=None, *args, **kwargs):  # noqa: E501
         """Module - a model defined in Swagger"""  # noqa: E501
+        self._name = None
         self._body = None
         self.discriminator = None
+        if name is not None:
+            self.name = name
         if body is not None:
             self.body = body
         AstNode.__init__(self, *args, **kwargs)
+
+    @property
+    def name(self):
+        """Gets the name of this Module.  # noqa: E501
+
+
+        :return: The name of this Module.  # noqa: E501
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """Sets the name of this Module.
+
+
+        :param name: The name of this Module.  # noqa: E501
+        :type: str
+        """
+
+        self._name = name
 
     @property
     def body(self):
@@ -110,6 +134,12 @@ class Module(AstNode):
         """Returns true if both objects are equal"""
         if not isinstance(other, Module):
             return False
+
+        from deepdiff import DeepDiff
+        from pprint import pprint
+
+        pprint(DeepDiff(self.__dict__, other.__dict__))
+        pprint(self.__dict__)
 
         return self.__dict__ == other.__dict__
 
