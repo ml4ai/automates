@@ -286,8 +286,8 @@ class SensitivityAnalyzer(object):
         )
 
         Si = SensitivityIndices(S, prob_def)
-        return (Si if not save_time else
-                (Si, (sample_time, exec_time, analyze_time)))
+        timing_tuple = (sample_time, exec_time, analyze_time)
+        return Si if not save_time else (Si, timing_tuple)
 
     @classmethod
     def Si_from_RBD_FAST(
