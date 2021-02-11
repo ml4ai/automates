@@ -248,8 +248,9 @@ class SensitivityAnalyzer(object):
 
             Si = SensitivityIndices(S, prob_def)
             results.append(Si)
-        return results
-        return (results if not save_time else (results, (sample_time, exec_time, analyze_time)))
+        
+        timing_tuple = (sample_time, exec_time, analyze_time)
+        return results if not save_time else (results, timing_tuple)
 
     @classmethod
     def Si_from_FAST(
@@ -275,19 +276,23 @@ class SensitivityAnalyzer(object):
                                            seed=seed)
 
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
+        
+        results = list()
+        for y in Y:
+            (S, analyze_time) = cls.__run_analysis(
+                fast.analyze,
+                prob_def,
+                Y,
+                M=M,
+                print_to_console=False,
+                seed=seed,
+            )
 
-        (S, analyze_time) = cls.__run_analysis(
-            fast.analyze,
-            prob_def,
-            Y,
-            M=M,
-            print_to_console=False,
-            seed=seed,
-        )
+            Si = SensitivityIndices(S, prob_def)
+            results.append(Si)
 
-        Si = SensitivityIndices(S, prob_def)
         timing_tuple = (sample_time, exec_time, analyze_time)
-        return Si if not save_time else (Si, timing_tuple)
+        return results if not save_time else (results, timing_tuple)
 
     @classmethod
     def Si_from_RBD_FAST(
@@ -313,20 +318,24 @@ class SensitivityAnalyzer(object):
         X = samples
 
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
+        
+        results = list()
+        for y in Y:
+            (S, analyze_time) = cls.__run_analysis(
+                rbd_fast.analyze,
+                prob_def,
+                X,
+                Y,
+                M=M,
+                print_to_console=False,
+                seed=seed,
+            )
 
-        (S, analyze_time) = cls.__run_analysis(
-            rbd_fast.analyze,
-            prob_def,
-            X,
-            Y,
-            M=M,
-            print_to_console=False,
-            seed=seed,
-        )
+            Si = SensitivityIndices(S, prob_def)
+            results.append(Si)
 
-        Si = SensitivityIndices(S, prob_def)
-        return (Si if not save_time else
-                (Si, (sample_time, exec_time, analyze_time)))
+        timing_tuple = (sample_time, exec_time, analyze_time)
+        return results if not save_time else (results, timing_tuple)
 
 
 def ISA(
