@@ -249,8 +249,7 @@ class SensitivityAnalyzer(object):
             Si = SensitivityIndices(S, prob_def)
             results.append(Si)
         return results
-        # return (Si if not save_time else
-        #         (Si, (sample_time, exec_time, analyze_time)))
+        return (results if not save_time else (results, (sample_time, exec_time, analyze_time)))
 
     @classmethod
     def Si_from_FAST(
