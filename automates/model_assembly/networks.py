@@ -28,6 +28,7 @@ from .structures import (
     ContainerIdentifier,
     VariableIdentifier,
     TypeIdentifier,
+    ObjectDefinition,
     VariableDefinition,
     TypeDefinition,
     VarType,
@@ -163,17 +164,22 @@ class LambdaNode(GenericNode):
             )
         try:
             res = self.function(*values)
+            if self.func_type == LambdaType.LITERAL:
+                return [np.full_like(self.np_shape, res, dtype=np.float)]
             if isinstance(res, tuple):
-                return [np.array(item) for item in res]
+                return [item for item in res]
             else:
-                if len(values) == 0:
-                    res = [np.array(res, dtype=np.float32)]
-                else:
-                    res = [np.array(res)]
-            return res
+                return [self.parse_result(values, res)]
         except Exception as e:
             print(f"Exception occured in {self.func_str}")
             raise GrFNExecutionException(e)
+
+    def parse_result(self, values, res):
+        if isinstance(res, dict):
+            res = {k: self.parse_result(values, v) for k, v in res.items()}
+        elif len(values) == 0:
+            res = np.array(res, dtype=np.float32)
+        return res
 
     def get_kwargs(self):
         return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
@@ -220,7 +226,10 @@ class HyperEdge:
         result = self.lambda_fn(*[var.value for var in self.inputs])
         for i, out_val in enumerate(result):
             variable = self.outputs[i]
-            if variable.input_value:
+            if (
+                variable.input_value != None
+                and self.lambda_fn.func_type == LambdaType.LITERAL
+            ):
                 variable.value = variable.input_value
             else:
                 variable.value = out_val
@@ -321,91 +330,107 @@ class GrFNSubgraph:
         nodes_to_hyper_edge = {e.lambda_fn: e for e in hyper_edges}
 
         # There should be only one lambda node of type interface with outputs
-        # all in the same subgraph.Identify this node as the entry point of
-        # execution within this subgraph.
-        input_interface_hyper_edge_nodes = [
-            e.lambda_fn
-            for e in hyper_edges
-            if e.lambda_fn.func_type == LambdaType.INTERFACE
-            and all([o in self.nodes for o in e.outputs])
-        ]
-
-        output_interface_hyper_edges = [
-            e
-            for e in hyper_edges
-            if e.lambda_fn.func_type == LambdaType.INTERFACE
-            and all([o in self.nodes for o in e.inputs])
-        ]
-
-        if len(input_interface_hyper_edge_nodes) != 1 and self.parent:
-            raise GrFNExecutionException(
-                "Found multiple input interface nodes in subgraph during execution."
-                + f" Expected 1 but {len(input_interface_hyper_edge_nodes)} were found."
-            )
-
-        hyper_edge_nodes_with_no_input = [
-            e.lambda_fn for e in hyper_edges if not e.inputs
-        ]
-
-        node_execute_queue = (
-            input_interface_hyper_edge_nodes + hyper_edge_nodes_with_no_input
+        # all in the same subgraph. Identify this node as the entry point of
+        # execution within this subgraph. Will be none if no input.
+        input_interface_hyper_edge_node = self.get_input_interface_hyper_edge(
+            hyper_edges
         )
+        output_interface_hyper_edge_node = self.get_output_interface_node(hyper_edges)
+
+        # Find the hyper edge nodes with no input to initialize the execution queue
+        node_execute_queue = [e.lambda_fn for e in hyper_edges if not e.inputs]
+
+        if input_interface_hyper_edge_node:
+            node_execute_queue.insert(0, input_interface_hyper_edge_node.lambda_fn)
+
         while node_execute_queue:
+            executed = True
+            executed_visited_variables = set()
             node_to_execute = node_execute_queue.pop(0)
-            visited_variables = set()
+
+            if node_to_execute in all_nodes_visited:
+                continue
+
             if node_to_execute not in nodes_to_hyper_edge:
                 if node_to_execute.func_type == LambdaType.INTERFACE:
-                    # We need to recurse into a new subgraph as the next node is an
-                    # interface thats not in the current subgraph
-                    # subgraph execution returns the updated output nodes so we can
-                    # mark them as visited here in the parent in order to continue
-                    # execution
-                    visited_variables.update(
-                        node_to_subgraph[node_to_execute](
-                            grfn,
-                            subgraphs_to_hyper_edges,
-                            node_to_subgraph,
-                            all_nodes_visited,
-                        )
+                    subgraph = node_to_subgraph[node_to_execute]
+                    subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
+                    subgraph_input_interface = subgraph.get_input_interface_hyper_edge(
+                        subgraph_hyper_edges
                     )
+                    # Either the subgraph has no input interface or all the
+                    # inputs must be set.
+                    if not subgraph_input_interface or all(
+                        [
+                            n in all_nodes_visited
+                            for n in subgraph_input_interface.inputs
+                        ]
+                    ):
+                        # We need to recurse into a new subgraph as the next node is an
+                        # interface thats not in the current subgraph
+                        # subgraph execution returns the updated output nodes so we can
+                        # mark them as visited here in the parent in order to continue
+                        # execution
+                        executed_visited_variables.update(
+                            node_to_subgraph[node_to_execute](
+                                grfn,
+                                subgraphs_to_hyper_edges,
+                                node_to_subgraph,
+                                all_nodes_visited,
+                            )
+                        )
+                    else:
+                        executed = False
+
                 else:
                     raise GrFNExecutionException(
                         "Error: Attempting to execute non-interface node"
                         + f" {node_to_execute} found in another subgraph."
                     )
-            elif (
-                all(
-                    [
-                        n in all_nodes_visited
-                        for n in nodes_to_hyper_edge[node_to_execute].inputs
-                    ]
-                )
-                or node_to_execute.func_type == LambdaType.DECISION
+            elif all(
+                [
+                    n in all_nodes_visited
+                    for n in nodes_to_hyper_edge[node_to_execute].inputs
+                ]
             ):
                 # All of the input nodes have been visited, so the input values
                 # are initialized and we can execute. In the case of literal
                 # nodes, inputs is empty and all() will default to True.
                 to_execute = nodes_to_hyper_edge[node_to_execute]
                 to_execute()
-                visited_variables.update(to_execute.outputs)
+                executed_visited_variables.update(to_execute.outputs)
             else:
                 # We still are waiting on input values to be computed, push to
                 # the back of the queue
-                node_execute_queue.append(node_to_execute)
-                continue
+                executed = False
 
-            all_nodes_visited.update(visited_variables)
-            all_nodes_visited.add(node_to_execute)
-            node_execute_queue.extend(
-                [
-                    succ
-                    for var in visited_variables
-                    for succ in grfn.successors(var)
-                    if (succ in self.nodes and succ not in all_nodes_visited)
-                    or succ.func_type == LambdaType.INTERFACE
-                ]
-            )
-        return {n for e in output_interface_hyper_edges for n in e.outputs}
+            if executed:
+                all_nodes_visited.update(executed_visited_variables)
+                all_nodes_visited.add(node_to_execute)
+                node_execute_queue.extend(
+                    [
+                        succ
+                        for var in executed_visited_variables
+                        for succ in grfn.successors(var)
+                        if (succ in self.nodes and succ not in all_nodes_visited)
+                        or succ.func_type == LambdaType.INTERFACE
+                    ]
+                )
+            else:
+                node_execute_queue.extend(
+                    [
+                        lambda_pred
+                        for var_pred in grfn.predecessors(node_to_execute)
+                        for lambda_pred in grfn.predecessors(var_pred)
+                        if lambda_pred not in all_nodes_visited
+                    ]
+                )
+
+        return (
+            {}
+            if not output_interface_hyper_edge_node
+            else {n for n in output_interface_hyper_edge_node.outputs}
+        )
 
     @classmethod
     def from_container(
@@ -428,6 +453,63 @@ class GrFNSubgraph:
             cls.get_border_color(con.__class__.__name__),
             [],
         )
+
+    def get_input_interface_hyper_edge(self, hyper_edges):
+        """
+        Get the interface node for input in this subgraph
+
+        Args:
+            hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
+                subgraph.
+
+        Returns:
+            LambdaNode: The lambda node for the input interface. None if there
+                is no input for this subgraph.
+        """
+        input_interfaces = [
+            e
+            for e in hyper_edges
+            if e.lambda_fn.func_type == LambdaType.INTERFACE
+            and all([o in self.nodes for o in e.outputs])
+        ]
+
+        if len(input_interfaces) > 1 and self.parent:
+            raise GrFNExecutionException(
+                "Found multiple input interface nodes in subgraph during execution."
+                + f" Expected 1 but {len(input_interfaces)} were found."
+            )
+        elif len(input_interfaces) == 0:
+            return None
+
+        return input_interfaces[0]
+
+    def get_output_interface_node(self, hyper_edges):
+        """
+        Get the interface node for output in this subgraph
+
+        Args:
+            hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
+                subgraph.
+
+        Returns:
+            LambdaNode: The lambda node for the output interface.
+        """
+        output_interfaces = [
+            e
+            for e in hyper_edges
+            if e.lambda_fn.func_type == LambdaType.INTERFACE
+            and all([o in self.nodes for o in e.inputs])
+        ]
+
+        if not self.parent:
+            # The root subgraph has no output interface
+            return None
+        elif len(output_interfaces) != 1:
+            raise GrFNExecutionException(
+                "Found multiple output interface nodes in subgraph during execution."
+                + f" Expected 1 but {len(output_interfaces)} were found."
+            )
+        return output_interfaces[0]
 
     @staticmethod
     def get_border_color(type_str):
@@ -512,11 +594,30 @@ class GrFNLoopSubgraph(GrFNSubgraph):
             )
         exit_var_node = exit_var_nodes[0]
 
+        # Find the first decision node and mark its input variables as
+        # visited so we can execute the cyclic portion of the loop
+        input_interface = self.get_input_interface_hyper_edge(
+            subgraphs_to_hyper_edges[self]
+        )
+        initial_decision = {
+            n
+            for v in input_interface.outputs
+            for n in grfn.successors(v)
+            if n.func_type == LambdaType.DECISION
+        }
+        first_decision_vars = {
+            v
+            for l in initial_decision
+            for v in grfn.predecessors(l)
+            if isinstance(v, VariableNode)
+        }
+
         var_results = set()
         initial_visited_nodes = set()
         # Loop until the exit value becomes true
         while not exit_var_node.value:
             initial_visited_nodes = all_nodes_visited.copy()
+            initial_visited_nodes.update(first_decision_vars)
             var_results = super().__call__(
                 grfn,
                 subgraphs_to_hyper_edges,
@@ -525,6 +626,21 @@ class GrFNLoopSubgraph(GrFNSubgraph):
             )
         all_nodes_visited = all_nodes_visited.union(initial_visited_nodes)
         return var_results
+
+
+class GrfFNType:
+    name: str
+    fields: List[Tuple[str, str]]
+
+    def __init__(self, name, fields):
+        self.name = name
+        self.fields = fields
+
+    def get_initial_dict(self):
+        d = {}
+        for field in self.fields:
+            d[field] = None
+        return d
 
 
 class GroundedFunctionNetwork(nx.DiGraph):
@@ -536,6 +652,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         G: nx.DiGraph,
         H: List[HyperEdge],
         S: nx.DiGraph,
+        # T: List[GrFNType],
     ):
         super().__init__(G)
         self.hyper_edges = H
@@ -550,6 +667,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         self.variables = [n for n in self.nodes if isinstance(n, VariableNode)]
         self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
+        self.types = []
 
         root_subgraphs = [s for s in self.subgraphs if not s.parent]
         if len(root_subgraphs) != 1:
@@ -610,6 +728,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             A set of outputs from executing the GrFN, one for every set of
             inputs.
         """
+        self.np_shape = (1,)
         # TODO: update this function to work with new GrFN object
         full_inputs = {self.input_name_map[n]: v for n, v in inputs.items()}
         # Set input values
@@ -621,16 +740,20 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 value = np.array([value], dtype=np.int32)
             elif isinstance(value, list):
                 value = np.array(value, dtype=np.float32)
+            elif isinstance(value, np.array):
+                self.np_shape = value.shape
 
             input_node.input_value = value
+
+        # Configure the np array shape for all lambda nodes
+        for n in self.lambdas:
+            n.np_shape = self.np_shape
 
         subgraph_to_hyper_edges = {
             s: [h for h in self.hyper_edges if h.lambda_fn in s.nodes]
             for s in self.subgraphs
         }
-
         node_to_subgraph = {n: s for s in self.subgraphs for n in s.nodes}
-
         self.root_subgraph(self, subgraph_to_hyper_edges, node_to_subgraph, set())
 
         # Return the output
@@ -643,6 +766,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         containers: Dict[ContainerIdentifier, GenericContainer],
         variables: Dict[VariableIdentifier, VariableDefinition],
         types: Dict[TypeIdentifier, TypeDefinition],
+        objects: List[ObjectDefinition],
     ):
         network = nx.DiGraph()
         hyper_edges = list()

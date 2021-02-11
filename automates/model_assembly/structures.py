@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto, unique
 from dataclasses import dataclass
+from typing import List
 import re
 
 from .code_types import CodeType
@@ -130,8 +131,21 @@ class VariableDefinition(GenericDefinition):
 
 
 @dataclass(frozen=True)
+class TypeFieldDefinition:
+    name: str
+    type: str
+
+
+@dataclass(frozen=True)
 class TypeDefinition(GenericDefinition):
-    attributes: tuple
+    name: str
+    metatype: str
+    fields: List[TypeFieldDefinition]
+
+
+@dataclass(frozen=True)
+class ObjectDefinition(GenericDefinition):
+    pass
 
 
 class GenericContainer(ABC):
