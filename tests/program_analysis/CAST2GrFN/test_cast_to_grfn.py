@@ -1,4 +1,6 @@
+from os import name
 import pytest
+import random
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -31,11 +33,22 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 )
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
+import automates.model_assembly.networks as networks
 from automates.model_assembly.networks import GroundedFunctionNetwork
 
 
 def get_grfn_from_json_file(file):
     return GroundedFunctionNetwork.from_json(file)
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # Before each test, set the seed for generating uuids to 0 for consistency
+    # between tests and expected output
+    networks.rd = random.Random()
+    networks.rd.seed(0)
+    # Run the test function
+    yield
 
 
 @pytest.fixture
@@ -45,8 +58,18 @@ def basic_function_def_and_assignment_grfn():
 
 
 @pytest.fixture
+def pid_c_cast_grfn():
+    return None
+
+
+@pytest.fixture
+def cast_with_all_nodes_grfn():
+    return None
+
+
+@pytest.fixture
 def basic_function_def_and_assignment_cast():
-    v = Var(val="exampleVar", type="float")
+    v = Var(val=Name(name="exampleVar"), type="float")
     n = Number(number=36.2)
     a = Assignment(left=v, right=n)
     f = FunctionDef(name="exampleFunction", func_args=[], body=[a])
@@ -57,7 +80,7 @@ def basic_function_def_and_assignment_cast():
 @pytest.fixture
 def cast_with_all_nodes():
     class_func_arg_name = Var(val="exampleArg", type="Number")
-    var = Var(val="exampleVar", type="Number")
+    var = Var(val=Name(name="exampleVar"), type="Number")
     number = Number(number=36.2)
 
     class_func_assign_expr = UnaryOp(
@@ -118,8 +141,200 @@ def cast_with_all_nodes():
     return CAST([m])
 
 
+@pytest.fixture
+def pid_c_cast():
+    # TODO for a C struct, should we make a default init function?
+    struct_pid_def = ClassDef(
+        name="struct _pid",
+        bases=[],
+        funcs=[],
+        fields=[
+            Var(val=Name(name="setSpeed"), type="float"),
+            Var(val=Name(name="ActualSpeed"), type="float"),
+            Var(val=Name(name="err"), type="float"),
+            Var(val=Name(name="err_last"), type="float"),
+            Var(val=Name(name="voltage"), type="float"),
+            Var(val=Name(name="integral"), type="float"),
+            Var(val=Name(name="Kp"), type="float"),
+            Var(val=Name(name="Ki"), type="float"),
+            Var(val=Name(name="Kd"), type="float"),
+        ],
+    )
+    global_pid_assign = Assignment(
+        left=Var(val=Name(name="pid")),
+        right=Call(
+            func="struct_pid",
+            arguments=[],
+        ),
+    )
+
+    pid_assignments = [
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="SetSpeed"),
+            right=Number(number=0.0),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="ActualSpeed"),
+            right=Number(number=0.0),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="err"),
+            right=Number(number=0.0),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="err_last"),
+            right=Number(number=0.0),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="voltage"),
+            right=Number(number=0.0),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="integral"),
+            right=Number(number=0.0),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="Kp"),
+            right=Number(number=0.2),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="Ki"),
+            right=Number(number=0.015),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="Kd"),
+            right=Number(number=0.2),
+        ),
+    ]
+    pid_init_func = FunctionDef(name="PID_init", body=pid_assignments)
+
+    pid_realize_body = [
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="SetSpeed"),
+            right=Name(name="speed"),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="err"),
+            right=BinaryOp(
+                op=BinaryOperator.SUB,
+                left=Attribute(value=Name(name="pid"), attr="SetSpeed"),
+                right=Attribute(value=Name(name="pid"), attr="ActualSpeed"),
+            ),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="integral"),
+            right=BinaryOp(
+                op=BinaryOperator.ADD,
+                left=Attribute(value=Name(name="pid"), attr="integral"),
+                right=Attribute(value=Name(name="pid"), attr="err"),
+            ),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="voltage"),
+            right=BinaryOp(
+                op=BinaryOperator.MULT,
+                left=Attribute(value=Name(name="pid"), attr="Kp"),
+                right=BinaryOp(
+                    op=BinaryOperator.MULT,
+                    left=BinaryOp(
+                        op=BinaryOperator.ADD,
+                        left=Attribute(value=Name(name="pid"), attr="err"),
+                        right=Attribute(value=Name(name="pid"), attr="Ki"),
+                    ),
+                    right=BinaryOp(
+                        op=BinaryOperator.MULT,
+                        left=BinaryOp(
+                            op=BinaryOperator.ADD,
+                            left=Attribute(value=Name(name="pid"), attr="integral"),
+                            right=Attribute(value=Name(name="pid"), attr="Kd"),
+                        ),
+                        right=BinaryOp(
+                            op=BinaryOperator.SUB,
+                            left=Attribute(value=Name(name="pid"), attr="err"),
+                            right=Attribute(value=Name(name="pid"), attr="err_last"),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="err_last"),
+            right=Attribute(value=Name(name="pid"), attr="err"),
+        ),
+        Assignment(
+            left=Attribute(value=Name(name="pid"), attr="ActualSpeed"),
+            right=BinaryOp(
+                op=BinaryOperator.MULT,
+                left=Attribute(value=Name(name="pid"), attr="voltage"),
+                right=Number(number=1.0),
+            ),
+        ),
+        ModelReturn(value=Attribute(value=Name(name="pid"), attr="ActualSpeed")),
+    ]
+    pid_realize_func = FunctionDef(
+        name="PID_realize",
+        func_args=[Var(val=Name(name="speed"), type="float")],
+        body=pid_realize_body,
+    )
+
+    main_pid_init_call = Expr(expr=Call(func=Name(name="PID_init")))
+    main_count_init = Assignment(
+        left=Var(val=Name(name="count"), type="int"), right=Number(number=0)
+    )
+
+    main_loop_speed_assign = Assignment(
+        left=Var(val=Name(name="speed")),
+        right=Call(func=Name(name="PID_init"), arguments=[Number(number=20.0)]),
+    )
+    main_loop_count_assign = Assignment(
+        left=Var(val=Name(name="count")),
+        right=BinaryOp(
+            op=BinaryOperator.ADD,
+            left=Var(val=Name(name="count")),
+            right=Number(number=1),
+        ),
+    )
+    main_loop = Loop(
+        expr=BinaryOp(
+            op=BinaryOperator.LT, left=Name(name="count"), right=Number(number=100)
+        ),
+        body=[main_loop_speed_assign, main_loop_count_assign],
+    )
+    main_return = ModelReturn(value=Number(number=0))
+
+    main_func = FunctionDef(
+        name="main",
+        func_args=[],
+        body=[main_pid_init_call, main_count_init, main_loop, main_return],
+    )
+
+    pid_body = [
+        struct_pid_def,
+        global_pid_assign,
+        pid_init_func,
+        pid_realize_func,
+        main_func,
+    ]
+    pid_module = Module(name="PID", body=pid_body)
+    return CAST([pid_module])
+
+
 def test_basic_function_def_and_assignment(
     basic_function_def_and_assignment_grfn, basic_function_def_and_assignment_cast
 ):
     generated_grfn = basic_function_def_and_assignment_cast.to_GrFN()
     assert generated_grfn == basic_function_def_and_assignment_grfn
+
+
+def test_cast_with_all_nodes(cast_with_all_nodes_grfn, cast_with_all_nodes):
+    assert True
+    # TODO
+    # generated_grfn = cast_with_all_nodes.to_GrFN()
+    # assert generated_grfn == cast_with_all_nodes_grfn
+
+
+def test_pid_c_cast(pid_c_cast_grfn, pid_c_cast):
+    assert True
+    # TODO
+    # generated_grfn = pid_c_cast.to_GrFN()
+    # assert generated_grfn == pid_c_cast_grfn
