@@ -227,7 +227,10 @@ class LambdaNode(GenericNode):
                 for lambda:\n{self.func_str}""")
         try:
             # print(self.func_str)
-            res = self.function(*values)
+            if self.np_shape != (1, ):
+                res = self.v_function(*values)
+            else:
+                res = self.function(*values)
             if self.func_type == LambdaType.LITERAL:
                 return [np.full(self.np_shape, res, dtype=np.float64)]
             elif isinstance(res, tuple):
@@ -298,6 +301,12 @@ class HyperEdge:
             if (self.lambda_fn.func_type == LambdaType.LITERAL
                     and variable.input_value is not None):
                 variable.value = variable.input_value
+            elif (self.lambda_fn.func_type == LambdaType.DECISION
+                    and all([o.identifier.var_name == "EXIT" for o in self.outputs])):
+                if variable.value is None:
+                    variable.value = out_val
+                else:
+                    variable.value = variable.value | out_val
             else:
                 variable.value = out_val
 
@@ -683,7 +692,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
         return var_results
 
 
-class GrfFNType:
+class GrFNType:
     name: str
     fields: List[Tuple[str, str]]
 
@@ -707,7 +716,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         G: nx.DiGraph,
         H: List[HyperEdge],
         S: nx.DiGraph,
-        # T: List[GrFNType],
+        T: List[GrFNType],
     ):
         super().__init__(G)
         self.hyper_edges = H
@@ -730,6 +739,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 f"Error: Incorrect number of root subgraphs found in GrFN." +
                 f"Should be 1 and found {len(root_subgraphs)}.")
         self.root_subgraph = root_subgraphs[0]
+
+        for lambda_node in self.lambdas:
+            lambda_node.v_function = np.vectorize(lambda_node.function)
 
         # TODO decide how we detect configurable inputs for execution
         # Configurable inputs are all variables assigned to a literal in the
@@ -1293,13 +1305,16 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
 
+        # TODO: fix this to actually gather typedefs
+        T = []
+
         # Add edges to the new DiGraph using the re-created hyper-edge objects
         for edge in H:
             G.add_edges_from([(var, edge.lambda_fn) for var in edge.inputs])
             G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
 
         identifier = GenericIdentifier.from_str(data["identifier"])
-        return cls(data["uid"], identifier, data["timestamp"], G, H, S)
+        return cls(data["uid"], identifier, data["timestamp"], G, H, S, T)
 
 
 class CausalAnalysisGraph(nx.DiGraph):
