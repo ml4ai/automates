@@ -176,7 +176,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         self.state.push_scope(node.name)
 
-        args_result = self.visit_list(node.args)
+        args_result = self.visit_list(node.func_args)
         body_result = self.visit_list(node.body)
 
         self.state.pop_scope()
@@ -251,7 +251,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return node.val
+        return node.name
 
     @visit.register
     def _(self, node: Number):
@@ -269,7 +269,7 @@ class CASTToAIRVisitor(CASTVisitor):
             [],
             [],
             C2ALambdaType.UNKNOWN,
-            node.val,
+            node.number,
             node,
         )
 
