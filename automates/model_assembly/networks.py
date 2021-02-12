@@ -8,6 +8,7 @@ from copy import deepcopy
 from uuid import uuid4
 import datetime
 import json
+import re
 
 import networkx as nx
 import numpy as np
@@ -36,7 +37,6 @@ from .structures import (
     GrFNExecutionException,
 )
 from ..utils.misc import choose_font
-
 
 FONT = choose_font()
 
@@ -116,8 +116,62 @@ class VariableNode(GenericNode):
             "label": self.get_label(),
         }
 
+    @staticmethod
+    def get_node_label(base_name):
+        if "_" in base_name:
+            if base_name.startswith("IF_") or base_name.startswith("COND_"):
+                snake_case_tokens = [base_name]
+            else:
+                snake_case_tokens = base_name.split("_")
+        else:
+            snake_case_tokens = [base_name]
+
+        # If the identifier is an all uppercase acronym (like `WMA`) then we
+        # need to capture that. But we also the case where the first two letters
+        # are capitals but the first letter does not belong with the second
+        # (like `AVariable`). We also need to capture the case of an acronym
+        # followed by a capital for the next word (like `AWSVars`).
+        camel_case_tokens = list()
+        for token in snake_case_tokens:
+            if token.islower() or token.isupper():
+                camel_case_tokens.append(token)
+            else:
+                # NOTE: special case rule for derivatives
+                if re.match(r"^d[A-Z]", token) is not None:
+                    camel_case_tokens.append(token)
+                else:
+                    camel_split = re.split(r"([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", token)
+                    camel_case_tokens.extend(camel_split)
+
+        clean_tokens = [t for t in camel_case_tokens if t != ""]
+        label = ""
+        cur_length = 0
+        for token in clean_tokens:
+            tok_len = len(token)
+            if cur_length == 0:
+                label += token + " "
+                cur_length += tok_len + 1
+                continue
+
+            if cur_length >= 8:
+                label += "\n"
+                cur_length = 0
+
+            if cur_length + tok_len < 8:
+                label += token + " "
+                cur_length += tok_len + 1
+            else:
+                label += token
+                cur_length += tok_len
+
+        return label
+
     def get_label(self):
-        return self.identifier.var_name
+        node_label = self.get_node_label(self.identifier.var_name)
+        return node_label
+
+    # def get_label(self):
+    #     return self.identifier.var_name
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -127,7 +181,7 @@ class VariableNode(GenericNode):
             data["reference"] if "reference" in data else None,
             identifier,
             None,
-            VarType.from_name(data["data_type"]),
+            VarType.from_name(data["data_type"]) if "data_type" in data else None,
             DataType.from_type_str(data["kind"]) if "kind" in data else None,
             data["domain"] if "domain" in data else None,
             None,
@@ -1027,6 +1081,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
         )
         A.node_attr.update({"fontname": "Menlo"})
+
         # A.add_subgraph(input_nodes, rank="same")
         # A.add_subgraph(output_nodes, rank="same")
 
