@@ -85,6 +85,7 @@ def main():
                     del row_order_parquet_data[edit_dict["del_idx"]]
                     row_order_parquet_data.insert(edit_dict["ins_idx"],
                                                   edit_dict["val"])
+                row_order_parquet_data.sort(key=lambda d: (d["pdf_name"]))
 
             parquet_json_filepath = parquet_filepath.replace(
                 ".parquet", ".json")
