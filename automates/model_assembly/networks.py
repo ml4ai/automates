@@ -226,9 +226,10 @@ class LambdaNode(GenericNode):
                 (expected {expected_num_args} found {input_num_args})
                 for lambda:\n{self.func_str}""")
         try:
+            # print(self.func_str)
             res = self.function(*values)
             if self.func_type == LambdaType.LITERAL:
-                return [np.full_like(self.np_shape, res, dtype=np.float)]
+                return [np.full(self.np_shape, res, dtype=np.float64)]
             elif isinstance(res, tuple):
                 return [item for item in res]
             else:
@@ -241,7 +242,7 @@ class LambdaNode(GenericNode):
         if isinstance(res, dict):
             res = {k: self.parse_result(values, v) for k, v in res.items()}
         elif len(values) == 0:
-            res = np.array(res, dtype=np.float32)
+            res = np.full(self.np_shape, res, dtype=np.float64)
         return res
 
     def get_kwargs(self):
@@ -286,14 +287,16 @@ class HyperEdge:
     outputs: Iterable[VariableNode]
 
     def __call__(self):
+        # print(self.lambda_fn.func_str)
         result = self.lambda_fn(*[
             var.value if var.value is not None else var.input_value
             for var in self.inputs
         ])
         for i, out_val in enumerate(result):
             variable = self.outputs[i]
-            if (variable.input_value != None
-                    and self.lambda_fn.func_type == LambdaType.LITERAL):
+            # print(out_val)
+            if (self.lambda_fn.func_type == LambdaType.LITERAL
+                    and variable.input_value is not None):
                 variable.value = variable.input_value
             else:
                 variable.value = out_val
@@ -667,7 +670,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
         var_results = set()
         initial_visited_nodes = set()
         # Loop until the exit value becomes true
-        while not exit_var_node.value:
+        while exit_var_node.value is None or not all(exit_var_node.value):
             initial_visited_nodes = all_nodes_visited.copy()
             initial_visited_nodes.update(first_decision_vars)
             var_results = super().__call__(
@@ -747,15 +750,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         self.uid2varnode = {v.uid: v for v in self.variables}
 
-        self.input_names = [
-            var_node.identifier
-            for var_node in self.inputs
-        ]
+        self.input_names = [var_node.identifier for var_node in self.inputs]
 
-        self.output_names = [
-            var_node.identifier
-            for var_node in self.outputs
-        ]
+        self.output_names = [var_node.identifier for var_node in self.outputs]
 
         self.input_name_map = {
             var_node.identifier.var_name: var_node
@@ -804,12 +801,14 @@ class GroundedFunctionNetwork(nx.DiGraph):
         # Set input values
         for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
+            # TODO: need to find a way to incorporate a 32/64 bit check here
             if isinstance(value, float):
-                value = np.array([value], dtype=np.float32)
+                value = np.array([value], dtype=np.float64)
             if isinstance(value, int):
-                value = np.array([value], dtype=np.int32)
+                value = np.array([value], dtype=np.int64)
             elif isinstance(value, list):
-                value = np.array(value, dtype=np.float32)
+                value = np.array(value)
+                self.np_shape = value.shape
             elif isinstance(value, np.ndarray):
                 self.np_shape = value.shape
 
@@ -827,7 +826,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
         self.root_subgraph(self, subgraph_to_hyper_edges, node_to_subgraph,
                            set())
         # Return the output
-        return {output.identifier.var_name: output.value for output in self.outputs}
+        return {
+            output.identifier.var_name: output.value
+            for output in self.outputs
+        }
 
     @classmethod
     def from_AIR(
