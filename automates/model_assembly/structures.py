@@ -91,7 +91,7 @@ class GenericDefinition(ABC):
         if "domain" in data:
             if "dimensions" in data["domain"]:
                 type_str = "type"
-                name_str = "array"
+                name_str = "list"
             else:
                 name_str = data["domain"]["name"]
                 type_str = data["domain"]["type"]
@@ -276,7 +276,8 @@ class VarType(Enum):
             return cls.BOOLEAN
         elif name == "integer":
             return cls.INTEGER
-        elif name == "list":
+        # TODO update for2py pipeline to use list instead
+        elif name == "list" or name == "array":
             return cls.ARRAY
         elif name == "object":
             return cls.OBJECT
@@ -315,7 +316,8 @@ class DataType(Enum):
             return cls.BINARY
         elif name == "integer":
             return cls.DISCRETE
-        elif name == "none" or name == "array":
+        # TODO remove array after updating for2py to use list type
+        elif name == "none" or name == "list" or name == "array":
             return cls.NONE
         else:
             raise ValueError(f"DataType unrecognized name: {name}")

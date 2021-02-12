@@ -21,7 +21,7 @@ class InputError(Exception):
 
 
 class SensitivityIndices(object):
-    """ This class creates an object with first and second order sensitivity
+    """This class creates an object with first and second order sensitivity
     indices as well as the total sensitivty index for a given sample size. It
     also contains the confidence interval associated with the computation of
     each index. The indices are in the form of a dictionary and they can be saved
@@ -191,7 +191,9 @@ class SensitivityAnalyzer(object):
         }
 
         outputs = CG(vectorized_input_samples)
-        Y = outputs[0]
+
+        # TODO @pauldhein how should this actuall work?
+        Y = outputs["eo"]
         Y = Y.reshape((Y.shape[0],))
         return Y
 
@@ -244,11 +246,7 @@ class SensitivityAnalyzer(object):
         )
 
         Si = SensitivityIndices(S, prob_def)
-        return (
-            Si
-            if not save_time
-            else (Si, (sample_time, exec_time, analyze_time))
-        )
+        return Si if not save_time else (Si, (sample_time, exec_time, analyze_time))
 
     @classmethod
     def Si_from_FAST(
@@ -273,15 +271,16 @@ class SensitivityAnalyzer(object):
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
 
         (S, analyze_time) = cls.__run_analysis(
-            fast.analyze, prob_def, Y, M=M, print_to_console=False, seed=seed,
+            fast.analyze,
+            prob_def,
+            Y,
+            M=M,
+            print_to_console=False,
+            seed=seed,
         )
 
         Si = SensitivityIndices(S, prob_def)
-        return (
-            Si
-            if not save_time
-            else (Si, (sample_time, exec_time, analyze_time))
-        )
+        return Si if not save_time else (Si, (sample_time, exec_time, analyze_time))
 
     @classmethod
     def Si_from_RBD_FAST(
@@ -318,11 +317,7 @@ class SensitivityAnalyzer(object):
         )
 
         Si = SensitivityIndices(S, prob_def)
-        return (
-            Si
-            if not save_time
-            else (Si, (sample_time, exec_time, analyze_time))
-        )
+        return Si if not save_time else (Si, (sample_time, exec_time, analyze_time))
 
 
 def ISA(
@@ -348,9 +343,7 @@ def ISA(
     ]
     PBAR = tqdm(total=sum([3 ** i for i in range(max_iterations)]))
 
-    def __add_max_var_node(
-        max_var: str, max_s1_val: float, S1_scores: list
-    ) -> str:
+    def __add_max_var_node(max_var: str, max_s1_val: float, S1_scores: list) -> str:
         node_id = uuid4()
         clr_idx = round(max_s1_val * 10)
         MAX_GRAPH.add_node(
@@ -414,7 +407,8 @@ def ISA(
             var_or_num = rf"({variable}|{numeric})"
             bool_ops = r"<|>|==|<=|>="
             cond = re.search(
-                rf"{var_or_num} ({bool_ops}) {var_or_num}", cond_line,
+                rf"{var_or_num} ({bool_ops}) {var_or_num}",
+                cond_line,
             )
 
             # No simple conditional found
@@ -453,9 +447,7 @@ def ISA(
             edge_label = f"[{l_b:.2f}, {u_b:.2f}]"
         else:
             edge_label = ""
-        MAX_GRAPH.add_edge(
-            parent_id, max_var_id, label=edge_label, object=cur_bounds
-        )
+        MAX_GRAPH.add_edge(parent_id, max_var_id, label=edge_label, object=cur_bounds)
 
         # Stop recursion with max iterations
         if pass_number == max_iterations:
@@ -475,20 +467,19 @@ def ISA(
                 interval_points.append(val)
         interval_points.sort()
         bound_breaks = __get_var_bound_breaks(interval_points)
-        new_bound_sets = __get_new_bound_sets(
-            bound_breaks, max_var, cur_bounds
-        )
+        new_bound_sets = __get_new_bound_sets(bound_breaks, max_var, cur_bounds)
 
         for new_bounds in new_bound_sets:
             PBAR.update(1)
             __iterate_with_bounds(
-                new_bounds, max_var_id, pass_number + 1, parent_var=max_var,
+                new_bounds,
+                max_var_id,
+                pass_number + 1,
+                parent_var=max_var,
             )
 
     root_id = str(uuid4())
-    root_label = "\n".join(
-        [f"{v}: [{b[0]}, {b[1]}]" for v, b in bounds.items()]
-    )
+    root_label = "\n".join([f"{v}: [{b[0]}, {b[1]}]" for v, b in bounds.items()])
 
     MAX_GRAPH.add_node(root_id, shape="rectangle", label=root_label)
     __iterate_with_bounds(bounds, root_id, 1)
