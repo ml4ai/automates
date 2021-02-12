@@ -29,7 +29,6 @@ class SensitivityIndices(object):
     minimum second order of the indices between any two input variables can be
     determined using the max (min) and argmax (argmin) methods.
     """
-
     def __init__(self, S: dict, problem: dict):
         """
         Args:
@@ -98,7 +97,7 @@ class SensitivityIndices(object):
             js_data = json.load(f)
         return cls.from_json_dict(js_data)
 
-    def to_json_dict(self):
+    def to_dict(self):
         return {
             "S1": self.O1_indices.tolist(),
             "S2": self.O2_indices.tolist(),
@@ -109,9 +108,12 @@ class SensitivityIndices(object):
             "names": self.parameter_list,
         }
 
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
     def to_json_file(self, filepath: str):
         with open(filepath, "w") as f:
-            json.dump(self.to_json_dict(), f)
+            json.dump(self.to_dict(), f)
 
 
 class SensitivityAnalyzer(object):
@@ -126,7 +128,6 @@ class SensitivityAnalyzer(object):
         conditions where a modeler may not want to include one of the inputs
         under sensitivity analysis
         """
-
         def convert_bounds(bound):
             num_bounds = len(bound)
             if num_bounds == 0:
@@ -191,10 +192,7 @@ class SensitivityAnalyzer(object):
         }
 
         outputs = CG(vectorized_input_samples)
-
-        # TODO @pauldhein how should this actuall work?
-        Y = outputs["eo"]
-        Y = Y.reshape((Y.shape[0],))
+        Y = np.concatenate([y.reshape((1, y.shape[0])) for y in outputs])
         return Y
 
     @classmethod
@@ -235,18 +233,23 @@ class SensitivityAnalyzer(object):
 
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
 
-        (S, analyze_time) = cls.__run_analysis(
-            sobol.analyze,
-            prob_def,
-            Y,
-            calc_second_order=True,
-            num_resamples=100,
-            conf_level=0.95,
-            seed=None,
-        )
+        results = list()
+        for y in Y:
+            (S, analyze_time) = cls.__run_analysis(
+                sobol.analyze,
+                prob_def,
+                y,
+                calc_second_order=True,
+                num_resamples=100,
+                conf_level=0.95,
+                seed=None,
+            )
 
-        Si = SensitivityIndices(S, prob_def)
-        return Si if not save_time else (Si, (sample_time, exec_time, analyze_time))
+            Si = SensitivityIndices(S, prob_def)
+            results.append(Si)
+        
+        timing_tuple = (sample_time, exec_time, analyze_time)
+        return results if not save_time else (results, timing_tuple)
 
     @classmethod
     def Si_from_FAST(
@@ -264,23 +267,30 @@ class SensitivityAnalyzer(object):
 
         prob_def = cls.setup_problem_def(G, B)
 
-        (samples, sample_time) = cls.__run_sampling(
-            SAL.sample.fast_sampler.sample, prob_def, N, M=M, seed=seed
-        )
+        (samples,
+         sample_time) = cls.__run_sampling(SAL.sample.fast_sampler.sample,
+                                           prob_def,
+                                           N,
+                                           M=M,
+                                           seed=seed)
 
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
+        
+        results = list()
+        for y in Y:
+            (S, analyze_time) = cls.__run_analysis(
+                fast.analyze,
+                prob_def,
+                Y,
+                M=M,
+                print_to_console=False,
+                seed=seed,
+            )
+            Si = SensitivityIndices(S, prob_def)
+            results.append(Si)
 
-        (S, analyze_time) = cls.__run_analysis(
-            fast.analyze,
-            prob_def,
-            Y,
-            M=M,
-            print_to_console=False,
-            seed=seed,
-        )
-
-        Si = SensitivityIndices(S, prob_def)
-        return Si if not save_time else (Si, (sample_time, exec_time, analyze_time))
+        timing_tuple = (sample_time, exec_time, analyze_time)
+        return results if not save_time else (results, timing_tuple)
 
     @classmethod
     def Si_from_RBD_FAST(
@@ -298,26 +308,32 @@ class SensitivityAnalyzer(object):
 
         prob_def = cls.setup_problem_def(G, B)
 
-        (samples, sample_time) = cls.__run_sampling(
-            latin.sample, prob_def, N, seed=seed
-        )
+        (samples, sample_time) = cls.__run_sampling(latin.sample,
+                                                    prob_def,
+                                                    N,
+                                                    seed=seed)
 
         X = samples
 
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
+        
+        results = list()
+        for y in Y:
+            (S, analyze_time) = cls.__run_analysis(
+                rbd_fast.analyze,
+                prob_def,
+                X,
+                Y,
+                M=M,
+                print_to_console=False,
+                seed=seed,
+            )
 
-        (S, analyze_time) = cls.__run_analysis(
-            rbd_fast.analyze,
-            prob_def,
-            X,
-            Y,
-            M=M,
-            print_to_console=False,
-            seed=seed,
-        )
+            Si = SensitivityIndices(S, prob_def)
+            results.append(Si)
 
-        Si = SensitivityIndices(S, prob_def)
-        return Si if not save_time else (Si, (sample_time, exec_time, analyze_time))
+        timing_tuple = (sample_time, exec_time, analyze_time)
+        return results if not save_time else (results, timing_tuple)
 
 
 def ISA(
@@ -341,9 +357,10 @@ def ISA(
         "#bd0026",
         "#800026",
     ]
-    PBAR = tqdm(total=sum([3 ** i for i in range(max_iterations)]))
+    PBAR = tqdm(total=sum([3**i for i in range(max_iterations)]))
 
-    def __add_max_var_node(max_var: str, max_s1_val: float, S1_scores: list) -> str:
+    def __add_max_var_node(max_var: str, max_s1_val: float,
+                           S1_scores: list) -> str:
         node_id = uuid4()
         clr_idx = round(max_s1_val * 10)
         MAX_GRAPH.add_node(
@@ -370,10 +387,9 @@ def ISA(
         elif num_bounds == 2:
             (lower, upper) = cur_bounds
             interval_sz = (upper - lower) / partitions
-            return [
-                (lower + (i * interval_sz), lower + ((i + 1) * interval_sz))
-                for i in range(partitions)
-            ]
+            return [(lower + (i * interval_sz),
+                     lower + ((i + 1) * interval_sz))
+                    for i in range(partitions)]
         else:
             return list(zip(cur_bounds[:-1], cur_bounds[1:]))
 
@@ -447,7 +463,10 @@ def ISA(
             edge_label = f"[{l_b:.2f}, {u_b:.2f}]"
         else:
             edge_label = ""
-        MAX_GRAPH.add_edge(parent_id, max_var_id, label=edge_label, object=cur_bounds)
+        MAX_GRAPH.add_edge(parent_id,
+                           max_var_id,
+                           label=edge_label,
+                           object=cur_bounds)
 
         # Stop recursion with max iterations
         if pass_number == max_iterations:
@@ -456,7 +475,7 @@ def ISA(
 
         if parent_var is not None:
             if max_var == parent_var:
-                PBAR.update(1 + 3 ** (max_iterations - pass_number))
+                PBAR.update(1 + 3**(max_iterations - pass_number))
                 return
 
         new_vals = __static_analysis_on_var(max_var)
@@ -467,7 +486,8 @@ def ISA(
                 interval_points.append(val)
         interval_points.sort()
         bound_breaks = __get_var_bound_breaks(interval_points)
-        new_bound_sets = __get_new_bound_sets(bound_breaks, max_var, cur_bounds)
+        new_bound_sets = __get_new_bound_sets(bound_breaks, max_var,
+                                              cur_bounds)
 
         for new_bounds in new_bound_sets:
             PBAR.update(1)

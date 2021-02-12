@@ -27,9 +27,10 @@ def sensitivity_visualizer():
     var_names = var_bounds.keys()
 
     for i in range(len(N)):
-        (Si, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
+        (Si_list, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
             N[i], tG, var_bounds, save_time=True
         )
+        Si = Si_list[0]
         (sample_time, exec_time, analysis_time) = timing_data
         sobol_dict = Si.__dict__
         S1_dict = dict(zip(var_names, sobol_dict["O1_indices"].tolist()))
