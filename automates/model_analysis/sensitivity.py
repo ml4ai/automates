@@ -192,7 +192,12 @@ class SensitivityAnalyzer(object):
         }
 
         outputs = CG(vectorized_input_samples)
-        Y = np.concatenate([y.reshape((1, y.shape[0])) for y in outputs])
+        ordered_output_vectors = [
+            outputs[name.var_name] for name in CG.output_names
+        ]
+
+        Y = np.concatenate(
+            [y.reshape((1, y.shape[0])) for y in ordered_output_vectors])
         return Y
 
     @classmethod
@@ -247,7 +252,7 @@ class SensitivityAnalyzer(object):
 
             Si = SensitivityIndices(S, prob_def)
             results.append(Si)
-        
+
         timing_tuple = (sample_time, exec_time, analyze_time)
         return results if not save_time else (results, timing_tuple)
 
@@ -275,7 +280,7 @@ class SensitivityAnalyzer(object):
                                            seed=seed)
 
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
-        
+
         results = list()
         for y in Y:
             (S, analyze_time) = cls.__run_analysis(
@@ -316,7 +321,7 @@ class SensitivityAnalyzer(object):
         X = samples
 
         (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
-        
+
         results = list()
         for y in Y:
             (S, analyze_time) = cls.__run_analysis(
@@ -499,7 +504,8 @@ def ISA(
             )
 
     root_id = str(uuid4())
-    root_label = "\n".join([f"{v}: [{b[0]}, {b[1]}]" for v, b in bounds.items()])
+    root_label = "\n".join(
+        [f"{v}: [{b[0]}, {b[1]}]" for v, b in bounds.items()])
 
     MAX_GRAPH.add_node(root_id, shape="rectangle", label=root_label)
     __iterate_with_bounds(bounds, root_id, 1)

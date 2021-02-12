@@ -36,8 +36,7 @@ def loop_grfn():
             result = increment
     """
     return GroundedFunctionNetwork.from_json(
-        "tests/data/program_analysis/grfn_execution/loop_grfn.json"
-    )
+        "tests/data/program_analysis/grfn_execution/loop_grfn.json")
 
 
 @pytest.fixture
@@ -46,8 +45,7 @@ def grfn_with_types():
     Modeled code: Refer to the PID.c example code
     """
     return GroundedFunctionNetwork.from_json(
-        "tests/data/program_analysis/grfn_execution/grfn_with_types.json"
-    )
+        "tests/data/program_analysis/grfn_execution/grfn_with_types.json")
 
 
 def test_basic_assignment_execution(basic_assignment_grfn):
@@ -79,7 +77,6 @@ def test_loops_and_user_defined_types(grfn_with_types):
     result = grfn_with_types(inputs)
 
     assert "count" in result and "pid" in result
-    from deepdiff import DeepDiff
 
     expected_result = {
         "count": np.array([100], dtype=np.int32),
@@ -96,7 +93,5 @@ def test_loops_and_user_defined_types(grfn_with_types):
         },
         "speed": np.array([15.321393223831578]),
     }
-    from pprint import pprint
 
-    pprint(DeepDiff(result, expected_result))
     assert result == expected_result
