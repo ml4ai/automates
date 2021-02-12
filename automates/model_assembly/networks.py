@@ -98,6 +98,9 @@ class VariableNode(GenericNode):
     def get_fullname(self):
         return f"{self.name}\n({self.index})"
 
+    def get_name(self):
+        return str(self.identifier)
+
     def get_kwargs(self):
         is_exit = self.identifier.var_name == "EXIT"
         return {
@@ -413,6 +416,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
             n for n, d in self.out_degree()
             if d == 0 and isinstance(n, VariableNode)
         ]
+
+        self.uid2varnode = {v.uid: v for v in self.variables}
 
         self.input_name_map = {
             var_node.identifier.var_name: var_node
