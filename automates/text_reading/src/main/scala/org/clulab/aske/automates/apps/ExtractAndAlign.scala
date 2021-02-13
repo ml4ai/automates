@@ -8,10 +8,9 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement, mkTextVarLinkElement}
+import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement, mkTextVarLinkElement, mkTextVarLinkElementForModelComparison}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
-import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
@@ -22,6 +21,8 @@ import org.clulab.grounding.{SVOGrounder, SVOGrounding, SeqOfGroundings, sparqlR
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s
 import java.util.UUID.randomUUID
+
+import org.clulab.aske.automates.attachments.MentionLocationAttachment
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -71,7 +72,10 @@ object ExtractAndAlign {
                       numAlignments: Option[Int],
                       numAlignmentsSrcToComment: Option[Int],
                       scoreThreshold: Double = 0.0,
-                      appendToGrFN: Boolean
+                      appendToGrFN: Boolean,
+                      textInputFormat: String,
+                      debug: Boolean
+
     ): Value = {
 
     // =============================================
@@ -94,7 +98,7 @@ object ExtractAndAlign {
 
     var outputJson = ujson.Obj()
 
-    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
+    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames, textInputFormat)
 
     linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION), alignments(TEXT_TO_UNIT))
 
@@ -109,10 +113,10 @@ object ExtractAndAlign {
     } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
 
     for (le <- linkElements.keys) {
-      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar)}
+      outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar, false)}
     }
 
-    val hypotheses = getLinkHypotheses(linkElements.toMap, alignments)
+    val hypotheses = getLinkHypotheses(linkElements.toMap, alignments, debug)
     outputJson("links") = hypotheses
 
     // the produced hypotheses can be either appended to the input file as "groundings" or returned as a separate ujson object
@@ -123,24 +127,19 @@ object ExtractAndAlign {
   }
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
-//    println("text var link el string: " + textVarLinkElementString)
-//    println("update: " + update)
     textVarLinkElementString + "::" + update
 
   }
 
   def updateTextVariable(textVarLinkElementString: String, update: Object): String = {
-    println("-> " + update)
     val updateString = update.toString()
-    println(updateString)
-
-
     textVarLinkElementString + "::" + updateString
 
   }
 
   def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitThroughDefAlignments: Seq[Seq[Alignment]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
+    // fixme: units can come through links directly to vars or to "definitions"; use this to analyze diff types of unit extractions
 //    println("through def: ")
 //    for ((topKThroughDef, i) <- textToUnitThroughDefAlignments.zipWithIndex) {
 ////      println(topK.head.src + " " + topK.head.dst)
@@ -209,8 +208,6 @@ object ExtractAndAlign {
 
   def updateTextVarsWithParamSettings(textVarLinkElements: Seq[String], paramSettingMentions: Option[Seq[Mention]], textToParamSettingAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
-
-    println("len unit alignments: " + textToParamSettingAlignments.length)
     val updatedTextVars = if (textToParamSettingAlignments.nonEmpty) {
       for {
         topK <- textToParamSettingAlignments
@@ -237,7 +234,7 @@ object ExtractAndAlign {
     updatedTextVars
   }
 
-  def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int): ujson.Obj = {
+  def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int, debug: Boolean): ujson.Obj = {
 
     //todo: add more informative source by type, e.g., for text var it's "text" (check with ph about this)
 
@@ -252,11 +249,14 @@ object ExtractAndAlign {
         val originalSentence = splitElStr(4)
         val definition = splitElStr(5)
         val svo_terms = splitElStr(7)
-        val unit = splitElStr(8)
-        val value = splitElStr(9)
-        val valueLeast = splitElStr(10)
-        val valueMost = splitElStr(11)
-        val svoString = splitElStr(12)
+        val unit = splitElStr(9)
+        val value = splitElStr(10)
+        val valueLeast = splitElStr(11)
+        val valueMost = splitElStr(12)
+        val svoString = splitElStr(13)
+        val locationJsonStr = splitElStr(8)
+
+        val locationAsJson = ujson.read(locationJsonStr)
 
         val results = if (groundToSvo) {
           if (svoString != "None") {
@@ -283,10 +283,32 @@ object ExtractAndAlign {
           svo_terms = svo_terms,
           unit = unit,
           paramSetting = paramSetting,
-          svo = results
+          svo = results,
+          spans = locationAsJson
         )
 
       }
+
+
+
+      case "text_var_for_model_comparison" => {
+        val id = splitElStr(0)
+        val source = splitElStr(2)
+        val identifier = splitElStr(3)
+        val originalSentence = splitElStr(4)
+        val definition = splitElStr(5)
+
+        mkTextVarLinkElementForModelComparison(
+          uid = id,
+          source = source,
+          originalSentence = originalSentence,
+          identifier = identifier,
+          definition = definition,
+          debug = debug
+        )
+
+      }
+
 
       case "identifier" => {
         val id = splitElStr(0)
@@ -320,7 +342,6 @@ object ExtractAndAlign {
 
         mkLinkElement(
           id = id,
-//          elemType = elType,
           source = source,
           content = content,
           contentType = "null"
@@ -379,13 +400,11 @@ object ExtractAndAlign {
       AlignmentJsonUtils.getCommentDocs(alignmentInputFile, source)
     } else GrFNParser.getCommentDocs(alignmentInputFile)
 
-//    for (cd <- commentDocs) println("comm doc: " + cd.text)
     // Iterate through the docs and find the mentions; eliminate duplicates
     val commentMentions = commentDocs.flatMap(doc => commentReader.extractFrom(doc)).distinct
 
-//    for (cm <- commentMentions) println("com mention: " + cm.text)
     val definitions = commentMentions.seq.filter(_ matches DEF_LABEL)
-//    for (cm <- definitions) println("com def mention: " + cm.text)
+
     if (variableShortNames.isEmpty) return definitions
     val overlapsWithVariables = definitions.filter(
       m => variableShortNames.get
@@ -432,8 +451,7 @@ object ExtractAndAlign {
       */
     if (textDefinitionMentions.isDefined && SVOgroundings.isDefined) {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), SVOgroundings.get.map(_._1.toLowerCase))
-      println("variables with svos " + SVOgroundings.get.map(_._1))
-      println("svo search results " + SVOgroundings.get.map(_._2))
+
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(TEXT_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
     }
@@ -480,7 +498,8 @@ object ExtractAndAlign {
     Option[Seq[Mention]],
     commentDefinitionMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
-    variableNames: Option[Seq[String]]
+    variableNames: Option[Seq[String]],
+    textInputFormat: String
   ): mutable.HashMap[String, Seq[String]] = {
     // Make Comment Spans from the comment variable mentions
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
@@ -524,9 +543,35 @@ object ExtractAndAlign {
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
         val definition = mention.arguments(DEFINITION).head.text
+        val charBegin = mention.startOffset
+        val charEnd = mention.endOffset
+        val continuousMenSpanJson = if (textInputFormat == "cosmos") {
+          val attAsJson = mention.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+          val page = attAsJson("pageNum").num.toInt
+          val block = attAsJson("blockIdx").num.toInt
 
+          // todo: this is for mentions that came from one block
+          // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
+          ujson.Obj(
+            "page" -> page,
+            "block" -> block,
+            "span" -> ujson.Obj(
+              "char_begin" -> charBegin,
+              "char_end" -> charEnd
+                      )
+                    )
+        } else {
+          ujson.Obj(
+            "page" -> "N/A",
+            "block" -> "N/A",
+            "span" -> ujson.Obj(
+              "char_begin" -> charBegin,
+              "char_end" -> charEnd
+            )
+          )
+        }
+          randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
 
-        randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",")
       }
     }
 
@@ -550,57 +595,169 @@ object ExtractAndAlign {
     linkElements
   }
 
-  def mkLinkHypothesisTextVarDef(variables: Seq[String], definitions: Seq[String]): Seq[Obj] = {
-    assert(variables.length == definitions.length)
-    for {
-      i <- variables.indices
-    } yield mkHypothesis(variables(i), definitions(i), 1.0)
+
+  def getInterModelComparisonLinkElements(
+                       defMentions1:
+                       Seq[Mention],
+                       defMention2: Seq[Mention]
+                     ): Map[String, Seq[String]] = {
+
+    val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
+
+
+      // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph - do not merge
+      linkElements("TEXT_VAR1") = defMentions1.map { mention =>
+        val docId = mention.document.id.getOrElse("unk_text_file")
+        val sent = mention.sentence
+        val originalSentence = mention.sentenceObj.words.mkString(" ")
+        val offsets = mention.tokenInterval.toString()
+        val textVar = mention.arguments(VARIABLE).head.text
+        val definition = mention.arguments(DEFINITION).head.text
+
+
+        randomUUID + "::" + "text_var_for_model_comparison" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}"
+      }
+
+      linkElements("TEXT_VAR2") = defMention2.map { mention =>
+        val docId = mention.document.id.getOrElse("unk_text_file")
+        val sent = mention.sentence
+        val originalSentence = mention.sentenceObj.words.mkString(" ")
+        val offsets = mention.tokenInterval.toString()
+        val textVar = mention.arguments(VARIABLE).head.text
+        val definition = mention.arguments(DEFINITION).head.text
+
+
+        randomUUID + "::" + "text_var_for_model_comparison" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}"
+      }
+
+    linkElements.toMap
+  }
+
+  def getInterModelComparisonLinkElements(
+                                       paper1Objects:
+                                       Seq[ujson.Value],
+                                       paper1id: String,
+                                       paper2Objects: Seq[ujson.Value],
+                                       paper2id: String
+                                     ): Map[String, Seq[ujson.Value]] = {
+
+    val linkElements = scala.collection.mutable.HashMap[String, Seq[ujson.Value]]()
+
+
+    // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph - do not merge
+    val updatedWithPaperId1 = for {
+      o <- paper1Objects
+      updated = ujson.Obj(
+      "var_uid" -> o.obj("var_uid"),
+      "code_identifier"-> o.obj("code_identifier"),
+      "text_definition"-> o.obj("text_definition"),
+      "text_identifier"-> o.obj("text_identifier"),
+        "grfn1_var_uid" -> paper1id
+      )
+    } yield updated
+
+    val updatedWithPaperId2 = for {
+      o <- paper2Objects
+      updated = ujson.Obj(
+        "var_uid" -> o.obj("var_uid"),
+        "code_identifier"-> o.obj("code_identifier"),
+        "text_definition"-> o.obj("text_definition"),
+        "text_identifier"-> o.obj("text_identifier"),
+        "grfn2_var_uid" -> paper2id
+      )
+    } yield updated
+
+
+    linkElements("grfn1_vars") = updatedWithPaperId1
+
+    linkElements("grfn2_vars") = updatedWithPaperId2
+    linkElements.toMap
   }
 
 
-  def mkLinkHypothesis(srcElements: Seq[String], dstElements: Seq[String], alignments: Seq[Seq[Alignment]]): Seq[Obj] = {
+//  def mkLinkHypothesisTextVarDef(variables: Seq[Obj], definitions: Seq[Obj]): Seq[Obj] = {
+
+  def mkLinkHypothesisTextVarDef(variables: Seq[String], definitions: Seq[String], debug: Boolean): Seq[Obj] = {
+
+    assert(variables.length == definitions.length)
+    for {
+      i <- variables.indices
+    } yield mkHypothesis(variables(i), definitions(i), 1.0, debug)
+  }
+
+
+  def mkLinkHypothesis(srcElements: Seq[String], dstElements: Seq[String], alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+
     for {
       topK <- alignments
       alignment <- topK
       srcLinkElement = srcElements(alignment.src)
       dstLinkElement = dstElements(alignment.dst)
       score = alignment.score
-    } yield mkHypothesis(srcLinkElement, dstLinkElement, score)
+    } yield mkHypothesis(srcLinkElement, dstLinkElement, score, debug)
+  }
+
+  def mkLinkHypothesisFromValueSequences(srcElements: Seq[Value], dstElements: Seq[Value], alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+
+    for {
+      topK <- alignments
+      alignment <- topK
+      srcLinkElement = srcElements(alignment.src)
+      dstLinkElement = dstElements(alignment.dst)
+      score = alignment.score
+    } yield mkHypothesis(srcLinkElement, dstLinkElement, score, debug)
   }
 
 
-  def getLinkHypotheses(linkElements: Map[String, Seq[String]], alignments: Map[String, Seq[Seq[Alignment]]]): Seq[Obj] = {//, SVOGroungings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
+
+  def getLinkHypotheses(linkElements: Map[String, Seq[String]], alignments: Map[String, Seq[Seq[Alignment]]], debug: Boolean): Seq[Obj] = {//, SVOGroungings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
     // Store them all here
     val hypotheses = new ArrayBuffer[ujson.Obj]()
     val linkElKeys = linkElements.keys.toSeq
     // Comment -> Text
     if (linkElKeys.contains(COMMENT) && linkElKeys.contains(TEXT_VAR)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(TEXT_VAR), alignments(COMMENT_TO_TEXT)))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(TEXT_VAR), alignments(COMMENT_TO_TEXT), debug))
     }
 
 
     // Src Variable -> Comment
     if (linkElKeys.contains(SOURCE) && linkElKeys.contains(COMMENT)) {
       println("has source and comment")
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(COMMENT), alignments(SRC_TO_COMMENT)))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(COMMENT), alignments(SRC_TO_COMMENT), debug))
     }
 
 
     // Equation -> Text
     if (linkElKeys.contains(EQUATION) && linkElKeys.contains(TEXT_VAR)) {
       println("has eq and text")
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT_VAR), alignments(EQN_TO_TEXT)))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT_VAR), alignments(EQN_TO_TEXT), debug))
     }
 
     // TextVar -> TextDef (text_span)
     //taken care of while creating link elements
     if (linkElKeys.contains(TEXT_VAR) && linkElKeys.toSeq.contains(TEXT)) {
-      hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT)))
+      hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT), debug))
     }
 
     hypotheses
   }
 
+
+  def getInterPaperLinkHypotheses(linkElements: Map[String, Seq[String]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+    val paper1LinkElements = linkElements("TEXT_VAR1")
+    val paper2LinkElements = linkElements("TEXT_VAR2")
+    val hypotheses = new ArrayBuffer[ujson.Obj]()
+    hypotheses.appendAll(mkLinkHypothesis(paper1LinkElements, paper2LinkElements, alignment, debug))
+    hypotheses
+  }
+
+  def getInterPaperLinkHypothesesWithValues(linkElements: Map[String, Seq[Value]], alignment: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+    val paper1LinkElements = linkElements("grfn1_vars")
+    val paper2LinkElements = linkElements("grfn2_vars")
+    val hypotheses = new ArrayBuffer[ujson.Obj]()
+    hypotheses.appendAll(mkLinkHypothesisFromValueSequences(paper1LinkElements, paper2LinkElements, alignment, debug))
+    hypotheses
+  }
 
   def is_balanced(string: String): Boolean = {
     is_balanced_delim(string, "(", ")") && is_balanced_delim(string, "{", "}") && is_balanced_delim(string, "[", "]")
@@ -625,6 +782,7 @@ object ExtractAndAlign {
     val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     val loadMentions = config[Boolean]("apps.loadMentions")
     val appendToGrFN = config[Boolean]("apps.appendToGrFN")
+    val textInputFormat = config[String]("apps.textInputFormat")
 
 
     // =============================================
@@ -700,7 +858,9 @@ object ExtractAndAlign {
       Some(numAlignments),
       Some(numAlignments),
       scoreThreshold,
-      appendToGrFN
+      appendToGrFN,
+      textInputFormat,
+      debug = false
       )
 
 

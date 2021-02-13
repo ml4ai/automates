@@ -115,7 +115,7 @@ object GrFNParser {
   }
 
 
-  def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value): ujson.Obj = {
+  def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value, spans: ujson.Value): ujson.Obj = {
     val linkElement = ujson.Obj(
       "uid" -> uid,
 //      "type" -> elemType,
@@ -126,9 +126,29 @@ object GrFNParser {
       "svo_terms" -> svo_terms,
       "unit" -> unit,
       "paramSetting" -> paramSetting,
-      "svo_groundings" -> svo
+      "svo_groundings" -> svo,
+      "spans" -> ujson.Arr(spans)
 //      "svo_query_terms" -> svoQueryTerms
     )
+    linkElement
+  }
+
+  def mkTextVarLinkElementForModelComparison(uid: String, source: String, originalSentence: String, identifier: String, definition: String, debug: Boolean): ujson.Obj = {
+    val linkElement = if (debug) {
+      ujson.Obj(
+        "uid" -> uid,
+        "source" -> source,
+        "original_sentence" -> originalSentence,
+        "identifier" -> identifier,
+        "definition" -> definition,
+      )
+    } else {
+      ujson.Obj(
+        "uid" -> uid,
+        "identifier" -> identifier
+      )
+    }
+
     linkElement
   }
 
@@ -139,6 +159,17 @@ object GrFNParser {
       "content" -> content,
       "content_type" -> contentType,
       "svo_query_terms" -> svoQueryTerms
+    )
+    linkElement
+  }
+
+  def mkModelComparisonTextLinkElement(elemType: String, source: String, identifier: String, definition: String, sentence: String): ujson.Obj = {
+    val linkElement = ujson.Obj(
+      "type" -> elemType,
+      "source" -> source,
+      "identifier" -> identifier,
+      "definition" -> definition,
+      "sentence" -> sentence
     )
     linkElement
   }
@@ -182,15 +213,45 @@ object GrFNParser {
     sparqlResuJson
   }
 
-  def mkHypothesis(elem1: String, elem2: String, score: Double): ujson.Obj = {
-    val el1 = elem1.split("::")(0)
-    val el2 = elem2.split("::")(0)
+  def mkHypothesis(elem1: String, elem2: String, score: Double, debug: Boolean): ujson.Obj = {
+    val splitEl1 = elem1.split("::")
+    val splitEl2 = elem2.split("::")
+    val el1 = splitEl1(0)
+    val el2 = splitEl2(0)
     //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
-    val hypothesis = ujson.Obj(
-      "element_1" -> el1,
-      "element_2" -> el2,
-      "score" -> score
-    )
+    val hypothesis = if (debug) {
+      val idAndIdentifier1 = splitEl1(0) + "::" + splitEl1(3) + "::" + splitEl1(4)
+      val idAndIdentifier2 = splitEl2(0) + "::" + splitEl2(3) + "::" + splitEl2(4)
+      ujson.Obj(
+        "element_1" -> idAndIdentifier1,
+        "element_2" -> idAndIdentifier2,
+        "score" -> score
+      )
+    } else {
+      ujson.Obj(
+        "element_1" -> el1,
+        "element_2" -> el2,
+        "score" -> score
+      )
+    }
+    hypothesis
+  }
+
+  def mkHypothesis(elem1: Value, elem2: Value, score: Double, debug: Boolean): ujson.Obj = {
+    val hypothesis = if (debug) {
+      // for debugging alignment quality; fixme: this is readable but not a pretty json
+      ujson.Obj(
+        "grfn1_var_uid" -> elem1.obj.mkString(" "),
+        "grfn2_var_uid" -> elem2.obj.mkString(" "),
+        "score" -> score
+      )
+    } else {
+      ujson.Obj(
+        "grfn1_var_uid" -> elem1("var_uid"),
+        "grfn2_var_uid" -> elem2("var_uid"),
+        "score" -> score
+      )
+    }
     hypothesis
   }
 

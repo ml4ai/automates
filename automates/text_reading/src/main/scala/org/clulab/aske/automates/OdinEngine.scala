@@ -141,6 +141,7 @@ object OdinEngine {
   val VARIABLE_LABEL: String = "Variable"
   val VARIABLE_GAZETTEER_LABEL: String = "VariableGazetteer"
   val UNIT_LABEL: String = "UnitRelation"
+  val MODEL_LABEL: String = "Model"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"
@@ -148,6 +149,7 @@ object OdinEngine {
   val DEFINITION_ARG: String = "definition"
   val VALUE_ARG: String = "value"
   val UNIT_ARG: String = "unit"
+
 
   val logger = LoggerFactory.getLogger(this.getClass())
   // Used by LexiconNER

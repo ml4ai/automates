@@ -83,7 +83,6 @@ rules:
     pattern: |
       [word=/^DSSAT|^CSM/]
 
-
   - name: var_greek
     label: Variable
     priority: ${priority}
@@ -104,7 +103,7 @@ rules:
     label: Variable
     priority: ${priority}
     type: token
-    example: "The density of water (ρw)"
+    example: "The density of water (ρw); R(t)"
     pattern: |
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
       |
@@ -119,6 +118,7 @@ rules:
 #    pattern: |
 #      trigger = [word=/\w*/]
 #      conj:Concept+ = conj_and | conj_or
+
 
 #  - name: var_greek_and_latin
 #    label: Variable

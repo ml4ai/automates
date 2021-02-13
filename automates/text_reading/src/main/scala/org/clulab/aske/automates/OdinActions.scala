@@ -460,6 +460,15 @@ println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
     mentionsDisplayOnlyArgs
   }
 
+  def modelArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val mentionsDisplayOnlyArgs = for {
+      m <- mentions
+      arg <- m.arguments.values.flatten
+    } yield copyWithLabel(arg, "Model")
+
+    mentionsDisplayOnlyArgs
+  }
+
   def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
 
@@ -505,7 +514,7 @@ println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
       // If the variable was found with a Gazetteer passed through the webservice, keep it
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
-      if ((v.words.length > 1 || v.words.length == 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for var that include a greek letter---those are found as separate words even if there is not space
+      if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for var that include a greek letter---those are found as separate words even if there is not space
       if (v.words.length != 1) return false
       // Else, the variable candidate has length 1
       val word = v.words.head

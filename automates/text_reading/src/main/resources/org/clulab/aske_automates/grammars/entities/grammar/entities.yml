@@ -19,6 +19,7 @@ rules:
     pattern: |
       [tag=/VBN|JJ/]
 
+
 #  - name: simple-vp
 #    label: Concept
 #    priority: 1

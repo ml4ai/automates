@@ -33,6 +33,8 @@ rules:
     pattern: |
       (@variable:Variable|@variable:Concept [!tag="CD"]) (?<trigger> [word="="]) @value:Value
 
+
+    # todo: this was commented out in cosmos branch; check why
   - name: var_&equals_val
     label: ParameterSetting
     priority: ${priority}
@@ -41,7 +43,6 @@ rules:
     pattern: |
       # @trigger:Concept "=" @Value:Value
       (@variable:Variable|@variable:Concept) [word="&"] [word="="] @value:Value
-
 
   - name: var-vary_between
     label: IntervalParameterSetting

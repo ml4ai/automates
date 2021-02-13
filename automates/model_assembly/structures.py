@@ -176,9 +176,7 @@ class GenericContainer(ABC):
     @abstractmethod
     def __str__(self):
         args_str = "\n".join([f"\t{arg}" for arg in self.arguments])
-        outputs_str = "\n".join(
-            [f"\t{var}" for var in self.returns + self.updated]
-        )
+        outputs_str = "\n".join([f"\t{var}" for var in self.returns + self.updated])
         return f"Inputs:\n{args_str}\nVariables:\n{outputs_str}"
 
     @staticmethod
@@ -247,6 +245,7 @@ class VarType(Enum):
     ARRAY = auto()
     STRUCT = auto()
     UNION = auto()
+    OBJECT = auto()
     NONE = auto()
 
     def __str__(self):
@@ -265,6 +264,8 @@ class VarType(Enum):
             return cls.INTEGER
         elif name == "array":
             return cls.ARRAY
+        elif name == "object":
+            return cls.OBJECT
         elif name == "none":
             return cls.NONE
         else:
@@ -338,7 +339,9 @@ class LambdaType(Enum):
     LITERAL = auto()
     CONDITION = auto()
     DECISION = auto()
-    PASS = auto()
+    INTERFACE = auto()
+    EXTRACT = auto()
+    PACK = auto()
 
     def __str__(self):
         return str(self.name)
@@ -356,8 +359,8 @@ class LambdaType(Enum):
             return cls.CONDITION
         elif type_str == "decision":
             return cls.DECISION
-        elif type_str == "pass":
-            return cls.PASS
+        elif type_str == "interface":
+            return cls.INTERFACE
         else:
             raise ValueError(f"Unrecognized lambda type name: {type_str}")
 
@@ -371,8 +374,16 @@ class LambdaType(Enum):
             return cls.DECISION
         elif name == "LITERAL":
             return cls.LITERAL
+        elif name == "INTERFACE":
+            return cls.INTERFACE
+        elif name == "PACK":
+            return cls.PACK
+        elif name == "EXTRACT":
+            return cls.EXTRACT
         elif name == "PASS":
-            return cls.PASS
+            raise ValueError(
+                f'Using container interface node name {name}. Please update to "INTERFACE" '
+            )
         else:
             raise ValueError(f"Unrecognized lambda type name: {name}")
 
@@ -394,12 +405,8 @@ class GenericStmt(ABC):
 
     @abstractmethod
     def __str__(self):
-        inputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.inputs]
-        )
-        outputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.outputs]
-        )
+        inputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.inputs])
+        outputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.outputs])
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
     @staticmethod
