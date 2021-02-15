@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Any
+from typing import List, Dict, Iterable, Set, Any
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from dataclasses import dataclass
@@ -29,10 +29,12 @@ from .structures import (
     ContainerIdentifier,
     VariableIdentifier,
     TypeIdentifier,
+    ObjectDefinition,
     VariableDefinition,
     TypeDefinition,
     VarType,
     DataType,
+    GrFNExecutionException,
 )
 from ..utils.misc import choose_font
 
@@ -73,12 +75,16 @@ class VariableNode(GenericNode):
     type: VarType
     kind: DataType
     domain: str
+    input_value: Any
 
     def __hash__(self):
         return hash(self.uid)
 
     def __eq__(self, other) -> bool:
         return self.uid == other.uid
+
+    def __str__(self):
+        return str(self.identifier)
 
     @classmethod
     def from_id(cls, id: VariableIdentifier, data: VariableDefinition):
@@ -93,10 +99,14 @@ class VariableNode(GenericNode):
             var_type,
             var_kind,
             data.domain_constraint,
+            None,
         )
 
     def get_fullname(self):
         return f"{self.name}\n({self.index})"
+
+    def get_name(self):
+        return str(self.identifier)
 
     def get_kwargs(self):
         is_exit = self.identifier.var_name == "EXIT"
@@ -179,6 +189,7 @@ class VariableNode(GenericNode):
             if "data_type" in data else None,
             DataType.from_type_str(data["kind"]) if "kind" in data else None,
             data["domain"] if "domain" in data else None,
+            None,
         )
 
     def to_dict(self) -> dict:
@@ -204,6 +215,9 @@ class LambdaNode(GenericNode):
     def __eq__(self, other) -> bool:
         return self.uid == other.uid
 
+    def __str__(self):
+        return f"{self.get_label()}: {self.uid}"
+
     def __call__(self, *values) -> Iterable[np.ndarray]:
         expected_num_args = len(self.get_signature())
         input_num_args = len(values)
@@ -213,17 +227,22 @@ class LambdaNode(GenericNode):
                 for lambda:\n{self.func_str}""")
         try:
             res = self.function(*values)
-            if isinstance(res, tuple):
-                return [np.array(item) for item in res]
+            if self.func_type == LambdaType.LITERAL:
+                return [np.full_like(self.np_shape, res, dtype=np.float)]
+            elif isinstance(res, tuple):
+                return [item for item in res]
             else:
-                if len(values) == 0:
-                    res = [np.array(res, dtype=np.float32)]
-                else:
-                    res = [np.array(res)]
-            return res
+                return [self.parse_result(values, res)]
         except Exception as e:
             print(f"Exception occured in {self.func_str}")
-            raise e
+            raise GrFNExecutionException(e)
+
+    def parse_result(self, values, res):
+        if isinstance(res, dict):
+            res = {k: self.parse_result(values, v) for k, v in res.items()}
+        elif len(values) == 0:
+            res = np.array(res, dtype=np.float32)
+        return res
 
     def get_kwargs(self):
         return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
@@ -241,12 +260,14 @@ class LambdaNode(GenericNode):
 
     @classmethod
     def from_dict(cls, data: dict):
+        lambda_fn = load_lambda_function(data["lambda"])
+        lambda_type = LambdaType.from_str(data["type"])
         return cls(
             data["uid"],
             data["reference"],
-            LambdaType.from_str(data["type"]),
+            lambda_type,
             data["lambda"],
-            load_lambda_function(data["lambda"]),
+            lambda_fn,
         )
 
     def to_dict(self) -> dict:
@@ -265,9 +286,17 @@ class HyperEdge:
     outputs: Iterable[VariableNode]
 
     def __call__(self):
-        result = self.lambda_fn(*[var.value for var in self.inputs])
+        result = self.lambda_fn(*[
+            var.value if var.value is not None else var.input_value
+            for var in self.inputs
+        ])
         for i, out_val in enumerate(result):
-            self.outputs[i].value = out_val
+            variable = self.outputs[i]
+            if (variable.input_value != None
+                    and self.lambda_fn.func_type == LambdaType.LITERAL):
+                variable.value = variable.input_value
+            else:
+                variable.value = out_val
 
     def __eq__(self, other) -> bool:
         return (
@@ -326,11 +355,155 @@ class GrFNSubgraph:
                 and set([n.uid for n in self.nodes]) == set(
                     [n.uid for n in other.nodes]))
 
+    def __call__(
+        self,
+        grfn: GroundedFunctionNetwork,
+        subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
+        node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
+        all_nodes_visited: Set[VariableNode],
+    ) -> List[GenericNode]:
+        """
+        Handles the execution of the lambda functions within a subgraoh of
+        GrFN. We place the logic in this function versus directly in __call__
+        so the logic can be shared in the loop subgraph type.
+
+        Args:
+            grfn (GroundedFucntioNetwork):
+                The GrFN we are operating on. Used to find successors of nodes.
+            subgraphs_to_hyper_edges (Dict[GrFNSubgraph, List[HyperEdge]]):
+                A list of a subgraph to the hyper edges with nodes in the
+                subgraph.
+            node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
+                nodes to the subgraph they are contained in.
+            all_nodes_visited (Set[VariableNode]):
+                Holds the set of all variable nodes that have been visited
+
+        Raises:
+            Exception: Raised when we find multiple input interface nodes.
+
+        Returns:
+            List[GenericNode]: The final list of nodes that we update/output
+            to in the parent container.
+        """
+        # Grab all hyper edges in this subgraph
+        hyper_edges = subgraphs_to_hyper_edges[self]
+        nodes_to_hyper_edge = {e.lambda_fn: e for e in hyper_edges}
+
+        # There should be only one lambda node of type interface with outputs
+        # all in the same subgraph. Identify this node as the entry point of
+        # execution within this subgraph. Will be none if no input.
+        input_interface_hyper_edge_node = self.get_input_interface_hyper_edge(
+            hyper_edges)
+        output_interface_hyper_edge_node = self.get_output_interface_node(
+            hyper_edges)
+
+        # Add nodes that must be configured via user input as they have no input edge
+        standalone_vars = [
+            n for n in self.nodes
+            if isinstance(n, VariableNode) and grfn.in_degree(n) == 0
+        ]
+        all_nodes_visited.update(standalone_vars)
+
+        # Find the hyper edge nodes with no input to initialize the execution queue
+        # and var nodes with no incoming edges
+        node_execute_queue = [e.lambda_fn for e in hyper_edges if not e.inputs]
+        node_execute_queue.extend(
+            [s for n in standalone_vars for s in grfn.successors(n)])
+        if input_interface_hyper_edge_node:
+            node_execute_queue.insert(
+                0, input_interface_hyper_edge_node.lambda_fn)
+
+        while node_execute_queue:
+            executed = True
+            executed_visited_variables = set()
+            node_to_execute = node_execute_queue.pop(0)
+
+            # TODO remove?
+            if node_to_execute in all_nodes_visited:
+                continue
+
+            if node_to_execute not in nodes_to_hyper_edge:
+                # Node is not in current subgraph
+                if node_to_execute.func_type == LambdaType.INTERFACE:
+                    subgraph = node_to_subgraph[node_to_execute]
+                    subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
+                    subgraph_input_interface = subgraph.get_input_interface_hyper_edge(
+                        subgraph_hyper_edges)
+                    # Either the subgraph has no input interface or all the
+                    # inputs must be set.
+                    if subgraph_input_interface is None or all([
+                            n in all_nodes_visited
+                            for n in subgraph_input_interface.inputs
+                    ]):
+                        # We need to recurse into a new subgraph as the next node is an
+                        # interface thats not in the current subgraph
+                        # subgraph execution returns the updated output nodes so we can
+                        # mark them as visited here in the parent in order to continue
+                        # execution
+                        executed_visited_variables.update(
+                            subgraph(
+                                grfn,
+                                subgraphs_to_hyper_edges,
+                                node_to_subgraph,
+                                all_nodes_visited,
+                            ))
+                    else:
+                        node_to_execute = subgraph_input_interface.lambda_fn
+                        executed = False
+                else:
+                    raise GrFNExecutionException(
+                        "Error: Attempting to execute non-interface node" +
+                        f" {node_to_execute} found in another subgraph.")
+            elif all([
+                    n in all_nodes_visited
+                    for n in nodes_to_hyper_edge[node_to_execute].inputs
+            ]):
+                # All of the input nodes have been visited, so the input values
+                # are initialized and we can execute. In the case of literal
+                # nodes, inputs is empty and all() will default to True.
+                to_execute = nodes_to_hyper_edge[node_to_execute]
+                to_execute()
+                executed_visited_variables.update(to_execute.outputs)
+            else:
+                # We still are waiting on input values to be computed, push to
+                # the back of the queue
+                executed = False
+
+            if executed:
+                all_nodes_visited.update(executed_visited_variables)
+                all_nodes_visited.add(node_to_execute)
+                node_execute_queue.extend([
+                    succ for var in executed_visited_variables
+                    for succ in grfn.successors(var)
+                    if (succ in self.nodes and succ not in all_nodes_visited)
+                    or (var in self.nodes
+                        and succ.func_type == LambdaType.INTERFACE)
+                ])
+            else:
+                node_execute_queue.extend([
+                    lambda_pred
+                    for var_pred in grfn.predecessors(node_to_execute)
+                    for lambda_pred in grfn.predecessors(var_pred)
+                    if (lambda_pred in self.nodes
+                        and lambda_pred not in all_nodes_visited)
+                    or lambda_pred.func_type == LambdaType.INTERFACE
+                ])
+                node_execute_queue.append(node_to_execute)
+
+        return ({} if not output_interface_hyper_edge_node else
+                {n
+                 for n in output_interface_hyper_edge_node.outputs})
+
     @classmethod
     def from_container(cls, con: GenericContainer, occ: int,
                        parent_subgraph: GrFNSubgraph):
         id = con.identifier
-        return cls(
+
+        class_to_create = cls
+        if isinstance(con, LoopContainer):
+            class_to_create = GrFNLoopSubgraph
+
+        return class_to_create(
             str(uuid4()),
             id.namespace,
             id.scope,
@@ -341,6 +514,59 @@ class GrFNSubgraph:
             cls.get_border_color(con.__class__.__name__),
             [],
         )
+
+    def get_input_interface_hyper_edge(self, hyper_edges):
+        """
+        Get the interface node for input in this subgraph
+
+        Args:
+            hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
+                subgraph.
+
+        Returns:
+            LambdaNode: The lambda node for the input interface. None if there
+                is no input for this subgraph.
+        """
+        input_interfaces = [
+            e for e in hyper_edges
+            if e.lambda_fn.func_type == LambdaType.INTERFACE
+            and all([o in self.nodes for o in e.outputs])
+        ]
+
+        if len(input_interfaces) > 1 and self.parent:
+            raise GrFNExecutionException(
+                "Found multiple input interface nodes in subgraph during execution."
+                + f" Expected 1 but {len(input_interfaces)} were found.")
+        elif len(input_interfaces) == 0:
+            return None
+
+        return input_interfaces[0]
+
+    def get_output_interface_node(self, hyper_edges):
+        """
+        Get the interface node for output in this subgraph
+
+        Args:
+            hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
+                subgraph.
+
+        Returns:
+            LambdaNode: The lambda node for the output interface.
+        """
+        output_interfaces = [
+            e for e in hyper_edges
+            if e.lambda_fn.func_type == LambdaType.INTERFACE
+            and all([o in self.nodes for o in e.inputs])
+        ]
+
+        if not self.parent:
+            # The root subgraph has no output interface
+            return None
+        elif len(output_interfaces) != 1:
+            raise GrFNExecutionException(
+                "Found multiple output interface nodes in subgraph during execution."
+                + f" Expected 1 but {len(output_interfaces)} were found.")
+        return output_interfaces[0]
 
     @staticmethod
     def get_border_color(type_str):
@@ -356,15 +582,21 @@ class GrFNSubgraph:
     @classmethod
     def from_dict(cls, data: dict, all_nodes: Dict[str, GenericNode]):
         subgraph_nodes = [all_nodes[n_id] for n_id in data["nodes"]]
-        return cls(
+        type_str = data["type"]
+
+        class_to_create = cls
+        if type_str == "LoopContainer":
+            class_to_create = GrFNLoopSubgraph
+
+        return class_to_create(
             data["uid"],
             data["namespace"],
             data["scope"],
             data["basename"],
             data["occurrence_num"],
             data["parent"],
-            data["type"],
-            cls.get_border_color(data["type"]),
+            type_str,
+            cls.get_border_color(type_str),
             subgraph_nodes,
         )
 
@@ -382,6 +614,87 @@ class GrFNSubgraph:
         }
 
 
+@dataclass(repr=False, eq=False)
+class GrFNLoopSubgraph(GrFNSubgraph):
+    def __call__(
+        self,
+        grfn: GroundedFunctionNetwork,
+        subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
+        node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
+        all_nodes_visited: Set[VariableNode],
+    ):
+        """
+        Handle a call statement on an object of type GrFNSubgraph
+
+        Args:
+            grfn (GroundedFucntioNetwork):
+                The GrFN we are operating on. Used to find successors of nodes.
+            subgraphs_to_hyper_edges (Dict[GrFNSubgraph, List[HyperEdge]]):
+                A list of a subgraph to the hyper edges with nodes in the
+                subgraph.
+            node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
+                nodes to the subgraph they are contained in.
+            all_nodes_visited (Set[VariableNode]):
+                Holds the set of all variable nodes that have been visited
+        """
+
+        # First, find exit node within the subgraph
+        exit_var_nodes = [
+            n for n in self.nodes
+            if isinstance(n, VariableNode) and n.identifier.var_name == "EXIT"
+        ]
+        if len(exit_var_nodes) != 1:
+            raise GrFNExecutionException(
+                "Found incorrect number of exit var nodes in loop subgraph during execution."
+                + f" Expected 1 but {len(exit_var_nodes)} were found.")
+        exit_var_node = exit_var_nodes[0]
+
+        # Find the first decision node and mark its input variables as
+        # visited so we can execute the cyclic portion of the loop
+        input_interface = self.get_input_interface_hyper_edge(
+            subgraphs_to_hyper_edges[self])
+        initial_decision = {
+            n
+            for v in input_interface.outputs for n in grfn.successors(v)
+            if n.func_type == LambdaType.DECISION
+        }
+        first_decision_vars = {
+            v
+            for l in initial_decision for v in grfn.predecessors(l)
+            if isinstance(v, VariableNode)
+        }
+
+        var_results = set()
+        initial_visited_nodes = set()
+        # Loop until the exit value becomes true
+        while not exit_var_node.value:
+            initial_visited_nodes = all_nodes_visited.copy()
+            initial_visited_nodes.update(first_decision_vars)
+            var_results = super().__call__(
+                grfn,
+                subgraphs_to_hyper_edges,
+                node_to_subgraph,
+                initial_visited_nodes,
+            )
+        all_nodes_visited = all_nodes_visited.union(initial_visited_nodes)
+        return var_results
+
+
+class GrfFNType:
+    name: str
+    fields: List[Tuple[str, str]]
+
+    def __init__(self, name, fields):
+        self.name = name
+        self.fields = fields
+
+    def get_initial_dict(self):
+        d = {}
+        for field in self.fields:
+            d[field] = None
+        return d
+
+
 class GroundedFunctionNetwork(nx.DiGraph):
     def __init__(
         self,
@@ -391,13 +704,14 @@ class GroundedFunctionNetwork(nx.DiGraph):
         G: nx.DiGraph,
         H: List[HyperEdge],
         S: nx.DiGraph,
+        # T: List[GrFNType],
     ):
         super().__init__(G)
         self.hyper_edges = H
         self.subgraphs = S
 
         self.uid = uid
-        self.date_created = timestamp
+        self.timestamp = timestamp
         self.namespace = id.namespace
         self.scope = id.scope
         self.name = id.con_name
@@ -405,18 +719,52 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         self.variables = [n for n in self.nodes if isinstance(n, VariableNode)]
         self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
+        self.types = []
+
+        root_subgraphs = [s for s in self.subgraphs if not s.parent]
+        if len(root_subgraphs) != 1:
+            raise Exception(
+                f"Error: Incorrect number of root subgraphs found in GrFN." +
+                f"Should be 1 and found {len(root_subgraphs)}.")
+        self.root_subgraph = root_subgraphs[0]
+
+        # TODO decide how we detect configurable inputs for execution
+        # Configurable inputs are all variables assigned to a literal in the
+        # root level subgraph AND input args to the root level subgraph
         self.inputs = [
+            n for e in self.hyper_edges for n in e.outputs
+            if (n in self.root_subgraph.nodes
+                and e.lambda_fn.func_type == LambdaType.LITERAL)
+        ]
+        self.inputs.extend([
             n for n, d in self.in_degree()
             if d == 0 and isinstance(n, VariableNode)
-        ]
+        ])
         self.outputs = [
             n for n, d in self.out_degree()
             if d == 0 and isinstance(n, VariableNode)
         ]
 
+        self.uid2varnode = {v.uid: v for v in self.variables}
+
+        self.input_names = [
+            var_node.identifier
+            for var_node in self.inputs
+        ]
+
+        self.output_names = [
+            var_node.identifier
+            for var_node in self.outputs
+        ]
+
         self.input_name_map = {
             var_node.identifier.var_name: var_node
             for var_node in self.inputs
+        }
+
+        self.output_name_map = {
+            var_node.identifier.var_name: var_node
+            for var_node in self.outputs
         }
         self.FCG = self.to_FCG()
         self.function_sets = self.build_function_sets()
@@ -450,10 +798,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
             A set of outputs from executing the GrFN, one for every set of
             inputs.
         """
+        self.np_shape = (1, )
         # TODO: update this function to work with new GrFN object
         full_inputs = {self.input_name_map[n]: v for n, v in inputs.items()}
         # Set input values
-        for input_node in self.inputs:
+        for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
             if isinstance(value, float):
                 value = np.array([value], dtype=np.float32)
@@ -461,14 +810,24 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 value = np.array([value], dtype=np.int32)
             elif isinstance(value, list):
                 value = np.array(value, dtype=np.float32)
+            elif isinstance(value, np.ndarray):
+                self.np_shape = value.shape
 
-            input_node.value = value
+            input_node.input_value = value
 
-        for edge in self.hyper_edges:
-            edge()
+        # Configure the np array shape for all lambda nodes
+        for n in self.lambdas:
+            n.np_shape = self.np_shape
 
+        subgraph_to_hyper_edges = {
+            s: [h for h in self.hyper_edges if h.lambda_fn in s.nodes]
+            for s in self.subgraphs
+        }
+        node_to_subgraph = {n: s for s in self.subgraphs for n in s.nodes}
+        self.root_subgraph(self, subgraph_to_hyper_edges, node_to_subgraph,
+                           set())
         # Return the output
-        return [output.value for output in self.outputs]
+        return {output.identifier.var_name: output.value for output in self.outputs}
 
     @classmethod
     def from_AIR(
@@ -477,6 +836,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         containers: Dict[ContainerIdentifier, GenericContainer],
         variables: Dict[VariableIdentifier, VariableDefinition],
         types: Dict[TypeIdentifier, TypeDefinition],
+        objects: List[ObjectDefinition],
     ):
         network = nx.DiGraph()
         hyper_edges = list()
@@ -880,8 +1240,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
             self.uid,
             "identifier":
             "::".join(["@container", self.namespace, self.scope, self.name]),
-            "date_created":
-            self.date_created,
+            "timestamp":
+            self.timestamp,
             "hyper_edges": [edge.to_dict() for edge in self.hyper_edges],
             "variables": [var.to_dict() for var in self.variables],
             "functions": [func.to_dict() for func in self.lambdas],
@@ -937,7 +1297,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
 
         identifier = GenericIdentifier.from_str(data["identifier"])
-        return cls(data["uid"], identifier, data["date_created"], G, H, S)
+        return cls(data["uid"], identifier, data["timestamp"], G, H, S)
 
 
 class CausalAnalysisGraph(nx.DiGraph):
@@ -945,7 +1305,7 @@ class CausalAnalysisGraph(nx.DiGraph):
         super().__init__(G)
         self.subgraphs = S
         self.uid = uid
-        self.date_created = date
+        self.timestamp = date
         self.namespace = ns
         self.scope = sc
         self.name = nm
@@ -1075,8 +1435,8 @@ class CausalAnalysisGraph(nx.DiGraph):
             self.uid,
             "identifier":
             "::".join(["@container", self.namespace, self.scope, self.name]),
-            "date_created":
-            self.date_created,
+            "timestamp":
+            self.timestamp,
             "variables": [var.to_dict() for var in self.nodes],
             "edges": [(src.uid, dst.uid) for src, dst in self.edges],
             "subgraphs": [sgraphs.to_dict() for sgraphs in self.subgraphs],
