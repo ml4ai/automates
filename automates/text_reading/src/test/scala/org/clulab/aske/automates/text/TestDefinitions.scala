@@ -470,9 +470,9 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t8f = "Since the rate of new infections in the SIR model is g = βS − γ and we've already computed γ,"
-  failingTest should s"find definitions from t8f: ${t8f}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t8f: ${t8f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "g" -> Seq("rate of new infections")
+      "g" -> Seq("rate of new infections in the SIR model")
     )
     val mentions = extractMentions(t8f)
     testDefinitionEvent(mentions, desired)
@@ -540,10 +540,10 @@ class TestDefinitions extends ExtractionTest {
   }
 
     val t4g = "where r is the infection rate and a the removal rate of infectives."
-  failingTest should s"find definitions from t4g: ${t4g}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t4g: ${t4g}" taggedAs(Somebody) in {
     val desired =  Seq(
       "r" -> Seq("infection rate"),
-      "a" -> Seq("removal rate of infectives") // fixme: "removal rate of infectives" is not extracted as a definition
+      "a" -> Seq("removal rate of infectives")
     )
     val mentions = extractMentions(t4g)
     testDefinitionEvent(mentions, desired)
@@ -605,7 +605,7 @@ class TestDefinitions extends ExtractionTest {
 
     val t1j = "This idea can probably be more readily seen if we say that the typical time between contacts is Tc = β-1, " +
       "and the typical time until recovery is Tr = γ-1."
-  failingTest should s"find definitions from t1j: ${t1j}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t1j: ${t1j}" taggedAs(Somebody) in {
     val desired =  Seq(
       "Tc" -> Seq("typical time between contacts"), // fixme: both of the definitions were not extracted
       "Tr" -> Seq("typical time until recovery")
@@ -628,11 +628,41 @@ class TestDefinitions extends ExtractionTest {
   }
 
     val t2k = "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
-  failingTest should s"find definitions from t2k: ${t2k}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t2k: ${t2k}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "κ" -> Seq("canopy extinction coefficient of radiation") // fixme: Definition of "κ" is not extracted.
+      "κ" -> Seq("canopy extinction coefficient of radiation")
     )
     val mentions = extractMentions(t2k)
+    testDefinitionEvent(mentions, desired)
+  }
+
+// Tests from paper: THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
+
+    val t1l = "Reference evapotranspiration (ETref) is the rate at which readily available soil water is vaporized from specified vegetated surfaces (Jensen et al., 1990)."
+  failingTest should s"find definitions from t1l: ${t1l}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "ETref" -> Seq("Reference evapotranspiration"),
+      "ETref" -> Seq("the rate at which readily available soil water is vaporized from specified vegetated surfaces") //fixme: longer definition is not captured. (shorter definition was selected)
+    )
+    val mentions = extractMentions(t1l)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t2l = "ETsz = standardized reference crop evapotranspiration for short (ETos) or tall (ETrs) surfaces (mm d-1 for daily time steps or mm h-1 for hourly time steps),"
+  failingTest should s"find definitions from t2l: ${t2l}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "ETsz" -> Seq("standardized reference crop evapotranspiration for short (ETos) or tall (ETrs) surfaces") //fixme: mm is captured as the definitions for the d-1 and h-1, short is captured as the definition of ETos
+    )
+    val mentions = extractMentions(t2l)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t3l = "Latent Heat of Vaporization (λ)"
+  passingTest should s"find definitions from t3l: ${t3l}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "λ" -> Seq("Latent Heat of Vaporization") //fixme: "latent" was not captured as the part of the definition (comma_appos_var)
+    )
+    val mentions = extractMentions(t3l)
     testDefinitionEvent(mentions, desired)
   }
 
