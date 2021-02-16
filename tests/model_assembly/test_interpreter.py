@@ -31,7 +31,7 @@ def test_pet_files():
         con_id = GenericIdentifier.from_str(con_name)
 
         G = GroundedFunctionNetwork.from_AIR(
-            con_id, ITP.containers, ITP.variables, ITP.types,
+            con_id, ITP.containers, ITP.variables, ITP.types, []
         )
 
         A = G.to_AGraph()
@@ -45,7 +45,7 @@ def test_pet_files():
     )
 
     assert isinstance(G, GroundedFunctionNetwork)
-    assert len(G.inputs) == 13
+    assert len(G.inputs) == 22
     assert len(G.outputs) == 1
 
     values = {
@@ -65,28 +65,24 @@ def test_pet_files():
     }
 
     outputs = G(values)
-    res = outputs[0][0]
-    assert res == np.float32(1.3980656099985995)
+    res = outputs["eo"][0]
+    assert res == np.float(1.3980657068634232)
 
     G.to_json_file("tmp/ASCE_GrFN.json")
     G2 = GroundedFunctionNetwork.from_json("tmp/ASCE_GrFN.json")
     assert G2 == G
 
     outputs = G2(values)
-    res2 = outputs[0][0]
+    res2 = outputs["eo"][0]
     assert res == res2
 
 
 def test_single_file_analysis():
-    ITP = ImperativeInterpreter.from_src_file(
-        "tests/data/program_analysis/PETPNO.for"
-    )
-    petpno_con_id = GenericIdentifier.from_str(
-        "@container::PETPNO::@global::petpno"
-    )
+    ITP = ImperativeInterpreter.from_src_file("tests/data/program_analysis/PETPNO.for")
+    petpno_con_id = GenericIdentifier.from_str("@container::PETPNO::@global::petpno")
 
     PNO_GrFN = GroundedFunctionNetwork.from_AIR(
-        petpno_con_id, ITP.containers, ITP.variables, ITP.types
+        petpno_con_id, ITP.containers, ITP.variables, ITP.types, []
     )
     assert isinstance(PNO_GrFN, GroundedFunctionNetwork)
 
@@ -102,11 +98,9 @@ def test_file_with_loops():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/SIR-Gillespie-SD.f"
     )
-    con_id = GenericIdentifier.from_str(
-        "@container::SIR-Gillespie-SD::@global::main"
-    )
+    con_id = GenericIdentifier.from_str("@container::SIR-Gillespie-SD::@global::main")
     G = GroundedFunctionNetwork.from_AIR(
-        con_id, ITP.containers, ITP.variables, ITP.types
+        con_id, ITP.containers, ITP.variables, ITP.types, []
     )
     A = G.to_AGraph()
     A.draw("Gillespie-SD--GrFN.pdf", prog="dot")
@@ -118,13 +112,11 @@ def test_file_with_loops():
 
 
 def test_petpt():
-    ITP = ImperativeInterpreter.from_src_file(
-        "tests/data/program_analysis/PETPT.for"
-    )
+    ITP = ImperativeInterpreter.from_src_file("tests/data/program_analysis/PETPT.for")
     con_id = GenericIdentifier.from_str("@container::PETPT::@global::petpt")
 
     G = GroundedFunctionNetwork.from_AIR(
-        con_id, ITP.containers, ITP.variables, ITP.types
+        con_id, ITP.containers, ITP.variables, ITP.types, []
     )
     assert isinstance(G, GroundedFunctionNetwork)
     A = G.to_AGraph()
@@ -145,11 +137,9 @@ def test_crop_yield_creation():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/crop_yield.f"
     )
-    con_id = GenericIdentifier.from_str(
-        "@container::crop_yield::@global::crop_yield"
-    )
+    con_id = GenericIdentifier.from_str("@container::crop_yield::@global::crop_yield")
 
     G = GroundedFunctionNetwork.from_AIR(
-        con_id, ITP.containers, ITP.variables, ITP.types
+        con_id, ITP.containers, ITP.variables, ITP.types, []
     )
     assert isinstance(G, GroundedFunctionNetwork)
