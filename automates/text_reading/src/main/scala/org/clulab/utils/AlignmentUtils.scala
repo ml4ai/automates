@@ -23,14 +23,15 @@ object AlignmentJsonUtils {
     * other related methods are in GrFNParser*/
 
   /**get arguments for the aligner depending on what data are provided**/
-  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, textInputFormat: String): alignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): alignmentArguments = {
 
     val jsonKeys = json.obj.keys.toList
     // load text mentions
     val allMentions =  if (jsonKeys.contains("mentions")) {
       val mentionsPath = json("mentions").str
       val mentionsFile = new File(mentionsPath)
-      val textMentions =  if (textInputFormat == "cosmos") {
+      val textMentions =  if (serializerName == "AutomatesJSONSerializer") {
+        println("using automates serializer")
         val ujsonOfMenFile = ujson.read(mentionsFile)
         AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
       } else {

@@ -8,6 +8,7 @@ import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
+import org.clulab.aske.automates.attachments.DiscontinuousCharOffsetAttachment
 import org.clulab.aske.automates.entities.EntityHelper
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
@@ -102,17 +103,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
-    for (v <- mentions) println("here:: " + v.text + " " + v.label)
+//    for (v <- mentions) println("here:: " + v.text + " " + v.label)
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
-    println("-> " + groupedBySent)
+//    println("-> " + groupedBySent)
     for (gbs <- groupedBySent) {
-      println("--> " + groupedBySent)
+//      println("--> " + groupedBySent)
       val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
       println(groupedByIntervalOverlap)
       for (item <- groupedByIntervalOverlap) {
-        println(item._1)
-        for (m <- item._2) println("here1: " + m.text)
+//        println(item._1)
+//        for (m <- item._2) println("here1: " + m.text)
         val longest = item._2.maxBy(_.tokenInterval.length)
         maxInGroup.append(longest)
       }
@@ -210,7 +211,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     val withConj = filterOutOverlappingMen(tempWithConj)
     for (wc <- withConj) println("wc " + wc.text)
-    for (woc <- withoutConj) println("woc " + woc.text)
+    for (woc <- withoutConj) println("->woc " + woc.text)
 
 
 
@@ -234,7 +235,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     for (m <- withoutConj) toReturn.append(m)
 
-    for (m <- standardDefsWithConj) toReturn.append(m)
+//    for (m <- standardDefsWithConj) toReturn.append(m)
 
     for (m <- standardDefsWithConj) {
       println("m: " + m.text )
@@ -242,9 +243,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 //      println("full deps: " + m.sentenceObj.dependencies.get.allEdges)
 
 
-      def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String)): Unit = {
+      def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String)): Mention = {
         // this should be the def text bound mention
-        def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Unit = {
+        def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
           val charOffsets = new ArrayBuffer[Array[Int]]
           var spanStartAndEndOffset = new ArrayBuffer[Int]()
           var prevTokenIndex = 0
@@ -269,10 +270,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
           }
           println("spans: ")
+          val listOfIntCharOffsets = new ArrayBuffer[(Int, Int)]()
           for (ch <- charOffsets) {
             println("ch span " + ch.mkString(" "))
             println("span text: " + m.document.text.get.slice(ch.head, ch.last))
           }
+          for (item <- charOffsets) {
+            listOfIntCharOffsets.append((item.head, item.last))
+          }
+          listOfIntCharOffsets
         }
         val sortedConj = List(conjEdge._1, conjEdge._2).sorted
         println("sorted conj: " + sortedConj)
@@ -295,8 +301,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val defText = defTextWordsWithInd.map(_._1)
         println("_-_-_" + defText.mkString(" "))
         println("words char offset " + charOffsets)
-        println("here:: " + m.document.text.get.slice(charOffsets.head, charOffsets(2)).mkString(""))
-        getDiscontCharOffset(m, newTokenInt)
+        println("here:: " + m.document.text.get.slice(charOffsets.head, charOffsets.last).mkString(""))
+        val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
+        val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+        val menWithAttachment = m.withAttachment(attachment)
+        menWithAttachment
 
       }
 
@@ -304,7 +313,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       println("only ours: " + edgesForOnlyThisMen)
       val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
       println(maxConj + "<<")
-      returnWithoutConj(m, maxConj)
+      val newMention = returnWithoutConj(m, maxConj)
+      toReturn.append(newMention)
 
 
 
@@ -368,7 +378,9 @@ println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
 
         val newDefinitions = new ArrayBuffer[Mention]()
 
-        val allConjNodes = tokenWithOutgoingConjAll.head +: incomingConjNodes
+        val allConjNodes = if (tokenWithOutgoingConjAll.nonEmpty) {
+          tokenWithOutgoingConjAll.head +: incomingConjNodes
+        } else incomingConjNodes
         if (allConjNodes.length > 0) {
           for (int <- (allConjNodes).sorted) {
             //      println("prev indices: " + previousIndices)

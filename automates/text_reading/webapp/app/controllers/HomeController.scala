@@ -8,18 +8,15 @@ import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
-import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
-
+import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLoader}
-
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, rehydrateLinkElement}
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
-
 import upickle.default._
 
 import scala.collection.mutable.ArrayBuffer
@@ -27,7 +24,7 @@ import ujson.json4s.Json4sJson
 import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.utils.{DisplayUtils, AlignmentJsonUtils}
+import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
 import play.api.mvc._
@@ -57,7 +54,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val maxSVOgroundingsPerVarDefault: Int = 5
   private val groundToSVODefault = true
   private val appendToGrFNDefault = true
-  private val defaultTextInputFormat = "cosmos" // other - "science-parse"
+  private val defaultSerializerName = "AutomatesJSONSerializer" // other - "JSONSerializer"
   private val debugDefault = false
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
@@ -165,7 +162,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     logger.info("Finished converting to text")
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
     val outFile = json("outfile").str
-    mentions.saveJSON(outFile, pretty=true)
+    AutomatesExporter(outFile).export(mentions)
+//    mentions.saveJSON(outFile, pretty=true)
     Ok("")
   }
 
@@ -221,7 +219,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val blockIdx = location.last
 //
       for (m <- menInTextBlocks) {
-        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "mentionLocation"))
+        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
         mentionsWithLocations.append(newMen)
       }
     }
@@ -261,17 +259,18 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       json("arguments").obj("maxSVOgroundingsPerVar").num.toInt
     } else maxSVOgroundingsPerVarDefault
 
-    val textInputFormat = if (jsonKeys.contains("arguments")) {
+    val serializerName = if (jsonKeys.contains("arguments")) {
       val args = json("arguments")
-      if (args.obj.keys.toList.contains("text_input_format")) {
-        args.obj("text_input_format").str
-      } else defaultTextInputFormat
-    } else defaultTextInputFormat
+      if (args.obj.keys.toList.contains("serializer_name")) {
+        args.obj("serializer_name").str
+      } else defaultSerializerName
+    } else defaultSerializerName
 
 
+    println("Which serializer: " + serializerName)
     //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
     if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
-      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, textInputFormat)
+      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
 
       // ground!
       val groundings = ExtractAndAlign.groundMentions(
@@ -291,7 +290,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         Some(numAlignmentsSrcToComment),
         scoreThreshold,
         appendToGrFN,
-        textInputFormat,
         debug
       )
 

@@ -1,8 +1,11 @@
 package org.clulab.utils
 
 import java.io.PrintWriter
+
+import org.clulab.aske.automates.attachments.{AutomatesAttachment, DiscontinuousCharOffsetAttachment}
 import org.clulab.odin._
 import org.clulab.processors.{Document, Sentence}
+
 import scala.runtime.ZippedTraversable3.zippedTraversable3ToTraversable
 
 object DisplayUtils {
@@ -82,7 +85,15 @@ object DisplayUtils {
     sb.toString
   }
 
-  def attachmentsString(mods: Set[Attachment]): String = s"${mods.mkString(", ")}"
+  def attachmentsString(mods: Set[Attachment]): String = {
+
+    for (m <- mods) println("->>>" + m.asInstanceOf[DiscontinuousCharOffsetAttachment].toUJson)
+//    s"${mods.mkString(", ")}"
+    s"${mods.map(_.asInstanceOf[AutomatesAttachment].toUJson)}"
+  }
+
+
+
 
   def syntacticDependenciesToString(s:Sentence): String = {
     if (s.universalEnhancedDependencies.isDefined) {
