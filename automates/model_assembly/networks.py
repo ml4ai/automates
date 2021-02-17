@@ -1046,7 +1046,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         translate_container(start_container, [])
         grfn_uid = str(uuid4())
         date_created = datetime.datetime.now().strftime("%Y-%m-%d")
-        return cls(grfn_uid, con_id, date_created, network, hyper_edges, subgraphs)
+        return cls(grfn_uid, con_id, date_created, network, hyper_edges, subgraphs, [])
 
     def to_FCG(self):
         G = nx.DiGraph()
