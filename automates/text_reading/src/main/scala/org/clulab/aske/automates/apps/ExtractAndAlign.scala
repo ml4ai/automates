@@ -532,7 +532,7 @@ object ExtractAndAlign {
       }
     }
 
-    def getDiscontinuousText(mention: Mention): Unit = {
+    def getDiscontinuousText(mention: Mention): String = {
       val subStrings = new ArrayBuffer[String]()
       println(mention.attachments + "<<<<<")
       val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
@@ -548,6 +548,7 @@ object ExtractAndAlign {
         subStrings.append(docText.slice(start, end).mkString(""))
       }
       println("def text: " + subStrings.mkString(" "))
+      subStrings.mkString(" ")
     }
 
     if (textDefinitionMentions.isDefined) {
@@ -559,14 +560,16 @@ object ExtractAndAlign {
         val originalSentence = mention.sentenceObj.words.mkString(" ")
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
-        val definition = mention.arguments(DEFINITION).head.text //if (mention.attachments.nonEmpty) {
+//        val definition = mention.arguments(DEFINITION).head.text //if (mention.attachments.nonEmpty) {
 //          mention
 //        } else  mention.arguments(DEFINITION).head.text
 
-        if (mention.attachments.nonEmpty && mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "DiscontinuousCharOffset")) {
-          getDiscontinuousText(mention)
-        }
 
+        val definition = if (mention.attachments.nonEmpty && mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "DiscontinuousCharOffset")) {
+          getDiscontinuousText(mention)
+        } else {
+          mention.arguments(DEFINITION).head.text
+        }
 
         val charBegin = mention.startOffset
         val charEnd = mention.endOffset
