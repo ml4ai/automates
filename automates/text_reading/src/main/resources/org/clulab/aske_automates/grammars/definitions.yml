@@ -193,8 +193,6 @@ rules:
       variable:Variable = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/JJR/]
 
-
-
   - name: def_cop_var
     label: Definition
     priority: ${priority}

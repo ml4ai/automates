@@ -103,17 +103,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
-//    for (v <- mentions) println("here:: " + v.text + " " + v.label)
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
-//    println("-> " + groupedBySent)
     for (gbs <- groupedBySent) {
-//      println("--> " + groupedBySent)
       val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
-      println(groupedByIntervalOverlap)
       for (item <- groupedByIntervalOverlap) {
-//        println(item._1)
-//        for (m <- item._2) println("here1: " + m.text)
         val longest = item._2.maxBy(_.tokenInterval.length)
         maxInGroup.append(longest)
       }
@@ -173,13 +167,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
       for (gr1 <- groupedByTokenOverlap.values) {
         // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
-//        println("------")
-        for (g <- gr1) println("overlapping " + g.text + " " + g.tokenInterval + " " + g.label)
-
         if (gr1.exists(_.label=="ConjDefinition")) {
-//          println("TRUE")
           val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
-//          println("longest: " + longestConjDef.text)
           toReturn.append(longestConjDef)
         } else {
           for (men <- gr1) toReturn.append(men)
@@ -208,12 +197,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           spanStartAndEndOffset = new ArrayBuffer[Int]()
           spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
           prevTokenIndex = tokenInt
+          // if last token, get end offset and append resulting offset
           if (indexOnList + 1 == newTokenList.length) {
             spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
             charOffsets.append(spanStartAndEndOffset.toArray)
           }
 
         } else {
+          // if last token, get end offset and append resulting offset
           if (indexOnList + 1 == newTokenList.length) {
             spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
             charOffsets.append(spanStartAndEndOffset.toArray)
@@ -232,12 +223,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     listOfIntCharOffsets
   }
 
-  def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String)): Mention = {
+  def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String), preconj: Seq[Int]): Mention = {
     // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
     val sortedConj = List(conjEdge._1, conjEdge._2).sorted
     val tokInAsList = m.arguments("definition").head.tokenInterval.toList
 
-    val newTokenInt = tokInAsList.filter(idx => idx < sortedConj.head || idx >= sortedConj.last)
+    val newTokenInt = tokInAsList.filter(idx => (idx < sortedConj.head || idx >= sortedConj.last) & !preconj.contains(idx))
 
     val charOffsets = new ArrayBuffer[Int]()
     val wordsWIndex = m.sentenceObj.words.zipWithIndex
@@ -261,6 +252,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val onlyThisMenedges = getEdgesForMention(m)
     onlyThisMenedges.map(_._3).exists(_.startsWith("conj"))
   }
+
+  /*
+  A method for handling definitions depending on whether or not they have any conjoined elements
+   */
   def untangleConj(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
     // partition on those with and without conj
@@ -290,8 +285,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (m <- standardDefsWithConj) {
       val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
       val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
+      val preconj = m.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
 
-      val newMention = returnWithoutConj(m, maxConj)
+      val newMention = returnWithoutConj(m, maxConj, preconj)
       toReturn.append(newMention)
 
     }
@@ -302,11 +298,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   // this one worked separately but not when used within untangleConj
   def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-
-
-    // todo: only conj defs should get here
-    // todo: if overlap, take most complete
-    // todo: if conj is outside def but overlap, take longest - but how? i only annotated the def itself... maybe combine all defs if there are more than one?
 
     val toReturn = new ArrayBuffer[Mention]()
 
@@ -324,25 +315,20 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           conjNodes.append(ce._2)
         }
         val allConjNodes = conjNodes.distinct.sorted
-
+        val preconj = headDef.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
         val previousIndices = new ArrayBuffer[Int]()
 
         val newDefinitions = new ArrayBuffer[Mention]()
         val defAttachments = new ArrayBuffer[DiscontinuousCharOffsetAttachment]()
 
-//        val allConjNodes = if (tokenWithOutgoingConjAll.nonEmpty) {
-//          tokenWithOutgoingConjAll.head +: incomingConjNodes
-//        } else incomingConjNodes
-        if (allConjNodes.length > 0) {
+        if (allConjNodes.nonEmpty) {
 
-          for (int <- (allConjNodes).sorted) {
+          for (int <- allConjNodes.sorted) {
             val headDefStartToken = headDef.tokenInterval.start
-            var newDefTokenInt = headDef.tokenInterval.filter(item => item >= headDefStartToken & item <= int)
+            var newDefTokenInt = headDef.tokenInterval.filter(item => (item >= headDefStartToken & item <= int) & !preconj.contains(item))
 
             if (previousIndices.nonEmpty) {
-
               newDefTokenInt = newDefTokenInt.filter(ind => ind < previousIndices.head || ind >= int )
-//
             }
 
             val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
@@ -356,7 +342,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
             previousIndices.append(int)
           }
-
         }
 
 
@@ -383,7 +368,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
     }
-
 
     toReturn
   }

@@ -537,11 +537,19 @@ object ExtractAndAlign {
       println(mention.attachments + "<<<<<")
       val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
       val charOffset = discontAttachment("charOffsets").arr
+      val docText = mention.document.text.getOrElse("No text")
+//      println("doc text: " + docText)
       for (offsetSet <- charOffset) {
         val start = offsetSet.arr.head.num.toInt
+        println("start: " + start)
+
         val end = offsetSet.arr.last.num.toInt
+        println("end: " + end)
+        subStrings.append(docText.slice(start, end).mkString(""))
       }
+      println("def text: " + subStrings.mkString(" "))
     }
+
     if (textDefinitionMentions.isDefined) {
 
       // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
@@ -555,7 +563,7 @@ object ExtractAndAlign {
 //          mention
 //        } else  mention.arguments(DEFINITION).head.text
 
-        if (mention.attachments.nonEmpty) {
+        if (mention.attachments.nonEmpty && mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "DiscontinuousCharOffset")) {
           getDiscontinuousText(mention)
         }
 
