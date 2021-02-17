@@ -310,32 +310,18 @@ class HyperEdge:
                 o for o in self.inputs if o.identifier.var_name == "EXIT"
             ][0].value
 
-            # Lambda function to be applied across seen exit/new out vals/existing values.
-            # If we have seen an exit before at a given position, keep the
-            # existing value, otherwise update.
-            v_keep_values_with_seen_exit = np.vectorize(
-                (
-                    lambda seen_exit, new_output_val, existing_val: existing_val
-                    if seen_exit
-                    else new_output_val
-                )
-            )
-
             # For each output value, update output nodes with new value that
             # just exited, otherwise keep existing value
             for i, out_val in enumerate(result):
-                self.outputs[i].value = v_keep_values_with_seen_exit(
-                    self.seen_exits, out_val, np.copy(self.outputs[i].value)
+                # If we have seen an exit before at a given position, keep the
+                # existing value, otherwise update.
+                self.outputs[i].value = np.where(
+                    self.seen_exits, np.copy(self.outputs[i].value), out_val
                 )
 
             # Update seen_exits with any vectorized positions that may have
             # exited during this execution
-            v_update_seen_exit = np.vectorize(
-                lambda seen_exit, current_exit: seen_exit or current_exit
-            )
-            self.seen_exits = v_update_seen_exit(
-                np.copy(self.seen_exits), exit_var_values
-            )
+            self.seen_exits = np.copy(self.seen_exits) | exit_var_values
 
         else:
             for i, out_val in enumerate(result):
@@ -837,7 +823,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
             [n for n, d in self.in_degree() if d == 0 and isinstance(n, VariableNode)]
         )
         self.outputs = [
-            n for n, d in self.out_degree() if d == 0 and isinstance(n, VariableNode)
+            n
+            for n, d in self.out_degree()
+            if d == 0 and isinstance(n, VariableNode) and n in self.root_subgraph.nodes
         ]
 
         self.uid2varnode = {v.uid: v for v in self.variables}
