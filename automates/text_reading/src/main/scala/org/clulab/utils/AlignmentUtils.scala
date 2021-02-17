@@ -31,7 +31,6 @@ object AlignmentJsonUtils {
       val mentionsPath = json("mentions").str
       val mentionsFile = new File(mentionsPath)
       val textMentions =  if (serializerName == "AutomatesJSONSerializer") {
-        println("using automates serializer")
         val ujsonOfMenFile = ujson.read(mentionsFile)
         AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
       } else {

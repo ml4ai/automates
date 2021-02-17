@@ -36,7 +36,6 @@ class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], discontArg
 
   def offsetsToUJson(charOffsets: Seq[(Int, Int)]): ujson.Value = {
     val json = charOffsets.map(seq => ujson.Arr(seq._1, seq._2))
-    println("JSON: " + json)
     json
   }
 

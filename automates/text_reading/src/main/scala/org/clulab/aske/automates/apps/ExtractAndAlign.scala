@@ -535,17 +535,11 @@ object ExtractAndAlign {
     def getDiscontinuousText(mention: Mention): Unit = {
       val subStrings = new ArrayBuffer[String]()
       println(mention.attachments + "<<<<<")
-      for (a <- mention.attachments) println("a: " + a.asInstanceOf[AutomatesAttachment].toUJson)
-      val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head //.filter(att => att.asInstanceOf[AutomatesAttachment].toUJson("attType")=="DiscontinuousCharOffset").head // for now, assume there's only one
+      val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
       val charOffset = discontAttachment("charOffsets").arr
-      println("CHAR OFF: " + charOffset)
       for (offsetSet <- charOffset) {
         val start = offsetSet.arr.head.num.toInt
-        println(start + "<")
         val end = offsetSet.arr.last.num.toInt
-        println(end + "<<")
-//        println("text: " + mention.document.text.getOrElse("no text"))
-        println("part of text: " + mention.document.text.get.slice(start, end))
       }
     }
     if (textDefinitionMentions.isDefined) {

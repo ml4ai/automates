@@ -192,20 +192,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   // this should be the def text bound mention
   def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
-    println("mention: " + m.text + " " + newTokenList)
     val charOffsets = new ArrayBuffer[Array[Int]]
     var spanStartAndEndOffset = new ArrayBuffer[Int]()
     var prevTokenIndex = 0
     for ((tokenInt, indexOnList) <- newTokenList.zipWithIndex) {
-      println("tok in and ind on list " + tokenInt + " " + indexOnList)
       if (indexOnList == 0) {
-        println("index on list = 0: " + indexOnList)
         spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
         prevTokenIndex = tokenInt
       } else {
-        println("index on list != 0: " + indexOnList)
         if (!(prevTokenIndex + 1 == tokenInt) ) {
-          println("gap line 207: " + indexOnList + " " + prevTokenIndex + " " + tokenInt)
           //this means, we have found the the gap in the token int
           // and the previous token was the end of previous part of the discont span, so we should get the endOffset of prev token
           spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
@@ -214,15 +209,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
           prevTokenIndex = tokenInt
           if (indexOnList + 1 == newTokenList.length) {
-            println("this should be the end: " + indexOnList + " " + prevTokenIndex + " " + tokenInt)
             spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
             charOffsets.append(spanStartAndEndOffset.toArray)
           }
 
         } else {
-          println("non gap " + indexOnList + " " + prevTokenIndex + " " + tokenInt )
           if (indexOnList + 1 == newTokenList.length) {
-            println("this should be the end non gap: " + indexOnList + " " + prevTokenIndex + " " + tokenInt)
             spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
             charOffsets.append(spanStartAndEndOffset.toArray)
           } else {
@@ -233,12 +225,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
     }
-    println("spans: ")
     val listOfIntCharOffsets = new ArrayBuffer[(Int, Int)]()
-    for (ch <- charOffsets) {
-      println("ch span " + ch.mkString(" "))
-      println("span text: " + m.document.text.get.slice(ch.head, ch.last))
-    }
     for (item <- charOffsets) {
       listOfIntCharOffsets.append((item.head, item.last))
     }
@@ -248,17 +235,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String)): Mention = {
     // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
     val sortedConj = List(conjEdge._1, conjEdge._2).sorted
-    println("sorted conj: " + sortedConj)
     val tokInAsList = m.arguments("definition").head.tokenInterval.toList
-    println("men tok int: " + m.tokenInterval.mkString("|"))
-    println("def tok int: " + m.arguments("definition").head.tokenInterval.mkString("::") + " " + m.arguments("definition").head.text)
-    val newTokenInt = tokInAsList.filter(idx => idx < sortedConj.head || idx >= sortedConj.last)
-    println("conj " + conjEdge)
-    println("M: " + m.text)
-    println("M orig token int " + tokInAsList)
-    println("M new " + newTokenInt)
-    println("m char offset: " + m.startOffset + " " + m.endOffset)
 
+    val newTokenInt = tokInAsList.filter(idx => idx < sortedConj.head || idx >= sortedConj.last)
 
     val charOffsets = new ArrayBuffer[Int]()
     val wordsWIndex = m.sentenceObj.words.zipWithIndex
@@ -268,9 +247,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       charOffsets.append(m.sentenceObj.startOffsets(ind))
     }
     val defText = defTextWordsWithInd.map(_._1)
-    println("_-_-_" + defText.mkString(" "))
-    println("words char offset " + charOffsets)
-    println("here:: " + m.document.text.get.slice(charOffsets.head, charOffsets.last).mkString(""))
     val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
     if (charOffsetsForAttachment.length > 1) {
       val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
@@ -293,7 +269,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // get rid of cc's and cc:preconj (maybe just all cc's?)
     // account for cases when one conj is not part of the extracted definition
     // if plural noun (eg entopies) - lemmatize
-//    println("======" + mentions.length)
 
     // all that have conj (to be grouped further) and those with no conj
     val (tempWithConj, withoutConj) = mentions.partition(hasConj(_))
@@ -314,9 +289,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     for (m <- standardDefsWithConj) {
       val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
-      println("only ours: " + edgesForOnlyThisMen)
       val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
-      println(maxConj + "<<")
+
       val newMention = returnWithoutConj(m, maxConj)
       toReturn.append(newMention)
 
@@ -333,30 +307,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // todo: only conj defs should get here
     // todo: if overlap, take most complete
     // todo: if conj is outside def but overlap, take longest - but how? i only annotated the def itself... maybe combine all defs if there are more than one?
-//    val (conjDef, other) = mentions.partition(_ matches "ConjDefinition")
-//    println(conjDef.length)
-//    for (m <- mentions) println("Inside untangle conj: " + m.text + " " + m.label)
+
     val toReturn = new ArrayBuffer[Mention]()
 
     val groupedBySent = mentions.groupBy(_.sentence)
     for (gr1 <- groupedBySent) {
       val groupedByIntervalOverlap = groupByTokenOverlap(gr1._2)
-//      println("GR LEN: " + groupedByIntervalOverlap.keys)
       for (gr <- groupedByIntervalOverlap) {
-//        println("-->> " + gr._1 + " " + gr._2.length)
-//        for (m <- gr._2) println(m.text)
         val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
-//        println("most co,mplete: " + mostComplete.text)
         val headDef = mostComplete.arguments("definition").head
-        //    println("head def: " + headDef.text)
-
-        //fixme: try to do this without reannotating just using the method for finding deps for the edge
-        println("head def token int: " + headDef.tokenInterval)
-
         val edgesForOnlyThisMen = headDef.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDef.tokenInterval.start && math.max(edge._1, edge._2) <= headDef.tokenInterval.end)
-        println("only ours: " + edgesForOnlyThisMen)
         val conjEdges = edgesForOnlyThisMen.filter(_._3.startsWith("conj"))
-        println("conj edges: " + conjEdges)
         val conjNodes = new ArrayBuffer[Int]()
         for (ce <- conjEdges) {
           conjNodes.append(ce._1)
@@ -364,17 +325,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
         val allConjNodes = conjNodes.distinct.sorted
 
-
-//        val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
-////        println("deps: " + deps)
-//        println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
-//        val tokenWithOutgoingConjAll = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
-//
-////         val tokenWithOutgoingConj = tokenWithOutgoingConjAll.head//assume one
-//        //    println(tokenWithOutgoingConj)
-//
-//        val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
-//        println(">>" + incomingConjNodes.mkString("||"))
         val previousIndices = new ArrayBuffer[Int]()
 
         val newDefinitions = new ArrayBuffer[Mention]()
@@ -384,30 +334,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 //          tokenWithOutgoingConjAll.head +: incomingConjNodes
 //        } else incomingConjNodes
         if (allConjNodes.length > 0) {
-          println("all conj nodes: " + allConjNodes.mkString("||"))
+
           for (int <- (allConjNodes).sorted) {
             val headDefStartToken = headDef.tokenInterval.start
-            println("head int start: " + headDefStartToken)
-            println("prev indices: " + previousIndices)
             var newDefTokenInt = headDef.tokenInterval.filter(item => item >= headDefStartToken & item <= int)
-            println("defs" + int + " " + newDefTokenInt)
+
             if (previousIndices.nonEmpty) {
 
-              println("int: " + int)
-              println("prevIntHead: " + previousIndices.head)
-              for (ind <- newDefTokenInt) println("ind: " + ind)
               newDefTokenInt = newDefTokenInt.filter(ind => ind < previousIndices.head || ind >= int )
-//              println("new new def tok: " + newNewDefTokenInt)
-//              newDefTokenInt = newNewDefTokenInt
-//              for (pi <- previousIndices.reverse) {
-//                println("pi and before patching: " + pi + " | " + newDefTokenInt.mkString("::") )
 //
-//                newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
-//                println("after patching: " + newDefTokenInt)
-//
-//              }
             }
-            println("new def tok in: " + newDefTokenInt)
+
             val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
             val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
             val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
@@ -416,7 +353,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
             val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
             defAttachments.append(attachment)
-            //          println("text " + defText.mkString(" "))
+
             previousIndices.append(int)
           }
 
@@ -425,24 +362,19 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
         val variables = mostComplete.arguments("variable")
         for ((v, i) <- variables.zipWithIndex) {
-//          println("here: " + v.text + " " + i)
           if (newDefinitions.nonEmpty) {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
             val newDefMen = copyWithArgs(mostComplete, newArgs)
             if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
               val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
-              println("new def men line 335 "+newDefMen.attachments)
               toReturn.append(newDefWithAtt)
             } else {
               toReturn.append(newDefMen)
             }
 
-            //          println("new def men line 335 "+newDefMen.text)
-//            toReturn.append(newDefMen)
           } else {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(headDef))
             val newDefMen = copyWithArgs(mostComplete, newArgs)
-            //          println("new def men line 335 "+newDefMen.text)
             toReturn.append(newDefMen)
           }
 
