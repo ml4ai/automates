@@ -6,6 +6,7 @@ import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
@@ -75,6 +76,9 @@ object ExtractAndExport extends App {
 //      println(dm.foundBy)
       for (arg <- dm.arguments) {
         println(arg._1 + ": " + dm.arguments(arg._1).head.text)
+      }
+      if (dm.attachments.nonEmpty) {
+        for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
       }
     }
     val paramSettingMentions = mentions.filter(_ matches "ParameterSetting")

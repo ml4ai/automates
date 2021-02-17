@@ -77,10 +77,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (m <- mentions) {
       if (intervalMentionMap.isEmpty) {
 //        println("++>" + intervalMentionMap)
-        println("m tok int: " + m.tokenInterval)
+//        println("m tok int: " + m.tokenInterval)
         intervalMentionMap += (m.tokenInterval -> Seq(m))
       } else {
-        println("---->" + intervalMentionMap)
+//        println("---->" + intervalMentionMap)
         if (intervalMentionMap.keys.exists(k => k.intersect(m.tokenInterval).nonEmpty)) {
           val interval = findOverlappingInterval(m.tokenInterval, intervalMentionMap.keys.toList)
           val currMen = intervalMentionMap(interval)
@@ -97,7 +97,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
       }
     }
-    println("---> " + intervalMentionMap.toMap)
+//    println("---> " + intervalMentionMap.toMap)
     intervalMentionMap.toMap
   }
 
@@ -163,6 +163,124 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
   }
 
+  def filterOutOverlappingMen(mentions: Seq[Mention]): Seq[Mention] = {
+    // input is only mentions with the label ConjDefinition or Definition with conjunctions
+    // this is to get rid of conj definitions that are redundant in the presence of a more complete ConjDefinition
+    val toReturn = new ArrayBuffer[Mention]()
+    val groupedBySent = mentions.groupBy(_.sentence)
+
+    for (gr <- groupedBySent) {
+      val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
+      for (gr1 <- groupedByTokenOverlap.values) {
+        // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
+//        println("------")
+        for (g <- gr1) println("overlapping " + g.text + " " + g.tokenInterval + " " + g.label)
+
+        if (gr1.exists(_.label=="ConjDefinition")) {
+//          println("TRUE")
+          val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
+//          println("longest: " + longestConjDef.text)
+          toReturn.append(longestConjDef)
+        } else {
+          for (men <- gr1) toReturn.append(men)
+        }
+      }
+    }
+    toReturn
+  }
+
+
+  // this should be the def text bound mention
+  def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
+    println("mention: " + m.text + " " + newTokenList)
+    val charOffsets = new ArrayBuffer[Array[Int]]
+    var spanStartAndEndOffset = new ArrayBuffer[Int]()
+    var prevTokenIndex = 0
+    for ((tokenInt, indexOnList) <- newTokenList.zipWithIndex) {
+      println("tok in and ind on list " + tokenInt + " " + indexOnList)
+      if (indexOnList == 0) {
+        println("index on list = 0: " + indexOnList)
+        spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
+        prevTokenIndex = tokenInt
+      } else {
+        println("index on list != 0: " + indexOnList)
+        if (!(prevTokenIndex + 1 == tokenInt) ) {
+          println("gap line 207: " + indexOnList + " " + prevTokenIndex + " " + tokenInt)
+          //this means, we have found the the gap in the token int
+          // and the previous token was the end of previous part of the discont span, so we should get the endOffset of prev token
+          spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
+          charOffsets.append(spanStartAndEndOffset.toArray)
+          spanStartAndEndOffset = new ArrayBuffer[Int]()
+          spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
+          prevTokenIndex = tokenInt
+          if (indexOnList + 1 == newTokenList.length) {
+            println("this should be the end: " + indexOnList + " " + prevTokenIndex + " " + tokenInt)
+            spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
+            charOffsets.append(spanStartAndEndOffset.toArray)
+          }
+
+        } else {
+          println("non gap " + indexOnList + " " + prevTokenIndex + " " + tokenInt )
+          if (indexOnList + 1 == newTokenList.length) {
+            println("this should be the end non gap: " + indexOnList + " " + prevTokenIndex + " " + tokenInt)
+            spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
+            charOffsets.append(spanStartAndEndOffset.toArray)
+          } else {
+            prevTokenIndex = tokenInt
+          }
+
+        }
+      }
+
+    }
+    println("spans: ")
+    val listOfIntCharOffsets = new ArrayBuffer[(Int, Int)]()
+    for (ch <- charOffsets) {
+      println("ch span " + ch.mkString(" "))
+      println("span text: " + m.document.text.get.slice(ch.head, ch.last))
+    }
+    for (item <- charOffsets) {
+      listOfIntCharOffsets.append((item.head, item.last))
+    }
+    listOfIntCharOffsets
+  }
+
+  def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String)): Mention = {
+    // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
+    val sortedConj = List(conjEdge._1, conjEdge._2).sorted
+    println("sorted conj: " + sortedConj)
+    val tokInAsList = m.arguments("definition").head.tokenInterval.toList
+    println("men tok int: " + m.tokenInterval.mkString("|"))
+    println("def tok int: " + m.arguments("definition").head.tokenInterval.mkString("::") + " " + m.arguments("definition").head.text)
+    val newTokenInt = tokInAsList.filter(idx => idx < sortedConj.head || idx >= sortedConj.last)
+    println("conj " + conjEdge)
+    println("M: " + m.text)
+    println("M orig token int " + tokInAsList)
+    println("M new " + newTokenInt)
+    println("m char offset: " + m.startOffset + " " + m.endOffset)
+
+
+    val charOffsets = new ArrayBuffer[Int]()
+    val wordsWIndex = m.sentenceObj.words.zipWithIndex
+
+    val defTextWordsWithInd = wordsWIndex.filter(w => newTokenInt.contains(w._2))
+    for (ind <- defTextWordsWithInd.map(_._2)) {
+      charOffsets.append(m.sentenceObj.startOffsets(ind))
+    }
+    val defText = defTextWordsWithInd.map(_._1)
+    println("_-_-_" + defText.mkString(" "))
+    println("words char offset " + charOffsets)
+    println("here:: " + m.document.text.get.slice(charOffsets.head, charOffsets.last).mkString(""))
+    val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
+    if (charOffsetsForAttachment.length > 1) {
+      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+      val menWithAttachment = m.withAttachment(attachment)
+      menWithAttachment
+    } else m
+
+  }
+
+
   def hasConj(m: Mention): Boolean = {
     val onlyThisMenedges = getEdgesForMention(m)
     onlyThisMenedges.map(_._3).exists(_.startsWith("conj"))
@@ -175,140 +293,26 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // get rid of cc's and cc:preconj (maybe just all cc's?)
     // account for cases when one conj is not part of the extracted definition
     // if plural noun (eg entopies) - lemmatize
-    println("======" + mentions.length)
+//    println("======" + mentions.length)
 
-
-
-
-    def filterOutOverlappingMen(mentions: Seq[Mention]): Seq[Mention] = {
-      // input is only mentions with the label ConjDefinition or Definition with conjunctions
-      // this is to get rid of conj definitions that are redundant in the presence of a more complete ConjDefinition
-      val toReturn = new ArrayBuffer[Mention]()
-      val groupedBySent = mentions.groupBy(_.sentence)
-
-      for (gr <- groupedBySent) {
-        val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
-        for (gr1 <- groupedByTokenOverlap.values) {
-          // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
-          println("------")
-          for (g <- gr1) println("overlapping " + g.text + " " + g.tokenInterval + " " + g.label)
-
-          if (gr1.exists(_.label=="ConjDefinition")) {
-            println("TRUE")
-            val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
-            println("longest: " + longestConjDef.text)
-            toReturn.append(longestConjDef)
-          } else {
-            for (men <- gr1) toReturn.append(men)
-          }
-        }
-      }
-      toReturn
-    }
-
+    // all that have conj (to be grouped further) and those with no conj
     val (tempWithConj, withoutConj) = mentions.partition(hasConj(_))
-//      val (withConj, withoutConj) = mentions.partition(hasConj(_))
-
+    // check if there's overlap between conjdefs and standard defs; if there is, drop the standard def
     val withConj = filterOutOverlappingMen(tempWithConj)
-    for (wc <- withConj) println("wc " + wc.text)
-    for (woc <- withoutConj) println("->woc " + woc.text)
-
-
-
+    // defs that were found as ConjDefinitions - that is events with multiple variables (at least partially) sharing a definitions vs definitions that were found with standard rule that happened to have conjunctions in their definitions
     val (conjDefs, standardDefsWithConj) = withConj.partition(_.label matches "ConjDefinition")
-
-    for (wc <- conjDefs) println("conjdef " + wc.text)
-    for (woc <- standardDefsWithConj) println("standard def " + woc.text)
 
     val toReturn = new ArrayBuffer[Mention]()
 
-//    val untangled = new ArrayBuffer[Mention]()
-//    for (m <- conjDefs) {
-//      val untang = untangleOneConjunction(m)
-//      for (men <- untang) untangled.append(men)
-//    }
-
-    //maybe before appending, check if there's overlap between conjdefs and standard defs; if there is, drop the standard def or even check conjdef and regular def? can end up filtering out small defs like class I; yes, this is better done before bc then the conjDef is the lonest and will be easier to filter the others; not standard, withoutConj
+    // the defs found with conj definition rules should be processed differently from standard defs that happen to have conjs
     for (m <- untangleConjunctions(conjDefs)) {
-//      println("m returned " + m.text)
       toReturn.append(m)
     }
+
+    // make sure to add non-conj events
     for (m <- withoutConj) toReturn.append(m)
 
-//    for (m <- standardDefsWithConj) toReturn.append(m)
-
     for (m <- standardDefsWithConj) {
-      println("m: " + m.text )
-      println("ti: " + m.tokenInterval)
-//      println("full deps: " + m.sentenceObj.dependencies.get.allEdges)
-
-
-      def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String)): Mention = {
-        // this should be the def text bound mention
-        def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
-          val charOffsets = new ArrayBuffer[Array[Int]]
-          var spanStartAndEndOffset = new ArrayBuffer[Int]()
-          var prevTokenIndex = 0
-          for ((tokenInt, indexOnList) <- newTokenList.zipWithIndex) {
-            println("tok in and ind on list " + tokenInt + " " + indexOnList)
-            if (indexOnList == 0) {
-              spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
-              prevTokenIndex = tokenInt
-            } else {
-              if (!(prevTokenIndex + 1 == tokenInt) || indexOnList + 1 == newTokenList.length) {
-                //this means, we have found the the gap in the token int
-                // and the previous token was the end of previous part of the discont span, so we should get the endOffset of prev token
-                spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
-                charOffsets.append(spanStartAndEndOffset.toArray)
-                spanStartAndEndOffset = new ArrayBuffer[Int]()
-                spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
-                prevTokenIndex = tokenInt
-              } else {
-                prevTokenIndex = tokenInt
-              }
-            }
-
-          }
-          println("spans: ")
-          val listOfIntCharOffsets = new ArrayBuffer[(Int, Int)]()
-          for (ch <- charOffsets) {
-            println("ch span " + ch.mkString(" "))
-            println("span text: " + m.document.text.get.slice(ch.head, ch.last))
-          }
-          for (item <- charOffsets) {
-            listOfIntCharOffsets.append((item.head, item.last))
-          }
-          listOfIntCharOffsets
-        }
-        val sortedConj = List(conjEdge._1, conjEdge._2).sorted
-        println("sorted conj: " + sortedConj)
-        val tokInAsList = m.tokenInterval.toList
-        val newTokenInt = tokInAsList.filter(idx => idx < sortedConj.head || idx >= sortedConj.last)
-        println("conj " + conjEdge)
-        println("M: " + m.text)
-        println("M orig token int " + tokInAsList)
-        println("M new " + newTokenInt)
-        println("m char offset: " + m.startOffset + " " + m.endOffset)
-
-
-        val charOffsets = new ArrayBuffer[Int]()
-        val wordsWIndex = m.sentenceObj.words.zipWithIndex
-
-        val defTextWordsWithInd = wordsWIndex.filter(w => newTokenInt.contains(w._2))
-        for (ind <- defTextWordsWithInd.map(_._2)) {
-          charOffsets.append(m.sentenceObj.startOffsets(ind))
-        }
-        val defText = defTextWordsWithInd.map(_._1)
-        println("_-_-_" + defText.mkString(" "))
-        println("words char offset " + charOffsets)
-        println("here:: " + m.document.text.get.slice(charOffsets.head, charOffsets.last).mkString(""))
-        val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
-        val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
-        val menWithAttachment = m.withAttachment(attachment)
-        menWithAttachment
-
-      }
-
       val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
       println("only ours: " + edgesForOnlyThisMen)
       val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
@@ -316,24 +320,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val newMention = returnWithoutConj(m, maxConj)
       toReturn.append(newMention)
 
-
-
-//      println("mp filtered: " + m.sentenceObj.dependencies.get.incomingEdges.flatten.toList.filter(id => m.tokenInterval.contains(id._1)))
-
-//      for (path <- m.paths) {
-////        println("p: " + path)
-//        for (x <- path._2) {
-//          for (i <- x._2) {
-//            println("----> " + x._1.text + " " + i._3)
-//          }
-//        }
-//      }
     }
-    // Only Def mentions will be passed
-//    val (haveConj, no_conj) = mentions.partition(m => m.paths.map)
-//    for (hc <- haveConj) println("hc: " + hc.text)
-//    for (nc <- no_conj) println("nc: " + nc.text)
-
     toReturn
   }
 
@@ -364,41 +351,71 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         //    println("head def: " + headDef.text)
 
         //fixme: try to do this without reannotating just using the method for finding deps for the edge
-        val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
-//        println("deps: " + deps)
-println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
-        val tokenWithOutgoingConjAll = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+        println("head def token int: " + headDef.tokenInterval)
 
-//         val tokenWithOutgoingConj = tokenWithOutgoingConjAll.head//assume one
-        //    println(tokenWithOutgoingConj)
+        val edgesForOnlyThisMen = headDef.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDef.tokenInterval.start && math.max(edge._1, edge._2) <= headDef.tokenInterval.end)
+        println("only ours: " + edgesForOnlyThisMen)
+        val conjEdges = edgesForOnlyThisMen.filter(_._3.startsWith("conj"))
+        println("conj edges: " + conjEdges)
+        val conjNodes = new ArrayBuffer[Int]()
+        for (ce <- conjEdges) {
+          conjNodes.append(ce._1)
+          conjNodes.append(ce._2)
+        }
+        val allConjNodes = conjNodes.distinct.sorted
 
-        val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+
+//        val deps = proc.annotate(headDef.text).sentences.head.universalEnhancedDependencies.get
+////        println("deps: " + deps)
+//        println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
+//        val tokenWithOutgoingConjAll = deps.incomingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
+//
+////         val tokenWithOutgoingConj = tokenWithOutgoingConjAll.head//assume one
+//        //    println(tokenWithOutgoingConj)
+//
+//        val incomingConjNodes = deps.outgoingEdges.flatten.filter(_._2.contains("conj")).map(_._1)
 //        println(">>" + incomingConjNodes.mkString("||"))
         val previousIndices = new ArrayBuffer[Int]()
 
         val newDefinitions = new ArrayBuffer[Mention]()
+        val defAttachments = new ArrayBuffer[DiscontinuousCharOffsetAttachment]()
 
-        val allConjNodes = if (tokenWithOutgoingConjAll.nonEmpty) {
-          tokenWithOutgoingConjAll.head +: incomingConjNodes
-        } else incomingConjNodes
+//        val allConjNodes = if (tokenWithOutgoingConjAll.nonEmpty) {
+//          tokenWithOutgoingConjAll.head +: incomingConjNodes
+//        } else incomingConjNodes
         if (allConjNodes.length > 0) {
+          println("all conj nodes: " + allConjNodes.mkString("||"))
           for (int <- (allConjNodes).sorted) {
-            //      println("prev indices: " + previousIndices)
-            var newDefTokenInt = headDef.tokenInterval.slice(0, int + 1)
-            //      println("defs" + int + " " + newDefTokenInt)
+            val headDefStartToken = headDef.tokenInterval.start
+            println("head int start: " + headDefStartToken)
+            println("prev indices: " + previousIndices)
+            var newDefTokenInt = headDef.tokenInterval.filter(item => item >= headDefStartToken & item <= int)
+            println("defs" + int + " " + newDefTokenInt)
             if (previousIndices.nonEmpty) {
 
-              for (pi <- previousIndices.reverse) {
-
-                newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
-
-              }
+              println("int: " + int)
+              println("prevIntHead: " + previousIndices.head)
+              for (ind <- newDefTokenInt) println("ind: " + ind)
+              newDefTokenInt = newDefTokenInt.filter(ind => ind < previousIndices.head || ind >= int )
+//              println("new new def tok: " + newNewDefTokenInt)
+//              newDefTokenInt = newNewDefTokenInt
+//              for (pi <- previousIndices.reverse) {
+//                println("pi and before patching: " + pi + " | " + newDefTokenInt.mkString("::") )
+//
+//                newDefTokenInt = newDefTokenInt.patch(pi, Nil, 1)
+//                println("after patching: " + newDefTokenInt)
+//
+//              }
             }
-            //          println("new def tok in: " + newDefTokenInt)
+            println("new def tok in: " + newDefTokenInt)
             val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
             val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
             val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
             newDefinitions.append(newDef)
+            val charOffsetsForAttachment= getDiscontCharOffset(headDef, newDefTokenInt.toList)
+
+            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+            defAttachments.append(attachment)
             //          println("text " + defText.mkString(" "))
             previousIndices.append(int)
           }
@@ -412,8 +429,16 @@ println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
           if (newDefinitions.nonEmpty) {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
             val newDefMen = copyWithArgs(mostComplete, newArgs)
+            if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
+              val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
+              println("new def men line 335 "+newDefMen.attachments)
+              toReturn.append(newDefWithAtt)
+            } else {
+              toReturn.append(newDefMen)
+            }
+
             //          println("new def men line 335 "+newDefMen.text)
-            toReturn.append(newDefMen)
+//            toReturn.append(newDefMen)
           } else {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(headDef))
             val newDefMen = copyWithArgs(mostComplete, newArgs)
@@ -427,9 +452,8 @@ println(">>>> " + deps.incomingEdges.flatten.mkString("|"))
 
     }
 
-//    for (m <- toReturn) println("to ret 343 " + m.text)
 
-    toReturn //++ other
+    toReturn
   }
 
 

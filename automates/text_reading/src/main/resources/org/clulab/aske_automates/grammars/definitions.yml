@@ -167,7 +167,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/]
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/JJR/]
 
 #  - name: var_cop_definition_conj
 #    label: Definition
@@ -191,7 +191,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Variable = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ ]
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/JJR/]
 
 
 

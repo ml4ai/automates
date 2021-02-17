@@ -86,8 +86,6 @@ object DisplayUtils {
   }
 
   def attachmentsString(mods: Set[Attachment]): String = {
-
-    for (m <- mods) println("->>>" + m.asInstanceOf[DiscontinuousCharOffsetAttachment].toUJson)
 //    s"${mods.mkString(", ")}"
     s"${mods.map(_.asInstanceOf[AutomatesAttachment].toUJson)}"
   }

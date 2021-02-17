@@ -170,6 +170,7 @@ object AutomatesJSONSerializer {
   def toDocument(docComponents: ujson.Value): Document = {
     val sentences = docComponents("sentences").arr.map(toSentence(_)).toArray
     val doc = Document(sentences)
+    doc.text = Some(docComponents("text").str)
     doc
   }
 

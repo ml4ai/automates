@@ -532,15 +532,22 @@ object ExtractAndAlign {
       }
     }
 
-//    def getDiscontinuousText(mention: Mention): Unit = {
-//      val subStrings = new ArrayBuffer[String]()
-//      println(mention.attachments + "<<<<<")
-//      for (a <- mention.attachments) println("a: " + a.asInstanceOf[AutomatesAttachment].toUJson)
-//      val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head //.filter(att => att.asInstanceOf[AutomatesAttachment].toUJson("attType")=="DiscontinuousCharOffset").head // for now, assume there's only one
-//      val charOffset = discontAttachment("charOffsets").arr
-//      println(charOffset)
-//
-//    }
+    def getDiscontinuousText(mention: Mention): Unit = {
+      val subStrings = new ArrayBuffer[String]()
+      println(mention.attachments + "<<<<<")
+      for (a <- mention.attachments) println("a: " + a.asInstanceOf[AutomatesAttachment].toUJson)
+      val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head //.filter(att => att.asInstanceOf[AutomatesAttachment].toUJson("attType")=="DiscontinuousCharOffset").head // for now, assume there's only one
+      val charOffset = discontAttachment("charOffsets").arr
+      println("CHAR OFF: " + charOffset)
+      for (offsetSet <- charOffset) {
+        val start = offsetSet.arr.head.num.toInt
+        println(start + "<")
+        val end = offsetSet.arr.last.num.toInt
+        println(end + "<<")
+//        println("text: " + mention.document.text.getOrElse("no text"))
+        println("part of text: " + mention.document.text.get.slice(start, end))
+      }
+    }
     if (textDefinitionMentions.isDefined) {
 
       // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
@@ -554,15 +561,16 @@ object ExtractAndAlign {
 //          mention
 //        } else  mention.arguments(DEFINITION).head.text
 
-//        if (mention.attachments.nonEmpty) {
-//          getDiscontinuousText(mention)
-//        }
+        if (mention.attachments.nonEmpty) {
+          getDiscontinuousText(mention)
+        }
+
 
         val charBegin = mention.startOffset
         val charEnd = mention.endOffset
         val continuousMenSpanJson = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
 
-          val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_("attType")=="MentionLocation").head//head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+          val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_("attType").str=="MentionLocation").head//head.asInstanceOf[MentionLocationAttachment].toUJson.obj
           val page = menAttAsJson("pageNum").num.toInt
           val block = menAttAsJson("blockIdx").num.toInt
 
