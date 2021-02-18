@@ -171,11 +171,11 @@ object ExtractAndAlign {
         textVarLinkElement = textVarLinkElements(alignment.src)
         unit = if (hasArg(unitMentions.get(alignment.dst), "unit")) {
           unitMentions.get(alignment.dst).arguments("unit").head.text
-        } else "None"
+        } else null
 
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, unit)
-    } else textVarLinkElements.map(el => updateTextVariable(el, "None"))
+    } else textVarLinkElements.map(el => updateTextVariable(el, null))
 
     updatedTextVars
 
@@ -191,10 +191,10 @@ object ExtractAndAlign {
         textVarLinkElement = textVarLinkElements(alignment.src)
         svoGrounding = if (SVOgroundings.nonEmpty) {
           ujson.Obj("grounding" -> SVOgroundings.get(alignment.dst)._2.map(sr => GrFNParser.sparqlResultTouJson(sr)))
-        } else "None"
+        } else null
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, svoGrounding)
-    } else textVarLinkElements.map(tvle => updateTextVariable(tvle, "None"))
+    } else textVarLinkElements.map(tvle => updateTextVariable(tvle, null))
 
 
 
@@ -215,21 +215,21 @@ object ExtractAndAlign {
         textVarLinkElement = textVarLinkElements(alignment.src)
         value = if (hasArg(paramSettingMentions.get(alignment.dst), "value")) {
           paramSettingMentions.get(alignment.dst).arguments("value").head.text
-        } else "None"
+        } else null
 
         valueLeast = if (hasArg(paramSettingMentions.get(alignment.dst), "valueLeast")) {
           paramSettingMentions.get(alignment.dst).arguments("valueLeast").head.text
-        } else "None"
+        } else null
 
         valueMost = if (hasArg(paramSettingMentions.get(alignment.dst), "valueMost")) {
           paramSettingMentions.get(alignment.dst).arguments("valueMost").head.text
-        } else "None"
+        } else null
 
 
         update = value + "::" + valueLeast + "::" + valueMost
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, update)
-    } else textVarLinkElements.map(el => updateTextVariable(el, "None::None::None"))
+    } else textVarLinkElements.map(el => updateTextVariable(el, "null::null::null"))
 
     updatedTextVars
   }
@@ -266,13 +266,13 @@ object ExtractAndAlign {
             logger.info("Querying SVO server")
             SVOGrounder.groundTermsToSVOandRank(identifier, svo_terms.split(","), maxSVOgroundingsPerVar)
           }
-        } else ujson.Str("N/A")
+        } else ujson.Null
 
-        val paramSetting = ujson.Obj(
-          "value" -> value,
-          "valueLeast" -> valueLeast,
-          "valueMost" -> valueMost
-        )
+        val paramSetting = ujson.Obj()
+
+        if (value == "null") paramSetting("value") = ujson.Null
+        if (valueLeast == "null") paramSetting("valueLeast") = ujson.Null
+        if (valueMost == "null") paramSetting("valueMost") = ujson.Null
 
         mkTextVarLinkElement(
           uid = id,
@@ -562,8 +562,8 @@ object ExtractAndAlign {
                     )
         } else {
           ujson.Obj(
-            "page" -> "N/A",
-            "block" -> "N/A",
+            "page" -> ujson.Null,
+            "block" -> ujson.Null,
             "span" -> ujson.Obj(
               "char_begin" -> charBegin,
               "char_end" -> charEnd

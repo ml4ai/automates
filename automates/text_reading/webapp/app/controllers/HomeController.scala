@@ -263,7 +263,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val textInputFormat = if (jsonKeys.contains("arguments")) {
       val args = json("arguments")
-      if (args.obj.keys.toList.contains("text_input_format")) {
+      if (args.obj.contains("text_input_format")) {
         args.obj("text_input_format").str
       } else defaultTextInputFormat
     } else defaultTextInputFormat
