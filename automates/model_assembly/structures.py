@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto, unique
 from dataclasses import dataclass
+from typing import List
 import re
 
 from .code_types import CodeType
@@ -90,7 +91,7 @@ class GenericDefinition(ABC):
         if "domain" in data:
             if "dimensions" in data["domain"]:
                 type_str = "type"
-                name_str = "array"
+                name_str = "list"
             else:
                 name_str = data["domain"]["name"]
                 type_str = data["domain"]["type"]
@@ -130,8 +131,21 @@ class VariableDefinition(GenericDefinition):
 
 
 @dataclass(frozen=True)
+class TypeFieldDefinition:
+    name: str
+    type: str
+
+
+@dataclass(frozen=True)
 class TypeDefinition(GenericDefinition):
-    attributes: tuple
+    name: str
+    metatype: str
+    fields: List[TypeFieldDefinition]
+
+
+@dataclass(frozen=True)
+class ObjectDefinition(GenericDefinition):
+    pass
 
 
 class GenericContainer(ABC):
@@ -176,7 +190,8 @@ class GenericContainer(ABC):
     @abstractmethod
     def __str__(self):
         args_str = "\n".join([f"\t{arg}" for arg in self.arguments])
-        outputs_str = "\n".join([f"\t{var}" for var in self.returns + self.updated])
+        outputs_str = "\n".join(
+            [f"\t{var}" for var in self.returns + self.updated])
         return f"Inputs:\n{args_str}\nVariables:\n{outputs_str}"
 
     @staticmethod
@@ -262,7 +277,8 @@ class VarType(Enum):
             return cls.BOOLEAN
         elif name == "integer":
             return cls.INTEGER
-        elif name == "array":
+        # TODO update for2py pipeline to use list instead
+        elif name == "list" or name == "array":
             return cls.ARRAY
         elif name == "object":
             return cls.OBJECT
@@ -301,7 +317,8 @@ class DataType(Enum):
             return cls.BINARY
         elif name == "integer":
             return cls.DISCRETE
-        elif name == "none" or name == "array":
+        # TODO remove array after updating for2py to use list type
+        elif name == "none" or name == "list" or name == "array":
             return cls.NONE
         else:
             raise ValueError(f"DataType unrecognized name: {name}")
@@ -342,6 +359,7 @@ class LambdaType(Enum):
     INTERFACE = auto()
     EXTRACT = auto()
     PACK = auto()
+    OPERATOR = auto()
 
     def __str__(self):
         return str(self.name)
@@ -380,6 +398,8 @@ class LambdaType(Enum):
             return cls.PACK
         elif name == "EXTRACT":
             return cls.EXTRACT
+        elif name == "OPERATOR":
+            return cls.OPERATOR
         elif name == "PASS":
             raise ValueError(
                 f'Using container interface node name {name}. Please update to "INTERFACE" '
@@ -405,8 +425,10 @@ class GenericStmt(ABC):
 
     @abstractmethod
     def __str__(self):
-        inputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.inputs])
-        outputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.outputs])
+        inputs_str = ", ".join(
+            [f"{id.var_name} ({id.index})" for id in self.inputs])
+        outputs_str = ", ".join(
+            [f"{id.var_name} ({id.index})" for id in self.outputs])
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
     @staticmethod
@@ -470,3 +492,7 @@ class LambdaStmt(GenericStmt):
             raise ValueError(
                 f"No recognized lambda type found from name string: {name}"
             )
+
+
+class GrFNExecutionException(Exception):
+    pass
