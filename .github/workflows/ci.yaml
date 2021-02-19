@@ -22,7 +22,7 @@ jobs:
         with:
           username: ml4ailab
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
-          image_name: automates
+          image_name: ml4ailab/automates
           image_tag: latest
 
       - name: Run unit tests
