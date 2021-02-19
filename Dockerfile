@@ -1,5 +1,5 @@
-FROM        ubuntu:20.04
-CMD         bash
+FROM  ubuntu:20.04
+CMD   bash
 
 # ==============================================================================
 # INSTALL SOFTWARE VIA THE UBUNTU PACKAGE MANAGER
@@ -7,7 +7,7 @@ CMD         bash
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get -y --no-install-recommends install apt-utils
 RUN apt-get -y --no-install-recommends install \
-  gcc build-essential pkg-config openjdk-8-jdk \
+  curl gcc build-essential pkg-config openjdk-8-jdk \
   antlr4 graphviz libgraphviz-dev doxygen \
   python3 python3-dev python3-pip python3-venv
 # ==============================================================================

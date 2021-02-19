@@ -9,13 +9,8 @@ on:
     branches: ["*"]
 
 jobs:
-  ci:
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'ml4ai/automates'
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
-
+  continuous_integration:
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: whoan/docker-build-with-cache-action@v5
@@ -24,14 +19,12 @@ jobs:
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
           image_name: ml4ailab/automates
           image_tag: latest
-
       - name: Run unit tests
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           CI_ENV=`bash <(curl -s https://codecov.io/env)`
-          docker login -u ml4ailab -p ${{ secrets.DOCKER_HUB_PASSWORD }}
-          docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name build-con ml4ailab/automates:latest
+          docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name build-con $FULL_IMAGE_NAME
           docker exec build-con make test
           docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN build-con bash -c 'bash <(curl -s https://codecov.io/bash)'
       # - name: Upload coverage to Codecov
