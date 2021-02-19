@@ -19,18 +19,7 @@ jobs:
         run: |
           CI_ENV=`bash <(curl -s https://codecov.io/env)`
           IMAGE=ml4ailab/automates:latest
-          docker login -u ml4ailab -p ${{ secrets.DOCKER_HUB_PASSWORD }}
           docker pull $IMAGE
           docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name build-con $IMAGE
           docker exec build-con make test
           docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN build-con bash -c 'bash <(curl -s https://codecov.io/bash)'
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v1
-      #   with:
-      #     files: ./coverage.xml
-      #     flags: unittests
-      #     env_vars: Python,Scala
-      #     name: codecov-umbrella
-      #     # TODO: add CI failure back in once demo season ends
-      #     # fail_ci_if_error: true
-      #     verbose: true
