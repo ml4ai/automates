@@ -1,5 +1,4 @@
-FROM        ubuntu:19.10
-MAINTAINER  Paul D. Hein <pauldhein@email.arizona.edu>
+FROM        ubuntu:20.04
 CMD         bash
 
 # ==============================================================================
@@ -8,26 +7,27 @@ CMD         bash
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get -y --no-install-recommends install apt-utils
 RUN apt-get -y --no-install-recommends install \
-  git curl gcc build-essential \
-  pkg-config openjdk-8-jdk antlr4 \
-  python3 python3-dev python3-pip \
-  graphviz libgraphviz-dev doxygen
-
-RUN git config --global user.email "pauldhein@email.arizona.edu"
-RUN git config --global user.name "Paul Hein"
+  gcc build-essential pkg-config openjdk-8-jdk \
+  antlr4 graphviz libgraphviz-dev doxygen \
+  python3 python3-dev python3-pip python3-venv
 # ==============================================================================
 
 # ==============================================================================
-# UPGRADE PYTHON TOOLS
+# CREATE A PYTHON VENV AND UPGRADE PYTHON TOOLS
 # ==============================================================================
-RUN pip3 install --upgrade setuptools
-RUN pip3 install wheel
+ENV VIRTUAL_ENV=/opt/automates_venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN pip install --upgrade setuptools
+RUN pip install wheel
 # ==============================================================================
 
 # ==============================================================================
 # SETUP THE AUTOMATES REPOSITORY AND ENVIRONMENT
 # ==============================================================================
-RUN git clone https://github.com/ml4ai/automates
+RUN mkdir -p /automates
+COPY * /automates/
 WORKDIR /automates
-RUN pip3 install -e .
+RUN pip install -e .
 # ==============================================================================
