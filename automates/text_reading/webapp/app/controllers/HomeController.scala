@@ -8,20 +8,20 @@ import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
-import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign, alignmentArguments}
+
+import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign}
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
-import org.clulab.aske.automates.data.{CosmosJsonDataLoader, ScienceParsedDataLoader}
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, rehydrateLinkElement}
+import org.clulab.aske.automates.data.CosmosJsonDataLoader
+
+import org.clulab.aske.automates.apps.ExtractAndAlign.hasRequiredArgs
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
 import upickle.default._
-
 import scala.collection.mutable.ArrayBuffer
 import ujson.json4s.Json4sJson
-import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils}
@@ -219,6 +219,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val blockIdx = location.last
 //
       for (m <- menInTextBlocks) {
+
         val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
         mentionsWithLocations.append(newMen)
       }
@@ -258,6 +259,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val maxSVOgroundingsPerVar = if (jsonKeys.contains("arguments")) {
       json("arguments").obj("maxSVOgroundingsPerVar").num.toInt
     } else maxSVOgroundingsPerVarDefault
+
 
     val serializerName = if (jsonKeys.contains("arguments")) {
       val args = json("arguments")

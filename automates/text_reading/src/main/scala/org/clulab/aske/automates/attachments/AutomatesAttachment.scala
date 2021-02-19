@@ -9,6 +9,7 @@ abstract class AutomatesAttachment extends Attachment with Serializable {
   def toJson: JsValue
 
   def toUJson: ujson.Value
+
 }
 
 class MentionLocationAttachment(pageNum: Int, blockIdx: Int, attType: String) extends AutomatesAttachment {
@@ -19,6 +20,7 @@ class MentionLocationAttachment(pageNum: Int, blockIdx: Int, attType: String) ex
     "attType" -> attType)
 
   // use 'asInstanceOf' + this method to retrieve the information from the attachment
+
   def toUJson: ujson.Value = ujson.Obj(
     "pageNum" -> pageNum,
     "blockIdx" -> blockIdx,
@@ -40,3 +42,4 @@ class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], discontArg
   }
 
 }
+
