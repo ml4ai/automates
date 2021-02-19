@@ -51,7 +51,6 @@ class PassThroughPreprocessor() extends Preprocessor {
     return (stringNoSpaces.count(_.isLetter).toDouble / stringNoSpaces.length) > .6
   }
   def cleanUp(text: String): String = {
-    for (w<-text.split("\n")) println(w)
     val loseVerticalText = text.split("\n").filter(t => t.length > 6).filter(t => looksLikeLanguage(t)).mkString("\n")
     val loseExtraLongFalseWords = loseVerticalText.split(" ").filter(w => w.length < 23).mkString(" ")
     val cleanerText = loseExtraLongFalseWords.replaceAll("\n", " ")
