@@ -13,18 +13,15 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: whoan/docker-build-with-cache-action@v5
-        with:
-          username: ml4ailab
-          password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
-          image_name: ml4ailab/automates
-          image_tag: latest
       - name: Run unit tests
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           CI_ENV=`bash <(curl -s https://codecov.io/env)`
-          docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name build-con $FULL_IMAGE_NAME
+          IMAGE=ml4ailab/automates:latest
+          docker login -u ml4ailab -p ${{ secrets.DOCKER_HUB_PASSWORD }}
+          docker pull $IMAGE
+          docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name build-con $IMAGE
           docker exec build-con make test
           docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN build-con bash -c 'bash <(curl -s https://codecov.io/bash)'
       # - name: Upload coverage to Codecov
