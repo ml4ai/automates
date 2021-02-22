@@ -6,7 +6,7 @@ import ai.lum.common.StringUtils._
 import org.clulab.aske.automates.apps.AlignmentBaseline
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.utils.FileUtils.getTextFromFile
-
+import org.clulab.aske.automates.cosmosjson._
 import scala.collection.mutable
 import scala.util.matching.Regex
 
@@ -57,6 +57,21 @@ class ScienceParsedDataLoader extends DataLoader {
   override val extension: String = "json"
 }
 
+
+class CosmosJsonDataLoader extends DataLoader {
+  /**
+    * Loader for documents which have been converted by UW Cosmos from pdf to parquet file and by ... to json. Each file contains a json representation of pdf blocks (sorted in increasing order of page and order of block on the page).
+    * Here we will return a sequence of strings; each string includes the content of the block, the page num, and index/order of the block on the page, "::"-separated.
+    *
+    * @param f the File being loaded
+    * @return string content of each section in the parsed pdf paper (as determined by science parse)
+    */
+  def loadFile(f: File): Seq[String] = {
+    val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
+    cosmosDoc.cosmosOjects.map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)
+  }
+  override val extension: String = "json"
+}
 
 class PDFDataLoader extends DataLoader {
 
