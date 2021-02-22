@@ -399,7 +399,7 @@ object ExpansionHandler {
     "advcl_to".r,
     "^advcl_because".r,
     "advmod".r,
-    //"amod".r, 
+    //"amod".r,
     "^case".r,
     "^cc$".r,
     "^conj".r,
