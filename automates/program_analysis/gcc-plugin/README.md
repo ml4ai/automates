@@ -39,8 +39,8 @@ You can use the makefile found in the `./plugins` directory to build the plugin.
 
 To run the plugin on a particuler c/c++ file, run the following and replace `example.c` with your file:
 
-`/usr/local/gcc-10.1.0/bin/g++-10.1 -fplugin=./ast_dump.so -c -x c++ example.c -o /dev/nul`
+`/usr/local/gcc-10.1.0/bin/g++-10.1 -fplugin=./ast_dump.so -c -x c++ example.c -o /dev/null`
 
 To run the plugin on a particuler fortran file, run the following and replace `example.f` with your file:
 
-`/usr/local/gcc-10.1.0/bin/gfortran-10.1 -fplugin=./ast_dump.so -c -x c++ example.f -o /dev/nul`
+`/usr/local/gcc-10.1.0/bin/gfortran-10.1 -fplugin=./ast_dump.so -c example.f -o /dev/null`
