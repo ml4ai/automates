@@ -40,7 +40,7 @@ object AutomatesJSONSerializer {
     val menType = mentionComponents("type").str
     val attachments = new ArrayBuffer[Attachment]
 
-    if (mentionComponents.obj.keys.toList.contains("attachments")) {
+    if (mentionComponents.obj.contains("attachments")) {
       val attObjArray = mentionComponents("attachments").arr
       for (ao <- attObjArray) {
         val att = toAttachment(ao)

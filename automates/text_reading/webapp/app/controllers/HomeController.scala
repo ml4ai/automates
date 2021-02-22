@@ -193,7 +193,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonPath = pathJson("pathToJson").str
     val jsonFile = new File(jsonPath)
     val json = ujson.read(jsonFile.readString())
-    val jsonKeys = json.obj.keys.toList
     val cosmosFileStr = json("path_to_cosmos_json").str
     logger.info(s"Extracting mentions from $jsonFile")
 
@@ -243,33 +242,33 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonFile = new File(jsonPath)
     val json = ujson.read(jsonFile.readString())
 
-    val jsonKeys = json.obj.keys.toList
-    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
+    val jsonObj = json.obj
+    val debug = if (jsonObj.contains("debug")) json("debug").bool else debugDefault
 
 
     //if toggles and arguments are not provided in the input, use class defaults (this is to be able to process the previously used GrFN format input)
-    val groundToSVO = if (jsonKeys.contains("toggles")) {
+    val groundToSVO = if (jsonObj.contains("toggles")) {
       json("toggles").obj("groundToSVO").bool
     } else groundToSVODefault
 
-    val appendToGrFN = if (jsonKeys.contains("toggles")) {
+    val appendToGrFN = if (jsonObj.contains("toggles")) {
       json("toggles").obj("appendToGrFN").bool
     } else appendToGrFNDefault
 
-    val maxSVOgroundingsPerVar = if (jsonKeys.contains("arguments")) {
+    val maxSVOgroundingsPerVar = if (jsonObj.contains("arguments")) {
       json("arguments").obj("maxSVOgroundingsPerVar").num.toInt
     } else maxSVOgroundingsPerVarDefault
 
 
-    val serializerName = if (jsonKeys.contains("arguments")) {
+    val serializerName = if (jsonObj.contains("arguments")) {
       val args = json("arguments")
-      if (args.obj.keys.toList.contains("serializer_name")) {
+      if (args.obj.contains("serializer_name")) {
         args.obj("serializer_name").str
       } else defaultSerializerName
     } else defaultSerializerName
 
     //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
-    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
+    if (jsonObj.contains("mentions") && (jsonObj.contains("equations") || jsonObj.contains("source_code"))) {
       val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
 
       // ground!
@@ -298,7 +297,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
       Ok(groundingsJson4s)
     } else {
-      logger.warn(s"Nothing to do for keys: $jsonKeys")
+      logger.warn(s"Nothing to do for keys: $jsonObj")
       Ok("")
     }
 
@@ -348,9 +347,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonPath = pathJson("pathToJson").str
     val jsonFile = new File(jsonPath)
     val json = ujson.read(jsonFile.readString())
-    val jsonKeys = json.obj.keys.toList
+    val jsonObj = json.obj
 
-    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
+    val debug = if (jsonObj.contains("debug")) json("debug").bool else debugDefault
     val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
 
     val inputFilePath = json("input_file").str
