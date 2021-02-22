@@ -107,7 +107,7 @@ rules:
     pattern: |
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
       |
-      [entity="B-GreekLetter"] [word=/\w/]
+      [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
 
 
 #  - name: var_greek_and_latin

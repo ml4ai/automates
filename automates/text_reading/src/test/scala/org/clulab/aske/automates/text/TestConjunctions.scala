@@ -4,7 +4,6 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestConjunctions extends ExtractionTest {
 
-
   // conj tests
   val t1 = "The model consists of individuals who are either Susceptible (S), Infected (I), or Recovered (R)."
   failingTest should s"find definitions from t1: ${t1}" taggedAs (Somebody) in {
@@ -55,12 +54,11 @@ class TestConjunctions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-  val t5 = "S(0) and R(0) are the initial numbers of, respectively, susceptible and removed subjects."
-  failingTest should s"find definitions from t5: ${t5}" taggedAs (Somebody) in {
-
-    val desired = Seq(
-      "S(0)" -> Seq("initial numbers of susceptible subjects"),
-      "R(0)" -> Seq("initial numbers of removed subjects")
+  val t5 = "where S(0) and R(0) are the initial numbers of, respectively, susceptible and removed subjects"
+  failingTest should s"find definitions from t5: ${t5}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "S(0)" -> Seq("initial number of susceptible subjects"),
+      "R(0)" -> Seq("initial number of removed subjects")      //fixme: the definition is not expanded over 'respectively'
     )
     val mentions = extractMentions(t5)
     testDefinitionEvent(mentions, desired)
@@ -76,8 +74,21 @@ class TestConjunctions extends ExtractionTest {
     val mentions = extractMentions(t6)
     testDefinitionEvent(mentions, desired)
   }
-}
 
+    val t7 = "where Rns and Rnc are net radiation obtained by soil surface and intercepted by crop canopy (W m−2), respectively; αs and αc are soil " +
+      "evaporation coefficient and crop transpiration coefficient, respectively."
+  failingTest should s"find definitions from t7: ${t7}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "Rns" -> Seq("net radiation obtained by soil surface"), // fixme: Only "Rns" is captured as variable here. The definition is also incomplete. ("net radiation")
+      "Rnc" -> Seq("net radiation intercepted by crop canopy"),
+      "αs" -> Seq("soil evaporation coefficient"), // fixme: Only "αs" is captured as variable here.
+      "αc" -> Seq("crop transpiration coefficient") // fixme: The definition for "αc" was not captured.
+    )
+    val mentions = extractMentions(t7)
+    testDefinitionEvent(mentions, desired)
+  }
+
+}
 
 // Panels ( C ) and ( D ) shows virus uptake for the same cells as in panels A and B respectively .
 // where k ~ 1z1 = T c is the total branching factor and k A , k B are the isolated branching factors of layer A and B respectively .
