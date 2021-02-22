@@ -297,7 +297,7 @@ rules:
       @variable:Variable [word = ","] (@definition: Concept ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","]
 
 
-  - name: def_is_var_eqaul
+  - name: def_is_var_equal
     label: Definition
     priority: ${priority}
     type: token
