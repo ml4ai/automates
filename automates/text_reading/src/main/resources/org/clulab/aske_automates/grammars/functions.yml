@@ -1,0 +1,45 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  - name: subtraction_difference_between
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
+    pattern: | #todo: how to distinguish between nmod_between (shorter distance) vs nmod_between (longer distance)? conj_and?
+      trigger = [word = "difference"]
+      input_1:Variable = nmod_between  
+      input_2:Variable = nmod_between conj_and
+      output:Variable = nsubj
+
+
+  - name: multiplication_product_of
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
+    pattern: | #todo: how to distinguish between nmod_of (shorter distance) vs nmod_of (longer distance)?
+      trigger = [word = "product"] (?="of")
+      input_1:Variable = nmod_of
+      input_2:Variable = nmod_of conj_and
+      output:Variable = nmode_as nsubjpass
+
+  #covidactnow
+
+  - name: division_divide_by
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Initial conditions for total cases and total exposed are calculated by dividing hospitalizations by the hospitalization rate."
+    pattern: |
+      trigger = [lemma = "divide"]
+      input_1:Variable = dobj
+      input_2:Variable = nmod_by
+      output:Variable = <advcl_by nsubjpass
+
+
+
