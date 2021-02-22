@@ -35,7 +35,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 class PyASTToCAST(ast.NodeVisitor):
 
     def visit_Module(self, node: ast.Module):
-        print("Module")
+        #print("Module")
 
         # Visit all the nodes and make a Module object out of them
         return Module([self.visit(piece) for piece in node.body])
@@ -66,8 +66,8 @@ class PyASTToCAST(ast.NodeVisitor):
         pass
 
     def visit_FunctionDef(self, node: Union[ast.FunctionDef,ast.Lambda]):
-        print("Function Def")
-        print(type(node))
+        #print("Function Def")
+        #print(type(node))
         #print(node.name)
         #print(node.args.args)
         #print(node.body)
@@ -76,17 +76,17 @@ class PyASTToCAST(ast.NodeVisitor):
         #print(node.type_comment)
 
         # Might have to change this Name() to a visit 
-        #func_def = FunctionDef(Name(node.name))
+        func_def = FunctionDef(Name(node.name))
         #if(node.args.args != []):
-            #func_def.args([self.visit(arg) for arg in node.args.args])
+         #   func_def.args([self.visit(arg) for arg in node.args.args])
 
-        # if(node.body != []):
-        #    func_def.body([self.generic_visit(piece) for piece in node.body])
+        #if(node.body != []):
+         #   func_def.body([self.generic_visit(piece) for piece in node.body])
         # TODO: Fix this set call above, something doesn't seem to be working or im doing it wrong 
 
         #print(node.body[0])
 
-        #return func_def
+        return func_def
 
         pass
 
@@ -204,6 +204,3 @@ class PyASTToCAST(ast.NodeVisitor):
 def main():
     c = PyASTToCAST()
     print(c.visit(ast.parse("def tito():\n    x = 1")))
-
-
-main()
