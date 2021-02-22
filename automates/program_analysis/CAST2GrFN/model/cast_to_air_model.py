@@ -189,7 +189,6 @@ class C2AExpressionLambda(C2ALambda):
             "output": [v.build_identifier() for v in self.output_variables],
             "updated": [v.build_identifier() for v in self.updated_variables],
         }
-        return self
 
 
 class C2AContainerCallLambda(C2ALambda):

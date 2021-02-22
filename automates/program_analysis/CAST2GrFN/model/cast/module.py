@@ -134,13 +134,6 @@ class Module(AstNode):
         """Returns true if both objects are equal"""
         if not isinstance(other, Module):
             return False
-
-        from deepdiff import DeepDiff
-        from pprint import pprint
-
-        pprint(DeepDiff(self.__dict__, other.__dict__))
-        pprint(self.__dict__)
-
         return self.__dict__ == other.__dict__
 
     def __ne__(self, other):

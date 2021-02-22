@@ -168,19 +168,24 @@ class CAST(object):
         if isinstance(data, list):
             # If we see a list parse each one of its elements
             return [cls.parse_cast_json(item) for item in data]
-        elif isinstance(data, float) or isinstance(data, int) or isinstance(data, str):
+        elif data is None:
+            return None
+        elif isinstance(data, (float, int, str)):
             # If we see a primitave type, simply return its value
             return data
 
-        # Create the object specified by "node_type" object with the values from its children nodes
-        for node_type in CAST_NODES_TYPES_LIST:
-            if node_type.__name__ == data["node_type"]:
-                node_results = {
-                    k: cls.parse_cast_json(v)
-                    for k, v in data.items()
-                    if k != "node_type"
-                }
-                return node_type(**node_results)
+        if "node_type" in data:
+            # Create the object specified by "node_type" object with the values
+            # from its children nodes
+            for node_type in CAST_NODES_TYPES_LIST:
+
+                if node_type.__name__ == data["node_type"]:
+                    node_results = {
+                        k: cls.parse_cast_json(v)
+                        for k, v in data.items()
+                        if k != "node_type"
+                    }
+                    return node_type(**node_results)
 
         raise CASTJsonException(
             f"Unable to decode json CAST field with field names: {set(data.keys())}"

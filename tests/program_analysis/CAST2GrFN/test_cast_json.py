@@ -30,7 +30,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-from automates.program_analysis.CAST2GrFN.cast import CAST
+from automates.program_analysis.CAST2GrFN.cast import CAST, CASTJsonException
 
 
 def get_file_str(filepath):
@@ -144,8 +144,8 @@ def test_from_json_no_node_type_exception(cast_with_no_node_type_exception_json)
 
     error_thrown = False
     try:
-        CAST.from_json(cast_with_no_node_type_exception_json)
-    except:
+        CAST.from_json_str(cast_with_no_node_type_exception_json)
+    except CASTJsonException:
         error_thrown = True
 
     assert error_thrown
@@ -157,8 +157,8 @@ def test_from_json_unknown_cast_type_exception(
 
     error_thrown = False
     try:
-        CAST.from_json(cast_with_unknown_node_type_exception_json)
-    except:
+        CAST.from_json_str(cast_with_unknown_node_type_exception_json)
+    except CASTJsonException:
         error_thrown = True
 
     assert error_thrown
