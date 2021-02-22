@@ -4,8 +4,8 @@ import play.api.libs.json._
 import org.clulab.odin._
 
 /** utilities to convert odin mentions into json objects
- *  that can be returned in http responses
- */
+  *  that can be returned in http responses
+  */
 object JsonUtils {
 
   def mkJsonFromMentions(mentions: Seq[Mention]): JsValue = {
