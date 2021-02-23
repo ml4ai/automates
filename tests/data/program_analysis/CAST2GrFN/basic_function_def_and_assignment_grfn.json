@@ -1,0 +1,48 @@
+{
+    "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+    "identifier": "@container::initial::@global::exampleFunction",
+    "timestamp": "2021-02-01",
+    "hyper_edges": [
+        {
+            "inputs": [],
+            "function": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+            "outputs": [
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+            ]
+        }
+    ],
+    "variables": [
+        {
+            "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+            "reference": "",
+            "identifier": "initial::@global.exampleFunction::exampleVar::-1",
+            "data_type": "float",
+            "kind": "continuous",
+            "domain": "(and (> v -infty) (< v infty))"
+        }
+    ],
+    "functions": [
+        {
+            "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+            "reference": "",
+            "type": "LITERAL",
+            "lambda": "lambda : 36.2"
+        }
+    ],
+    "subgraphs": [
+        {
+            "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "namespace": "initial",
+            "scope": "@global",
+            "basename": "exampleFunction",
+            "occurrence_num": 0,
+            "parent": null,
+            "type": "FuncContainer",
+            "border_color": "forestgreen",
+            "nodes": [
+                "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+            ]
+        }
+    ]
+}

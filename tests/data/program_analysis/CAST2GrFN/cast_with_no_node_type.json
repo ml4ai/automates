@@ -1,0 +1,32 @@
+{
+    "nodes": [
+        {
+            "body": null,
+            "name": [
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "type": "float",
+                                "val": "exampleVar"
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "node_type": "Number",
+                                "number": 36.2
+                            }
+                        },
+                        {
+                            "val": "This is some node that doesnt have node_type"
+                        }
+                    ],
+                    "func_args": [],
+                    "name": "exampleFunction",
+                    "node_type": "FunctionDef"
+                }
+            ],
+            "node_type": "Module"
+        }
+    ]
+}
