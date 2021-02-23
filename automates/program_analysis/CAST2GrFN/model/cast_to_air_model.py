@@ -1,5 +1,6 @@
 from typing import List, Dict
 from enum import Enum
+from dataclasses import dataclass
 
 from automates.program_analysis.CAST2GrFN.model.cast import AstNode
 
@@ -67,6 +68,7 @@ class C2AIdentifierType(str, Enum):
     LAMBDA = "lambda"
 
 
+@dataclass(repr=False, frozen=True)
 class C2AIdentifierInformation(object):
 
     name: str
@@ -74,37 +76,16 @@ class C2AIdentifierInformation(object):
     module: str
     identifier_type: C2AIdentifierType
 
-    def __init__(
-        self,
-        name: str,
-        scope: List[str],
-        module: str,
-        identifier_type: C2AIdentifierType,
-    ):
-        self.name = name
-        self.scope = scope
-        self.module = module
-        self.identifier_type = identifier_type
-
     def build_identifier(self):
         return f'@{self.identifier_type}::{self.module}::{".".join(self.scope)}::{self.name}'
 
 
+@dataclass(repr=False, frozen=True)
 class C2AVariable(object):
 
     identifier_information: C2AIdentifierInformation
     version: int
     type_name: str
-
-    def __init__(
-        self,
-        identifier_information: C2AIdentifierInformation,
-        version: int,
-        type_name: str,
-    ):
-        self.identifier_information = identifier_information
-        self.version = version
-        self.type_name = type_name
 
     def get_name(self):
         return self.identifier_information.name
@@ -139,6 +120,7 @@ class C2ALambdaType(str, Enum):
     DECISION = "decision"
 
 
+@dataclass(repr=False, frozen=True)
 class C2ALambda(object):
     """
     Represents an executable container/ function to transition between states in AIR
@@ -156,20 +138,6 @@ class C2ALambda(object):
     updated_variables: List[C2AVariable]
     # The type of the container.
     container_type: C2ALambdaType
-
-    def __init__(
-        self,
-        identifier_information: C2AIdentifierInformation,
-        input_variables: List[C2AVariable],
-        output_variables: List[C2AVariable],
-        updated_variables: List[C2AVariable],
-        container_type: C2ALambdaType,
-    ):
-        self.identifier_information = identifier_information
-        self.input_variables = input_variables
-        self.output_variables = output_variables
-        self.updated_variables = updated_variables
-        self.container_type = container_type
 
     def build_name(self):
         var = None
@@ -194,6 +162,7 @@ class C2ALambda(object):
         return self
 
 
+@dataclass(repr=False, frozen=True)
 class C2AExpressionLambda(C2ALambda):
     """
     A type of function within AIR that represents an executable lambda expression that transitions
@@ -202,26 +171,6 @@ class C2AExpressionLambda(C2ALambda):
 
     lambda_expr: str
     cast: AstNode
-
-    def __init__(
-        self,
-        identifier_information: C2AIdentifierInformation,
-        input_variables: List[C2AVariable],
-        output_variables: List[C2AVariable],
-        updated_variables: List[C2AVariable],
-        container_type: C2ALambdaType,
-        lambda_expr: str,
-        cast: AstNode,
-    ):
-        super().__init__(
-            identifier_information,
-            input_variables,
-            output_variables,
-            updated_variables,
-            container_type,
-        )
-        self.lambda_expr = lambda_expr
-        self.cast = cast
 
     def to_AIR(self):
         return {
@@ -236,6 +185,7 @@ class C2AExpressionLambda(C2ALambda):
         }
 
 
+@dataclass(repr=False, frozen=True)
 class C2AContainerCallLambda(C2ALambda):
     """
     Represents the call/passing to another container found in the body of a container definition
@@ -245,24 +195,11 @@ class C2AContainerCallLambda(C2ALambda):
     original_cast: AstNode
     return_type_name: str
 
-    def __init__(
-        self,
-        input_variables: List[C2AVariable],
-        output_variables: List[C2AVariable],
-        updated_variables: List[C2AVariable],
-        name: str,
-        original_cast: AstNode,
-        return_type_name: str,
-    ):
-        super().__init__(input_variables, output_variables, updated_variables)
-        self.name = name
-        self.original_cast = original_cast
-        self.return_type_name = return_type_name
-
     def to_AIR(self):
         return self
 
 
+@dataclass(repr=False, frozen=True)
 class C2AContainerDef(object):
     """
     Represents a top level AIR container def. Has its arguments, outputs/ updates, and a body
@@ -281,20 +218,6 @@ class C2AContainerDef(object):
     # Represents the executable body statements
     body: List[C2ALambda]
 
-    def __init__(
-        self,
-        identifier_information: C2AIdentifierInformation,
-        arguments: List[C2AVariable],
-        output_variables: List[C2AVariable],
-        updated_variables: List[C2AVariable],
-        body: List[C2ALambda],
-    ):
-        self.identifier_information = identifier_information
-        self.arguments = arguments
-        self.output_variables = output_variables
-        self.updated_variables = updated_variables
-        self.body = body
-
     def build_identifier(self):
         return self.identifier_information.build_identifier()
 
@@ -302,26 +225,13 @@ class C2AContainerDef(object):
         return self
 
 
+@dataclass(repr=False, frozen=True)
 class C2AFunctionDefContainer(C2AContainerDef):
     """
     Represents a top level container definition. Input variables will represent the arguments to the funciton in the AIR. Also contains a body.
     """
 
     return_type_name: str
-
-    def __init__(
-        self,
-        identifier_information: C2AIdentifierInformation,
-        arguments: List[C2AVariable],
-        output_variables: List[C2AVariable],
-        updated_variables: List[C2AVariable],
-        body: List[C2ALambda],
-        return_type_name: str,
-    ):
-        super().__init__(
-            identifier_information, arguments, output_variables, updated_variables, body
-        )
-        self.return_type_name = return_type_name
 
     def to_AIR(self):
         return {
@@ -337,21 +247,18 @@ class C2AFunctionDefContainer(C2AContainerDef):
         }
 
 
+@dataclass(repr=False, frozen=True)
 class C2ABlockContainer(C2AContainerDef):
     """"""
 
     original_cast: AstNode
     return_type_name: str
 
-    def __init__(self, name: str, original_cast: AstNode, return_type_name: str):
-        self.name = name
-        self.original_cast = original_cast
-        self.return_type_name = return_type_name
-
     def to_AIR(self):
         return self
 
 
+@dataclass(repr=False, frozen=True)
 class C2ATypeDef(object):
     class C2AType(Enum):
         INTEGER = 1
@@ -366,17 +273,6 @@ class C2ATypeDef(object):
     given_type: C2AType
     fields: Dict[str, str]
     function_identifiers: List[str]
-
-    def __init__(
-        self,
-        name: str,
-        given_type: C2AType,
-        fields: Dict[str, str],
-        function_identifiers: List[str],
-    ):
-        self.name = name
-        self.given_type = given_type
-        self.fields = fields
 
     def to_AIR(self):
         return self
