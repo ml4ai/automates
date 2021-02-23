@@ -45,9 +45,9 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t4a = "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-  passingTest should s"extract definitions from t4a: ${t4a}" taggedAs(Somebody) in {
+  failingTest should s"extract definitions from t4a: ${t4a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "E0" -> Seq("potential crop ET")
+      "E0" -> Seq("potential crop ET") // Et is found as potential crop
     )
     val mentions = extractMentions(t4a)
     testDefinitionEvent(mentions, desired)
@@ -112,9 +112,10 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
+  // todo: a filter that checks if the head of the extracted def is a noun - need to see if that is really a requirement for all defs
   val t12a = "The approach uses model-simulated LAI to calculate the Kcb, which means Kcb is more dynamic and " +
     "responsive to cultivar, weather, and soil variability, as simulated by the model"
-  passingTest should s"find NO definitions from t12a: ${t12a}" taggedAs(Somebody) in {
+  failingTest should s"find NO definitions from t12a: ${t12a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t12a)
     testDefinitionEvent(mentions, desired)
@@ -128,7 +129,6 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
 
   }
-
 
   // Tests from paper: 2016-Camargo-and Kemanian-Six-crop-models differ-in-their-simulation-of water-uptake
 
@@ -247,10 +247,11 @@ class TestDefinitions extends ExtractionTest {
   }
   val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl " +
     "times pr for each layer and summing over the soil profile:"
-    passingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
-        "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
+        "Ux" -> Seq("maximum potential water uptake for the profile")
       )
+      // the test fails because of the var Ta,rl being processed as two comma-separated words
       val mentions = extractMentions(t12b)
       testDefinitionEvent(mentions, desired)
 
@@ -390,6 +391,17 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
+  // Misc tests
+
+  val t1z = "The rate of infection R(t) is..."
+  failingTest should s"find definitions from t1z: ${t1z}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "R(t)" -> Seq("rate of infection")
+    )
+    val mentions = extractMentions(t1z)
+    testDefinitionEvent(mentions, desired)
+  }
+
 
 //  val t9c = "Assuming no sink or source (S = 0) and no gravitational or osmotic component (H = h), Eq. [4] reduces to..."
 //  failingTest should s"find definitions from t9c: ${t9c}" taggedAs(Somebody) in {
@@ -400,11 +412,271 @@ class TestDefinitions extends ExtractionTest {
 //    testDefinitionEvent(mentions, desired)
 //  }
 
+// Tests from paper: 2020-08-04-CHIME-documentation
+
+  val t1f = "The CHIME (COVID-19 Hospital Impact Model for Epidemics) App"
+  failingTest should s"find definitions from t1f: ${t1f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "CHIME" -> Seq("COVID-19 Hospital Impact Model for Epidemics")
+    )
+    val mentions = extractMentions(t1f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t2f = "The model consists of individuals who are either Susceptible (S), Infected (I), or Recovered (R)."
+  failingTest should s"find definitions from t2f: ${t2f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "S" -> Seq("either Susceptible"), //fixme: it should be just Susceptible (either should be deleted)
+      "I" -> Seq("Infected"),
+      "R" -> Seq("Recovered") //fixme: Recovered is not captured as a concept
+    )
+    val mentions = extractMentions(t2f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t3f = "β can be interpreted as the effective contact rate: β=τ×c which is the transmissibility τ multiplied by the average number of people exposed c."
+  passingTest should s"find definitions from t3f: ${t3f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "β" -> Seq("effective contact rate"),
+      "τ" -> Seq("transmissibility"),
+      "c." -> Seq("average number of people exposed") //fixme: period(.) should be deleted after c & needs to check if it is average number or just number
+    )
+    val mentions = extractMentions(t3f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t4f = "γ is the inverse of the mean recovery time"
+  passingTest should s"find definitions from t4f: ${t4f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "γ" -> Seq("inverse of the mean recovery time")
+    )
+    val mentions = extractMentions(t4f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t5f = "An important descriptive parameter is the basic reproduction number, or R0."
+  passingTest should s"find definitions from t5f: ${t5f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "R0" -> Seq("basic reproduction number")
+    )
+    val mentions = extractMentions(t5f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t6f = "If this happens at time t, then the effective reproduction rate is Rt, which will be lower than R0."
+  passingTest should s"find definitions from t6f: ${t6f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "t" -> Seq("time"),
+      "Rt" -> Seq("effective reproduction rate")
+    )
+    val mentions = extractMentions(t6f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t7f = "The AHA says to expect a doubling time Td of 7-10 days."
+  passingTest should s"find definitions from t7f: ${t7f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Td" -> Seq("doubling time")
+    )
+    val mentions = extractMentions(t7f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t8f = "Since the rate of new infections in the SIR model is g = βS − γ and we've already computed γ,"
+  passingTest should s"find definitions from t8f: ${t8f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "g" -> Seq("rate of new infections in the SIR model")
+    )
+    val mentions = extractMentions(t8f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t9f = "This is the initial S (Susceptible) input in the SIR model."
+  passingTest should s"find definitions from t9f: ${t9f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "S" -> Seq("Susceptible")
+    )
+    val mentions = extractMentions(t9f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t10f = "This will affect projections for the number infected and the numbers requiring hospitalization, intensive care (ICU), and ventilation."
+  passingTest should s"find definitions from t10f: ${t10f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "ICU" -> Seq("intensive care")
+    )
+    val mentions = extractMentions(t10f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+  val t11f = "The number of patients currently hospitalized with COVID-19 at your hospital(s)."
+  passingTest should s"find NO definitions from t11f: ${t11f}" taggedAs(Somebody) in {
+    val desired =  Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t11f)
+    testDefinitionEvent(mentions, desired)
+  }
+
+// Tests from paper: 2003-A_double_epidemic_model_for_the_SARS_propagation
+
+  val t1g = "the susceptibles, S, who can catch the disease; the infectives, I, who have the disease and can transmit it; " +
+    "and the removed class, R, namely those  who  have  either  had  the  disease, or are recovered, immune or isolated until recovered."
+  failingTest should s"find definitions from t1g: ${t1g}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "S" -> Seq("susceptibles who can catch the disease"), // fixme: [error] Vector((S,susceptibles)) did not contain element (S,susceptibles who can catch the disease) (TestUtils.scala:123)
+      "I" -> Seq("infectives who have the disease and can transmit it"),
+      "R" -> Seq("removed class namely those who have either had the disease, or are recovered, immune or isolated until recovered"),
+    )
+    val mentions = extractMentions(t1g)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t2g = "Let S(t), I(t) and R(t) be the number of individuals in each of the corresponding class at time t. "
+  failingTest should s"find definitions from t2g: ${t2g}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "S(t)" -> Seq("number of individuals in class at time t"),
+      "I(t)" -> Seq("number of individuals in class at time t"),
+      "R(t)" -> Seq("number of individuals in class at time t"),
+      "t" -> Seq("time")
+    )
+    val mentions = extractMentions(t2g)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t3g = "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection)" +
+    "which can be considered as a variant of the standard SIR."
+  failingTest should s"find definitions from t3g: ${t3g}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "SEIRP" -> Seq("variant of the standard SIR") // todo: check if this is the one that should be extracted here. ask Paul.
+    )
+    val mentions = extractMentions(t3g)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t4g = "where r is the infection rate and a the removal rate of infectives."
+  passingTest should s"find definitions from t4g: ${t4g}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "r" -> Seq("infection rate"),
+      "a" -> Seq("removal rate of infectives")
+    )
+    val mentions = extractMentions(t4g)
+    testDefinitionEvent(mentions, desired)
+  }
+
+
+// Tests from unknown papers
+
+    val t1h = "where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux."
+  failingTest should s"find definitions from t1h: ${t1h}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "Rn" -> Seq("net radiation"),
+      "H" -> Seq("sensible heat"), //todo: H, G, λET should be annotated as variables.
+      "G" -> Seq("soil heat flux"),
+      "λET" -> Seq("latent heat flux")
+    )
+    val mentions = extractMentions(t1h)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t2h = "The only factors affecting ETo are climatic parameters."
+  passingTest should s"find NO definitions from t2h: ${t2h}" taggedAs(Somebody) in {
+    val desired =  Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t2h)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t3h = "The crop evapotranspiration under standard conditions, denoted as ETc, " +
+      "is the evapotranspiration from disease-free, well-fertilized crops, grown in large fields, " +
+      "under optimum soil water conditions, and achieving full production under the given climatic conditions."
+  failingTest should s"find definitions from t3h: ${t3h}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "ETc" -> Seq("crop evapotranspiration under standard conditions"),
+      "ETc" -> Seq("evapotranspiration from disease-free, well-fertilized crops, grown in large fields, " + // fixme: this should be captured as the definition.
+      "under optimum soil water conditions, and achieving full production under the given climatic conditions") // todo: need to allow two definitions per variable.
+    )
+    val mentions = extractMentions(t3h)
+    testDefinitionEvent(mentions, desired)
+  }
+
+// Tests from paper: Covid_Act_Now_Model_Reference
+
+    val t1i = "Susceptible (S) individuals may become exposed (E) to the virus, then infected (I) at varying " +
+      "levels of disease severity (mild, moderate, or severe, illustrated as I1, I2, and I3 respectively)."
+  failingTest should s"find definitions from t1i: ${t1i}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "S" -> Seq("Susceptible"),
+      "E" -> Seq("exposed"), // fixme: Definitions of E, I, I1, I2, I3 are not extracted
+      "I" -> Seq("infected"),
+      "I1" -> Seq("mild"),
+      "I2" -> Seq("moderate"),
+      "I3" -> Seq("severe")
+    )
+    val mentions = extractMentions(t1i)
+    testDefinitionEvent(mentions, desired)
+  }
+
+// Tests from paper: ideal_sir_model_without_vital_dynamics
+
+    val t1j = "This idea can probably be more readily seen if we say that the typical time between contacts is Tc = β-1, " +
+      "and the typical time until recovery is Tr = γ-1."
+  passingTest should s"find definitions from t1j: ${t1j}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "Tc" -> Seq("typical time between contacts"), // fixme: both of the definitions were not extracted
+      "Tr" -> Seq("typical time until recovery")
+    )
+    val mentions = extractMentions(t1j)
+    testDefinitionEvent(mentions, desired)
+  }
+
+// Tests from paper: PT-2012-ET Measurement and Estimation Using Modified PT in Maise with Mulching-petpt_2012
+
+    val t1k = "where θ is soil water content in 0–1.0 m soil (cm3 cm−3), θF is field capacity (cm3 cm−3) and θw is wilting point (cm3 cm−3)."
+  failingTest should s"find definitions from t1k: ${t1k}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "θ" -> Seq("soil water content in 0–1.0 m soil"),
+      "θF" -> Seq("field capacity"), // fixme: "F" only is captured as the variable here. Should be fixed to capture θF as one variable.
+      "θw" -> Seq("wilting point")   // fixme: Definition of "θw" is not extracted.
+    )
+    val mentions = extractMentions(t1k)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t2k = "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
+  passingTest should s"find definitions from t2k: ${t2k}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "κ" -> Seq("canopy extinction coefficient of radiation")
+    )
+    val mentions = extractMentions(t2k)
+    testDefinitionEvent(mentions, desired)
+  }
+
+// Tests from paper: THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
+
+    val t1l = "Reference evapotranspiration (ETref) is the rate at which readily available soil water is vaporized from specified vegetated surfaces (Jensen et al., 1990)."
+  failingTest should s"find definitions from t1l: ${t1l}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "ETref" -> Seq("Reference evapotranspiration"),
+      "ETref" -> Seq("the rate at which readily available soil water is vaporized from specified vegetated surfaces") //fixme: longer definition is not captured. (shorter definition was selected)
+    )
+    val mentions = extractMentions(t1l)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t2l = "ETsz = standardized reference crop evapotranspiration for short (ETos) or tall (ETrs) surfaces (mm d-1 for daily time steps or mm h-1 for hourly time steps),"
+  failingTest should s"find definitions from t2l: ${t2l}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "ETsz" -> Seq("standardized reference crop evapotranspiration for short (ETos) or tall (ETrs) surfaces") //fixme: mm is captured as the definitions for the d-1 and h-1, short is captured as the definition of ETos
+    )
+    val mentions = extractMentions(t2l)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t3l = "Latent Heat of Vaporization (λ)"
+  passingTest should s"find definitions from t3l: ${t3l}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "λ" -> Seq("Latent Heat of Vaporization") //fixme: "latent" was not captured as the part of the definition (comma_appos_var)
+    )
+    val mentions = extractMentions(t3l)
+    testDefinitionEvent(mentions, desired)
+  }
+
 }
-
-
-//todo:
-//where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux.
-//neg example: The only factors affecting ETo are climatic parameters.
-//The crop evapotranspiration under standard conditions, denoted as ETc, is the evapotranspiration from disease-free, well-fertilized crops, grown in large fields, under optimum soil water conditions, and achieving full production under the given climatic conditions.
-

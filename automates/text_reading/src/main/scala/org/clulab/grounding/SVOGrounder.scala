@@ -324,7 +324,7 @@ object SVOGrounder {
     if (headWord.trim().length > 3 && headWord.trim().count(_.isLetter) > 0) { //don't ground words that are too short---too many false pos from svo and many are variables; has to contain letters
       compoundWords.append(headWord)
       //todo: do we want terms other than syntactic head?
-      val outgoing = mention.sentenceObj.dependencies.head.getOutgoingEdges(mention.synHead.get)
+      val outgoing = mention.sentenceObj.universalEnhancedDependencies.head.getOutgoingEdges(mention.synHead.get)
       //get indices of compounds or modifiers to the head word of the mention
       val outgoingNodes = outgoing.map(o => o._1)
 
