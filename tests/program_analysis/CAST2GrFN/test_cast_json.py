@@ -141,24 +141,12 @@ def test_all_nodes_to_json_and_from_result(
 
 
 def test_from_json_no_node_type_exception(cast_with_no_node_type_exception_json):
-
-    error_thrown = False
-    try:
+    with pytest.raises(CASTJsonException):
         CAST.from_json_str(cast_with_no_node_type_exception_json)
-    except CASTJsonException:
-        error_thrown = True
-
-    assert error_thrown
 
 
 def test_from_json_unknown_cast_type_exception(
     cast_with_unknown_node_type_exception_json,
 ):
-
-    error_thrown = False
-    try:
+    with pytest.raises(CASTJsonException):
         CAST.from_json_str(cast_with_unknown_node_type_exception_json)
-    except CASTJsonException:
-        error_thrown = True
-
-    assert error_thrown

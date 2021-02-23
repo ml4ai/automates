@@ -342,10 +342,6 @@ def test_pid_c_cast(pid_c_cast_grfn, pid_c_cast):
 
 
 def test_unknown_cast_node():
-    success = False
     c = CAST([object()])
-    try:
+    with pytest.raises(C2ATypeError):
         c.to_GrFN()
-    except C2ATypeError:
-        success = True
-    assert success
