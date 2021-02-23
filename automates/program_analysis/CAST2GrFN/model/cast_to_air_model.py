@@ -4,7 +4,52 @@ from enum import Enum
 from automates.program_analysis.CAST2GrFN.model.cast import AstNode
 
 
-class CASTToAIRException(Exception):
+class C2ATypeError(TypeError):
+    """
+    Used to create exceptions during the CAST to AIR execution
+
+    Args:
+        Exception: An exception that occured during CAST to AIR execution
+    """
+
+    pass
+
+
+class C2ARuntimeError(Exception):
+    """
+    Used for any runtime errors that occur during CAST --> AIR processing
+
+    Args:
+        Exception: An exception that occured during CAST to AIR execution
+    """
+
+    pass
+
+
+class C2ANameError(NameError):
+    """
+    Used when name errors occur (such as a missing member variable for some
+    object) during CAST
+
+    Args:
+        Exception: An exception that occured during CAST to AIR execution
+    """
+
+    pass
+
+
+class C2AValueError(Exception):
+    """
+    Used when an operation cannot be performed for a given value during CAST
+
+    Args:
+        Exception: An exception that occured during CAST to AIR execution
+    """
+
+    pass
+
+
+class C2AException(Exception):
     """
     Used to create exceptions during the CAST to AIR execution
 

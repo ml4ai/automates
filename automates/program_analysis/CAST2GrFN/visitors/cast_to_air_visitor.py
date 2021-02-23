@@ -13,7 +13,7 @@ from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2ATypeDef,
     C2AIdentifierInformation,
     C2AIdentifierType,
-    CASTToAIRException,
+    C2ATypeError,
 )
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -67,7 +67,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return NotImplemented
+        raise C2ATypeError(f"Unrecognized type in CASTToAIRVisitor.visit: {type(node)}")
 
     @visit.register
     def _(self, node: Assignment):
@@ -98,7 +98,7 @@ class CASTToAIRVisitor(CASTVisitor):
             output_variables.append(new_var)
             self.state.add_variable(new_var)
         else:
-            raise CASTToAIRException(
+            raise C2AValueError(
                 f"Unable to handle left hand of assignment of type {type(node.left)}"
             )
 

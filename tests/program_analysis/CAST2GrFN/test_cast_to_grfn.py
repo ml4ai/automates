@@ -32,6 +32,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import C2ATypeError
 from automates.program_analysis.CAST2GrFN.cast import CAST
 import automates.model_assembly.networks as networks
 from automates.model_assembly.networks import GroundedFunctionNetwork
@@ -338,3 +339,13 @@ def test_pid_c_cast(pid_c_cast_grfn, pid_c_cast):
     # TODO
     # generated_grfn = pid_c_cast.to_GrFN()
     # assert generated_grfn == pid_c_cast_grfn
+
+
+def test_unknown_cast_node():
+    success = False
+    c = CAST([object()])
+    try:
+        c.to_GrFN()
+    except C2ATypeError:
+        success = True
+    assert success
