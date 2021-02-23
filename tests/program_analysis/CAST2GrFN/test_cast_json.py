@@ -127,16 +127,23 @@ def test_all_nodes_from_json(cast_with_all_nodes_json, cast_with_all_nodes):
 
 
 def test_all_nodes_to_json(cast_with_all_nodes_json, cast_with_all_nodes):
-    cast_json = cast_with_all_nodes.to_json_str()
-    assert cast_json == cast_with_all_nodes_json
+    cast_json = cast_with_all_nodes.to_json_object()
+    assert cast_json == json.loads(cast_with_all_nodes_json)
+
+    cast_json_str = cast_with_all_nodes.to_json_str()
+    assert cast_json_str == cast_with_all_nodes_json
 
 
 def test_all_nodes_to_json_and_from_result(
     cast_with_all_nodes_json, cast_with_all_nodes
 ):
-    cast_json = cast_with_all_nodes.to_json_str()
-    assert cast_json == cast_with_all_nodes_json
-    cast_from_generated_json = CAST.from_json_str(cast_json)
+    cast_json = cast_with_all_nodes.to_json_object()
+    assert cast_json == json.loads(cast_with_all_nodes_json)
+
+    cast_json_str = cast_with_all_nodes.to_json_str()
+    assert cast_json_str == cast_with_all_nodes_json
+
+    cast_from_generated_json = CAST.from_json_str(cast_json_str)
     assert cast_with_all_nodes == cast_from_generated_json
 
 
