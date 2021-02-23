@@ -9,7 +9,9 @@
     - Unit:
         - UnitRelation
 - Event:
+  - Conj
   - Causal
-  - Definition
+  - Definition:
+    - ConjDefinition
   - ParameterSetting
   - IntervalParameterSetting
