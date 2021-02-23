@@ -327,15 +327,17 @@ def test_basic_function_def_and_assignment(
     assert generated_grfn == basic_function_def_and_assignment_grfn
 
 
+@pytest.mark.skip("Still need to implement some nodes.")
 def test_cast_with_all_nodes(cast_with_all_nodes_grfn, cast_with_all_nodes):
-    assert True
+    pass
     # TODO
     # generated_grfn = cast_with_all_nodes.to_GrFN()
     # assert generated_grfn == cast_with_all_nodes_grfn
 
 
+@pytest.mark.skip("Still need to implement some nodes.")
 def test_pid_c_cast(pid_c_cast_grfn, pid_c_cast):
-    assert True
+    pass
     # TODO
     # generated_grfn = pid_c_cast.to_GrFN()
     # assert generated_grfn == pid_c_cast_grfn
