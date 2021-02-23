@@ -1,6 +1,6 @@
 import typing
+from functools import singledispatchmethod
 
-from automates.utils.method_dispatch import methdispatch
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
 )
@@ -16,6 +16,6 @@ class CASTVisitor:
     def visit_list(self, node_list: typing.List[AstNode]):
         return [self.visit(n) for n in node_list]
 
-    @methdispatch
+    @singledispatchmethod
     def visit(self, node: AstNode):
         raise C2ATypeError(f"Unimplemented AST node of type: {type(node)}")

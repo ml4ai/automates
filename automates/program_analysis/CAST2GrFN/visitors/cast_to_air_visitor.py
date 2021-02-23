@@ -1,6 +1,5 @@
 import typing
-
-from automates.utils.method_dispatch import methdispatch
+from functools import singledispatchmethod
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
@@ -62,7 +61,7 @@ class CASTToAIRVisitor(CASTVisitor):
         self.visit_list(self.cast_nodes)
         return self.state.to_AIR()
 
-    @methdispatch
+    @singledispatchmethod
     def visit(self, node: AstNode):
         """
         TODO
