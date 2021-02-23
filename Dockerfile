@@ -3,31 +3,54 @@ CMD   bash
 
 # ==============================================================================
 # INSTALL SOFTWARE VIA THE UBUNTU PACKAGE MANAGER
-# ==============================================================================
+# =============================================================================
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get -y --no-install-recommends install apt-utils
-RUN apt-get -y --no-install-recommends install \
-  curl gcc build-essential pkg-config openjdk-8-jdk \
-  antlr4 graphviz libgraphviz-dev doxygen \
-  python3 python3-dev python3-pip python3-venv
-# ==============================================================================
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+RUN apt-get update && \
+  apt-get -y upgrade && \
+  apt-get -y --no-install-recommends install apt-utils
 
-# ==============================================================================
+# Use individual commands to prevent excess time usage when re-building
+RUN apt-get -y --no-install-recommends install curl wget gnupg2 git 
+RUN apt-get -y --no-install-recommends install openjdk-8-jdk antlr4 doxygen
+RUN apt-get -y --no-install-recommends install gcc build-essential pkg-config
+RUN apt-get -y --no-install-recommends install graphviz libgraphviz-dev
+RUN apt-get -y --no-install-recommends install python3-dev python3-pip python3-venv
+# =============================================================================
+
+# =============================================================================
 # CREATE A PYTHON VENV AND UPGRADE PYTHON TOOLS
-# ==============================================================================
+# =============================================================================
 ENV VIRTUAL_ENV=/opt/automates_venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN pip install --upgrade setuptools
 RUN pip install wheel
-# ==============================================================================
+# =============================================================================
 
-# ==============================================================================
+# =============================================================================
+# SETUP TR PIPELINE FOR TESTING
+# =============================================================================
+RUN mkdir -p /TR_utils
+WORKDIR /TR_utils
+# Add Scala and SBT
+RUN wget www.scala-lang.org/files/archive/scala-2.13.0.deb
+RUN dpkg -i scala*.deb
+RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
+RUN apt-get update && apt-get install sbt -y --no-install-recommends
+# Add necessary packages from CLULab
+RUN git clone https://github.com/lum-ai/regextools.git
+WORKDIR /TR_utils/regextools
+RUN sbt publishLocal
+# =============================================================================
+
+# =============================================================================
 # SETUP THE AUTOMATES REPOSITORY AND ENVIRONMENT
-# ==============================================================================
+# =============================================================================
 RUN mkdir -p /automates
 COPY * /automates/
 WORKDIR /automates
 RUN pip install -e .
-# ==============================================================================
+# =============================================================================
