@@ -108,6 +108,8 @@ rules:
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
       |
       [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
+      |
+      [word="$"] [word=/\b[A-Za-z]\b/]
 
 
 #  - name: var_greek_and_latin

@@ -149,14 +149,21 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance; where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
+    example: "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
 #    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
-      variable:Concept = nsubjpass | advcl nsubj
-      definition:Concept = nmod_as [!entity = "NUMBER"]
-      #fixme: need to limit to 'find first nsubj you find' to account for the second example
+      variable:Concept = nsubjpass  # note: advcl nsub was replaced by the token rule below. 
+      definition:Concept = nmod_as [!entity = "NUMBER"] # todo: needs to expand the definition to include "at LAI = 6.0"
 
+  - name: var_is_defined_token
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance;"
+    # action: ${action}
+    pattern: |
+      @variable:Variable [word = "("] ([word = /.*/])* [word = ")"] [lemma = "be"] [word = "defined"] [word = "as"] ([word=/a|an|the/])? @definition:Concept
 
   - name: var_cop_definition_greek
     label: Definition
@@ -178,7 +185,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Variable = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
+      definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "nmod_at?". need to see if it's feasible.
 
   - name: def_cop_var
     label: Definition

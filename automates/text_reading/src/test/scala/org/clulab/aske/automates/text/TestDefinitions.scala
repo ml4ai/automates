@@ -45,9 +45,9 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t4a = "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-  failingTest should s"extract definitions from t4a: ${t4a}" taggedAs(Somebody) in {
+  passingTest should s"extract definitions from t4a: ${t4a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "E0" -> Seq("potential crop ET") // Et is found as potential crop
+      "E0" -> Seq("potential crop ET")
     )
     val mentions = extractMentions(t4a)
     testDefinitionEvent(mentions, desired)
@@ -112,10 +112,9 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-  // todo: a filter that checks if the head of the extracted def is a noun - need to see if that is really a requirement for all defs
   val t12a = "The approach uses model-simulated LAI to calculate the Kcb, which means Kcb is more dynamic and " +
     "responsive to cultivar, weather, and soil variability, as simulated by the model"
-  failingTest should s"find NO definitions from t12a: ${t12a}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t12a: ${t12a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t12a)
     testDefinitionEvent(mentions, desired)
@@ -154,7 +153,7 @@ class TestDefinitions extends ExtractionTest {
       "fi" -> Seq("daily fractional light interception"),
       "ETo" -> Seq("daily reference evapotranspiration"), //fixme: expansion is too extreme; limit
       "pwp" -> Seq("water content at permanent wilting point"),//fixme: modify lookslikeavar to accommodate lower-case letters as vars
-      "$z" -> Seq("soil layer thickness"),
+      "$z" -> Seq("soil layer thickness"), //fixme: in order to capture "$z" as one variable, a rule was added under compound_var rule.
       "kl" -> Seq("water extraction rate", "empiric soil–root factor for the fraction of available water that can " +
         "be supplied to the plant from each rooted soil layer")
     )
@@ -247,11 +246,10 @@ class TestDefinitions extends ExtractionTest {
   }
   val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl " +
     "times pr for each layer and summing over the soil profile:"
-    failingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
+    passingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
-        "Ux" -> Seq("maximum potential water uptake for the profile")
+        "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
       )
-      // the test fails because of the var Ta,rl being processed as two comma-separated words
       val mentions = extractMentions(t12b)
       testDefinitionEvent(mentions, desired)
 
@@ -387,18 +385,18 @@ class TestDefinitions extends ExtractionTest {
   val t1e = "Since eS is not a linear function of temperature"
   passingTest should s"find NO definitions from t1e: ${t1e}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
-    val mentions = extractMentions(t5a)
+    val mentions = extractMentions(t1e)  // issue: changed from t5a to t1e. needs to check if this is right.
     testDefinitionEvent(mentions, desired)
   }
 
-  // Misc tests
-
-  val t1z = "The rate of infection R(t) is..."
-  failingTest should s"find definitions from t1z: ${t1z}" taggedAs(Somebody) in {
+  val t2e = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld)"
+  passingTest should s"find definitions from t2e: ${t2e}" taggedAs(Somebody) in {
     val desired = Seq(
-      "R(t)" -> Seq("rate of infection")
+      "Rnl" -> Seq("net long-wave radiation"),
+      "Rlu" -> Seq("upward long-wave radiation from the standardized surface"),
+      "Rld" -> Seq("downward long-wave radiation from the sky"),
     )
-    val mentions = extractMentions(t1z)
+    val mentions = extractMentions(t2e)
     testDefinitionEvent(mentions, desired)
   }
 
@@ -678,5 +676,18 @@ class TestDefinitions extends ExtractionTest {
     val mentions = extractMentions(t3l)
     testDefinitionEvent(mentions, desired)
   }
+
+    val t4l = "e°(Tmax) = saturation vapor pressure at daily maximum temperature [kPa]"
+  failingTest should s"find definitions from t4l: ${t4l}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "e°(Tmax)" -> Seq("saturation vapor pressure at daily maximum temperature")
+    )
+    val mentions = extractMentions(t4l)
+    testDefinitionEvent(mentions, desired)
+  }
+
+//todo: First, the limiting value R∞, called the total size of the epidemic which is the total number of people having the disease at the end of the epidemic. 
+//todo: Second, R0 = r/a, the basic reproduction number which is the average number of secondary infections produced when one infected individual is introduced into a host population where everyone is susceptible.
+
 
 }
