@@ -56,4 +56,5 @@ COPY setup.py /automates/
 COPY automates /automates/automates
 WORKDIR /automates
 RUN pip install -e .
+RUN rm -rf automates setup.py
 # =============================================================================
