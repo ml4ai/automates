@@ -41,7 +41,6 @@ RUN pip install wheel
 # Add PACKAGES FOR TR PIPELINE
 # =============================================================================
 RUN update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
-RUN wget http://vanga.sista.arizona.edu/automates_data/vectors.txt
 RUN mkdir -p /TR_utils
 WORKDIR /TR_utils
 RUN git clone https://github.com/lum-ai/regextools.git
