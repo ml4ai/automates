@@ -9,8 +9,10 @@ from copy import deepcopy
 import uuid
 import datetime
 import json
+import random
 import re
 import random
+
 
 import networkx as nx
 import numpy as np
@@ -569,7 +571,6 @@ class GrFNSubgraph:
         cls, con: GenericContainer, occ: int, parent_subgraph: GrFNSubgraph
     ):
         id = con.identifier
-
         class_to_create = cls
         if isinstance(con, LoopContainer):
             class_to_create = GrFNLoopSubgraph
@@ -1379,6 +1380,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         identifier = GenericIdentifier.from_str(data["identifier"])
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T)
+
 
 
 class CausalAnalysisGraph(nx.DiGraph):
