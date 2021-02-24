@@ -19,7 +19,8 @@ jobs:
         run: |
           CI_ENV=`bash <(curl -s https://codecov.io/env)`
           IMAGE=ml4ailab/automates:latest
-          docker run $CI_ENV -itd --rm --pull -v $GITHUB_WORKSPACE:/automates --name build-con $IMAGE
+          docker pull $IMAGE
+          docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name build-con $IMAGE
           docker exec build-con make test
           docker exec -w /automates/automates/text_reading build-con sbt test
           docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN build-con bash -c 'bash <(curl -s https://codecov.io/bash)'
