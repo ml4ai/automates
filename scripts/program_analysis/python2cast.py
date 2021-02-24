@@ -25,4 +25,4 @@ print(type(cast.CAST([C])))
 
 Cast = cast.CAST([C])
 # Then, print CAST as JSON
-print(Cast.to_json())
+print(Cast.to_json_str())
