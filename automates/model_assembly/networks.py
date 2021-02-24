@@ -5,10 +5,12 @@ from functools import singledispatch
 from dataclasses import dataclass
 from itertools import product
 from copy import deepcopy
-from uuid import uuid4
+
+import uuid
 import datetime
 import json
 import re
+import random
 
 import networkx as nx
 import numpy as np
@@ -38,6 +40,16 @@ from .structures import (
 )
 from ..utils.misc import choose_font
 
+# -------------------------------------------
+# Remove this block to generate different
+# UUIDs everytime you run this code.
+# This block should be right below the uuid
+# import.
+rd = random.Random()
+rd.seed(0)
+uuid.uuid4 = lambda: uuid.UUID(int=rd.getrandbits(128))
+# -------------------------------------------
+
 FONT = choose_font()
 
 dodgerblue3 = "#1874CD"
@@ -57,7 +69,7 @@ class GenericNode(ABC):
 
     @staticmethod
     def create_node_id() -> str:
-        return str(uuid4())
+        return str(uuid.uuid4())
 
     @abstractmethod
     def get_kwargs(self):
@@ -563,7 +575,7 @@ class GrFNSubgraph:
             class_to_create = GrFNLoopSubgraph
 
         return class_to_create(
-            str(uuid4()),
+            str(uuid.uuid4()),
             id.namespace,
             id.scope,
             id.con_name,
@@ -856,10 +868,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
         )
 
     def __str__(self):
-        L_sz = str(len(self.lambda_nodes))
-        V_sz = str(len(self.variable_nodes))
-        I_sz = str(len(self.input_variables))
-        O_sz = str(len(self.output_variables))
+        L_sz = str(len(self.lambdas))
+        V_sz = str(len(self.variables))
+        I_sz = str(len(self.inputs))
+        O_sz = str(len(self.outputs))
         size_str = f"< |L|: {L_sz}, |V|: {V_sz}, |I|: {I_sz}, |O|: {O_sz} >"
         return f"{self.label}\n{size_str}"
 
@@ -1044,7 +1056,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         start_container = containers[con_id]
         Occs[con_id] = 0
         translate_container(start_container, [])
-        grfn_uid = str(uuid4())
+        grfn_uid = str(uuid.uuid4())
         date_created = datetime.datetime.now().strftime("%Y-%m-%d")
         return cls(grfn_uid, con_id, date_created, network, hyper_edges, subgraphs, [])
 
