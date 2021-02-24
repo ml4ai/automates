@@ -5,6 +5,18 @@ import org.clulab.aske.automates.TestUtils._
 class TestFunctions extends ExtractionTest {
 
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
+
+  val t1a = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
+  passingTest should s"find functions from t1a: ${t1a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Rnl" -> Seq("difference between upward long-wave radiation from the standardized surface", "downward long-wave radiation from the sky")
+    )
+    val mentions = extractMentions(t1a)
+    testFunctionEvent(mentions, desired)
+  }
+
+
+  // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
   // todo: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
  
   // todo: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm." (example from TestDefinitions)

@@ -64,6 +64,10 @@ object TestUtils {
       testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
     }
 
+    def testFunctionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, FUNCTION_LABEL, FUNCTION_INPUT_ARG, FUNCTION_OUTPUT_ARG, desired)
+    }
+
     def testUnitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testBinaryEvent(mentions, UNIT_LABEL, VARIABLE_ARG, UNIT_ARG, desired)
     }
@@ -156,6 +160,10 @@ object TestUtils {
 
     def testDefinitionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
+    }
+
+    def testFunctionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, FUNCTION_LABEL, FUNCTION_INPUT_ARG, FUNCTION_OUTPUT_ARG, desired)
     }
 
     def testUnitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
