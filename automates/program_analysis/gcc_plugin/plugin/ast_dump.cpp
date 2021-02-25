@@ -1243,11 +1243,11 @@ static void dump_global_vars()
 
   json_array_field("globalVariables");
 
-  // struct varpool_node *node;
-  // for (node = varpool_nodes; node; node = node->next)
-  // {
-  //   dump_global_var(node->decl);
-  // }
+  struct varpool_node *node;
+  for (node = varpool_nodes; node; node = node->next)
+  {
+    dump_global_var(node->decl);
+  }
 
   json_end_array();
 }
