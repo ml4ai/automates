@@ -21,10 +21,11 @@ Taken from: https://solarianprogrammer.com/2019/10/12/compiling-gcc-macos/. The 
 2) Create a directory to download the gcc files into: `mkdir gcc_all & cd gcc_all`
 3) Download gcc tarball and extract into the folder `curl -L https://ftpmirror.gnu.org/gcc/gcc-10.1.0/gcc-10.1.0.tar.xz | tar xf -`
 4) Download gcc preqrequesites via provided script `cd gcc-10.1.0 & contrib/download_prerequisites`
-5) Now build the compiler (this will take awhile (~1hr) and take up a good amount of space (~4gb)). From `/gcc_all/gcc-10.1.0`, run
+5) Now configure and build the compiler (this will take awhile (~1hr) and take up a good amount of space (~4gb)). From `/gcc_all/gcc-10.1.0`, run
 
 `mkdir build && cd build`
 `../configure --prefix=/usr/local/gcc-10.1.0 --enable-plugin --enable-checking=release --enable-languages=c,c++,fortran --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --program-suffix=-10.1`
+`make -j$(getconf _NPROCESSORS_ONLN)`
 
 Note that the configure specifies we are enabling gcc for c, c++, and fortran. This will allow us to install gcc, g++, and g-fortran.
 

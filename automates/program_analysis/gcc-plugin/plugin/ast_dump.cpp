@@ -854,13 +854,14 @@ static void dump_return(gimple *stmt)
   dump_srcref(stmt);
 
   // TODO
-  // greturn * ret = as_a <greturn *> (gsi_stmt (gsi));
+  greturn *ret = as_a<greturn *>(gsi_stmt(stmt));
   // gimple_build_return
-  // tree retval = gimple_return_retval(as_a <greturn *> (stmt));
-  // if(retval) {
-  //   json_field("value");
-  //   dump_op(retval);
-  // }
+  tree retval = gimple_return_retval(as_a<greturn *>(stmt));
+  if (retval)
+  {
+    json_field("value");
+    dump_op(retval);
+  }
   json_end_object();
 }
 
@@ -1242,12 +1243,11 @@ static void dump_global_vars()
 
   json_array_field("globalVariables");
 
-  // TODO
   // struct varpool_node *node;
   // for (node = varpool_nodes; node; node = node->next)
-  //   {
-  //       dump_global_var(node->decl);
-  //   }
+  // {
+  //   dump_global_var(node->decl);
+  // }
 
   json_end_array();
 }
@@ -1336,40 +1336,15 @@ namespace
     void set_pass_param(unsigned int n, bool param)
     {
       gcc_assert(n == 0);
-      // insert_powi_p = param;
     }
 
-    // virtual bool gate (function *) { return flag_tree_reassoc != 0; }
     virtual unsigned int execute(function *)
     {
       dump_function_ast();
       return 0;
-      // return execute_reassoc (insert_powi_p);
     }
 
-    // private:
-    //   /* Enable insertion of __builtin_powi calls during execute_pass_ast_dump.  See
-    //     point 3a in the pass header comment.  */
-    //   bool insert_powi_p;
   }; // class pass_ast_dump
-
-  // struct ast_plugin : gimple_opt_pass
-  // {
-  //   ast_plugin(gcc::context *ctx) : gimple_opt_pass(ast_plugin_data, ctx)
-  //   {
-  //   }
-
-  //   virtual unsigned int execute(function *fun) override
-  //   {
-  //     dump_function_ast();
-  //     return 0;
-  //   }
-
-  //   virtual ast_plugin *clone() override
-  //   {
-  //     return this;
-  //   }
-  // };
 
 } // anon namespace
 
@@ -1390,7 +1365,6 @@ int plugin_init(struct plugin_name_args *plugin_info,
   /* Register this new pass with GCC */
   register_callback(plugin_info->base_name, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
 
-  //register_callback (plugin_name, PLUGIN_FINISH_TYPE, &dump_type_decl, NULL);
   register_callback("start_unit", PLUGIN_START_UNIT, &start_unit_callback, NULL);
   register_callback("finish_unit", PLUGIN_FINISH_UNIT, &finish_unit_callback, NULL);
 
