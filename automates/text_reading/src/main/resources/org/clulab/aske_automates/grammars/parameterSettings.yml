@@ -88,14 +88,15 @@ rules:
 
 
   - name: var-less_than_symbol
-    label: ParameterSetting
+    label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "but simulated yield decreased rapidly for Kcbmax < 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='<']
       variable:Concept = <dep <nummod <dep | <advmod <nummod
-      value:Value = </dep|advmod/ [tag = "CD"]
+      valueMostExcl:Value = </dep|advmod/ [tag = "CD"]
 
   - name: var_hard-coded
     label: ParameterSetting

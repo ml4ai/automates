@@ -2,13 +2,13 @@ package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.aske.automates.actions.ExpansionHandler
-import org.clulab.odin._
+import org.clulab.odin.{Mention, _}
 import org.clulab.odin.impl.Taxonomy
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.DiscontinuousCharOffsetAttachment
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment}
 import org.clulab.aske.automates.entities.EntityHelper
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
@@ -72,6 +72,48 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
     }
     intervalMentionMap.toMap
+  }
+
+
+  def processParamSettingInt(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      var inclLower: Option[Boolean] = None
+      var inclUpper: Option[Boolean] = None
+      for (arg <- m.arguments) {
+        arg._1 match {
+          case "valueLeastExcl" => {
+            newArgs("valueLeast") = arg._2
+            inclLower = Some(false)
+          }
+          case "valueLeastIncl" => {
+          newArgs("valueLeast") = arg._2
+            inclLower = Some(true)
+        }
+          case "valueMostExcl" => {
+            newArgs("valueMost") = arg._2
+            inclUpper = Some(false)
+          }
+          case "valueInclIncl" => {
+            newArgs("valueLeast") = arg._2
+            inclUpper = Some(true)
+          }
+
+          case _ => newArgs(arg._1) = arg._2
+        }
+      }
+//      for (arg <- m.arguments) {
+//        if (arg._1 == "valueLeastExcl") {
+//          newArgs("valueLeast") = arg._2
+//        } else newArgs(arg._1) = arg._2
+//      }
+
+      val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
+      newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
+    }
+    newMentions
   }
 
   def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
