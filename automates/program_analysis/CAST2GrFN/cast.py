@@ -124,8 +124,9 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
+        # TODO do something better than grabbing the first container
         grfn = GroundedFunctionNetwork.from_AIR(
-            GenericIdentifier.from_str("@container::initial::@global::exampleFunction"),
+            GenericIdentifier.from_str(air["containers"][0]["name"]),
             C,
             V,
             T,
