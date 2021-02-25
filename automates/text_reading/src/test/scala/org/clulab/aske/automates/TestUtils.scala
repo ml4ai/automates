@@ -105,6 +105,7 @@ object TestUtils {
       found.length should be(desired.size)
 
 
+
       val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
       for {
         (desiredVar, desiredDefs) <- desired

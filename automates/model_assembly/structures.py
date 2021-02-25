@@ -65,8 +65,19 @@ class VariableIdentifier(GenericIdentifier):
 
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):
-        (_, name, idx) = data.split("::")
-        return cls(con.namespace, con.con_name, name, int(idx))
+        split = data.split("::")
+        name = ""
+        idx = -1
+        if len(split) == 3:
+            # Identifier is depricated <id type>::<name>::<version> style
+            (_, name, idx) = split
+            return cls(con.namespace, con.con_name, name, int(idx))
+        elif len(split) == 5:
+            # Identifier is <id type>::<module>::<scope>::<name>::<version>
+            (_, ns, sc, name, idx) = split
+            return cls(ns, sc, name, int(idx))
+        else:
+            raise ValueError(f"Unrecognized variable identifier: {data}")
 
     @classmethod
     def from_str(cls, var_id: str):

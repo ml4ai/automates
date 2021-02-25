@@ -8,34 +8,86 @@ import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
+import org.clulab.aske.automates.attachments.DiscontinuousCharOffsetAttachment
 import org.clulab.aske.automates.entities.EntityHelper
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.io.{BufferedSource, Source}
 
 
 
 class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHandler], validArgs: List[String], freqWords: Array[String]) extends Actions with LazyLogging {
 
+  val proc = new FastNLPProcessor()
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
 
     if (expansionHandler.nonEmpty) {
       // expand arguments
-      //val (textBounds, expandable) = mentions.partition(m => m.isInstanceOf[TextBoundMention])
-      //val expanded = expansionHandler.get.expandArguments(expandable, state)
-      //keepLongest(expanded) ++ textBounds
 
-      val (expandable, other) = mentions.partition(m => m matches "Definition")
+      val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
+      val expandedVars = keepLongestVariable(vars)
+
+      val (expandable, other) = (expandedVars ++ non_vars).partition(m => m matches "Definition")
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
-      keepLongest(expanded) ++ other
-//        expanded ++ other
+      keepOneWithSameSpanAfterExpansion(expanded) ++ other
 
-      //val mostComplete = keepMostCompleteEvents(expanded, state.updated(expanded))
-      //val result = mostComplete ++ textBounds
     } else {
       mentions
     }
   }
+
+  def findOverlappingInterval(tokenInt: Interval, intervals: List[Interval]): Interval = {
+    val overlapping = new ArrayBuffer[Interval]()
+    for (int <- intervals) {
+      if (tokenInt.intersect(int).nonEmpty) overlapping.append(int)
+    }
+    return overlapping.maxBy(_.length)
+  }
+
+  def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    // has to be used for mentions in the same sentence - token intervals are per sentence
+    val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
+    for (m <- mentions) {
+      if (intervalMentionMap.isEmpty) {
+        intervalMentionMap += (m.tokenInterval -> Seq(m))
+      } else {
+        if (intervalMentionMap.keys.exists(k => k.intersect(m.tokenInterval).nonEmpty)) {
+          val interval = findOverlappingInterval(m.tokenInterval, intervalMentionMap.keys.toList)
+          val currMen = intervalMentionMap(interval)
+          val updMen = currMen :+ m
+          if (interval.length >= m.tokenInterval.length) {
+            intervalMentionMap += (interval -> updMen)
+          } else {
+            intervalMentionMap += (m.tokenInterval -> updMen)
+            intervalMentionMap.remove(interval)
+          }
+
+        } else {
+          intervalMentionMap += (m.tokenInterval -> Seq(m))
+        }
+      }
+    }
+    intervalMentionMap.toMap
+  }
+
+  def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // used to avoid vars like R(t) being found as separate R, t, R(t, and so on
+    val maxInGroup = new ArrayBuffer[Mention]()
+    val groupedBySent = mentions.groupBy(_.sentence)
+    for (gbs <- groupedBySent) {
+      val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
+      for (item <- groupedByIntervalOverlap) {
+        val longest = item._2.maxBy(_.tokenInterval.length)
+        maxInGroup.append(longest)
+      }
+    }
+    maxInGroup.distinct
+  }
+
 
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -44,12 +96,242 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       (k, v) <- mentions.groupBy(m => (m.sentence, m.label))
       m <- v
       // for overlapping mentions starting at the same token, keep only the longest
-      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => ((m.end - m.start) + 0.1 * m.arguments.size))
-      //      longest = v.filter(_.tokenInterval.start == m.tokenInterval.start).maxBy(m => ((m.end - m.start) + 0.1 * m.arguments.size))
-
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
     mns.toVector.distinct
   }
+
+  def keepOneWithSameSpanAfterExpansion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val mns: Iterable[Mention] = for {
+      // find mentions of the same label and sentence overlap
+      (k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)
+      // conj defs have more vars, so from overlapping mentions, choose those that have most vars and...
+      maxNumOfVars = v.maxBy(_.arguments("variable").length).arguments("variable").length
+      //out of the ones with most vars, pick the longest
+    } yield v.filter(_.arguments("variable").length == maxNumOfVars).maxBy(_.text.length)//v.maxBy(_.text.length)
+    val mens = mns.toList
+    mens.toVector.distinct
+  }
+
+  def getEdgesForMention(m: Mention): List[(Int, Int, String)] = {
+    // return only edges within the token interval of the mention
+    m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
+  }
+
+  def filterOutOverlappingMen(mentions: Seq[Mention]): Seq[Mention] = {
+    // input is only mentions with the label ConjDefinition or Definition with conjunctions
+    // this is to get rid of conj definitions that are redundant in the presence of a more complete ConjDefinition
+    val toReturn = new ArrayBuffer[Mention]()
+    val groupedBySent = mentions.groupBy(_.sentence)
+
+    for (gr <- groupedBySent) {
+      val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
+      for (gr1 <- groupedByTokenOverlap.values) {
+        // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
+        if (gr1.exists(_.label=="ConjDefinition")) {
+          val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
+          toReturn.append(longestConjDef)
+        } else {
+          for (men <- gr1) toReturn.append(men)
+        }
+      }
+    }
+    toReturn
+  }
+
+
+  // this should be the def text bound mention
+  def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
+    val charOffsets = new ArrayBuffer[Array[Int]]
+    var spanStartAndEndOffset = new ArrayBuffer[Int]()
+    var prevTokenIndex = 0
+    for ((tokenInt, indexOnList) <- newTokenList.zipWithIndex) {
+      if (indexOnList == 0) {
+        spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
+        prevTokenIndex = tokenInt
+      } else {
+        if (!(prevTokenIndex + 1 == tokenInt) ) {
+          //this means, we have found the the gap in the token int
+          // and the previous token was the end of previous part of the discont span, so we should get the endOffset of prev token
+          spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
+          charOffsets.append(spanStartAndEndOffset.toArray)
+          spanStartAndEndOffset = new ArrayBuffer[Int]()
+          spanStartAndEndOffset.append(m.sentenceObj.startOffsets(tokenInt))
+          prevTokenIndex = tokenInt
+          // if last token, get end offset and append resulting offset
+          if (indexOnList + 1 == newTokenList.length) {
+            spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
+            charOffsets.append(spanStartAndEndOffset.toArray)
+          }
+
+        } else {
+          // if last token, get end offset and append resulting offset
+          if (indexOnList + 1 == newTokenList.length) {
+            spanStartAndEndOffset.append(m.sentenceObj.endOffsets(prevTokenIndex))
+            charOffsets.append(spanStartAndEndOffset.toArray)
+          } else {
+            prevTokenIndex = tokenInt
+          }
+
+        }
+      }
+
+    }
+    val listOfIntCharOffsets = new ArrayBuffer[(Int, Int)]()
+    for (item <- charOffsets) {
+      listOfIntCharOffsets.append((item.head, item.last))
+    }
+    listOfIntCharOffsets
+  }
+
+  def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String), preconj: Seq[Int]): Mention = {
+    // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
+    val sortedConj = List(conjEdge._1, conjEdge._2).sorted
+    val tokInAsList = m.arguments("definition").head.tokenInterval.toList
+
+    val newTokenInt = tokInAsList.filter(idx => (idx < sortedConj.head || idx >= sortedConj.last) & !preconj.contains(idx))
+
+    val charOffsets = new ArrayBuffer[Int]()
+    val wordsWIndex = m.sentenceObj.words.zipWithIndex
+
+    val defTextWordsWithInd = wordsWIndex.filter(w => newTokenInt.contains(w._2))
+    for (ind <- defTextWordsWithInd.map(_._2)) {
+      charOffsets.append(m.sentenceObj.startOffsets(ind))
+    }
+    val defText = defTextWordsWithInd.map(_._1)
+    val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
+    if (charOffsetsForAttachment.length > 1) {
+      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+      val menWithAttachment = m.withAttachment(attachment)
+      menWithAttachment
+    } else m
+
+  }
+
+
+  def hasConj(m: Mention): Boolean = {
+    val onlyThisMenedges = getEdgesForMention(m)
+    onlyThisMenedges.map(_._3).exists(_.startsWith("conj"))
+  }
+
+  /*
+  A method for handling definitions depending on whether or not they have any conjoined elements
+   */
+  def untangleConj(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
+    // fixme: account for cases when one conj is not part of the extracted definition
+    //todo: if plural noun (eg entopies) - lemmatize?
+
+    // all that have conj (to be grouped further) and those with no conj
+    val (tempWithConj, withoutConj) = mentions.partition(hasConj(_))
+    // check if there's overlap between conjdefs and standard defs; if there is, drop the standard def
+    val withConj = filterOutOverlappingMen(tempWithConj)
+    // defs that were found as ConjDefinitions - that is events with multiple variables (at least partially) sharing a definitions vs definitions that were found with standard rule that happened to have conjunctions in their definitions
+    val (conjDefs, standardDefsWithConj) = withConj.partition(_.label matches "ConjDefinition")
+
+    val toReturn = new ArrayBuffer[Mention]()
+    // the defs found with conj definition rules should be processed differently from standard defs that happen to have conjs
+    for (m <- untangleConjunctions(conjDefs)) {
+      toReturn.append(m)
+    }
+
+    for (m <- standardDefsWithConj) {
+      val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
+      // take max conjunction hop contained inside the definition - that will be removed
+      val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
+      val preconj = m.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
+      val newMention = returnWithoutConj(m, maxConj, preconj)
+      toReturn.append(newMention)
+    }
+    // make sure to add non-conj events
+    for (m <- withoutConj) toReturn.append(m)
+
+    toReturn
+  }
+
+
+  /*
+  a method for handling `ConjDefinition`s - definitions that were found with a special rule---the def has to have at least two conjoined variables and at least one (at least partially) shared definition
+   */
+  def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
+    val toReturn = new ArrayBuffer[Mention]()
+
+    val groupedBySent = mentions.groupBy(_.sentence)
+    for (gr1 <- groupedBySent) {
+      val groupedByIntervalOverlap = groupByTokenOverlap(gr1._2)
+      for (gr <- groupedByIntervalOverlap) {
+        val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
+        // out of overlapping defs, take the longest one
+        val headDef = mostComplete.arguments("definition").head
+        val edgesForOnlyThisMen = headDef.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDef.tokenInterval.start && math.max(edge._1, edge._2) <= headDef.tokenInterval.end)
+        val conjEdges = edgesForOnlyThisMen.filter(_._3.startsWith("conj"))
+        val conjNodes = new ArrayBuffer[Int]()
+        for (ce <- conjEdges) {
+          conjNodes.append(ce._1)
+          conjNodes.append(ce._2)
+        }
+        val allConjNodes = conjNodes.distinct.sorted
+        val preconj = headDef.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
+        val previousIndices = new ArrayBuffer[Int]()
+
+        val newDefinitions = new ArrayBuffer[Mention]()
+        val defAttachments = new ArrayBuffer[DiscontinuousCharOffsetAttachment]()
+
+        if (allConjNodes.nonEmpty) {
+
+          for (int <- allConjNodes.sorted) {
+            val headDefStartToken = headDef.tokenInterval.start
+            // the new def token interval is the longest def available with words like `both` and `either` removed and ...
+            var newDefTokenInt = headDef.tokenInterval.filter(item => (item >= headDefStartToken & item <= int) & !preconj.contains(item))
+            //...with intervening conj hops removed, e.g., in `a and b are the blah of c and d, respectively`, for the def of b, we will want to remove `c and ` - which make up the intervening conj hop
+            if (previousIndices.nonEmpty) {
+              newDefTokenInt = newDefTokenInt.filter(ind => ind < previousIndices.head || ind >= int )
+            }
+
+            val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
+//            val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
+            val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
+            newDefinitions.append(newDef)
+            // store char offsets for discont def as attachments
+            val charOffsetsForAttachment= getDiscontCharOffset(headDef, newDefTokenInt.toList)
+
+            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+            defAttachments.append(attachment)
+
+            previousIndices.append(int)
+          }
+        }
+
+
+        // get the conjoined vars
+        val variables = mostComplete.arguments("variable")
+        for ((v, i) <- variables.zipWithIndex) {
+          // if there are new defs, we will assume that they should be matched with the vars in the linear left to right order
+          if (newDefinitions.nonEmpty) {
+            val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
+              val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
+              toReturn.append(newDefWithAtt)
+            } else {
+              toReturn.append(newDefMen)
+            }
+
+            // if there are no new defs, we just assume that the definition is shared between all the variables
+          } else {
+            val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(headDef))
+            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            toReturn.append(newDefMen)
+          }
+        }
+      }
+
+    }
+    toReturn
+  }
+
+
 
   def addArgument(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     for {
@@ -104,6 +386,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     def mkDefinitionMention(m: Mention): Seq[Mention] = {
       val outer = m.arguments("c1").head
       val inner = m.arguments("c2").head
+      if (outer.text.split(" ").last.length == 1 & inner.text.length == 1) return Seq.empty // this is a filter that helps avoid splitting of compound variables, e.g. the rate R(t) - t should not be extracted as a variable with a definition 'rate R'
       val sorted = Seq(outer, inner).sortBy(_.text.length)
       // The longest mention (i.e., the definition) should be at least 3 characters, else it's likely a false positive
       // todo: tune
@@ -120,7 +403,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
           foundBy=foundBy(rm.foundBy),
           tokenInterval = Interval(math.min(variable.start, definition.start), math.max(variable.end, definition.end)))
-//         case em: EventMention => em.copy(//alexeeva wrote this to try to try to fix an appos. dependency rule todo: what seems to need don
+//         case em: EventMention => em.copy(//alexeeva wrote this to try to try to fix an appos. dependency rule
         //is changing the keys in 'paths' to variable and defintion bc as of now they show up downstream (in the expansion handler) as c1 and c2
 //           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(definition)),
 //           foundBy=foundBy(em.foundBy),
@@ -128,7 +411,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         case _ => ???
       }
       Seq(variable, defMention)
-//      Seq(defMention)
     }
 
     mentions.flatMap(mkDefinitionMention)
@@ -222,7 +504,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def definitionActionFlowSpecialCase(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //select shorter as var is only applicable to one rule, so it can't be part of the regular def. action flow
-    val toReturn = definitionActionFlow(selectShorterAsVariable(mentions, state), state)
+    val varAndDef = selectShorterAsVariable(mentions, state)
+    val toReturn = if (varAndDef.nonEmpty) definitionActionFlow(varAndDef, state) else Seq.empty
     toReturn
   }
 

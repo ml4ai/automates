@@ -6,9 +6,12 @@ import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.attachments.AutomatesAttachment
+import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
+import org.json4s
 import org.json4s.jackson.JsonMethods._
 
 /**
@@ -22,7 +25,7 @@ object ExtractAndExport extends App {
   def getExporter(exporterString: String, filename: String): Exporter = {
     exporterString match {
       case "serialized" => SerializedExporter(filename)
-      case "json" => JSONExporter(filename)
+      case "json" => AutomatesExporter(filename)
       case "tsv" => TSVExporter(filename)
       case _ => throw new NotImplementedError(s"Export mode $exporterString is not supported.")
     }
@@ -31,7 +34,7 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
   val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR/chime"
-  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR/chime"
+  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR/chime/mentions"
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
@@ -73,6 +76,9 @@ object ExtractAndExport extends App {
 //      println(dm.foundBy)
       for (arg <- dm.arguments) {
         println(arg._1 + ": " + dm.arguments(arg._1).head.text)
+      }
+      if (dm.attachments.nonEmpty) {
+        for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
       }
     }
     val paramSettingMentions = mentions.filter(_ matches "ParameterSetting")
@@ -134,6 +140,20 @@ case class JSONExporter(filename: String) extends Exporter {
 
   override def close(): Unit = ()
 }
+
+case class AutomatesExporter(filename: String) extends Exporter {
+  override def export(mentions: Seq[Mention]): Unit = {
+    val serialized = ujson.write(AutomatesJSONSerializer.serializeMentions(mentions))
+//    val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(serialized))
+    val file = new File(filename)
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write(serialized)
+    bw.close()
+  }
+
+  override def close(): Unit = ()
+}
+
 
 // used to produce tsv files with extracted mentions; add 'tsv' to the list of foramats under apps.exportAs in application.conf; change m.label filtering to whatever type of event you are interested in.
 case class TSVExporter(filename: String) extends Exporter {

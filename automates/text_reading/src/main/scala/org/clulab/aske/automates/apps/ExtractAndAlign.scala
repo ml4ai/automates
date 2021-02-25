@@ -16,13 +16,11 @@ import org.clulab.odin.Mention
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding
-import org.clulab.grounding.{SVOGrounder, SVOGrounding, SeqOfGroundings, sparqlResult}
+import org.clulab.grounding.{SVOGrounder, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
-import org.json4s
 import java.util.UUID.randomUUID
+import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
 
-import org.clulab.aske.automates.attachments.MentionLocationAttachment
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -73,7 +71,6 @@ object ExtractAndAlign {
                       numAlignmentsSrcToComment: Option[Int],
                       scoreThreshold: Double = 0.0,
                       appendToGrFN: Boolean,
-                      textInputFormat: String,
                       debug: Boolean
 
     ): Value = {
@@ -98,7 +95,7 @@ object ExtractAndAlign {
 
     var outputJson = ujson.Obj()
 
-    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames, textInputFormat)
+    val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
 
     linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION), alignments(TEXT_TO_UNIT))
 
@@ -498,8 +495,7 @@ object ExtractAndAlign {
     Option[Seq[Mention]],
     commentDefinitionMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
-    variableNames: Option[Seq[String]],
-    textInputFormat: String
+    variableNames: Option[Seq[String]]
   ): mutable.HashMap[String, Seq[String]] = {
     // Make Comment Spans from the comment variable mentions
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
@@ -534,7 +530,21 @@ object ExtractAndAlign {
       }
     }
 
+    def getDiscontinuousText(mention: Mention): String = {
+      val subStrings = new ArrayBuffer[String]()
+      val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
+      val charOffset = discontAttachment("charOffsets").arr
+      val docText = mention.document.text.getOrElse("No text")
+      for (offsetSet <- charOffset) {
+        val start = offsetSet.arr.head.num.toInt
+        val end = offsetSet.arr.last.num.toInt
+        subStrings.append(docText.slice(start, end).mkString(""))
+      }
+      subStrings.mkString(" ")
+    }
+
     if (textDefinitionMentions.isDefined) {
+
       // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
@@ -542,13 +552,21 @@ object ExtractAndAlign {
         val originalSentence = mention.sentenceObj.words.mkString(" ")
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
-        val definition = mention.arguments(DEFINITION).head.text
+
+        val definition = if (mention.attachments.nonEmpty && mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "DiscontinuousCharOffset")) {
+          getDiscontinuousText(mention)
+        } else {
+          mention.arguments(DEFINITION).head.text
+        }
+
         val charBegin = mention.startOffset
         val charEnd = mention.endOffset
-        val continuousMenSpanJson = if (textInputFormat == "cosmos") {
-          val attAsJson = mention.attachments.head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-          val page = attAsJson("pageNum").num.toInt
-          val block = attAsJson("blockIdx").num.toInt
+
+        val continuousMenSpanJson = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
+
+          val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_("attType").str=="MentionLocation").head//head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+          val page = menAttAsJson("pageNum").num.toInt
+          val block = menAttAsJson("blockIdx").num.toInt
 
           // todo: this is for mentions that came from one block
           // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
@@ -782,8 +800,7 @@ object ExtractAndAlign {
     val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     val loadMentions = config[Boolean]("apps.loadMentions")
     val appendToGrFN = config[Boolean]("apps.appendToGrFN")
-    val textInputFormat = config[String]("apps.textInputFormat")
-
+    val serializerName = config[String]("apps.serializerName")
 
     // =============================================
     //                 DATA LOADING
@@ -859,7 +876,6 @@ object ExtractAndAlign {
       Some(numAlignments),
       scoreThreshold,
       appendToGrFN,
-      textInputFormat,
       debug = false
       )
 

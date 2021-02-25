@@ -85,12 +85,8 @@ class OdinEngine(
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
-
-    val (definitionMentions, other) = events.partition(_.label matches "Definition")
-    // todo: some appropriate version of "keepMostComplete"
-    //there could be multiple definitions for one variable, so don't eliminate any of definition mentions, even if there's overlap
-    (loadableAttributes.actions.keepLongest(other) ++ definitionMentions).toVector
-
+    val (definitionMentions, other) = events.partition(_.label.contains("Definition"))
+    (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConj(definitionMentions)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
