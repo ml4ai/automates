@@ -65,8 +65,19 @@ class VariableIdentifier(GenericIdentifier):
 
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):
-        (_, name, idx) = data.split("::")
-        return cls(con.namespace, con.con_name, name, int(idx))
+        split = data.split("::")
+        name = ""
+        idx = -1
+        if len(split) == 3:
+            # Identifier is depricated <id type>::<name>::<version> style
+            (_, name, idx) = split
+            return cls(con.namespace, con.con_name, name, int(idx))
+        elif len(split) == 5:
+            # Identifier is <id type>::<module>::<scope>::<name>::<version>
+            (_, ns, sc, name, idx) = split
+            return cls(ns, sc, name, int(idx))
+        else:
+            raise ValueError(f"Unrecognized variable identifier: {data}")
 
     @classmethod
     def from_str(cls, var_id: str):
@@ -190,8 +201,7 @@ class GenericContainer(ABC):
     @abstractmethod
     def __str__(self):
         args_str = "\n".join([f"\t{arg}" for arg in self.arguments])
-        outputs_str = "\n".join(
-            [f"\t{var}" for var in self.returns + self.updated])
+        outputs_str = "\n".join([f"\t{var}" for var in self.returns + self.updated])
         return f"Inputs:\n{args_str}\nVariables:\n{outputs_str}"
 
     @staticmethod
@@ -425,10 +435,8 @@ class GenericStmt(ABC):
 
     @abstractmethod
     def __str__(self):
-        inputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.inputs])
-        outputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.outputs])
+        inputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.inputs])
+        outputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.outputs])
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
     @staticmethod

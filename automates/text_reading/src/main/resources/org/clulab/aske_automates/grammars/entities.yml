@@ -45,14 +45,15 @@ rules:
     pattern: |
       (@Concept [word = /.*/]) (?= in equation)
 
-  - name: var_equals
+
+  - name: var_a_comma
     label: Variable
     priority: ${priority}
     type: token
     action: variableArguments
-    example: "T = daily mean air temperature [°C]"
+    example: "while a, aP and b are..."
     pattern: |
-      @variable:Concept (?= "=")
+      [word="a"] (?= ",")
 
 
   - name: var_where-dep
@@ -74,7 +75,13 @@ rules:
     pattern: |
       (?<=product of|values for) @variable:Concept and @variable:Concept
 
-
+  - name: var_model
+    label: Model
+    priority: ${priority}
+    type: token
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+    pattern: |
+      [word=/^DSSAT|^CSM/]
 
   - name: var_greek
     label: Variable
@@ -96,9 +103,11 @@ rules:
     label: Variable
     priority: ${priority}
     type: token
-    example: "R(t)"
+    example: "The density of water (ρw); R(t)"
     pattern: |
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
+      |
+      [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
 
 
 #  - name: var_greek_and_latin

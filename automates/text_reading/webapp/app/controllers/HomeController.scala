@@ -8,31 +8,27 @@ import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
-import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, rehydrateLinkElement}
-import org.clulab.aske.automates.apps.ExtractAndExport.dataLoader
+
+import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign}
+import org.clulab.aske.automates.attachments.MentionLocationAttachment
+import org.clulab.aske.automates.data.CosmosJsonDataLoader
+
+import org.clulab.aske.automates.apps.ExtractAndAlign.hasRequiredArgs
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
-import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
+import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
-import play.libs.F.Tuple
-import ujson.Value
+import upickle.default._
+import scala.collection.mutable.ArrayBuffer
 import ujson.json4s.Json4sJson
-
-import scala.collection.immutable.ListMap
-import scala.collection.mutable
-//import org.clulab.odin._
-import org.clulab.odin.serialization.json._
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.utils.{DisplayUtils, AlignmentJsonUtils}
+import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
 import play.api.mvc._
 import play.api.libs.json._
-
-import org.json4s.JsonAST
 
 
 /**
@@ -51,12 +47,14 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
   lazy val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  // fixme: these should come from config if possible
   private val numAlignments: Int = 5
   private val numAlignmentsSrcToComment: Int = 3
   private val scoreThreshold: Double = 0.0
   private val maxSVOgroundingsPerVarDefault: Int = 5
   private val groundToSVODefault = true
   private val appendToGrFNDefault = true
+  private val defaultSerializerName = "AutomatesJSONSerializer" // other - "JSONSerializer"
   private val debugDefault = false
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
@@ -164,7 +162,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     logger.info("Finished converting to text")
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(pdfFile)))
     val outFile = json("outfile").str
-    mentions.saveJSON(outFile, pretty=true)
+    AutomatesExporter(outFile).export(mentions)
+//    mentions.saveJSON(outFile, pretty=true)
     Ok("")
   }
 
@@ -187,6 +186,47 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(parsed_output)
   }
 
+
+  def cosmos_json_to_mentions: Action[AnyContent] = Action { request =>
+    val data = request.body.asJson.get.toString()
+    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
+    val jsonPath = pathJson("pathToJson").str
+    val jsonFile = new File(jsonPath)
+    val json = ujson.read(jsonFile.readString())
+    val cosmosFileStr = json("path_to_cosmos_json").str
+    logger.info(s"Extracting mentions from $jsonFile")
+
+    // cosmos stores information about each block on each pdf page
+    // for each block, we load the text (content) and the location of the text (page_num and block order/index on the page)
+    val loader = new CosmosJsonDataLoader
+    val textsAndLocations = loader.loadFile(cosmosFileStr)
+    val texts = textsAndLocations.map(_.split("::").head)
+    val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
+
+    // extract mentions form each text block
+    val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
+
+    // store location information from cosmos as an attachment for each mention
+    val menWInd = mentions.zipWithIndex
+    val mentionsWithLocations = new ArrayBuffer[Mention]()
+    for (tuple <- menWInd) {
+      // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
+      val menInTextBlocks = tuple._1
+      val id = tuple._2
+      val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt)
+      val pageNum = location.head
+      val blockIdx = location.last
+//
+      for (m <- menInTextBlocks) {
+
+        val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
+        mentionsWithLocations.append(newMen)
+      }
+    }
+
+    val parsed_output = AutomatesJSONSerializer.serializeMentions(mentionsWithLocations)
+    Ok(write(parsed_output))
+  }
   /**
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:
     *  'mentions' : file path to Odin serialized mentions
@@ -202,27 +242,34 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val jsonFile = new File(jsonPath)
     val json = ujson.read(jsonFile.readString())
 
-    val jsonKeys = json.obj.keys.toList
-    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
+    val jsonObj = json.obj
+    val debug = if (jsonObj.contains("debug")) json("debug").bool else debugDefault
 
 
     //if toggles and arguments are not provided in the input, use class defaults (this is to be able to process the previously used GrFN format input)
-    val groundToSVO = if (jsonKeys.contains("toggles")) {
+    val groundToSVO = if (jsonObj.contains("toggles")) {
       json("toggles").obj("groundToSVO").bool
     } else groundToSVODefault
 
-    val appendToGrFN = if (jsonKeys.contains("toggles")) {
+    val appendToGrFN = if (jsonObj.contains("toggles")) {
       json("toggles").obj("appendToGrFN").bool
     } else appendToGrFNDefault
 
-    val maxSVOgroundingsPerVar = if (jsonKeys.contains("arguments")) {
+    val maxSVOgroundingsPerVar = if (jsonObj.contains("arguments")) {
       json("arguments").obj("maxSVOgroundingsPerVar").num.toInt
     } else maxSVOgroundingsPerVarDefault
 
 
+    val serializerName = if (jsonObj.contains("arguments")) {
+      val args = json("arguments")
+      if (args.obj.contains("serializer_name")) {
+        args.obj("serializer_name").str
+      } else defaultSerializerName
+    } else defaultSerializerName
+
     //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
-    if (jsonKeys.contains("mentions") && (jsonKeys.contains("equations") || jsonKeys.contains("source_code"))) {
-      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO)
+    if (jsonObj.contains("mentions") && (jsonObj.contains("equations") || jsonObj.contains("source_code"))) {
+      val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
 
       // ground!
       val groundings = ExtractAndAlign.groundMentions(
@@ -250,7 +297,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(groundingsAsString))
       Ok(groundingsJson4s)
     } else {
-      logger.warn(s"Nothing to do for keys: $jsonKeys")
+      logger.warn(s"Nothing to do for keys: $jsonObj")
       Ok("")
     }
 
@@ -296,14 +343,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def alignMentionsFromTwoModels: Action[AnyContent] = Action { request =>
 
     val data = request.body.asJson.get.toString()
-    println(data)
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
     val jsonPath = pathJson("pathToJson").str
     val jsonFile = new File(jsonPath)
     val json = ujson.read(jsonFile.readString())
-    val jsonKeys = json.obj.keys.toList
+    val jsonObj = json.obj
 
-    val debug = if (jsonKeys.contains("debug")) json("debug").bool else debugDefault
+    val debug = if (jsonObj.contains("debug")) json("debug").bool else debugDefault
     val modelCompAlignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("modelComparisonAlignment"))
 
     val inputFilePath = json("input_file").str
@@ -655,7 +701,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val rels = doc.sentences.flatMap { sent =>
       var relId = 0
-      val deps = sent.dependencies.get // lets assume that dependencies are always available
+      val deps = sent.universalEnhancedDependencies.get // lets assume that dependencies are always available
       val rels = for {
         governor <- deps.outgoingEdges.indices
         (dependent, label) <- deps.outgoingEdges(governor)

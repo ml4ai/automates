@@ -11,17 +11,16 @@ import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler
 import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement, mkTextVarLinkElement, mkTextVarLinkElementForModelComparison}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
-import org.clulab.aske.automates.entities.GrFNEntityFinder
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.Mention
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding
-import org.clulab.grounding.{SVOGrounder, SVOGrounding, SeqOfGroundings, sparqlResult}
+import org.clulab.grounding.{SVOGrounder, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
-import org.json4s
 import java.util.UUID.randomUUID
+import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
+
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -73,6 +72,7 @@ object ExtractAndAlign {
                       scoreThreshold: Double = 0.0,
                       appendToGrFN: Boolean,
                       debug: Boolean
+
     ): Value = {
 
     // =============================================
@@ -168,11 +168,11 @@ object ExtractAndAlign {
         textVarLinkElement = textVarLinkElements(alignment.src)
         unit = if (hasArg(unitMentions.get(alignment.dst), "unit")) {
           unitMentions.get(alignment.dst).arguments("unit").head.text
-        } else "None"
+        } else null
 
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, unit)
-    } else textVarLinkElements.map(el => updateTextVariable(el, "None"))
+    } else textVarLinkElements.map(el => updateTextVariable(el, null))
 
     updatedTextVars
 
@@ -188,10 +188,10 @@ object ExtractAndAlign {
         textVarLinkElement = textVarLinkElements(alignment.src)
         svoGrounding = if (SVOgroundings.nonEmpty) {
           ujson.Obj("grounding" -> SVOgroundings.get(alignment.dst)._2.map(sr => GrFNParser.sparqlResultTouJson(sr)))
-        } else "None"
+        } else null
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, svoGrounding)
-    } else textVarLinkElements.map(tvle => updateTextVariable(tvle, "None"))
+    } else textVarLinkElements.map(tvle => updateTextVariable(tvle, null))
 
 
 
@@ -212,21 +212,21 @@ object ExtractAndAlign {
         textVarLinkElement = textVarLinkElements(alignment.src)
         value = if (hasArg(paramSettingMentions.get(alignment.dst), "value")) {
           paramSettingMentions.get(alignment.dst).arguments("value").head.text
-        } else "None"
+        } else null
 
         valueLeast = if (hasArg(paramSettingMentions.get(alignment.dst), "valueLeast")) {
           paramSettingMentions.get(alignment.dst).arguments("valueLeast").head.text
-        } else "None"
+        } else null
 
         valueMost = if (hasArg(paramSettingMentions.get(alignment.dst), "valueMost")) {
           paramSettingMentions.get(alignment.dst).arguments("valueMost").head.text
-        } else "None"
+        } else null
 
 
         update = value + "::" + valueLeast + "::" + valueMost
         score = alignment.score
       } yield updateTextVariable(textVarLinkElement, update)
-    } else textVarLinkElements.map(el => updateTextVariable(el, "None::None::None"))
+    } else textVarLinkElements.map(el => updateTextVariable(el, "null::null::null"))
 
     updatedTextVars
   }
@@ -246,11 +246,14 @@ object ExtractAndAlign {
         val originalSentence = splitElStr(4)
         val definition = splitElStr(5)
         val svo_terms = splitElStr(7)
-        val unit = splitElStr(8)
-        val value = splitElStr(9)
-        val valueLeast = splitElStr(10)
-        val valueMost = splitElStr(11)
-        val svoString = splitElStr(12)
+        val unit = splitElStr(9)
+        val value = splitElStr(10)
+        val valueLeast = splitElStr(11)
+        val valueMost = splitElStr(12)
+        val svoString = splitElStr(13)
+        val locationJsonStr = splitElStr(8)
+
+        val locationAsJson = ujson.read(locationJsonStr)
 
         val results = if (groundToSvo) {
           if (svoString != "None") {
@@ -260,13 +263,13 @@ object ExtractAndAlign {
             logger.info("Querying SVO server")
             SVOGrounder.groundTermsToSVOandRank(identifier, svo_terms.split(","), maxSVOgroundingsPerVar)
           }
-        } else ujson.Str("N/A")
+        } else ujson.Null
 
-        val paramSetting = ujson.Obj(
-          "value" -> value,
-          "valueLeast" -> valueLeast,
-          "valueMost" -> valueMost
-        )
+        val paramSetting = ujson.Obj()
+
+        if (value == "null") paramSetting("value") = ujson.Null
+        if (valueLeast == "null") paramSetting("valueLeast") = ujson.Null
+        if (valueMost == "null") paramSetting("valueMost") = ujson.Null
 
         mkTextVarLinkElement(
           uid = id,
@@ -277,7 +280,8 @@ object ExtractAndAlign {
           svo_terms = svo_terms,
           unit = unit,
           paramSetting = paramSetting,
-          svo = results
+          svo = results,
+          spans = locationAsJson
         )
 
       }
@@ -335,7 +339,6 @@ object ExtractAndAlign {
 
         mkLinkElement(
           id = id,
-//          elemType = elType,
           source = source,
           content = content,
           contentType = "null"
@@ -527,7 +530,21 @@ object ExtractAndAlign {
       }
     }
 
+    def getDiscontinuousText(mention: Mention): String = {
+      val subStrings = new ArrayBuffer[String]()
+      val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
+      val charOffset = discontAttachment("charOffsets").arr
+      val docText = mention.document.text.getOrElse("No text")
+      for (offsetSet <- charOffset) {
+        val start = offsetSet.arr.head.num.toInt
+        val end = offsetSet.arr.last.num.toInt
+        subStrings.append(docText.slice(start, end).mkString(""))
+      }
+      subStrings.mkString(" ")
+    }
+
     if (textDefinitionMentions.isDefined) {
+
       // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
@@ -535,10 +552,44 @@ object ExtractAndAlign {
         val originalSentence = mention.sentenceObj.words.mkString(" ")
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
-        val definition = mention.arguments(DEFINITION).head.text
 
+        val definition = if (mention.attachments.nonEmpty && mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "DiscontinuousCharOffset")) {
+          getDiscontinuousText(mention)
+        } else {
+          mention.arguments(DEFINITION).head.text
+        }
 
-        randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",")
+        val charBegin = mention.startOffset
+        val charEnd = mention.endOffset
+
+        val continuousMenSpanJson = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
+
+          val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_("attType").str=="MentionLocation").head//head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+          val page = menAttAsJson("pageNum").num.toInt
+          val block = menAttAsJson("blockIdx").num.toInt
+
+          // todo: this is for mentions that came from one block
+          // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
+          ujson.Obj(
+            "page" -> page,
+            "block" -> block,
+            "span" -> ujson.Obj(
+              "char_begin" -> charBegin,
+              "char_end" -> charEnd
+                      )
+                    )
+        } else {
+          ujson.Obj(
+            "page" -> ujson.Null,
+            "block" -> ujson.Null,
+            "span" -> ujson.Obj(
+              "char_begin" -> charBegin,
+              "char_end" -> charEnd
+            )
+          )
+        }
+          randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
+
       }
     }
 
@@ -749,7 +800,7 @@ object ExtractAndAlign {
     val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     val loadMentions = config[Boolean]("apps.loadMentions")
     val appendToGrFN = config[Boolean]("apps.appendToGrFN")
-
+    val serializerName = config[String]("apps.serializerName")
 
     // =============================================
     //                 DATA LOADING
