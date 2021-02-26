@@ -56,5 +56,8 @@ COPY setup.py /automates/
 COPY automates /automates/automates
 WORKDIR /automates
 RUN pip install -e .
+WORKDIR /automates/automates/text_reading
+RUN sbt test
+WORKDIR /automates
 RUN rm -rf automates setup.py
 # =============================================================================
