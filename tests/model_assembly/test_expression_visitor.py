@@ -96,4 +96,23 @@ def test_boolean_ops():
 
 
 def test_comparative_ops():
-    pass
+    test_cases = {
+        "eq_op": "lambda x, y: x == y",
+        "multi_eq_op": "lambda w, x, y, z: x == y == z == w",
+        "noteq_op": "lambda x, y: x != y",
+        "multi_noteq_op": "lambda x, y, z, w: x != y != z != w",
+        "lt_op": "lambda x, y: x < y",
+        "lte_op": "lambda x, y: x <= y",
+        "gt_op": "lambda x, y: x > y",
+        "gte_op": "lambda x, y: x >= y",
+        "is_op": "lambda x, y: x is y",
+        "isnot_op": "lambda x, y: x is not y",
+        "in_op": "lambda x, y: x in y",
+        "notin_op": "lambda x, y: x not in y",
+    }
+
+    graphs = create_expr_trees(test_cases)
+    compare_graph_lists(
+        graphs,
+        "tests/data/model_assembly/expression_visitor/comparative_ops.json",
+    )

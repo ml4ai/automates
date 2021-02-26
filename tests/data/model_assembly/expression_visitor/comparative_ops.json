@@ -1,0 +1,438 @@
+[
+    {
+        "id": "eq_op",
+        "nodes": [
+            {
+                "uid": "d8ab0b30-0ac0-cf0d-d974-c146e8ec01b3",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "9b8b71a1-b38a-05fb-f611-64cebfc74ca9",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "a4e695c9-b65d-1226-7e96-9cf3a7c5cb87",
+                "type": "OPERATOR",
+                "operator": "Eq",
+                "children": [
+                    "d8ab0b30-0ac0-cf0d-d974-c146e8ec01b3",
+                    "9b8b71a1-b38a-05fb-f611-64cebfc74ca9"
+                ]
+            },
+            {
+                "uid": "6f790959-a3e0-4b3b-756b-0715e7180322",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "a4e695c9-b65d-1226-7e96-9cf3a7c5cb87"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "multi_eq_op",
+        "nodes": [
+            {
+                "uid": "2da44da1-89b5-b368-df14-c6125f58d5b5",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "4a814d53-964d-db77-6025-f0ae35354579",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "4578bab3-26a9-7465-2371-ea2c0247145f",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "5e00ea6d-ca24-be4d-5667-2017555a4085",
+                "type": "VARIABLE",
+                "identifier": "w",
+                "children": []
+            },
+            {
+                "uid": "c787ddfb-5697-f17c-17fd-3736b7ef941c",
+                "type": "OPERATOR",
+                "operator": "Eq / Eq / Eq",
+                "children": [
+                    "2da44da1-89b5-b368-df14-c6125f58d5b5",
+                    "4a814d53-964d-db77-6025-f0ae35354579",
+                    "4578bab3-26a9-7465-2371-ea2c0247145f",
+                    "5e00ea6d-ca24-be4d-5667-2017555a4085"
+                ]
+            },
+            {
+                "uid": "4505f4f6-0a8c-46c7-0921-5f4f9edb95f2",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "c787ddfb-5697-f17c-17fd-3736b7ef941c"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "noteq_op",
+        "nodes": [
+            {
+                "uid": "955d0e77-fb5e-b866-2640-211e29f2c3c7",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "fd42f697-6511-1656-5c64-60364a1eb1b7",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "1d69d9fc-4b1c-b8bd-2130-260c8c69778f",
+                "type": "OPERATOR",
+                "operator": "NotEq",
+                "children": [
+                    "955d0e77-fb5e-b866-2640-211e29f2c3c7",
+                    "fd42f697-6511-1656-5c64-60364a1eb1b7"
+                ]
+            },
+            {
+                "uid": "ef0a81ed-3d5d-60bc-bb03-78eb7a62722e",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "1d69d9fc-4b1c-b8bd-2130-260c8c69778f"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "multi_noteq_op",
+        "nodes": [
+            {
+                "uid": "db66bfda-2df9-6747-4ed1-35530c5a876f",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "4d7bd307-1224-11e6-ba89-82dd85e69ea9",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "4c9a0ae1-5419-eefc-d5e7-3e3f673617d9",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "8f928dc5-1972-4ce3-1bd0-94486a2b3200",
+                "type": "VARIABLE",
+                "identifier": "w",
+                "children": []
+            },
+            {
+                "uid": "564ae909-7958-5e69-7b2e-1b82e89dc815",
+                "type": "OPERATOR",
+                "operator": "NotEq / NotEq / NotEq",
+                "children": [
+                    "db66bfda-2df9-6747-4ed1-35530c5a876f",
+                    "4d7bd307-1224-11e6-ba89-82dd85e69ea9",
+                    "4c9a0ae1-5419-eefc-d5e7-3e3f673617d9",
+                    "8f928dc5-1972-4ce3-1bd0-94486a2b3200"
+                ]
+            },
+            {
+                "uid": "cff4c56b-f9ea-2c64-cc41-7e7cd741d609",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "564ae909-7958-5e69-7b2e-1b82e89dc815"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "lt_op",
+        "nodes": [
+            {
+                "uid": "1db2b452-7aa5-6a18-1fd3-c01757f98d1e",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "09aedbd0-6d31-6b4a-7f6b-8793b318ad4c",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "afe6790a-bc18-a40b-55c7-ed9d4d4985dc",
+                "type": "OPERATOR",
+                "operator": "Lt",
+                "children": [
+                    "1db2b452-7aa5-6a18-1fd3-c01757f98d1e",
+                    "09aedbd0-6d31-6b4a-7f6b-8793b318ad4c"
+                ]
+            },
+            {
+                "uid": "2aa36cf7-eb70-ba65-27d9-9a23e4f7625e",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "afe6790a-bc18-a40b-55c7-ed9d4d4985dc"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "lte_op",
+        "nodes": [
+            {
+                "uid": "ce5dc807-6025-7199-9082-3edaa0722aa0",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "16408169-a38d-8afc-fdd2-ed7af97ccc57",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "32b2c492-15ac-e7a1-ceca-2ee310da8a95",
+                "type": "OPERATOR",
+                "operator": "LtE",
+                "children": [
+                    "ce5dc807-6025-7199-9082-3edaa0722aa0",
+                    "16408169-a38d-8afc-fdd2-ed7af97ccc57"
+                ]
+            },
+            {
+                "uid": "62830869-0fa7-ee05-3897-4df5bff773ce",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "32b2c492-15ac-e7a1-ceca-2ee310da8a95"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "gt_op",
+        "nodes": [
+            {
+                "uid": "8e751eb7-64d0-9913-191b-8adf0202861c",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "eb8f2056-72d3-cc5d-4a31-b24384dd6da6",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "b6e355f6-95bb-440d-c9cd-4af97d161f29",
+                "type": "OPERATOR",
+                "operator": "Gt",
+                "children": [
+                    "8e751eb7-64d0-9913-191b-8adf0202861c",
+                    "eb8f2056-72d3-cc5d-4a31-b24384dd6da6"
+                ]
+            },
+            {
+                "uid": "156af458-6c4c-3935-379d-eda1ade6c5e9",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "b6e355f6-95bb-440d-c9cd-4af97d161f29"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "gte_op",
+        "nodes": [
+            {
+                "uid": "ffc573d5-fd0b-a70e-385a-f4635e4af862",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "2aa50f4e-c6f0-0933-95d1-805142cb6d1d",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "1d7173e5-5bc7-fdeb-3123-4efe6e648043",
+                "type": "OPERATOR",
+                "operator": "GtE",
+                "children": [
+                    "ffc573d5-fd0b-a70e-385a-f4635e4af862",
+                    "2aa50f4e-c6f0-0933-95d1-805142cb6d1d"
+                ]
+            },
+            {
+                "uid": "da54f267-dd13-8266-d26d-53961058fe8c",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "1d7173e5-5bc7-fdeb-3123-4efe6e648043"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "is_op",
+        "nodes": [
+            {
+                "uid": "869bdbd2-e72b-b5b7-0712-0911b3b68b57",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "33a1d1c2-ad4a-b155-c09f-cd8f739cd488",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "41a8a6e1-65e0-4993-7f41-1fed1e70e799",
+                "type": "OPERATOR",
+                "operator": "Is",
+                "children": [
+                    "869bdbd2-e72b-b5b7-0712-0911b3b68b57",
+                    "33a1d1c2-ad4a-b155-c09f-cd8f739cd488"
+                ]
+            },
+            {
+                "uid": "ff3e0ba1-0ac7-28b4-a418-65bf350d278d",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "41a8a6e1-65e0-4993-7f41-1fed1e70e799"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "isnot_op",
+        "nodes": [
+            {
+                "uid": "9f982188-3744-da64-cc24-9558f2ad985f",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "755a3ac1-32ae-2a20-1ac9-02ee25777cf0",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "d3b564b0-8be0-4c3e-5c94-938160c6b3ed",
+                "type": "OPERATOR",
+                "operator": "IsNot",
+                "children": [
+                    "9f982188-3744-da64-cc24-9558f2ad985f",
+                    "755a3ac1-32ae-2a20-1ac9-02ee25777cf0"
+                ]
+            },
+            {
+                "uid": "98a33736-fd1a-c7ce-1ad0-a6f226bdd974",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "d3b564b0-8be0-4c3e-5c94-938160c6b3ed"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "in_op",
+        "nodes": [
+            {
+                "uid": "905c053b-25fd-acbe-7ce7-1b48fba52e59",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "6c596216-ae0f-dbc8-a36b-cb0167e98363",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "ade7cef3-7ed2-ec2f-856f-3d95e0ae1a1b",
+                "type": "OPERATOR",
+                "operator": "In",
+                "children": [
+                    "905c053b-25fd-acbe-7ce7-1b48fba52e59",
+                    "6c596216-ae0f-dbc8-a36b-cb0167e98363"
+                ]
+            },
+            {
+                "uid": "d5627386-528c-c241-e345-ac72eac39204",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "ade7cef3-7ed2-ec2f-856f-3d95e0ae1a1b"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "notin_op",
+        "nodes": [
+            {
+                "uid": "a2939b3b-7fa7-4d8a-ff88-ec827f99d273",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "8af58903-33b5-b3ce-dfec-4623ab899605",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "027c013f-3801-8399-ee6a-8e2f9c19ed34",
+                "type": "OPERATOR",
+                "operator": "NotIn",
+                "children": [
+                    "a2939b3b-7fa7-4d8a-ff88-ec827f99d273",
+                    "8af58903-33b5-b3ce-dfec-4623ab899605"
+                ]
+            },
+            {
+                "uid": "bf3df0bb-f66a-c168-b4a1-ca795718ada2",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "027c013f-3801-8399-ee6a-8e2f9c19ed34"
+                ]
+            }
+        ]
+    }
+]

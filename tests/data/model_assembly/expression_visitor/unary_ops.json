@@ -1,1 +1,83 @@
-[{"id": "negate_bool_x", "nodes": [{"uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "5487ce1e-af19-922a-d9b8-a714e61a441c", "type": "OPERATOR", "operator": "Not", "children": ["12e0c8b2-bad6-40fb-1948-8dec4f65d4d9"]}, {"uid": "5a921187-19c7-8df4-8f4f-f31e78de5857", "type": "OPERATOR", "operator": "RETURN", "children": ["5487ce1e-af19-922a-d9b8-a714e61a441c"]}]}, {"id": "invert_x", "nodes": [{"uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "8d723104-f773-83c1-3458-a748e9bb17bc", "type": "OPERATOR", "operator": "Invert", "children": ["a3f2c9bf-9c63-16b9-50f2-44556f25e2a2"]}, {"uid": "85776e9a-dd84-f39e-7154-5a137a1d5006", "type": "OPERATOR", "operator": "RETURN", "children": ["8d723104-f773-83c1-3458-a748e9bb17bc"]}]}, {"id": "negate_x", "nodes": [{"uid": "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6", "type": "OPERATOR", "operator": "USub", "children": ["eb2083e6-ce16-4dba-0ff1-8e0242af9fc3"]}, {"uid": "b5d32b16-6619-4cb1-d710-37d1b83e90ec", "type": "OPERATOR", "operator": "RETURN", "children": ["17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"]}]}]
+[
+    {
+        "id": "negate_bool_x",
+        "nodes": [
+            {
+                "uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "5487ce1e-af19-922a-d9b8-a714e61a441c",
+                "type": "OPERATOR",
+                "operator": "Not",
+                "children": [
+                    "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9"
+                ]
+            },
+            {
+                "uid": "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "5487ce1e-af19-922a-d9b8-a714e61a441c"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "invert_x",
+        "nodes": [
+            {
+                "uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "8d723104-f773-83c1-3458-a748e9bb17bc",
+                "type": "OPERATOR",
+                "operator": "Invert",
+                "children": [
+                    "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2"
+                ]
+            },
+            {
+                "uid": "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "8d723104-f773-83c1-3458-a748e9bb17bc"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "negate_x",
+        "nodes": [
+            {
+                "uid": "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6",
+                "type": "OPERATOR",
+                "operator": "USub",
+                "children": [
+                    "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3"
+                ]
+            },
+            {
+                "uid": "b5d32b16-6619-4cb1-d710-37d1b83e90ec",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"
+                ]
+            }
+        ]
+    }
+]
