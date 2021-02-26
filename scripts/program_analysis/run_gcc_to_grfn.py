@@ -45,6 +45,7 @@ if __name__ == "__main__":
         [
             f"{GCC_10_BIN_DIRECTORY}/g++-10.1",
             f"-fplugin={GCC_PLUGIN_IMAGE}",
+            "-o0",
             "-c",
             "-x",
             "c++",
@@ -68,7 +69,7 @@ if __name__ == "__main__":
     grfn = cast.to_GrFN()
 
     program_name = c_file.rsplit(".")[0].rsplit("/")[-1]
-    json.dump(grfn.to_json(), open(f"{program_name}--CAST.json", "w+"))
-    json.dump(grfn.to_json(), open(f"{program_name}--GrFN.json", "w+"))
+    json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
+    grfn.to_json_file(f"{program_name}--GrFN.json")
     A = grfn.to_AGraph()
     A.draw(program_name + "--GrFN.pdf", prog="dot")
