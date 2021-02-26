@@ -4,9 +4,9 @@
   <!-- <a href="https://github.com/ml4ai/automates">
    <img src="https://img.shields.io/github/license/ml4ai/automates" />
   </a> -->
-  <a href="https://hub.docker.com/r/ml4ailab/automates">
-     <img src="https://img.shields.io/docker/cloud/build/ml4ailab/automates" alt="Docker cloud build status">
-  </a>
+  <!-- <a href="https://hub.docker.com/r/ml4ailab/automates">
+     <img src="https://img.shields.io/docker/cloud/build/ml4ailab/automates" alt="Docker cloud build status"> 
+  </a> -->
   <a href="https://github.com/ml4ai/automates/actions">
     <img src="https://img.shields.io/github/workflow/status/ml4ai/automates/Continuous%20Integration?label=tests" alt="GH Actions build status">
   </a>
