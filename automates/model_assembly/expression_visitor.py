@@ -237,7 +237,12 @@ class ExpressionVisitor(ast.NodeVisitor):
 
     def visit_Subscript(self, node: ast.Subscript) -> NoReturn:
         new_uid = ExprAbstractNode.create_node_id()
-        node_name = f"{node.value.id}.{node.slice.value.value}"
+        if isinstance(node.slice.value, ast.Constant):
+            node_name = f"{node.value.id}.{node.slice.value.value}"
+        elif isinstance(node.slice.value, ast.Name):
+            node_name = f"{node.value.id}.{node.slice.value.id}"
+        else:
+            raise TypeError(f"Unexpected AST type: {type(node.slice.value)}")
         self.nodes.append(ExprVariableNode(new_uid, node_name, []))
         self.uid_stack.put(new_uid)
 
@@ -320,6 +325,22 @@ class ExpressionVisitor(ast.NodeVisitor):
                 ),
             )
         )
+        self.uid_stack.put(new_uid)
+
+    def visit_Call(self, node: ast.Call) -> NoReturn:
+        self.generic_visit(node)
+        new_uid = ExprAbstractNode.create_node_id()
+        num_args = len(node.args) + len(node.keywords)
+        self.nodes.append(
+            ExprOperatorNode(
+                new_uid,
+                f"{node.func.id}()",
+                list(
+                    reversed([self.uid_stack.get() for _ in range(num_args)])
+                ),
+            )
+        )
+        self.uid_stack.get()  # Pop the func node off of the stack
         self.uid_stack.put(new_uid)
 
 

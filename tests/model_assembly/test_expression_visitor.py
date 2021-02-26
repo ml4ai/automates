@@ -1,9 +1,15 @@
 import pytest
+import pickle
 import json
 import ast
 from typing import NoReturn
 
-from automates.model_assembly.expression_visitor import ExpressionVisitor
+import networkx as nx
+
+from automates.model_assembly.expression_visitor import (
+    ExpressionVisitor,
+    nodes2DiGraph,
+)
 
 
 def create_expr_trees(test_cases) -> list:
@@ -25,10 +31,13 @@ def compare_graph_lists(tests, expected_file) -> NoReturn:
 def test_single_value_returns():
     test_cases = {
         "int_constant_return": "lambda : 0",
-        "str_constant_return": 'lambda : "foo"',
+        "str_constant_return": "lambda : 'foo'",
         "float_constant_return": "lambda : 3.14",
         "variable_return": "lambda x: x",
         "wrapped_variable_return": "lambda x: (x)",
+        "list": "lambda : [1,2,3]",
+        "tuple": "lambda : (1,2,3)",
+        "dict": "lambda x, y: {'a': 1, 'b': 'b', '3': x}",
     }
 
     graphs = create_expr_trees(test_cases)
@@ -116,3 +125,42 @@ def test_comparative_ops():
         graphs,
         "tests/data/model_assembly/expression_visitor/comparative_ops.json",
     )
+
+
+def test_complex_expr():
+    test_cases = {
+        "ifexp": "lambda c, x, y: x if c else y",
+        "compound_ifexp": "lambda c1,c2,x,y,z: x if c1 else y if c2 else z",
+        "multi_cond_ifexp": "lambda c1, c2, x, y: x if c1 or c2 else y",
+        "indexed_expr": "lambda x: x[0]",
+        "str_indexed_expr": "lambda x: x['test']",
+        "var_indexed_expr": "lambda x, y: x[y]",
+        "exprs_in_list": "lambda x, y, z: [x + y, x * 3 + 1, x[2]]",
+        "exprs_in_tuple": "lambda x, y, z: (x + y, x * 3 + 1, x[2])",
+        "call_expr": "lambda x, y, z: max(x, y) + min(x, y, z)",
+    }
+
+    graphs = create_expr_trees(test_cases)
+    compare_graph_lists(
+        graphs,
+        "tests/data/model_assembly/expression_visitor/complex_ops.json",
+    )
+
+
+def test_nodes2DiGraph():
+    lambda_str = "lambda x: 4 * x**3 + 2 * x + 1"
+    visitor = ExpressionVisitor()
+    visitor.visit(ast.parse(lambda_str))
+    nodes = visitor.get_nodes()
+    G = nodes2DiGraph(nodes)
+
+    expected_G = pickle.load(
+        open(
+            "tests/data/model_assembly/expression_visitor/sample_network.pkl",
+            "rb",
+        )
+    )
+
+    assert isinstance(G, nx.DiGraph)
+    assert len(G.nodes) == 12
+    assert G.nodes == expected_G.nodes
