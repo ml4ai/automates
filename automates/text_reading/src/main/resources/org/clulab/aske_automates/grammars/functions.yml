@@ -65,5 +65,8 @@ rules:
       input1:Concept = nmod_to 
       input2:Concept = <amod? conj_and
       output:Concept = <amod? nsubj
+      #fixme: inputs and outputs need to be expanded.
+
+  
 
 

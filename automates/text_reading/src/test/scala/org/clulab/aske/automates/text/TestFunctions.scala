@@ -30,7 +30,10 @@ class TestFunctions extends ExtractionTest {
   // Tests from CHIME-online-manual
   // todo: "which is the transmissibility τ multiplied by the average number of people exposed c."
   // todo: "γ is the inverse of the mean recovery time, in days."
-  // 
+  
+  // Tests from 2003-A-double-epidemic-model for the SARS_propagation
+  // todo: "The rate of removal of the people in class E to the infective class I is proportional to the number of people in class E, that is bE(t), where b is a positive number."
+  // todo: "The incubation period (the time from first infection to the appearances of symptoms) plus the onset to admission interval is equal to the sum of the latent period and the infectious period and is therefore equal to 1/b + 1/a."
 
 
 }
