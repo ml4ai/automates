@@ -47,7 +47,7 @@ object TestUtils {
 
   class Test extends FlatSpec with Matchers {
     val passingTest = it
-    val failingTest = ignore
+    val failingTest = it
     val brokenSyntaxTest = ignore
     val toDiscuss = ignore
 

@@ -153,7 +153,7 @@ rules:
 #    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
-      variable:Concept = nsubjpass  # note: advcl nsub was replaced by the token rule below. 
+      variable:Concept = nsubjpass # | advcl nsubj
       definition:Concept = nmod_as [!entity = "NUMBER"] # todo: needs to expand the definition to include "at LAI = 6.0"
 
   - name: var_is_defined_token
@@ -163,7 +163,7 @@ rules:
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance;"
     # action: ${action}
     pattern: |
-      @variable:Variable [word = "("] ([word = /.*/])* [word = ")"] [lemma = "be"] [word = "defined"] [word = "as"] ([word=/a|an|the/])? @definition:Concept
+      @variable:Variable ([word = "("] ([word = /.*/])* [word = ")"])? [lemma = "be"] [word = "defined"] [word = "as"] ([word=/a|an|the/])? (?<definition> [word = /.*/ & tag = /^NN|^JJ/]* ([tag = IN] [tag = /^NN/] [word = "="] [entity =  NUMBER])?)
 
   - name: var_cop_definition_greek
     label: Definition
@@ -173,7 +173,7 @@ rules:
     action: looksLikeAVariableWithGreek
     pattern: |
       trigger = [lemma="be"]
-      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      variable:Concept = (<cop /${agents}/ | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
 
   - name: var_cop_definition
@@ -184,7 +184,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      variable:Variable = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      variable:Variable = (<cop /${agents}/ | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "nmod_at?". need to see if it's feasible.
 
   - name: def_cop_var
@@ -232,7 +232,7 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "The Toomre factor varies with radius and is given by Q(r)."
+    example: "The Toomre factor varies with radius and is given by Q(r)." # todo: this example sentence doesn't include any comma. needs to replace this with another example.
     action: ${action}
     pattern: |
       trigger = [lemma=/,/]
@@ -291,7 +291,7 @@ rules:
     example: "where r is the infection rate and a the removal rate of infectives. where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux."
     action: ${action}
     pattern: |
-      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Variable [word=/a|an|the/] (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter"]{1,5})
+      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Variable [word = /a|an|the/] (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter" & !entity = Variable]{1,5})
 
 
   - name: var_comma_def_comma
