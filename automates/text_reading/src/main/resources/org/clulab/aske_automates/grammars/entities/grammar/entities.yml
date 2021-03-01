@@ -13,6 +13,21 @@ rules:
       #todo: can we add parens in avoid without making it invisible in rules?
 
 
+  - name: participle_or_adj
+    label: Concept
+    priority: 1
+    type: token
+    pattern: |
+      [tag=/VBN|JJ/]
+
+
+  - name: single_capital_VP
+    label: Concept
+    priority: 1
+    type: token
+    pattern: |
+      [chunk='B-VP' & word = /[A-Z]/]
+
 #  - name: simple-vp
 #    label: Concept
 #    priority: 1

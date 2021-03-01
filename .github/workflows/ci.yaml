@@ -4,46 +4,25 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ '*' ]
+    branches: ["*"]
   pull_request:
-    branches: [ '*' ]
+    branches: ["*"]
 
 jobs:
-  ci:
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'ml4ai/automates'
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
-
-
+  continuous_integration:
+    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Run unit tests
-      env:
-        DEBIAN_FRONTEND: noninteractive
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends apt-utils\
-            git curl gcc build-essential \
-            pkg-config openjdk-8-jdk antlr4 \
-            python3 python3-dev python3-pip python3-venv \
-            graphviz libgraphviz-dev doxygen
-        python3 -m venv automates_venv
-        source automates_venv/bin/activate
-        pip install --upgrade setuptools
-        pip install wheel
-        pip install -e .
-        make test
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        files: ./coverage.xml
-        flags: unittests
-        env_vars: Python,Scala
-        name: codecov-umbrella
-        # TODO: add CI failure back in once demo season ends
-        # fail_ci_if_error: true
-        verbose: true
+      - uses: actions/checkout@v2
+      - name: Run unit tests
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -y --no-install-recommends install wget
+          wget http://vanga.sista.arizona.edu/automates_data/vectors.txt -O $GITHUB_WORKSPACE/automates/text_reading/src/test/resources/vectors.txt
+          CI_ENV=`bash <(curl -s https://codecov.io/env)`
+          IMAGE=ml4ailab/automates:latest
+          docker pull $IMAGE
+          docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name test-con $IMAGE
+          docker exec test-con make test
+          docker exec -w /automates/automates/text_reading test-con sbt test
+          docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN test-con bash -c 'bash <(curl -s https://codecov.io/bash)'
