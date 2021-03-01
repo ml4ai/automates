@@ -2,22 +2,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import NoReturn, List
 from queue import LifoQueue
-import random
-import uuid
 import ast
 
 import networkx as nx
 
-
-# -------------------------------------------
-# Remove this block to generate different
-# UUIDs everytime you run this code.
-# This block should be right below the uuid
-# import.
-rd = random.Random()
-rd.seed(0)
-uuid.uuid4 = lambda: uuid.UUID(int=rd.getrandbits(128))
-# -------------------------------------------
+from ..utils.misc import uuid
 
 
 @dataclass(repr=False, frozen=False)

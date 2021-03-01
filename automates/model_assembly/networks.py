@@ -36,17 +36,8 @@ from .structures import (
     DataType,
     GrFNExecutionException,
 )
-from ..utils.misc import choose_font
+from ..utils.misc import choose_font, uuid
 
-# -------------------------------------------
-# Remove this block to generate different
-# UUIDs everytime you run this code.
-# This block should be right below the uuid
-# import.
-rd = random.Random()
-rd.seed(0)
-uuid.uuid4 = lambda: uuid.UUID(int=rd.getrandbits(128))
-# -------------------------------------------
 
 FONT = choose_font()
 
