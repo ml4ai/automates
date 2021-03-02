@@ -38,23 +38,24 @@ class PyASTToCAST(ast.NodeVisitor):
         #print("Module")
 
         # Visit all the nodes and make a Module object out of them
-        return Module([self.visit(piece) for piece in node.body])
+        return Module(body=[self.visit(piece) for piece in node.body])
 
     def visit_ClassDef(self, node:ast.ClassDef):
 
         pass
 
     def visit_If(self, node: ast.If):
+        print(node.test)
         node_test = self.visit(node.test)
         
         if(node.body != []):
-            node_body = self.visit(node.body)
+            node_body = [self.visit(piece) for piece in node.body]
         else:
             node_body = []
 
-        # might have to change to account for else/elif
         if(node.orelse != []):
-            node_orelse = self.visit(node.orelse)
+            node_orelse = [self.visit(piece) for piece in node.orelse]
+
         else:  
             node_orelse = []
         
@@ -66,43 +67,57 @@ class PyASTToCAST(ast.NodeVisitor):
         pass
 
     def visit_FunctionDef(self, node: Union[ast.FunctionDef,ast.Lambda]):
-        #print("Function Def")
-        #print(type(node))
-        #print(node.name)
-        #print(node.args.args)
-        #print(node.body)
-        #print(node.decorator_list)
-        #print(node.returns)
-        #print(node.type_comment)
+        print("Function Def")
+        if(type(node) == ast.FunctionDef):
+            print(type(node))
 
-        # Might have to change this Name() to a visit 
-        func_def = FunctionDef(Name(node.name))
-        #if(node.args.args != []):
-         #   func_def.args([self.visit(arg) for arg in node.args.args])
+            # Might have to change this Name() to a visit 
+            func_def = FunctionDef(Name(node.name))
+            body = []
+            # TODO: Function Args func_def.func_args(self.visit(node.args))
+            if(node.body != []):
+                body = [self.visit(piece) for piece in node.body]
 
-        #if(node.body != []):
-         #   func_def.body([self.generic_visit(piece) for piece in node.body])
-        # TODO: Fix this set call above, something doesn't seem to be working or im doing it wrong 
+            #TODO: Decorators? Returns? Type_comment?
+            return FunctionDef(Name(node.name),[],body)
 
-        #print(node.body[0])
+        if(type(node) == ast.Lambda):
+            print("Lambda Function")
+            func_def = FunctionDef(None)
+            # TODO: Function Args func_def.func_args(self.visit(node.args))
+            func_def.body(self.visit(node.body))
 
-        return func_def
+            return func_def
 
-        pass
+    def visit_BinOp(self, node: ast.BinOp):
+        print("BINOP")
+        ops = {ast.Add : BinaryOperator.ADD}
+        left = node.left
+        print(left)
+        print("OP",ops[type(node.op)])
+        op = ops[type(node.op)]
+        right = node.right
+        print(right)
+
+        return BinaryOp(op,self.visit(left),self.visit(right))
 
     def visit_Expr(self, node:ast.Expr):
-        print(type(node))
-        return self.visit(node)
-        pass
+        print(node.value)
+        return self.visit(node.value)
 
 
     def visit_Assign(self, node: ast.Assign):
         print("Assign") 
-        # TODO: Handle single assignment, multiple assignments to same value, and 'unpacking' tuple/list
-        pass
+        # TODO: multiple assignments to same value, and 'unpacking' tuple/list
+        left = self.visit(node.targets[0])
+        right = self.visit(node.value)
+
+        return Assignment(left,right)
 
     def visit_Call(self, node:ast.Call):
-        pass
+        print("id",node.func.id)
+        # TODO args
+        return Call(Name(node.func.id),[])
 
     def visit_Attribute(self, node:ast.Attribute):
         pass
@@ -117,7 +132,6 @@ class PyASTToCAST(ast.NodeVisitor):
             node (ast.Return): A PyAST Return node
         """
 
-
         return ModelReturn(self.visit(node.value))
 
     def visit_UnaryOp(self, node: ast.UnaryOp):
@@ -126,12 +140,17 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return UnaryOp(self.visit(op), self.visit(operand))
 
-    def visit_BinaryOp(self, node: ast.BinOp):
+    def visit_Compare(self, node: ast.Compare):
         left = node.left
-        op = node.op
-        right = node.right
+        ops = {ast.Eq : BinaryOperator.EQ}
+        
 
-        return BinaryOp(self.visit(op),self.visit(left),self.visit(right))
+        # TODO: Change these to handle more than one comparison operation and
+        # Operand (i.e. handle 1 < x < 10)
+        op = ops[type(node.ops[0])]
+        right = node.comparators[0]
+
+        return BinaryOp(op,self.visit(left),self.visit(right))
 
     def visit_Subscript(self, node:ast.Subscript):
         """Visits a PyAST Subscript node, and returns a CAST Subscript node
@@ -181,7 +200,7 @@ class PyASTToCAST(ast.NodeVisitor):
             node (ast.Name): [description]
         """
 
-        pass
+        return Name(name=node.id)
         
     def visit_List(self, node:ast.List):
         pass
@@ -198,9 +217,8 @@ class PyASTToCAST(ast.NodeVisitor):
     def visit_String(self, node:ast.Str):
         pass
 
-    def visit_Num(self, node:ast.Num):
+    def visit_Constant(self, node:ast.Constant):
+        if(type(node.value) == int):
+            return Number(node.value)
         pass
 
-def main():
-    c = PyASTToCAST()
-    print(c.visit(ast.parse("def tito():\n    x = 1")))
