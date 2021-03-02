@@ -1,6 +1,6 @@
 package org.clulab.aske.automates.serializer
 
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment, ParamSettingIntAttachment}
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.odin
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
@@ -154,6 +154,7 @@ object AutomatesJSONSerializer {
       case "MentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
       case "DiscontinuousCharOffset" => new DiscontinuousCharOffsetAttachment(json("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt)), json("discontinuousArgument").str, attType)
       case "ParamSettingIntervalAtt" => new ParamSettingIntAttachment(Some(json("inclusiveLower").bool), Some(json("inclusiveUpper").bool), json("attachedTo").str, attType)
+      case "UnitAtt" => new UnitAttachment(json("attachedTo").str, attType)
       case _ => ???
     }
     toReturn
@@ -260,6 +261,7 @@ object AutomatesJSONSerializer {
       case a: MentionLocationAttachment => a.toUJson
       case a: DiscontinuousCharOffsetAttachment => a.toUJson
       case a: ParamSettingIntAttachment => a.toUJson
+      case a: UnitAttachment => a.toUJson
       case _ => ???
     }
   }

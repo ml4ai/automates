@@ -97,9 +97,9 @@ object ExtractAndAlign {
 
     val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames)
 
-    linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION), alignments(TEXT_TO_UNIT))
+//    linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION), alignments(TEXT_TO_UNIT))
 
-    linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
+//    linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
 
     linkElements(TEXT_VAR) =  if (groundToSVO) {
       // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
@@ -236,6 +236,8 @@ object ExtractAndAlign {
     //todo: add more informative source by type, e.g., for text var it's "text" (check with ph about this)
 
     val splitElStr = element.split("::")
+    for (el <- splitElStr) println("el: " + el)
+    println("----")
     val elType = splitElStr(1)
 
     elType match {
@@ -246,12 +248,15 @@ object ExtractAndAlign {
         val originalSentence = splitElStr(4)
         val definition = splitElStr(5)
         val svo_terms = splitElStr(7)
-        val unit = splitElStr(9)
-        val value = splitElStr(10)
-        val valueLeast = splitElStr(11)
-        val valueMost = splitElStr(12)
-        val svoString = splitElStr(13)
+//        val unit = splitElStr(9)
+//        val value = splitElStr(10)
+//        val valueLeast = splitElStr(11)
+//        val valueMost = splitElStr(12)
+        val svoString = splitElStr(9)
         val locationJsonStr = splitElStr(8)
+        println("svo: " + svoString)
+        println("loc: " + locationJsonStr)
+
 
         val locationAsJson = ujson.read(locationJsonStr)
 
@@ -265,11 +270,11 @@ object ExtractAndAlign {
           }
         } else ujson.Null
 
-        val paramSetting = ujson.Obj()
-
-        if (value == "null") paramSetting("value") = ujson.Null
-        if (valueLeast == "null") paramSetting("valueLeast") = ujson.Null
-        if (valueMost == "null") paramSetting("valueMost") = ujson.Null
+//        val paramSetting = ujson.Obj()
+//
+//        if (value == "null") paramSetting("value") = ujson.Null
+//        if (valueLeast == "null") paramSetting("valueLeast") = ujson.Null
+//        if (valueMost == "null") paramSetting("valueMost") = ujson.Null
 
         mkTextVarLinkElement(
           uid = id,
@@ -278,8 +283,8 @@ object ExtractAndAlign {
           identifier = identifier,
           definition = definition,
           svo_terms = svo_terms,
-          unit = unit,
-          paramSetting = paramSetting,
+//          unit = unit,
+//          paramSetting = paramSetting,
           svo = results,
           spans = locationAsJson
         )

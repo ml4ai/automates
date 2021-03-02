@@ -29,6 +29,7 @@ rules:
   - import: "org/clulab/aske_automates/grammars/unitRels.yml"
     vars:
       priority: 6
+      action: unitActionFlow
 
   - import: "org/clulab/aske_automates/grammars/model.yml"
     vars:

@@ -115,7 +115,8 @@ object GrFNParser {
   }
 
 
-  def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value, spans: ujson.Value): ujson.Obj = {
+//  def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value, spans: ujson.Value): ujson.Obj = {
+def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, definition: String, svo_terms: String, svo: ujson.Value, spans: ujson.Value): ujson.Obj = {
     val linkElement = ujson.Obj(
       "uid" -> uid,
       "source" -> source,
@@ -123,12 +124,12 @@ object GrFNParser {
       "identifier" -> identifier,
       "definition" -> definition,
       "svo_terms" -> svo_terms,
-      "paramSetting" -> paramSetting,
+//      "paramSetting" -> paramSetting,
       "svo_groundings" -> svo,
       "spans" -> ujson.Arr(spans)
 //      "svo_query_terms" -> svoQueryTerms
     )
-    if (unit == "null") linkElement("unit") = ujson.Null else linkElement("unit") = unit
+//    if (unit == "null") linkElement("unit") = ujson.Null else linkElement("unit") = unit
     linkElement
   }
 

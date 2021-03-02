@@ -79,3 +79,17 @@ class ParamSettingIntAttachment(inclusiveLower: Option[Boolean], inclusiveUpper:
   }
 
 }
+
+class UnitAttachment(attachedTo: String, attType: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = {
+    val toReturn = ujson.Obj()
+
+    toReturn("attachedTo") = attachedTo
+    toReturn("attType") = attType //"UnitAtt"
+    toReturn
+  }
+
+}

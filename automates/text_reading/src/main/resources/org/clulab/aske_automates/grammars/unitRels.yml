@@ -9,7 +9,7 @@ rules:
     priority: ${priority}
     type: token
     example: "T = daily mean air temperature [°C]"
-    action: looksLikeAUnit
+    action: ${action}
     pattern: |
       @variable:Variable [word=/.*/ & !word = /,|\]|\./]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
 #
@@ -19,7 +19,7 @@ rules:
     type: token
     example: "In one type, water uptake is a function of the difference in water potentials ( , J kg−1) and
     the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
-    action: looksLikeAUnit
+    action: ${action}
     pattern: |
       @variable:Concept [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
 
@@ -29,7 +29,7 @@ rules:
     type: dependency
     example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
     Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
-    action: looksLikeAUnit
+    action: ${action}
     pattern: |
       trigger = [lemma = /express|give/]
       variable: Concept = <acl | nsubjpass
@@ -42,7 +42,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: "The density of water (ρw) is taken as 1.0 Mg m-3."
-    action: looksLikeAUnit
+    action: ${action}
     pattern: |
       trigger = [lemma = /take/]
       variable: Variable = nsubjpass nmod_of? appos
@@ -55,7 +55,7 @@ rules:
     type: dependency
     example: "...a hypothetical crop with an assumed height of 0.12 m, with a surface resistance of 70 s m-1 and an albedo of 0.23.
     The following values are often used: apsy = 0.000662 for ventilated (Asmann type) psychrometers having air movement between 2 and 10 m s-1 for Twet ≥ 0..."
-    action: looksLikeAUnit
+    action: ${action}
     pattern: |
       trigger = [tag = "CD"]
       variable: Concept = <nummod </nmod_of|nmod_between/
@@ -66,7 +66,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: "For example for a soil with pwp = 0.1 m3 m-3..."
-    action: looksLikeAUnit
+    action: ${action}
     pattern: |
       trigger = [word = "="]
       variable: Variable = <amod
@@ -76,6 +76,7 @@ rules:
     label: UnitRelation
     priority: ${priority}
     type: token
+    action: ${action}
     example: "We expect the time T of 5-10 days"
     pattern: |
       @variable:Variable [word="of"] [entity="NUMBER"] @unit: Unit

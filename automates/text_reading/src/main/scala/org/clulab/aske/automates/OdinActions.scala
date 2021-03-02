@@ -8,7 +8,7 @@ import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment}
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.aske.automates.entities.EntityHelper
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
@@ -112,6 +112,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
       newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
+    }
+    newMentions
+  }
+
+  def processUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+
+      val att = new UnitAttachment(attachedTo, "UnitAtt")
+      newMentions.append(m.withAttachment(att))
     }
     newMentions
   }
@@ -551,7 +563,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn
   }
 
-
+  def unitActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = processUnits(looksLikeAUnit(mentions, state), state)
+    toReturn
+  }
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
