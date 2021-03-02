@@ -1,5 +1,7 @@
+import ast
 import json
 import typing
+import networkx as nx
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -99,6 +101,22 @@ class CAST(object):
                 for self_node, other_node in zip(self.nodes, other.nodes)
             ]
         )
+
+    def to_AGraph(self):
+        G = nx.DiGraph()
+        for node in self.nodes:
+            print("node",node)
+            print("type",type(node))
+            for ast_node in ast.walk(node.body):
+                for child_node in ast_node.children:
+                    G.add_edge(ast_node,child_node)
+        A = nx.nx_agraph.to_agraph(G)
+        A.graph_attr.update(
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+        )
+        A.node_attr.update({"fontname": "Menlo"})
+        return A
+
 
     def to_GrFN(self):
         c2a_visitor = CASTToAIRVisitor(self.nodes)
