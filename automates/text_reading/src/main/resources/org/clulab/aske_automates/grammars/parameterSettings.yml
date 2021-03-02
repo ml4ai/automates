@@ -48,43 +48,47 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "The value of Kcbmax was varied between 0.9 and 1.4"
     pattern: |
       trigger = [lemma='vary']
       variable:Variable = nsubjpass nmod_of
-      valueLeast:Value = nmod_between
-      valueMost:Value = nmod_between conj_and
+      valueLeastIncl:Value = nmod_between
+      valueMostIncl:Value = nmod_between conj_and
 
   - name: var_ranges
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
     pattern: |
       trigger = [lemma='range']
       variable:Variable = nsubj
-      valueLeast:Value = nmod_from
-      valueMost:Value = nmod_from nmod
+      valueLeastIncl:Value = nmod_from
+      valueMostIncl:Value = nmod_from nmod
 
 #
   - name: var-vary_between_symbols_interval
     label: IntervalParameterSetting
     priority: ${priority}
     type: token
+    action: processParamSettingInt
     example: "Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield for 0.9 < Kcbmax < 1.15"
     pattern: |
-      @valueLeast:Value [word = "<"] (?<trigger> @Variable) [word = "<"] @valueMost:Value
+      @valueLeastExcl:Value [word = "<"] (?<trigger> @Variable) [word = "<"] @valueMostExcl:Value
 #
 
   - name: var-more_than_symbol
-    label: ParameterSetting
+    label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='>']
       variable:Concept = <advmod <nummod
-      value:Value = <advmod [tag = "CD"]
+      valueLeastExcl:Value = <advmod [tag = "CD"]
 
 
   - name: var-less_than_symbol
@@ -125,9 +129,10 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: token
+    action: processParamSettingInt
     example: "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
     pattern: |
-      (?<trigger> [lemma="value"]) of @variable:Variable from @valueLeast:Value to @valueMost:Value
+      (?<trigger> [lemma="value"]) of @variable:Variable from @valueLeastIncl:Value to @valueMostIncl:Value
 
 
   - name: var-noun_of1
@@ -165,6 +170,7 @@ rules:
       variable:Concept = dobj
       value:Value = nmod_to nmod_of nummod
 
+  # fixme: the 5-10 days is found as one token; this needs to be interval
   - name: of_param_setting
     label: ParameterSetting
     priority: ${priority}

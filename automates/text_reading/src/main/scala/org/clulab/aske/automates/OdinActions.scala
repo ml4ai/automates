@@ -96,8 +96,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             newArgs("valueMost") = arg._2
             inclUpper = Some(false)
           }
-          case "valueInclIncl" => {
-            newArgs("valueLeast") = arg._2
+          case "valueMostIncl" => {
+            newArgs("valueMost") = arg._2
             inclUpper = Some(true)
           }
 
