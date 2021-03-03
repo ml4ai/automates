@@ -19,18 +19,6 @@ class ExprAbstractNode(ABC):
 
     uid: str
 
-    def __repr__(self) -> str:
-        return self.__str__()
-
-    def __str__(self) -> str:
-        """Returns the `uid` of the node that is used to determine node
-        equivalency in the NetworkX graph object.
-
-        Returns:
-            str: the `uid` of this node`
-        """
-        return self.uid
-
     @staticmethod
     def create_node_id() -> str:
         """Used to generate a new UUID4 object that is then stringified for
@@ -46,7 +34,7 @@ class ExprAbstractNode(ABC):
         """A label that will be used to visually identify nodes when viewing
         them in a NetworkX graph.
         """
-        return NotImplemented
+        pass
 
     def get_kwargs(self) -> dict:
         """The basic settings for easy viewing of a node in a NetworkX graph
@@ -69,7 +57,7 @@ class ExprAbstractNode(ABC):
         Returns:
             [type]: [description]
         """
-        return NotImplemented
+        pass
 
 
 @dataclass(repr=False, frozen=False)
@@ -149,13 +137,8 @@ class ExpressionVisitor(ast.NodeVisitor):
     def get_nodes(self):
         return self.nodes
 
-    def empty_uid_stack(self):
-        while not self.uid_stack.empty():
-            self.uid_stack.get()
-
     def visit_Lambda(self, node: ast.Lambda) -> NoReturn:
         self.nodes = list()
-        self.empty_uid_stack()
 
         self.generic_visit(node)
         new_uid = ExprAbstractNode.create_node_id()

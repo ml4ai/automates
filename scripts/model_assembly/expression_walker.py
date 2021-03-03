@@ -39,7 +39,7 @@ def main():
             }
         )
 
-    outfile_name = sys.argv[2]
+    outfile_name = grfn_file.replace("--GrFN.json", "--expr-trees.json")
     json.dump(func_node_graphs, open(outfile_name, "w"))
 
 
