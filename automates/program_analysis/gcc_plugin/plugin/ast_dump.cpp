@@ -30,13 +30,14 @@
 #include "plugin-version.h"
 
 #include "tree.h"
+#include "cp/cp-tree.h"
+#include "tree-cfg.h"
+#include "tree-pass.h"
 #include "gimple.h"
 #include "gimple-iterator.h"
 #include "coretypes.h"
 #include "diagnostic.h"
 // #include "tree-flow.h"
-#include "tree-cfg.h"
-#include "tree-pass.h"
 #include "cfgloop.h"
 #include "cgraph.h"
 #include "options.h"
@@ -739,6 +740,7 @@ static void dump_ops(gimple *stmt)
 static void dump_srcref(gimple *stmt)
 {
   json_int_field("line", gimple_lineno(stmt));
+  json_int_field("col", LOCATION_COLUMN(gimple_location(stmt)));
 
   if (gimple_filename(stmt))
   {
@@ -764,17 +766,14 @@ static void dump_assignment(gimple *stmt)
   json_array_field("operands");
   if (rhs1)
   {
-    printf("TEST 1\n");
     dump_op(rhs1);
   }
   if (rhs2)
   {
-    printf("TEST 2\n");
     dump_op(rhs2);
   }
   if (rhs3)
   {
-    printf("TEST 3\n");
     dump_op(rhs3);
   }
   json_end_array();
@@ -854,14 +853,14 @@ static void dump_return(gimple *stmt)
   dump_srcref(stmt);
 
   // TODO
-  greturn *ret = as_a<greturn *>(gsi_stmt(stmt));
-  // gimple_build_return
-  tree retval = gimple_return_retval(as_a<greturn *>(stmt));
-  if (retval)
-  {
-    json_field("value");
-    dump_op(retval);
-  }
+  // greturn *ret = as_a<greturn *>(gsi_stmt(stmt));
+  // // gimple_build_return
+  // tree retval = gimple_return_retval(as_a<greturn *>(stmt));
+  // if (retval)
+  // {
+  //   json_field("value");
+  //   dump_op(retval);
+  // }
   json_end_object();
 }
 
@@ -1212,6 +1211,7 @@ static void dump_global_var(tree var)
 
   json_start_object();
   json_int_field("id", DEBUG_TEMP_UID(var));
+
   if (DECL_NAME(var))
   {
     json_string_field("name", IDENTIFIER_POINTER(DECL_NAME(var)));
@@ -1220,6 +1220,7 @@ static void dump_global_var(tree var)
   {
     json_string_field("mangledName", IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(var)));
   }
+
   json_bool_field("public", TREE_PUBLIC(var));
   json_bool_field("extern", DECL_EXTERNAL(var));
 
@@ -1238,15 +1239,31 @@ static void dump_global_var(tree var)
   TRACE("dump_global_var: exiting\n");
 }
 
+void print_decl(tree decl)
+{
+  tree id(DECL_NAME(decl));
+  const char *name(id ? IDENTIFIER_POINTER(id) : "<unnamed>");
+  TRACE("%s %s at %d:%d\n", get_tree_code_name(TREE_CODE(decl)), name, DECL_SOURCE_FILE(decl), DECL_SOURCE_LINE(decl));
+}
+
 static void dump_global_vars()
 {
 
   json_array_field("globalVariables");
+  tree ns = global_namespace;
+  tree decl;
+  cp_binding_level *level(NAMESPACE_LEVEL(ns));
 
-  struct varpool_node *node;
-  for (node = varpool_nodes; node; node = node->next)
+  // Traverse declarations.
+  for (decl = level->names;
+       decl != 0;
+       decl = TREE_CHAIN(decl))
   {
-    dump_global_var(node->decl);
+    if (DECL_IS_BUILTIN(decl) || TREE_CODE(decl) != VAR_DECL)
+    {
+      continue;
+    }
+    dump_global_var(decl);
   }
 
   json_end_array();
@@ -1364,7 +1381,6 @@ int plugin_init(struct plugin_name_args *plugin_info,
 
   /* Register this new pass with GCC */
   register_callback(plugin_info->base_name, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
-
   register_callback("start_unit", PLUGIN_START_UNIT, &start_unit_callback, NULL);
   register_callback("finish_unit", PLUGIN_FINISH_UNIT, &finish_unit_callback, NULL);
 
