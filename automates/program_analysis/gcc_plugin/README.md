@@ -29,8 +29,8 @@ Taken from: https://solarianprogrammer.com/2019/10/12/compiling-gcc-macos/. The 
 
 Note that the configure specifies we are enabling gcc for c, c++, and fortran. This will allow us to install gcc, g++, and g-fortran.
 
-6) Install the gcc-10 binarys into your bin: `sudo make install-strip`
-7) Test if it works with an example c file: `/usr/local/gcc-10.1.0/bin/g++-10.1 example.c`
+1) Install the gcc-10 binarys into your bin: `sudo make install`
+2) Test if it works with an example c file: `/usr/local/gcc-10.1.0/bin/g++-10.1 example.c`
 
 ### Building Plugin
 
