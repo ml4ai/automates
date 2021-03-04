@@ -854,13 +854,13 @@ static void dump_return(gimple *stmt)
 
   // TODO
   // greturn *ret = as_a<greturn *>(gsi_stmt(stmt));
-  // // gimple_build_return
-  // tree retval = gimple_return_retval(as_a<greturn *>(stmt));
-  // if (retval)
-  // {
-  //   json_field("value");
-  //   dump_op(retval);
-  // }
+  // greturn *ret = gimple_build_return(stmt);
+  tree retval = gimple_return_retval(as_a<greturn *>(stmt));
+  if (retval)
+  {
+    json_field("value");
+    dump_op(retval);
+  }
   json_end_object();
 }
 
