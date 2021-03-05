@@ -105,7 +105,7 @@ rules:
     type: token
     example: "The density of water (ρw); R(t)"
     pattern: |
-      [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
+      [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # excluded units from variables.
       |
       [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
       |

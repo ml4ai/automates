@@ -60,15 +60,16 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-  val t6a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-  passingTest should s"find NO definitions from t6a: ${t6a}" taggedAs(Somebody) in {
-//    val desired = Seq(
-//      "E0" -> Seq("product of Kcd and ETpm")
-//    )
-    val desired =  Seq.empty[(String, Seq[String])] //todo: do we consider calculations to be definitions?
-    val mentions = extractMentions(t6a)
-    testDefinitionEvent(mentions, desired)
-  }
+//   val t6a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
+//   passingTest should s"find NO definitions from t6a: ${t6a}" taggedAs(Somebody) in {
+// //    val desired = Seq(
+// //      "E0" -> Seq("product of Kcd and ETpm")
+// //    )
+//     val desired =  Seq.empty[(String, Seq[String])] //todo: do we consider calculations to be definitions? -> to be extracted as a function
+//     val mentions = extractMentions(t6a)
+//     testDefinitionEvent(mentions, desired)
+//   }
+
   val t7a = "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of " +
     "the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998)."
     passingTest should s"find definitions from t7a: ${t7a}" taggedAs(Somebody) in {
@@ -145,18 +146,18 @@ class TestDefinitions extends ExtractionTest {
   }
 
   val t2b = "where fi is the daily fractional light interception, ETo is the daily reference evapotranspiration (mm d−1)," +
-    " pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl " +
+    " pwp is the water content at permanent wilting point (m3 m−3), Δz is the soil layer thickness (m), and kl " +
     "is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be " +
     "supplied to the plant from each rooted soil layer."
   failingTest should s"find definitions from t2b: ${t2b}" taggedAs(Somebody) in {
     val desired = Seq(
       "fi" -> Seq("daily fractional light interception"),
-      "ETo" -> Seq("daily reference evapotranspiration"), //fixme: expansion is too extreme; limit
-      "pwp" -> Seq("water content at permanent wilting point"),//fixme: modify lookslikeavar to accommodate lower-case letters as vars
-      "$z" -> Seq("soil layer thickness"), //note: in order to capture "$z" as one variable, a rule was added under compound_var rule.
-      // fixme: definition of $z is not captured by var_cop_definition rule.
+      "ETo" -> Seq("daily reference evapotranspiration"), //fixme: expansion is too extreme; limit <- fixed?
+      "pwp" -> Seq("water content at permanent wilting point"),//fixme: modify lookslikeavar to accommodate lower-case letters as vars <- fixed?
+      "Δz" -> Seq("soil layer thickness"), //note: in order to capture "$z" as one variable, a rule was added under compound_var rule.
+      // fixme: definition of $z is not captured by var_cop_definition rule. -> "$" was an error. it was "Δ".
       "kl" -> Seq("water extraction rate", "empiric soil–root factor for the fraction of available water that can " +
-        "be supplied to the plant from each rooted soil layer")
+        "be supplied to the plant from each rooted soil layer") //note: is it possible to capture two different definitions for one variable?
     )
     val mentions = extractMentions(t2b)
     testDefinitionEvent(mentions, desired)
@@ -207,7 +208,7 @@ class TestDefinitions extends ExtractionTest {
   val t7b = "If L falls below that of permanent wilting point ( Lpwp), then Ta = 0"
   passingTest should s"find definitions from t7b: ${t7b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Lpwp" -> Seq("permanent wilting point") // todo: or "that of permanent wilting point" ??
+      "Lpwp" -> Seq("permanent wilting point") // todo: or "that of permanent wilting point" ?? (or L falls below that of permanent wilting point??)
     )
     val mentions = extractMentions(t7b)
     testDefinitionEvent(mentions, desired)
@@ -284,7 +285,7 @@ class TestDefinitions extends ExtractionTest {
     "head (m)."
     failingTest should s"find definitions from t2c: ${t2c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "t" -> Seq("time"),
+        "t" -> Seq("time"), // fixme: d is captured as a variable here. needs to be fixed.
         "C" -> Seq("differential water capacity"),
         "q" -> Seq("water flux density"), //fixme: m is found as entity by definition_var_appos despite the [!entity = "B-unit"]
         "r" -> Seq("distance from the axial center"),
@@ -329,10 +330,10 @@ class TestDefinitions extends ExtractionTest {
     "and Ar (m2) is the root surface area."
     failingTest should s"find definitions from t5c: ${t5c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "L" -> Seq("root length"), //fixme: both L and z are captured as compound variables with "(m)".
+        "L" -> Seq("root length"), //fixme: both L and z are captured as compound variables with "(m)". -> fixed
         "z" -> Seq("total rooted soil depth"), //z is not found as concept bc it's found as B-VP: need a surface rule where var is any word but use a looksLikeAVar on it?
         "Ap" -> Seq("surface area"),
-        "Ar" -> Seq("root surface area") //todo: bad parse; have to have a surface rule
+        "Ar" -> Seq("root surface area") //todo: bad parse; have to have a surface rule -> fixed
       )
       val mentions = extractMentions(t5c)
       testDefinitionEvent(mentions, desired)
@@ -356,7 +357,7 @@ class TestDefinitions extends ExtractionTest {
   failingTest should s"find definitions from t7c: ${t7c}" taggedAs(Somebody) in {
 
     val desired = Seq(
-      "r0" -> Seq("root radius"), // fixme: when variable and definition are separated by parenthesis, it is not captured by var_cop_definition rule.
+      "r0" -> Seq("root radius"), // fixme: when variable and definition are separated by parenthesis, it is not captured by var_cop_definition rule. -> fixed
       "rm" -> Seq("radius of the root extraction zone"), // fixme: roots (rm) sequence is captured as def (var) by comma_appos_var rule.
       "R" -> Seq("root density")
     )

@@ -137,7 +137,7 @@ rules:
     action: ${action}
     example: "and W represents the soil limitation to water uptake of each layer."
 #    action: looksLikeAVariable #//whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
-#    action: ${action}
+  #  action: ${action}
     pattern: |
       trigger = [word=/(?i)represent|denote/]
       variable:Variable = /${agents}/
@@ -186,6 +186,15 @@ rules:
       trigger = [lemma="be"]
       variable:Variable = (<cop /${agents}/ | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "nmod_at?". need to see if it's feasible.
+
+  - name: var_is_def_token # needed because of bad parse
+    label: Definition
+    priority: ${priority}
+    type: token
+    example: "in which L (m) is the root length, z (m) is the total rooted soil depth, Ap (m2) is the surface area and Ar (m2) is the root surface area."
+    action: ${action}
+    pattern: |
+      @variable:Variable ([word = "("] [word = /.*/]? [word = ")"])? [lemma = "be"] [word = /a|an|the/] (@definition:Concept [!entity = /NUMBER|B-unit/ & !tag=/^JJ/])
 
   - name: def_cop_var
     label: Definition

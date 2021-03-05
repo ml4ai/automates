@@ -109,18 +109,6 @@ class TestConjunctions extends ExtractionTest {
       testDefinitionEvent(mentions, desired)
   }
 
-    val t9 = "The model consists of individuals who are either Susceptible (S), Infected (I), or Recovered (R)."
-  failingTest should s"find definitions from t9: ${t9}" taggedAs(Somebody) in {
-    val desired = Seq(
-      "S" -> Seq("either Susceptible"), //fixme: it should be just Susceptible (either should be deleted)
-      "I" -> Seq("Infected"),
-      "R" -> Seq("Recovered") //fixme: Recovered is not captured as a concept
-    )
-    val mentions = extractMentions(t9)
-    testDefinitionEvent(mentions, desired)
-  }
-
-
 }
 
 // Panels ( C ) and ( D ) shows virus uptake for the same cells as in panels A and B respectively .
