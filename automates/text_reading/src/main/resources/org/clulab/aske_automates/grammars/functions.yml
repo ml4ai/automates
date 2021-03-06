@@ -2,26 +2,28 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-  - name: subtraction_difference_between
+  # todo: the number of inputs is undecided. how to incorporate unspecified number of inputs into the rules? (for now, most of the rules have two inputs)
+
+  - name: difference_between
     label: Function
     priority: ${priority}
     type: dependency
     # action: ${action}
     example: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
-    pattern: | #todo: how to distinguish between nmod_between (shorter distance) vs nmod_between (longer distance)? conj_and?
+    pattern: |
       trigger = [word = "difference"]
       input1:Concept = nmod_between
-      input2:Concept = nmod_between conj_and
-      output:Variable = nsubj
+      input2:Concept = (nmod_between conj_and | nmod_between amod)
+      output:Concept = (nsubj | <nmod_from nsubjpass)
+      # note: if the sequence of inputs matter (if it has to be "input1 - input2"), the rule needs to be fixed.
 
-
-  - name: multiplication_product_of
+  - name: product_of
     label: Function
     priority: ${priority}
     type: dependency
     # action: ${action}
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-    pattern: | #todo: how to distinguish between nmod_of (shorter distance) vs nmod_of (longer distance)?
+    pattern: |
       trigger = [word = "product"] (?="of")
       input1:Variable = nmod_of
       input2:Variable = nmod_of conj_and
@@ -29,7 +31,7 @@ rules:
 
   #covidactnow
 
-  - name: division_divide_by
+  - name: divide_by
     label: Function
     priority: ${priority}
     type: dependency
@@ -41,6 +43,7 @@ rules:
       input2:Concept = nmod_by
       output:Concept = <advcl_by nsubjpass
 
+  # note: this rule has only one input.
   - name: inverse_of
     label: Function
     priority: ${priority}
@@ -48,9 +51,9 @@ rules:
     # action: ${action}
     example: "γ is the inverse of the mean recovery time, in days."
     pattern: |
-      trigger = [lemma = "inverse"] (?="of")
+      trigger = [word = "inverse"] (?="of")
       input:Concept = nmod_of
-      output:Concept = nsubj
+      output:Concept = (nsubj | <nsubj ccomp nummod)
 
   #double_epidemic
   
@@ -65,7 +68,79 @@ rules:
       input1:Concept = nmod_to 
       input2:Concept = <amod? conj_and
       output:Concept = <amod? nsubj
-      #fixme: inputs and outputs need to be expanded.
+      #fixme: inputs and outputs need to be expanded. 
+      #todo: the number of inputs should not be fixed as two.
+
+  - name: sum_of
+    label: Function
+    priority: ${priority}
+    type: dependency
+    # action: ${action}
+    example: "The incubation period (the time from first infection to the appearances of symptoms) plus the onset to admission interval is equal to the sum of the latent period and the infectious period and is therefore equal to 1/b + 1/a."
+    pattern: |
+      trigger = [word = "sum"] (?="of")
+      input1:Concept = nmod_of
+      input2:Concept = (nmod_of)? conj_and
+      output:Concept = (<nmod_to)? nsubj #todo: output needs to be expanded.
+
+  - name: mean_of
+    label: Function
+    priority: ${priority}
+    type: dependency
+    # action: ${action}
+    example: "the mean air temperature, T, for a daily time step is preferred as the mean of the daily maximum and daily minimum air temperatures..."
+    pattern: |
+      trigger = [word = "mean"] (?="of")
+      input1:Concept = nmod_of
+      input2:Concept = nmod_of conj_and
+      output:Concept = <nmod_as nsubjpass
+
+  # note: this rule can have multiple (more than 2) inputs.
+  # todo: how to incorporate optional arguments into the rule?
+  - name: function_of
+    label: Function
+    priority: ${priority}
+    type: dependency
+    # action: ${action}
+    example: "Daily Rso is a function of the time of year and latitude."
+    pattern: |
+      trigger = [word = "function"] (?="of")
+      input1:Concept = nmod_of
+      input2:Concept = nmod_of (nmod_of)? conj_and
+      output:Concept = nsubj
+
+  # note: this rule has only one input.
+  - name: estimated_from
+    label: Function
+    priority: ${priority}
+    type: dependency
+    # action: ${action}
+    example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
+    pattern: |
+      trigger = [lemma = "estimate"] (?="from")
+      input:Concept = nmod_from
+      output:Concept = nsubjpass
+
+  - name: calculated_from
+    label: Function
+    priority: ${priority}
+    type: dependency
+    # action: ${action}
+    example: "The actual vapor pressure of air for hourly periods can be calculated from relative humidity (RH) and saturation vapor pressure at the corresponding air temperature (from Eq. 37):"
+    pattern: |
+      trigger = [lemma = "calculate"] (?="from")
+      input1:Concept = nmod_from
+      input2:Concept = nmod_from conj_and
+      output:Concept = nsubjpass
+
+
+
+  
+
+
+
+
+
 
   
 

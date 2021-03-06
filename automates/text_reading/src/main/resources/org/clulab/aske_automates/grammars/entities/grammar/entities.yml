@@ -27,13 +27,13 @@ rules:
     pattern: |
       [tag=/VBN|JJ/]
 
-
-  - name: single_capital_VP
-    label: Concept
-    priority: 1
-    type: token
-    pattern: |
-      [chunk='B-VP' & word = /[A-Z]/]
+  # note: error? (repetition) 
+  # - name: single_capital_VP
+  #   label: Concept
+  #   priority: 1
+  #   type: token
+  #   pattern: |
+  #     [chunk='B-VP' & word = /[A-Z]/]
 
 #  - name: simple-vp
 #    label: Concept

@@ -692,8 +692,14 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
+    val t5l = "The inverse of λ = 2.45 MJ kg-1 is approximately 0.408 kg MJ-1."
+  failingTest should s"find NO definitions from t5l: ${t5l}" taggedAs(Somebody) in {
+    val desired =  Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t11f)
+    testDefinitionEvent(mentions, desired)
+  }
+
 //todo: First, the limiting value R∞, called the total size of the epidemic which is the total number of people having the disease at the end of the epidemic. 
 //todo: Second, R0 = r/a, the basic reproduction number which is the average number of secondary infections produced when one infected individual is introduced into a host population where everyone is susceptible.
-
 
 }

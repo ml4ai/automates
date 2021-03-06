@@ -15,17 +15,34 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  val t2a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
+  passingTest should s"find functions from t2a: ${t2a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "E0" -> Seq("Kcd", "ETpm")
+    )
+    val mentions = extractMentions(t2a)
+    testFunctionEvent(mentions, desired)
+  }
+
 
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
   // todo: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
- 
   // todo: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm." (example from TestDefinitions)
+  // todo: "The values for Cn consider the time step and aerodynamic roughness of the surface (i.e., reference type)."
+  // todo: "The constant in the denominator, Cd, considers the time step, bulk surface resistance, and aerodynamic roughness of the surface (the latter two terms vary with reference type, time step and daytime/nighttime)."
+  // todo: "The density of water (ρw) is taken as 1.0 Mg m-3 so that the inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
+  // todo: "The actual vapor pressure can be measured or it can be calculated from various humidity data, such as measured dew point temperature, wet-bulb and dry-bulb temperature, or relative humidity and air temperature data."
+  // todo: "For daily calculation time steps, average dew point temperature can be computed by averaging over hourly periods"
+  // todo: "Daily Rso is a function of the time of year and latitude."
+  // todo: "Extraterrestrial radiation, Ra, defined as the short-wave solar radiation in the absence of an atmosphere, is a well-behaved function of the day of the year, time of day, and latitude."
+  // todo: "For daily (24-hour) periods, Ra can be estimated from the solar constant, the solar declination, and the day of the year"
+  // todo: "The value for Rso is a function of the time of year and latitude, and, in addition, the time of day for hourly calculation periods."
+  // todo: "Extraterrestrial radiation, Ra, defined as the short-wave solar radiation in the absence of an atmosphere, is a well-behaved function of the day of the year, time of day, latitude, and longitude."
 
   // Tests from COVID_ACT_NOW
   // todo: "Initial conditions for total cases and total exposed are calculated by dividing hospitalizations by the hospitalization rate."
   // todo: "The default infection propagation rate ( β mild ) used in this model is an US average extracted from actual death data."
   // todo: "Cases estimated by multiplying confirmed cases by 20."
-
 
   // Tests from CHIME-online-manual
   // todo: "which is the transmissibility τ multiplied by the average number of people exposed c."

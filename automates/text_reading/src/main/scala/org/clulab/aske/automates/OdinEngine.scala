@@ -145,7 +145,8 @@ object OdinEngine {
   val DEFINITION_ARG: String = "definition"
   val VALUE_ARG: String = "value"
   val UNIT_ARG: String = "unit"
-  val FUNCTION_INPUT_ARG: String = "input+"
+  val FUNCTION_INPUT1_ARG: String = "input1"
+  val FUNCTION_INPUT2_ARG: String = "input2"
   val FUNCTION_OUTPUT_ARG: String = "output"
 
 
