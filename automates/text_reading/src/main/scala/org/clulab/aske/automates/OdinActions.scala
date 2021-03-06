@@ -380,6 +380,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentionsDisplayOnlyArgs
   }
 
+  def functionArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val mentionsDisplayOnlyArgs = for {
+      m <- mentions
+      arg <- m.arguments.values.flatten
+    } yield copyWithLabel(arg, "Function")
+
+    mentionsDisplayOnlyArgs
+  }
+
   def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
 
