@@ -38,7 +38,7 @@ class PyASTToCAST(ast.NodeVisitor):
         #print("Module")
 
         # Visit all the nodes and make a Module object out of them
-        return Module(body=[self.visit(piece) for piece in node.body])
+        return Module(name="Program",body=[self.visit(piece) for piece in node.body])
 
     def visit_ClassDef(self, node:ast.ClassDef):
 
@@ -62,9 +62,26 @@ class PyASTToCAST(ast.NodeVisitor):
         return ModelIf(node_test, node_body, node_orelse)
 
 
-    def visit_Loop(self, node: Union[ast.For,ast.While]):
+    def visit_Pass(self, node: ast.Pass):
+        return []
+
+    def visit_For(self, node: ast.For):
+        print("LOOP")
         print(type(node))
-        pass
+        target = self.visit(node.target)
+        iterable = self.visit(node.iter)
+        
+        body = [self.visit(piece) for piece in (node.body+node.orelse)]
+
+        return Loop(expr=[target,iterable],body=body)
+
+    def visit_While(self, node: ast.While):
+        print("LOOP")
+        print(type(node))
+        test = self.visit(node.test)
+        body = [self.visit(piece) for piece in (node.body+node.orelse)]
+
+        return Loop(expr=test,body=body)
 
     def visit_FunctionDef(self, node: Union[ast.FunctionDef,ast.Lambda]):
         print("Function Def")
@@ -72,14 +89,14 @@ class PyASTToCAST(ast.NodeVisitor):
             print(type(node))
 
             # Might have to change this Name() to a visit 
-            func_def = FunctionDef(Name(node.name))
+            #func_def = FunctionDef(Name(node.name))
             body = []
             # TODO: Function Args func_def.func_args(self.visit(node.args))
             if(node.body != []):
                 body = [self.visit(piece) for piece in node.body]
 
             #TODO: Decorators? Returns? Type_comment?
-            return FunctionDef(Name(node.name),[],body)
+            return FunctionDef(node.name,[],body)
 
         if(type(node) == ast.Lambda):
             print("Lambda Function")
@@ -90,14 +107,17 @@ class PyASTToCAST(ast.NodeVisitor):
             return func_def
 
     def visit_BinOp(self, node: ast.BinOp):
-        print("BINOP")
-        ops = {ast.Add : BinaryOperator.ADD}
+        #print("BINOP")
+        ops = {ast.Add : BinaryOperator.ADD, ast.Sub : BinaryOperator.SUB, ast.Mult : BinaryOperator.MULT,
+                ast.Div : BinaryOperator.DIV, ast.FloorDiv : BinaryOperator.FLOORDIV, ast.Mod : BinaryOperator.MOD,
+                ast.Pow : BinaryOperator.POW, ast.LShift : BinaryOperator.LSHIFT, ast.RShift : BinaryOperator.RSHIFT,
+                ast.BitOr : BinaryOperator.BITOR, ast.BitAnd : BinaryOperator.BITAND, ast.BitXor : BinaryOperator.BITXOR}
         left = node.left
-        print(left)
-        print("OP",ops[type(node.op)])
+        #print(left)
+        #print("OP",ops[type(node.op)])
         op = ops[type(node.op)]
         right = node.right
-        print(right)
+        #print(right)
 
         return BinaryOp(op,self.visit(left),self.visit(right))
 
@@ -109,7 +129,9 @@ class PyASTToCAST(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign):
         print("Assign") 
         # TODO: multiple assignments to same value, and 'unpacking' tuple/list
-        left = self.visit(node.targets[0])
+        print(node.targets)
+        left = Var(node.targets[0].id,"Unknown")
+        print(node.value)
         right = self.visit(node.value)
 
         return Assignment(left,right)
@@ -135,10 +157,12 @@ class PyASTToCAST(ast.NodeVisitor):
         return ModelReturn(self.visit(node.value))
 
     def visit_UnaryOp(self, node: ast.UnaryOp):
-        op = node.op
+        ops = {ast.UAdd : UnaryOperator.UADD, ast.USub : UnaryOperator.USUB, ast.Not : UnaryOperator.NOT,
+                ast.Invert : UnaryOperator.INVERT}
+        op = ops[type(node.op)]
         operand = node.operand
 
-        return UnaryOp(self.visit(op), self.visit(operand))
+        return UnaryOp(op, self.visit(operand))
 
     def visit_Compare(self, node: ast.Compare):
         left = node.left
@@ -159,10 +183,15 @@ class PyASTToCAST(ast.NodeVisitor):
             node (ast.Subscript): [description]
         """
 
-        value = node.value
-        sl = node.slice
+        value = self.visit(node.value)
+        print('Slice',node.slice)
+        sl = self.visit(node.slice)
 
+        return Subscript(value,sl)
         pass
+
+    def visit_Index(self, node:ast.Index):
+        return self.visit(node.value)
 
     def visit_Break(self, node:ast.Break):
         """Visits a PyAST Break node, which is just a break statement
@@ -203,10 +232,10 @@ class PyASTToCAST(ast.NodeVisitor):
         return Name(name=node.id)
         
     def visit_List(self, node:ast.List):
-        pass
+        return [self.visit(piece) for piece in node.elts]
 
     def visit_Tuple(self, node:ast.Tuple):
-        pass
+        return [self.visit(piece) for piece in node.elts]
 
     def visit_Dict(self, node:ast.Dict):
         pass
@@ -218,7 +247,7 @@ class PyASTToCAST(ast.NodeVisitor):
         pass
 
     def visit_Constant(self, node:ast.Constant):
-        if(type(node.value) == int):
+        if(type(node.value) == int or type(node.value) == float):
             return Number(node.value)
         pass
 
