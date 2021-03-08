@@ -50,7 +50,7 @@ object AlignmentJsonUtils {
     val definitionMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
-        .filter(m => m.label matches "Definition")
+        .filter(m => m.label.contains("Definition"))
         .filter(hasRequiredArgs))
     } else None
 
@@ -61,10 +61,17 @@ object AlignmentJsonUtils {
         .filter(hasRequiredArgs))
     } else None
 
+    val intervalParameterSettingMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
+        .filter(m => m.label matches "IntervalParameterSetting")
+        .filter(hasRequiredArgs))
+    } else None
+
     val unitMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
-        .filter(m => m.label matches "Unit")
+        .filter(m => m.label matches "UnitRelation")
         .filter(hasRequiredArgs))
     } else None
 
@@ -108,7 +115,7 @@ object AlignmentJsonUtils {
 
 
 
-    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")

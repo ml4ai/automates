@@ -104,11 +104,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           case _ => newArgs(arg._1) = arg._2
         }
       }
-//      for (arg <- m.arguments) {
-//        if (arg._1 == "valueLeastExcl") {
-//          newArgs("valueLeast") = arg._2
-//        } else newArgs(arg._1) = arg._2
-//      }
+
 
       val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
       newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
@@ -117,12 +113,25 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def processUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val newMentions = new ArrayBuffer[Mention]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+    val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
-      val newArgs = mutable.Map[String, Seq[Mention]]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+      val newArgs = mutable.Map[String, Seq[Mention]]()
       val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
 
       val att = new UnitAttachment(attachedTo, "UnitAtt")
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
+  }
+
+
+  def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+
+      val att = new UnitAttachment(attachedTo, "ParamSetAtt")
       newMentions.append(m.withAttachment(att))
     }
     newMentions

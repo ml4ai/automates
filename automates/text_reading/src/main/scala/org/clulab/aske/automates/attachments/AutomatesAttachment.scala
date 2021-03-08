@@ -43,6 +43,21 @@ class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], discontArg
 
 }
 
+
+class ParamSetAttachment(attachedTo: String, attType: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = {
+    val toReturn = ujson.Obj()
+
+    toReturn("attachedTo") = attachedTo
+    toReturn("attType") = attType //"ParamSetAtt"
+    toReturn
+  }
+
+}
+
 //class ParamSettingAttachment(charOffsets: Seq[(Int, Int)], discontArg: String, attType: String) extends AutomatesAttachment {
 //  // this one will just need whether or not we attach through def or var - but again, maybe we dont need that if i just rename args? but then need to change tests and such?.. might be better with just an attachment
 //  // this also applies to units - need an att to store what the unit is linked to

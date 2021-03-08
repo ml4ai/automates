@@ -278,6 +278,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.variableShortNames,
         argsForGrounding.definitionMentions,
         argsForGrounding.parameterSettingMentions,
+        argsForGrounding.intervalParameterSettingMentions,
         argsForGrounding.unitMentions,
         argsForGrounding.commentDefinitionMentions,
         argsForGrounding.equationChunksAndSource,

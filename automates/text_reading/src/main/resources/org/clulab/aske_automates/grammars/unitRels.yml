@@ -3,6 +3,7 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 rules:
 
   ####UNIT RELATIONS####
+  ###See Possible improvement note in parameterSettings.yml
 
   - name: var_unit_rel
     label: UnitRelation
