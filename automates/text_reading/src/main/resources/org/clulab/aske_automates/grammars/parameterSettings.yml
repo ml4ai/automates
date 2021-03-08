@@ -92,8 +92,8 @@ rules:
     example: "but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='>']
-      variable:Concept = <advmod <nummod
-      valueLeastExcl:Value = <advmod [tag = "CD"]
+      variable:Concept = <advmod <nummod | <amod compound? | <dep
+      valueLeastExcl:Value = <advmod [tag = "CD"] | >nummod [tag = "CD"] | >dep [tag="CD"]
 
 
   - name: var-less_than_symbol

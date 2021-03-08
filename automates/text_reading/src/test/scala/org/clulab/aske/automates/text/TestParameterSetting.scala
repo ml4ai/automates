@@ -140,12 +140,13 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
+  //fixme: these are both intervals; move this test
   val t12a = "Under full irrigation, Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield " +
     "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
   passingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t12a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
 //      "Kcbmax" -> Seq("0.9", "1.5"), //todo: this should be in the interval test set
-      "Kcbmax" -> Seq("1.15") //todo: need to have some mechanism to preserve ><=. some sort of attachment? similar to count in wm or use 'valueMin'/'valueMax' for the var
+//      "Kcbmax" -> Seq("1.15") //todo: need to have some mechanism to preserve ><=. some sort of attachment? similar to count in wm or use 'valueMin'/'valueMax' for the var
     )
     val mentions = extractMentions(t12a)
     testParameterSettingEvent(mentions, desired)

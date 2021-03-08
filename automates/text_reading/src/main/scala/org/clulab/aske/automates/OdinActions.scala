@@ -117,7 +117,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (m <- mentions) {
       val newArgs = mutable.Map[String, Seq[Mention]]()
       val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
-
       val att = new UnitAttachment(attachedTo, "UnitAtt")
       newMentions.append(m.withAttachment(att))
     }
@@ -485,10 +484,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable was found with a Gazetteer passed through the webservice, keep it
+      if (v == null) return false
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
       if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for var that include a greek letter---those are found as separate words even if there is not space
+      if (v.words.length==4) {
+        // to account for vars like R(t)
+        if (v.words(1) == "(" & v.words(3) == ")" ) return true
+      }
       if (v.words.length != 1) return false
+      if (v.words.head.contains("-") & v.words.head.last.isDigit) return false
       // Else, the variable candidate has length 1
       val word = v.words.head
       if (freqWords.contains(word.toLowerCase())) return false //filter out potential variables that are freq words
@@ -509,11 +514,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
     }
+
+
     for {
       m <- mentions
       (varMention, isArg) = m match {
         case tb: TextBoundMention => (m, false)
-        case rm: RelationMention => (m.arguments.getOrElse("variable", Seq()).head, true)
+        case rm: RelationMention => {
+          if (m.arguments.contains("variable")) {
+            (m.arguments("variable").head, true)
+          } else (null, false)
+        }
         case em: EventMention => (m.arguments.getOrElse("variable", Seq()).head, true)
         case _ => ???
       }
