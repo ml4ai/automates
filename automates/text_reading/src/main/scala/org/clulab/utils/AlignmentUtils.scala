@@ -51,30 +51,31 @@ object AlignmentJsonUtils {
       Some(allMentions
         .get
         .filter(m => m.label.contains("Definition"))
-        .filter(hasRequiredArgs))
+        .filter(m => hasRequiredArgs(m, "definition")))
     } else None
 
     val parameterSettingMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
         .filter(m => m.label matches "ParameterSetting")
-        .filter(hasRequiredArgs))
+        )
     } else None
+
 
     val intervalParameterSettingMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
         .filter(m => m.label matches "IntervalParameterSetting")
-        .filter(hasRequiredArgs))
+      )
     } else None
+
 
     val unitMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
         .filter(m => m.label matches "UnitRelation")
-        .filter(hasRequiredArgs))
+        )
     } else None
-
 
     // get the equations
     val equationChunksAndSource = if (jsonObj.contains("equations")) {
@@ -101,7 +102,7 @@ object AlignmentJsonUtils {
 
       val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
       Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames, source)
-        .filter(hasRequiredArgs))
+        .filter(m => hasRequiredArgs(m, "definition")))
     } else None
 
 

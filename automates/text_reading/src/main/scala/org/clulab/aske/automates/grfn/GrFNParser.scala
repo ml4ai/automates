@@ -213,11 +213,11 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
     sparqlResuJson
   }
 
-  def mkHypothesis(elem1: String, elem2: String, score: Double, debug: Boolean): ujson.Obj = {
+  def mkHypothesis(elem1: String, elem2: String, linkType: String, score: Double, debug: Boolean): ujson.Obj = {
 //    val splitEl1 = elem1.split("::")
 //    val splitEl2 = elem2.split("::")
     val el1json = ujson.read(elem1).obj
-    val el2json = ujson.read(elem1).obj
+    val el2json = ujson.read(elem2).obj
     val el1Id = el1json("uid").str
     val el2Id = el2json("uid").str
 
@@ -232,12 +232,14 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
       ujson.Obj(
         "element_1" -> idAndIdentifier1,
         "element_2" -> idAndIdentifier2,
+        "link_type" -> linkType,
         "score" -> score
       )
     } else {
       ujson.Obj(
         "element_1" -> el1Id,
         "element_2" -> el2Id,
+        "link_type" -> linkType,
         "score" -> score
       )
     }

@@ -43,9 +43,16 @@ object ExtractAndAlign {
   val TEXT_VAR_TO_UNIT = "textVarToUnit"
   val TEXT_TO_UNIT = "textToUnit"
   val TEXT_VAR_TO_PARAM_SETTING = "textVarToParamSetting"
-  val TEXT_TO_PARAM_SETTING = "textToParamSetting"
-  val VAR_INT_PARAM_SETTING = "textVarToIntParamSetting"
+  val TEXT_VAR_TO_INT_PARAM_SETTING = "textVarToIntParamSetting"
   val TEXT_TO_INT_PARAM_SETTING = "textToIntParamSetting"
+  val TEXT_TO_PARAM_SETTING = "textToParamSetting"
+  //val VAR_INT_PARAM_SETTING = "textVarToIntParamSetting"
+  val INT_PARAM_SETTING_THRU_CONCEPT = "intParamSettingThroughConcept"
+  val INT_PARAM_SETTING_THRU_VAR = "intParamSettingThroughVar"
+  val PARAM_SETTING_THRU_CONCEPT = "paramSettingThroughConcept"
+  val PARAM_SETTING_THRU_VAR = "paramSettingThroughVar"
+  val UNIT_THRU_VAR = "unitThroughVar"
+  val UNIT_THRU_CONCEPT = "unitThroughConcept"
   val EQN_TO_TEXT = "equationToText"
   val COMMENT_TO_TEXT = "commentToText"
   val TEXT_TO_SVO = "textToSVO"
@@ -92,6 +99,7 @@ object ExtractAndAlign {
       alignmentHandler,
       definitionMentions,
       parameterSettingMention,
+      intervalParameterSettingMentions,
       unitMentions,
       equationChunksAndSource,
       commentDefinitionMentions,
@@ -106,10 +114,7 @@ object ExtractAndAlign {
 
     val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames, parameterSettingMention, intervalParameterSettingMentions,  unitMentions)
 
-//    linkElements(TEXT_VAR) = updateTextVarsWithUnits(linkElements(TEXT_VAR), unitMentions, alignments(TEXT_TO_UNIT_THROUGH_DEFINITION), alignments(TEXT_TO_UNIT))
-
-//    linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
-
+    // fixme: rethink svo grounding
 //    linkElements(TEXT_VAR) =  if (groundToSVO) {
 //      // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
 //      if (alignments.contains("TEXT_TO_SVO")) {
@@ -118,7 +123,9 @@ object ExtractAndAlign {
 //
 //    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
 
+    println("les: " + linkElements.keys.mkString(" "))
     for (le <- linkElements.keys) {
+
       outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar, false)}
     }
 
@@ -345,7 +352,7 @@ object ExtractAndAlign {
    // }
   }
 
-  def hasRequiredArgs(m: Mention): Boolean = m.arguments.contains(VARIABLE) && m.arguments.contains(DEFINITION)
+  def hasRequiredArgs(m: Mention, argLabel: String): Boolean = m.arguments.contains(VARIABLE) && m.arguments.contains(argLabel)
 
   def hasUnitArg(m: Mention): Boolean = m.arguments.contains("unit")
 
@@ -417,6 +424,7 @@ object ExtractAndAlign {
     alignmentHandler: AlignmentHandler,
     textDefinitionMentions: Option[Seq[Mention]],
     parameterSettingMentions: Option[Seq[Mention]],
+    intParameterSettingMentions: Option[Seq[Mention]],
     unitMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
     commentDefinitionMentions: Option[Seq[Mention]],
@@ -435,13 +443,12 @@ object ExtractAndAlign {
       alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
     }
 
-
     /** Align text definition to unit variable
       * this should take care of unit relations like this: The density of water is taken as 1.0 Mg m-3.
       */
     if (textDefinitionMentions.isDefined && unitMentions.isDefined) {
 
-      val (throughVar, throughConcept) = parameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m.attachments, "UnitAtt").toUJson("attachedTo").str=="variable")
+      val (throughVar, throughConcept) = unitMentions.get.partition(m => returnAttachmentOfAGivenType(m.attachments, "UnitAtt").toUJson("attachedTo").str=="variable")
 
       // link the units attached to a var ('t' in 't is measured in days') to the variable of the definition mention ('t' in 't is time')
       if (throughVar.nonEmpty) {
@@ -468,7 +475,7 @@ object ExtractAndAlign {
     }
 
 
-    /** Align text variable to param setting variable
+    /** Align text variable to param setting
       */
     if (textDefinitionMentions.isDefined && parameterSettingMentions.isDefined) {
       val (throughVar, throughConcept) = parameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m.attachments, "ParamSetAtt").toUJson("attachedTo").str=="variable")
@@ -488,6 +495,30 @@ object ExtractAndAlign {
       }
 
     }
+
+
+    /** Align text variable to param setting interval
+      */
+    if (textDefinitionMentions.isDefined && intParameterSettingMentions.isDefined) {
+      val (throughVar, throughConcept) = intParameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m.attachments, "ParamSettingIntervalAtt").toUJson("attachedTo").str=="variable")
+
+      // link the params attached to a var ('t' in 't = 5 (days)') to the variable of the definition mention ('t' in 't is time')
+      if (throughVar.nonEmpty) {
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
+        alignments(TEXT_VAR_TO_INT_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
+      }
+
+      // link the params attached to a concept ('time' in 'time is set to 5 days') to the definition of the definition mention ('time' in 't is time')
+      if (throughConcept.nonEmpty) {
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(textDefinitionMentions.get.map(Aligner.getRelevantText(_, Set("definition"))).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
+        alignments(TEXT_TO_INT_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
+      }
+
+    }
+
+
 
     /** Align the equation chunks to the text definitions */
       if (equationChunksAndSource.isDefined && textDefinitionMentions.isDefined) {
@@ -679,12 +710,12 @@ object ExtractAndAlign {
     val originalSentence = mention.sentenceObj.words.mkString(" ")
     val offsets = mention.tokenInterval.toString()
     val args = mentionType match {
-      case "textVarToIntParamSetting" => getIntParamSetArgObj(mention) // fixme: how to make case for two matches? (for both types of int param settings)
-      case "textToIntParamSetting" => getIntParamSetArgObj(mention)
-      case "textVarToParamSetting" =>  getArgObjForUnitAndParamSet(mention)
-      case "textToParamSetting" =>  getArgObjForUnitAndParamSet(mention)
-      case "textVarToUnit" =>  getArgObjForUnitAndParamSet(mention)
-      case "textToUnit" =>  getArgObjForUnitAndParamSet(mention)
+      case INT_PARAM_SETTING_THRU_VAR => getIntParamSetArgObj(mention) // fixme: how to make case for two matches? (for both types of int param settings)
+      case INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention)
+      case PARAM_SETTING_THRU_VAR =>  getArgObjForUnitAndParamSet(mention)
+      case PARAM_SETTING_THRU_CONCEPT =>  getArgObjForUnitAndParamSet(mention)
+      case UNIT_THRU_VAR =>  getArgObjForUnitAndParamSet(mention)
+      case UNIT_THRU_CONCEPT =>  getArgObjForUnitAndParamSet(mention)
 
       case _ => ???
     }
@@ -820,20 +851,23 @@ object ExtractAndAlign {
 
 
 
+    println("int par set: " + intervalParameterSettingMentions)
     if (intervalParameterSettingMentions.isDefined) {
+
+
 
       val (throughVar, throughConcept) = intervalParameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m
        .attachments, "ParamSettingIntervalAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(VAR_INT_PARAM_SETTING) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, "textVarToIntParamSetting")
+        linkElements(INT_PARAM_SETTING_THRU_VAR) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, INT_PARAM_SETTING_THRU_VAR)
         }
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(TEXT_TO_INT_PARAM_SETTING) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, "textToIntParamSetting")
+        linkElements(INT_PARAM_SETTING_THRU_CONCEPT) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, INT_PARAM_SETTING_THRU_CONCEPT)
         }
       }
 
@@ -845,14 +879,14 @@ object ExtractAndAlign {
         .attachments, "ParamSetAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(TEXT_VAR_TO_PARAM_SETTING) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, "textVarToParamSetting")
+        linkElements(PARAM_SETTING_THRU_VAR) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, PARAM_SETTING_THRU_VAR)
         }
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(TEXT_TO_PARAM_SETTING) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, "textToParamSetting")
+        linkElements(PARAM_SETTING_THRU_CONCEPT) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, PARAM_SETTING_THRU_VAR)
         }
       }
 
@@ -865,14 +899,14 @@ object ExtractAndAlign {
         .attachments, "UnitAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(TEXT_VAR_TO_UNIT) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, "textVarToUnit")
+        linkElements(UNIT_THRU_VAR) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, UNIT_THRU_VAR)
         }
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(TEXT_TO_UNIT) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, "textToUnit")
+        linkElements(UNIT_THRU_CONCEPT) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, UNIT_THRU_CONCEPT)
         }
       }
 
@@ -1008,7 +1042,7 @@ object ExtractAndAlign {
   }
 
 
-  def mkLinkHypothesis(srcElements: Seq[String], dstElements: Seq[String], alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+  def mkLinkHypothesis(srcElements: Seq[String], dstElements: Seq[String], linkType: String, alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
 
     for {
       topK <- alignments
@@ -1016,7 +1050,7 @@ object ExtractAndAlign {
       srcLinkElement = srcElements(alignment.src)
       dstLinkElement = dstElements(alignment.dst)
       score = alignment.score
-    } yield mkHypothesis(srcLinkElement, dstLinkElement, score, debug)
+    } yield mkHypothesis(srcLinkElement, dstLinkElement, linkType, score, debug)
   }
 
   def mkLinkHypothesisFromValueSequences(srcElements: Seq[Value], dstElements: Seq[Value], alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
@@ -1036,31 +1070,61 @@ object ExtractAndAlign {
     // Store them all here
     val hypotheses = new ArrayBuffer[ujson.Obj]()
     val linkElKeys = linkElements.keys.toSeq
-    // Comment -> Text
+    // Comment -> Text Var
     if (linkElKeys.contains(COMMENT) && linkElKeys.contains(TEXT_VAR)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(TEXT_VAR), alignments(COMMENT_TO_TEXT), debug))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(TEXT_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
     }
 
 
     // Src Variable -> Comment
     if (linkElKeys.contains(SOURCE) && linkElKeys.contains(COMMENT)) {
       println("has source and comment")
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(COMMENT), alignments(SRC_TO_COMMENT), debug))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
     }
-
 
     // Equation -> Text
     if (linkElKeys.contains(EQUATION) && linkElKeys.contains(TEXT_VAR)) {
       println("has eq and text")
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT_VAR), alignments(EQN_TO_TEXT), debug))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(TEXT_VAR), EQN_TO_TEXT, alignments(EQN_TO_TEXT), debug))
     }
 
-    // TextVar -> TextDef (text_span)
-    //taken care of while creating link elements
-    // the full var def extraction are an element now so we dont need a separate text object
-//    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(TEXT)) {
-//      hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT), debug))
-//    }
+    // Comment -> Text Var
+    if (linkElKeys.contains(COMMENT) && linkElKeys.contains(TEXT_VAR)) {
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(TEXT_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
+    }
+
+    // TextVar to Unit (through var)
+    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(UNIT_THRU_VAR)) {
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(TEXT_VAR), linkElements(TEXT_VAR), TEXT_VAR_TO_UNIT, alignments(TEXT_VAR_TO_UNIT), debug))
+    }
+
+    // TextVar to Unit (through concept)
+    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(UNIT_THRU_CONCEPT)) {
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(TEXT_VAR), linkElements(TEXT_VAR), TEXT_TO_UNIT, alignments(TEXT_TO_UNIT), debug))
+    }
+
+
+    // TextVar to ParamSetting (through var)
+    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(PARAM_SETTING_THRU_VAR)) {
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(TEXT_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_PARAM_SETTING, alignments(TEXT_VAR_TO_PARAM_SETTING), debug))
+    }
+
+    // TextVar to ParamSetting (through concept)
+    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(PARAM_SETTING_THRU_CONCEPT)) {
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(TEXT_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_TO_PARAM_SETTING, alignments(TEXT_TO_PARAM_SETTING), debug))
+    }
+
+
+    // TextVar to IntervalParamSetting (through var)
+    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(INT_PARAM_SETTING_THRU_VAR)) {
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(TEXT_VAR), linkElements(INT_PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_INT_PARAM_SETTING, alignments(TEXT_VAR_TO_INT_PARAM_SETTING), debug))
+    }
+
+    // TextVar to IntervalParamSetting (through concept)
+    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(INT_PARAM_SETTING_THRU_CONCEPT)) {
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(TEXT_VAR), linkElements(INT_PARAM_SETTING_THRU_CONCEPT), TEXT_TO_INT_PARAM_SETTING, alignments(TEXT_TO_INT_PARAM_SETTING), debug))
+    }
+
 
     hypotheses
   }
@@ -1070,7 +1134,8 @@ object ExtractAndAlign {
     val paper1LinkElements = linkElements("TEXT_VAR1")
     val paper2LinkElements = linkElements("TEXT_VAR2")
     val hypotheses = new ArrayBuffer[ujson.Obj]()
-    hypotheses.appendAll(mkLinkHypothesis(paper1LinkElements, paper2LinkElements, alignment, debug))
+    // fixme: there should be no link type here bc link types are all the same in this task
+    hypotheses.appendAll(mkLinkHypothesis(paper1LinkElements, paper2LinkElements, "VAR1_VAR2", alignment, debug))
     hypotheses
   }
 
@@ -1136,7 +1201,7 @@ object ExtractAndAlign {
 
     // Get comment definitions
     val commentDefinitionMentions = getCommentDefinitionMentions(localCommentReader, grfn, variableShortNames, source)
-      .filter(hasRequiredArgs)
+      .filter(m => hasRequiredArgs(m, "definition"))
 
     val allUsedTextMentions = if (loadMentions) {
       val mentionsFile = new File(config[String]("apps.mentionsFile"))
@@ -1156,6 +1221,10 @@ object ExtractAndAlign {
     val parameterSettingMentions = allUsedTextMentions._2
     val intervalParameterSettingMentions = allUsedTextMentions._3
     val unitMentions = allUsedTextMentions._4
+
+    println(parameterSettingMentions.length + " par set len")
+    println(intervalParameterSettingMentions.length + " int par set len")
+    println(unitMentions.length + " unit len")
     logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
 
     // Load equations and "extract" variables/chunks (using heuristics)

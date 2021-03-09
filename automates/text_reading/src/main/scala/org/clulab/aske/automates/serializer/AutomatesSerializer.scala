@@ -154,7 +154,15 @@ object AutomatesJSONSerializer {
       case "MentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
       case "DiscontinuousCharOffset" => new DiscontinuousCharOffsetAttachment(json("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt)), json("discontinuousArgument").str, attType)
       case "ParamSetAtt" => new ParamSetAttachment(json("attachedTo").str, attType)
-      case "ParamSettingIntervalAtt" => new ParamSettingIntAttachment(Some(json("inclusiveLower").bool), Some(json("inclusiveUpper").bool), json("attachedTo").str, attType)
+      case "ParamSettingIntervalAtt" => {
+        var inclLower: Option[Boolean] = None
+        var inclUpper: Option[Boolean] = None
+        if (!json("inclusiveLower").isNull) inclLower = Some(json("inclusiveLower").bool)
+        if (!json("inclusiveUpper").isNull) inclUpper = Some(json("inclusiveUpper").bool)
+
+        new ParamSettingIntAttachment(inclLower, inclUpper, json("attachedTo").str, attType)
+      }
+
       case "UnitAtt" => new UnitAttachment(json("attachedTo").str, attType)
       case _ => ???
     }

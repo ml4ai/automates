@@ -316,7 +316,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val mentions = textMentions
       .filter(m => m.label matches mentionType)
-      .filter(hasRequiredArgs)
+//      .filter(hasRequiredArgs)
     mentions
   }
 
