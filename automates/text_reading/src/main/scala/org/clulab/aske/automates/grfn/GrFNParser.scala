@@ -225,6 +225,7 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
 //    val el2 = splitEl2(0)
     //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
     val hypothesis = if (debug) {
+  //todo: make sure all elements have a content field if possible or make it optional here
       val el1text = el1json("content").str
       val el2text = el2json("content").str
       val idAndIdentifier1 = el1Id + "::" + el1text
