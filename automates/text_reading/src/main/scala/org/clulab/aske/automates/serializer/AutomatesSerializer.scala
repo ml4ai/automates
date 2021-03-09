@@ -1,6 +1,6 @@
 package org.clulab.aske.automates.serializer
 
-import org.clulab.aske.automates.attachments.MentionLocationAttachment
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment}
 import org.clulab.odin
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
@@ -40,7 +40,7 @@ object AutomatesJSONSerializer {
     val menType = mentionComponents("type").str
     val attachments = new ArrayBuffer[Attachment]
 
-    if (mentionComponents.obj.keys.toList.contains("attachments")) {
+    if (mentionComponents.obj.contains("attachments")) {
       val attObjArray = mentionComponents("attachments").arr
       for (ao <- attObjArray) {
         val att = toAttachment(ao)
@@ -124,23 +124,26 @@ object AutomatesJSONSerializer {
     }
 
     // build paths
-    mentionJson("paths") match {
-      case ujson.Null => Map.empty[String, Map[Mention, odin.SynPath]]
-      case contents => for {
-        (argName, innermap) <- contents.obj.toMap
-      } yield {
-        val pathMap = for {
-          (mentionID, pathJSON) <- innermap.obj.toList
-          mOp = findMention(mentionID, mentionJson, docMap)
-          if mOp.nonEmpty
-          m = mOp.get
-          edges = pathJSON.arr.map(hop => Edge(hop.obj("source").num.toInt, hop.obj("destination").num.toInt, hop.obj("relation").str))
-          synPath: odin.SynPath = DirectedGraph.edgesToTriples(edges)
-        } yield m -> synPath
-        argName -> pathMap.toMap
+    if (mentionJson("paths").isNull) {
+      Map.empty[String, Map[Mention, odin.SynPath]]
+    } else {
+      mentionJson("paths") match {
+        case ujson.Null => Map.empty[String, Map[Mention, odin.SynPath]]
+        case contents => for {
+          (argName, innermap) <- contents.obj.toMap
+        } yield {
+          val pathMap = for {
+            (mentionID, pathJSON) <- innermap.obj.toList
+            mOp = findMention(mentionID, mentionJson, docMap)
+            if mOp.nonEmpty
+            m = mOp.get
+            edges = pathJSON.arr.map(hop => Edge(hop.obj("source").num.toInt, hop.obj("destination").num.toInt, hop.obj("relation").str))
+            synPath: odin.SynPath = DirectedGraph.edgesToTriples(edges)
+          } yield m -> synPath
+          argName -> pathMap.toMap
+        }
       }
     }
-
   }
 
 
@@ -148,12 +151,12 @@ object AutomatesJSONSerializer {
   def toAttachment(json: ujson.Value): Attachment = {
     val attType = json("attType").str
     val toReturn = attType match {
-      case "mentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
+      case "MentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
+      case "DiscontinuousCharOffset" => new DiscontinuousCharOffsetAttachment(json("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt)), json("discontinuousArgument").str, attType)
       case _ => ???
     }
     toReturn
   }
-
 
   def mkDocumentMap(documentsUJson: ujson.Value): Map[String, Document] = {
     val docHashToDocument = for {
@@ -167,6 +170,7 @@ object AutomatesJSONSerializer {
   def toDocument(docComponents: ujson.Value): Document = {
     val sentences = docComponents("sentences").arr.map(toSentence(_)).toArray
     val doc = Document(sentences)
+    doc.text = Some(docComponents("text").str)
     doc
   }
 
@@ -253,6 +257,7 @@ object AutomatesJSONSerializer {
   def toUJson(attachment: Attachment): ujson.Value = {
     attachment match {
       case a: MentionLocationAttachment => a.toUJson
+      case a: DiscontinuousCharOffsetAttachment => a.toUJson
       case _ => ???
     }
   }
