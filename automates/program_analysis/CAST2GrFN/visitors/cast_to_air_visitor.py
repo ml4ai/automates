@@ -7,6 +7,7 @@ from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2ALambda,
     C2ALambdaType,
     C2AExpressionLambda,
+    C2AReturnLambda,
     C2AVariable,
     C2AFunctionDefContainer,
     C2ATypeDef,
@@ -42,6 +43,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     UnaryOperator,
     VarType,
     Var,
+    var,
 )
 
 
@@ -126,19 +128,39 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         return NotImplemented
 
+    def get_op(self, op):
+        op_map = {"Mult": "*", "Add": "+", "Sub": "-", "Gt": ">"}
+        return op_map[op] if op in op_map else None
+
     @visit.register
     def _(self, node: BinaryOp):
         """
         TODO
         """
-        return NotImplemented
+        left_result = self.visit(node.left)
+        right_result = self.visit(node.right)
+        op_result = self.get_op(node.op)
+
+        return C2AExpressionLambda(
+            C2AIdentifierInformation(
+                C2ALambdaType.UNKNOWN,
+                self.state.scope_stack,
+                self.state.current_module,
+                C2AIdentifierType.LAMBDA,
+            ),
+            left_result.input_variables + right_result.input_variables,
+            [],
+            [],
+            C2ALambdaType.UNKNOWN,
+            f"{left_result.lambda_expr} {op_result} {right_result.lambda_expr}",
+            node,
+        )
 
     @visit.register
     def _(self, node: BinaryOperator):
         """
         TODO
         """
-        return NotImplemented
 
     @visit.register
     def _(self, node: Call):
@@ -174,8 +196,12 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
         self.state.push_scope(node.name)
-
         args_result = self.visit_list(node.func_args)
+        argument_vars = []
+        for arg in args_result:
+            for var in arg.input_variables:
+                self.state.add_variable(var)
+                argument_vars.append(var)
         body_result = self.visit_list(node.body)
 
         self.state.pop_scope()
@@ -187,7 +213,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 self.state.current_module,
                 C2AIdentifierType.CONTAINER,
             ),
-            args_result,
+            argument_vars,
             [],
             [],
             body_result,
@@ -235,7 +261,26 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return NotImplemented
+        val_result = self.visit(node.value)
+        print(type(node.value))
+        if isinstance(node.value, (Name, Number)):
+            return C2AReturnLambda(
+                C2AIdentifierInformation(
+                    C2ALambdaType.UNKNOWN,
+                    self.state.scope_stack,
+                    self.state.current_module,
+                    C2AIdentifierType.LAMBDA,
+                ),
+                [],
+                val_result.input_variables,
+                [],
+                C2ALambdaType.RETURN,
+            )
+
+        # TODO
+        # If not a var or literal, store the resulting value in a variable then
+        # return that variable
+        return []
 
     @visit.register
     def _(self, node: Module):
@@ -250,7 +295,23 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return node.name
+        name = node.name
+        var_obj = self.state.find_highest_version_var(name)
+
+        return C2AExpressionLambda(
+            C2AIdentifierInformation(
+                C2ALambdaType.UNKNOWN,
+                self.state.scope_stack,
+                self.state.current_module,
+                C2AIdentifierType.LAMBDA,
+            ),
+            [var_obj],
+            [],
+            [],
+            C2ALambdaType.UNKNOWN,
+            name,
+            node,
+        )
 
     @visit.register
     def _(self, node: Number):
@@ -326,7 +387,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        name = node.val
+        name = node.val.name
         var_obj = self.state.find_highest_version_var(name)
         if var_obj is None:
             var_obj = C2AVariable(

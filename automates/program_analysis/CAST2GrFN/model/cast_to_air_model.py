@@ -101,11 +101,18 @@ class C2AVariable(object):
         return f"{self.identifier_information.build_identifier()}::{str(self.version)}"
 
     def to_AIR(self):
+        # TODO
+        air_type = ""
+        if self.type_name == "Number":
+            air_type = "float"
+        else:
+            air_type = self.type_name
+
         return {
             "name": self.build_identifier(),
             "source_refs": [],
             "domain": {
-                "name": self.type_name,
+                "name": air_type,
                 "type": "type",  # TODO what is this field
                 "mutable": False,  # TODO probably only mutable if object/list/dict type
             },
@@ -118,6 +125,7 @@ class C2ALambdaType(str, Enum):
     ASSIGN = "assign"
     CONDITION = "condition"
     DECISION = "decision"
+    RETURN = "return"
 
 
 @dataclass(repr=False, frozen=True)
@@ -200,6 +208,16 @@ class C2AContainerCallLambda(C2ALambda):
 
 
 @dataclass(repr=False, frozen=True)
+class C2AReturnLambda(C2ALambda):
+    """
+    Represents the return from a container found in the body of a container definition
+    """
+
+    def to_AIR(self):
+        return self
+
+
+@dataclass(repr=False, frozen=True)
 class C2AContainerDef(object):
     """
     Represents a top level AIR container def. Has its arguments, outputs/ updates, and a body
@@ -234,6 +252,13 @@ class C2AFunctionDefContainer(C2AContainerDef):
     return_type_name: str
 
     def to_AIR(self):
+        body_without_returns = [
+            bb for bb in self.body if not isinstance(bb, C2AReturnLambda)
+        ]
+        # TODO
+        returns = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
+
+        print(self.arguments)
         return {
             # TODO
             "name": self.identifier_information.build_identifier(),
@@ -243,7 +268,7 @@ class C2AFunctionDefContainer(C2AContainerDef):
             "updated": [v.build_identifier() for v in self.updated_variables],
             # TODO change to specify a single return val
             "return_value": [v.build_identifier() for v in self.output_variables],
-            "body": [i.to_AIR() for i in self.body],
+            "body": [i.to_AIR() for i in body_without_returns],
         }
 
 
@@ -329,7 +354,8 @@ class C2AState(object):
         instances = [
             v
             for v in self.variables
-            if v.name == var_name and share_scope(self.scope_stack, v.scope)
+            if v.identifier_information.name == var_name
+            and share_scope(self.scope_stack, v.identifier_information.scope)
         ]
         return max(instances, key=lambda v: v.version, default=None)
 
@@ -339,7 +365,10 @@ class C2AState(object):
         variables in the current scope.
         """
         current_highest_ver = self.find_highest_version_var(var_name)
-        return current_highest_ver + 1 if current_highest_ver is not None else -1
+        print(current_highest_ver)
+        return (
+            current_highest_ver.version + 1 if current_highest_ver is not None else -1
+        )
 
     def to_AIR(self):
         """
