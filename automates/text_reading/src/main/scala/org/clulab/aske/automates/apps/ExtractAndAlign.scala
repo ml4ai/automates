@@ -53,6 +53,7 @@ object ExtractAndAlign {
   val VARIABLE = "variable"
   val DEF_LABEL = "Definition"
   val PARAMETER_SETTING_LABEL = "ParameterSetting"
+  val INTERVAL_PARAMETER_SETTING_LABEL = "IntervalParameterSetting"
   val UNIT_LABEL = "Unit"
 
   val logger = LoggerFactory.getLogger(this.getClass())
@@ -109,13 +110,13 @@ object ExtractAndAlign {
 
 //    linkElements(TEXT_VAR) = updateTextVarsWithParamSettings(linkElements(TEXT_VAR), parameterSettingMention, alignments(TEXT_TO_PARAM_SETTING))
 
-    linkElements(TEXT_VAR) =  if (groundToSVO) {
-      // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
-      if (alignments.contains("TEXT_TO_SVO")) {
-        updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
-      } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
-
-    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
+//    linkElements(TEXT_VAR) =  if (groundToSVO) {
+//      // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
+//      if (alignments.contains("TEXT_TO_SVO")) {
+//        updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
+//      } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
+//
+//    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
 
     for (le <- linkElements.keys) {
       outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar, false)}
@@ -216,126 +217,132 @@ object ExtractAndAlign {
     updatedTextVars
   }
 
-  def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int, debug: Boolean): ujson.Obj = {
+  def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int, debug: Boolean): ujson.Value = {
+
+    //todo: can keep the model comparison kind same for now but all other elType can just read in json; in that case, do I even need to make link elements? hopefully not
 
     //todo: add more informative source by type, e.g., for text var it's "text" (check with ph about this)
-
-    val splitElStr = element.split("::")
-    for (el <- splitElStr) println("el: " + el)
-    println("----")
-    val elType = splitElStr(1)
-
-    elType match {
-      case "text_var" => {
-        val id = splitElStr(0)
-        val source = splitElStr(2)
-        val identifier = splitElStr(3)
-        val originalSentence = splitElStr(4)
-        val definition = splitElStr(5)
-        val svo_terms = splitElStr(7)
-//        val unit = splitElStr(9)
-//        val value = splitElStr(10)
-//        val valueLeast = splitElStr(11)
-//        val valueMost = splitElStr(12)
-        val svoString = splitElStr(9)
-        val locationJsonStr = splitElStr(8)
-        println("svo: " + svoString)
-        println("loc: " + locationJsonStr)
-
-
-        val locationAsJson = ujson.read(locationJsonStr)
-
-        val results = if (groundToSvo) {
-          if (svoString != "None") {
-            val updateJson = ujson.read(svoString)
-            ujson.Arr(updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "score" -> sr("score").num, "source" -> sr("source").str)))
-          } else {
-            logger.info("Querying SVO server")
-            SVOGrounder.groundTermsToSVOandRank(identifier, svo_terms.split(","), maxSVOgroundingsPerVar)
-          }
-        } else ujson.Null
-
-//        val paramSetting = ujson.Obj()
+    val ujsonObj = ujson.read(element).obj
+    ujsonObj
+//    val splitElStr = element.split("::")
+//    for (el <- splitElStr) println("el: " + el)
+//    println("----")
+//    val elType = splitElStr(1)
 //
-//        if (value == "null") paramSetting("value") = ujson.Null
-//        if (valueLeast == "null") paramSetting("valueLeast") = ujson.Null
-//        if (valueMost == "null") paramSetting("valueMost") = ujson.Null
+//    elType match {
+////      case "text_var" => {
+////        val id = splitElStr(0)
+////        val source = splitElStr(2)
+////        val identifier = splitElStr(3)
+////        val originalSentence = splitElStr(4)
+////        val definition = splitElStr(5)
+////        val svo_terms = splitElStr(7)
+//////        val unit = splitElStr(9)
+//////        val value = splitElStr(10)
+//////        val valueLeast = splitElStr(11)
+//////        val valueMost = splitElStr(12)
+////        val svoString = splitElStr(9)
+////        val locationJsonStr = splitElStr(8)
+////        println("svo: " + svoString)
+////        println("loc: " + locationJsonStr)
+////
+////
+////        val locationAsJson = ujson.read(locationJsonStr)
+////
+////        val results = if (groundToSvo) {
+////          if (svoString != "None") {
+////            val updateJson = ujson.read(svoString)
+////            ujson.Arr(updateJson("grounding").arr.map(sr => ujson.Obj("osv_term" -> sr("osv_term").str, "class_name" -> sr("class_name").str, "score" -> sr("score").num, "source" -> sr("source").str)))
+////          } else {
+////            logger.info("Querying SVO server")
+////            SVOGrounder.groundTermsToSVOandRank(identifier, svo_terms.split(","), maxSVOgroundingsPerVar)
+////          }
+////        } else ujson.Null
+////
+//////        val paramSetting = ujson.Obj()
+//////
+//////        if (value == "null") paramSetting("value") = ujson.Null
+//////        if (valueLeast == "null") paramSetting("valueLeast") = ujson.Null
+//////        if (valueMost == "null") paramSetting("valueMost") = ujson.Null
+////
+////        mkTextVarLinkElement(
+////          uid = id,
+////          source = source,
+////          originalSentence = originalSentence,
+////          identifier = identifier,
+////          definition = definition,
+////          svo_terms = svo_terms,
+//////          unit = unit,
+//////          paramSetting = paramSetting,
+////          svo = results,
+////          spans = locationAsJson
+////        )
+////
+////      }
+////
+//
+//
+//      case "text_var_for_model_comparison" => {
+//        val id = splitElStr(0)
+//        val source = splitElStr(2)
+//        val identifier = splitElStr(3)
+//        val originalSentence = splitElStr(4)
+//        val definition = splitElStr(5)
+//
+//        mkTextVarLinkElementForModelComparison(
+//          uid = id,
+//          source = source,
+//          originalSentence = originalSentence,
+//          identifier = identifier,
+//          definition = definition,
+//          debug = debug
+//        )
+//
+//      }
+//      case _ => {
+//        ujson.read(element)
+//      }
 
-        mkTextVarLinkElement(
-          uid = id,
-          source = source,
-          originalSentence = originalSentence,
-          identifier = identifier,
-          definition = definition,
-          svo_terms = svo_terms,
-//          unit = unit,
-//          paramSetting = paramSetting,
-          svo = results,
-          spans = locationAsJson
-        )
-
-      }
-
-
-
-      case "text_var_for_model_comparison" => {
-        val id = splitElStr(0)
-        val source = splitElStr(2)
-        val identifier = splitElStr(3)
-        val originalSentence = splitElStr(4)
-        val definition = splitElStr(5)
-
-        mkTextVarLinkElementForModelComparison(
-          uid = id,
-          source = source,
-          originalSentence = originalSentence,
-          identifier = identifier,
-          definition = definition,
-          debug = debug
-        )
-
-      }
-
-
-      case "identifier" => {
-        val id = splitElStr(0)
-        val source = splitElStr(2)
-        val identifier = splitElStr.takeRight(3)(0)
-
-        mkLinkElement(
-          id = id,
-          source = source,
-          content = identifier,
-          contentType = "null"
-        )
-      }
-      case "fullTextEquation" => {
-        val id = splitElStr(0)
-        val equation = splitElStr(2)
-
-        mkLinkElement(
-          id = id,
-          source = "text",
-          content = equation,
-          contentType = "null"
-        )
-
-      }
-      case _ => {
-        val id = splitElStr(0)
-        val elType = splitElStr(1)
-        val source = splitElStr(2)
-        val content = splitElStr(3)
-
-        mkLinkElement(
-          id = id,
-          source = source,
-          content = content,
-          contentType = "null"
-        )
-
-      }
-    }
+//
+//      case "identifier" => {
+//        val id = splitElStr(0)
+//        val source = splitElStr(2)
+//        val identifier = splitElStr.takeRight(3)(0)
+//
+//        mkLinkElement(
+//          id = id,
+//          source = source,
+//          content = identifier,
+//          contentType = "null"
+//        )
+//      }
+//      case "fullTextEquation" => {
+//        val id = splitElStr(0)
+//        val equation = splitElStr(2)
+//
+//        mkLinkElement(
+//          id = id,
+//          source = "text",
+//          content = equation,
+//          contentType = "null"
+//        )
+//
+//      }
+//      case _ => {
+//        val id = splitElStr(0)
+//        val elType = splitElStr(1)
+//        val source = splitElStr(2)
+//        val content = splitElStr(3)
+//
+//        mkLinkElement(
+//          id = id,
+//          source = source,
+//          content = content,
+//          contentType = "null"
+//        )
+//
+//      }
+   // }
   }
 
   def hasRequiredArgs(m: Mention): Boolean = m.arguments.contains(VARIABLE) && m.arguments.contains(DEFINITION)
@@ -370,7 +377,7 @@ object ExtractAndAlign {
       .filter(chunk => !chunk.matches("&?\\\\\\w+&?")) //to eliminate standalone latex control sequences, e.g., \\times (they can have ampersands on each side)
   }
 
-  def getTextMentions(textReader: OdinEngine, dataLoader: DataLoader, textRouter: TextRouter, files: Seq[File]): (Seq[Mention], Seq[Mention], Seq[Mention]) = {
+  def getTextMentions(textReader: OdinEngine, dataLoader: DataLoader, textRouter: TextRouter, files: Seq[File]): (Seq[Mention], Seq[Mention], Seq[Mention], Seq[Mention]) = {
     val textMentions = files.par.flatMap { file =>
       logger.info(s"Extracting from ${file.getName}")
       val texts: Seq[String] = dataLoader.loadFile(file)
@@ -379,7 +386,7 @@ object ExtractAndAlign {
     }
     logger.info(s"Extracted ${textMentions.length} text mentions")
     val onlyEventsAndRelations = textMentions.seq.filter(m => m.matches("EventMention") || m.matches("RelationMention"))
-    (onlyEventsAndRelations.filter(_ matches DEF_LABEL), onlyEventsAndRelations.filter(_ matches PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches UNIT_LABEL))
+    (onlyEventsAndRelations.filter(_ matches DEF_LABEL), onlyEventsAndRelations.filter(_ matches PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches INTERVAL_PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches UNIT_LABEL))
   }
 
   def getCommentDefinitionMentions(commentReader: OdinEngine, alignmentInputFile: Value, variableShortNames: Option[Seq[String]], source: Option[String]): Seq[Mention] = {
@@ -499,6 +506,200 @@ object ExtractAndAlign {
     alignments.toMap
   }
 
+
+  // fixme: move this to odin actions or some utils file
+  def getDiscontinuousText(mention: Mention): String = {
+    val subStrings = new ArrayBuffer[String]()
+    val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
+    val charOffset = discontAttachment("charOffsets").arr
+    val docText = mention.document.text.getOrElse("No text")
+    for (offsetSet <- charOffset) {
+      val start = offsetSet.arr.head.num.toInt
+      val end = offsetSet.arr.last.num.toInt
+      subStrings.append(docText.slice(start, end).mkString(""))
+    }
+    subStrings.mkString(" ")
+  }
+
+
+  def makeLocationObj(argMen: Mention, page: Int, block: Int): ujson.Obj = {
+    // passing an arg text mention and the full mention attachments (bc location attachment is on the whole Mention
+    val locationObj = if  (page != -1000 & block != -1000)  {
+
+      ujson.Obj(
+        "page" -> page,
+        "block" -> block,
+        "span" -> ujson.Obj(
+          "char_begin" -> argMen.startOffset,
+          "char_end" -> argMen.endOffset
+        )
+      )
+    } else {
+      ujson.Obj(
+        "page" -> ujson.Null,
+        "block" -> ujson.Null,
+        "span" -> ujson.Obj(
+          "char_begin" -> argMen.startOffset,
+          "char_end" -> argMen.endOffset
+        )
+      )
+    }
+    locationObj
+  }
+  //
+  //    def makeIdentifierObject(identifierTextMen: Mention, page: Int, block: Int): ujson.Obj = {
+  //      ujson.Obj(
+  //        "name" -> "identifier",
+  //        "text" -> identifierTextMen.text,
+  //        "spans" -> makeLocationObj(identifierTextMen, page, block)
+  //      )
+  //    }
+
+  def makeArgObject(identifierTextMen: Mention, page: Int, block: Int, argType: String): ujson.Obj = {
+    ujson.Obj(
+      "name" -> argType,
+      "text" -> identifierTextMen.text,
+      "spans" -> makeLocationObj(identifierTextMen, page, block)
+    )
+  }
+
+  def makeParamSettingObj(mention: Mention, paramSetAttJson: Value, page: Int, block: Int): ujson.Obj = {
+    val lowerBound = paramSetAttJson("inclusiveLower")
+    val upperBound = paramSetAttJson("inclusiveUpper")
+    val toReturn = ujson.Obj(
+      "name" -> "parameter_interval",
+      "inclusive_lower" -> lowerBound,
+      "inclusive_upper" -> upperBound,
+      "lower_bound" -> ujson.Null,
+      "upper_bound" -> ujson.Null,
+
+    )
+
+    val spans = new ArrayBuffer[ujson.Value]()
+    val menArgs = mention.arguments
+    if (menArgs.exists(arg => arg._1 == "valueLeast")) {
+      val valLeastMen = menArgs("valueLeast").head
+      toReturn("lower_bound") = valLeastMen.text.toDouble
+      spans.append(makeLocationObj(valLeastMen, page, block))
+
+    }
+    if (menArgs.exists(arg => arg._1 == "valueMost")) {
+      val valMostMen = menArgs("valueMost").head
+      toReturn("upper_bound") = valMostMen.text.toDouble
+      spans.append(makeLocationObj(valMostMen, page, block))
+
+    }
+    toReturn("spans") = spans
+    toReturn
+  }
+
+  def getIntParamSetArgObj(mention: Mention): ArrayBuffer[Value] = {
+    // NB! this one is weird because it needs to put two args into one param interval obj; the others can just be done iterating through args
+
+    val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
+      val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+      val page = menAttAsJson("pageNum").num.toInt
+      val block = menAttAsJson("blockIdx").num.toInt
+      (page, block)
+    } else {
+      (-1000, -1000)
+    }
+
+
+    val argObjs = new ArrayBuffer[Value]()
+
+    val paramSetAttJson = returnAttachmentOfAGivenType(mention.attachments, "ParamSettingIntervalAtt").toUJson
+    val attTo = paramSetAttJson("attachedTo")
+    val varMen = mention.arguments("variable").head
+
+
+    val varObj = if (attTo.str == "variable") {
+      makeArgObject(varMen, page, block, "identifier")
+    } else {
+      makeArgObject(varMen, page, block, "definition")
+    }
+    argObjs.append(varObj)
+
+    val paramSettingObj = makeParamSettingObj(mention, paramSetAttJson, page, block)
+    argObjs.append(paramSettingObj)
+    argObjs
+  }
+
+  def getArgObjForUnitAndParamSet(mention: Mention): ArrayBuffer[Value] = {
+    // NB! this one is weird because it needs to put two args into one param interval obj; the others can just be done iterating through args
+
+    val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
+      val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+      val page = menAttAsJson("pageNum").num.toInt
+      val block = menAttAsJson("blockIdx").num.toInt
+      (page, block)
+    } else {
+      (-1000, -1000)
+    }
+
+    val attTo = mention.label match {
+      case "ParameterSetting" => {
+        val paramSetAttJson = returnAttachmentOfAGivenType(mention.attachments, "ParamSetAtt").toUJson
+        paramSetAttJson("attachedTo")
+      }
+      case "UnitRelation" => {
+        val unitAttJson = returnAttachmentOfAGivenType(mention.attachments, "UnitAtt").toUJson
+        unitAttJson("attachedTo")
+      }
+      case _ => ???
+    }
+
+    val argObjs = new ArrayBuffer[Value]()
+    val varMen = mention.arguments("variable").head
+
+    val varObj = if (attTo.str == "variable") {
+      makeArgObject(varMen, page, block, "identifier")
+    } else {
+      makeArgObject(varMen, page, block, "definition")
+    }
+    argObjs.append(varObj)
+
+    val theOtherArgObj = mention.label match {
+      case "ParameterSetting" => {
+        makeArgObject(mention.arguments("value").head, page, block, "parameter_setting")
+      }
+      case "UnitRelation" => {
+        makeArgObject(mention.arguments("unit").head, page, block, "unit")
+      }
+      case _ => ???
+    }
+    argObjs.append(theOtherArgObj)
+    argObjs
+  }
+
+  def mentionToIDedObjString(mention: Mention, mentionType: String): String = {
+    // creates an id'ed object for each mention
+    val docId = mention.document.id.getOrElse("unk_text_file")
+    //      val sent = mention.sentence
+    val originalSentence = mention.sentenceObj.words.mkString(" ")
+    val offsets = mention.tokenInterval.toString()
+    val args = mentionType match {
+      case "textVarToIntParamSetting" => getIntParamSetArgObj(mention) // fixme: how to make case for two matches? (for both types of int param settings)
+      case "textToIntParamSetting" => getIntParamSetArgObj(mention)
+      case "textVarToParamSetting" =>  getArgObjForUnitAndParamSet(mention)
+      case "textToParamSetting" =>  getArgObjForUnitAndParamSet(mention)
+      case "textVarToUnit" =>  getArgObjForUnitAndParamSet(mention)
+      case "textToUnit" =>  getArgObjForUnitAndParamSet(mention)
+
+      case _ => ???
+    }
+
+    val jsonObj = ujson.Obj(
+      "uid" -> randomUUID.toString(),
+      "source" -> docId,
+      "original_sentence" -> originalSentence,
+      "content" -> mention.text,
+      "arguments" -> ujson.Arr(args)
+    )
+
+    jsonObj.toString()
+  }
+
   def getLinkElements(
     grfn: Value,
     textDefinitionMentions:
@@ -516,7 +717,12 @@ object ExtractAndAlign {
 
     if (commentDefinitionMentions.isDefined) {
       linkElements(COMMENT) = commentDefinitionMentions.get.map { commentMention => {
-        randomUUID + "::" + "comment_span" + "::" + commentMention.document.id.getOrElse("unk_file").toString + "::" +commentMention.arguments(DEFINITION).head.text + "::" + "null"
+
+        ujson.Obj(
+          "uid" -> randomUUID.toString,
+          "source" -> commentMention.document.id.getOrElse("unk_file").toString,
+          "text" -> commentMention.arguments(DEFINITION).head.text
+        ).toString()
 
       }
 
@@ -527,41 +733,35 @@ object ExtractAndAlign {
     // Repeat for src code variables
     if (variableNames.isDefined) {
       linkElements(SOURCE) = variableNames.get.map { varName =>
+        ujson.Obj(
+          "uid" -> randomUUID.toString,
+          "???" -> varName.split("::")(1),
+          "var_name" -> varName
+        ).toString()
 
-        randomUUID + "::" + "identifier" + "::" + varName.split("::")(1) + "::" + varName + "::" + "null"
+//        randomUUID + "::" + "identifier" + "::" + varName.split("::")(1) + "::" + varName + "::" + "null"
 
       }
     }
 
 
 //     Repeat for text variables
-    if (textDefinitionMentions.isDefined) {
-      linkElements(TEXT) = textDefinitionMentions.get.map { mention =>
-        val docId = mention.document.id.getOrElse("unk_text_file")
-        val sent = mention.sentence
-        val offsets = mention.tokenInterval.toString()
-        randomUUID + "::" + "text_span" +"::" +  s"${docId}_sent${sent}_$offsets" + "::" + mention.arguments(DEFINITION).head.text + "::" + "null"
-      }
-    }
+//    if (textDefinitionMentions.isDefined) {
+//      linkElements(TEXT) = textDefinitionMentions.get.map { mention =>
+//        val docId = mention.document.id.getOrElse("unk_text_file")
+//        val sent = mention.sentence
+//        val offsets = mention.tokenInterval.toString()
+//        randomUUID + "::" + "text_span" +"::" +  s"${docId}_sent${sent}_$offsets" + "::" + mention.arguments(DEFINITION).head.text + "::" + "null"
+//      }
+//    }
 
-    // fixme: move this to odin actions or some utils file
-    def getDiscontinuousText(mention: Mention): String = {
-      val subStrings = new ArrayBuffer[String]()
-      val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
-      val charOffset = discontAttachment("charOffsets").arr
-      val docText = mention.document.text.getOrElse("No text")
-      for (offsetSet <- charOffset) {
-        val start = offsetSet.arr.head.num.toInt
-        val end = offsetSet.arr.last.num.toInt
-        subStrings.append(docText.slice(start, end).mkString(""))
-      }
-      subStrings.mkString(" ")
-    }
 
     if (textDefinitionMentions.isDefined) {
 
       // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
+
+
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
         val originalSentence = mention.sentenceObj.words.mkString(" ")
@@ -603,164 +803,80 @@ object ExtractAndAlign {
             )
           )
         }
-          randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
-
-      }
-    }
-
-
-//    "arguments": [
-//    {
-//      "name": "identifier",
-//      "text": "beta",
-//      "spans": []
-//    },
-//    {
-//      "name": "definition",
-//      "text": "relative contact rate",
-//      "svo_terms": [],
-//      "spans": []
-//    }
-//    ]
-
-//    "arguments": [
-//    {
-//      "name": "identifier",
-//      "text": "beta",
-//      "spans": []
-//    },
-//    {
-//      "name": "parameter_interval",
-//      "inclusive_lower": null,
-//      "inclusive_upper": true,
-//      "lower_bound": "0.7",
-//      "upper_bound": "0.9",
-//      "spans": []
-//    }
-//    ]
-
-    def makeLocationObj(argMen: Mention, page: Int, block: Int): ujson.Obj = {
-      // passing an arg text mention and the full mention attachments (bc location attachment is on the whole Mention
-      val locationObj = if  (page != null & block != null)  {
 
         ujson.Obj(
-          "page" -> page,
-          "block" -> block,
-          "span" -> ujson.Obj(
-            "char_begin" -> argMen.startOffset,
-            "char_end" -> argMen.endOffset
-          )
-        )
-      } else {
-        ujson.Obj(
-          "page" -> ujson.Null,
-          "block" -> ujson.Null,
-          "span" -> ujson.Obj(
-            "char_begin" -> argMen.startOffset,
-            "char_end" -> argMen.endOffset
-          )
-        )
-      }
-      locationObj
-    }
+          "uid" -> randomUUID.toString(),
+          "source" -> docId,
+          "text_var" -> textVar,
+          "original_sentence" -> originalSentence,
+          "definition" -> definition,
+          "spans" -> continuousMenSpanJson
 
-    def makeIdentifierObject(identifierTextMen: Mention, page: Int, block: Int): ujson.Obj = {
-      ujson.Obj(
-        "name" -> "identifier",
-        "text" -> identifierTextMen.text,
-        "spans" -> makeLocationObj(identifierTextMen, page, block)
-      )
-    }
+        ).toString()
+//          randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
 
-    def makeParamSettingObj(mention: Mention): ujson.Obj = {
-      val paramSettAtt = returnAttachmentOfAGivenType(mention.attachments, "ParamSettingIntervalAtt").toUJson
-      val lowerBound = paramSettAtt("inclusiveLower")
-      val upperBound = paramSettAtt("inclusiveUpper").bool
-      val toReturn = ujson.Obj(
-        "name" -> "parameter_interval"
-      )
-      if (lowerBound!=true & lowerBound!=false) {
-        toReturn("inclusive_lower") = lowerBound
-      } else {
-        toReturn("inclusive_lower") = ujson.Null
-      }
-      if (upperBound != null) {
-        toReturn("inclusive_lower") = lowerBound
-      } else {
-        toReturn("inclusive_lower") = ujson.Null
-      }
-      val valueLeastTextMen = if (mention.arguments.exists(_._1 == "valueLeast")) mention.arguments("valueLeast").head else null
-      val valueMostTextMen = if (mention.arguments.exists(_._1 == "valueLeast")) mention.arguments("valueLeast").head else null
-
-      {
-        "name" -> "parameter_interval",
-        "inclusive_lower": null,
-        "inclusive_upper": true,
-        "lower_bound": "0.7",
-        "upper_bound": "0.9",
-        "spans": []
       }
     }
 
-    def getVarIntParamSetArgObj(mention: Mention): Array[ujson.Obj] = {
-      // NB! this one is weird because it needs to put two args into one param interval obj; the others can just be done iterating through args
 
-      val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
-        val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-        val page = menAttAsJson("pageNum").num.toInt
-        val block = menAttAsJson("blockIdx").num.toInt
-        (page, block)
-      } else {
-        null
-      }
-
-      val argObjs = new ArrayBuffer[ujson.Obj]()
-      val identifierTextMen = mention.arguments("variable").head
-
-      val identifierObj = makeIdentifierObject(identifierTextMen, page, block)
-      argObjs.append(identifierObj)
-      val paramSettingObj = makeParamSettingObj(mention)
-
-      argObjs.toArray
-    }
-
-    def mentionToIDedObjString(mention: Mention, mentionType: String): String = {
-      // creates an id'ed object for each mention
-      val docId = mention.document.id.getOrElse("unk_text_file")
-//      val sent = mention.sentence
-      val originalSentence = mention.sentenceObj.words.mkString(" ")
-      val offsets = mention.tokenInterval.toString()
-      val args = mentionType match {
-        case "textVarToIntParamSetting" => getVarIntParamSetArgObj(mention)
-      }
-
-      val jsonObj = ujson.Obj(
-        "uid" -> randomUUID.toString,
-        "source" -> docId,
-        "original_sentence" -> originalSentence,
-        "arguments" -> args
-      )
-
-      jsonObj.toString()
-    }
 
     if (intervalParameterSettingMentions.isDefined) {
 
-
       val (throughVar, throughConcept) = intervalParameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m
-       .attachments, "ParamSetAtt").toUJson("attachedTo").str=="variable")
-
+       .attachments, "ParamSettingIntervalAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
         linkElements(VAR_INT_PARAM_SETTING) = throughVar.map { mention =>
           mentionToIDedObjString(mention, "textVarToIntParamSetting")
-
         }
+      }
 
+      if (throughConcept.nonEmpty) {
+        linkElements(TEXT_TO_INT_PARAM_SETTING) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, "textToIntParamSetting")
+        }
       }
 
     }
 
+    if (parameterSettingMentions.isDefined) {
+
+      val (throughVar, throughConcept) = parameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m
+        .attachments, "ParamSetAtt").toUJson("attachedTo").str=="variable")
+
+      if (throughVar.nonEmpty) {
+        linkElements(TEXT_VAR_TO_PARAM_SETTING) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, "textVarToParamSetting")
+        }
+      }
+
+      if (throughConcept.nonEmpty) {
+        linkElements(TEXT_TO_PARAM_SETTING) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, "textToParamSetting")
+        }
+      }
+
+    }
+
+
+    if (unitRelationMentions.isDefined) {
+
+      val (throughVar, throughConcept) = unitRelationMentions.get.partition(m => returnAttachmentOfAGivenType(m
+        .attachments, "UnitAtt").toUJson("attachedTo").str=="variable")
+
+      if (throughVar.nonEmpty) {
+        linkElements(TEXT_VAR_TO_UNIT) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, "textVarToUnit")
+        }
+      }
+
+      if (throughConcept.nonEmpty) {
+        linkElements(TEXT_TO_UNIT) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, "textToUnit")
+        }
+      }
+
+    }
 
 
     // Repeat for Eqn Variables
@@ -768,15 +884,34 @@ object ExtractAndAlign {
       val equation2uuid = mutable.Map[String, UUID]()
       linkElements(EQUATION) = equationChunksAndSource.get.map { case (chunk, orig) =>
         if (equation2uuid.contains(orig)) {
-          randomUUID + "::" + "equation_span" + "::" + equation2uuid(orig) + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
+          ujson.Obj(
+            "uid" -> randomUUID.toString(),
+            "equation_uid" -> equation2uuid(orig).toString(),
+            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+          ).toString()
+
+//          randomUUID + "::" + "equation_span" + "::" + equation2uuid(orig) + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
         } else {
           val id = randomUUID
           equation2uuid(orig) = id
-          randomUUID + "::" + "equation_span" + "::" + id + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
+
+          // fixme: i dont think this one matters
+          ujson.Obj(
+            "uid" -> id.toString(),
+            "equation_content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+          ).toString()
+//          randomUUID + "::" + "equation_span" + "::" + id + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
         }
       }
 
-      linkElements(FULL_TEXT_EQUATION) = equation2uuid.keys.map(key => equation2uuid(key).toString() + "::" + "fullTextEquation" + "::" + key ).toSeq
+      linkElements(FULL_TEXT_EQUATION) = equation2uuid.keys.map(key =>
+        ujson.Obj(
+          "uid" -> equation2uuid(key).toString(),
+          "content" -> key
+        ).toString()
+        //equation2uuid(key).toString() + "::" + "fullTextEquation" + "::" + key
+
+      ).toSeq
     }
 
     linkElements
@@ -922,9 +1057,10 @@ object ExtractAndAlign {
 
     // TextVar -> TextDef (text_span)
     //taken care of while creating link elements
-    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(TEXT)) {
-      hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT), debug))
-    }
+    // the full var def extraction are an element now so we dont need a separate text object
+//    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(TEXT)) {
+//      hypotheses.appendAll(mkLinkHypothesisTextVarDef(linkElements(TEXT_VAR), linkElements(TEXT), debug))
+//    }
 
     hypotheses
   }
@@ -1006,7 +1142,8 @@ object ExtractAndAlign {
       val mentionsFile = new File(config[String]("apps.mentionsFile"))
       (JSONSerializer.toMentions(mentionsFile).filter(_.label matches "Definition"),
         JSONSerializer.toMentions(mentionsFile).filter(_.label matches "ParameterSetting"),
-        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "Unit"))
+        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "IntervalParameterSetting"),
+        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "UnitRelation"))
     } else {
       val inputDir = config[String]("apps.inputDirectory")
       val inputType = config[String]("apps.inputType")
@@ -1017,7 +1154,8 @@ object ExtractAndAlign {
     }
     val textDefinitionMentions = allUsedTextMentions._1
     val parameterSettingMentions = allUsedTextMentions._2
-    val unitMentions = allUsedTextMentions._3
+    val intervalParameterSettingMentions = allUsedTextMentions._3
+    val unitMentions = allUsedTextMentions._4
     logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
 
     // Load equations and "extract" variables/chunks (using heuristics)
@@ -1034,6 +1172,7 @@ object ExtractAndAlign {
       variableShortNames,
       Some(textDefinitionMentions),
       Some(parameterSettingMentions),
+      Some(intervalParameterSettingMentions),
       Some(unitMentions),
       Some(commentDefinitionMentions),
       equationChunksAndSource,

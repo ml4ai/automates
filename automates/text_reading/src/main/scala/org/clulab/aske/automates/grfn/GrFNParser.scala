@@ -214,14 +214,21 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
   }
 
   def mkHypothesis(elem1: String, elem2: String, score: Double, debug: Boolean): ujson.Obj = {
-    val splitEl1 = elem1.split("::")
-    val splitEl2 = elem2.split("::")
-    val el1 = splitEl1(0)
-    val el2 = splitEl2(0)
+//    val splitEl1 = elem1.split("::")
+//    val splitEl2 = elem2.split("::")
+    val el1json = ujson.read(elem1).obj
+    val el2json = ujson.read(elem1).obj
+    val el1Id = el1json("uid").str
+    val el2Id = el2json("uid").str
+
+//    val el1 = splitEl1(0)
+//    val el2 = splitEl2(0)
     //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
     val hypothesis = if (debug) {
-      val idAndIdentifier1 = splitEl1(0) + "::" + splitEl1(3) + "::" + splitEl1(4)
-      val idAndIdentifier2 = splitEl2(0) + "::" + splitEl2(3) + "::" + splitEl2(4)
+      val el1text = el1json("content").str
+      val el2text = el2json("content").str
+      val idAndIdentifier1 = el1Id + "::" + el1text
+      val idAndIdentifier2 = el2Id + "::" + el2text
       ujson.Obj(
         "element_1" -> idAndIdentifier1,
         "element_2" -> idAndIdentifier2,
@@ -229,8 +236,8 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
       )
     } else {
       ujson.Obj(
-        "element_1" -> el1,
-        "element_2" -> el2,
+        "element_1" -> el1Id,
+        "element_2" -> el2Id,
         "score" -> score
       )
     }
