@@ -55,7 +55,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val groundToSVODefault = true
   private val appendToGrFNDefault = true
   private val defaultSerializerName = "AutomatesJSONSerializer" // other - "JSONSerializer"
-  private val debugDefault = true
+  private val debugDefault = false
+
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 

@@ -19,7 +19,6 @@ import ujson.{Obj, Value}
 import org.clulab.grounding.{SVOGrounder, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import java.util.UUID.randomUUID
-
 import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
 
 import scala.collection.mutable
@@ -112,6 +111,7 @@ object ExtractAndAlign {
     var outputJson = ujson.Obj()
 
     val linkElements = getLinkElements(grfn, definitionMentions, commentDefinitionMentions, equationChunksAndSource, variableNames, parameterSettingMention, intervalParameterSettingMentions,  unitMentions)
+
 
     // fixme: rethink svo grounding
 //    linkElements(TEXT_VAR) =  if (groundToSVO) {
@@ -621,7 +621,6 @@ object ExtractAndAlign {
     parameterSettingMentions: Option[Seq[Mention]],
     intervalParameterSettingMentions: Option[Seq[Mention]],
     unitRelationMentions: Option[Seq[Mention]]
-
   ): mutable.HashMap[String, Seq[String]] = {
     // Make Comment Spans from the comment variable mentions
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
@@ -682,6 +681,7 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         linkElements(PARAM_SETTING_THRU_VAR) = throughVar.map { mention =>
           mentionToIDedObjString(mention, PARAM_SETTING_THRU_VAR)
+
         }
       }
 
