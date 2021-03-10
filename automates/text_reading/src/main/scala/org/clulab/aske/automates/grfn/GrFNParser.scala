@@ -214,16 +214,12 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
   }
 
   def mkHypothesis(elem1: String, elem2: String, linkType: String, score: Double, debug: Boolean): ujson.Obj = {
-//    val splitEl1 = elem1.split("::")
-//    val splitEl2 = elem2.split("::")
+
     val el1json = ujson.read(elem1).obj
     val el2json = ujson.read(elem2).obj
     val el1Id = el1json("uid").str
     val el2Id = el2json("uid").str
 
-//    val el1 = splitEl1(0)
-//    val el2 = splitEl2(0)
-    //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
     val hypothesis = if (debug) {
   //todo: make sure all elements have a content field if possible or make it optional here
       val el1text = el1json("content").str
@@ -249,10 +245,10 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
 
   def mkHypothesis(elem1: Value, elem2: Value, score: Double, debug: Boolean): ujson.Obj = {
     val hypothesis = if (debug) {
-      // for debugging alignment quality; fixme: this is readable but not a pretty json
+      // for debugging alignment quality
       ujson.Obj(
-        "grfn1_var_uid" -> elem1.obj.mkString(" "),
-        "grfn2_var_uid" -> elem2.obj.mkString(" "),
+        "grfn1_var_uid" -> elem1.obj,
+        "grfn2_var_uid" -> elem2.obj,
         "score" -> score
       )
     } else {
