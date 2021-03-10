@@ -15,15 +15,16 @@ object DiscourseExperiments extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/txt_with_per"
+  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/sample"
   val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/output"
   val inputType = "txt"
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
+  val pw = new PrintWriter(new File("/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/output/full_doc_trees.txt" ))
 
-
+  pw.write("START")
   files.par.foreach { file =>
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
@@ -31,20 +32,20 @@ object DiscourseExperiments extends App {
     // 2. Get the input file contents
     // note: for science parse format, each text is a section
     val texts = dataLoader.loadFile(file)
-    // 3. Extract causal mentions from the texts
-    // todo: here I am choosing to pass each text/section through separately -- this may result in a difficult coref problem
+
     val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
 
     val doc = reader.annotate(texts.mkString(" "))
 //    println(doc.discourseTree.getOrElse("No tree"))
 //
-    val tree = doc.discourseTree.get
+    val tree = doc.discourseTree.get//.visualizerJSON()
 
-   println(tree)
+    pw.write(tree.toString() + "\n============\n")
+//   println(tree)
     val causal = mentions.filter(_ matches "Causal")
 
     for (m <- causal) {
-      println("causalRel: " + m.text + m.startOffset + m.endOffset)
+      pw.write("causalRel: " + m.text + m.startOffset + m.endOffset)
     }
 
 //    for (m <- mentions) println(m.text + " " + m.label)
@@ -102,4 +103,5 @@ object DiscourseExperiments extends App {
 //    }
 
   }
+  pw.close()
 }
