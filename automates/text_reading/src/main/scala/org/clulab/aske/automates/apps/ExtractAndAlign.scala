@@ -37,30 +37,29 @@ object ExtractAndAlign {
   val VAR_UNIT = "var_unit"
   val SOURCE = "source"
   val EQUATION = "equation"
-  val FULL_TEXT_EQUATION = "fullTextEquation"
+  val FULL_TEXT_EQUATION = "full_text_equation"
   val SVO_GROUNDING = "SVOgrounding"
-  val SRC_TO_COMMENT = "sourceToComment"
-  val TEXT_VAR_TO_UNIT = "textVarToUnit"
-  val TEXT_TO_UNIT = "textToUnit"
-  val TEXT_VAR_TO_PARAM_SETTING = "textVarToParamSetting"
-  val TEXT_VAR_TO_INT_PARAM_SETTING = "textVarToIntParamSetting"
-  val TEXT_TO_INT_PARAM_SETTING = "textToIntParamSetting"
-  val TEXT_TO_PARAM_SETTING = "textToParamSetting"
-  //val VAR_INT_PARAM_SETTING = "textVarToIntParamSetting"
-  val INT_PARAM_SETTING_THRU_CONCEPT = "intParamSettingThroughConcept"
-  val INT_PARAM_SETTING_THRU_VAR = "intParamSettingThroughVar"
-  val PARAM_SETTING_THRU_CONCEPT = "paramSettingThroughConcept"
-  val PARAM_SETTING_THRU_VAR = "paramSettingThroughVar"
-  val UNIT_THRU_VAR = "unitThroughVar"
-  val UNIT_THRU_CONCEPT = "unitThroughConcept"
-  val EQN_TO_TEXT = "equationToText"
-  val COMMENT_TO_TEXT = "commentToText"
+  val SRC_TO_COMMENT = "source_to_comment"
+  val TEXT_VAR_TO_UNIT = "text_var_to_unit"
+  val TEXT_TO_UNIT = "text_to_unit"
+  val TEXT_VAR_TO_PARAM_SETTING = "text_var_to_param_setting"
+  val TEXT_VAR_TO_INT_PARAM_SETTING = "text_var_to_int_param_setting"
+  val TEXT_TO_INT_PARAM_SETTING = "text_to_int_param_setting"
+  val TEXT_TO_PARAM_SETTING = "text_to_param_setting"
+  val INT_PARAM_SETTING_THRU_CONCEPT = "int_param_setting_through_concept"
+  val INT_PARAM_SETTING_THRU_VAR = "int_param_setting_through_var"
+  val PARAM_SETTING_THRU_CONCEPT = "parameter_setting_through_concept"
+  val PARAM_SETTING_THRU_VAR = "parameter_setting_through_var"
+  val UNIT_THRU_VAR = "unit_through_var"
+  val UNIT_THRU_CONCEPT = "unit_through_concept"
+  val EQN_TO_TEXT = "equation_to_text"
+  val COMMENT_TO_TEXT = "comment_to_text"
   val TEXT_TO_SVO = "textToSVO"
   val DEFINITION = "definition"
   val VARIABLE = "variable"
   val DEF_LABEL = "Definition"
-  val PARAMETER_SETTING_LABEL = "ParameterSetting"
-  val INTERVAL_PARAMETER_SETTING_LABEL = "IntervalParameterSetting"
+  val PARAMETER_SETTING_LABEL = "parameter_setting"
+  val INTERVAL_PARAMETER_SETTING_LABEL = "interval_parameter_setting"
   val UNIT_LABEL = "Unit"
 
   val logger = LoggerFactory.getLogger(this.getClass())
@@ -656,7 +655,7 @@ object ExtractAndAlign {
     argObjs
   }
 
-  def getArgObjForUnitAndParamSet(mention: Mention): ArrayBuffer[Value] = {
+  def getArgObj(mention: Mention): ArrayBuffer[Value] = {
     // NB! this one is weird because it needs to put two args into one param interval obj; the others can just be done iterating through args
 
     val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
@@ -671,23 +670,25 @@ object ExtractAndAlign {
     val attTo = mention.label match {
       case "ParameterSetting" => {
         val paramSetAttJson = returnAttachmentOfAGivenType(mention.attachments, "ParamSetAtt").toUJson
-        paramSetAttJson("attachedTo")
+        paramSetAttJson("attachedTo").str
       }
       case "UnitRelation" => {
         val unitAttJson = returnAttachmentOfAGivenType(mention.attachments, "UnitAtt").toUJson
-        unitAttJson("attachedTo")
+        unitAttJson("attachedTo").str
       }
-      case _ => ???
+      case _ => "variable"
     }
 
     val argObjs = new ArrayBuffer[Value]()
     val varMen = mention.arguments("variable").head
 
-    val varObj = if (attTo.str == "variable") {
-      makeArgObject(varMen, page, block, "identifier")
+
+    val varObj = if (attTo == "concept") {
+      makeArgObject(varMen, page, block, "definition") // aka concept
     } else {
-      makeArgObject(varMen, page, block, "definition")
+      makeArgObject(varMen, page, block, "identifier")
     }
+
     argObjs.append(varObj)
 
     val theOtherArgObj = mention.label match {
@@ -696,6 +697,9 @@ object ExtractAndAlign {
       }
       case "UnitRelation" => {
         makeArgObject(mention.arguments("unit").head, page, block, "unit")
+      }
+      case "Definition" | "ConjDefinition" => {
+        makeArgObject(mention.arguments("definition").head, page, block, "definition")
       }
       case _ => ???
     }
@@ -712,10 +716,11 @@ object ExtractAndAlign {
     val args = mentionType match {
       case INT_PARAM_SETTING_THRU_VAR => getIntParamSetArgObj(mention) // fixme: how to make case for two matches? (for both types of int param settings)
       case INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention)
-      case PARAM_SETTING_THRU_VAR =>  getArgObjForUnitAndParamSet(mention)
-      case PARAM_SETTING_THRU_CONCEPT =>  getArgObjForUnitAndParamSet(mention)
-      case UNIT_THRU_VAR =>  getArgObjForUnitAndParamSet(mention)
-      case UNIT_THRU_CONCEPT =>  getArgObjForUnitAndParamSet(mention)
+      case PARAM_SETTING_THRU_VAR =>  getArgObj(mention)
+      case PARAM_SETTING_THRU_CONCEPT =>  getArgObj(mention)
+      case UNIT_THRU_VAR =>  getArgObj(mention)
+      case UNIT_THRU_CONCEPT =>  getArgObj(mention)
+      case TEXT_VAR =>  getArgObj(mention)
 
       case _ => ???
     }
@@ -752,7 +757,7 @@ object ExtractAndAlign {
         ujson.Obj(
           "uid" -> randomUUID.toString,
           "source" -> commentMention.document.id.getOrElse("unk_file").toString,
-          "text" -> commentMention.arguments(DEFINITION).head.text
+          "content" -> commentMention.text
         ).toString()
 
       }
@@ -766,96 +771,24 @@ object ExtractAndAlign {
       linkElements(SOURCE) = variableNames.get.map { varName =>
         ujson.Obj(
           "uid" -> randomUUID.toString,
-          "???" -> varName.split("::")(1),
-          "var_name" -> varName
+          "source" ->  varName.split("::")(1),
+          "content" -> varName.split("::")(2)
         ).toString()
-
-//        randomUUID + "::" + "identifier" + "::" + varName.split("::")(1) + "::" + varName + "::" + "null"
 
       }
     }
-
-
-//     Repeat for text variables
-//    if (textDefinitionMentions.isDefined) {
-//      linkElements(TEXT) = textDefinitionMentions.get.map { mention =>
-//        val docId = mention.document.id.getOrElse("unk_text_file")
-//        val sent = mention.sentence
-//        val offsets = mention.tokenInterval.toString()
-//        randomUUID + "::" + "text_span" +"::" +  s"${docId}_sent${sent}_$offsets" + "::" + mention.arguments(DEFINITION).head.text + "::" + "null"
-//      }
-//    }
-
 
     if (textDefinitionMentions.isDefined) {
 
       // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
 
-
-        val docId = mention.document.id.getOrElse("unk_text_file")
-        val sent = mention.sentence
-        val originalSentence = mention.sentenceObj.words.mkString(" ")
-        val offsets = mention.tokenInterval.toString()
-        val textVar = mention.arguments(VARIABLE).head.text
-
-        val definition = if (mention.attachments.nonEmpty && mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "DiscontinuousCharOffset")) {
-          getDiscontinuousText(mention)
-        } else {
-          mention.arguments(DEFINITION).head.text
-        }
-
-        val charBegin = mention.startOffset
-        val charEnd = mention.endOffset
-
-        val continuousMenSpanJson = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
-
-          val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_("attType").str=="MentionLocation").head//head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-          val page = menAttAsJson("pageNum").num.toInt
-          val block = menAttAsJson("blockIdx").num.toInt
-
-          // todo: this is for mentions that came from one block
-          // mentions that come from separate cosmos blocks will require additional processing and can have two location spans
-          ujson.Obj(
-            "page" -> page,
-            "block" -> block,
-            "span" -> ujson.Obj(
-              "char_begin" -> charBegin,
-              "char_end" -> charEnd
-                      )
-                    )
-        } else {
-          ujson.Obj(
-            "page" -> ujson.Null,
-            "block" -> ujson.Null,
-            "span" -> ujson.Obj(
-              "char_begin" -> charBegin,
-              "char_end" -> charEnd
-            )
-          )
-        }
-
-        ujson.Obj(
-          "uid" -> randomUUID.toString(),
-          "source" -> docId,
-          "text_var" -> textVar,
-          "original_sentence" -> originalSentence,
-          "definition" -> definition,
-          "spans" -> continuousMenSpanJson
-
-        ).toString()
-//          randomUUID + "::" + "text_var" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}" + "::"  +  "null" + "::" + SVOGrounder.getTerms(mention).getOrElse(Seq.empty).mkString(",") + "::" + continuousMenSpanJson.toString()
+        mentionToIDedObjString(mention, TEXT_VAR)
 
       }
     }
 
-
-
-    println("int par set: " + intervalParameterSettingMentions)
     if (intervalParameterSettingMentions.isDefined) {
-
-
-
       val (throughVar, throughConcept) = intervalParameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m
        .attachments, "ParamSettingIntervalAtt").toUJson("attachedTo").str=="variable")
 
@@ -929,12 +862,10 @@ object ExtractAndAlign {
           val id = randomUUID
           equation2uuid(orig) = id
 
-          // fixme: i dont think this one matters
           ujson.Obj(
             "uid" -> id.toString(),
-            "equation_content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
           ).toString()
-//          randomUUID + "::" + "equation_span" + "::" + id + "::" + AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap) + "::" + "null"
         }
       }
 
@@ -943,8 +874,6 @@ object ExtractAndAlign {
           "uid" -> equation2uuid(key).toString(),
           "content" -> key
         ).toString()
-        //equation2uuid(key).toString() + "::" + "fullTextEquation" + "::" + key
-
       ).toSeq
     }
 
