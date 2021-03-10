@@ -42,3 +42,25 @@ rules:
 #      addlabel: "Cause"
 #      label: Causal
 #      trigger: ${cause_triggers}
+  # ------------ Causal ------------
+  - import: org/clulab/aske_automates/grammars/causal.yml
+    vars:
+      rulepriority: "6"
+      addlabel: "Causal"
+      label: Causal
+      trigger: ${cause_triggers} #|${increase_triggers}|${decrease_triggers}
+
+  - import: org/clulab/aske_automates/grammars/linkersTemplate.yml
+    vars:
+      rulepriority: "6"
+      addlabel: "Causal"
+      label: Causal
+      trigger: ${cause_triggers}|${increase_triggers}|${decrease_triggers}|${create_triggers}|${positive_affect_triggers}|${negative_affect_triggers}
+      othertriggers: ${cause_triggers}|${increase_triggers}|${decrease_triggers}|${create_triggers}|${positive_affect_triggers}|${negative_affect_triggers}
+
+  - import: org/clulab/aske_automates/grammars/reverse_direction_causal.yml
+    vars:
+      rulepriority: "6"
+      addlabel: "Causal"
+      label: Causal
+      trigger: ${reverse_direction_cause_triggers}

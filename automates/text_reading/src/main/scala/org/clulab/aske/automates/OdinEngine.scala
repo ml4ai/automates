@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, PassThroughPreprocessor, Preprocessor}
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 
 import scala.io.Source
 
@@ -126,7 +127,7 @@ class OdinEngine(
 object OdinEngine {
 
   // todo: ability to load/use diff processors
-  lazy val proc: Processor = new FastNLPProcessor()
+  lazy val proc: Processor = new FastNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   // Mention labels
   val DEFINITION_LABEL: String = "Definition"
