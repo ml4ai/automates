@@ -64,12 +64,11 @@ if __name__ == "__main__":
         "./ast.json"
     ), "Error: ast.json file not created after executing GCC plugin"
 
+    program_name = c_file.rsplit(".")[0].rsplit("/")[-1]
     gcc_ast_obj = json.load(open("./ast.json"))
     cast = GCC2CAST(gcc_ast_obj).to_cast()
-    grfn = cast.to_GrFN()
-
-    program_name = c_file.rsplit(".")[0].rsplit("/")[-1]
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
+    grfn = cast.to_GrFN()
     grfn.to_json_file(f"{program_name}--GrFN.json")
     A = grfn.to_AGraph()
     A.draw(program_name + "--GrFN.pdf", prog="dot")
