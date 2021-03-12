@@ -984,7 +984,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
             con_subgraph.nodes.extend(list(live_variables.values()))
 
+            revisit = []
             for stmt in con.statements:
+                if translate_stmt(stmt, live_variables, con_subgraph):
+                    revisit.append(stmt)
+            for stmt in revisit:
                 translate_stmt(stmt, live_variables, con_subgraph)
 
             subgraphs.add_node(con_subgraph)
@@ -1041,17 +1045,33 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-            inputs = [live_variables[id] for id in stmt.inputs]
+
             out_nodes = [add_variable_node(var) for var in stmt.outputs]
             func = add_lambda_node(stmt.type, stmt.func_str)
 
             subgraph.nodes.append(func)
             subgraph.nodes.extend(out_nodes)
 
-            add_hyper_edge(inputs, func, out_nodes)
             for output_node in out_nodes:
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
+
+            # The new var inputs into this decision node for a loop may not be defined yet
+            if (
+                subgraph.type == "LoopContainer"
+                and stmt.type == LambdaType.DECISION
+                and not all([id in live_variables for id in stmt.inputs])
+            ):
+                if stmt in Occs:
+                    # TODO custom exception
+                    raise Exception(
+                        f"Unable to find inputs required for loop decision node {stmt}"
+                    )
+                Occs[stmt] = stmt
+                return True
+
+            inputs = [live_variables[id] for id in stmt.inputs]
+            add_hyper_edge(inputs, func, out_nodes)
 
         start_container = containers[con_id]
         Occs[con_id] = 0

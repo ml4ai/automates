@@ -292,7 +292,7 @@ class VarType(Enum):
             return cls.ARRAY
         elif name == "object":
             return cls.OBJECT
-        elif name == "none":
+        elif name == "none" or name == "unknown":
             return cls.NONE
         else:
             raise ValueError(f"VarType unrecognized name: {name}")
@@ -328,7 +328,7 @@ class DataType(Enum):
         elif name == "integer":
             return cls.DISCRETE
         # TODO remove array after updating for2py to use list type
-        elif name == "none" or name == "list" or name == "array":
+        elif name == "none" or name == "unknown" or name == "list" or name == "array":
             return cls.NONE
         else:
             raise ValueError(f"DataType unrecognized name: {name}")
