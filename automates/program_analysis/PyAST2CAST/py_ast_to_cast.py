@@ -1,7 +1,6 @@
 from typing import Union
 import ast
 
-
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
     Assignment,
@@ -35,8 +34,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 class PyASTToCAST(ast.NodeVisitor):
 
     def visit_Module(self, node: ast.Module):
-        #print("Module")
-
         # Visit all the nodes and make a Module object out of them
         return Module(name="Program",body=[self.visit(piece) for piece in node.body])
 
@@ -84,10 +81,7 @@ class PyASTToCAST(ast.NodeVisitor):
         return Loop(expr=test,body=body)
 
     def visit_FunctionDef(self, node: Union[ast.FunctionDef,ast.Lambda]):
-        print("Function Def")
         if(type(node) == ast.FunctionDef):
-            print(type(node))
-
             # Might have to change this Name() to a visit 
             #func_def = FunctionDef(Name(node.name))
             body = []
@@ -122,22 +116,34 @@ class PyASTToCAST(ast.NodeVisitor):
         return BinaryOp(op,self.visit(left),self.visit(right))
 
     def visit_Expr(self, node:ast.Expr):
-        print(node.value)
-        return self.visit(node.value)
+        print("expr: node.value",node.value)
+        return Expr(self.visit(node.value))
 
 
     def visit_Assign(self, node: ast.Assign):
         print("Assign") 
         # TODO: multiple assignments to same value, and 'unpacking' tuple/list
-        print(node.targets)
-        left = Var(node.targets[0].id,"Unknown")
-        print(node.value)
-        right = self.visit(node.value)
+        # TODO: Subscript
+        print("assign: node.targets",node.targets)
+        left = None
+        right = None
+        # Simple assignment like x = ...
+        if(len(node.targets) == 1):
+            #print("assign: left",left)            
+            #print("assign: node.value", node.value)
+            left = self.visit(node.targets[0])
+            right = self.visit(node.value)
+
+        # Assignments in the form of x = y = z = ....
+        if(len(node.targets) > 1):
+            left = Var(node.targets[0].id, "integer")
+            right = self.visit(node)
+
 
         return Assignment(left,right)
 
     def visit_Call(self, node:ast.Call):
-        print("id",node.func.id)
+        print("call: id",node.func.id)
         # TODO args
         return Call(Name(node.func.id),[])
 
@@ -184,11 +190,10 @@ class PyASTToCAST(ast.NodeVisitor):
         """
 
         value = self.visit(node.value)
-        print('Slice',node.slice)
+        print("subscript: node.slice",node.slice)
         sl = self.visit(node.slice)
 
         return Subscript(value,sl)
-        pass
 
     def visit_Index(self, node:ast.Index):
         return self.visit(node.value)
@@ -228,8 +233,17 @@ class PyASTToCAST(ast.NodeVisitor):
         Args:
             node (ast.Name): [description]
         """
-
-        return Name(name=node.id)
+        print("in name")
+        print("name: node.ctx", type(node.ctx))
+        if(type(node.ctx) == ast.Load):
+            print("name: in load")
+            return Name(node.id)
+        if(type(node.ctx) == ast.Store):
+            print("name: in store")
+            return Var(node.id, "integer")    
+        if(type(node.ctx) == ast.Del):
+            # TODO: At some point..
+            return None
         
     def visit_List(self, node:ast.List):
         return [self.visit(piece) for piece in node.elts]
@@ -247,7 +261,9 @@ class PyASTToCAST(ast.NodeVisitor):
         pass
 
     def visit_Constant(self, node:ast.Constant):
+        print("constant")
         if(type(node.value) == int or type(node.value) == float):
+            print("constant: node.value",type(node.value))
             return Number(node.value)
         pass
 

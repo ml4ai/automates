@@ -1,6 +1,7 @@
 import re
 import sys
 import ast
+import astpp
 from automates.program_analysis.PyAST2CAST import py_ast_to_cast
 from automates.program_analysis.CAST2GrFN import cast 
 
@@ -21,6 +22,7 @@ convert = py_ast_to_cast.PyASTToCAST()
 # ../../tests/data/program_analysis/PyAST2CAST/
 # Use it to convert PyAST To CAST
 print(ast.parse(file_contents))
+print(astpp.parseprint(file_contents))
 C = convert.visit(ast.parse(file_contents))
 print(type(cast.CAST([C])))
 
@@ -28,7 +30,7 @@ Cast = cast.CAST([C])
 # Then, print CAST as JSON
 print(Cast.to_json_str())
 
-#G = Cast.to_GrFN()
+G = Cast.to_GrFN()
 
-#A = Cast.to_AGraph()
-#G.draw("test-grfn.pdf", prog="dot") 
+A = G.to_AGraph()
+A.draw("test-grfn.pdf", prog="dot") 
