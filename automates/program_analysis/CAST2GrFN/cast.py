@@ -124,9 +124,14 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
+        main_container = [c for c in air["containers"] if c["name"].endswith("::main")]
         # TODO do something better than grabbing the first container
         grfn = GroundedFunctionNetwork.from_AIR(
-            GenericIdentifier.from_str(air["containers"][0]["name"]),
+            GenericIdentifier.from_str(
+                air["containers"][0]["name"]
+                if len(main_container) == 0
+                else main_container[0]["name"]
+            ),
             C,
             V,
             T,
