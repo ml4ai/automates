@@ -94,6 +94,18 @@ class GCC2CAST:
 
         return Subscript(value=Name(name=name), slice=index_result)
 
+    def parse_lhs(self, lhs, assign_value):
+        assign_var = self.parse_variable(lhs)
+        if assign_var is None and "id" in lhs:
+            self.variables_ids_to_expression[lhs["id"]] = assign_value
+            return []
+        elif "ssa_id" in lhs:
+            ssa_id = lhs["ssa_id"]
+            self.ssa_ids_to_expression[ssa_id] = assign_value
+            return []
+
+        return [Assignment(left=assign_var, right=assign_value)]
+
     def parse_assign_statement(self, stmt):
         lhs = stmt["lhs"]
         operator = stmt["operator"]
@@ -135,16 +147,7 @@ class GCC2CAST:
             # TODO custom exception type
             raise Exception(f"Error: Unknown operator type: {operator}")
 
-        assign_var = self.parse_variable(lhs)
-        if assign_var is None and "id" in lhs:
-            self.variables_ids_to_expression[lhs["id"]] = assign_value
-            return []
-        elif "ssa_id" in lhs:
-            ssa_id = lhs["ssa_id"]
-            self.ssa_ids_to_expression[ssa_id] = assign_value
-            return []
-
-        return [Assignment(left=assign_var, right=assign_value)]
+        return self.parse_lhs(lhs, assign_value)
 
     def parse_conditional_expr(self, stmt):
         operator = stmt["operator"]
@@ -163,9 +166,13 @@ class GCC2CAST:
 
         cast_args = []
         for arg in arguments:
-            cast_args.append(self.parse_variable(arg))
+            cast_args.append(self.parse_operand(arg))
 
-        return [Call(func=Name(func_name), arguments=cast_args)]
+        cast_call = Call(func=Name(func_name), arguments=cast_args)
+        if "lhs" in stmt:
+            return self.parse_lhs(stmt["lhs"], cast_call)
+
+        return [cast_call]
 
     def parse_return_statement(self, stmt):
         # In this case, we have a void return
@@ -202,7 +209,8 @@ class GCC2CAST:
             return [Loop(expr=condition_expr, body=false_res)]
 
         else:
-            return [ModelIf(expr=condition_expr, body=false_res, orelse=true_res)]
+            # TODO handle or else
+            return [ModelIf(expr=condition_expr, body=true_res, orelse=[])]
 
     def parse_statement(self, stmt, statements):
         stmt_type = stmt["type"]
@@ -238,7 +246,17 @@ class GCC2CAST:
         cast_statements = []
         for stmt in statements:
             cast_statements.extend(self.parse_statement(stmt, statements))
-        return cast_statements
+
+        result_statements = cast_statements
+        if "edges" in bb:
+            edges = bb["edges"]
+            for e in edges:
+                target_edge = int(e["target"])
+                result_statements += self.parse_basic_block(
+                    [bb for bb in self.basic_blocks if bb["index"] == target_edge][0]
+                )
+
+        return result_statements
 
     def parse_function(self, f):
         name = f["name"]
