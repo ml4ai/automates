@@ -66,6 +66,7 @@ class C2AIdentifierType(str, Enum):
     VARIABLE = "variable"
     CONTAINER = "container"
     LAMBDA = "lambda"
+    DECISION = "decision"
 
 
 @dataclass(repr=False, frozen=True)
@@ -80,12 +81,22 @@ class C2AIdentifierInformation(object):
         return f'@{self.identifier_type}::{self.module}::{".".join(self.scope)}::{self.name}'
 
 
-@dataclass(repr=False, frozen=True)
+# @dataclass(repr=False, frozen=True)
 class C2AVariable(object):
 
     identifier_information: C2AIdentifierInformation
     version: int
     type_name: str
+
+    def __init__(
+        self,
+        identifier_information: C2AIdentifierInformation,
+        version: int,
+        type_name: str,
+    ):
+        self.identifier_information = identifier_information
+        self.version = version
+        self.type_name = type_name
 
     def get_name(self):
         return self.identifier_information.name
@@ -125,7 +136,9 @@ class C2ALambdaType(str, Enum):
     ASSIGN = "assign"
     CONDITION = "condition"
     DECISION = "decision"
+    EXIT = "exit"
     RETURN = "return"
+    CONTAINER = "container"
 
 
 @dataclass(repr=False, frozen=True)
@@ -156,7 +169,7 @@ class C2ALambda(object):
         elif len(self.updated_variables) > 0:
             var = self.updated_variables[0]
         else:
-            raise CASTToAIRException(f"No variables output or updated by lambda")
+            raise C2AException(f"No variables output or updated by lambda")
 
         return (
             f"{self.identifier_information.module}"
@@ -199,12 +212,19 @@ class C2AContainerCallLambda(C2ALambda):
     Represents the call/passing to another container found in the body of a container definition
     """
 
-    name: str
-    original_cast: AstNode
-    return_type_name: str
+    def build_name(self):
+        return self.identifier_information.build_identifier()
 
     def to_AIR(self):
-        return self
+        return {
+            "function": {
+                "name": self.identifier_information.build_identifier(),
+                "type": "container",
+            },
+            "input": [v.build_identifier() for v in self.input_variables],
+            "output": [v.build_identifier() for v in self.output_variables],
+            "updated": [v.build_identifier() for v in self.updated_variables],
+        }
 
 
 @dataclass(repr=False, frozen=True)
@@ -214,7 +234,15 @@ class C2AReturnLambda(C2ALambda):
     """
 
     def to_AIR(self):
-        return self
+        return {
+            "function": {
+                "name": self.identifier_information.build_identifier(),
+                "type": "container",
+            },
+            "input": [v.build_identifier() for v in self.input_variables],
+            "output": [v.build_identifier() for v in self.output_variables],
+            "updated": [v.build_identifier() for v in self.updated_variables],
+        }
 
 
 @dataclass(repr=False, frozen=True)
@@ -242,6 +270,18 @@ class C2AContainerDef(object):
     def to_AIR(self):
         return self
 
+    def add_arguments(self, arguments_to_add: List[C2AVariable]):
+        self.arguments.extend(arguments_to_add)
+
+    def add_outputs(self, output_variables_to_add: List[C2AVariable]):
+        self.output_variables.extend(output_variables_to_add)
+
+    def add_updated(self, updated_variables_to_add: List[C2AVariable]):
+        self.updated_variables.extend(updated_variables_to_add)
+
+    def add_body_lambdas(self, body_to_add: List[C2ALambda]):
+        self.body.extend(body_to_add)
+
 
 @dataclass(repr=False, frozen=True)
 class C2AFunctionDefContainer(C2AContainerDef):
@@ -256,14 +296,68 @@ class C2AFunctionDefContainer(C2AContainerDef):
             bb for bb in self.body if not isinstance(bb, C2AReturnLambda)
         ]
         # TODO
-        returns = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
+        return_lambda = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
+        # TODO multiple returns? probably need a decision node with all possible
+        # return vals going in?
 
-        print(self.arguments)
         return {
             # TODO
             "name": self.identifier_information.build_identifier(),
             "source_refs": [],
             "type": "function",
+            "arguments": [v.build_identifier() for v in self.arguments],
+            "updated": [v.build_identifier() for v in self.updated_variables],
+            # TODO change to specify a single return val
+            "return_value": [v.build_identifier() for v in self.output_variables],
+            "body": [i.to_AIR() for i in body_without_returns],
+        }
+
+
+@dataclass(repr=False, frozen=True)
+class C2ALoopContainer(C2AContainerDef):
+    """
+    Represents a top level container definition. Input variables will represent
+    the arguments that go through the loop interface. Also contains a body.
+    """
+
+    def to_AIR(self):
+        body_without_returns = [
+            bb for bb in self.body if not isinstance(bb, C2AReturnLambda)
+        ]
+        # TODO
+        returns = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
+
+        return {
+            # TODO
+            "name": self.identifier_information.build_identifier(),
+            "source_refs": [],
+            "type": "loop",
+            "arguments": [v.build_identifier() for v in self.arguments],
+            "updated": [v.build_identifier() for v in self.updated_variables],
+            # TODO change to specify a single return val
+            "return_value": [v.build_identifier() for v in self.output_variables],
+            "body": [i.to_AIR() for i in body_without_returns],
+        }
+
+
+class C2AIfContainer(C2AContainerDef):
+    """
+    Represents a top level container definition. Input variables will represent
+    the arguments that go through the if interface. Also contains a body.
+    """
+
+    def to_AIR(self):
+        body_without_returns = [
+            bb for bb in self.body if not isinstance(bb, C2AReturnLambda)
+        ]
+        # TODO
+        returns = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
+
+        return {
+            # TODO
+            "name": self.identifier_information.build_identifier(),
+            "source_refs": [],
+            "type": "if-block",
             "arguments": [v.build_identifier() for v in self.arguments],
             "updated": [v.build_identifier() for v in self.updated_variables],
             # TODO change to specify a single return val
@@ -309,6 +403,8 @@ class C2AState(object):
     types: List[C2ATypeDef]
     scope_stack: List[str]
     current_module: str
+    current_function: C2AFunctionDefContainer
+    current_conditional: int
 
     def __init__(self):
         self.containers = list()
@@ -316,6 +412,8 @@ class C2AState(object):
         self.types = list()
         self.scope_stack = ["@global"]
         self.current_module = "initial"
+        self.current_function = None
+        self.current_conditional = 0
 
     def add_container(self, con: C2AContainerDef):
         self.containers.append(con)
@@ -327,7 +425,7 @@ class C2AState(object):
         """
         Returns the current scope of the CAST to AIR state
         """
-        return self.scope_stack
+        return self.scope_stack.copy()
 
     def push_scope(self, scope):
         """
@@ -365,10 +463,20 @@ class C2AState(object):
         variables in the current scope.
         """
         current_highest_ver = self.find_highest_version_var(var_name)
-        print(current_highest_ver)
         return (
             current_highest_ver.version + 1 if current_highest_ver is not None else -1
         )
+
+    def get_next_conditional(self):
+        cur_cond = self.current_conditional
+        self.current_conditional += 1
+        return cur_cond
+
+    def reset_conditional_count(self):
+        self.current_conditional = 0
+
+    def reset_current_function(self):
+        self.current_function = None
 
     def to_AIR(self):
         """
