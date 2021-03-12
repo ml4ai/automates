@@ -35,6 +35,7 @@
 #include "tree-pass.h"
 #include "gimple.h"
 #include "gimple-iterator.h"
+#include "gimple-predict.h"
 #include "coretypes.h"
 #include "diagnostic.h"
 // #include "tree-flow.h"
@@ -575,7 +576,8 @@ static void dump_op(tree op)
     {
     case FUNCTION_DECL:
       json_int_field("id", DEBUG_TEMP_UID(op));
-      json_string_field("name", IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(op)));
+      json_string_field("mangledName", IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(op)));
+      json_string_field("name", IDENTIFIER_POINTER(DECL_NAME(op)));
       break;
 
     case PARM_DECL:
@@ -813,7 +815,7 @@ static void dump_predict(gimple *stmt)
   json_string_field("type", "predict");
   dump_srcref(stmt);
   json_int_field("hassub", gimple_has_substatements(stmt));
-  // json_string_field("name", predictor_name(gimple_predict_predictor(stmt)));
+  json_string_field("name", predictor_name(gimple_predict_predictor(stmt)));
   json_end_object();
 }
 
