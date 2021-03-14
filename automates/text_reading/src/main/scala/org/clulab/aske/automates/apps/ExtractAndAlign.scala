@@ -2,6 +2,7 @@ package org.clulab.aske.automates.apps
 
 import java.io.{File, PrintWriter}
 import java.util.UUID
+import org.clulab.utils.TextUtils._
 
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
@@ -123,7 +124,6 @@ object ExtractAndAlign {
 //    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
 
     for (le <- linkElements.keys) {
-
       outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar, false)}
     }
 
@@ -338,7 +338,6 @@ object ExtractAndAlign {
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(TEXT_TO_UNIT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
-
     }
 
     /** Align text variable to SVO groundings
@@ -414,63 +413,107 @@ object ExtractAndAlign {
   }
 
 
-  // fixme: move this to odin actions or some utils file
-  def getDiscontinuousText(mention: Mention): String = {
-    val subStrings = new ArrayBuffer[String]()
-    val discontAttachment = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson).filter(_("attType").str == "DiscontinuousCharOffset").head // for now, assume there's only one
-    val charOffset = discontAttachment("charOffsets").arr
-    val docText = mention.document.text.getOrElse("No text")
-    for (offsetSet <- charOffset) {
-      val start = offsetSet.arr.head.num.toInt
-      val end = offsetSet.arr.last.num.toInt
-      subStrings.append(docText.slice(start, end).mkString(""))
+  def makeLocationObj(mention: Mention): ujson.Obj = {
+      val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
+        val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
+        val page = menAttAsJson("pageNum").num.toInt
+        val block = menAttAsJson("blockIdx").num.toInt
+        (page, block)
+      } else {
+        (-1000, -1000)
+      }
+
+    val span = new ArrayBuffer[Value]()
+    val attsAsUjson = mention.attachments.map(a => a.asInstanceOf[AutomatesAttachment].toUJson)
+    if (attsAsUjson.exists(a => a("attType").str == "DiscontinuousCharOffset")) {
+      val discontCharOffsetAtt = returnAttachmentOfAGivenType(mention.attachments, "DiscontinuousCharOffset")
+      val charOffsets = discontCharOffsetAtt.toUJson("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt))
+
+      for (offset <- charOffsets) {
+        val oneOffsetObj = ujson.Obj()
+        oneOffsetObj("char_begin") = offset._1
+        oneOffsetObj("char_end") = offset._2
+        span.append(oneOffsetObj)
+      }
+
+    } else {
+      span.append(
+        ujson.Obj(
+          "char_begin" -> mention.startOffset,
+          "char_end" -> mention.endOffset
+        )
+      )
     }
-    subStrings.mkString(" ")
-  }
 
-
-  def makeLocationObj(argMen: Mention, page: Int, block: Int): ujson.Obj = {
-    // passing an arg text mention and the full mention attachments (bc location attachment is on the whole Mention
     val locationObj = if  (page != -1000 & block != -1000)  {
 
       ujson.Obj(
         "page" -> page,
         "block" -> block,
-        "span" -> ujson.Obj(
-          "char_begin" -> argMen.startOffset,
-          "char_end" -> argMen.endOffset
-        )
+        "spans" -> span
       )
     } else {
       ujson.Obj(
         "page" -> ujson.Null,
         "block" -> ujson.Null,
-        "span" -> ujson.Obj(
+        "spans" -> span
+      )
+    }
+    locationObj
+  }
+
+  def makeLocationObj(argMen: Mention, page: Int, block: Int): ujson.Obj = {
+    // passing an arg text mention and the full mention attachments (bc location attachment is on the whole Mention
+    val span = new ArrayBuffer[Value]()
+    val attsAsUjson = argMen.attachments.map(a => a.asInstanceOf[AutomatesAttachment].toUJson)
+    if (attsAsUjson.exists(a => a("attType").str == "DiscontinuousCharOffset")) {
+      val discontCharOffsetAtt = returnAttachmentOfAGivenType(argMen.attachments, "DiscontinuousCharOffset")
+      val charOffsets = discontCharOffsetAtt.toUJson("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt))
+
+      for (offset <- charOffsets) {
+        val oneOffsetObj = ujson.Obj()
+        oneOffsetObj("char_begin") = offset._1
+        oneOffsetObj("char_end") = offset._2
+        span.append(oneOffsetObj)
+      }
+
+    } else {
+      span.append(
+        ujson.Obj(
           "char_begin" -> argMen.startOffset,
           "char_end" -> argMen.endOffset
         )
       )
     }
+
+
+    val locationObj = if  (page != -1000 & block != -1000)  {
+
+      ujson.Obj(
+        "page" -> page,
+        "block" -> block,
+        "spans" -> span
+      )
+    } else {
+      ujson.Obj(
+        "page" -> ujson.Null,
+        "block" -> ujson.Null,
+        "spans" -> span
+      )
+    }
     locationObj
   }
-  //
-  //    def makeIdentifierObject(identifierTextMen: Mention, page: Int, block: Int): ujson.Obj = {
-  //      ujson.Obj(
-  //        "name" -> "identifier",
-  //        "text" -> identifierTextMen.text,
-  //        "spans" -> makeLocationObj(identifierTextMen, page, block)
-  //      )
-  //    }
 
-  def makeArgObject(identifierTextMen: Mention, page: Int, block: Int, argType: String): ujson.Obj = {
+
+  def makeArgObject(mention: Mention, page: Int, block: Int, argType: String): ujson.Obj = {
     ujson.Obj(
       "name" -> argType,
-      "text" -> identifierTextMen.text,
-      "spans" -> makeLocationObj(identifierTextMen, page, block)
+      "text" -> getMentionText(mention),
+      "spans" -> makeLocationObj(mention, page, block)
     )
   }
 
-  def makeParamSettingObj(mention: Mention, paramSetAttJson: Value, page: Int, block: Int): ujson.Obj = {
+  def makeIntParamSettingObj(mention: Mention, paramSetAttJson: Value, page: Int, block: Int): ujson.Obj = {
     val lowerBound = paramSetAttJson("inclusiveLower")
     val upperBound = paramSetAttJson("inclusiveUpper")
     val toReturn = ujson.Obj(
@@ -501,7 +544,7 @@ object ExtractAndAlign {
   }
 
   def getIntParamSetArgObj(mention: Mention): ArrayBuffer[Value] = {
-    // NB! this one is weird because it needs to put two args into one param interval obj; the others can just be done iterating through args
+    // NB! this one is different from getArgObj because it needs to put two args into one param interval obj; the others can just be done iterating through args
 
     val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
       val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
@@ -527,7 +570,7 @@ object ExtractAndAlign {
     }
     argObjs.append(varObj)
 
-    val paramSettingObj = makeParamSettingObj(mention, paramSetAttJson, page, block)
+    val paramSettingObj = makeIntParamSettingObj(mention, paramSetAttJson, page, block)
     argObjs.append(paramSettingObj)
     argObjs
   }
@@ -589,14 +632,8 @@ object ExtractAndAlign {
     val originalSentence = mention.sentenceObj.words.mkString(" ")
     val offsets = mention.tokenInterval.toString()
     val args = mentionType match {
-      case INT_PARAM_SETTING_THRU_VAR | INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention) // fixme: how to make case for two matches? (for both types of int param settings)
-//      case INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention)
+      case INT_PARAM_SETTING_THRU_VAR | INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention)
       case PARAM_SETTING_THRU_VAR | PARAM_SETTING_THRU_CONCEPT | UNIT_THRU_VAR | UNIT_THRU_CONCEPT | TEXT_VAR =>  getArgObj(mention)
-//      case PARAM_SETTING_THRU_CONCEPT =>  getArgObj(mention)
-//      case UNIT_THRU_VAR =>  getArgObj(mention)
-//      case UNIT_THRU_CONCEPT =>  getArgObj(mention)
-//      case TEXT_VAR =>  getArgObj(mention)
-
       case _ => ???
     }
 
@@ -605,7 +642,9 @@ object ExtractAndAlign {
       "source" -> docId,
       "original_sentence" -> originalSentence,
       "content" -> mention.text,
+      "spans" -> makeLocationObj(mention),
       "arguments" -> ujson.Arr(args)
+
     )
 
     jsonObj.toString()
@@ -649,7 +688,6 @@ object ExtractAndAlign {
     }
 
     if (textDefinitionMentions.isDefined) {
-      // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph
       linkElements(TEXT_VAR) = textDefinitionMentions.get.map { mention =>
         mentionToIDedObjString(mention, TEXT_VAR)
       }
@@ -743,8 +781,8 @@ object ExtractAndAlign {
     linkElements
   }
 
-
-  def getInterModelComparisonLinkElements(
+  /* Align definition mentions from two sources; not currently used */
+ def getInterModelComparisonLinkElements(
                        defMentions1:
                        Seq[Mention],
                        defMention2: Seq[Mention]
@@ -752,8 +790,6 @@ object ExtractAndAlign {
 
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
 
-
-      // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph - do not merge
       linkElements("TEXT_VAR1") = defMentions1.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
@@ -762,8 +798,14 @@ object ExtractAndAlign {
         val textVar = mention.arguments(VARIABLE).head.text
         val definition = mention.arguments(DEFINITION).head.text
 
+        ujson.Obj(
+          "uid" -> randomUUID.toString(),
+          "source" -> docId,
+          "content" -> textVar,
+          "definition" -> definition,
+          "original_sentence" -> originalSentence
+        ).toString()
 
-        randomUUID + "::" + "text_var_for_model_comparison" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}"
       }
 
       linkElements("TEXT_VAR2") = defMention2.map { mention =>
@@ -773,9 +815,13 @@ object ExtractAndAlign {
         val offsets = mention.tokenInterval.toString()
         val textVar = mention.arguments(VARIABLE).head.text
         val definition = mention.arguments(DEFINITION).head.text
-
-
-        randomUUID + "::" + "text_var_for_model_comparison" + "::" + s"${docId}_sent${sent}_$offsets" + "::" + s"${textVar}" + "::" + s"${originalSentence}" + "::" + s"${definition}"
+        ujson.Obj(
+          "uid" -> randomUUID.toString(),
+          "source" -> docId,
+          "content" -> textVar,
+          "definition" -> definition,
+          "original_sentence" -> originalSentence
+        ).toString()
       }
 
     linkElements.toMap
@@ -791,8 +837,6 @@ object ExtractAndAlign {
 
     val linkElements = scala.collection.mutable.HashMap[String, Seq[ujson.Value]]()
 
-
-    // todo: merge if same text var but diff definitions? if yes, needs to be done here before the randomUUID is assigned; check with ph - do not merge
     val updatedWithPaperId1 = for {
       o <- paper1Objects
       updated = ujson.Obj(
@@ -817,13 +861,10 @@ object ExtractAndAlign {
 
 
     linkElements("grfn1_vars") = updatedWithPaperId1
-
     linkElements("grfn2_vars") = updatedWithPaperId2
     linkElements.toMap
   }
 
-
-//  def mkLinkHypothesisTextVarDef(variables: Seq[Obj], definitions: Seq[Obj]): Seq[Obj] = {
 
   def mkLinkHypothesisTextVarDef(variables: Seq[String], definitions: Seq[String], debug: Boolean): Seq[Obj] = {
 

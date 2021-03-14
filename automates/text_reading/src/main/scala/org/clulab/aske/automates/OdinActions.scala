@@ -249,7 +249,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String), preconj: Seq[Int]): Mention = {
     // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
     val sortedConj = List(conjEdge._1, conjEdge._2).sorted
-    val tokInAsList = m.arguments("definition").head.tokenInterval.toList
+    val defMention = m.arguments("definition").head
+    val tokInAsList = defMention.tokenInterval.toList
 
     val newTokenInt = tokInAsList.filter(idx => (idx < sortedConj.head || idx >= sortedConj.last) & !preconj.contains(idx))
 
@@ -264,8 +265,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
     if (charOffsetsForAttachment.length > 1) {
       val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
-      val menWithAttachment = m.withAttachment(attachment)
-      menWithAttachment
+      // attach the attachment to the def arg
+      val defMenWithAttachment = defMention.withAttachment(attachment)
+      val newArgs = Map("variable" -> Seq(m.arguments("variable").head), "definition" -> Seq(defMenWithAttachment))
+
+        copyWithArgs(m, newArgs)
     } else m
 
   }
@@ -371,12 +375,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         for ((v, i) <- variables.zipWithIndex) {
           // if there are new defs, we will assume that they should be matched with the vars in the linear left to right order
           if (newDefinitions.nonEmpty) {
-            val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
-            val newDefMen = copyWithArgs(mostComplete, newArgs)
             if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
-              val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
-              toReturn.append(newDefWithAtt)
+              val defWithAtt = newDefinitions(i).withAttachment(defAttachments(i))
+              val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(defWithAtt))
+              val newDefMenWithAtt = copyWithArgs(mostComplete, newArgs)
+              toReturn.append(newDefMenWithAtt)
             } else {
+              val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+              val newDefMen = copyWithArgs(mostComplete, newArgs)
               toReturn.append(newDefMen)
             }
 

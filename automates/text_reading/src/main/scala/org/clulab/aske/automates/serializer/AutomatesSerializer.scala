@@ -339,7 +339,8 @@ object AutomatesJSONSerializer {
         "sentence" -> tb.sentence,
         "document" -> tb.document.equivalenceHash.toString,
         "keep" -> tb.keep,
-        "foundBy" -> tb.foundBy
+        "foundBy" -> tb.foundBy,
+        "attachments" -> AutomatesJSONSerializer.toUJson(tb.attachments)
       )
     }
   }
