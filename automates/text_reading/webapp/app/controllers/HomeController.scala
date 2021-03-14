@@ -317,7 +317,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val mentions = textMentions
       .filter(m => m.label matches mentionType)
-//      .filter(hasRequiredArgs)
     mentions
   }
 
@@ -328,17 +327,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_defs"
     val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
     (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_defs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_defs")))
-    // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
-    //transform the mentions into json4s format, used by mention serializer
-//    val jvalueMentions = upickle.default.transform(
-//      ujsonMentions
-//    ).to(Json4sJson)
-//    val textMentions = JSONSerializer.toMentions(jvalueMentions)
-//
-//    val mentions = textMentions
-//      .filter(m => m.label matches mentionType)
-//      .filter(hasRequiredArgs)
-//    mentions
   }
 
 

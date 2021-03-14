@@ -54,15 +54,6 @@ object AlignmentJsonUtils {
         .filter(m => hasRequiredArgs(m, "definition")))
     } else None
 
-    // todo: creating a global var can happen here, but how to store all of the associated var-def objects? Can build one def men that will hold all def texts, but also pass these groupings and they will be associated by some sort of id
-//    val definitionMentionsGr = if (definitionMentions.nonEmpty) {
-//      val grouped = definitionMentions.get.groupBy(_.arguments("variable").head.text)
-//      for (gr <- grouped) {
-//        for (m <- gr._2) {
-//          println("=>" + gr._1 + " " + m.text)
-//        }
-//      }
-//    }
 
     val parameterSettingMentions = if (allMentions.nonEmpty) {
       Some(allMentions
