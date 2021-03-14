@@ -264,7 +264,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val defText = defTextWordsWithInd.map(_._1)
     val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
     if (charOffsetsForAttachment.length > 1) {
-      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment,  "DiscontinuousCharOffset")
       // attach the attachment to the def arg
       val defMenWithAttachment = defMention.withAttachment(attachment)
       val newArgs = Map("variable" -> Seq(m.arguments("variable").head), "definition" -> Seq(defMenWithAttachment))
@@ -362,7 +362,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             // store char offsets for discont def as attachments
             val charOffsetsForAttachment= getDiscontCharOffset(headDef, newDefTokenInt.toList)
 
-            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "DiscontinuousCharOffset")
             defAttachments.append(attachment)
 
             previousIndices.append(int)

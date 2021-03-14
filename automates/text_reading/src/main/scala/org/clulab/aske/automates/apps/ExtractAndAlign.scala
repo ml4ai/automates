@@ -413,15 +413,19 @@ object ExtractAndAlign {
   }
 
 
-  def makeLocationObj(mention: Mention): ujson.Obj = {
-      val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
-        val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-        val page = menAttAsJson("pageNum").num.toInt
-        val block = menAttAsJson("blockIdx").num.toInt
-        (page, block)
-      } else {
-        (-1000, -1000)
-      }
+  def makeLocationObj(mention: Mention, givenPage: Option[Int], givenBlock: Option[Int]): ujson.Obj = {
+      val (page, block) = if (givenPage.isEmpty & givenBlock.isEmpty) {
+        if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
+          val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head
+          val page = menAttAsJson("pageNum").num.toInt
+          val block = menAttAsJson("blockIdx").num.toInt
+          (page, block)
+        } else {
+          (-1000, -1000)
+        }
+      } else (givenPage.get, givenBlock.get)
+
+
 
     val span = new ArrayBuffer[Value]()
     val attsAsUjson = mention.attachments.map(a => a.asInstanceOf[AutomatesAttachment].toUJson)
@@ -462,54 +466,12 @@ object ExtractAndAlign {
     locationObj
   }
 
-  def makeLocationObj(argMen: Mention, page: Int, block: Int): ujson.Obj = {
-    // passing an arg text mention and the full mention attachments (bc location attachment is on the whole Mention
-    val span = new ArrayBuffer[Value]()
-    val attsAsUjson = argMen.attachments.map(a => a.asInstanceOf[AutomatesAttachment].toUJson)
-    if (attsAsUjson.exists(a => a("attType").str == "DiscontinuousCharOffset")) {
-      val discontCharOffsetAtt = returnAttachmentOfAGivenType(argMen.attachments, "DiscontinuousCharOffset")
-      val charOffsets = discontCharOffsetAtt.toUJson("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt))
-
-      for (offset <- charOffsets) {
-        val oneOffsetObj = ujson.Obj()
-        oneOffsetObj("char_begin") = offset._1
-        oneOffsetObj("char_end") = offset._2
-        span.append(oneOffsetObj)
-      }
-
-    } else {
-      span.append(
-        ujson.Obj(
-          "char_begin" -> argMen.startOffset,
-          "char_end" -> argMen.endOffset
-        )
-      )
-    }
-
-
-    val locationObj = if  (page != -1000 & block != -1000)  {
-
-      ujson.Obj(
-        "page" -> page,
-        "block" -> block,
-        "spans" -> span
-      )
-    } else {
-      ujson.Obj(
-        "page" -> ujson.Null,
-        "block" -> ujson.Null,
-        "spans" -> span
-      )
-    }
-    locationObj
-  }
-
 
   def makeArgObject(mention: Mention, page: Int, block: Int, argType: String): ujson.Obj = {
     ujson.Obj(
       "name" -> argType,
       "text" -> getMentionText(mention),
-      "spans" -> makeLocationObj(mention, page, block)
+      "spans" -> makeLocationObj(mention, Some(page), Some(block))
     )
   }
 
@@ -530,13 +492,13 @@ object ExtractAndAlign {
     if (menArgs.exists(arg => arg._1 == "valueLeast")) {
       val valLeastMen = menArgs("valueLeast").head
       toReturn("lower_bound") = valLeastMen.text.toDouble
-      spans.append(makeLocationObj(valLeastMen, page, block))
+      spans.append(makeLocationObj(valLeastMen, Some(page), Some(block)))
 
     }
     if (menArgs.exists(arg => arg._1 == "valueMost")) {
       val valMostMen = menArgs("valueMost").head
       toReturn("upper_bound") = valMostMen.text.toDouble
-      spans.append(makeLocationObj(valMostMen, page, block))
+      spans.append(makeLocationObj(valMostMen, Some(page), Some(block)))
 
     }
     toReturn("spans") = spans
@@ -642,7 +604,7 @@ object ExtractAndAlign {
       "source" -> docId,
       "original_sentence" -> originalSentence,
       "content" -> mention.text,
-      "spans" -> makeLocationObj(mention),
+      "spans" -> makeLocationObj(mention, None, None),
       "arguments" -> ujson.Arr(args)
 
     )
@@ -1055,9 +1017,6 @@ object ExtractAndAlign {
     val intervalParameterSettingMentions = allUsedTextMentions._3
     val unitMentions = allUsedTextMentions._4
 
-    println(parameterSettingMentions.length + " par set len")
-    println(intervalParameterSettingMentions.length + " int par set len")
-    println(unitMentions.length + " unit len")
     logger.info(s"Extracted ${textDefinitionMentions.length} definitions from text")
 
     // Load equations and "extract" variables/chunks (using heuristics)

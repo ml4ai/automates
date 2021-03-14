@@ -27,13 +27,12 @@ class MentionLocationAttachment(pageNum: Int, blockIdx: Int, attType: String) ex
     "attType" -> attType) //"MentionLocation"
 }
 
-class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], discontArg: String, attType: String) extends AutomatesAttachment {
+class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], attType: String) extends AutomatesAttachment {
 
   override def toJson: JsValue = ???
 
   def toUJson: ujson.Value = ujson.Obj(
     "charOffsets" -> offsetsToUJson(charOffsets),
-    "discontinuousArgument" -> discontArg, //which argument the discontinuous char offset describes
     "attType" -> attType) //"DiscontinuousCharOffset"
 
   def offsetsToUJson(charOffsets: Seq[(Int, Int)]): ujson.Value = {
