@@ -38,8 +38,12 @@ class PyASTToCAST(ast.NodeVisitor):
         return Module(name="Program",body=[self.visit(piece) for piece in node.body])
 
     def visit_ClassDef(self, node:ast.ClassDef):
+        name = node.name
+        bases = []
+        funcs = [self.visit(piece) for piece in node.body]
+        fields = []
 
-        pass
+        return ClassDef(name,bases,funcs,fields)
 
     def visit_If(self, node: ast.If):
         print(node.test)
@@ -86,11 +90,12 @@ class PyASTToCAST(ast.NodeVisitor):
             #func_def = FunctionDef(Name(node.name))
             body = []
             # TODO: Function Args func_def.func_args(self.visit(node.args))
+            args = [self.visit(arg) for arg in node.args.args]
             if(node.body != []):
                 body = [self.visit(piece) for piece in node.body]
 
             #TODO: Decorators? Returns? Type_comment?
-            return FunctionDef(node.name,[],body)
+            return FunctionDef(node.name,args,body)
 
         if(type(node) == ast.Lambda):
             print("Lambda Function")
@@ -148,6 +153,9 @@ class PyASTToCAST(ast.NodeVisitor):
         return Call(Name(node.func.id),[])
 
     def visit_Attribute(self, node:ast.Attribute):
+        value = self.visit(node.value)
+        attr = self.visit(node.attr)
+        return Attribute(value,attr)
         pass
 
     def visit_Return(self, node:ast.Return):
@@ -172,7 +180,7 @@ class PyASTToCAST(ast.NodeVisitor):
 
     def visit_Compare(self, node: ast.Compare):
         left = node.left
-        ops = {ast.Eq : BinaryOperator.EQ}
+        ops = {ast.Eq : BinaryOperator.EQ, ast.Lt : BinaryOperator.LT}
         
 
         # TODO: Change these to handle more than one comparison operation and

@@ -30,7 +30,7 @@ Cast = cast.CAST([C])
 # Then, print CAST as JSON
 print(Cast.to_json_str())
 
-G = Cast.to_GrFN()
+#G = Cast.to_GrFN()
 
-A = G.to_AGraph()
-A.draw("test-grfn.pdf", prog="dot") 
+#A = G.to_AGraph()
+#A.draw("test-grfn.pdf", prog="dot") 
