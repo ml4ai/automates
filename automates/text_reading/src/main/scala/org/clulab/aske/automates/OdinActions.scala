@@ -139,6 +139,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn
   }
 
+  // def keepOneInputWithSameSpan(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+  //   val mns: Iterable[Mention] = for {
+  //     // find mentions of the same label and sentence overlap
+  //     (k, v) <- mentions.filter(_.arguments.keys.toList.contains("Concept")).groupBy(men => men.arguments("Concept").head.text)
+  //     // conj defs have more vars, so from overlapping mentions, choose those that have most vars and...
+  //     functionMens= v.maxBy(_.arguments("Concept").length).arguments("Concept").length
+  //     //out of the ones with most vars, pick the longest
+  //   } yield v.filter(_.arguments("Concept")).maxBy(_.text.length)//v.maxBy(_.text.length)
+  //   val mens = mns.toList
+  //   mens.toVector.distinct
+  // }
+
+  // def functionActionFlow(mentions: Seq[Mention]): Seq[Mention] = {
+  //   val functionMens = mentions.toList
+  //   val toReturn = functionMens.distinct
+  //   toReturn
+  // }
 
   // this should be the def text bound mention
   def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
@@ -210,8 +227,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def hasConj(m: Mention): Boolean = {
-    val onlyThisMenedges = getEdgesForMention(m)
-    onlyThisMenedges.map(_._3).exists(_.startsWith("conj"))
+    val onlyThisMenEdges = getEdgesForMention(m)
+    onlyThisMenEdges.map(_._3).exists(_.startsWith("conj"))
   }
 
   /*
@@ -517,8 +534,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val toReturn = if (varAndDef.nonEmpty) definitionActionFlow(varAndDef, state) else Seq.empty
     toReturn
   }
-
-
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {

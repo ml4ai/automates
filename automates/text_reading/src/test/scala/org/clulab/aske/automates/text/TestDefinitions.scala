@@ -205,10 +205,10 @@ class TestDefinitions extends ExtractionTest {
     testDefinitionEvent(mentions, desired)
   }
 
-  val t7b = "If L falls below that of permanent wilting point ( Lpwp), then Ta = 0"
+  val t7b = "If L falls below that of permanent wilting point (Lpwp), then Ta = 0"
   passingTest should s"find definitions from t7b: ${t7b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Lpwp" -> Seq("permanent wilting point") // todo: or "that of permanent wilting point" ?? (or L falls below that of permanent wilting point??)
+      "Lpwp" -> Seq("permanent wilting point") // todo: or "that of permanent wilting point" ?? (or L falls below that of permanent wilting point??) (needs to be reviewed)
     )
     val mentions = extractMentions(t7b)
     testDefinitionEvent(mentions, desired)
@@ -226,7 +226,7 @@ class TestDefinitions extends ExtractionTest {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t9b)
     testDefinitionEvent(mentions, desired)
-    //fixme: without the comma after 'research', 'research' is found as the definition for Tx because of the 'sort_of_appos' rule
+    //fixme: without the comma after 'research', 'research' is found as the definition for Tx because of the 'sort_of_appos' rule (needs to be reviewed)
   }
 
   val t10b = "In DSSAT, root water uptake is calculated in two steps."
@@ -240,7 +240,7 @@ class TestDefinitions extends ExtractionTest {
     "exponential function that depends on:"
   passingTest should s"find definitions from t11b: ${t11b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Url" -> Seq("water uptake per unit of root length") // todo: add a rule?
+      "Url" -> Seq("water uptake per unit of root length") // todo: add a rule? -> done
     )
     val mentions = extractMentions(t11b)
     testDefinitionEvent(mentions, desired)
@@ -251,18 +251,18 @@ class TestDefinitions extends ExtractionTest {
     passingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
         "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
-      ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a definition for Ta by var_appos_def rule.
+      ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a definition for Ta by var_appos_def rule. (Ta,rl is one variable)
       val mentions = extractMentions(t12b)
       testDefinitionEvent(mentions, desired)
 
     }
   val t13b = "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the " +
     "soil limitation to water uptake of each layer."
-    failingTest should s"find definitions from t13b: ${t13b}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t13b: ${t13b}" taggedAs(Masha) in {
       val desired = Seq(
         "s1" -> Seq("parameters of a logistic curve"),
         "s2" -> Seq("parameters of a logistic curve"), // fixme: definition for s2 is captured twice by both var_cop_conj_definition and var_cop_definition.
-        "w" -> Seq("soil limitation") // need to expand this to "to water uptake of each layer"
+        "w" -> Seq("soil limitation") // need to expand this to "to water uptake of each layer" (needs to be reviewed - expansion handler?)
       )
       val mentions = extractMentions(t13b)
       testDefinitionEvent(mentions, desired)
@@ -274,7 +274,7 @@ class TestDefinitions extends ExtractionTest {
     "Mh0 (m2 d-1)"
     failingTest should s"find definitions from t1c: ${t1c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "Mh0" -> Seq("matric flux potential") //fixme: sort_of_appos rule didn't apply due to bad parsing. "potential" is parsed as JJ.
+        "Mh0" -> Seq("matric flux potential") //fixme: sort_of_appos rule didn't apply due to bad parsing. "potential" is parsed as JJ. (needs to be reviewed - keep the longest)
       )
       val mentions = extractMentions(t1c)
       testDefinitionEvent(mentions, desired)
@@ -285,11 +285,11 @@ class TestDefinitions extends ExtractionTest {
     "head (m)."
     failingTest should s"find definitions from t2c: ${t2c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "t" -> Seq("time"), // fixme: d is captured as a variable here. needs to be fixed.
+        "t" -> Seq("time"), // fixme: d is captured as a variable here. needs to be fixed. (needs to be reviewed - difficulty of capturing "variables")
         "C" -> Seq("differential water capacity"),
         "q" -> Seq("water flux density"), //fixme: m is found as entity by definition_var_appos despite the [!entity = "B-unit"]
         "r" -> Seq("distance from the axial center"),
-        "S" -> Seq("sink or source term"), //two separate concepts, not going to pass without expansion?
+        "S" -> Seq("sink or source term"), //two separate concepts, not going to pass without expansion? (todo: try expand on conj_or!)
         "H" -> Seq("hydraulic head")
       )
       //fixme: "var_definition_appos_bidir++selectShorter" rule wrongly extracted two additional definitions.
@@ -320,7 +320,7 @@ class TestDefinitions extends ExtractionTest {
   val t4c = "Segment size (dr) was chosen smaller near the root and larger at greater distance, according to"
   passingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "dr" -> Seq("Segment size") //fixme: filtered out by looksLikeAVar action
+        "dr" -> Seq("Segment size") //fixme: filtered out by looksLikeAVar action -> fixed
       )
       val mentions = extractMentions(t4c)
       testDefinitionEvent(mentions, desired)
@@ -389,7 +389,7 @@ class TestDefinitions extends ExtractionTest {
   val t1e = "Since eS is not a linear function of temperature"
   passingTest should s"find NO definitions from t1e: ${t1e}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
-    val mentions = extractMentions(t1e)  // issue: changed from t5a to t1e. needs to check if this is right.
+    val mentions = extractMentions(t1e)  // issue: changed from t5a to t1e. needs to check if this is right. (needs to be reviewed)
     testDefinitionEvent(mentions, desired)
   }
 
@@ -418,7 +418,7 @@ class TestDefinitions extends ExtractionTest {
   val t1f = "The CHIME (COVID-19 Hospital Impact Model for Epidemics) App"
   failingTest should s"find definitions from t1f: ${t1f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "CHIME" -> Seq("COVID-19 Hospital Impact Model for Epidemics") // note: do we want to extract model names as variables?
+      "CHIME" -> Seq("COVID-19 Hospital Impact Model for Epidemics") // note: do we want to extract model names as variables? (needs to be reviewed - move to "modelname"? yes!)
     )
     val mentions = extractMentions(t1f)
     testDefinitionEvent(mentions, desired)
@@ -573,7 +573,7 @@ class TestDefinitions extends ExtractionTest {
   failingTest should s"find definitions from t1h: ${t1h}" taggedAs(Somebody) in {
     val desired =  Seq(
       "Rn" -> Seq("net radiation"),
-      "H" -> Seq("sensible heat"), // fixme: H is captured as a part of the definition
+      "H" -> Seq("sensible heat"), // fixme: H is captured as a part of the definition (needs to be reviewed)
       "G" -> Seq("soil heat flux"), // fixme: G is captured as a part of the definition
       "λET" -> Seq("latent heat flux")
     )
@@ -593,11 +593,33 @@ class TestDefinitions extends ExtractionTest {
       "under optimum soil water conditions, and achieving full production under the given climatic conditions."
   failingTest should s"find definitions from t3h: ${t3h}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "ETc" -> Seq("crop evapotranspiration under standard conditions"), // todo: ETc should be captured as a variable.
+      "ETc" -> Seq("crop evapotranspiration under standard conditions"), // todo: ETc should be captured as a variable. (needs to be reviewed - problem due to frequenct word list. add "etc" to the aviod.yml and delete it in the freqwordlist)
       "ETc" -> Seq("evapotranspiration from disease-free, well-fertilized crops, grown in large fields, " + // fixme: this should be captured as the definition.
       "under optimum soil water conditions, and achieving full production under the given climatic conditions") // todo: need to allow two definitions per variable.
     )
     val mentions = extractMentions(t3h)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t4h = "First, the limiting value R∞, called the total size of the epidemic which is the total number of people having the disease at the end of the epidemic."
+  failingTest should s"find definitions from t4h: ${t4h}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "R∞" -> Seq("the limiting value"),
+      "R∞" -> Seq("total size of the epidemic"),
+      "R∞" -> Seq("total number of people having the disease at the end of the epidemic")
+    )
+    val mentions = extractMentions(t4h)
+    testDefinitionEvent(mentions, desired)
+  }
+
+    val t5h = "Second, R0 = r/a, the basic reproduction number which is the average number of secondary infections produced when one infected individual is introduced into " +
+      "a host population where everyone is susceptible."
+  failingTest should s"find definitions from t5h: ${t5h}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "R0" -> Seq("the basic reproduction number"),
+      "R0" -> Seq("the average number of secondary infections produced when one infected individual is introduced into a host population where everyone is susceptible")
+    )
+    val mentions = extractMentions(t5h)
     testDefinitionEvent(mentions, desired)
   }
 
@@ -608,7 +630,7 @@ class TestDefinitions extends ExtractionTest {
   failingTest should s"find definitions from t1i: ${t1i}" taggedAs(Somebody) in {
     val desired =  Seq(
       "S" -> Seq("Susceptible"),
-      "E" -> Seq("exposed"), // fixme: Definitions of I1, I2, I3 are not extracted
+      "E" -> Seq("exposed"), // fixme: Definitions of I1, I2, I3 are not extracted (needs to be reviewed - needs a new conj_rule?) // todo: check if I1, I2, I3 are actually variables & if if they are, try to make a rule for that
       "I" -> Seq("infected"),
       "I1" -> Seq("mild"),
       "I2" -> Seq("moderate"),
@@ -624,7 +646,7 @@ class TestDefinitions extends ExtractionTest {
       "and the typical time until recovery is Tr = γ-1."
   passingTest should s"find definitions from t1j: ${t1j}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "Tc" -> Seq("typical time between contacts"), // fixme: both of the definitions were not extracted
+      "Tc" -> Seq("typical time between contacts"), // fixme: both of the definitions were not extracted -> fixed
       "Tr" -> Seq("typical time until recovery")
     )
     val mentions = extractMentions(t1j)
@@ -656,10 +678,10 @@ class TestDefinitions extends ExtractionTest {
 // Tests from paper: THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
 
     val t1l = "Reference evapotranspiration (ETref) is the rate at which readily available soil water is vaporized from specified vegetated surfaces (Jensen et al., 1990)."
-  failingTest should s"find definitions from t1l: ${t1l}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t1l: ${t1l}" taggedAs(Masha) in {
     val desired =  Seq(
       "ETref" -> Seq("Reference evapotranspiration"),
-      "ETref" -> Seq("the rate at which readily available soil water is vaporized from specified vegetated surfaces") //fixme: longer definition is not captured. (shorter definition was selected)
+      "ETref" -> Seq("the rate at which readily available soil water is vaporized from specified vegetated surfaces") //fixme: longer definition is not captured. (shorter definition was selected) (needs to be reviewed: "bidir++selectShorter"? - action!)
     )
     val mentions = extractMentions(t1l)
     testDefinitionEvent(mentions, desired)
@@ -698,8 +720,5 @@ class TestDefinitions extends ExtractionTest {
     val mentions = extractMentions(t11f)
     testDefinitionEvent(mentions, desired)
   }
-
-//todo: First, the limiting value R∞, called the total size of the epidemic which is the total number of people having the disease at the end of the epidemic. 
-//todo: Second, R0 = r/a, the basic reproduction number which is the average number of secondary infections produced when one infected individual is introduced into a host population where everyone is susceptible.
 
 }

@@ -150,3 +150,10 @@ rules:
     type: token
     pattern: |
       (?<= [entity="LOCATION"]) [word=","] [word=/[A-Z]/]
+
+  - name: "for_this_research"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      (?<= [word=/For/] [word="this"]) [word="research"]
