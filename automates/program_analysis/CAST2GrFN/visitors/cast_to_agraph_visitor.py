@@ -56,8 +56,9 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @singledispatchmethod
     def visit(self, node: AstNode):
-        print("Not implemented: ",type(node))
-        return None
+        print("Not implemented: ",node)
+        print("Type not implemented: ",type(node))
+        return None+1
 
     @visit.register
     def _(self, node: Assignment):
@@ -71,8 +72,8 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Attribute):
-        value = node.value
-        attr = node.attr
+        value = self.visit(node.value)
+        attr = self.visit(node.attr)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="Attribute")
         self.G.add_edge(node_uid,value)
@@ -94,9 +95,12 @@ class CASTToAGraphVisitor(CASTVisitor):
     @visit.register
     def _(self, node: Call):
         func = self.visit(node.func)
-        args = self.visit_list(node.arguments)
+        if(node.arguments != []):
+            args = self.visit_list(node.arguments)
+        else:
+            args = []
         node_uid = uuid.uuid4()
-        self.G.add_node(node_uid, label="Function")
+        self.G.add_node(node_uid, label="FunctionCall")
         self.G.add_edge(node_uid, func)
         for n in args:
             self.G.add_edge(node_uid,n)
@@ -133,7 +137,7 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Expr):
-        expr = self.visit_list(node.expr)
+        expr = self.visit(node.expr)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="Expression")
         self.G.add_edge(node_uid,expr)
@@ -237,9 +241,9 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
-    def _(self. node: String):
+    def _(self, node: String):
         node_uid = uuid.uuid4()
-        self.G.add_node(node_uid,label=node.string)
+        self.G.add_node(node_uid,label="\""+node.string+"\"")
         return node_uid 
 
     @visit.register

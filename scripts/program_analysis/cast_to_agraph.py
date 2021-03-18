@@ -1,5 +1,6 @@
-from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import CASTToAGraphVisitor
+import sys
 
+from automates.program_analysis.CAST2GrFN.visitors.cast_to_agraph_visitor import CASTToAGraphVisitor
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -32,8 +33,8 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 )
 
 def basic_function_def_and_assignment_cast():
-    v = Var(val=Name(name="exampleVar"), type="float")
-    n = Number(number=36.2)
+    v = Var(val=Name(name="exampleVar"), type="string")
+    n = String(string="hey")
     a = Assignment(left=v, right=n)
     f = FunctionDef(name=Name(name="exampleFunction"), func_args=[], body=[a])
     m = Module(name="ExampleModule", body=[f])
@@ -66,7 +67,15 @@ def basic_function_def_and_assignment_if():
 def main():
     #V = CASTToAGraphVisitor(basic_function_def_and_assignment_cast())
     #V = CASTToAGraphVisitor(basic_function_def_and_assignment_math())
-    V = CASTToAGraphVisitor(basic_function_def_and_assignment_if())
+    #V = CASTToAGraphVisitor(basic_function_def_and_assignment_if())
+    # Read a JSON file that has CAST data
+
+    f_name = sys.argv[1]
+    file_contents = open(f_name).read()
+    C = CAST([])
+    C2 = C.from_json_str(file_contents)
+
+    V = CASTToAGraphVisitor(C2)
     V.to_pdf("agraph_test")
 
 main()
