@@ -254,27 +254,51 @@ class PyASTToCAST(ast.NodeVisitor):
             return None
         
     def visit_List(self, node:ast.List):
-        return [self.visit(piece) for piece in node.elts]
+        if(node.elts != []):
+            return List([self.visit(piece) for piece in node.elts])
+        else:
+            return List([])
 
     def visit_Tuple(self, node:ast.Tuple):
-        return [self.visit(piece) for piece in node.elts]
+        if(node.elts != []):
+            return Tuple([self.visit(piece) for piece in node.elts])
+        else:
+            return Tuple([])
 
     def visit_Dict(self, node:ast.Dict):
-        pass
+        if(node.keys != []):
+            keys = [self.visit(piece) for piece in node.keys]
+        else:
+            keys = []
+        if(node.values != []):
+            values = [self.visit(piece) for piece in node.values]
+        else:
+            values = []
+
+        return Dict(keys,values)
 
     def visit_Set(self, node:ast.Set):
-        pass
+        if(node.elts != []):
+            return Set([self.visit(piece) for piece in node.elts])
+        else:
+            return Set([])
         
-    def visit_String(self, node:ast.Str):
-        pass
 
     def visit_Constant(self, node:ast.Constant):
         print("constant")
         if(type(node.value) == int or type(node.value) == float):
             print("constant: node.value",type(node.value))
             return Number(node.value)
-        pass
+        elif(type(node.value) == str):
+            print("constant: node.value",type(node.value))
+            return String(node.value)
+        else:
+            print("constant: unknown type", type(node.value))
+            return None
 
+    #def visit_String(self, node:ast.Str):
+     #   return String(string=node.)
+      #  pass
 
 def main():
     print("Hi")
