@@ -29,9 +29,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // expand arguments
 
       val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
+
+      for (e <- non_vars) println("non vars " + e.text + " " + e.label + " " + e.tokenInterval + " " + e.foundBy)
       val expandedVars = keepLongestVariable(vars)
 
-      val (expandable, other) = (expandedVars ++ non_vars).partition(m => m matches "Definition")
+      val (expandable, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Definition"))
+      for (e <- expandable) println("e " + e.text + e.tokenInterval)
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepOneWithSameSpanAfterExpansion(expanded) ++ other
 
@@ -91,6 +94,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    for (m <- mentions) println("men: " + m.text + m.tokenInterval + " " + m.label)
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
       (k, v) <- mentions.groupBy(m => (m.sentence, m.label))
@@ -103,8 +107,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def keepOneWithSameSpanAfterExpansion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val mns: Iterable[Mention] = for {
-      // find mentions of the same label and sentence overlap
-      (k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.text)
+      (k, v) <- mentions.filter(_.arguments.keys.toList.contains("variable")).groupBy(men => men.arguments("variable").head.startOffset)
       // conj defs have more vars, so from overlapping mentions, choose those that have most vars and...
       maxNumOfVars = v.maxBy(_.arguments("variable").length).arguments("variable").length
       //out of the ones with most vars, pick the longest
@@ -118,16 +121,20 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
   }
 
-  def filterOutOverlappingMen(mentions: Seq[Mention]): Seq[Mention] = {
+  def filterOutOverlappingDefMen(mentions: Seq[Mention]): Seq[Mention] = {
+    for (m <- mentions) println("m -> " + m.text)
     // input is only mentions with the label ConjDefinition or Definition with conjunctions
     // this is to get rid of conj definitions that are redundant in the presence of a more complete ConjDefinition
     val toReturn = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
 
     for (gr <- groupedBySent) {
+
       val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
       for (gr1 <- groupedByTokenOverlap.values) {
+        println("start group")
         // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
+        for (g <- gr1) println(g.arguments("variable").head.text + " " + g.text)
         if (gr1.exists(_.label=="ConjDefinition")) {
           val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
           toReturn.append(longestConjDef)
@@ -241,8 +248,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     // all that have conj (to be grouped further) and those with no conj
     val (tempWithConj, withoutConj) = mentions.partition(hasConj(_))
+    for (m <- withoutConj) println("wo conj: " + m.text + " " + m.label)
     // check if there's overlap between conjdefs and standard defs; if there is, drop the standard def
-    val withConj = filterOutOverlappingMen(tempWithConj)
+    val withConj = filterOutOverlappingDefMen(tempWithConj)
     // defs that were found as ConjDefinitions - that is events with multiple variables (at least partially) sharing a definitions vs definitions that were found with standard rule that happened to have conjunctions in their definitions
     val (conjDefs, standardDefsWithConj) = withConj.partition(_.label matches "ConjDefinition")
 
@@ -263,7 +271,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // make sure to add non-conj events
     for (m <- withoutConj) toReturn.append(m)
 
-    toReturn
+//    toReturn
+    keepLongest(toReturn)
   }
 
 
