@@ -258,7 +258,7 @@ class TestDefinitions extends ExtractionTest {
     }
   val t13b = "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the " +
     "soil limitation to water uptake of each layer."
-    failingTest should s"find definitions from t13b: ${t13b}" taggedAs(Masha) in {
+    passingTest should s"find definitions from t13b: ${t13b}" taggedAs(Masha) in {
       val desired = Seq(
         "s1" -> Seq("parameters of a logistic curve"),
         "s2" -> Seq("parameters of a logistic curve"), // fixme: definition for s2 is captured twice by both var_cop_conj_definition and var_cop_definition.
