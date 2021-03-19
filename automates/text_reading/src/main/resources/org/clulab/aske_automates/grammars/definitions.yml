@@ -173,7 +173,7 @@ rules:
     action: looksLikeAVariableWithGreek
     pattern: |
       trigger = [lemma="be"]
-      variable:Concept = (<cop /${agents}/ | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      variable:Variable = (<cop /${agents}/ | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
 
   - name: var_cop_definition
@@ -184,7 +184,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      variable:Variable = (<cop /${agents}/ | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      variable:Variable = (<cop /${agents}/ appos? | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "nmod_at?". need to see if it's feasible.
 
 #  - name: var_is_def_token # needed because of bad parse

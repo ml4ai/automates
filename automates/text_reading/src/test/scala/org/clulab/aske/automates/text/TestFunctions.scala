@@ -47,7 +47,7 @@ class TestFunctions extends ExtractionTest {
   // Tests from CHIME-online-manual
   // fixme: inverse_of rule contains only one input. how should we test such rules?
   val t1c = "γ is the inverse of the mean recovery time, in days."
-  failingTest should s"find functions from t1c: ${t1c}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t1c: ${t1c}" taggedAs(Somebody) in {
     val desired = Seq(
       "γ" -> Seq("mean recovery time")
     )

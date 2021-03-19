@@ -53,6 +53,53 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     return overlapping.maxBy(_.length)
   }
 
+  def keepWithGivenArgs(mentions: Seq[Mention], argTypes: Seq[String]): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      if (m.arguments.keys.toList.intersect(argTypes).length == argTypes.length) {
+        toReturn.append(m)
+      }
+    }
+    toReturn
+  }
+
+  def groupByDefOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    // group mentions by token overlap of a given argument
+    // has to be used for mentions in the same sentence - token intervals are per sentence
+    // only apply this when there is one var and one def
+
+    val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
+//    val intervalVarMap = mutable.Map[Interval, Mention]()
+    val mentionsWithRightArgs = keepWithGivenArgs(mentions, Seq("definition"))
+    for (m <- mentionsWithRightArgs) {
+      // assume there's one of each arg
+//      println(m.arguments.keys.mkString("||"))
+//      println(m.text + " " + m.label)
+//      val variableTextBoundMention = m.arguments("variable").head
+      val defTextBoundMention = m.arguments("definition").head
+      if (intervalMentionMap.isEmpty) {
+        intervalMentionMap += (defTextBoundMention.tokenInterval -> Seq(m))
+//        intervalVarMap += (defTextBoundMention.tokenInterval -> variableTextBoundMention)
+      } else {
+        if (intervalMentionMap.keys.exists(k => k.intersect(defTextBoundMention.tokenInterval).nonEmpty)) {
+          val interval = findOverlappingInterval(defTextBoundMention.tokenInterval, intervalMentionMap.keys.toList)
+          val currMen = intervalMentionMap(interval)
+          val updMen = currMen :+ m
+          if (interval.length >= defTextBoundMention.tokenInterval.length) {
+            intervalMentionMap += (interval -> updMen)
+          } else {
+            intervalMentionMap += (defTextBoundMention.tokenInterval -> updMen)
+            intervalMentionMap.remove(interval)
+          }
+
+        } else {
+          intervalMentionMap += (defTextBoundMention.tokenInterval -> Seq(m))
+        }
+      }
+    }
+    intervalMentionMap.toMap
+  }
+
   def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
     // has to be used for mentions in the same sentence - token intervals are per sentence
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
@@ -94,6 +141,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
 
+  // Masha todo: need a version of keep longest that will check args and if both args fuzzy match, then keep longest - that will be for cases when i need to eliminate similar def mentions  ( Latent Heat of Vaporization (λ)) but still allow same var having multiple defs eg Reference evapotranspiration (ETref) is the rate at which readily available soil water is vaporized from specified vegetated surfaces (Jensen et al., 1990). OR need a method to group by overlapping definition (not completely matching def - started a method here groupByArgTokenOverlap)
+
+//  def eliminateOverlappingDefs(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+//    //    for (m <- mentions) println("men: " + m.text + m.tokenInterval + " " + m.label)
+//
+//    val groupedByTwoArgs = mentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.startOffset, m.arguments("definition").head.startOffset))
+//    val mns: Iterable[Mention] = for {
+//      // find mentions of the same label and sentence overlap
+//      (k, v) <- mentions.groupBy(m => (m.sentence, m.label))
+//      m <- v
+//      // for overlapping mentions starting at the same token, keep only the longest
+//      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+//    } yield longest
+//    mns.toVector.distinct
+//  }
+
+
   /** Keeps the longest mention for each group of overlapping mentions **/
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 //    for (m <- mentions) println("men: " + m.text + m.tokenInterval + " " + m.label)
@@ -118,13 +182,54 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for ((sentId, sameSentMentions) <- sentGroup) {
       // group by group
       val spanGroups = sameSentMentions.groupBy(_.tokenInterval)
+//      val spanGroups = sameSentMentions.groupBy(_.arguments("definition").head.tokenInterval)
+//      val spanGroups = mentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.startOffset, m.arguments("definition").head.startOffset))
+//      val spanGroups = groupByArgTokenOverlap(mentions, "definition")
+//      val spanGroups = sameSentMentions.groupBy(m => (m.arguments("variable")))
       for (sg <- spanGroups) {
+//        println("start group")
+//        for (m <- sg._2) println(m.text + " " + m.label)
         // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
         val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
         // chose a mention with most vars - if they have the same span and same (max) num of vars, it shouldnt matter which one it is, so take the first one
         val chosenMen = sg._2.filter(_.arguments("variable").length == maxNumOfVars).head
+//        println("chosen: " + chosenMen.text + " " + chosenMen.label)
         mns.append(chosenMen)
       }
+    }
+
+    val mens = mns.toList
+    mens.toVector.distinct
+  }
+
+  def keepOneWithSameSpanWithVarAndDefSpan(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // after expanding definitions and ConjDefinitions, eliminate redundant mentions;
+    // out of overlapping mentions, keep the ones that have more than one variable - those are the conj definitions that can be "untangled" - those are the events that have more than one var-def combos in them
+    val mns = new ArrayBuffer[Mention]()
+
+    // group by sentence
+    val sentGroup = mentions.filter(_.arguments.contains("variable")).groupBy(_.sentence)
+    for ((sentId, sameSentMentions) <- sentGroup) {
+      val groupedByVar = sameSentMentions.groupBy(_.arguments("variable").head)
+      for (varGr <- groupedByVar) {
+        // group by group
+        val spanGroups = groupByDefOverlap(varGr._2)
+        //      val spanGroups = sameSentMentions.groupBy(_.arguments("definition").head.tokenInterval)
+        //      val spanGroups = mentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.startOffset, m.arguments("definition").head.startOffset))
+        //      val spanGroups = groupByArgTokenOverlap(mentions, "definition")
+        //      val spanGroups = sameSentMentions.groupBy(m => (m.arguments("variable")))
+        for (sg <- spanGroups) {
+          println("start group")
+          for (m <- sg._2) println(m.text + " " + m.label)
+          // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
+          val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
+          // chose a mention with most vars - if they have the same span and same (max) num of vars, it shouldnt matter which one it is, so take the first one
+          val chosenMen = sg._2.filter(_.arguments("variable").length == maxNumOfVars).head
+          println("chosen: " + chosenMen.text + " " + chosenMen.label)
+          mns.append(chosenMen)
+        }
+      }
+
     }
 
     val mens = mns.toList
@@ -137,7 +242,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def filterOutOverlappingDefMen(mentions: Seq[Mention]): Seq[Mention] = {
-    for (m <- mentions) println("m -> " + m.text)
+//    for (m <- mentions) println("m -> " + m.text)
     // input is only mentions with the label ConjDefinition or Definition with conjunctions
     // this is to get rid of conj definitions that are redundant in the presence of a more complete ConjDefinition
     val toReturn = new ArrayBuffer[Mention]()
@@ -147,9 +252,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
       for (gr1 <- groupedByTokenOverlap.values) {
-        println("start group")
+//        println("start group")
         // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
-        for (g <- gr1) println(g.arguments("variable").head.text + " " + g.text)
+//        for (g <- gr1) println(g.arguments("variable").head.text + " " + g.text)
         if (gr1.exists(_.label=="ConjDefinition")) {
           val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
           toReturn.append(longestConjDef)
@@ -263,7 +368,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     // all that have conj (to be grouped further) and those with no conj
     val (tempWithConj, withoutConj) = mentions.partition(hasConj(_))
-    for (m <- withoutConj) println("wo conj: " + m.text + " " + m.label)
+//    for (m <- withoutConj) println("wo conj: " + m.text + " " + m.label)
     // check if there's overlap between conjdefs and standard defs; if there is, drop the standard def
     val withConj = filterOutOverlappingDefMen(tempWithConj)
     // defs that were found as ConjDefinitions - that is events with multiple variables (at least partially) sharing a definitions vs definitions that were found with standard rule that happened to have conjunctions in their definitions
@@ -287,7 +392,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (m <- withoutConj) toReturn.append(m)
 
 //    toReturn
-    keepLongest(toReturn)
+//    keepLongest(toReturn)
+//    keepOneWithSameSpanAfterExpansion(toReturn)
+    keepOneWithSameSpanWithVarAndDefSpan(toReturn)
   }
 
 

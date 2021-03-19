@@ -86,7 +86,7 @@ class OdinEngine(
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
     val (definitionMentions, other) = events.partition(_.label.contains("Definition"))
-    for (m <- definitionMentions) println("def: " + m.text + " " + m.label + m.tokenInterval)
+//    for (m <- definitionMentions) println("def: " + m.text + " " + m.label + m.tokenInterval)
     (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConj(definitionMentions)).toVector
   }
 
