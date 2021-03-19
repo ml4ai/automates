@@ -86,6 +86,10 @@ class CASTToAGraphVisitor(CASTVisitor):
     def to_pdf(self,filename):
         """Creates a pdf of the generated agraph"""
         A = self.to_agraph()
+        for node in A.iternodes():
+            node.attr["fontcolor"] = "black"
+            node.attr["style"] = "rounded"
+        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
         A.draw(filename+".pdf",prog="dot")
 
     @singledispatchmethod
@@ -249,7 +253,8 @@ class CASTToAGraphVisitor(CASTVisitor):
             body = self.visit_list(node.body)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="Loop")
-        self.G.add_edge(node_uid,expr)
+        self.G.add_edge(node_uid,expr,label="Condition")
+        print(self.G[expr])
         for n in body:
             self.G.add_edge(node_uid,n)
 
