@@ -854,9 +854,6 @@ static void dump_return(gimple *stmt)
   json_string_field("type", "return");
   dump_srcref(stmt);
 
-  // TODO
-  // greturn *ret = as_a<greturn *>(gsi_stmt(stmt));
-  // greturn *ret = gimple_build_return(stmt);
   tree retval = gimple_return_retval(as_a<greturn *>(stmt));
   if (retval)
   {
@@ -1134,7 +1131,6 @@ static void dump_basic_block(basic_block bb)
 }
 
 static unsigned int dump_function_ast(void)
-// static unsigned int dump_function (function *function)
 {
   if (errorcount > 0)
   {
@@ -1164,7 +1160,6 @@ static unsigned int dump_function_ast(void)
 
   TRACE("dump_function: dumping basic blocks...\n");
   json_array_field("basicBlocks");
-  // TODO FOR_EACH_BB_FN
   FOR_ALL_BB_FN(bb, cfun)
   {
     dump_basic_block(bb);
