@@ -65,17 +65,13 @@ def basic_function_def_and_assignment_if():
 
 
 def main():
-    #V = CASTToAGraphVisitor(basic_function_def_and_assignment_cast())
-    #V = CASTToAGraphVisitor(basic_function_def_and_assignment_math())
-    #V = CASTToAGraphVisitor(basic_function_def_and_assignment_if())
     # Read a JSON file that has CAST data
-
     f_name = sys.argv[1]
     file_contents = open(f_name).read()
     C = CAST([])
     C2 = C.from_json_str(file_contents)
 
     V = CASTToAGraphVisitor(C2)
-    V.to_pdf("agraph_test")
+    V.to_pdf(f_name.split(".")[0].split("/")[-1])
 
 main()
