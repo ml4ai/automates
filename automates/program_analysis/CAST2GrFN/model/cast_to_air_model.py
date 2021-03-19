@@ -1,8 +1,8 @@
-from typing import List, Dict
+from typing import List, Dict, Set
 from enum import Enum
 from dataclasses import dataclass
 
-from automates.program_analysis.CAST2GrFN.model.cast import AstNode
+from automates.program_analysis.CAST2GrFN.model.cast import AstNode, var
 
 
 class C2ATypeError(TypeError):
@@ -67,9 +67,11 @@ class C2AIdentifierType(str, Enum):
     CONTAINER = "container"
     LAMBDA = "lambda"
     DECISION = "decision"
+    PACK = "pack"
+    EXTRACT = "extract"
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2AIdentifierInformation(object):
 
     name: str
@@ -81,7 +83,7 @@ class C2AIdentifierInformation(object):
         return f'@{self.identifier_type}::{self.module}::{".".join(self.scope)}::{self.name}'
 
 
-# @dataclass(repr=False, frozen=True)
+# @dataclass(repr=True, frozen=True)
 class C2AVariable(object):
 
     identifier_information: C2AIdentifierInformation
@@ -139,9 +141,12 @@ class C2ALambdaType(str, Enum):
     EXIT = "exit"
     RETURN = "return"
     CONTAINER = "container"
+    OPERATOR = "operator"
+    EXTRACT = "extract"
+    PACK = "pack"
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2ALambda(object):
     """
     Represents an executable container/ function to transition between states in AIR
@@ -183,7 +188,7 @@ class C2ALambda(object):
         return self
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2AExpressionLambda(C2ALambda):
     """
     A type of function within AIR that represents an executable lambda expression that transitions
@@ -206,7 +211,7 @@ class C2AExpressionLambda(C2ALambda):
         }
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2AContainerCallLambda(C2ALambda):
     """
     Represents the call/passing to another container found in the body of a container definition
@@ -227,8 +232,26 @@ class C2AContainerCallLambda(C2ALambda):
         }
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2AReturnLambda(C2ALambda):
+    """
+    Represents the return from a container found in the body of a container definition
+    """
+
+    def to_AIR(self):
+        return {
+            "function": {
+                "name": self.identifier_information.build_identifier(),
+                "type": "lambda",
+            },
+            "input": [v.build_identifier() for v in self.input_variables],
+            "output": [v.build_identifier() for v in self.output_variables],
+            "updated": [v.build_identifier() for v in self.updated_variables],
+        }
+
+
+@dataclass(repr=True, frozen=True)
+class C2AObjectLambda(C2ALambda):
     """
     Represents the return from a container found in the body of a container definition
     """
@@ -245,7 +268,7 @@ class C2AReturnLambda(C2ALambda):
         }
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2AContainerDef(object):
     """
     Represents a top level AIR container def. Has its arguments, outputs/ updates, and a body
@@ -271,19 +294,27 @@ class C2AContainerDef(object):
         return self
 
     def add_arguments(self, arguments_to_add: List[C2AVariable]):
-        self.arguments.extend(arguments_to_add)
+        for v in arguments_to_add:
+            if v not in set(self.arguments):
+                self.arguments.append(v)
 
     def add_outputs(self, output_variables_to_add: List[C2AVariable]):
-        self.output_variables.extend(output_variables_to_add)
+        # self.output_variables.update(set(output_variables_to_add))
+        for v in output_variables_to_add:
+            if v not in set(self.output_variables):
+                self.output_variables.append(v)
 
     def add_updated(self, updated_variables_to_add: List[C2AVariable]):
-        self.updated_variables.extend(updated_variables_to_add)
+        # self.updated_variables.update(set(updated_variables_to_add))
+        for v in updated_variables_to_add:
+            if v not in set(self.updated_variables):
+                self.updated_variables.append(v)
 
     def add_body_lambdas(self, body_to_add: List[C2ALambda]):
         self.body.extend(body_to_add)
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2AFunctionDefContainer(C2AContainerDef):
     """
     Represents a top level container definition. Input variables will represent the arguments to the funciton in the AIR. Also contains a body.
@@ -305,15 +336,14 @@ class C2AFunctionDefContainer(C2AContainerDef):
             "name": self.identifier_information.build_identifier(),
             "source_refs": [],
             "type": "function",
-            "arguments": [v.build_identifier() for v in self.arguments],
-            "updated": [v.build_identifier() for v in self.updated_variables],
-            # TODO change to specify a single return val
-            "return_value": [v.build_identifier() for v in self.output_variables],
+            "arguments": {v.build_identifier() for v in self.arguments},
+            "updated": {v.build_identifier() for v in self.updated_variables},
+            "return_value": {v.build_identifier() for v in self.output_variables},
             "body": [i.to_AIR() for i in body_without_returns],
         }
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2ALoopContainer(C2AContainerDef):
     """
     Represents a top level container definition. Input variables will represent
@@ -332,10 +362,9 @@ class C2ALoopContainer(C2AContainerDef):
             "name": self.identifier_information.build_identifier(),
             "source_refs": [],
             "type": "loop",
-            "arguments": [v.build_identifier() for v in self.arguments],
-            "updated": [v.build_identifier() for v in self.updated_variables],
-            # TODO change to specify a single return val
-            "return_value": [v.build_identifier() for v in self.output_variables],
+            "arguments": {v.build_identifier() for v in self.arguments},
+            "updated": {v.build_identifier() for v in self.updated_variables},
+            "return_value": {v.build_identifier() for v in self.output_variables},
             "body": [i.to_AIR() for i in body_without_returns],
         }
 
@@ -358,15 +387,14 @@ class C2AIfContainer(C2AContainerDef):
             "name": self.identifier_information.build_identifier(),
             "source_refs": [],
             "type": "if-block",
-            "arguments": [v.build_identifier() for v in self.arguments],
-            "updated": [v.build_identifier() for v in self.updated_variables],
-            # TODO change to specify a single return val
-            "return_value": [v.build_identifier() for v in self.output_variables],
+            "arguments": {v.build_identifier() for v in self.arguments},
+            "updated": {v.build_identifier() for v in self.updated_variables},
+            "return_value": {v.build_identifier() for v in self.output_variables},
             "body": [i.to_AIR() for i in body_without_returns],
         }
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2ABlockContainer(C2AContainerDef):
     """"""
 
@@ -377,7 +405,7 @@ class C2ABlockContainer(C2AContainerDef):
         return self
 
 
-@dataclass(repr=False, frozen=True)
+@dataclass(repr=True, frozen=True)
 class C2ATypeDef(object):
     class C2AType(Enum):
         INTEGER = 1
@@ -397,6 +425,111 @@ class C2ATypeDef(object):
         return self
 
 
+class C2AAttributeAccessState(object):
+
+    var_to_current_extract_node: Dict[str, C2ALambda]
+    var_to_current_pack_node: Dict[str, C2ALambda]
+
+    def __init__(self):
+        self.var_to_current_extract_node = {}
+        self.var_to_current_pack_node = {}
+
+    def need_attribute_extract(self, var, attr_var):
+        # Check if the attr_var name appears in either the extract node for the
+        # var or the current pack var. If it exists in either, we should not
+        # add the same attribute for extract.
+        vars_to_check = (
+            self.var_to_current_extract_node[var].output_variables
+            if var in self.var_to_current_extract_node
+            else []
+        ) + (
+            self.var_to_current_pack_node[var].input_variables
+            if var in self.var_to_current_pack_node
+            else []
+        )
+
+        return not any(
+            [
+                v.identifier_information.name == attr_var.identifier_information.name
+                for v in vars_to_check
+            ]
+        )
+
+    def add_attribute_access(self, var, attr_var):
+        extract_lambda = self.var_to_current_extract_node.get(var, None)
+        if extract_lambda is None:
+            id = var.identifier_information
+            extract_lambda = C2AExpressionLambda(
+                C2AIdentifierInformation(
+                    "EXTRACT", id.scope, id.module, C2AIdentifierType.CONTAINER
+                ),
+                [var],
+                [attr_var],
+                [],
+                C2ALambdaType.EXTRACT,
+                "lambda : None",  # TODO
+                None,
+            )
+            self.var_to_current_extract_node[var] = extract_lambda
+            return extract_lambda
+
+        extract_lambda.output_variables.append(attr_var)
+
+    def add_attribute_to_pack(self, var, attr_var):
+        pack_lambda = self.var_to_current_pack_node.get(var, None)
+        if pack_lambda is None:
+            id = var.identifier_information
+            pack_lambda = C2AExpressionLambda(
+                C2AIdentifierInformation(
+                    "PACK", id.scope, id.module, C2AIdentifierType.CONTAINER
+                ),
+                [var],
+                [],
+                [],
+                C2ALambdaType.PACK,
+                "lambda : None",  # TODO
+                None,
+            )
+
+        for v in pack_lambda.input_variables:
+            if v.identifier_information.name == attr_var.identifier_information.name:
+                pack_lambda.input_variables.remove(v)
+        pack_lambda.input_variables.append(attr_var)
+
+        self.var_to_current_pack_node[var] = pack_lambda
+
+    def has_outstanding_pack_nodes(self):
+        return bool(self.var_to_current_pack_node)
+
+    def get_outstanding_pack_node(self, var):
+        pack_lambda = self.var_to_current_pack_node.get(var)
+        new_var = C2AVariable(
+            var.identifier_information, var.version + 1, var.type_name
+        )
+        pack_lambda.output_variables.append(new_var)
+
+        # Delete upon retrieval
+        del self.var_to_current_pack_node[var]
+
+        if var in self.var_to_current_extract_node:
+            del self.var_to_current_extract_node[var]
+
+        return pack_lambda
+
+    def get_outstanding_pack_nodes(self):
+        return [
+            self.get_outstanding_pack_node(k)
+            for k in self.var_to_current_pack_node.copy().keys()
+        ]
+
+
+class C2AVariableContext(Enum):
+    LOAD = 0
+    STORE = 1
+    ATTR_VALUE = 2
+    UNKNOWN = 3
+
+
 class C2AState(object):
     containers: List[C2AContainerDef]
     variables: List[C2AVariable]
@@ -405,15 +538,19 @@ class C2AState(object):
     current_module: str
     current_function: C2AFunctionDefContainer
     current_conditional: int
+    attribute_access_state: C2AAttributeAccessState
+    current_context: C2AVariableContext
 
     def __init__(self):
         self.containers = list()
         self.variables = list()
         self.types = list()
-        self.scope_stack = ["@global"]
+        self.scope_stack = ["global"]
         self.current_module = "initial"
         self.current_function = None
         self.current_conditional = 0
+        self.current_context = C2AVariableContext.UNKNOWN
+        self.attribute_access_state = C2AAttributeAccessState()
 
     def add_container(self, con: C2AContainerDef):
         self.containers.append(con)
@@ -439,33 +576,64 @@ class C2AState(object):
         """
         self.scope_stack = self.scope_stack[:-1]
 
-    def find_highest_version_var(self, var_name):
+    def find_highest_version_var_in_scope(self, var_name, scope):
         """
         Given a variable name, finds the highest version defined
-        for that variable given the current scope
+        for that variable given a scope
         """
         # Check that the global/function_name are the same
-        # TODO define what needs to e checked here etter
+        # TODO define what needs to be checked here better
         def share_scope(scope1, scope2):
-            return scope1[:1] == scope2[:1]
+            return scope1 == scope2
 
         instances = [
             v
             for v in self.variables
             if v.identifier_information.name == var_name
-            and share_scope(self.scope_stack, v.identifier_information.scope)
+            and share_scope(scope, v.identifier_information.scope)
         ]
         return max(instances, key=lambda v: v.version, default=None)
+
+    def find_highest_version_var_in_previous_scopes(self, var_name):
+        """
+        Given a variable name, finds the highest version defined
+        for that variable along our current scope path
+        """
+        # Subtract one so we look at all scopes except "global"
+        i = len(self.scope_stack)
+        while i >= 0:
+            res = self.find_highest_version_var_in_scope(var_name, self.scope_stack[:i])
+            if res is not None:
+                return res
+            i -= 1
+
+        return None
+
+    def find_highest_version_var_in_current_scope(self, var_name):
+        """
+        Given a variable name, finds the highest version defined
+        for that variable given the current scope
+        """
+        return self.find_highest_version_var_in_scope(var_name, self.scope_stack)
 
     def find_next_var_version(self, var_name):
         """
         Determines the next version of a variable given its name and
         variables in the current scope.
         """
-        current_highest_ver = self.find_highest_version_var(var_name)
+        current_highest_ver = self.find_highest_version_var_in_current_scope(var_name)
         return (
             current_highest_ver.version + 1 if current_highest_ver is not None else -1
         )
+
+    def find_container(self, scope):
+        matching = [
+            c
+            for c in self.containers
+            if c.identifier_information.scope + [c.identifier_information.name] == scope
+        ]
+
+        return matching[0] if matching else None
 
     def get_next_conditional(self):
         cur_cond = self.current_conditional
@@ -477,6 +645,9 @@ class C2AState(object):
 
     def reset_current_function(self):
         self.current_function = None
+
+    def set_variable_context(self, context):
+        self.current_context = context
 
     def to_AIR(self):
         """

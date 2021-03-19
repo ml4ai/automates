@@ -4,6 +4,7 @@ from collections.abc import Iterable
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
+    C2AException,
     C2AState,
     C2ALambda,
     C2ALambdaType,
@@ -17,6 +18,7 @@ from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2ATypeDef,
     C2AIdentifierInformation,
     C2AIdentifierType,
+    C2AVariableContext,
     C2ATypeError,
     C2AValueError,
 )
@@ -90,16 +92,21 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        left_res = self.visit(node.left)
+        previous_context = self.state.current_context
+        self.state.set_variable_context(C2AVariableContext.LOAD)
         right_res = self.visit(node.right)
+        self.state.set_variable_context(C2AVariableContext.STORE)
+        left_res = self.visit(node.left)
+        self.state.set_variable_context(previous_context)
 
         input_variables = right_res[-1].input_variables
         output_variables = list()
         updated_variables = list()
-        if isinstance(node.left, Var):
+        if isinstance(node.left, (Attribute, Var)):
             # If we are assigning to strictly a var, create
             # the new version of the var
-            assigned_var_name = left_res[-1].input_variables[0].get_name()
+            assigned_var = left_res[-1].input_variables[0]
+            assigned_var_name = assigned_var.get_name()
             new_ver = self.state.find_next_var_version(assigned_var_name)
             new_var = C2AVariable(
                 C2AIdentifierInformation(
@@ -109,7 +116,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     C2AIdentifierType.VARIABLE,
                 ),
                 new_ver,
-                node.left.type,
+                assigned_var.type_name,
             )
             output_variables.append(new_var)
             self.state.add_variable(new_var)
@@ -143,10 +150,106 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return "NotImplemented"
+        additional_lambdas = []
+        if isinstance(node.value, Name):
+
+            prev_context = self.state.current_context
+            self.state.set_variable_context(C2AVariableContext.ATTR_VALUE)
+            value_result = self.visit(node.value)
+            self.state.set_variable_context(prev_context)
+
+            value_var = value_result[-1].input_variables[0]
+
+            # TODO type
+            attr_var_name = f"{node.value.name}_{node.attr.name}"
+            cur_attr_var = self.state.find_highest_version_var_in_current_scope(
+                attr_var_name
+            )
+
+            new_attr_var = cur_attr_var
+            # If the cur_attr_var doesnt exist, create it
+            if cur_attr_var is None:
+                # TODO lookup type of field and use here
+                cast_attr_var = Var(val=Name(name=attr_var_name), type="Unknown")
+                attr_var_result = self.visit(cast_attr_var)
+                new_attr_var = attr_var_result[-1].input_variables[0]
+
+            if (
+                self.state.current_context == C2AVariableContext.LOAD
+                and self.state.attribute_access_state.need_attribute_extract(
+                    value_var, new_attr_var
+                )
+            ):
+                # If cur attr var is not none then  we found an exisiting var for this
+                # attribute. In this case, we need to make a new version of this
+                # attr var to output from the extract node.
+                if cur_attr_var is not None:
+                    cast_attr_var = Var(
+                        val=Name(name=attr_var_name), type=cur_attr_var.type_name
+                    )
+                    attr_var_result = self.visit(cast_attr_var)
+                    new_attr_var = attr_var_result[-1].input_variables[0]
+                self.state.add_variable(new_attr_var)
+
+                new_extract_lambda = (
+                    self.state.attribute_access_state.add_attribute_access(
+                        value_var, new_attr_var
+                    )
+                )
+
+                if new_extract_lambda is not None:
+                    additional_lambdas.append(new_extract_lambda)
+
+            elif self.state.current_context == C2AVariableContext.STORE:
+                # If we are storing into the attr var, we need to udpate the input
+                # version of the var into the pack node. However, we are not actually
+                # creating the updated var here, that is handled in the assignment
+                # node. So, just create the var object to update the packed version.
+                if cur_attr_var is not None:
+                    new_attr_var = C2AVariable(
+                        new_attr_var.identifier_information,
+                        new_attr_var.version + 1,
+                        new_attr_var.type_name,
+                    )
+                self.state.attribute_access_state.add_attribute_to_pack(
+                    value_var, new_attr_var
+                )
+
+            return additional_lambdas + [
+                C2AExpressionLambda(
+                    C2AIdentifierInformation(
+                        C2ALambdaType.UNKNOWN,
+                        self.state.get_scope_stack(),
+                        self.state.current_module,
+                        C2AIdentifierType.LAMBDA,
+                    ),
+                    [new_attr_var],
+                    [],
+                    [],
+                    C2ALambdaType.UNKNOWN,
+                    f"{attr_var_name}",
+                    node,
+                )
+            ]
+
+        else:
+            # TODO custom exception
+            raise Exception(
+                f"Error: Unable to handle expression on left side of attribute type {type(node.value)}: {node.value}"
+            )
 
     def get_op(self, op):
-        op_map = {"Mult": "*", "Add": "+", "Sub": "-", "Gt": ">", "Not": "not "}
+        op_map = {
+            "Mult": "*",
+            "Add": "+",
+            "Sub": "-",
+            "Div": "/",
+            "Gt": ">",
+            "Gte": ">=",
+            "Lt": "<",
+            "Lte": "<=",
+            "Not": "not ",
+        }
         return op_map[op] if op in op_map else None
 
     @visit.register
@@ -185,28 +288,70 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
 
+    def check_and_add_container_var(self, v):
+        v_name = v.identifier_information.name
+        var_obj = self.state.find_highest_version_var_in_current_scope(v_name)
+
+        if var_obj is None:
+            var_obj = C2AVariable(
+                C2AIdentifierInformation(
+                    v_name,
+                    self.state.get_scope_stack(),
+                    self.state.current_module,
+                    C2AIdentifierType.VARIABLE,
+                ),
+                -1,
+                v.type_name,
+            )
+            self.state.add_variable(var_obj)
+            container = self.state.find_container(var_obj.identifier_information.scope)
+            container.add_arguments([var_obj])
+
+        return var_obj
+
     @visit.register
     def _(self, node: Call):
         """
         TODO
         """
-        name = node.func.name
+        called_func_name = node.func.name
+        # Skip printf calls for now
+        if called_func_name == "printf":
+            return []
         # TODO throw error if not found
         # TODO also what happens if func is defined after call
-        called_func_name = [
-            c.identifier_information
+
+        matching_funcs = [
+            c
             for c in self.state.containers
-            if c.identifier_information.name == name
-        ][0]
+            if c.identifier_information.name == called_func_name
+        ]
+        called_func = None
+        called_func_identifier = None
+        lambda_type = C2ALambdaType.CONTAINER
+        if matching_funcs:
+            called_func = matching_funcs[0]
+            called_func_identifier = called_func.identifier_information
+        else:
+            lambda_type = C2ALambdaType.OPERATOR
+            called_func_identifier = (
+                C2AIdentifierInformation(
+                    called_func_name,
+                    self.state.get_scope_stack(),
+                    self.state.current_module,
+                    C2AIdentifierType.CONTAINER,
+                ),
+            )
 
         input_vars = []
+        output_vars = []
         arg_assign_lambdas = []
         for arg in node.arguments:
             if isinstance(arg, Name):
                 name_res = self.visit(arg)
                 input_vars.extend(name_res[-1].input_variables)
             else:
-                arg_name = f"{called_func_name.name}_ARG_{len(input_vars)}"
+                arg_name = f"{called_func_name}_ARG_{len(input_vars)}"
                 arg_assign = Assignment(
                     left=Var(val=Name(name=arg_name), type="Unknown"), right=arg
                 )
@@ -214,43 +359,85 @@ class CASTToAIRVisitor(CASTVisitor):
                 arg_assign_lambdas.extend(assign_res)
                 input_vars.extend(assign_res[-1].output_variables)
 
-        result_name = f"{called_func_name.name}_RESULT"
-        result_var = Var(val=Name(name=result_name), type="Unknown")
-        result_var_res = self.visit(result_var)[0]
-        self.state.add_variable(result_var_res.input_variables[0])
+        # Gather what global variables need to be inputted into the container.
+        # These would have been added as additional arguments to the container
+        # during previous processing.
+        arg_start = len(node.arguments)
+        container_args_list = called_func.arguments if called_func is not None else []
+        while arg_start < len(container_args_list):
+            v = container_args_list[arg_start]
+            input_var = self.check_and_add_container_var(v)
+            input_vars.append(input_var)
 
-        # TODO
-        return arg_assign_lambdas + [
-            C2AContainerCallLambda(
-                called_func_name,
-                set(input_vars),
-                set(result_var_res.input_variables),
-                [],
-                C2ALambdaType.CONTAINER,
-            ),
-            result_var_res,
-        ]
+            output_var = C2AVariable(
+                C2AIdentifierInformation(
+                    input_var.identifier_information.name,
+                    self.state.get_scope_stack(),
+                    self.state.current_module,
+                    C2AIdentifierType.VARIABLE,
+                ),
+                input_var.version + 1,
+                input_var.type_name,
+            )
+
+            self.state.add_variable(output_var)
+            output_vars.append(output_var)
+
+            arg_start += 1
+
+        container_call_lambda = C2AContainerCallLambda(
+            called_func_identifier,
+            list(set(input_vars)),
+            list(set(output_vars)),
+            [],
+            lambda_type,
+        )
+        results = arg_assign_lambdas + [container_call_lambda]
+
+        if self.state.current_context == C2AVariableContext.LOAD:
+            result_name = f"{called_func_name}_RESULT"
+            result_var = Var(val=Name(name=result_name), type="Unknown")
+            result_var_res = self.visit(result_var)[-1]
+            self.state.add_variable(result_var_res.input_variables[0])
+            container_call_lambda.output_variables.extend(
+                result_var_res.input_variables
+            )
+            results.append(result_var_res)
+
+        return results
 
     @visit.register
     def _(self, node: ClassDef):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: Dict):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: Expr):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
+
+    def handle_packs_exiting_container(self, con):
+        # If there are outstanding updates to an object that need to be packed,
+        # handle that here
+        aas = self.state.attribute_access_state
+        if aas.has_outstanding_pack_nodes():
+            all_packs = aas.get_outstanding_pack_nodes()
+            con.add_body_lambdas(all_packs)
+            vars_output_from_packs = {v for n in all_packs for v in n.output_variables}
+            for v in vars_output_from_packs:
+                self.state.add_variable(v)
+            con.add_outputs(vars_output_from_packs)
 
     @visit.register
     def _(self, node: FunctionDef):
@@ -264,12 +451,14 @@ class CASTToAIRVisitor(CASTVisitor):
                 self.state.current_module,
                 C2AIdentifierType.CONTAINER,
             ),
+            list(),
+            list(),
+            list(),
             [],
+            "lambda : None",  # TODO
             [],
-            [],
-            [],
-            "",  # TODO
         )
+        self.state.add_container(self.state.current_function)
 
         self.state.push_scope(node.name)
         args_result = self.visit_node_list_and_flatten(node.func_args)
@@ -278,13 +467,14 @@ class CASTToAIRVisitor(CASTVisitor):
             for var in arg.input_variables:
                 self.state.add_variable(var)
                 argument_vars.append(var)
+        self.state.current_function.add_arguments(argument_vars)
+
         body_result = self.visit_node_list_and_flatten(node.body)
+        self.state.current_function.add_body_lambdas(body_result)
+
         self.state.pop_scope()
 
-        self.state.current_function.add_arguments(argument_vars)
-        self.state.current_function.add_body_lambdas(body_result)
-        self.state.add_container(self.state.current_function)
-
+        self.handle_packs_exiting_container(self.state.current_function)
         self.state.reset_current_function()
         self.state.reset_conditional_count()
 
@@ -293,7 +483,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     def build_var_with_incremented_version(self, var):
         return C2AVariable(
@@ -304,6 +494,22 @@ class CASTToAIRVisitor(CASTVisitor):
         self, expr, body, orelse, condition_type, condition_num, current_cond_block
     ):
         node_name = f"{condition_type}_{condition_num}"
+
+        # Create and add If/Loop container TODO need loop
+        container_type = C2AIfContainer if condition_type == "IF" else C2ALoopContainer
+        cond_con = container_type(
+            C2AIdentifierInformation(
+                node_name,
+                self.state.get_scope_stack(),
+                self.state.current_module,
+                C2AIdentifierType.CONTAINER,
+            ),
+            [],
+            [],
+            [],
+            [],
+        )
+        self.state.add_container(cond_con)
         self.state.push_scope(node_name)
 
         cond_expr_var_name = f"COND_{condition_num}_{current_cond_block}"
@@ -312,7 +518,7 @@ class CASTToAIRVisitor(CASTVisitor):
         )
         cond_assign_result = self.visit(cond_assign)
         cond_assign_lambda = cond_assign_result[-1]
-        temp = C2AExpressionLambda(
+        cond_assign_lambda_with_correct_type = C2AExpressionLambda(
             cond_assign_lambda.identifier_information,
             cond_assign_lambda.input_variables,
             cond_assign_lambda.output_variables,
@@ -322,9 +528,13 @@ class CASTToAIRVisitor(CASTVisitor):
             cond_assign_lambda.cast,
         )
 
+        # Add the condition var into the variable list
+        for v in cond_assign_lambda_with_correct_type.output_variables:
+            self.state.add_variable(v)
+
         body_result = self.visit_node_list_and_flatten(body)
         body_result.extend(cond_assign_result[:-1])
-        body_result.append(temp)
+        body_result.append(cond_assign_lambda_with_correct_type)
 
         # TODO add orelse result information in
         if len(orelse) > 0:
@@ -341,44 +551,6 @@ class CASTToAIRVisitor(CASTVisitor):
             else:
                 self.visit(next_block)
 
-        # All variables that do not share the scope of the inside of the if
-        # must be inputted to the container
-        caller_input_vars = []
-        callee_input_vars = []
-        for b in body_result:
-            for (idx, v) in enumerate(b.input_variables):
-                # If the var was defined outside of this conditional body
-                if (
-                    v.identifier_information.scope[: len(self.state.scope_stack)]
-                    != self.state.scope_stack
-                ):
-                    # Add the argument in the caller container
-                    caller_input_vars.append(v)
-                    # Create new version of this var in the conditional container
-                    iv_name = v.identifier_information.name
-                    new_ver = self.state.find_next_var_version(iv_name)
-                    new_var = C2AVariable(
-                        C2AIdentifierInformation(
-                            iv_name,
-                            self.state.get_scope_stack(),
-                            self.state.current_module,
-                            C2AIdentifierType.VARIABLE,
-                        ),
-                        -1,
-                        v.type_name,
-                    )
-                    if not [
-                        v
-                        for v in callee_input_vars
-                        if v.identifier_information.name
-                        == new_var.identifier_information.name
-                    ]:
-                        callee_input_vars.append(new_var)
-                        self.state.add_variable(new_var)
-                    # Update the input var in the lambda with the new one inside
-                    # this container
-                    b.input_variables[idx] = new_var
-
         # Just the name of all currently defined vars
         external_vars = [
             v.identifier_information.name
@@ -386,8 +558,6 @@ class CASTToAIRVisitor(CASTVisitor):
             if v.identifier_information.scope[: len(self.state.scope_stack)]
             != self.state.scope_stack
         ]
-
-        self.state.pop_scope()
 
         # Gather the maximum updated version of variables for variables that
         # were defined outside of this if block
@@ -417,7 +587,7 @@ class CASTToAIRVisitor(CASTVisitor):
             # We have to pass each input var through the
             matching_vars = [
                 (iv, ov)
-                for iv in callee_input_vars
+                for iv in cond_con.arguments
                 for ov in callee_output_vars
                 if ov.identifier_information.name == iv.identifier_information.name
             ]
@@ -432,16 +602,15 @@ class CASTToAIRVisitor(CASTVisitor):
                     def enumerate_vars_and_update_version(vars):
                         for (idx, v) in enumerate(vars):
                             name = v.identifier_information.name
-                            if (
-                                name
-                                in decision_var_names
-                                # and name not in names_to_output_from_input_decision
-                            ):
+                            if name in decision_var_names:
                                 new_var = C2AVariable(
                                     v.identifier_information, v.version + 1, v.type_name
                                 )
                                 vars[idx] = new_var
                                 names_to_output_from_input_decision[name] = v
+
+                                if new_var not in set(self.state.variables):
+                                    self.state.add_variable(new_var)
 
                     enumerate_vars_and_update_version(b.input_variables)
                     enumerate_vars_and_update_version(b.output_variables)
@@ -517,12 +686,16 @@ class CASTToAIRVisitor(CASTVisitor):
                 body_result.insert(0, input_decision_node)
                 body_result.append(output_decision_node)
 
+        self.state.pop_scope()
+
         # Given all the output vars from this container, create the updated
         # versions of these in the caller container
         caller_output_vars = []
+        caller_input_vars = []
         for ov in callee_output_vars:
             ov_name = ov.identifier_information.name
-            new_ver = self.state.find_next_var_version(ov_name)
+            # cur_var = self.state.find_highest_version_var_in_current_scope(ov_name)
+            cur_var = self.check_and_add_container_var(ov)
             new_var = C2AVariable(
                 C2AIdentifierInformation(
                     ov_name,
@@ -530,33 +703,24 @@ class CASTToAIRVisitor(CASTVisitor):
                     self.state.current_module,
                     C2AIdentifierType.VARIABLE,
                 ),
-                new_ver,
+                cur_var.version + 1,
                 ov.type_name,
             )
-            caller_output_vars.append(new_var)
             self.state.add_variable(new_var)
 
-        # Create and add If/Loop container TODO need loop
-        container_type = C2AIfContainer if condition_type == "IF" else C2ALoopContainer
-        cond_con = container_type(
-            C2AIdentifierInformation(
-                node_name,
-                self.state.get_scope_stack(),
-                self.state.current_module,
-                C2AIdentifierType.CONTAINER,
-            ),
-            set(callee_input_vars),
-            set(callee_output_vars),
-            [],
-            body_result,
-        )
-        self.state.add_container(cond_con)
+            caller_output_vars.append(new_var)
+            caller_input_vars.append(cur_var)
+
+        cond_con.add_body_lambdas(body_result)
+        cond_con.add_outputs(list(set(callee_output_vars)))
+
+        self.handle_packs_exiting_container(cond_con)
 
         return [
             C2AContainerCallLambda(
                 cond_con.identifier_information,
-                set(caller_input_vars),
-                set(caller_output_vars),
+                list(set(caller_input_vars)),
+                list(set(caller_output_vars)),
                 [],
                 C2ALambdaType.CONTAINER,
             )
@@ -595,14 +759,14 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: ModelContinue):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: ModelReturn):
@@ -610,9 +774,11 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
 
-        if isinstance(node.value, (Name, Number)):
+        if isinstance(node.value, Number):
+            return []
+        elif isinstance(node.value, Name):
             val_result = self.visit(node.value)
-            self.state.current_function.add_outputs(val_result.input_variables)
+            self.state.current_function.add_outputs(val_result[-1].input_variables)
             return []
 
         result_name = "RETURN_VAL"
@@ -632,8 +798,16 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        # TODO module cast node should be updated with name
-        body_res = self.visit_node_list_and_flatten(node.body)
+        self.state.current_module = node.name
+
+        global_var_nodes = [n for n in node.body if isinstance(n, Var)]
+        non_var_nodes = [n for n in node.body if not isinstance(n, Var)]
+
+        global_var_results = self.visit_node_list_and_flatten(global_var_nodes)
+        for var_lambda in global_var_results:
+            for v in var_lambda.input_variables:
+                self.state.add_variable(v)
+        self.visit_node_list_and_flatten(non_var_nodes)
 
     @visit.register
     def _(self, node: Name):
@@ -641,9 +815,31 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
         name = node.name
-        var_obj = self.state.find_highest_version_var(name)
+        var_obj = self.state.find_highest_version_var_in_current_scope(name)
 
-        return [
+        additional_lambas = []
+        # In this case we are loading a var of type object but not accessing an attribute.
+        # If so, check if we need to pack / produce a new version of this var before using it
+        if (
+            var_obj is not None
+            and self.state.current_context == C2AVariableContext.LOAD
+            and var_obj.type_name == "object"  # TODO AND has outstanding packs
+        ):
+            pack_lambda = self.state.attribute_access_state.get_outstanding_pack_node(
+                var_obj
+            )
+            additional_lambas.append(pack_lambda)
+            var_obj = pack_lambda.output_variables[-1]
+        elif var_obj is None and self.state.current_context in {
+            C2AVariableContext.LOAD,
+            C2AVariableContext.ATTR_VALUE,
+        }:
+            var_obj = self.state.find_highest_version_var_in_previous_scopes(name)
+            if var_obj is None:
+                raise C2AValueError(f"Error: Unable to find variable with name: {name}")
+            var_obj = self.check_and_add_container_var(var_obj)
+
+        return additional_lambas + [
             C2AExpressionLambda(
                 C2AIdentifierInformation(
                     C2ALambdaType.UNKNOWN,
@@ -687,28 +883,28 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: String):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: Subscript):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: Tuple):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: UnaryOp):
@@ -740,7 +936,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return "NotImplemented"
+        return NotImplemented
 
     @visit.register
     def _(self, node: Var):
@@ -748,7 +944,7 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
         name = node.val.name
-        var_obj = self.state.find_highest_version_var(name)
+        var_obj = self.state.find_highest_version_var_in_current_scope(name)
         if var_obj is None:
             var_obj = C2AVariable(
                 C2AIdentifierInformation(
