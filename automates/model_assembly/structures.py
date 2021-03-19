@@ -312,6 +312,7 @@ class DataType(Enum):
     CONTINUOUS = auto()  # Numerical measure w/ *uncountably infinite* options
     INTERVAL = auto()  # Continuous measure *without* an absolute zero
     RATIO = auto()  # Continuous measure *with* an absolute zero
+    COMPOSITE = auto()  # A collection of named fields with types
 
     def __str__(self):
         return str(self.name).lower()
@@ -327,6 +328,8 @@ class DataType(Enum):
             return cls.BINARY
         elif name == "integer":
             return cls.DISCRETE
+        elif name == "object":
+            return cls.COMPOSITE
         # TODO remove array after updating for2py to use list type
         elif name == "none" or name == "unknown" or name == "list" or name == "array":
             return cls.NONE
@@ -389,6 +392,10 @@ class LambdaType(Enum):
             return cls.DECISION
         elif type_str == "interface":
             return cls.INTERFACE
+        elif type_str == "pack":
+            return cls.PACK
+        elif type_str == "extract":
+            return cls.EXTRACT
         else:
             raise ValueError(f"Unrecognized lambda type name: {type_str}")
 
@@ -496,6 +503,10 @@ class LambdaStmt(GenericStmt):
             return "condition"
         elif re.search(r"__decision__", name) is not None:
             return "decision"
+        elif re.search(r"__pack__", name) is not None:
+            return "pack"
+        elif re.search(r"__extract__", name) is not None:
+            return "extract"
         else:
             raise ValueError(
                 f"No recognized lambda type found from name string: {name}"
