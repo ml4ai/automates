@@ -52,7 +52,8 @@ if __name__ == "__main__":
             c_file,
             "-o",
             "/dev/null",
-        ]
+        ],
+        stdout=subprocess.DEVNULL,
     )
 
     # Assert return code is 0 which is success
