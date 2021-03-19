@@ -996,7 +996,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if parent is not None:
                 subgraphs.add_edge(parent, con_subgraph)
 
-            if len(inputs) > 0:
+            # If this container identifier is not the root con_id passed into from_AIR
+            if con.identifier != con_id:
                 # Do this only if this is not the starting container
                 returned_vars = [live_variables[id] for id in con.returns]
                 update_vars = [live_variables[id] for id in con.updated]
@@ -1028,6 +1029,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 Occs[stmt.call_id] = 0
 
             inputs = [live_variables[id] for id in stmt.inputs]
+
             (con_outputs, interface_func) = translate_container(
                 new_con, inputs, subgraph
             )
