@@ -183,17 +183,79 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // group by group
       val spanGroups = sameSentMentions.groupBy(_.tokenInterval)
 //      val spanGroups = sameSentMentions.groupBy(_.arguments("definition").head.tokenInterval)
-//      val spanGroups = mentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.startOffset, m.arguments("definition").head.startOffset))
+//      val spanGroups = sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.startOffset, m.arguments("definition").head.startOffset))
 //      val spanGroups = groupByArgTokenOverlap(mentions, "definition")
 //      val spanGroups = sameSentMentions.groupBy(m => (m.arguments("variable")))
       for (sg <- spanGroups) {
-//        println("start group")
-//        for (m <- sg._2) println(m.text + " " + m.label)
+        println("start group 1")
+        for (m <- sg._2) println(m.text + " " + m.label)
         // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
         val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
         // chose a mention with most vars - if they have the same span and same (max) num of vars, it shouldnt matter which one it is, so take the first one
         val chosenMen = sg._2.filter(_.arguments("variable").length == maxNumOfVars).head
-//        println("chosen: " + chosenMen.text + " " + chosenMen.label)
+        println("chosen: " + chosenMen.text + " " + chosenMen.label)
+        mns.append(chosenMen)
+      }
+    }
+
+    val mens = mns.toList
+    mens.toVector.distinct
+  }
+
+  def keepLongestByStart(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // after expanding definitions and ConjDefinitions, eliminate redundant mentions;
+    // out of overlapping mentions, keep the ones that have more than one variable - those are the conj definitions that can be "untangled" - those are the events that have more than one var-def combos in them
+    val mns = new ArrayBuffer[Mention]()
+
+    // group by sentence
+    val sentGroup = mentions.filter(_.arguments.contains("variable")).groupBy(_.sentence)
+    for ((sentId, sameSentMentions) <- sentGroup) {
+      // group by group
+      //      val spanGroups = sameSentMentions.groupBy(_.tokenInterval)
+      //      val spanGroups = sameSentMentions.groupBy(_.arguments("definition").head.tokenInterval)
+      val spanGroups = sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.startOffset, m.arguments("definition").head.startOffset))
+      //      val spanGroups = groupByArgTokenOverlap(mentions, "definition")
+      //      val spanGroups = sameSentMentions.groupBy(m => (m.arguments("variable")))
+      for (sg <- spanGroups) {
+//        println("start group 1")
+//        for (m <- sg._2) println(m.text + " " + m.label)
+        // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
+//        val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
+        // chose a mention with most vars - if they have the same span and same (max) num of vars, it shouldnt matter which one it is, so take the first one
+        val chosenMen = sg._2.maxBy(_.arguments("definition").head.text.length)
+        println("chosen: " + chosenMen.text + " " + chosenMen.label)
+        mns.append(chosenMen)
+      }
+    }
+
+    val mens = mns.toList
+    mens.toVector.distinct
+  }
+
+
+  //masha todo: need to have one keep longest action when it's overlapping vars and defs with the defs based on start, on end, and the one that just does token interval for the full men?
+  def keepOneWithSameSpanAfterExpansionEnd(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // after expanding definitions and ConjDefinitions, eliminate redundant mentions;
+    // out of overlapping mentions, keep the ones that have more than one variable - those are the conj definitions that can be "untangled" - those are the events that have more than one var-def combos in them
+    val mns = new ArrayBuffer[Mention]()
+
+    // group by sentence
+    val sentGroup = mentions.filter(_.arguments.contains("variable")).groupBy(_.sentence)
+    for ((sentId, sameSentMentions) <- sentGroup) {
+      // group by group
+      //      val spanGroups = sameSentMentions.groupBy(_.tokenInterval)
+      //      val spanGroups = sameSentMentions.groupBy(_.arguments("definition").head.tokenInterval)
+      val spanGroups = sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.endOffset, m.arguments("definition").head.endOffset))
+      //      val spanGroups = groupByArgTokenOverlap(mentions, "definition")
+      //      val spanGroups = sameSentMentions.groupBy(m => (m.arguments("variable")))
+      for (sg <- spanGroups) {
+//        println("start group 1")
+//        for (m <- sg._2) println(m.text + " " + m.label)
+        // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
+//        val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
+        // chose a mention with most vars - if they have the same span and same (max) num of vars, it shouldnt matter which one it is, so take the first one
+        val chosenMen = sg._2.maxBy(_.arguments("definition").head.text.length)
+        println("chosen: " + chosenMen.text + " " + chosenMen.label)
         mns.append(chosenMen)
       }
     }
@@ -393,8 +455,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 //    toReturn
 //    keepLongest(toReturn)
+    keepOneWithSameSpanAfterExpansionEnd(keepLongestByStart(toReturn))
+//    keepOneWithSameSpanWithVarAndDefSpan(toReturn)
+//    keepLongestByStart(toReturn)
 //    keepOneWithSameSpanAfterExpansion(toReturn)
-    keepOneWithSameSpanWithVarAndDefSpan(toReturn)
   }
 
 
@@ -458,7 +522,20 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           // if there are new defs, we will assume that they should be matched with the vars in the linear left to right order
           if (newDefinitions.nonEmpty) {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
-            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            // masha todo: have to construct a new mention here with the new token int and updated foundBy
+//            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            val newDefMen = new EventMention(
+            mostComplete.labels,
+            Interval(math.min(v.tokenInterval.start, newDefinitions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDefinitions(i).tokenInterval.end)),
+  mostComplete.asInstanceOf[EventMention].trigger,
+  newArgs,
+  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+            mostComplete.sentence,
+  mostComplete.document,
+  mostComplete.keep,
+  mostComplete.foundBy ++ "++untangleConjunctions",
+  Set.empty
+)
             if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
               val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
               toReturn.append(newDefWithAtt)
@@ -469,12 +546,32 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             // if there are no new defs, we just assume that the definition is shared between all the variables
           } else {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(headDef))
-            val newDefMen = copyWithArgs(mostComplete, newArgs)
+//            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            val newDefMen = new EventMention(
+              mostComplete.labels,
+              Interval(math.min(v.tokenInterval.start, headDef.tokenInterval.start), math.max(v.tokenInterval.end, headDef.tokenInterval.end)),
+              mostComplete.asInstanceOf[EventMention].trigger,
+              newArgs,
+              mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+              mostComplete.sentence,
+              mostComplete.document,
+              mostComplete.keep,
+              mostComplete.foundBy ++ "++untangleConjunctions",
+              Set.empty
+            )
             toReturn.append(newDefMen)
           }
         }
       }
 
+    }
+    for (m <- toReturn) {
+      println("Mention: " + m.text + " " + m.label)
+      for (argType <- m.arguments) {
+        println("arg type: " + argType._1)
+        for (a <- argType._2) println("a: " + a.text)
+
+      }
     }
     toReturn
   }
