@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -47,13 +49,21 @@ class GCC2CAST:
         self.basic_blocks = []
         self.parsed_basic_blocks = []
         self.current_basic_block = None
+        self.type_ids_to_defined_types = {}
 
     def to_cast(self):
         input_file = self.gcc_ast["mainInputFilename"]
         functions = self.gcc_ast["functions"]
         types = self.gcc_ast["recordTypes"]
+        global_variables = self.gcc_ast["globalVariables"]
 
         body = []
+
+        for t in types:
+            self.parse_record_type(t)
+
+        for gv in global_variables:
+            body.append(self.parse_variable(gv))
 
         for f in functions:
             body.append(self.parse_function(f))
@@ -61,12 +71,20 @@ class GCC2CAST:
         file_module = Module(name=input_file.rsplit(".")[0], body=body)
         return CAST([file_module])
 
+    def parse_record_type(self, record_type):
+        id = record_type["id"]
+        name = record_type["name"]
+        self.type_ids_to_defined_types[id] = {"name": name}
+
+        # TODO fill out full class def
+        return ClassDef(name=name)
+
     def parse_variable(self, variable):
         if "name" not in variable:
             return None
         var_type = variable["type"]
         name = variable["name"]
-        cast_type = gcc_type_to_var_type(var_type)
+        cast_type = gcc_type_to_var_type(var_type, self.type_ids_to_defined_types)
         return Var(val=Name(name=name), type=cast_type)
 
     def parse_operand(self, operand):
@@ -77,7 +95,7 @@ class GCC2CAST:
             del self.ssa_ids_to_expression[ssa_id]
             return stored_ssa_expr
         elif is_const_operator(code):
-            return Number(number=operand["value"])
+            return Number(number=get_const_value(operand))
         elif code == "var_decl" or code == "parm_decl":
             if "name" in operand:
                 return Name(name=operand["name"])
@@ -95,7 +113,12 @@ class GCC2CAST:
         return Subscript(value=Name(name=name), slice=index_result)
 
     def parse_lhs(self, lhs, assign_value):
-        assign_var = self.parse_variable(lhs)
+        assign_var = None
+        if lhs["code"] == "component_ref":
+            assign_var = self.parse_component_ref(lhs)[0]
+        elif lhs["code"] == "var_decl":
+            assign_var = self.parse_variable(lhs)
+
         if assign_var is None and "id" in lhs:
             self.variables_ids_to_expression[lhs["id"]] = assign_value
             return []
@@ -105,6 +128,14 @@ class GCC2CAST:
             return []
 
         return [Assignment(left=assign_var, right=assign_value)]
+
+    def parse_component_ref(self, operand):
+        value = operand["value"]
+        var_name = value["name"]
+        member = operand["member"]
+        field = member["name"]
+
+        return [Attribute(value=Name(name=var_name), attr=Name(name=field))]
 
     def parse_assign_statement(self, stmt):
         lhs = stmt["lhs"]
@@ -129,6 +160,8 @@ class GCC2CAST:
                     assign_value = Name(name=operands[0]["name"])
                 elif "id" in operands[0]:
                     assign_value = self.variable_ids_to_expression(operands[0]["id"])
+                else:
+                    assign_value = self.parse_operand(operands[0])
             elif (
                 is_casting_operator(operator)
                 or is_trunc_operator(operator)
@@ -137,6 +170,8 @@ class GCC2CAST:
                 assign_value = self.parse_operand(operands[0])
             elif operator == "array_ref":
                 assign_value = self.parse_array_ref_operand(operands[0])
+            elif operator == "component_ref":
+                assign_value = self.parse_component_ref(operands[0])[0]
             else:
                 cast_op = get_cast_operator(operator)
                 ops = []
@@ -163,13 +198,17 @@ class GCC2CAST:
         arguments = stmt["arguments"] if "arguments" in stmt else []
 
         func_name = function["value"]["name"]
+        # TODO not sure if this is a permemnant solution, but ignore these
+        # unexpected builtin calls for now
+        if "__builtin_" in func_name:
+            return []
 
         cast_args = []
         for arg in arguments:
             cast_args.append(self.parse_operand(arg))
 
         cast_call = Call(func=Name(func_name), arguments=cast_args)
-        if "lhs" in stmt:
+        if "lhs" in stmt and stmt["lhs"] is not None:
             return self.parse_lhs(stmt["lhs"], cast_call)
 
         return [cast_call]
