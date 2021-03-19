@@ -1513,7 +1513,7 @@ class CausalAnalysisGraph(nx.DiGraph):
             G,
             GrFN.subgraphs,
             GrFN.uid,
-            GrFN.date_created,
+            GrFN.timestamp,
             GrFN.namespace,
             GrFN.scope,
             GrFN.name,
