@@ -853,6 +853,12 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 if d == 0 and isinstance(n, VariableNode)
             ]
         )
+
+        self.literal_vars = [
+            v
+            for v in self.variables
+            if list(self.predecessors(v))[0].func_type == LambdaType.LITERAL
+        ]
         self.outputs = [
             n
             for n, d in self.out_degree()
@@ -869,6 +875,12 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         self.input_name_map = {
             var_node.identifier.var_name: var_node for var_node in self.inputs
+        }
+        self.input_identifier_map = {
+            var_node.identifier: var_node for var_node in self.inputs
+        }
+        self.literal_identifier_map = {
+            var_node.identifier: var_node for var_node in self.literal_vars
         }
 
         self.output_name_map = {
@@ -896,7 +908,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
         size_str = f"< |L|: {L_sz}, |V|: {V_sz}, |I|: {I_sz}, |O|: {O_sz} >"
         return f"{self.label}\n{size_str}"
 
-    def __call__(self, inputs: Dict[str, Any]) -> Iterable[Any]:
+    def __call__(
+        self, inputs: Dict[str, Any], literals: Dict[str, Any]
+    ) -> Iterable[Any]:
         """Executes the GrFN over a particular set of inputs and returns the
         result.
 
@@ -914,6 +928,29 @@ class GroundedFunctionNetwork(nx.DiGraph):
         # Set input values
         for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
+            # TODO: need to find a way to incorporate a 32/64 bit check here
+            if isinstance(value, float):
+                value = np.array([value], dtype=np.float64)
+            if isinstance(value, int):
+                value = np.array([value], dtype=np.int64)
+            elif isinstance(value, list):
+                value = np.array(value)
+                self.np_shape = value.shape
+            elif isinstance(value, np.ndarray):
+                self.np_shape = value.shape
+
+            input_node.input_value = value
+
+        literal_ids = set(
+            [VariableIdentifier.from_str(var_id) for var_id in literals.keys()]
+        )
+        lit_id2val = {lit_id: literals[str(lit_id)] for lit_id in literal_ids}
+        literal_overrides = [
+            (var_node, lit_id2val[identifier])
+            for identifier, var_node in self.literal_identifier_map.items()
+            if identifier in literal_ids
+        ]
+        for input_node, value in literal_overrides:
             # TODO: need to find a way to incorporate a 32/64 bit check here
             if isinstance(value, float):
                 value = np.array([value], dtype=np.float64)
