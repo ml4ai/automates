@@ -20,10 +20,8 @@ import ujson.{Obj, Value}
 import org.clulab.grounding.{SVOGrounder, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import java.util.UUID.randomUUID
-
 import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -94,39 +92,9 @@ object ExtractAndAlign {
     ): Value = {
 
 
-
-    // for every group, create:
-    // - random id for each def
-    // - global id for all
-    // - a new definition for each global var that has text and def that is a combination of all definitions (in the same order as global id)
-
-
-
-    def getGlobalVars(defMentions: Seq[Mention]): Seq[GlobalVariable] = {
-
-      // fixme: if there's period at the end - replace with nothing - so can group by text.replace(".", "")?
-      // fixme: cosmos splits a lot of words like in flu enza and splits paragraphs weird - check which of the cosmos files is really the best
-      val groupedVars = definitionMentions.get.groupBy(_.arguments("variable").head.text)
-      val allGlobalVars = new ArrayBuffer[GlobalVariable]()
-      for (gr <- groupedVars) {
-        val glVarID = randomUUID().toString()
-        val identifier = gr._1
-        val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
-        val textFromAllDefs = gr._2.map(m => m.arguments("definition").head.text)
-        val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDefs)
-        allGlobalVars.append(glVar)
-
-      }
-
-      allGlobalVars
-    }
-
     val allGlobalVars = if (definitionMentions.nonEmpty) {
       getGlobalVars(definitionMentions.get)
     } else Seq.empty
-
-    for (g <- allGlobalVars) println("gl: " + g)
-
 
 
     // =============================================
@@ -174,6 +142,24 @@ object ExtractAndAlign {
       // Add the grounding links to the GrFN
       GrFNParser.addHypotheses(grfn, hypotheses)
     } else outputJson
+  }
+
+  def getGlobalVars(defMentions: Seq[Mention]): Seq[GlobalVariable] = {
+
+    // fixme: if there's period at the end - replace with nothing - so can group by text.replace(".", "")?
+    val groupedVars = defMentions.groupBy(_.arguments("variable").head.text)
+    val allGlobalVars = new ArrayBuffer[GlobalVariable]()
+    for (gr <- groupedVars) {
+      val glVarID = randomUUID().toString()
+      val identifier = gr._1
+      val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
+      val textFromAllDefs = gr._2.map(m => m.arguments("definition").head.text)
+      val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDefs)
+      allGlobalVars.append(glVar)
+
+    }
+
+    allGlobalVars
   }
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
