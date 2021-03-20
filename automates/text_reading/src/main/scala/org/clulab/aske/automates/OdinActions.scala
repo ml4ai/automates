@@ -9,13 +9,12 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.attachments.DiscontinuousCharOffsetAttachment
-import org.clulab.aske.automates.entities.EntityHelper
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.io.{BufferedSource, Source}
+
 
 
 
@@ -159,10 +158,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for ((sentId, sameSentMentions) <- sentGroup) {
       // group by group
       val spanGroups = sameSentMentions.groupBy(_.tokenInterval)
-//      val spanGroups = sameSentMentions.groupBy(_.arguments("definition").head.tokenInterval)
-//      val spanGroups = sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head.startOffset, m.arguments("definition").head.startOffset))
-//      val spanGroups = groupByArgTokenOverlap(mentions, "definition")
-//      val spanGroups = sameSentMentions.groupBy(m => (m.arguments("variable")))
+
       for (sg <- spanGroups) {
         // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
         val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
@@ -412,20 +408,20 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           // if there are new defs, we will assume that they should be matched with the vars in the linear left to right order
           if (newDefinitions.nonEmpty) {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
-            // masha todo: have to construct a new mention here with the new token int and updated foundBy
-//            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            val newInt = Interval(math.min(v.tokenInterval.start, newDefinitions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDefinitions(i).tokenInterval.end))
+            // construct a new definition with new token int, foundBy, and args
             val newDefMen = new EventMention(
-            mostComplete.labels,
-            Interval(math.min(v.tokenInterval.start, newDefinitions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDefinitions(i).tokenInterval.end)),
-  mostComplete.asInstanceOf[EventMention].trigger,
-  newArgs,
-  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
-            mostComplete.sentence,
-  mostComplete.document,
-  mostComplete.keep,
-  mostComplete.foundBy ++ "++untangleConjunctions",
-  Set.empty
-)
+              mostComplete.labels,
+              newInt,
+              mostComplete.asInstanceOf[EventMention].trigger,
+              newArgs,
+              mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+              mostComplete.sentence,
+              mostComplete.document,
+              mostComplete.keep,
+              mostComplete.foundBy ++ "++untangleConjunctions",
+              Set.empty
+            )
             if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
               val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
               toReturn.append(newDefWithAtt)
@@ -436,10 +432,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             // if there are no new defs, we just assume that the definition is shared between all the variables
           } else {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(headDef))
-//            val newDefMen = copyWithArgs(mostComplete, newArgs)
+            val newInt = Interval(math.min(v.tokenInterval.start, headDef.tokenInterval.start), math.max(v.tokenInterval.end, headDef.tokenInterval.end))
             val newDefMen = new EventMention(
               mostComplete.labels,
-              Interval(math.min(v.tokenInterval.start, headDef.tokenInterval.start), math.max(v.tokenInterval.end, headDef.tokenInterval.end)),
+              newInt,
               mostComplete.asInstanceOf[EventMention].trigger,
               newArgs,
               mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow

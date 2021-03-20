@@ -187,6 +187,7 @@ rules:
       variable:Variable = (<cop /${agents}/ appos? | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "nmod_at?". need to see if it's feasible.
 
+# disabled for now - overwrites successful dependency-based extractions
 #  - name: var_is_def_token # needed because of bad parse
 #    label: Definition
 #    priority: ${priority}
