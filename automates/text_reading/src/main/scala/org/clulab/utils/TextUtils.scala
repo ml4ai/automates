@@ -19,7 +19,6 @@ def getMentionText(mention: Mention): String = {
   // get text bound mention text taking into account the presence of discontinuous character offset attachment
   // fixme: add functionality to get text of an event mention whose arguments have discont attachments
   if (mention.attachments.nonEmpty & mention.attachments.exists(att => att.asInstanceOf[AutomatesAttachment].toUJson("attType").str == "DiscontinuousCharOffset")) {
-    println(mention.attachments)
     val attAsJson = ExtractAndAlign.returnAttachmentOfAGivenType(mention.attachments, "DiscontinuousCharOffset").toUJson
     val charOffsets = attAsJson("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt))
     val textPieces = new ArrayBuffer[String]()
