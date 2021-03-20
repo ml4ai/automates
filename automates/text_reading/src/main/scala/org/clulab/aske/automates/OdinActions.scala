@@ -302,12 +302,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
 
     for (m <- standardDefsWithConj) {
-      val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
-      // take max conjunction hop contained inside the definition - that will be removed
-      val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
-      val preconj = m.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
-      val newMention = returnWithoutConj(m, maxConj, preconj)
-      toReturn.append(newMention)
+      // only apply this to definitions where var is to the right of the definition, e.g., '...individuals who are either Susceptible (S), Infected (I), or Recovered (R)." In other cases observed so far, it removes chunks of definitions it shouldn't remove
+      if (m.arguments("variable").head.startOffset > m.arguments("definition").head.startOffset) {
+        val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
+        // take max conjunction hop contained inside the definition - that will be removed
+        val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
+        val preconj = m.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
+        val newMention = returnWithoutConj(m, maxConj, preconj)
+        toReturn.append(newMention)
+      } else toReturn.append(m)
+
     }
     // make sure to add non-conj events
     for (m <- withoutConj) toReturn.append(m)
