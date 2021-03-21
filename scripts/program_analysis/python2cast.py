@@ -21,8 +21,8 @@ convert = py_ast_to_cast.PyASTToCAST()
 # Use ast.parse to get a PyAST
 # ../../tests/data/program_analysis/PyAST2CAST/
 # Use it to convert PyAST To CAST
-print(ast.parse(file_contents))
-print(astpp.parseprint(file_contents))
+#print(ast.parse(file_contents))
+#print(astpp.parseprint(file_contents))
 C = convert.visit(ast.parse(file_contents))
 print(type(cast.CAST([C])))
 
