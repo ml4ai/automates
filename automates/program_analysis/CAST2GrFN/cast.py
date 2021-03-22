@@ -1,3 +1,4 @@
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 import json
 import typing
 
@@ -142,7 +143,9 @@ class CAST(object):
     def write_cast_object(self, cast_value):
         if isinstance(cast_value, list):
             return [self.write_cast_object(val) for val in cast_value]
-        elif not isinstance(cast_value, AstNode):
+        elif not isinstance(cast_value, AstNode) and not isinstance(
+            cast_value, SourceRef
+        ):
             return cast_value
 
         return dict(
