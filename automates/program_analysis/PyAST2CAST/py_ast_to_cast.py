@@ -47,6 +47,7 @@ class PyASTToCAST(ast.NodeVisitor):
             right = self.visit(node.value)
 
         # Assignments in the form of x = y = z = ....
+        # TODO: Still needs work
         if(len(node.targets) > 1):
             left = Var(node.targets[0].id, "integer")
             right = self.visit(node)
@@ -236,7 +237,7 @@ class PyASTToCAST(ast.NodeVisitor):
         if(type(node.ctx) == ast.Store):
             print("name: in store")
             # TODO: how to get type?
-            return Var(node.id, "integer")    
+            return Var(Name(node.id), "integer")    
         if(type(node.ctx) == ast.Del):
             # TODO: At some point..
             return None
