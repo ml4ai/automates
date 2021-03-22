@@ -1,3 +1,4 @@
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from pprint import pprint
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
@@ -56,7 +57,6 @@ class GCC2CAST:
         functions = self.gcc_ast["functions"]
         types = self.gcc_ast["recordTypes"]
         global_variables = self.gcc_ast["globalVariables"]
-
         body = []
 
         for t in types:
@@ -112,7 +112,7 @@ class GCC2CAST:
 
         return Subscript(value=Name(name=name), slice=index_result)
 
-    def parse_lhs(self, lhs, assign_value):
+    def parse_lhs(self, stmt, lhs, assign_value):
         assign_var = None
         if lhs["code"] == "component_ref":
             assign_var = self.parse_component_ref(lhs)[0]
@@ -127,7 +127,19 @@ class GCC2CAST:
             self.ssa_ids_to_expression[ssa_id] = assign_value
             return []
 
-        return [Assignment(left=assign_var, right=assign_value)]
+        source_refs = []
+        if "line" in stmt:
+            source_refs.append(
+                SourceRef(
+                    source_file_name=stmt["file"],
+                    row_start=stmt["line"],
+                    col_start=stmt["col"],
+                )
+            )
+
+        return [
+            Assignment(left=assign_var, right=assign_value, source_refs=source_refs)
+        ]
 
     def parse_component_ref(self, operand):
         value = operand["value"]
@@ -182,7 +194,7 @@ class GCC2CAST:
             # TODO custom exception type
             raise Exception(f"Error: Unknown operator type: {operator}")
 
-        return self.parse_lhs(lhs, assign_value)
+        return self.parse_lhs(stmt, lhs, assign_value)
 
     def parse_conditional_expr(self, stmt):
         operator = stmt["operator"]
@@ -209,7 +221,7 @@ class GCC2CAST:
 
         cast_call = Call(func=Name(func_name), arguments=cast_args)
         if "lhs" in stmt and stmt["lhs"] is not None:
-            return self.parse_lhs(stmt["lhs"], cast_call)
+            return self.parse_lhs(stmt, stmt["lhs"], cast_call)
 
         return [cast_call]
 
