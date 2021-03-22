@@ -164,12 +164,12 @@ class PyASTToCAST(ast.NodeVisitor):
     def visit_For(self, node: ast.For):
         print("LOOP")
         print(type(node))
-        target = self.visit(node.target)
+        #target = self.visit(node.target)
         iterable = self.visit(node.iter)
         
         body = [self.visit(piece) for piece in (node.body+node.orelse)]
 
-        return Loop(expr=[target,iterable],body=body)
+        return Loop(expr=iterable,body=body)
 
     def visit_FunctionDef(self, node: Union[ast.FunctionDef,ast.Lambda]):
         if(type(node) == ast.FunctionDef):
@@ -205,7 +205,6 @@ class PyASTToCAST(ast.NodeVisitor):
 
         if(node.orelse != []):
             node_orelse = [self.visit(piece) for piece in node.orelse]
-
         else:  
             node_orelse = []
         
@@ -294,9 +293,6 @@ class PyASTToCAST(ast.NodeVisitor):
             return Tuple([self.visit(piece) for piece in node.elts])
         else:
             return Tuple([])
-
-
-        
 
     def visit_While(self, node: ast.While):
         print("LOOP")
