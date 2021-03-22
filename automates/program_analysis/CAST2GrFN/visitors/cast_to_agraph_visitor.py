@@ -284,9 +284,12 @@ class CASTToAGraphVisitor(CASTVisitor):
         accordingly. The node's UID is returned."""
         expr = self.visit(node.expr)
         body = []
+        orelse = None
         if(node.body != []):
             body = self.visit_list(node.body) 
-        orelse = None if node.orelse == None else self.visit(node.orelse)
+        if(node.orelse != None):
+            self.visit_list(node.orelse)
+
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="If")
         self.G.add_edge(node_uid,expr)
