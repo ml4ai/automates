@@ -1,0 +1,6 @@
+tqdm
+lxml
+webcolors
+pdf2image
+pillow
+pdfminer.six
