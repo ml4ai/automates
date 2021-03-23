@@ -34,9 +34,6 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 class PyASTToCAST(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign):
         print("Assign") 
-        # TODO: multiple assignments to same value, and 'unpacking' tuple/list
-        # TODO: Subscript
-        print("assign: node.targets",node.targets)
         left = None
         right = None
         # Simple assignment like x = ...
@@ -47,9 +44,9 @@ class PyASTToCAST(ast.NodeVisitor):
             right = self.visit(node.value)
 
         # Assignments in the form of x = y = z = ....
-        # TODO: Still needs work
         if(len(node.targets) > 1):
-            left = Var(node.targets[0].id, "integer")
+            left = self.visit(node.targets[0])
+            node.targets = node.targets[1:]
             right = self.visit(node)
 
         return Assignment(left,right)
@@ -66,11 +63,8 @@ class PyASTToCAST(ast.NodeVisitor):
                 ast.Pow : BinaryOperator.POW, ast.LShift : BinaryOperator.LSHIFT, ast.RShift : BinaryOperator.RSHIFT,
                 ast.BitOr : BinaryOperator.BITOR, ast.BitAnd : BinaryOperator.BITAND, ast.BitXor : BinaryOperator.BITXOR}
         left = node.left
-        #print(left)
-        #print("OP",ops[type(node.op)])
         op = ops[type(node.op)]
         right = node.right
-        #print(right)
 
         return BinaryOp(op,self.visit(left),self.visit(right))
 
@@ -94,12 +88,10 @@ class PyASTToCAST(ast.NodeVisitor):
 
     def visit_ClassDef(self, node:ast.ClassDef):
         name = node.name
-        print("why am i here",node)
-        print("why am i here",name)
-        print("why am i here",node.bases)
-        print("why am i here",node.body)
-        bases = [self.visit(func) for base in node.bases]
+        bases = [self.visit(base) for base in node.bases]
         funcs = [self.visit(func) for func in node.body]
+        
+        #TODO: How to do fields?
         fields = []
 
         return ClassDef(name,bases,funcs,fields)
@@ -114,6 +106,7 @@ class PyASTToCAST(ast.NodeVisitor):
 
         # TODO: Change these to handle more than one comparison operation and
         # Operand (i.e. handle 1 < x < 10)
+        
         op = ops[type(node.ops[0])]
         right = node.comparators[0]
 
@@ -173,11 +166,9 @@ class PyASTToCAST(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: Union[ast.FunctionDef,ast.Lambda]):
         if(type(node) == ast.FunctionDef):
-            # Might have to change this Name() to a visit 
-            #func_def = FunctionDef(Name(node.name))
             body = []
             args = [] 
-            # TODO: Function Args func_def.func_args(self.visit(node.args))
+            # TODO: Correct typing instead of just 'integer'
             if(node.args.args != []):
                 args = [Var(Name(arg.arg),"integer") for arg in node.args.args]
             if(node.body != []):
@@ -188,11 +179,14 @@ class PyASTToCAST(ast.NodeVisitor):
 
         if(type(node) == ast.Lambda):
             print("Lambda Function")
-            func_def = FunctionDef(None)
-            # TODO: Function Args func_def.func_args(self.visit(node.args))
-            func_def.body(self.visit(node.body))
 
-            return func_def
+            body = self.visit(node.body)
+            args = [] 
+            # TODO: Correct typing instead of just 'integer'
+            if(node.args.args != []):
+                args = [Var(Name(arg.arg),"integer") for arg in node.args.args]
+
+            return FunctionDef(Name("LAMBDA"),args,body)
 
     def visit_If(self, node: ast.If):
         print(node.test)
