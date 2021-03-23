@@ -180,12 +180,17 @@ class ExpressionVisitor(ast.NodeVisitor):
         """
         return self.nodes
 
+    @staticmethod
+    def reverse_uid_list(uids) -> List:
+        return list(reversed(uids))
+
     def visit_Lambda(self, node: ast.Lambda) -> NoReturn:
-        """Adds the starting position RETURN node for the root of an expression
+        """Adds the starting position LAMBDA node for the root of an expression
         tree.
 
-        This function also empties the list of nodes before beginning to
-        process a new lambda expression.
+        The expected children of a lambda node are [ARUGMENTS, RETURN]. This
+        function also empties the list of nodes before beginning to process a
+        new lambda expression.
 
         Args:
             node (ast.Lambda): a Python AST Lambda node
@@ -204,22 +209,31 @@ class ExpressionVisitor(ast.NodeVisitor):
         )
 
     def visit_arguments(self, node: ast.arguments) -> NoReturn:
+        """Creates an ARGUMENTS node that contains an ordered list of the
+        arguments to a lambda expression as its children.
+
+        Args:
+            node (ast.arguments): A Python AST arguments node
+        """
         self.generic_visit(node)
         new_uid = ExprAbstractNode.create_node_id()
         self.nodes.append(
             ExprDefinitionNode(
                 new_uid,
                 "ARGUMENTS",
-                list(
-                    reversed(
-                        [self.uid_stack.get() for _ in range(len(node.args))]
-                    ),
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.args))]
                 ),
             )
         )
         self.uid_stack.put(new_uid)
 
     def visit_arg(self, node: ast.arg) -> NoReturn:
+        """Creates a VariableNode for an input argument to a lambda expression.
+
+        Args:
+            node (ast.arg): A Python AST Arg node
+        """
         new_uid = ExprAbstractNode.create_node_id()
         self.nodes.append(ExprVariableNode(new_uid, "", node.arg, []))
         self.uid_stack.put(new_uid)
@@ -288,10 +302,8 @@ class ExpressionVisitor(ast.NodeVisitor):
                 new_uid,
                 "",
                 "LIST",
-                list(
-                    reversed(
-                        [self.uid_stack.get() for _ in range(len(node.elts))]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.elts))]
                 ),
             )
         )
@@ -313,10 +325,8 @@ class ExpressionVisitor(ast.NodeVisitor):
                 new_uid,
                 "",
                 "TUPLE",
-                list(
-                    reversed(
-                        [self.uid_stack.get() for _ in range(len(node.elts))]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.elts))]
                 ),
             )
         )
@@ -344,7 +354,9 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 "ACCESS",
-                list(reversed([self.uid_stack.get(), self.uid_stack.get()])),
+                self.reverse_uid_list(
+                    [self.uid_stack.get(), self.uid_stack.get()]
+                ),
             )
         )
         self.uid_stack.put(new_uid)
@@ -362,7 +374,9 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 node.op.__class__.__name__,
-                list(reversed([self.uid_stack.get(), self.uid_stack.get()])),
+                self.reverse_uid_list(
+                    [self.uid_stack.get(), self.uid_stack.get()]
+                ),
             )
         )
         self.uid_stack.put(new_uid)
@@ -396,17 +410,13 @@ class ExpressionVisitor(ast.NodeVisitor):
         new_uid = ExprAbstractNode.create_node_id()
         comp_ops_list = [op.__class__.__name__ for op in node.ops]
         comp_ops_name = " / ".join(comp_ops_list)
+        num_comp_ops = len(node.comparators) + 1
         self.nodes.append(
             ExprOperatorNode(
                 new_uid,
                 comp_ops_name,
-                list(
-                    reversed(
-                        [
-                            self.uid_stack.get()
-                            for _ in range(len(node.comparators) + 1)
-                        ]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(num_comp_ops)]
                 ),
             )
         )
@@ -425,10 +435,8 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 node.op.__class__.__name__,
-                list(
-                    reversed(
-                        [self.uid_stack.get() for _ in range(len(node.values))]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.values))]
                 ),
             )
         )
@@ -447,14 +455,8 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 "IfExpr",
-                list(
-                    reversed(
-                        [
-                            self.uid_stack.get(),
-                            self.uid_stack.get(),
-                            self.uid_stack.get(),
-                        ]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(3)]
                 ),
             )
         )
@@ -474,8 +476,8 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 f"{node.func.id}()",
-                list(
-                    reversed([self.uid_stack.get() for _ in range(num_args)])
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(num_args)]
                 ),
             )
         )
