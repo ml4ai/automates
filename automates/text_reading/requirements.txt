@@ -1,7 +1,8 @@
 antlr4-python3-runtime==4.8
 SPARQLWrapper==1.8.5
-pdfminer.six
-pdf2image
-webcolors
+tqdm
 lxml
+webcolors
+pdf2image
 Pillow
+pdfminer.six
