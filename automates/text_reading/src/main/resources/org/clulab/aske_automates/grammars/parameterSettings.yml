@@ -4,12 +4,14 @@ rules:
 
 
   ####VALUES####
+  ###Possible improvement: many of these rules can potentially take both variables and concepts as their "variable" argument; to avoid writing a separate rule for each of the two cases, we can have one rule that has concept as a variable arg, but then apply an action which reassigns the label of the argument to "Variable" if it passes the looksLikeAVariable heuristic. This could increase the number of false positives, though, so for now we will just add concepts to rules strictly based on when they appear in literature (instead of using this action flow to all rules)
 
   - name: var-equals_value
     label: ParameterSetting
     priority: ${priority}
     type: dependency
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    action: processParamSetting
     pattern: |
       trigger = [lemma='=']
       variable:Variable = nsubj
@@ -20,6 +22,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    action: processParamSetting
     pattern: |
       trigger = [lemma='=']
       variable:Variable = <amod
@@ -30,6 +33,7 @@ rules:
     priority: ${priority}
     type: token
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    action: processParamSetting
     pattern: |
       (@variable:Variable|@variable:Concept [!tag="CD"]) (?<trigger> [word="="]) @value:Value
 
@@ -40,6 +44,7 @@ rules:
     priority: ${priority}
     type: token
     example: ""
+    action: processParamSetting
     pattern: |
       # @trigger:Concept "=" @Value:Value
       (@variable:Variable|@variable:Concept) [word="&"] [word="="] @value:Value
@@ -48,59 +53,65 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "The value of Kcbmax was varied between 0.9 and 1.4"
     pattern: |
       trigger = [lemma='vary']
       variable:Variable = nsubjpass nmod_of
-      valueLeast:Value = nmod_between
-      valueMost:Value = nmod_between conj_and
+      valueLeastIncl:Value = nmod_between
+      valueMostIncl:Value = nmod_between conj_and
 
   - name: var_ranges
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
     pattern: |
       trigger = [lemma='range']
       variable:Variable = nsubj
-      valueLeast:Value = nmod_from
-      valueMost:Value = nmod_from nmod
+      valueLeastIncl:Value = nmod_from
+      valueMostIncl:Value = nmod_from nmod
 
 #
   - name: var-vary_between_symbols_interval
     label: IntervalParameterSetting
     priority: ${priority}
     type: token
+    action: processParamSettingInt
     example: "Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield for 0.9 < Kcbmax < 1.15"
     pattern: |
-      @valueLeast:Value [word = "<"] (?<trigger> @Variable) [word = "<"] @valueMost:Value
+      @valueLeastExcl:Value [word = "<"] (?<trigger> @Variable) [word = "<"] @valueMostExcl:Value
 #
 
   - name: var-more_than_symbol
-    label: ParameterSetting
+    label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='>']
-      variable:Concept = <advmod <nummod
-      value:Value = <advmod [tag = "CD"]
+      variable:Concept = <advmod <nummod | <amod compound? | <dep
+      valueLeastExcl:Value = <advmod [tag = "CD"] | >nummod [tag = "CD"] | >dep [tag="CD"]
 
 
   - name: var-less_than_symbol
-    label: ParameterSetting
+    label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSettingInt
     example: "but simulated yield decreased rapidly for Kcbmax < 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='<']
-      variable:Concept = <dep <nummod <dep | <advmod <nummod
-      value:Value = </dep|advmod/ [tag = "CD"]
+      variable:Concept = </dep|advmod/ <nummod? <dep | <advmod <nummod
+      valueMostExcl:Value = </dep|advmod/ [tag = "CD"]
 
   - name: var_hard-coded
     label: ParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSetting
     example: "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
     pattern: |
       trigger = [word=/(?i)^hard-coded/]
@@ -112,6 +123,7 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSetting
     example: "The density of water (ρw) is taken as 1.0 Mg m-3."
     pattern: |
       trigger = [word=/(?i)^taken/]
@@ -124,15 +136,17 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: token
+    action: processParamSettingInt
     example: "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
     pattern: |
-      (?<trigger> [lemma="value"]) of @variable:Variable from @valueLeast:Value to @valueMost:Value
+      (?<trigger> [lemma="value"]) of @variable:Variable from @valueLeastIncl:Value to @valueMostIncl:Value
 
 
   - name: var-noun_of1
     label: ParameterSetting
     priority: ${priority}
     type: token
+    action: processParamSetting
     example: "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from DSSAT-CSM version 4.5 for Arizona conditions."
     pattern: |
       /(?i)with/ (an|a|the) @variable:Variable of @value:Value
@@ -140,6 +154,7 @@ rules:
   - name: var-noun_of2
     label: ParameterSetting
     priority: ${priority}
+    action: processParamSetting
     example: "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed measurements to a standard height of 2.0 m"
     pattern: |
       trigger = [word = "standard" & tag = "JJ"]
@@ -150,6 +165,7 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: token
+    action: processParamSetting
     example: "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
     pattern: |
       (?<variable> [word = "DOY"]) @value:Value
@@ -158,12 +174,14 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: dependency
+    action: processParamSetting
     example: "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed measurements to a standard height of 2.0 m"
     pattern: |
       trigger = [word=/(?i)adjust/]
       variable:Concept = dobj
       value:Value = nmod_to nmod_of nummod
 
+  # fixme: the 5-10 days is found as one token; this needs to be interval
   - name: of_param_setting
     label: ParameterSetting
     priority: ${priority}
