@@ -78,9 +78,21 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.visit_list(self.cast.nodes)
         A = nx.nx_agraph.to_agraph(self.G)
         A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+            {
+                "dpi": 227, 
+                "fontsize": 20, 
+                "fontname": "Menlo", 
+                "rankdir": "TB"
+            }
         )
-        A.node_attr.update({"fontname": "Menlo"})
+        A.node_attr.update(
+            {
+                "shape": "rectangle",
+                "color": "#650021",
+                "style": "rounded",    
+                "fontname": "Menlo"
+            }
+        )
         return A        
 
     def to_pdf(self,filename):
