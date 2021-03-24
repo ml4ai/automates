@@ -30,7 +30,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
       val expandedVars = keepLongestVariable(vars)
-
       val (expandable, other) = (expandedVars ++ non_vars).partition(m => m matches "Definition")
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs) //todo: check if this is the best place for validArgs argument
       keepOneWithSameSpanAfterExpansion(expanded) ++ other
@@ -138,24 +137,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     toReturn
   }
-
-  // def keepOneInputWithSameSpan(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-  //   val mns: Iterable[Mention] = for {
-  //     // find mentions of the same label and sentence overlap
-  //     (k, v) <- mentions.filter(_.arguments.keys.toList.contains("Concept")).groupBy(men => men.arguments("Concept").head.text)
-  //     // conj defs have more vars, so from overlapping mentions, choose those that have most vars and...
-  //     functionMens= v.maxBy(_.arguments("Concept").length).arguments("Concept").length
-  //     //out of the ones with most vars, pick the longest
-  //   } yield v.filter(_.arguments("Concept")).maxBy(_.text.length)//v.maxBy(_.text.length)
-  //   val mens = mns.toList
-  //   mens.toVector.distinct
-  // }
-
-  // def functionActionFlow(mentions: Seq[Mention]): Seq[Mention] = {
-  //   val functionMens = mentions.toList
-  //   val toReturn = functionMens.distinct
-  //   toReturn
-  // }
 
   // this should be the def text bound mention
   def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
@@ -404,6 +385,40 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield copyWithLabel(arg, "Function")
 
     mentionsDisplayOnlyArgs
+  }
+
+  def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val (functions, other) = mentions.partition(_.label == "Function")
+    val toReturn = ArrayBuffer[Mention]()
+    for (f <- functions) {
+      val inputMention = f.arguments.getOrElse("input", Seq())
+      val outputMention = f.arguments.getOrElse("output", Seq())
+      val newInputs = new ArrayBuffer[Mention]()
+      val newOutputs = new ArrayBuffer[Mention]()
+      for (i <- inputMention) {
+        if (looksLikeAVariable(Seq(i), state).nonEmpty) {
+          val copyInput = copyWithLabel(i, "Variable") // copy with label Variable + add to newArgs
+          newInputs.append(copyInput)
+      } else {
+        newInputs.append(i)
+      }
+    }
+      for (o <- outputMention) {
+        if (looksLikeAVariable(Seq(o), state).nonEmpty) {
+          val copyOutput = copyWithLabel(o, "Variable") // copy with label Variable + add to newArgs
+          newOutputs.append(copyOutput)
+      } else {
+        newOutputs.append(o)
+      }
+    }
+      for {
+        v <- newInputs
+        k <- newOutputs
+        val newArgs = Map("input" -> Seq(v), "output" -> Seq(k))
+      }
+    toReturn.append(copyWithArgs(f, newArgs))
+    } 
+  toReturn
   }
 
   def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {

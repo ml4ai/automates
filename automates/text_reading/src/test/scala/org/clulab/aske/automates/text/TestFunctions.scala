@@ -96,7 +96,8 @@ class TestFunctions extends ExtractionTest {
   val t3e = "Wilting point Wp and field capacity Wc were calculated from soil depth and soil texture information, i.e., the relative proportion of sand, silt and clay, according to a set of prediction equations developed by Saxton et al. (1986)."
   passingTest should s"find functions from t3e: ${t3e}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Wilting point Wp and field capacity Wc" -> Seq("soil depth", "soil texture information")
+      "Wilting point Wp" -> Seq("soil depth", "soil texture information"), // multiple outputs: needs to be addressed in the next meeting!
+      "field capacity Wc" -> Seq("soil depth", "soil texture information")
     )
     val mentions = extractMentions(t3e)
     testFunctionEvent(mentions, desired)
