@@ -8,31 +8,31 @@ rules:
   - import: "org/clulab/aske_automates/grammars/entities.yml"
     vars:
       priority: 1
-
-  - import: "org/clulab/aske_automates/grammars/values.yml"
-    vars:
-      priority: 2
-
-  - import: "org/clulab/aske_automates/grammars/definitions.yml"
-    vars:
-      action: definitionActionFlow #note: there are two rules that do not use this action flow
-      priority: 3
-
-  - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
-    vars:
-      priority: 5
-
-  - import: "org/clulab/aske_automates/grammars/units.yml"
-    vars:
-      priority: 4
-
-  - import: "org/clulab/aske_automates/grammars/unitRels.yml"
-    vars:
-      priority: 6
-
-  - import: "org/clulab/aske_automates/grammars/model.yml"
-    vars:
-      priority: 7
+#
+#  - import: "org/clulab/aske_automates/grammars/values.yml"
+#    vars:
+#      priority: 2
+#
+#  - import: "org/clulab/aske_automates/grammars/definitions.yml"
+#    vars:
+#      action: definitionActionFlow #note: there are two rules that do not use this action flow
+#      priority: 3
+#
+#  - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
+#    vars:
+#      priority: 5
+#
+#  - import: "org/clulab/aske_automates/grammars/units.yml"
+#    vars:
+#      priority: 4
+#
+#  - import: "org/clulab/aske_automates/grammars/unitRels.yml"
+#    vars:
+#      priority: 6
+#
+#  - import: "org/clulab/aske_automates/grammars/model.yml"
+#    vars:
+#      priority: 7
 
 
 

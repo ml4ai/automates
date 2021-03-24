@@ -3,7 +3,7 @@ package org.clulab.aske.automates.apps
 import java.io.PrintWriter
 import java.util.regex.Pattern
 
-import org.clulab.discourse.rstparser.{DiscourseTree, DiscourseUnit, RelationDirection}
+import org.clulab.discourse.rstparser.{DiscourseTree, DiscourseUnit, RelationDirection, TokenOffset}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
@@ -11,7 +11,7 @@ import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
-
+case class DiscourseTuple(relation:String, nucText:List[String], satText:List[String], start:TokenOffset, end:TokenOffset)
 /**
   * Created by gus on 8/5/14.
   */
@@ -80,7 +80,7 @@ class DiscourseExplorer {
     } else dt.satText
 
     //return the new, pruned discourse tuple
-    new DiscourseTuple(dt.relation, outNuc, outSat, (-1, -1)) // no char offsets for some reason
+    DiscourseTuple(dt.relation, outNuc, outSat, new TokenOffset(-1, -1), new TokenOffset(-1, -1)) // no char offsets for some reason
   }
 
 
@@ -90,7 +90,7 @@ class DiscourseExplorer {
   def findRootPairs(dt:DiscourseTree):List[DiscourseTuple] = {
     if (dt.isTerminal){
       // if tree consists of a single, terminal node, then there is no relation (no children) so make a dummy DiscourseTuple
-      val outList = List[DiscourseTuple](new DiscourseTuple("NULL", List[String](dt.rawText), List[String](dt.rawText), dt.charOffsets))
+      val outList = List[DiscourseTuple](new DiscourseTuple("NULL", List[String](dt.rawText), List[String](dt.rawText), dt.firstToken, dt.lastToken))
       outList
     } else { //otherwise, go and recursively get the DiscourseTuples!
       val (tuple, others) = findTextPairs(dt)
@@ -138,14 +138,14 @@ class DiscourseExplorer {
 
     val (satReturn, satOther) = smush(sat)
 
-    val dTpl = DiscourseTuple(dt.relationLabel, nucReturn, satReturn, dt.charOffsets)
+    val dTpl = DiscourseTuple(dt.relationLabel, nucReturn, satReturn, dt.firstToken, dt.lastToken)
 
     //(disc tuple for current node, list of others...)
     (dTpl, nucOther ++ satOther)
   }
 
 
-  case class DiscourseTuple(relation:String, nucText:List[String], satText:List[String], offset:(Int, Int))
+
 
   //TODO: Add methods to explore discourseTree structure
   def findDiscoursePairs = findRootPairs _

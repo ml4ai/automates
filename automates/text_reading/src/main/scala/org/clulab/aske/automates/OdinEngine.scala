@@ -117,6 +117,7 @@ class OdinEngine(
   def annotate(text: String, keepText: Boolean = false, filename: Option[String]= None): Document = {
     val tokenized = proc.mkDocument(text, keepText = true)  // Formerly keepText, must now be true
     val filtered = documentFilter.filter(tokenized)         // Filter noise from document if enabled (else "pass through")
+    //todo: check if filtered is empty; return an option
     val doc = proc.annotate(filtered)
     doc.id = filename
     doc
