@@ -466,8 +466,8 @@ object ExpansionHandler {
     "nmod_at".r,
     "^nmod_of".r,
     "nmod_under".r,
-    "nmod_in".r,
-    "dobj".r
+    "nmod_in".r//,
+//    "dobj".r
   )
 
   def apply() = new ExpansionHandler()

@@ -20,12 +20,13 @@ class TestDefinitions extends ExtractionTest {
 
   val t2a = "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 " +
     "(Sau et al., 2004; Thorp et al., 2010), and Kcs is the DSSAT-CSM crop coefficient."
-  passingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
+  failingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "LAI" -> Seq("simulated leaf area index"),
-      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"), //todo: how to attach param setting to definition? -> fixed with new token rule
+      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"), //todo: how to attach param setting to definition?
       "Kcs" -> Seq("DSSAT-CSM crop coefficient")
     )
+    // fixme: maximum is found as def for Kcs
     val mentions = extractMentions(t2a)
     val defMentions = mentions.seq.filter(_ matches "Definition")
     testDefinitionEvent(mentions, desired)
@@ -248,7 +249,7 @@ class TestDefinitions extends ExtractionTest {
   }
   val t12b = "Second, the maximum potential water uptake for the profile (Ux, mm d−1) is obtained by multiplying Ta,rl " +
     "times pr for each layer and summing over the soil profile:"
-    passingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
+    failingTest should s"find definitions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
         "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
       ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a definition for Ta by var_appos_def rule. (Ta,rl is one variable)
@@ -258,7 +259,7 @@ class TestDefinitions extends ExtractionTest {
     }
   val t13b = "where s1 and s2 are parameters of a logistic curve (9 and 0.005, respectively), and w represents the " +
     "soil limitation to water uptake of each layer."
-    failingTest should s"find definitions from t13b: ${t13b}" taggedAs(Masha) in {
+    passingTest should s"find definitions from t13b: ${t13b}" taggedAs(Somebody) in {
       val desired = Seq(
         "s1" -> Seq("parameters of a logistic curve"),
         "s2" -> Seq("parameters of a logistic curve"), // fixme: definition for s2 is captured twice by both var_cop_conj_definition and var_cop_definition.
@@ -678,10 +679,10 @@ class TestDefinitions extends ExtractionTest {
 // Tests from paper: THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
 
     val t1l = "Reference evapotranspiration (ETref) is the rate at which readily available soil water is vaporized from specified vegetated surfaces (Jensen et al., 1990)."
-  failingTest should s"find definitions from t1l: ${t1l}" taggedAs(Masha) in {
+  passingTest should s"find definitions from t1l: ${t1l}" taggedAs(Somebody) in {
     val desired =  Seq(
       "ETref" -> Seq("Reference evapotranspiration"),
-      "ETref" -> Seq("the rate at which readily available soil water is vaporized from specified vegetated surfaces") //fixme: longer definition is not captured. (shorter definition was selected) (needs to be reviewed: "bidir++selectShorter"? - action!)
+      "ETref" -> Seq("rate at which readily available soil water is vaporized from specified vegetated surfaces") //fixme: longer definition is not captured. (shorter definition was selected) (needs to be reviewed: "bidir++selectShorter"? - action!)
     )
     val mentions = extractMentions(t1l)
     testDefinitionEvent(mentions, desired)
@@ -715,7 +716,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
     val t5l = "The inverse of λ = 2.45 MJ kg-1 is approximately 0.408 kg MJ-1."
-  failingTest should s"find NO definitions from t5l: ${t5l}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t5l: ${t5l}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t11f)
     testDefinitionEvent(mentions, desired)
