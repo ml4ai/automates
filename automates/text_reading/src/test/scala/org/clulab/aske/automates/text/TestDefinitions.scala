@@ -641,7 +641,7 @@ class TestDefinitions extends ExtractionTest {
   }
 
     val t2k = "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
-  passingTest should s"find definitions from t2k: ${t2k}" taggedAs(Somebody) in {
+  failingTest should s"find definitions from t2k: ${t2k}" taggedAs(Somebody) in {
     val desired =  Seq(
       "κ" -> Seq("canopy extinction coefficient of radiation")
     )
