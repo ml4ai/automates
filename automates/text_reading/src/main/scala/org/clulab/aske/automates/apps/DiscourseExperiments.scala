@@ -22,31 +22,48 @@ object DiscourseExperiments extends App {
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
-  val pw = new PrintWriter(new File("/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/output/full_doc_trees.txt" ))
+  val pw = new PrintWriter(new File("/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/output/text_pairs_paragraph_sample.txt" ))
 
-  pw.write("START")
-  files.par.foreach { file =>
+  val discExplorer = new DiscourseExplorer
+
+  files.foreach { file =>
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
 
     // 2. Get the input file contents
-    // note: for science parse format, each text is a section
-    val texts = dataLoader.loadFile(file)
+    // make one text, split on blank linke, remove \n's within each text
+    val texts = dataLoader.loadFile(file).mkString(" ").split("\n\n").map(_.replace("\n", ""))
 
-    val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
+//    println("-->" + file)
+//    for (t <- texts) println("text -> " + t.replace("\n", ""))
 
-    val doc = reader.annotate(texts.mkString(" "))
-//    println(doc.discourseTree.getOrElse("No tree"))
-//
-    val tree = doc.discourseTree.get//.visualizerJSON()
 
-    pw.write(tree.toString() + "\n============\n")
-//   println(tree)
-    val causal = mentions.filter(_ matches "Causal")
 
-    for (m <- causal) {
-      pw.write("causalRel: " + m.text + m.startOffset + m.endOffset)
+    // full doc annotation
+//    val doc = reader.annotate(texts.mkString(" "))
+//    val tree = doc.discourseTree.get//.visualizerJSON()
+//    pw.write(tree.toString() + "\n============\n")
+////
+
+    // paragraph annotation
+    for (text <- texts) {
+//      println("->" + text)
+      val doc = reader.annotate(text)
+//      println("-->" + doc.discourseTree.get)
+      val tree = doc.discourseTree.get
+      println(tree.charOffsets + "<")
+      for (tuple <- discExplorer.findRootPairs(tree) )
+        println("->" + tuple.nucText + " " + tuple.relation + " " + tuple.satText.mkString(" ") + " " + tuple.offset)
+      pw.write(tree.toString() + "\n===========\n")
     }
+
+
+//    // MENTIONS - shouldn't matter if it's full text or paragraphs
+//    val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
+//    val causal = mentions.filter(_ matches "Causal")
+//    for (m <- causal) {
+//      pw.write("causalRel: " + m.text + m.startOffset + m.endOffset + "\n")
+//    }
 
 //    for (m <- mentions) println(m.text + " " + m.label)
     //The version of mention that includes routing between text vs. comment
