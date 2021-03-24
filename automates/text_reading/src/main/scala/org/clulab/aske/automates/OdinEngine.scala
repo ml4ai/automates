@@ -86,7 +86,9 @@ class OdinEngine(
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
     val (definitionMentions, other) = events.partition(_.label.contains("Definition"))
-    (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConj(definitionMentions)).toVector
+
+    val untangled = loadableAttributes.actions.untangleConj(definitionMentions)
+    (loadableAttributes.actions.keepLongest(other) ++ untangled).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
