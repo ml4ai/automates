@@ -1,4 +1,3 @@
-from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from pprint import pprint
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
@@ -24,12 +23,14 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Number,
     Set,
     String,
+    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
     UnaryOperator,
     VarType,
     Var,
+    source_ref,
 )
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     is_valid_operator,
@@ -59,8 +60,13 @@ class GCC2CAST:
         global_variables = self.gcc_ast["globalVariables"]
         body = []
 
+        # First fill out the ids to type names in case one type uses another
+        # before it is defined.
         for t in types:
-            self.parse_record_type(t)
+            self.type_ids_to_defined_types[t["id"]] = ClassDef(name=t["name"])
+
+        for t in types:
+            self.type_ids_to_defined_types[t["id"]] = self.parse_record_type(t)
 
         for gv in global_variables:
             body.append(self.parse_variable(gv))
@@ -71,13 +77,36 @@ class GCC2CAST:
         file_module = Module(name=input_file.rsplit(".")[0], body=body)
         return CAST([file_module])
 
+    def get_source_refs(self, obj):
+        source_refs = []
+        if obj.keys() >= {"line_start", "col_start", "file"}:
+            line = obj["line_start"]
+            col = obj["col_start"]
+            file = obj["file"]
+            source_refs.append(
+                SourceRef(source_file_name=file, col_start=col, row_start=line)
+            )
+        return source_refs
+
+    def parse_record_type_field(self, field):
+        return self.parse_variable(field)
+
     def parse_record_type(self, record_type):
         id = record_type["id"]
         name = record_type["name"]
         self.type_ids_to_defined_types[id] = {"name": name}
 
-        # TODO fill out full class def
-        return ClassDef(name=name)
+        bases = []
+        funcs = []
+
+        record_type_fields = record_type["fields"]
+        fields = [self.parse_record_type_field(f) for f in record_type_fields]
+
+        source_refs = self.get_source_refs(record_type)
+
+        return ClassDef(
+            name=name, bases=bases, funcs=funcs, fields=fields, source_refs=source_refs
+        )
 
     def parse_variable(self, variable):
         if "name" not in variable:
@@ -85,7 +114,17 @@ class GCC2CAST:
         var_type = variable["type"]
         name = variable["name"]
         cast_type = gcc_type_to_var_type(var_type, self.type_ids_to_defined_types)
-        return Var(val=Name(name=name), type=cast_type)
+
+        line = variable["line_start"]
+        col = variable["col_start"]
+        file = variable["file"]
+        source_ref = SourceRef(source_file_name=file, col_start=col, row_start=line)
+
+        return Var(
+            val=Name(name=name),
+            type=cast_type,
+            source_refs=[source_ref],
+        )
 
     def parse_operand(self, operand):
         code = operand["code"]
@@ -127,15 +166,15 @@ class GCC2CAST:
             self.ssa_ids_to_expression[ssa_id] = assign_value
             return []
 
-        source_refs = []
-        if "line" in stmt:
-            source_refs.append(
-                SourceRef(
-                    source_file_name=stmt["file"],
-                    row_start=stmt["line"],
-                    col_start=stmt["col"],
-                )
-            )
+        source_refs = self.get_source_refs(stmt)
+        # if "line_start" in stmt:
+        #     source_refs.append(
+        #         SourceRef(
+        #             source_file_name=stmt["file"],
+        #             row_start=stmt["line_start"],
+        #             col_start=stmt["col_start"],
+        #         )
+        #     )
 
         return [
             Assignment(left=assign_var, right=assign_value, source_refs=source_refs)
@@ -147,12 +186,24 @@ class GCC2CAST:
         member = operand["member"]
         field = member["name"]
 
-        return [Attribute(value=Name(name=var_name), attr=Name(name=field))]
+        line = member["line_start"]
+        col = member["col_start"]
+        file = member["file"]
+        source_ref = SourceRef(source_file_name=file, row_start=line, col_start=col)
+
+        return [
+            Attribute(
+                value=Name(name=var_name),
+                attr=Name(name=field),
+                source_refs=[source_ref],
+            )
+        ]
 
     def parse_assign_statement(self, stmt):
         lhs = stmt["lhs"]
         operator = stmt["operator"]
         operands = stmt["operands"]
+        src_ref = self.get_source_refs(stmt)
 
         # Integer assignment, so simply grab the value from the first operand
         # node.
@@ -189,7 +240,9 @@ class GCC2CAST:
                 ops = []
                 for op in operands:
                     ops.append(self.parse_operand(op))
-                assign_value = BinaryOp(op=cast_op, left=ops[0], right=ops[1])
+                assign_value = BinaryOp(
+                    op=cast_op, left=ops[0], right=ops[1], source_refs=src_ref
+                )
         else:
             # TODO custom exception type
             raise Exception(f"Error: Unknown operator type: {operator}")
@@ -203,14 +256,17 @@ class GCC2CAST:
         ops = []
         for op in operands:
             ops.append(self.parse_operand(op))
-        return BinaryOp(op=cast_op, left=ops[0], right=ops[1])
+
+        source_refs = self.get_source_refs(stmt)
+
+        return BinaryOp(op=cast_op, left=ops[0], right=ops[1], source_refs=source_refs)
 
     def parse_call_statement(self, stmt):
         function = stmt["function"]
         arguments = stmt["arguments"] if "arguments" in stmt else []
-
+        src_ref = self.get_source_refs(stmt)
         func_name = function["value"]["name"]
-        # TODO not sure if this is a permemnant solution, but ignore these
+        # TODO not sure if this is a permenant solution, but ignore these
         # unexpected builtin calls for now
         if "__builtin_" in func_name:
             return []
@@ -219,7 +275,7 @@ class GCC2CAST:
         for arg in arguments:
             cast_args.append(self.parse_operand(arg))
 
-        cast_call = Call(func=Name(func_name), arguments=cast_args)
+        cast_call = Call(func=Name(func_name), arguments=cast_args, source_refs=src_ref)
         if "lhs" in stmt and stmt["lhs"] is not None:
             return self.parse_lhs(stmt, stmt["lhs"], cast_call)
 
@@ -232,7 +288,10 @@ class GCC2CAST:
         value = stmt["value"]
         return_val = None
         return_val = self.parse_operand(value)
-        return [ModelReturn(value=return_val)]
+
+        source_refs = self.get_source_refs(stmt)
+
+        return [ModelReturn(value=return_val, source_refs=source_refs)]
 
     def parse_conditional_statement(self, stmt, statements):
         true_edge = stmt["trueLabel"]
@@ -327,4 +386,22 @@ class GCC2CAST:
         self.ssa_ids_to_expression = {}
         self.variables_ids_to_expression = {}
 
-        return FunctionDef(name=name, func_args=arguments, body=body)
+        line_start = f["line_start"]
+        line_end = f["line_end"]
+        decl_line = f["decl_line_start"]
+        decl_col = f["decl_col_start"]
+        file = f["file"]
+
+        body_source_ref = SourceRef(
+            source_file_name=file, row_start=line_start, row_end=line_end
+        )
+        decl_source_ref = SourceRef(
+            source_file_name=file, row_start=decl_line, col_start=decl_col
+        )
+
+        return FunctionDef(
+            name=name,
+            func_args=arguments,
+            body=body,
+            source_refs=[body_source_ref, decl_source_ref],
+        )

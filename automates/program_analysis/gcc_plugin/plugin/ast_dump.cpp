@@ -38,12 +38,10 @@
 #include "gimple-predict.h"
 #include "coretypes.h"
 #include "diagnostic.h"
-// #include "tree-flow.h"
 #include "cfgloop.h"
 #include "cgraph.h"
 #include "options.h"
 #include "context.h"
-// #include "tree-ssanames.h"
 
 #include "langhooks.h"
 
@@ -246,6 +244,24 @@ void json_end_object()
 
 /* Post pass */
 
+static void dump_gimple_srcref(gimple *stmt)
+{
+  json_int_field("line_start", gimple_lineno(stmt));
+  json_int_field("col_start", LOCATION_COLUMN(gimple_location(stmt)));
+
+  if (gimple_filename(stmt))
+  {
+    json_string_field("file", gimple_filename(stmt));
+  }
+}
+
+static void dump_decl_srcref(tree stmt)
+{
+  json_int_field("line_start", DECL_SOURCE_LINE(stmt));
+  json_int_field("col_start", DECL_SOURCE_COLUMN(stmt));
+  json_string_field("file", DECL_SOURCE_FILE(stmt));
+}
+
 static void dump_type(tree type);
 
 static void dump_op(tree op);
@@ -394,6 +410,13 @@ static void dump_record_type_decl(tree type)
     json_int_field("size", TREE_INT_CST_LOW(TYPE_SIZE(type)));
   }
 
+  if (DECL_SOURCE_LOCATION(type))
+  {
+    json_int_field("line_start", DECL_SOURCE_LINE(type));
+    json_int_field("col_start", DECL_SOURCE_COLUMN(type));
+    json_string_field("file", DECL_SOURCE_FILE(type));
+  }
+
   TRACE("dump_record_type_decl: writing fields\n");
   tree field = TYPE_FIELDS(type);
   json_array_field("fields");
@@ -422,6 +445,11 @@ static void dump_record_type_decl(tree type)
         }
         json_field("type");
         dump_type(TREE_TYPE(field));
+
+        json_int_field("line_start", DECL_SOURCE_LINE(field));
+        json_int_field("col_start", DECL_SOURCE_COLUMN(field));
+        json_string_field("file", DECL_SOURCE_FILE(field));
+
         json_end_object();
       }
     }
@@ -578,6 +606,7 @@ static void dump_op(tree op)
       json_int_field("id", DEBUG_TEMP_UID(op));
       json_string_field("mangledName", IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(op)));
       json_string_field("name", IDENTIFIER_POINTER(DECL_NAME(op)));
+      dump_decl_srcref(op);
       break;
 
     case PARM_DECL:
@@ -591,6 +620,7 @@ static void dump_op(tree op)
       {
         json_string_field("mangledName", IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(op)));
       }
+      dump_decl_srcref(op);
       break;
 
     case FIELD_DECL:
@@ -602,23 +632,21 @@ static void dump_op(tree op)
       }
       // json_int_field("offset", int_bit_position(op));
       json_int_field("size", TREE_INT_CST_LOW(DECL_SIZE(op)));
+      dump_decl_srcref(op);
       break;
 
     case CONST_DECL:
       json_field("value");
       dump_op(DECL_INITIAL(op));
+      dump_decl_srcref(op);
       break;
 
     case INTEGER_CST:
       json_int_field("value", TREE_INT_CST_LOW(op));
-      json_field("type");
-      dump_type(TREE_TYPE(op));
       break;
 
     case REAL_CST:
       dump_real_cst(op);
-      json_field("type");
-      dump_type(TREE_TYPE(op));
       break;
 
     case COMPLEX_CST:
@@ -739,22 +767,11 @@ static void dump_ops(gimple *stmt)
   }
 }
 
-static void dump_srcref(gimple *stmt)
-{
-  json_int_field("line", gimple_lineno(stmt));
-  json_int_field("col", LOCATION_COLUMN(gimple_location(stmt)));
-
-  if (gimple_filename(stmt))
-  {
-    json_string_field("file", gimple_filename(stmt));
-  }
-}
-
 static void dump_assignment(gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "assign");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
 
   json_string_field("operator", get_tree_code_name(gimple_assign_rhs_code(stmt)));
 
@@ -786,7 +803,7 @@ static void dump_cond(basic_block bb, gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "conditional");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
 
   json_string_field("operator", get_tree_code_name(gimple_assign_rhs_code(stmt)));
 
@@ -804,7 +821,7 @@ static void dump_nop(gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "nop");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
 
   json_end_object();
 }
@@ -813,7 +830,7 @@ static void dump_predict(gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "predict");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
   json_int_field("hassub", gimple_has_substatements(stmt));
   json_string_field("name", predictor_name(gimple_predict_predictor(stmt)));
   json_end_object();
@@ -823,17 +840,15 @@ static void dump_resx(basic_block bb, gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "resx");
-  dump_srcref(stmt);
-  // TODO
+  dump_gimple_srcref(stmt);
   // json_int_field("region", gimple_resx_region(stmt));
-  json_int_field("region", 0);
   json_end_object();
 }
 static void dump_eh_dispatch(gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "eh_dispatch");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
   // TODO
   // json_int_field("region", gimple_eh_dispatch_region(&stmt));
   json_int_field("region", 0);
@@ -844,7 +859,7 @@ static void dump_label(gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "label");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
   json_end_object();
 }
 
@@ -852,7 +867,7 @@ static void dump_return(gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "return");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
 
   tree retval = gimple_return_retval(as_a<greturn *>(stmt));
   if (retval)
@@ -867,7 +882,7 @@ static void dump_call(gimple *stmt)
 {
   json_start_object();
   json_string_field("type", "call");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
 
   json_field("lhs");
   dump_op(gimple_call_lhs(stmt));
@@ -897,7 +912,7 @@ static void dump_switch(gimple *stmt)
   int num_ops = gimple_num_ops(stmt);
 
   json_string_field("type", "switch");
-  dump_srcref(stmt);
+  dump_gimple_srcref(stmt);
 
   json_field("value");
   dump_op(gimple_op(stmt, 0));
@@ -1020,6 +1035,10 @@ static void dump_argument(tree arg)
   json_field("type");
   dump_type(TREE_TYPE(arg));
 
+  json_int_field("line_start", DECL_SOURCE_LINE(arg));
+  json_int_field("col_start", DECL_SOURCE_COLUMN(arg));
+  json_string_field("file", DECL_SOURCE_FILE(arg));
+
   json_end_object();
 
   TRACE("dump_argument: exiting\n");
@@ -1093,6 +1112,7 @@ static void dump_basic_block(basic_block bb)
 
   json_start_object();
   json_int_field("index", bb->index);
+  // json_int_field("line_start", LOCATION_LINE(bb->locus));
   json_array_field("statements");
 
   gimple_stmt_iterator gsi;
@@ -1141,16 +1161,19 @@ static unsigned int dump_function_ast(void)
 
   TRACE("dump_function: entering %s\n", IDENTIFIER_POINTER(DECL_NAME(cfun->decl)));
 
-  basic_block bb;
-
   json_start_object();
   json_int_field("id", DEBUG_TEMP_UID(cfun->decl));
   json_string_field("name", IDENTIFIER_POINTER(DECL_NAME(cfun->decl)));
   json_string_field("mangledName", IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(cfun->decl)));
   json_bool_field("weak", DECL_WEAK(cfun->decl));
   json_bool_field("inline", DECL_DECLARED_INLINE_P(cfun->decl));
-
   json_bool_field("public", TREE_PUBLIC(cfun->decl));
+
+  json_int_field("decl_line_start", DECL_SOURCE_LINE(cfun->decl));
+  json_int_field("decl_col_start", DECL_SOURCE_COLUMN(cfun->decl));
+  json_string_field("file", DECL_SOURCE_FILE(cfun->decl));
+  json_int_field("line_start", LOCATION_LINE(cfun->function_start_locus));
+  json_int_field("line_end", LOCATION_LINE(cfun->function_end_locus));
 
   TRACE("dump_function: dumping arguments...\n");
   dump_arguments(cfun->decl);
@@ -1160,6 +1183,7 @@ static unsigned int dump_function_ast(void)
 
   TRACE("dump_function: dumping basic blocks...\n");
   json_array_field("basicBlocks");
+  basic_block bb;
   FOR_ALL_BB_FN(bb, cfun)
   {
     dump_basic_block(bb);
@@ -1231,6 +1255,11 @@ static void dump_global_var(tree var)
     json_field("value");
     dump_op(DECL_INITIAL(var));
   }
+
+  json_int_field("line_start", DECL_SOURCE_LINE(var));
+  json_int_field("col_start", DECL_SOURCE_COLUMN(var));
+  json_string_field("file", DECL_SOURCE_FILE(var));
+
   json_end_object();
 
   TRACE("dump_global_var: exiting\n");
