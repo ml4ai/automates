@@ -180,9 +180,12 @@ class CASTToAGraphVisitor(CASTVisitor):
         if(node.fields != []):
             fields = self.visit_list(node.fields)
         node_uid = uuid.uuid4()
-        self.G.add_node(node_uid,label="Class " + node.name)
+        self.G.add_node(node_uid,label="Class: " + node.name)
+        attr_uid = uuid.uuid4()
+        self.G.add_node(attr_uid,label="Attributes")
+        self.G.add_edge(node_uid,attr_uid)
         for n in funcs + fields:
-            self.G.add_edge(node_uid,n)
+            self.G.add_edge(attr_uid,n)
 
         return node_uid
 
@@ -237,7 +240,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         args_node = uuid.uuid4()
         body_node = uuid.uuid4() 
 
-        self.G.add_node(node_uid,label="Function: "+node.name.name)
+        self.G.add_node(node_uid,label="Function: "+node.name)
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
 
