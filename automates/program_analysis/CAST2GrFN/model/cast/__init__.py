@@ -38,6 +38,7 @@ from automates.program_analysis.CAST2GrFN.model.cast.name import Name
 from automates.program_analysis.CAST2GrFN.model.cast.number import Number
 from automates.program_analysis.CAST2GrFN.model.cast.set import Set
 from automates.program_analysis.CAST2GrFN.model.cast.string import String
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from automates.program_analysis.CAST2GrFN.model.cast.subscript import Subscript
 from automates.program_analysis.CAST2GrFN.model.cast.tuple import Tuple
 from automates.program_analysis.CAST2GrFN.model.cast.unary_op import UnaryOp

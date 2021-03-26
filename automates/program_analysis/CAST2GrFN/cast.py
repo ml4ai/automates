@@ -1,4 +1,3 @@
-from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 import json
 import typing
 
@@ -24,6 +23,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Number,
     Set,
     String,
+    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
