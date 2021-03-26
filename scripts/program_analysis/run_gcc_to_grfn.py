@@ -19,17 +19,54 @@ import sys
 import os
 import subprocess
 import json
+import argparse
 
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE = "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
 
-if __name__ == "__main__":
+
+def get_args(args=sys.argv[1:]):
+    parser = argparse.ArgumentParser(description="Parses command.")
+    parser.add_argument("-i", "--input", help="Your input file.")
+    parser.add_argument(
+        "-l",
+        "--language",
+        help="The langugage of the input file. Valid inputs: c, c++, f (for fortran)",
+    )
+    parser.add_argument(
+        "-v", "--verbose", help="Verbose mode, dump output of gcc plugin."
+    )
+    options = parser.parse_args(args)
+    return options
+
+
+def run_gcc_pipeline():
 
     assert len(sys.argv) > 1, "Error: No c file name passed in arguments"
 
-    c_file = sys.argv[1]
+    # c_file = sys.argv[1]
+    args = get_args()
+
+    if args.input is None:
+        raise Exception("Error: No input file specified via -i option")
+    input_file = args.input
+
+    compiler = None
+    if args.language is None or args.language in {"c", "c++"}:
+        compiler = "g++-10.1"
+    elif args.language == "f":
+        compiler = "gfortran-10.1"
+    else:
+        raise Exception(f"Error: Unknown language specified {args.language}")
+
+    capture_output = []
+    if args.verbose is None:
+        capture_output = [
+            "-o",
+            "/dev/null",
+        ]
 
     assert os.path.exists(
         GCC_10_BIN_DIRECTORY
@@ -43,16 +80,15 @@ if __name__ == "__main__":
     # with the programs ast inside of it.
     results = subprocess.run(
         [
-            f"{GCC_10_BIN_DIRECTORY}/g++-10.1",
+            f"{GCC_10_BIN_DIRECTORY}/{compiler}",
             f"-fplugin={GCC_PLUGIN_IMAGE}",
             "-o0",
             "-c",
-            "-x",
-            "c++",
-            c_file,
-            "-o",
-            "/dev/null",
-        ],
+            # "-x",
+            # "c++",
+            input_file,
+        ]
+        + capture_output,
         stdout=subprocess.DEVNULL,
     )
 
@@ -65,7 +101,7 @@ if __name__ == "__main__":
         "./ast.json"
     ), "Error: ast.json file not created after executing GCC plugin"
 
-    program_name = c_file.rsplit(".")[0].rsplit("/")[-1]
+    program_name = input_file.rsplit(".")[0].rsplit("/")[-1]
     gcc_ast_obj = json.load(open("./ast.json"))
     cast = GCC2CAST(gcc_ast_obj).to_cast()
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
@@ -73,3 +109,7 @@ if __name__ == "__main__":
     grfn.to_json_file(f"{program_name}--GrFN.json")
     A = grfn.to_AGraph()
     A.draw(program_name + "--GrFN.pdf", prog="dot")
+
+
+if __name__ == "__main__":
+    run_gcc_pipeline()
