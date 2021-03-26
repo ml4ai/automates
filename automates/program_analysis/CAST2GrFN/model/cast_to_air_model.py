@@ -1,3 +1,5 @@
+from automates.program_analysis.CAST2GrFN.model.cast import source_ref
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from typing import List, Dict, Set
 from enum import Enum
 from dataclasses import dataclass
@@ -83,22 +85,42 @@ class C2AIdentifierInformation(object):
         return f'@{self.identifier_type}::{self.module}::{".".join(self.scope)}::{self.name}'
 
 
-# @dataclass(repr=True, frozen=True)
+@dataclass(repr=True, frozen=True)
+class C2ASourceRef(object):
+    """
+    Represents a reference point of the containing object in the original source
+    code. If a field of the line/col reference information is missing, it will
+    hold the value -1.
+    """
+
+    file: str
+    line_start: int
+    col_start: int
+    line_end: int
+    col_end: int
+
+    def to_AIR(self):
+        return self.__dict__
+
+
 class C2AVariable(object):
 
     identifier_information: C2AIdentifierInformation
     version: int
     type_name: str
+    source_ref: C2ASourceRef
 
     def __init__(
         self,
         identifier_information: C2AIdentifierInformation,
         version: int,
         type_name: str,
+        source_ref: C2ASourceRef,
     ):
         self.identifier_information = identifier_information
         self.version = version
         self.type_name = type_name
+        self.source_ref = source_ref
 
     def get_name(self):
         return self.identifier_information.name
@@ -123,7 +145,7 @@ class C2AVariable(object):
 
         return {
             "name": self.build_identifier(),
-            "source_refs": [],
+            "source_refs": [self.source_ref.to_AIR()],
             "domain": {
                 "name": air_type,
                 "type": "type",  # TODO what is this field
@@ -164,6 +186,8 @@ class C2ALambda(object):
     updated_variables: List[C2AVariable]
     # The type of the container.
     container_type: C2ALambdaType
+    # The reference to the source code that this lambda was derived from
+    source_ref: C2ASourceRef
 
     def build_name(self):
         var = None
@@ -208,6 +232,7 @@ class C2AExpressionLambda(C2ALambda):
             "input": [v.build_identifier() for v in self.input_variables],
             "output": [v.build_identifier() for v in self.output_variables],
             "updated": [v.build_identifier() for v in self.updated_variables],
+            "source_ref": self.source_ref.to_AIR(),
         }
 
 
@@ -229,46 +254,11 @@ class C2AContainerCallLambda(C2ALambda):
             "input": [v.build_identifier() for v in self.input_variables],
             "output": [v.build_identifier() for v in self.output_variables],
             "updated": [v.build_identifier() for v in self.updated_variables],
+            "source_ref": self.source_ref.to_AIR(),
         }
 
 
-@dataclass(repr=True, frozen=True)
-class C2AReturnLambda(C2ALambda):
-    """
-    Represents the return from a container found in the body of a container definition
-    """
-
-    def to_AIR(self):
-        return {
-            "function": {
-                "name": self.identifier_information.build_identifier(),
-                "type": "lambda",
-            },
-            "input": [v.build_identifier() for v in self.input_variables],
-            "output": [v.build_identifier() for v in self.output_variables],
-            "updated": [v.build_identifier() for v in self.updated_variables],
-        }
-
-
-@dataclass(repr=True, frozen=True)
-class C2AObjectLambda(C2ALambda):
-    """
-    Represents the return from a container found in the body of a container definition
-    """
-
-    def to_AIR(self):
-        return {
-            "function": {
-                "name": self.identifier_information.build_identifier(),
-                "type": "container",
-            },
-            "input": [v.build_identifier() for v in self.input_variables],
-            "output": [v.build_identifier() for v in self.output_variables],
-            "updated": [v.build_identifier() for v in self.updated_variables],
-        }
-
-
-@dataclass(repr=True, frozen=True)
+@dataclass(repr=True, frozen=False)
 class C2AContainerDef(object):
     """
     Represents a top level AIR container def. Has its arguments, outputs/ updates, and a body
@@ -286,6 +276,8 @@ class C2AContainerDef(object):
     updated_variables: List[C2AVariable]
     # Represents the executable body statements
     body: List[C2ALambda]
+    # Defines the span of code for this container body in the original source code
+    body_source_ref: C2ASourceRef
 
     def build_identifier(self):
         return self.identifier_information.build_identifier()
@@ -313,8 +305,11 @@ class C2AContainerDef(object):
     def add_body_lambdas(self, body_to_add: List[C2ALambda]):
         self.body.extend(body_to_add)
 
+    def add_body_source_ref(self, body_source_ref: SourceRef):
+        self.body_source_ref = body_source_ref
 
-@dataclass(repr=True, frozen=True)
+
+@dataclass(repr=True, frozen=False)
 class C2AFunctionDefContainer(C2AContainerDef):
     """
     Represents a top level container definition. Input variables will represent the arguments to the funciton in the AIR. Also contains a body.
@@ -323,14 +318,6 @@ class C2AFunctionDefContainer(C2AContainerDef):
     return_type_name: str
 
     def to_AIR(self):
-        body_without_returns = [
-            bb for bb in self.body if not isinstance(bb, C2AReturnLambda)
-        ]
-        # TODO
-        return_lambda = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
-        # TODO multiple returns? probably need a decision node with all possible
-        # return vals going in?
-
         return {
             # TODO
             "name": self.identifier_information.build_identifier(),
@@ -339,24 +326,22 @@ class C2AFunctionDefContainer(C2AContainerDef):
             "arguments": {v.build_identifier() for v in self.arguments},
             "updated": {v.build_identifier() for v in self.updated_variables},
             "return_value": {v.build_identifier() for v in self.output_variables},
-            "body": [i.to_AIR() for i in body_without_returns],
+            "body": [i.to_AIR() for i in self.body],
+            "body_source_ref": self.body_source_ref.to_AIR(),
         }
 
 
-@dataclass(repr=True, frozen=True)
+@dataclass(repr=True, frozen=False)
 class C2ALoopContainer(C2AContainerDef):
     """
     Represents a top level container definition. Input variables will represent
     the arguments that go through the loop interface. Also contains a body.
     """
 
-    def to_AIR(self):
-        body_without_returns = [
-            bb for bb in self.body if not isinstance(bb, C2AReturnLambda)
-        ]
-        # TODO
-        returns = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
+    # Represents the reference to the source code where the conditional for this loop is
+    condition_source_ref: C2ASourceRef
 
+    def to_AIR(self):
         return {
             # TODO
             "name": self.identifier_information.build_identifier(),
@@ -365,22 +350,23 @@ class C2ALoopContainer(C2AContainerDef):
             "arguments": {v.build_identifier() for v in self.arguments},
             "updated": {v.build_identifier() for v in self.updated_variables},
             "return_value": {v.build_identifier() for v in self.output_variables},
-            "body": [i.to_AIR() for i in body_without_returns],
+            "body": [i.to_AIR() for i in self.body],
+            "body_source_ref": self.body_source_ref.to_AIR(),
+            "condition_source_ref": self.condition_source_ref.to_AIR(),
         }
 
 
+@dataclass(repr=True, frozen=False)
 class C2AIfContainer(C2AContainerDef):
     """
     Represents a top level container definition. Input variables will represent
     the arguments that go through the if interface. Also contains a body.
     """
 
+    # Represents the reference to the source code where the conditional for this if is
+    condition_source_ref: C2ASourceRef
+
     def to_AIR(self):
-        body_without_returns = [
-            bb for bb in self.body if not isinstance(bb, C2AReturnLambda)
-        ]
-        # TODO
-        returns = [bb for bb in self.body if not isinstance(bb, C2AReturnLambda)]
 
         return {
             # TODO
@@ -390,19 +376,10 @@ class C2AIfContainer(C2AContainerDef):
             "arguments": {v.build_identifier() for v in self.arguments},
             "updated": {v.build_identifier() for v in self.updated_variables},
             "return_value": {v.build_identifier() for v in self.output_variables},
-            "body": [i.to_AIR() for i in body_without_returns],
+            "body": [i.to_AIR() for i in self.body],
+            "body_source_ref": self.body_source_ref.to_AIR(),
+            "condition_source_ref": self.condition_source_ref.to_AIR(),
         }
-
-
-@dataclass(repr=True, frozen=True)
-class C2ABlockContainer(C2AContainerDef):
-    """"""
-
-    original_cast: AstNode
-    return_type_name: str
-
-    def to_AIR(self):
-        return self
 
 
 @dataclass(repr=True, frozen=True)
@@ -418,8 +395,9 @@ class C2ATypeDef(object):
 
     name: str
     given_type: C2AType
-    fields: Dict[str, str]
+    fields: Dict[str, C2AVariable]
     function_identifiers: List[str]
+    source_ref: C2ASourceRef
 
     def to_AIR(self):
         return self
@@ -467,6 +445,7 @@ class C2AAttributeAccessState(object):
                 [attr_var],
                 [],
                 C2ALambdaType.EXTRACT,
+                C2ASourceRef("", -1, -1, -1, -1),
                 "lambda : None",  # TODO
                 None,
             )
@@ -487,6 +466,7 @@ class C2AAttributeAccessState(object):
                 [],
                 [],
                 C2ALambdaType.PACK,
+                C2ASourceRef("", -1, -1, -1, -1),
                 "lambda : None",  # TODO
                 None,
             )
@@ -504,7 +484,7 @@ class C2AAttributeAccessState(object):
     def get_outstanding_pack_node(self, var):
         pack_lambda = self.var_to_current_pack_node.get(var)
         new_var = C2AVariable(
-            var.identifier_information, var.version + 1, var.type_name
+            var.identifier_information, var.version + 1, var.type_name, var.source_ref
         )
         pack_lambda.output_variables.append(new_var)
 
