@@ -33,13 +33,10 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 
 class PyASTToCAST(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign):
-        print("Assign") 
         left = None
         right = None
         # Simple assignment like x = ...
         if(len(node.targets) == 1):
-            #print("assign: left",left)            
-            #print("assign: node.value", node.value)
             left = self.visit(node.targets[0])
             right = self.visit(node.value)
 
@@ -53,11 +50,10 @@ class PyASTToCAST(ast.NodeVisitor):
 
     def visit_Attribute(self, node:ast.Attribute):
         value = self.visit(node.value)
-        attr = self.visit(node.attr)
+        attr = Name(node.attr)
         return Attribute(value,attr)
 
     def visit_BinOp(self, node: ast.BinOp):
-        #print("BINOP")
         ops = {ast.Add : BinaryOperator.ADD, ast.Sub : BinaryOperator.SUB, ast.Mult : BinaryOperator.MULT,
                 ast.Div : BinaryOperator.DIV, ast.FloorDiv : BinaryOperator.FLOORDIV, ast.Mod : BinaryOperator.MOD,
                 ast.Pow : BinaryOperator.POW, ast.LShift : BinaryOperator.LSHIFT, ast.RShift : BinaryOperator.RSHIFT,
@@ -82,18 +78,31 @@ class PyASTToCAST(ast.NodeVisitor):
         return ModelBreak()
 
     def visit_Call(self, node:ast.Call):
-        print("call: id",node.func.id)
         args = [self.visit(arg) for arg in node.args]
-        return Call(Name(node.func.id),args)
+        if(type(node.func) == ast.Attribute):
+            return Call(self.visit(node.func),args)
+        else:
+            return Call(Name(node.func.id),args)
 
     def visit_ClassDef(self, node:ast.ClassDef):
         name = node.name
         bases = [self.visit(base) for base in node.bases]
         funcs = [self.visit(func) for func in node.body]
-        
-        #TODO: How to do fields?
         fields = []
-
+        
+        # Attempt at getting the fields
+        init_func = None
+        for f in node.body:
+            if(type(f) == ast.FunctionDef and f.name=="__init__"):
+                init_func = f.body
+                break
+        
+        for node in init_func:
+            if(type(node) == ast.Assign and type(node.targets[0]) == ast.Attribute):
+                attr_node = node.targets[0]
+                if(attr_node.value.id == 'self'):
+                    fields.append(Var(Name(attr_node.attr),"integer"))
+                
         return ClassDef(name,bases,funcs,fields)
 
     def visit_Compare(self, node: ast.Compare):
@@ -113,15 +122,11 @@ class PyASTToCAST(ast.NodeVisitor):
         return BinaryOp(op,self.visit(left),self.visit(right))
 
     def visit_Constant(self, node:ast.Constant):
-        print("constant")
         if(type(node.value) == int or type(node.value) == float):
-            print("constant: node.value",type(node.value))
             return Number(node.value)
         elif(type(node.value) == str):
-            print("constant: node.value",type(node.value))
             return String(node.value)
         else:
-            print("constant: unknown type", type(node.value))
             return None
 
     def visit_Continue(self, node:ast.Continue):
@@ -151,11 +156,9 @@ class PyASTToCAST(ast.NodeVisitor):
         return Dict(keys,values)
 
     def visit_Expr(self, node: ast.Expr):
-        print("expr: node.value",node.value)
         return Expr(self.visit(node.value))
 
     def visit_For(self, node: ast.For):
-        print("LOOP")
         print(type(node))
         #target = self.visit(node.target)
         iterable = self.visit(node.iter)
@@ -164,7 +167,7 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return Loop(expr=iterable,body=body)
 
-    def visit_FunctionDef(self, node: Union[ast.FunctionDef,ast.Lambda]):
+    def visit_FunctionDef(self, node: ast.FunctionDef):
         if(type(node) == ast.FunctionDef):
             body = []
             args = [] 
@@ -175,21 +178,19 @@ class PyASTToCAST(ast.NodeVisitor):
                 body = [self.visit(piece) for piece in node.body]
 
             #TODO: Decorators? Returns? Type_comment?
-            return FunctionDef(Name(node.name),args,body)
+            return FunctionDef(node.name,args,body)
+            
+    def visit_Lambda(self, node: ast.Lambda):
 
-        if(type(node) == ast.Lambda):
-            print("Lambda Function")
+        body = self.visit(node.body)
+        args = [] 
+        # TODO: Correct typing instead of just 'integer'
+        if(node.args.args != []):
+            args = [Var(Name(arg.arg),"integer") for arg in node.args.args]
 
-            body = self.visit(node.body)
-            args = [] 
-            # TODO: Correct typing instead of just 'integer'
-            if(node.args.args != []):
-                args = [Var(Name(arg.arg),"integer") for arg in node.args.args]
-
-            return FunctionDef(Name("LAMBDA"),args,body)
+        return FunctionDef("LAMBDA",args,body)
 
     def visit_If(self, node: ast.If):
-        print(node.test)
         node_test = self.visit(node.test)
         
         if(node.body != []):
@@ -222,13 +223,9 @@ class PyASTToCAST(ast.NodeVisitor):
         Args:
             node (ast.Name): [description]
         """
-        print("in name")
-        print("name: node.ctx", type(node.ctx))
         if(type(node.ctx) == ast.Load):
-            print("name: in load")
             return Name(node.id)
         if(type(node.ctx) == ast.Store):
-            print("name: in store")
             # TODO: how to get type?
             return Var(Name(node.id), "integer")    
         if(type(node.ctx) == ast.Del):
@@ -265,7 +262,6 @@ class PyASTToCAST(ast.NodeVisitor):
         else:
             return Set([])
 
-
     def visit_Subscript(self, node:ast.Subscript):
         """Visits a PyAST Subscript node, and returns a CAST Subscript node
            
@@ -274,7 +270,6 @@ class PyASTToCAST(ast.NodeVisitor):
         """
 
         value = self.visit(node.value)
-        print("subscript: node.slice",node.slice)
         sl = self.visit(node.slice)
 
         return Subscript(value,sl)
@@ -289,7 +284,6 @@ class PyASTToCAST(ast.NodeVisitor):
             return Tuple([])
 
     def visit_While(self, node: ast.While):
-        print("LOOP")
         print(type(node))
         test = self.visit(node.test)
         body = [self.visit(piece) for piece in (node.body+node.orelse)]
