@@ -86,6 +86,7 @@ class TestConjunctions extends ExtractionTest {
     )
     val mentions = extractMentions(t7)
     testDefinitionEvent(mentions, desired)
+
   }
 
   // tests moved from definition test
@@ -107,6 +108,7 @@ class TestConjunctions extends ExtractionTest {
       )
       val mentions = extractMentions(t8)
       testDefinitionEvent(mentions, desired)
+
   }
 
 }
@@ -123,3 +125,5 @@ class TestConjunctions extends ExtractionTest {
 //Here r and r P are related to the infection rate of disease A and B respectively , while a , a P and b are the removal rate of individuals in class I , I P and E respectively .
 // The mean FICO 2 values at rest were 8.2 mmHg , 10.7 mmHg and 7.8 mmHg for the participants without mask , with mask , and with mask and MF respectively .
 // where g, r (0.04 in this study) and s (0.36 in this study) denote measured, residual and saturated water content in 0–10 cm soil depth(cm3 cm−3), respectively.
+
+
