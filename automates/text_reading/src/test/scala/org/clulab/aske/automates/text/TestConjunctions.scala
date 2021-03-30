@@ -94,23 +94,34 @@ class TestConjunctions extends ExtractionTest {
 
   // tests moved from definition test
 
-    val t8 = "u, ur, and us are water content, residual water content and saturated water content (m3 m-3), " +
-      "respectively; h is pressure head (m); K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, " +
-      "respectively (m d21); and a (m21), n, and l are empirical parameters."
-  failingTest should s"find definitions from t8: ${t8}" taggedAs(Somebody) in {
+    val t8 = "K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, respectively."
+  passingTest should s"find definitions from t8: ${t8}" taggedAs(Somebody) in {
       val desired = Seq(
-        "u" -> Seq("water content"),
-        "ur" -> Seq("residual water content"),
-        "us" -> Seq("saturated water content"),
-        "h" -> Seq("pressure head"),
-        "K" -> Seq("hydraulic conductivity"), //two separate concepts, not going to pass without expansion?
-        "Ksat" -> Seq("saturated hydraulic conductivity"),
-        "a" -> Seq("empirical parameters"),
-        "n" -> Seq("empirical parameters"),
-        "l" -> Seq("empirical parameters")
+        "K" -> Seq("hydraulic conductivity"),
+        "Ksat" -> Seq("saturated hydraulic conductivity")
       )
       val mentions = extractMentions(t8)
       testDefinitionEvent(mentions, desired)
+
+  }
+
+  val t9 = "u, ur, and us are water content, residual water content and saturated water content (m3 m-3), " +
+    "respectively; h is pressure head (m); K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, " +
+    "respectively (m d21); and a (m21), n, and l are empirical parameters."
+  failingTest should s"find definitions from t9: ${t9}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "u" -> Seq("water content"),
+      "ur" -> Seq("residual water content"),
+      "us" -> Seq("saturated water content"),
+      "h" -> Seq("pressure head"),
+      "K" -> Seq("hydraulic conductivity"), //two separate concepts, not going to pass without expansion?
+      "Ksat" -> Seq("saturated hydraulic conductivity"),
+      "a" -> Seq("empirical parameters"),
+      "n" -> Seq("empirical parameters"),
+      "l" -> Seq("empirical parameters")
+    )
+    val mentions = extractMentions(t9)
+    testDefinitionEvent(mentions, desired)
 
   }
 

@@ -8,7 +8,7 @@ rules:
     label: ConjDefinition
     priority: ${priority}
     type: dependency
-    example: "LAI is the actual leaf area index"
+    example: "where s1 and s2 are parameters of a logistic curve"
     pattern: |
       trigger = [lemma="be"]
       variable:Variable{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
@@ -19,7 +19,7 @@ rules:
     label: ConjDefinitionType2
     priority: ${priority}
     type: dependency
-    example: "LAI is the actual leaf area index"
+    example: "K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, respectively"
     action: noDefOverlap
     pattern: |
       trigger = [lemma="be"]
