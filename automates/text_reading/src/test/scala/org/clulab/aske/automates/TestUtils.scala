@@ -7,6 +7,7 @@ import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
+import org.clulab.utils.TextUtils
 import org.json4s.jackson.JsonMethods._
 
 object TestUtils {
@@ -121,8 +122,8 @@ object TestUtils {
     def testBinaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
       val variableDefinitionPairs = for {
         m <- ms
-        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(_.text)
-        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(_.text)
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
+        a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(TextUtils.getMentionText(_))
       } yield (a1, a2)
 
       arg2Strings.foreach(arg2String => variableDefinitionPairs should contain ((arg1String, arg2String)))

@@ -15,6 +15,21 @@ rules:
       definition: Concept = <cop nmod_of? nmod_in? conj_and?
 
 
+  - name: var_cop_conj_definition2
+    label: ConjDefinitionType2
+    priority: ${priority}
+    type: dependency
+    example: "LAI is the actual leaf area index"
+    action: noDefOverlap
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Variable{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept{2,} = <cop nmod_of? nmod_in? conj_and?
+
+
+
+
+
   - name: var_equals_def_token #needed bc of bad parse
     label: Definition
     priority: ${priority}
@@ -164,17 +179,6 @@ rules:
     # action: ${action}
     pattern: |
       @variable:Variable ([word = "("] ([word = /.*/])* [word = ")"])? [lemma = "be"] [word = "defined"] [word = "as"] ([word=/a|an|the/])? (?<definition> [word = /.*/ & tag = /^NN|^JJ/]* ([tag = IN] [tag = /^NN/] [word = "="] [entity =  NUMBER])?)
-
-  - name: var_cop_definition_greek
-    label: Definition
-    priority: ${priority}
-    type: dependency
-    example: "LAI is the actual leaf area index"
-    action: looksLikeAVariableWithGreek
-    pattern: |
-      trigger = [lemma="be"]
-      variable:Variable = (<cop /${agents}/ | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
 
   - name: var_cop_definition
     label: Definition
