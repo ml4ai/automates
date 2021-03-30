@@ -26,10 +26,6 @@ rules:
       variable:Variable{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept{2,} = <cop nmod_of? nmod_in? conj_and?
 
-
-
-
-
   - name: var_equals_def_token #needed bc of bad parse
     label: Definition
     priority: ${priority}
@@ -246,7 +242,7 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "The Toomre factor varies with radius and is given by Q(r)." # todo: this example sentence doesn't include any comma. needs to replace this with another example.
+    example: "which is the τ, transmissibility, multiplied by the average number of people exposed"
     action: ${action}
     pattern: |
       trigger = [lemma=/,/]

@@ -298,26 +298,6 @@ class TestDefinitions extends ExtractionTest {
       testDefinitionEvent(mentions, desired)
     }
 
-  // val t3c = "u, ur, and us are water content, residual water content and saturated water content (m3 m-3), " +
-  //   "respectively; h is pressure head (m); K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, " +
-  //   "respectively (m d21); and a (m21), n, and l are empirical parameters."
-  //   failingTest should s"find definitions from t3c: ${t3c}" taggedAs(Somebody) in {
-  //     val desired = Seq(
-  //       "u" -> Seq("water content"),
-  //       "ur" -> Seq("residual water content"),
-  //       "us" -> Seq("saturated water content"),
-  //       "h" -> Seq("pressure head"),
-  //       "K" -> Seq("hydraulic conductivity"), //two separate concepts, not going to pass without expansion?
-  //       "Ksat" -> Seq("saturated hydraulic conductivity"),
-  //       "a" -> Seq("empirical parameters"),
-  //       "n" -> Seq("empirical parameters"),
-  //       "l" -> Seq("empirical parameters")
-  //     )
-  //     val mentions = extractMentions(t3c)
-  //     testDefinitionEvent(mentions, desired)
-  //   }
-  // note: test moved to TestConjunctions
-
   val t4c = "Segment size (dr) was chosen smaller near the root and larger at greater distance, according to"
   passingTest should s"find definitions from t4c: ${t4c}" taggedAs(Somebody) in {
       val desired = Seq(
