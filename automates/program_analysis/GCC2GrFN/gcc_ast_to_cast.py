@@ -40,6 +40,7 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     get_cast_operator,
     get_const_value,
     gcc_type_to_var_type,
+    default_cast_val_for_gcc_types,
 )
 
 
@@ -66,10 +67,12 @@ class GCC2CAST:
             self.type_ids_to_defined_types[t["id"]] = ClassDef(name=t["name"])
 
         for t in types:
-            self.type_ids_to_defined_types[t["id"]] = self.parse_record_type(t)
+            full_type_def = self.parse_record_type(t)
+            self.type_ids_to_defined_types[t["id"]] = full_type_def
+            body.append(full_type_def)
 
         for gv in global_variables:
-            body.append(self.parse_variable(gv))
+            body.append(self.parse_variable(gv, parse_value=True))
 
         for f in functions:
             body.append(self.parse_function(f))
@@ -92,10 +95,9 @@ class GCC2CAST:
         return self.parse_variable(field)
 
     def parse_record_type(self, record_type):
-        id = record_type["id"]
         name = record_type["name"]
-        self.type_ids_to_defined_types[id] = {"name": name}
 
+        # TODO
         bases = []
         funcs = []
 
@@ -108,7 +110,7 @@ class GCC2CAST:
             name=name, bases=bases, funcs=funcs, fields=fields, source_refs=source_refs
         )
 
-    def parse_variable(self, variable):
+    def parse_variable(self, variable, parse_value=False):
         if "name" not in variable:
             return None
         var_type = variable["type"]
@@ -120,11 +122,21 @@ class GCC2CAST:
         file = variable["file"]
         source_ref = SourceRef(source_file_name=file, col_start=col, row_start=line)
 
-        return Var(
+        var_node = Var(
             val=Name(name=name),
             type=cast_type,
             source_refs=[source_ref],
         )
+
+        if parse_value:
+            assign_val = default_cast_val_for_gcc_types(
+                var_type, self.type_ids_to_defined_types
+            )
+            if "value" in variable:
+                assign_val = self.parse_operand(variable["value"])
+            return Assignment(left=var_node, right=assign_val)
+        else:
+            return var_node
 
     def parse_operand(self, operand):
         code = operand["code"]
@@ -167,14 +179,6 @@ class GCC2CAST:
             return []
 
         source_refs = self.get_source_refs(stmt)
-        # if "line_start" in stmt:
-        #     source_refs.append(
-        #         SourceRef(
-        #             source_file_name=stmt["file"],
-        #             row_start=stmt["line_start"],
-        #             col_start=stmt["col_start"],
-        #         )
-        #     )
 
         return [
             Assignment(left=assign_var, right=assign_value, source_refs=source_refs)

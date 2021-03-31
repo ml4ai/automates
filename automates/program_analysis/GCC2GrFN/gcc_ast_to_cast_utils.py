@@ -2,6 +2,9 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     BinaryOperator,
     UnaryOperator,
     VarType,
+    Number,
+    Dict,
+    List,
 )
 
 GCC_OPS_TO_CAST_OPS = {
@@ -75,11 +78,61 @@ def gcc_type_to_var_type(type, type_ids_to_defined_types):
         and "id" in type
         and type["id"] in type_ids_to_defined_types
     ):
-        return "object"
         # TODO how do we specify the name of the object? building the grfn requires
         # just "object" as the type, probably need an additional field to represent
         # the name.
-        # return type_ids_to_defined_types[type["id"]]["name"]
+        object_name = type_ids_to_defined_types[type["id"]].name
+        return f"object${object_name}"
+    else:
+        # TODO custom exception
+        raise Exception(f"Error: Unknown gcc type {type_name}")
+
+
+def default_cast_val(type, type_ids_to_defined_types):
+    if type == "Number":
+        return Number(number=-1)
+    elif type == "List":
+        return List(values=[])
+    elif type.startswith("object$"):
+        object_name = type.split("object$")[-1]
+
+        type_defs = [
+            t for t in type_ids_to_defined_types.values() if t.name == object_name
+        ]
+        if len(type_defs) < 1:
+            # TODO custom exception
+            raise Exception(f"Error: Unknown object type while parsing gcc ast {type}")
+        type_def = type_defs[0]
+
+        keys = []
+        vals = []
+        for field in type_def.fields:
+            name = field.val
+            type = field.type
+            val = default_cast_val(type, type_ids_to_defined_types)
+            vals.append(val)
+            keys.append(name)
+
+        return Dict(keys=keys, values=vals)
+    else:
+        # TODO custom exception
+        raise Exception(f"Error: Unknown cast type {type}")
+
+
+def default_cast_val_for_gcc_types(type, type_ids_to_defined_types):
+    type_name = type["type"]
+
+    if (
+        type_name == "integer_type"
+        or type_name == "real_type"
+        or type_name == "float_type"
+    ):
+        return default_cast_val("Number", type_ids_to_defined_types)
+    elif type_name == "pointer_type" or type_name == "array_type":
+        return default_cast_val("List", type_ids_to_defined_types)
+    elif type_name == "record_type":
+        type_def = type_ids_to_defined_types[type["id"]]
+        return default_cast_val(f"object${type_def.name}", type_ids_to_defined_types)
     else:
         # TODO custom exception
         raise Exception(f"Error: Unknown gcc type {type_name}")
