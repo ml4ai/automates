@@ -359,6 +359,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         body_uid = uuid.uuid4()
         orelse_uid = uuid.uuid4()
 
+        # TODO: Handle strings of If/Elif/Elif/... constructs
         self.G.add_node(body_uid,label="If Body")
         self.G.add_node(orelse_uid,label="Else Body")
 
