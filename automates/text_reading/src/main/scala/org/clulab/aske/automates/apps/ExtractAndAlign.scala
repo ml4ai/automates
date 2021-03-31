@@ -421,14 +421,14 @@ object ExtractAndAlign {
 
 
     /** Align the equation chunks to the text definitions */
-      if (equationChunksAndSource.isDefined && allGlobalVars.nonEmpty) {
+      if (allGlobalVars.nonEmpty && equationChunksAndSource.isDefined) {
         val equationToTextAlignments = alignmentHandler.editDistance.alignEqAndTexts(equationChunksAndSource.get.unzip._1, allGlobalVars.map(_.identifier))
         // group by src idx, and keep only top k (src, dst, score) for each src idx
         alignments(EQN_TO_TEXT) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
       }
 
     /** Align the comment definitions to the text definitions */
-    if (commentDefinitionMentions.isDefined && allGlobalVars.nonEmpty) {
+    if (allGlobalVars.nonEmpty && commentDefinitionMentions.isDefined) {
       val commentToTextAlignments = alignmentHandler.w2v.alignMentionsAndGlobalVars(commentDefinitionMentions.get, allGlobalVars)
       // group by src idx, and keep only top k (src, dst, score) for each src idx
       alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
@@ -685,9 +685,6 @@ object ExtractAndAlign {
 
     if (allGlobalVars.nonEmpty) {
       linkElements(GLOBAL_VAR) = allGlobalVars.map(glv => mkGlobalVarLinkElement(glv))
-    }
-
-    if (allGlobalVars.nonEmpty) {
       linkElements(TEXT_VAR) = allGlobalVars.flatMap(_.textVarObjStrings)
     }
 
@@ -900,62 +897,62 @@ object ExtractAndAlign {
   def getLinkHypotheses(linkElements: Map[String, Seq[String]], alignments: Map[String, Seq[Seq[Alignment]]], debug: Boolean): Seq[Obj] = {//, SVOGroungings: Map[String, Seq[sparqlResult]]): Seq[Obj] = {
     // Store them all here
     val hypotheses = new ArrayBuffer[ujson.Obj]()
-    val linkElKeys = linkElements.keys.toSeq
-    // Comment -> Text Var
-    if (linkElKeys.contains(COMMENT) && linkElKeys.contains(GLOBAL_VAR)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
-    }
-
 
     // Src Variable -> Comment
-    if (linkElKeys.contains(SOURCE) && linkElKeys.contains(COMMENT)) {
+    if (linkElements.contains(SOURCE) && linkElements.contains(COMMENT)) {
       println("has source and comment")
       hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
     }
 
-    // Equation -> Text
-    if (linkElKeys.contains(EQUATION) && linkElKeys.contains(GLOBAL_VAR)) {
-      println("has eq and text")
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(GLOBAL_VAR), EQN_TO_TEXT, alignments(EQN_TO_TEXT), debug))
+    if (linkElements.contains(GLOBAL_VAR)) {
+
+      // Comment -> Text Var
+      if (linkElements.contains(COMMENT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
+      }
+
+      // Equation -> Text
+      if (linkElements.contains(EQUATION)) {
+        println("has eq and text")
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(GLOBAL_VAR), EQN_TO_TEXT, alignments(EQN_TO_TEXT), debug))
+      }
+
+      // Comment -> Text Var
+      if (linkElements.contains(COMMENT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
+      }
+
+      // TextVar to Unit (through var)
+      if (linkElements.contains(UNIT_THRU_VAR)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(GLOBAL_VAR), TEXT_VAR_TO_UNIT, alignments(TEXT_VAR_TO_UNIT), debug))
+      }
+
+      // TextVar to Unit (through concept)
+      if (linkElements.contains(UNIT_THRU_CONCEPT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(GLOBAL_VAR), TEXT_TO_UNIT, alignments(TEXT_TO_UNIT), debug))
+      }
+
+      // TextVar to ParamSetting (through var)
+      if (linkElements.contains(PARAM_SETTING_THRU_VAR)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_PARAM_SETTING, alignments(TEXT_VAR_TO_PARAM_SETTING), debug))
+      }
+
+      // TextVar to ParamSetting (through concept)
+      if (linkElements.contains(PARAM_SETTING_THRU_CONCEPT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_TO_PARAM_SETTING, alignments(TEXT_TO_PARAM_SETTING), debug))
+      }
+
+      // TextVar to IntervalParamSetting (through var)
+      if (linkElements.contains(INT_PARAM_SETTING_THRU_VAR)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_INT_PARAM_SETTING, alignments(TEXT_VAR_TO_INT_PARAM_SETTING), debug))
+      }
+
+      // TextVar to IntervalParamSetting (through concept)
+      if (linkElements.contains(INT_PARAM_SETTING_THRU_CONCEPT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_CONCEPT), TEXT_TO_INT_PARAM_SETTING, alignments(TEXT_TO_INT_PARAM_SETTING), debug))
+      }
+
     }
-
-    // Comment -> Text Var
-    if (linkElKeys.contains(COMMENT) && linkElKeys.contains(GLOBAL_VAR)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
-    }
-
-    // TextVar to Unit (through var)
-    if (linkElKeys.contains(GLOBAL_VAR) && linkElKeys.contains(UNIT_THRU_VAR)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(GLOBAL_VAR), TEXT_VAR_TO_UNIT, alignments(TEXT_VAR_TO_UNIT), debug))
-    }
-
-    // TextVar to Unit (through concept)
-    if (linkElKeys.contains(GLOBAL_VAR) && linkElKeys.contains(UNIT_THRU_CONCEPT)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(GLOBAL_VAR), TEXT_TO_UNIT, alignments(TEXT_TO_UNIT), debug))
-    }
-
-
-    // TextVar to ParamSetting (through var)
-    if (linkElKeys.contains(GLOBAL_VAR) && linkElKeys.contains(PARAM_SETTING_THRU_VAR)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_PARAM_SETTING, alignments(TEXT_VAR_TO_PARAM_SETTING), debug))
-    }
-
-    // TextVar to ParamSetting (through concept)
-    if (linkElKeys.contains(TEXT_VAR) && linkElKeys.contains(PARAM_SETTING_THRU_CONCEPT)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_TO_PARAM_SETTING, alignments(TEXT_TO_PARAM_SETTING), debug))
-    }
-
-
-    // TextVar to IntervalParamSetting (through var)
-    if (linkElKeys.contains(GLOBAL_VAR) && linkElKeys.contains(INT_PARAM_SETTING_THRU_VAR)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_INT_PARAM_SETTING, alignments(TEXT_VAR_TO_INT_PARAM_SETTING), debug))
-    }
-
-    // TextVar to IntervalParamSetting (through concept)
-    if (linkElKeys.contains(GLOBAL_VAR) && linkElKeys.contains(INT_PARAM_SETTING_THRU_CONCEPT)) {
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_CONCEPT), TEXT_TO_INT_PARAM_SETTING, alignments(TEXT_TO_INT_PARAM_SETTING), debug))
-    }
-
 
     hypotheses
   }
