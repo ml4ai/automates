@@ -60,12 +60,12 @@ class PyASTToCAST(ast.NodeVisitor):
         left = None
         right = None
         # Simple assignment like x = ...
-        if(len(node.targets) == 1):
+        if len(node.targets) == 1:
             left = self.visit(node.targets[0])
             right = self.visit(node.value)
 
         # Assignments in the form of x = y = z = ....
-        if(len(node.targets) > 1):
+        if len(node.targets) > 1:
             left = self.visit(node.targets[0])
             node.targets = node.targets[1:]
             right = self.visit(node)
@@ -82,7 +82,6 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns:
             Attribute: A CAST Attribute node representing an Attribute access
         """
-
         value = self.visit(node.value)
         attr = Name(node.attr)
         return Attribute(value,attr)
@@ -131,7 +130,7 @@ class PyASTToCAST(ast.NodeVisitor):
             Call: A CAST function call node
         """
         args = [self.visit(arg) for arg in node.args]
-        if(type(node.func) == ast.Attribute):
+        if type(node.func) == ast.Attribute:
             return Call(self.visit(node.func),args)
         else:
             return Call(Name(node.func.id),args)
@@ -156,14 +155,14 @@ class PyASTToCAST(ast.NodeVisitor):
         # Get the fields in the class
         init_func = None
         for f in node.body:
-            if(type(f) == ast.FunctionDef and f.name=="__init__"):
+            if type(f) == ast.FunctionDef and f.name == "__init__":
                 init_func = f.body
                 break
         
         for node in init_func:
-            if(type(node) == ast.Assign and type(node.targets[0]) == ast.Attribute):
+            if type(node) == ast.Assign and type(node.targets[0]) == ast.Attribute:
                 attr_node = node.targets[0]
-                if(attr_node.value.id == 'self'):
+                if attr_node.value.id == 'self':
                     fields.append(Var(Name(attr_node.attr),"integer"))
                 
         return ClassDef(name,bases,funcs,fields)
@@ -201,14 +200,16 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns:
             Number: A CAST numeric node, if the node's value is an int or float
             String: A CAST string node, if the node's value is a string
-            None: If the node's value is something else that isn't recognized by the other two cases
+
+        Raises:
+            TypeError: If the node's value is something else that isn't recognized by the other two cases
         """
-        if(type(node.value) == int or type(node.value) == float):
+        if type(node.value) == int or type(node.value) == float:
             return Number(node.value)
-        elif(type(node.value) == str):
+        elif type(node.value) == str:
             return String(node.value)
         else:
-            return None
+            raise TypeError
 
     def visit_Continue(self, node:ast.Continue):
         """Visits a PyAST Continue node, which is just a continue statement
@@ -232,11 +233,11 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns:
             Dict: A CAST Dictionary node. 
         """
-        if(node.keys != []):
+        if len(node.keys) > 0:
             keys = [self.visit(piece) for piece in node.keys]
         else:
             keys = []
-        if(node.values != []):
+        if len(node.values) > 0:
             values = [self.visit(piece) for piece in node.values]
         else:
             values = []
@@ -292,9 +293,9 @@ class PyASTToCAST(ast.NodeVisitor):
         body = []
         args = [] 
         # TODO: Correct typing instead of just 'integer'
-        if(node.args.args != []):
+        if len(node.args.args) > 0:
             args = [Var(Name(arg.arg),"integer") for arg in node.args.args]
-        if(node.body != []):
+        if len(node.body) > 0:
             body = [self.visit(piece) for piece in node.body]
 
         #TODO: Decorators? Returns? Type_comment?
@@ -315,7 +316,7 @@ class PyASTToCAST(ast.NodeVisitor):
         body = self.visit(node.body)
         args = [] 
         # TODO: Correct typing instead of just 'integer'
-        if(node.args.args != []):
+        if len(node.args.args) > 0:
             args = [Var(Name(arg.arg),"integer") for arg in node.args.args]
 
         return FunctionDef("LAMBDA",args,body)
@@ -333,12 +334,12 @@ class PyASTToCAST(ast.NodeVisitor):
         """
         node_test = self.visit(node.test)
         
-        if(node.body != []):
+        if len(node.body) > 0:
             node_body = [self.visit(piece) for piece in node.body]
         else:
             node_body = []
 
-        if(node.orelse != []):
+        if len(node.orelse) > 0:
             node_orelse = [self.visit(piece) for piece in node.orelse]
         else:  
             node_orelse = []
@@ -354,7 +355,7 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns:
             List: A CAST List node.
         """
-        if(node.elts != []):
+        if len(node.elts) > 0:
             return List([self.visit(piece) for piece in node.elts])
         else:
             return List([])
@@ -385,14 +386,14 @@ class PyASTToCAST(ast.NodeVisitor):
 
 
         """
-        if(type(node.ctx) == ast.Load):
+        if type(node.ctx) == ast.Load:
             return Name(node.id)
-        if(type(node.ctx) == ast.Store):
-            # TODO: how to get type?
+        if type(node.ctx) == ast.Store:
+            # TODO: Typing so it's not hardcoded to integers
             return Var(Name(node.id), "integer")    
-        if(type(node.ctx) == ast.Del):
+        if type(node.ctx) == ast.Del:
             # TODO: At some point..
-            return None
+            raise NotImplementedError()
 
 
     def visit_Pass(self, node: ast.Pass):
@@ -441,7 +442,7 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns:
             Set: A CAST Set node.
         """
-        if(node.elts != []):
+        if len(node.elts) > 0:
             return Set([self.visit(piece) for piece in node.elts])
         else:
             return Set([])
@@ -482,7 +483,7 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns:
             Set: A CAST Tuple node.
         """
-        if(node.elts != []):
+        if len(node.elts) > 0:
             return Tuple([self.visit(piece) for piece in node.elts])
         else:
             return Tuple([])
