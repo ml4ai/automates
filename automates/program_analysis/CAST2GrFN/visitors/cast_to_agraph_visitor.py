@@ -37,6 +37,16 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
+class CASTTypeError(TypeError):
+    """Used to create errors in the CASTToAGraphVisitor, in particular 
+    when the visitor encounters some value that it wasn't expecting.
+
+    Args:
+        Exception: An exception that occurred during execution. 
+    """
+    pass 
+
+
 class CASTToAGraphVisitor(CASTVisitor):
     """class CASTToAGraphVisitor - A visitor that traverses
     CAST nodes to generate a networkx DiGraph that represents
@@ -97,25 +107,23 @@ class CASTToAGraphVisitor(CASTVisitor):
                 "fontname": "Menlo"
             }
         )
+        for node in A.iternodes():
+            node.attr["fontcolor"] = "black"
+            node.attr["style"] = "rounded"
+        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+
         return A        
 
     def to_pdf(self,filename):
         """Generates an agraph, and uses it 
         to create a PDF using the 'dot' program"""
         A = self.to_agraph()
-        for node in A.iternodes():
-            node.attr["fontcolor"] = "black"
-            node.attr["style"] = "rounded"
-        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
-
         A.draw(filename+".pdf",prog="dot")
 
     @singledispatchmethod
     def visit(self, node: AstNode):
         """Generic visitor for unimplemented/unexpected nodes"""
-        print("Not implemented: ",node)
-        print("Type not implemented: ",type(node))
-        return None
+        raise CASTTypeError(f"Unrecognized node type: {type(node)}")
 
     @visit.register
     def _(self, node: Assignment):
@@ -163,7 +171,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         if we have any. The node's UID is returned."""
         func = self.visit(node.func)
         args = []
-        if(node.arguments != []):
+        if len(node.arguments) > 0:
             args = self.visit_list(node.arguments)
 
         node_uid = uuid.uuid4()
@@ -187,9 +195,9 @@ class CASTToAGraphVisitor(CASTVisitor):
         # TODO: Where should bases field be used?
         funcs = []
         fields = [] 
-        if(node.funcs != []):
+        if len(node.funcs) > 0:
             funcs = self.visit_list(node.funcs)
-        if(node.fields != []):
+        if len(node.fields) > 0:
             fields = self.visit_list(node.fields)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="Class: " + node.name)
@@ -218,19 +226,15 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         keys = []
         values = []
-        if(node.keys != []):
+        if len(node.keys) > 0:
             keys = self.visit_list(node.keys)
-        if(node.values != []):
+        if len(node.values) > 0:
             values = self.visit_list(node.values)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid, label="Dict")
 
-        # TODO: Make this prettier, somehow?
         for n in keys + values:
             self.G.add_edges(node_uid, n)        
-
-        #for (k,v) in list(zip(keys,values)):
-         #   self.G.add_edges(node_uid, (k,v)) 
 
         return node_uid
 
@@ -252,9 +256,9 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         args = []
         body = []
-        if(node.func_args != []):
+        if len(node.func_args) > 0:
             args = self.visit_list(node.func_args)
-        if(node.body != []):
+        if len(node.body) > 0:
             body = self.visit_list(node.body) 
 
         node_uid = uuid.uuid4()
@@ -262,7 +266,6 @@ class CASTToAGraphVisitor(CASTVisitor):
         body_node = uuid.uuid4() 
 
         self.G.add_node(node_uid,label="Function: "+node.name)
-
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
 
@@ -282,7 +285,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         """Visits List nodes. We visit all the elements and add them to
         this node. This node's UID is returned."""
         values = []
-        if(node.values != []):
+        if len(node.values) > 0:
             values = self.visit_list(node.values)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="List")
@@ -298,7 +301,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         expr = self.visit(node.expr)
         body = []
-        if(node.body != []):
+        if len(node.body) > 0:
             body = self.visit_list(node.body)
         node_uid = uuid.uuid4()
         test_uid = uuid.uuid4()
@@ -341,9 +344,9 @@ class CASTToAGraphVisitor(CASTVisitor):
         expr = self.visit(node.expr)
         body = []
         orelse = []
-        if(node.body != []):
+        if len(node.body) > 0:
             body = self.visit_list(node.body) 
-        if(node.orelse != None):
+        if node.orelse != None:
             orelse = self.visit_list(node.orelse)
 
         node_uid = uuid.uuid4()
@@ -409,12 +412,12 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         class_init = False
         for n in self.cast.nodes[0].body:
-            if(type(n) == ClassDef and n.name == node.name):
+            if type(n) == ClassDef and n.name == node.name:
                 class_init = True
                 self.G.add_node(node_uid,label=node.name+" Init()")
                 break
             
-        if(not class_init):
+        if not class_init:
             self.G.add_node(node_uid,label=node.name)
 
         return node_uid 
@@ -432,7 +435,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         """Visits a Set node. We add all the elements of this set (if any)
         to the graph and return the UID of this node."""
         values = []
-        if(node.values != []):
+        if len(node.values) > 0:
             values = self.visit_list(node.values)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="Set")
@@ -446,7 +449,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         """Visits a String node. We add this node's string to the
         graph and return the UID of this node."""
         node_uid = uuid.uuid4()
-        self.G.add_node(node_uid,label="\""+node.string+"\"")
+        self.G.add_node(node_uid,label=f'"{node.string}"')
         return node_uid 
 
     @visit.register
@@ -467,7 +470,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         """Visits a Tuple node. We add all the elements of this 
         tuple (if any) to the graph and return the UID of this node."""
         values = []
-        if(node.values != []):
+        if len(node.values) > 0:
             values = self.visit_list(node.values)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="Tuple")
