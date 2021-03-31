@@ -7,7 +7,7 @@ CMD   bash
 ARG DEBIAN_FRONTEND=noninteractive
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 RUN apt-get update && \
-  apt-get -y --no-install-recommends install apt-utils
+    apt-get -y --no-install-recommends install apt-utils
 
 # Use individual commands to prevent excess time usage when re-building
 RUN apt-get -y --no-install-recommends install curl wget gnupg2 git 
@@ -15,13 +15,6 @@ RUN apt-get -y --no-install-recommends install openjdk-8-jdk antlr4 doxygen
 RUN apt-get -y --no-install-recommends install gcc build-essential pkg-config
 RUN apt-get -y --no-install-recommends install graphviz libgraphviz-dev
 RUN apt-get -y --no-install-recommends install python3-dev python3-pip python3-venv
-
-# Add Scala and SBT
-RUN wget www.scala-lang.org/files/archive/scala-2.13.0.deb
-RUN dpkg -i scala*.deb
-RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
-RUN apt-get update && apt-get -y --no-install-recommends install sbt
 
 # Add dependencies needed to compile GCC for use in PA pipeline
 RUN apt-get -y --no-install-recommends install make
@@ -61,17 +54,6 @@ RUN pip install wheel
 # =============================================================================
 
 # =============================================================================
-# Add PACKAGES FOR TR PIPELINE
-# =============================================================================
-RUN update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
-RUN mkdir -p /TR_utils
-WORKDIR /TR_utils
-RUN git clone https://github.com/lum-ai/regextools.git
-WORKDIR /TR_utils/regextools
-RUN sbt publishLocal
-# =============================================================================
-
-# =============================================================================
 # SETUP THE AUTOMATES REPOSITORY AND ENVIRONMENT
 # =============================================================================
 RUN mkdir -p /automates/automates
@@ -79,10 +61,5 @@ COPY setup.py /automates/
 COPY automates /automates/automates
 WORKDIR /automates
 RUN pip install -e .
-WORKDIR /automates/automates/text_reading
-# In order for the test suite to work, you need vector files. Run the following to get them:
-# wget http://vanga.sista.arizona.edu/automates_data/vectors.txt -O /local/path/to/automates/automates/text_reading/src/test/resources/vectors.txt
-RUN sbt test
-WORKDIR /automates
 RUN rm -rf automates setup.py
 # =============================================================================
