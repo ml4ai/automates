@@ -1,7 +1,6 @@
 import sys
 import json
 import re
-from dataclasses import dataclass
 
 from automates.model_assembly.interpreter import ImperativeInterpreter
 from automates.model_assembly.networks import (

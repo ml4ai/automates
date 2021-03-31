@@ -31,10 +31,6 @@ def compare_graph_lists(tests, expected_file) -> NoReturn:
     assert {g["id"]: g for g in tests} == {g["id"]: g for g in expected}
 
 
-# def save_json(test_data, result_filename):
-#     json.dump(test_data, open(result_filename, "w"))
-
-
 def test_single_value_returns():
     expected_output_filename = os.path.join(DATA_ROOT, "single_values.json")
     test_cases = {
