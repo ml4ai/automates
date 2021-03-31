@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum, auto, unique
 from dataclasses import dataclass
@@ -201,7 +202,9 @@ class GenericContainer(ABC):
     @abstractmethod
     def __str__(self):
         args_str = "\n".join([f"\t{arg}" for arg in self.arguments])
-        outputs_str = "\n".join([f"\t{var}" for var in self.returns + self.updated])
+        outputs_str = "\n".join(
+            [f"\t{var}" for var in self.returns + self.updated]
+        )
         return f"Inputs:\n{args_str}\nVariables:\n{outputs_str}"
 
     @staticmethod
@@ -259,7 +262,7 @@ class LoopContainer(GenericContainer):
 
 
 @unique
-class VarType(Enum):
+class DataType(Enum):
     BOOLEAN = auto()
     STRING = auto()
     INTEGER = auto()
@@ -278,40 +281,43 @@ class VarType(Enum):
 
     @classmethod
     def from_name(cls, name: str):
-        name = name.lower()
-        if name == "float":
-            return cls.FLOAT
-        elif name == "string":
-            return cls.STRING
-        elif name == "boolean":
-            return cls.BOOLEAN
-        elif name == "integer":
-            return cls.INTEGER
-        # TODO update for2py pipeline to use list instead
-        elif name == "list" or name == "array":
-            return cls.ARRAY
-        elif name == "object":
-            return cls.OBJECT
-        elif name == "none":
-            return cls.NONE
-        else:
-            raise ValueError(f"VarType unrecognized name: {name}")
+        return getattr(DataType, name.upper())
+        # name = name.lower()
+        # if name == "float":
+        #     return cls.FLOAT
+        # elif name == "string":
+        #     return cls.STRING
+        # elif name == "boolean":
+        #     return cls.BOOLEAN
+        # elif name == "integer":
+        #     return cls.INTEGER
+        # # TODO update for2py pipeline to use list instead
+        # elif name == "list" or name == "array":
+        #     return cls.ARRAY
+        # elif name == "object":
+        #     return cls.OBJECT
+        # elif name == "none":
+        #     return cls.NONE
+        # else:
+        #     raise ValueError(f"DataType unrecognized name: {name}")
 
 
 @unique
-class DataType(Enum):
+class MeasurementType(Enum):
     # NOTE: Refer to this stats data type blog post:
     # https://towardsdatascience.com/data-types-in-statistics-347e152e8bee
-    NONE = auto()  # Used for undefined variable types
-    CATEGORICAL = auto()  # Labels used to represent a quality
-    BINARY = auto()  # Categorical measure with *only two* categories
-    NOMINAL = auto()  # Categorical measure with *many* categories
-    ORDINAL = auto()  # Categorical measure with many *ordered* categories
-    NUMERICAL = auto()  # Numbers used to express a quantity
-    DISCRETE = auto()  # Numerical measure with *countably infinite* options
-    CONTINUOUS = auto()  # Numerical measure w/ *uncountably infinite* options
-    INTERVAL = auto()  # Continuous measure *without* an absolute zero
-    RATIO = auto()  # Continuous measure *with* an absolute zero
+
+    # NOTE: the ordering of the values below is incredibly important!!
+    NONE = 0  # Used for undefined variable types
+    CATEGORICAL = 1  # Labels used to represent a quality
+    BINARY = 2  # Categorical measure with *only two* categories
+    NOMINAL = 3  # Categorical measure with *many* categories
+    ORDINAL = 4  # Categorical measure with many *ordered* categories
+    NUMERICAL = 5  # Numbers used to express a quantity
+    DISCRETE = 6  # Numerical measure with *countably infinite* options
+    CONTINUOUS = 7  # Numerical measure w/ *uncountably infinite* options
+    INTERVAL = 8  # Continuous measure *without* an absolute zero
+    RATIO = 9  # Continuous measure *with* an absolute zero
 
     def __str__(self):
         return str(self.name).lower()
@@ -331,33 +337,42 @@ class DataType(Enum):
         elif name == "none" or name == "list" or name == "array":
             return cls.NONE
         else:
-            raise ValueError(f"DataType unrecognized name: {name}")
+            raise ValueError(f"MeasurementType unrecognized name: {name}")
 
     @classmethod
     def from_type_str(cls, type_str: str):
-        type_str = type_str.lower()
-        if type_str == "catgorical":
-            return cls.CATEGORICAL
-        elif type_str == "binary":
-            return cls.BINARY
-        elif type_str == "nominal":
-            return cls.NOMINAL
-        elif type_str == "ordinal":
-            return cls.ORDINAL
-        elif type_str == "numerical":
-            return cls.NUMERICAL
-        elif type_str == "discrete":
-            return cls.DISCRETE
-        elif type_str == "continuous":
-            return cls.CONTINUOUS
-        elif type_str == "interval":
-            return cls.INTERVAL
-        elif type_str == "ratio":
-            return cls.RATIO
-        elif type_str == "none":
-            return cls.NONE
-        else:
-            raise ValueError(f"DataType unrecognized name: {type_str}")
+        return getattr(MeasurementType, type_str.upper())
+        # type_str = type_str.lower()
+        # if type_str == "catgorical":
+        #     return cls.CATEGORICAL
+        # elif type_str == "binary":
+        #     return cls.BINARY
+        # elif type_str == "nominal":
+        #     return cls.NOMINAL
+        # elif type_str == "ordinal":
+        #     return cls.ORDINAL
+        # elif type_str == "numerical":
+        #     return cls.NUMERICAL
+        # elif type_str == "discrete":
+        #     return cls.DISCRETE
+        # elif type_str == "continuous":
+        #     return cls.CONTINUOUS
+        # elif type_str == "interval":
+        #     return cls.INTERVAL
+        # elif type_str == "ratio":
+        #     return cls.RATIO
+        # elif type_str == "none":
+        #     return cls.NONE
+        # else:
+        #     raise ValueError(f"MeasurementType unrecognized name: {type_str}")
+
+    def isa_categorical(self, item: MeasurementType) -> bool:
+        return any(
+            [item == x for x in range(self.CATEGORICAL, self.NUMERICAL)]
+        )
+
+    def isa_numerical(self, item: MeasurementType) -> bool:
+        return any([item == x for x in range(self.NUMERICAL, self.RATIO + 1)])
 
 
 @unique
@@ -412,7 +427,8 @@ class LambdaType(Enum):
             return cls.OPERATOR
         elif name == "PASS":
             raise ValueError(
-                f'Using container interface node name {name}. Please update to "INTERFACE" '
+                f"Using container interface node name {name}. Please "
+                + 'update to "INTERFACE" '
             )
         else:
             raise ValueError(f"Unrecognized lambda type name: {name}")
@@ -435,8 +451,12 @@ class GenericStmt(ABC):
 
     @abstractmethod
     def __str__(self):
-        inputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.inputs])
-        outputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.outputs])
+        inputs_str = ", ".join(
+            [f"{id.var_name} ({id.index})" for id in self.inputs]
+        )
+        outputs_str = ", ".join(
+            [f"{id.var_name} ({id.index})" for id in self.outputs]
+        )
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
     @staticmethod

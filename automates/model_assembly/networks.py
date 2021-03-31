@@ -2,15 +2,13 @@ from __future__ import annotations
 from typing import List, Dict, Iterable, Set, Any, Tuple
 from abc import ABC, abstractmethod
 from functools import singledispatch
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from itertools import product
 from copy import deepcopy
 
-import uuid
 import datetime
 import json
 import re
-import random
 
 import networkx as nx
 import numpy as np
@@ -32,9 +30,22 @@ from .structures import (
     ObjectDefinition,
     VariableDefinition,
     TypeDefinition,
-    VarType,
     DataType,
+    MeasurementType,
     GrFNExecutionException,
+)
+from .metadata import (
+    TypedMetadata,
+    ProvenanceData,
+    DomainSet,
+    DomainInterval,
+    SuperSet,
+    MetadataType,
+    MetadataMethod,
+    CodeCollectionReference,
+    CodeSpanReference,
+    Domain,
+    GrFNCreation,
 )
 from ..utils.misc import choose_font, uuid
 
@@ -48,7 +59,6 @@ forestgreen = "#228b22"
 @dataclass(repr=False, frozen=False)
 class GenericNode(ABC):
     uid: str
-    reference: str
 
     def __repr__(self):
         return self.__str__()
@@ -72,10 +82,8 @@ class GenericNode(ABC):
 @dataclass(repr=False, frozen=False)
 class VariableNode(GenericNode):
     identifier: VariableIdentifier
+    metadata: List[TypedMetadata]
     value: Any
-    type: VarType
-    kind: DataType
-    domain: str
     input_value: Any
 
     def __hash__(self):
@@ -88,18 +96,43 @@ class VariableNode(GenericNode):
         return str(self.identifier)
 
     @classmethod
-    def from_id(cls, id: VariableIdentifier, data: VariableDefinition):
-        # TODO: continue with the two functions below
-        var_type = VarType.from_name(data.domain_name)
-        var_kind = DataType.from_name(data.domain_name)
+    def from_id(cls, idt: VariableIdentifier, data: VariableDefinition):
+        # TODO: use domain constraint information in the future
+        d_type = DataType.from_name(data.domain_name)
+        m_type = MeasurementType.from_name(data.domain_name)
+
+        def create_domain_elements():
+            if MeasurementType.isa_categorical(m_type):
+                set_type = SuperSet.from_data_type(d_type)
+                return [
+                    DomainSet(
+                        d_type,
+                        set_type,
+                        (lambda x: SuperSet.ismember(x, set_type)),
+                    )
+                ]
+            elif MeasurementType.isa_numerical(m_type):
+                return [
+                    DomainInterval(-float("inf"), float("inf"), False, False)
+                ]
+            else:
+                return []
+
+        dom = Domain(
+            MetadataType.DOMAIN,
+            ProvenanceData(
+                MetadataMethod.PROGRAM_ANALYSIS_PIPELINE,
+                ProvenanceData.get_dt_timestamp(),
+            ),
+            d_type,
+            m_type,
+            create_domain_elements(),
+        )
         return cls(
             GenericNode.create_node_id(),
-            "",
-            id,
+            idt,
+            [dom],
             None,
-            var_type,
-            var_kind,
-            data.domain_constraint,
             None,
         )
 
@@ -184,25 +217,17 @@ class VariableNode(GenericNode):
         identifier = VariableIdentifier.from_str(data["identifier"])
         return cls(
             data["uid"],
-            data["reference"] if "reference" in data else None,
             identifier,
+            [TypedMetadata.from_dict(mdict) for mdict in data["metadata"]],
             None,
-            VarType.from_name(data["data_type"])
-            if "data_type" in data
-            else None,
-            DataType.from_type_str(data["kind"]) if "kind" in data else None,
-            data["domain"] if "domain" in data else None,
             None,
         )
 
     def to_dict(self) -> dict:
         return {
             "uid": self.uid,
-            "reference": self.reference,
             "identifier": str(self.identifier),
-            "data_type": str(self.type),
-            "kind": str(self.kind),
-            "domain": self.domain,
+            "metadata": asdict(self.metadata),
         }
 
 
