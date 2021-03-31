@@ -48,12 +48,16 @@ class CASTToAGraphVisitor(CASTVisitor):
     add themselves to a networkx DiGraph object that is updated across
     most the visitors by either adding nodes or edges.
     A lot of the visitors are relatively straightforward and
-    follow the pattern for a particular node
+    follow this pattern for a particular node
         - Visit the node's children
         - Generate a UID for the current node
         - Add the node to the graph with the UID
         - Add edges connecting the node to its children
         - Return the Node's UID, so this can be repeated as necessary
+
+    Some do a little bit of extra work to make the visualization look
+    nicer, like add extra 'group' nodes to group certain nodes together
+    (i.e. function arguments, class attributes)
 
     Inherits from CASTVisitor to use its visit functions.
 
@@ -96,17 +100,19 @@ class CASTToAGraphVisitor(CASTVisitor):
         return A        
 
     def to_pdf(self,filename):
-        """Creates a pdf of the generated agraph"""
+        """Generates an agraph, and uses it 
+        to create a PDF using the 'dot' program"""
         A = self.to_agraph()
         for node in A.iternodes():
             node.attr["fontcolor"] = "black"
             node.attr["style"] = "rounded"
         A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+
         A.draw(filename+".pdf",prog="dot")
 
     @singledispatchmethod
     def visit(self, node: AstNode):
-        """Generic visitor for unimplemented/incorrect nodes"""
+        """Generic visitor for unimplemented/unexpected nodes"""
         print("Not implemented: ",node)
         print("Type not implemented: ",type(node))
         return None
@@ -159,11 +165,17 @@ class CASTToAGraphVisitor(CASTVisitor):
         args = []
         if(node.arguments != []):
             args = self.visit_list(node.arguments)
+
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid, label="FunctionCall")
         self.G.add_edge(node_uid, func)
+
+        args_uid = uuid.uuid4()
+        self.G.add_node(args_uid, label="Arguments")
+        self.G.add_edge(node_uid,args_uid)
+
         for n in args:
-            self.G.add_edge(node_uid,n)
+            self.G.add_edge(args_uid,n)
 
         return node_uid
 
@@ -181,11 +193,20 @@ class CASTToAGraphVisitor(CASTVisitor):
             fields = self.visit_list(node.fields)
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid,label="Class: " + node.name)
+
+        # Add attributes to the graph
         attr_uid = uuid.uuid4()
         self.G.add_node(attr_uid,label="Attributes")
         self.G.add_edge(node_uid,attr_uid)
-        for n in funcs + fields:
+        for n in fields:
             self.G.add_edge(attr_uid,n)
+
+        # Add functions to the graph
+        funcs_uid = uuid.uuid4()
+        self.G.add_node(funcs_uid,label="Functions")
+        self.G.add_edge(node_uid,funcs_uid)
+        for n in funcs:
+            self.G.add_edge(funcs_uid,n)
 
         return node_uid
 
@@ -241,6 +262,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         body_node = uuid.uuid4() 
 
         self.G.add_node(node_uid,label="Function: "+node.name)
+
         self.G.add_node(args_node, label="Arguments")
         self.G.add_node(body_node, label="Body")
 
@@ -364,14 +386,37 @@ class CASTToAGraphVisitor(CASTVisitor):
     def _(self, node: Module):
         """Visits a Module node. This is the starting point for visiting
         a CAST object. The return value isn't relevant here (I think)"""
-        return self.visit_list(node.body) 
+        program_uuid = uuid.uuid4()
+        self.G.add_node(program_uuid, label = "Program: "+node.name) 
+
+        module_uuid = uuid.uuid4()
+        self.G.add_node(module_uuid,label = "Module: "+node.name)
+        self.G.add_edge(program_uuid,module_uuid)
+
+        body = self.visit_list(node.body) 
+        for b in body:
+            self.G.add_edge(module_uuid,b)
+        
+        return program_uuid
 
     @visit.register
     def _(self, node: Name):
-        """Visits a Name node. We add this node's name to the graph, 
+        """Visits a Name node. We check to see if this Name node 
+        belongs to a class. In which case it's being called as an 
+        init(), and add this node's name to the graph accordingly, 
         and return the UID of this node."""
         node_uid = uuid.uuid4()
-        self.G.add_node(node_uid,label=node.name)
+
+        class_init = False
+        for n in self.cast.nodes[0].body:
+            if(type(n) == ClassDef and n.name == node.name):
+                class_init = True
+                self.G.add_node(node_uid,label=node.name+" Init()")
+                break
+            
+        if(not class_init):
+            self.G.add_node(node_uid,label=node.name)
+
         return node_uid 
 
     @visit.register
