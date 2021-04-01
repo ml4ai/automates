@@ -311,11 +311,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
 
-  // def functionActionFlow(mentions: Seq[Mention]): Seq[Mention] = {
-  //   val functionMens = mentions.toList
-  //   val toReturn = functionMens.distinct
-  //   toReturn
-  // }
+  // keep this as a stub for function action flow
+   def functionActionFlow(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+     mentions.distinct
+   }
 
   // this should be the def text bound mention
   def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {

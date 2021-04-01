@@ -23,7 +23,7 @@ class TestDefinitions extends ExtractionTest {
   failingTest should s"extract definitions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "LAI" -> Seq("simulated leaf area index"),
-      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"), //todo: how to attach param setting to definition?
+      "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"),
       "Kcs" -> Seq("DSSAT-CSM crop coefficient")
     )
     // fixme: maximum is found as def for Kcs
@@ -153,8 +153,8 @@ class TestDefinitions extends ExtractionTest {
   failingTest should s"find definitions from t2b: ${t2b}" taggedAs(Somebody) in {
     val desired = Seq(
       "fi" -> Seq("daily fractional light interception"),
-      "ETo" -> Seq("daily reference evapotranspiration"), //fixme: expansion is too extreme; limit <- fixed?
-      "pwp" -> Seq("water content at permanent wilting point"),//fixme: modify lookslikeavar to accommodate lower-case letters as vars <- fixed?
+      "ETo" -> Seq("daily reference evapotranspiration"),
+      "pwp" -> Seq("water content at permanent wilting point"),
       "Δz" -> Seq("soil layer thickness"), //note: in order to capture "$z" as one variable, a rule was added under compound_var rule.
       // fixme: definition of $z is not captured by var_cop_definition rule. -> "$" was an error. it was "Δ".
       "kl" -> Seq("water extraction rate", "empiric soil–root factor for the fraction of available water that can " +

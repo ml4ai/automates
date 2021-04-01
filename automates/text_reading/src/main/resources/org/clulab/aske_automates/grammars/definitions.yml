@@ -164,7 +164,7 @@ rules:
 #    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
-      variable:Concept = nsubjpass # | advcl nsubj
+      variable:Variable = nsubjpass # | advcl nsubj
       definition:Concept = nmod_as [!entity = "NUMBER"] # todo: needs to expand the definition to include "at LAI = 6.0"
 
   - name: var_is_defined_token
@@ -185,7 +185,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Variable = (<cop /${agents}/ appos? | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? conj_or? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "conj_or?". need to see if it's feasible.
+      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
 
 # disabled for now - overwrites successful dependency-based extractions
 #  - name: var_is_def_token # needed because of bad parse
