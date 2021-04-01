@@ -22,6 +22,8 @@ object AlignmentJsonUtils {
   /**stores methods that are specific to processing json with alignment components;
     * other related methods are in GrFNParser*/
 
+  case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDefs: Seq[String])
+
   /**get arguments for the aligner depending on what data are provided**/
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): alignmentArguments = {
 

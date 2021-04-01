@@ -7,6 +7,7 @@ import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.clulab.aske.automates.apps.AlignmentBaseline
+import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
 
 case class AlignmentHandler(editDistance: VariableEditDistanceAligner, w2v: PairwiseW2VAligner) {
   def this(w2vPath: String, relevantArgs: Set[String]) =
@@ -63,6 +64,20 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
 
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
     alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()), dstMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()))
+  }
+
+  def getRelevantTextFromGlobalVar(glv: GlobalVariable): String = {
+    // ["variable", "definition"]
+    relevantArgs match {
+      case x if x.contains("variable") & x.contains("definition")=> glv.identifier + " " + glv.textFromAllDefs.mkString(" ")
+      case x if x.contains("variable") => glv.identifier
+      case x if x.contains("definition") => glv.textFromAllDefs.mkString(" ")
+      case _ => ???
+    }
+  }
+
+  def alignMentionsAndGlobalVars(srcMentions: Seq[Mention], glVars: Seq[GlobalVariable]): Seq[Alignment] = {
+    alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()), glVars.map(getRelevantTextFromGlobalVar(_).toLowerCase()))
   }
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
