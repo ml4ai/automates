@@ -137,20 +137,27 @@ class C2AVariable(object):
 
     def to_AIR(self):
         # TODO
-        air_type = ""
+        domain = {
+            "type": "type",  # TODO what is this field?
+            "mutable": False,  # TODO probably only mutable if object/list/dict type
+        }
         if self.type_name == "Number":
-            air_type = "float"
+            domain["name"] = "float"
+        elif self.type_name.startswith("object$"):
+            name = self.type_name.split("object$")[-1]
+            domain.update(
+                {
+                    "name": "object",
+                    "object_name": name,
+                }
+            )
         else:
-            air_type = self.type_name
+            domain["name"] = self.type_name
 
         return {
             "name": self.build_identifier(),
             "source_refs": [self.source_ref.to_AIR()],
-            "domain": {
-                "name": air_type,
-                "type": "type",  # TODO what is this field
-                "mutable": False,  # TODO probably only mutable if object/list/dict type
-            },
+            "domain": domain,
             "domain_constraint": "(and (> v -infty) (< v infty))",  # TODO
         }
 
@@ -168,7 +175,16 @@ class C2ALambdaType(str, Enum):
     PACK = "pack"
 
 
-@dataclass(repr=True, frozen=True)
+def build_unique_list_with_order(l, predicate):
+    new_list = []
+    for i in l:
+        res = predicate(i)
+        if res not in new_list:
+            new_list.append(res)
+    return new_list
+
+
+@dataclass(repr=True, frozen=False)
 class C2ALambda(object):
     """
     Represents an executable container/ function to transition between states in AIR
@@ -212,7 +228,7 @@ class C2ALambda(object):
         return self
 
 
-@dataclass(repr=True, frozen=True)
+@dataclass(repr=True, frozen=False)
 class C2AExpressionLambda(C2ALambda):
     """
     A type of function within AIR that represents an executable lambda expression that transitions
@@ -229,14 +245,20 @@ class C2AExpressionLambda(C2ALambda):
                 "type": "lambda",
                 "code": self.lambda_expr,
             },
-            "input": [v.build_identifier() for v in self.input_variables],
-            "output": [v.build_identifier() for v in self.output_variables],
-            "updated": [v.build_identifier() for v in self.updated_variables],
+            "input": build_unique_list_with_order(
+                self.input_variables, lambda v: v.build_identifier()
+            ),
+            "output": build_unique_list_with_order(
+                self.output_variables, lambda v: v.build_identifier()
+            ),
+            "updated": build_unique_list_with_order(
+                self.updated_variables, lambda v: v.build_identifier()
+            ),
             "source_ref": self.source_ref.to_AIR(),
         }
 
 
-@dataclass(repr=True, frozen=True)
+@dataclass(repr=True, frozen=False)
 class C2AContainerCallLambda(C2ALambda):
     """
     Represents the call/passing to another container found in the body of a container definition
@@ -251,9 +273,15 @@ class C2AContainerCallLambda(C2ALambda):
                 "name": self.identifier_information.build_identifier(),
                 "type": "container",
             },
-            "input": [v.build_identifier() for v in self.input_variables],
-            "output": [v.build_identifier() for v in self.output_variables],
-            "updated": [v.build_identifier() for v in self.updated_variables],
+            "input": build_unique_list_with_order(
+                self.input_variables, lambda v: v.build_identifier()
+            ),
+            "output": build_unique_list_with_order(
+                self.output_variables, lambda v: v.build_identifier()
+            ),
+            "updated": build_unique_list_with_order(
+                self.updated_variables, lambda v: v.build_identifier()
+            ),
             "source_ref": self.source_ref.to_AIR(),
         }
 
@@ -278,6 +306,8 @@ class C2AContainerDef(object):
     body: List[C2ALambda]
     # Defines the span of code for this container body in the original source code
     body_source_ref: C2ASourceRef
+    # Tracks what variables were added as arguments to container from previous scope
+    vars_from_previous_scope: List[C2AVariable]
 
     def build_identifier(self):
         return self.identifier_information.build_identifier()
@@ -308,6 +338,9 @@ class C2AContainerDef(object):
     def add_body_source_ref(self, body_source_ref: SourceRef):
         self.body_source_ref = body_source_ref
 
+    def add_var_used_from_previous_scope(self, var):
+        self.vars_from_previous_scope.append(var)
+
 
 @dataclass(repr=True, frozen=False)
 class C2AFunctionDefContainer(C2AContainerDef):
@@ -323,9 +356,15 @@ class C2AFunctionDefContainer(C2AContainerDef):
             "name": self.identifier_information.build_identifier(),
             "source_refs": [],
             "type": "function",
-            "arguments": {v.build_identifier() for v in self.arguments},
-            "updated": {v.build_identifier() for v in self.updated_variables},
-            "return_value": {v.build_identifier() for v in self.output_variables},
+            "arguments": build_unique_list_with_order(
+                self.arguments, lambda v: v.build_identifier()
+            ),
+            "updated": build_unique_list_with_order(
+                self.updated_variables, lambda v: v.build_identifier()
+            ),
+            "return_value": build_unique_list_with_order(
+                self.output_variables, lambda v: v.build_identifier()
+            ),
             "body": [i.to_AIR() for i in self.body],
             "body_source_ref": self.body_source_ref.to_AIR(),
         }
@@ -347,9 +386,15 @@ class C2ALoopContainer(C2AContainerDef):
             "name": self.identifier_information.build_identifier(),
             "source_refs": [],
             "type": "loop",
-            "arguments": {v.build_identifier() for v in self.arguments},
-            "updated": {v.build_identifier() for v in self.updated_variables},
-            "return_value": {v.build_identifier() for v in self.output_variables},
+            "arguments": build_unique_list_with_order(
+                self.arguments, lambda v: v.build_identifier()
+            ),
+            "updated": build_unique_list_with_order(
+                self.updated_variables, lambda v: v.build_identifier()
+            ),
+            "return_value": build_unique_list_with_order(
+                self.output_variables, lambda v: v.build_identifier()
+            ),
             "body": [i.to_AIR() for i in self.body],
             "body_source_ref": self.body_source_ref.to_AIR(),
             "condition_source_ref": self.condition_source_ref.to_AIR(),
@@ -373,9 +418,15 @@ class C2AIfContainer(C2AContainerDef):
             "name": self.identifier_information.build_identifier(),
             "source_refs": [],
             "type": "if-block",
-            "arguments": {v.build_identifier() for v in self.arguments},
-            "updated": {v.build_identifier() for v in self.updated_variables},
-            "return_value": {v.build_identifier() for v in self.output_variables},
+            "arguments": build_unique_list_with_order(
+                self.arguments, lambda v: v.build_identifier()
+            ),
+            "updated": build_unique_list_with_order(
+                self.updated_variables, lambda v: v.build_identifier()
+            ),
+            "return_value": build_unique_list_with_order(
+                self.output_variables, lambda v: v.build_identifier()
+            ),
             "body": [i.to_AIR() for i in self.body],
             "body_source_ref": self.body_source_ref.to_AIR(),
             "condition_source_ref": self.condition_source_ref.to_AIR(),
@@ -433,6 +484,17 @@ class C2AAttributeAccessState(object):
             ]
         )
 
+    def build_extract_lambda(self, extract_var, output_variables):
+        obj_var_name = extract_var.identifier_information.name
+        lambda_dict_keys = [
+            v.identifier_information.name.split("_", 1)[1] for v in output_variables
+        ]
+        lambda_dict_accesses = ",".join(
+            [f'{obj_var_name}["{v}"]' for v in lambda_dict_keys if obj_var_name != v]
+        )
+        lambda_expr = f"lambda {obj_var_name}:" f" ({lambda_dict_accesses})"
+        return lambda_expr
+
     def add_attribute_access(self, var, attr_var):
         extract_lambda = self.var_to_current_extract_node.get(var, None)
         if extract_lambda is None:
@@ -446,13 +508,16 @@ class C2AAttributeAccessState(object):
                 [],
                 C2ALambdaType.EXTRACT,
                 C2ASourceRef("", -1, -1, -1, -1),
-                "lambda : None",  # TODO
+                self.build_extract_lambda(var, [attr_var]),
                 None,
             )
             self.var_to_current_extract_node[var] = extract_lambda
             return extract_lambda
 
         extract_lambda.output_variables.append(attr_var)
+        extract_lambda.lambda_expr = self.build_extract_lambda(
+            var, extract_lambda.output_variables
+        )
 
     def add_attribute_to_pack(self, var, attr_var):
         pack_lambda = self.var_to_current_pack_node.get(var, None)
@@ -467,7 +532,7 @@ class C2AAttributeAccessState(object):
                 [],
                 C2ALambdaType.PACK,
                 C2ASourceRef("", -1, -1, -1, -1),
-                "lambda : None",  # TODO
+                "",  # will be filled out when "get_outstandin_pack_node" is called
                 None,
             )
 
@@ -483,14 +548,32 @@ class C2AAttributeAccessState(object):
 
     def get_outstanding_pack_node(self, var):
         pack_lambda = self.var_to_current_pack_node.get(var)
+        # Add the updated version of the var after packing
         new_var = C2AVariable(
             var.identifier_information, var.version + 1, var.type_name, var.source_ref
         )
         pack_lambda.output_variables.append(new_var)
 
-        # Delete upon retrieval
-        del self.var_to_current_pack_node[var]
+        # Add the correct lambda now that we have all vars to pack
+        obj_var_name = var.identifier_information.name
+        lambda_inputs = [
+            v.identifier_information.name for v in pack_lambda.input_variables
+        ]
+        lambda_body_dict = ",".join(
+            [
+                f'"{v.split(f"{obj_var_name}_")[-1]}": ' + v
+                for v in lambda_inputs
+                if obj_var_name != v
+            ]
+        )
+        lambda_expr = (
+            f"lambda {','.join(lambda_inputs)}:"
+            f"{{ **{obj_var_name}, **{{ {lambda_body_dict} }} }}"
+        )
+        pack_lambda.lambda_expr = lambda_expr
 
+        # Delete from state map upon retrieval
+        del self.var_to_current_pack_node[var]
         if var in self.var_to_current_extract_node:
             del self.var_to_current_extract_node[var]
 
@@ -525,7 +608,7 @@ class C2AState(object):
         self.containers = list()
         self.variables = list()
         self.types = list()
-        self.scope_stack = ["global"]
+        self.scope_stack = []
         self.current_module = "initial"
         self.current_function = None
         self.current_conditional = 0
@@ -614,6 +697,20 @@ class C2AState(object):
         ]
 
         return matching[0] if matching else None
+
+    def find_root_level_containers(self):
+        called_containers = [
+            s.identifier_information.build_identifier()
+            for c in self.containers
+            for s in c.body
+            if isinstance(s, C2AContainerCallLambda)
+        ]
+        root_containers = [
+            c.identifier_information.name
+            for c in self.containers
+            if c.build_identifier() not in called_containers
+        ]
+        return root_containers
 
     def get_next_conditional(self):
         cur_cond = self.current_conditional
