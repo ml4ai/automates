@@ -271,7 +271,7 @@ class C2AContainerCallLambda(C2ALambda):
         return {
             "function": {
                 "name": self.identifier_information.build_identifier(),
-                "type": "container",
+                "type": self.container_type.value,
             },
             "input": build_unique_list_with_order(
                 self.input_variables, lambda v: v.build_identifier()
@@ -410,6 +410,14 @@ class C2AIfContainer(C2AContainerDef):
 
     # Represents the reference to the source code where the conditional for this if is
     condition_source_ref: C2ASourceRef
+    # Output vars per each condition in the if block. Represent else condition
+    # as conidition number -1.
+    output_per_condition: Dict[int, List[C2AVariable]]
+
+    def add_condition_outputs(self, condition_num, outputs):
+        if condition_num not in self.output_per_condition:
+            self.output_per_condition[condition_num] = []
+        self.output_per_condition[condition_num].extend(outputs)
 
     def to_AIR(self):
 
@@ -635,9 +643,11 @@ class C2AState(object):
 
     def pop_scope(self):
         """
-        Removes the last scope name from the stack
+        Removes the last scope name from the stack and returns it
         """
+        top = self.scope_stack[-1]
         self.scope_stack = self.scope_stack[:-1]
+        return top
 
     def find_highest_version_var_in_scope(self, var_name, scope):
         """

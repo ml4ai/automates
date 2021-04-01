@@ -107,7 +107,7 @@ class CASTToAIRVisitor(CASTVisitor):
         input_variables = right_res[-1].input_variables
         output_variables = list()
         updated_variables = list()
-        if isinstance(node.left, (Attribute, Var)):
+        if isinstance(node.left, (Attribute, Var, Subscript)):
             # If we are assigning to strictly a var, create
             # the new version of the var
             assigned_var = left_res[-1].input_variables[0]
@@ -126,6 +126,8 @@ class CASTToAIRVisitor(CASTVisitor):
             )
             output_variables.append(new_var)
             self.state.add_variable(new_var)
+        # elif isinstance(node.left, Subscript):
+        #     updated_variables.append(left_res[-1].input_variables[0])
         else:
             raise C2AValueError(
                 f"Unable to handle left hand of assignment of type {type(node.left)}"
@@ -263,6 +265,8 @@ class CASTToAIRVisitor(CASTVisitor):
             "Lt": "<",
             "Lte": "<=",
             "Not": "not ",
+            "Eq": "==",
+            "NotEq": "!=",
         }
         return op_map[op] if op in op_map else None
 
@@ -327,7 +331,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        called_func_name = node.func.name
+        called_func_name = node.func
         # Skip printf calls for now
         if called_func_name == "printf" or called_func_name == "print":
             return []
@@ -347,13 +351,11 @@ class CASTToAIRVisitor(CASTVisitor):
             called_func_identifier = called_func.identifier_information
         else:
             lambda_type = C2ALambdaType.OPERATOR
-            called_func_identifier = (
-                C2AIdentifierInformation(
-                    called_func_name,
-                    self.state.get_scope_stack(),
-                    self.state.current_module,
-                    C2AIdentifierType.CONTAINER,
-                ),
+            called_func_identifier = C2AIdentifierInformation(
+                called_func_name,
+                self.state.get_scope_stack(),
+                self.state.current_module,
+                C2AIdentifierType.CONTAINER,
             )
 
         input_vars = []
@@ -538,6 +540,7 @@ class CASTToAIRVisitor(CASTVisitor):
             for var in arg.input_variables:
                 self.state.add_variable(var)
                 argument_vars.append(var)
+                print(f"Added var {var.build_identifier()}")
         self.state.current_function.add_arguments(argument_vars)
 
         body_result = self.visit_node_list_and_flatten(node.body)
@@ -603,24 +606,41 @@ class CASTToAIRVisitor(CASTVisitor):
 
         cond_source_ref = C2ASourceRef("", -1, -1, -1, -1)
         source_file_name = cond_source_ref.file
-        # Create and add If/Loop container TODO need loop
-        container_type = C2AIfContainer if condition_type == "IF" else C2ALoopContainer
-        cond_con = container_type(
-            C2AIdentifierInformation(
-                node_name,
-                self.state.get_scope_stack(),
-                self.state.current_module,
-                C2AIdentifierType.CONTAINER,
-            ),
-            [],
-            [],
-            [],
-            [],
-            C2ASourceRef("", -1, -1, -1, -1),
-            [],
-            cond_source_ref,
+
+        container_identifier = C2AIdentifierInformation(
+            node_name,
+            self.state.get_scope_stack(),
+            self.state.current_module,
+            C2AIdentifierType.CONTAINER,
         )
-        self.state.add_container(cond_con)
+        cond_con = self.state.find_container(self.state.get_scope_stack() + [node_name])
+        if cond_con == None:
+            # Create and add If/Loop container
+            cond_con = None
+            if condition_type == "IF":
+                cond_con = C2AIfContainer(
+                    container_identifier,
+                    [],
+                    [],
+                    [],
+                    [],
+                    C2ASourceRef("", -1, -1, -1, -1),
+                    [],
+                    cond_source_ref,
+                    dict(),
+                )
+            else:
+                cond_con = C2ALoopContainer(
+                    container_identifier,
+                    [],
+                    [],
+                    [],
+                    [],
+                    C2ASourceRef("", -1, -1, -1, -1),
+                    [],
+                    cond_source_ref,
+                )
+            self.state.add_container(cond_con)
         self.state.push_scope(node_name)
 
         cond_expr_var_name = f"COND_{condition_num}_{current_cond_block}"
@@ -672,6 +692,7 @@ class CASTToAIRVisitor(CASTVisitor):
         if len(orelse) > 0:
             next_block = orelse[0]
             if isinstance(next_block, ModelIf):
+                cur_scope = self.state.pop_scope()
                 self.handle_control_node_type(
                     next_block.expr,
                     next_block.body,
@@ -680,6 +701,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     condition_num,
                     current_cond_block + 1,
                 )
+                self.state.push_scope(cur_scope)
             else:
                 self.visit(next_block)
 
@@ -758,13 +780,6 @@ class CASTToAIRVisitor(CASTVisitor):
                                     v.source_ref,
                                 )
                                 vars[idx] = new_var
-                                # if all(
-                                #     [
-                                #         v.identifier_information.name != name
-                                #         for v in vars_to_output_from_input_decision
-                                #     ]
-                                # ):
-                                #     vars_to_output_from_input_decision.append(v)
 
                                 if new_var not in set(self.state.variables):
                                     self.state.add_variable(new_var)
@@ -887,6 +902,68 @@ class CASTToAIRVisitor(CASTVisitor):
 
                 body_result.insert(0, input_decision_node)
                 body_result.append(output_decision_node)
+        elif condition_type == "IF":
+            cond_con.add_condition_outputs(condition_num, callee_output_vars)
+            # If we are in the first condition in an if/elif/else block, we
+            # need to create the exit decision node
+            if condition_num == 0:
+                cond_vars = [
+                    self.state.find_highest_version_var_in_current_scope(
+                        f"COND_{condition_num}_{i}"
+                    )
+                    for i in cond_con.output_per_condition.keys()
+                    if i > -1
+                ]
+                all_output_vars = [
+                    v
+                    for outputs in cond_con.output_per_condition.values()
+                    for v in outputs
+                ]
+
+                unique_output_vars = []
+                for v in all_output_vars:
+                    if v not in unique_output_vars:
+                        unique_output_vars.append(v)
+
+                outputs = []
+                for v in unique_output_vars:
+                    name = v.identifier_information.name
+                    new_ver = self.state.find_next_var_version(name)
+                    new_var = C2AVariable(
+                        v.identifier_information,
+                        new_ver,
+                        v.type_name,
+                        v.source_ref,
+                    )
+                    self.state.add_variable(new_var)
+                    outputs.append(new_var)
+
+                lambda_expr = "lambda : None"
+                # for i in cond_con.output_per_condition.keys():
+                # lambda_expr = (
+                #     f"lambda {','.join([v.identifier_information.name for v in cond_vars])}"
+                #     f",{','.join([v.identifier_information.name for v in all_output_vars])}:"
+                #     f"{[f'COND_{condition_num}_{i}' for i in cond_con.output_per_condition.keys()]}"
+
+                # )
+
+                decision = C2AExpressionLambda(
+                    C2AIdentifierInformation(
+                        C2ALambdaType.UNKNOWN,
+                        self.state.get_scope_stack(),
+                        self.state.current_module,
+                        C2AIdentifierType.DECISION,
+                    ),
+                    cond_vars + all_output_vars,
+                    outputs,
+                    [],
+                    C2ALambdaType.DECISION,
+                    C2ASourceRef("", -1, -1, -1, -1),  # TODO
+                    lambda_expr,
+                    None,  # TODO
+                )
+                cond_con.add_body_lambdas([decision])
+                callee_output_vars = outputs
 
         self.state.pop_scope()
 
@@ -1084,6 +1161,8 @@ class CASTToAIRVisitor(CASTVisitor):
                 raise C2AValueError(f"Error: Unable to find variable with name: {name}")
             var_obj = self.check_and_add_container_var(var_obj)
 
+        print(node.name)
+
         return additional_lambas + [
             C2AExpressionLambda(
                 C2AIdentifierInformation(
@@ -1144,7 +1223,33 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return NotImplemented
+        prev_context = self.state.current_context
+        self.state.set_variable_context(C2AVariableContext.LOAD)
+        val_result = self.visit(node.value)
+        slice_result = self.visit(node.slice)
+        self.state.set_variable_context(prev_context)
+
+        return (
+            val_result[:-1]
+            + slice_result[:-1]
+            + [
+                C2AExpressionLambda(
+                    C2AIdentifierInformation(
+                        C2ALambdaType.UNKNOWN,
+                        self.state.get_scope_stack(),
+                        self.state.current_module,
+                        C2AIdentifierType.LAMBDA,
+                    ),
+                    val_result[-1].input_variables + slice_result[-1].input_variables,
+                    [],
+                    [],
+                    C2ALambdaType.UNKNOWN,
+                    source_ref,
+                    f"{val_result[-1].lambda_expr}[{slice_result[-1].lambda_expr}]",
+                    node,
+                )
+            ]
+        )
 
     @visit.register
     def _(self, node: Tuple):
