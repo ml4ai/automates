@@ -1,4 +1,5 @@
 from automates.program_analysis.CAST2GrFN.model.cast import (
+    Call,
     BinaryOperator,
     UnaryOperator,
     VarType,
@@ -13,13 +14,20 @@ GCC_OPS_TO_CAST_OPS = {
     "minus_expr": BinaryOperator.SUB,
     "ge_expr": BinaryOperator.GTE,
     "gt_expr": BinaryOperator.GT,
+    "le_expr": BinaryOperator.LTE,
+    "lt_expr": BinaryOperator.LT,
     "rdiv_expr": BinaryOperator.DIV,
+    "eq_expr": BinaryOperator.EQ,
+    "ne_expr": BinaryOperator.NOTEQ,
+    "negate_expr": UnaryOperator.USUB,
 }
 
 GCC_CONST_OPS = ["integer_cst", "real_cst"]
 
 GCC_CASTING_OPS = ["float_expr", "int_expr"]
 GCC_TRUNC_OPS = ["trunc_div_expr", "trunc_mod_expr", "fix_trunc_expr"]
+GCC_PASS_THROUGH_EXPR = {"var_decl", "parm_decl", "ssa_name", "paren_expr"}
+GCC_BUILTIN_FUNC_EXPR = {"max_expr"}
 
 
 def is_casting_operator(op):
@@ -30,6 +38,14 @@ def is_trunc_operator(op):
     return op in GCC_TRUNC_OPS
 
 
+def is_pass_through_expr(op):
+    return op in GCC_PASS_THROUGH_EXPR
+
+
+def is_gcc_builtin_func(op):
+    return op in GCC_BUILTIN_FUNC_EXPR
+
+
 def is_valid_operator(op):
     # TODO handle all valid ops
     return (
@@ -38,17 +54,25 @@ def is_valid_operator(op):
         or op in GCC_CASTING_OPS
         or op in GCC_TRUNC_OPS
         # Refers to prexisting var decl
-        or op == "var_decl"
-        or op == "parm_decl"
-        or op == "ssa_name"
+        or op in GCC_PASS_THROUGH_EXPR
+        or op in GCC_BUILTIN_FUNC_EXPR
         or op == "array_ref"
         or op == "nop_expr"
         or op == "component_ref"
+        or op == "mem_ref"
     )
 
 
 def is_const_operator(op):
     return op in GCC_CONST_OPS
+
+
+def get_builtin_func_cast(operator):
+    if operator == "max_expr":
+        return Call(func="max", arguments=[], source_refs=[])
+    else:
+        # TODO custom exception
+        raise Exception(f"Error: Unknown gcc builting func: {operator}")
 
 
 def get_const_value(operand):
@@ -64,6 +88,8 @@ def get_cast_operator(op):
 
 def gcc_type_to_var_type(type, type_ids_to_defined_types):
     type_name = type["type"]
+    if type_name == "reference_type":
+        type_name = type["baseType"]["type"]
 
     if (
         type_name == "integer_type"

@@ -33,11 +33,14 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     source_ref,
 )
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
+    is_pass_through_expr,
+    is_gcc_builtin_func,
     is_valid_operator,
     is_const_operator,
     is_casting_operator,
     is_trunc_operator,
     get_cast_operator,
+    get_builtin_func_cast,
     get_const_value,
     gcc_type_to_var_type,
     default_cast_val_for_gcc_types,
@@ -115,6 +118,7 @@ class GCC2CAST:
             return None
         var_type = variable["type"]
         name = variable["name"]
+        name = name.replace(".", "_")
         cast_type = gcc_type_to_var_type(var_type, self.type_ids_to_defined_types)
 
         line = variable["line_start"]
@@ -149,7 +153,9 @@ class GCC2CAST:
             return Number(number=get_const_value(operand))
         elif code == "var_decl" or code == "parm_decl":
             if "name" in operand:
-                return Name(name=operand["name"])
+                name = operand["name"]
+                name = name.replace(".", "_")
+                return Name(name=name)
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
 
@@ -163,12 +169,33 @@ class GCC2CAST:
 
         return Subscript(value=Name(name=name), slice=index_result)
 
+    def parse_mem_ref_operand(self, operand):
+        pointer = operand["pointer"]
+        name = pointer["name"]
+        offset = operand["offset"]
+        index = offset["value"]
+
+        # TODO how will we handle complex memory references? i.e.
+        # different pointer types, complex calculations for pointer location
+
+        if index != 0:
+            return Subscript(value=Name(name=name), slice=index)
+        else:
+            return Name(name=name)
+
     def parse_lhs(self, stmt, lhs, assign_value):
         assign_var = None
-        if lhs["code"] == "component_ref":
+        code = lhs["code"]
+        if code == "component_ref":
             assign_var = self.parse_component_ref(lhs)[0]
-        elif lhs["code"] == "var_decl":
+        elif code == "var_decl":
             assign_var = self.parse_variable(lhs)
+        elif code == "mem_ref":
+            assign_var = self.parse_mem_ref_operand(lhs)
+            if isinstance(assign_var, Name):
+                assign_var = Var(val=assign_var)
+        elif code == "array_ref":
+            assign_var = self.parse_array_ref_operand(lhs)
 
         if assign_var is None and "id" in lhs:
             self.variables_ids_to_expression[lhs["id"]] = assign_value
@@ -218,11 +245,7 @@ class GCC2CAST:
         if is_valid_operator(operator):
             if is_const_operator(operator):
                 assign_value = Number(number=get_const_value(operands[0]))
-            elif (
-                operator == "var_decl"
-                or operator == "parm_decl"
-                or operator == "ssa_name"
-            ):
+            elif is_pass_through_expr(operator):
                 if "name" in operands[0]:
                     assign_value = Name(name=operands[0]["name"])
                 elif "id" in operands[0]:
@@ -239,14 +262,26 @@ class GCC2CAST:
                 assign_value = self.parse_array_ref_operand(operands[0])
             elif operator == "component_ref":
                 assign_value = self.parse_component_ref(operands[0])[0]
+            elif operator == "mem_ref":
+                assign_value = self.parse_mem_ref_operand(operands[0])
+            elif is_gcc_builtin_func(operator):
+                assign_value = get_builtin_func_cast(operator)
+                for arg in operands:
+                    assign_value.arguments.append(self.parse_operand(arg))
             else:
                 cast_op = get_cast_operator(operator)
                 ops = []
                 for op in operands:
                     ops.append(self.parse_operand(op))
-                assign_value = BinaryOp(
-                    op=cast_op, left=ops[0], right=ops[1], source_refs=src_ref
-                )
+                assign_value = None
+                if len(ops) == 1:
+                    assign_value = UnaryOp(
+                        op=cast_op, value=ops[0], source_refs=src_ref
+                    )
+                else:
+                    assign_value = BinaryOp(
+                        op=cast_op, left=ops[0], right=ops[1], source_refs=src_ref
+                    )
         else:
             # TODO custom exception type
             raise Exception(f"Error: Unknown operator type: {operator}")
@@ -272,14 +307,14 @@ class GCC2CAST:
         func_name = function["value"]["name"]
         # TODO not sure if this is a permenant solution, but ignore these
         # unexpected builtin calls for now
-        if "__builtin_" in func_name:
-            return []
+        # if "__builtin_" in func_name:
+        #     return []
 
         cast_args = []
         for arg in arguments:
             cast_args.append(self.parse_operand(arg))
 
-        cast_call = Call(func=Name(func_name), arguments=cast_args, source_refs=src_ref)
+        cast_call = Call(func=func_name, arguments=cast_args, source_refs=src_ref)
         if "lhs" in stmt and stmt["lhs"] is not None:
             return self.parse_lhs(stmt, stmt["lhs"], cast_call)
 
@@ -312,14 +347,12 @@ class GCC2CAST:
             ):
                 is_loop = True
 
-        temp = self.current_basic_block
-        false_res = self.parse_basic_block(false_block)
-        true_res = self.parse_basic_block(true_block)
-        self.current_basic_block = temp
-
         condition_expr = self.parse_conditional_expr(stmt)
 
         if is_loop:
+            temp = self.current_basic_block
+            loop_body = self.parse_basic_block(false_block)
+            self.current_basic_block = temp
             # GCC inverts loop expressions to check if the EXIT condition
             # i.e., given "while (count < 100)", gcc converts that to "if (count > 99) leave loop;"
             # So, to revert to the original loop condition, add a boolean NOT
@@ -328,10 +361,13 @@ class GCC2CAST:
                 value=condition_expr,
                 source_refs=condition_expr.source_refs,
             )
-            return [Loop(expr=condition_expr, body=false_res)]
+            return [Loop(expr=condition_expr, body=loop_body)]
         else:
-            # TODO handle or else
-            return [ModelIf(expr=condition_expr, body=true_res, orelse=[])]
+            temp = self.current_basic_block
+            false_res = self.parse_basic_block(false_block)
+            true_res = self.parse_basic_block(true_block)
+            self.current_basic_block = temp
+            return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]
 
     def parse_statement(self, stmt, statements):
         stmt_type = stmt["type"]
@@ -346,8 +382,8 @@ class GCC2CAST:
         elif stmt_type == "conditional":
             result = self.parse_conditional_statement(stmt, statements)
         elif (
-            stmt_type
-            == "goto"  # Already handled in the conditional stmt type, just skip
+            # Already handled in the conditional stmt type, just skip
+            stmt_type == "goto"
             or stmt_type == "resx"  # Doesnt concern us
         ):
             return []
@@ -390,7 +426,8 @@ class GCC2CAST:
 
         body = []
         for bb in self.basic_blocks:
-            body.extend(self.parse_basic_block(bb))
+            res = self.parse_basic_block(bb)
+            body.extend(res)
 
         # Clear data from function parsing
         self.parsed_basic_blocks = []
