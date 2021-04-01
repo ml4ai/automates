@@ -60,7 +60,7 @@ rules:
     example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
     action: ${action}
     pattern: |
-      (?<= [word = /a|the|,/])? (?<definition> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Variable #(?! [chunk = I-NP])
+      (?<= [word = /a|the|,/])? (?<definition> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Variable (?! [chunk = I-NP]) # note: enabled (?! [chunk = I-NP]). needs to see if this makes problems.
 #      |
 #      (?<definition> [word = /.*/]) (?<variable> [entity = "B-GreekLetter"])
 
@@ -185,7 +185,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Variable = (<cop /${agents}/ appos? | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "nmod_at?". need to see if it's feasible.
+      definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? conj_or? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/] # note: added "conj_or?". need to see if it's feasible.
 
 # disabled for now - overwrites successful dependency-based extractions
 #  - name: var_is_def_token # needed because of bad parse
@@ -215,7 +215,7 @@ rules:
     action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," ([word = "denoted"] [word = "as"])? @variable:Variable (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
       (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
@@ -301,7 +301,7 @@ rules:
     example: "where r is the infection rate and a the removal rate of infectives. where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux."
     action: ${action}
     pattern: |
-      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Variable [word = /a|an|the/] (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter" & !entity = Variable]{1,5})
+      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Variable [word = "the"] (?<definition> [word = /.*/ & tag = /NN|JJ/ & !entity = "B-GreekLetter"]{1,5})
 
 
   - name: var_comma_def_comma
