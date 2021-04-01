@@ -126,13 +126,28 @@ class CAST(object):
             C[new_container.identifier] = new_container
 
         main_container = [c for c in air["containers"] if c["name"].endswith("::main")]
-        # TODO do something better than grabbing the first container
+
+        called_containers = [
+            s["function"]["name"]
+            for c in air["containers"]
+            for s in c["body"]
+            if s["function"]["type"] == "container"
+        ]
+        root_containers = [
+            c["name"] for c in air["containers"] if c["name"] not in called_containers
+        ]
+
+        container_id_to_start_from = None
+        if len(root_containers) > 0:
+            container_id_to_start_from = root_containers[0]
+        elif len(main_container) > 0:
+            container_id_to_start_from = main_container[0]
+        else:
+            # TODO
+            raise Exception("Error: Unable to find root container to build GrFN.")
+
         grfn = GroundedFunctionNetwork.from_AIR(
-            GenericIdentifier.from_str(
-                air["containers"][0]["name"]
-                if len(main_container) == 0
-                else main_container[0]["name"]
-            ),
+            GenericIdentifier.from_str(container_id_to_start_from),
             C,
             V,
             T,
