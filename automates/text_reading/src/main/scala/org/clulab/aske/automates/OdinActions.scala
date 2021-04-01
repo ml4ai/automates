@@ -99,7 +99,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
     // has to be used for mentions in the same sentence - token intervals are per sentence
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
-    for (m <- mentions) {
+    // start with longest - the shorter overlapping ones should be subsumed this way
+    for (m <- mentions.sortBy(_.tokenInterval).reverse) {
       if (intervalMentionMap.isEmpty) {
         intervalMentionMap += (m.tokenInterval -> Seq(m))
       } else {
@@ -197,7 +198,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     maxInGroup.distinct
   }
-
 
 
   /** Keeps the longest mention for each group of overlapping mentions **/
