@@ -307,8 +307,8 @@ class GCC2CAST:
         func_name = function["value"]["name"]
         # TODO not sure if this is a permenant solution, but ignore these
         # unexpected builtin calls for now
-        # if "__builtin_" in func_name:
-        #     return []
+        if "__builtin_" in func_name and not is_gcc_builtin_func(func_name):
+            return []
 
         cast_args = []
         for arg in arguments:
