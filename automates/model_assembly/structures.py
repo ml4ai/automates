@@ -453,6 +453,8 @@ class GenericStmt(ABC):
             return LambdaStmt(stmt_data, container)
         elif func_type == "container":
             return CallStmt(stmt_data, container)
+        elif func_type == "operator":
+            return OperatorStmt(stmt_data, container)
         else:
             raise ValueError(f"Undefined statement type: {func_type}")
 
@@ -473,6 +475,19 @@ class CallStmt(GenericStmt):
     def __str__(self):
         generic_str = super().__str__()
         return f"<CallStmt>: {self.call_id}\n{generic_str}"
+
+
+class OperatorStmt(GenericStmt):
+    def __init__(self, stmt: dict, con: GenericContainer):
+        super().__init__(stmt, con)
+        self.call_id = GenericIdentifier.from_str(stmt["function"]["name"])
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        generic_str = super().__str__()
+        return f"<OperatorStmt>: {self.call_id}\n{generic_str}"
 
 
 class LambdaStmt(GenericStmt):
