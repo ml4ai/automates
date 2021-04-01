@@ -10,6 +10,8 @@ rules:
       [chunk='B-NP' & !mention=Avoid & !entity=NUMBER]? [chunk='I-NP' & !mention=Avoid & !word = /\(|\)|,|=|\[|\]/]+
       |
       [chunk='B-NP' & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
+      |
+      [chunk='B-ADJP' & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/] [chunk='I-ADJP' & tag=/NN/ & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
       #todo: can we add parens in avoid without making it invisible in rules?
 
 

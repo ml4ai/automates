@@ -637,11 +637,11 @@ class TestDefinitions extends ExtractionTest {
 // Tests from paper: PT-2012-ET Measurement and Estimation Using Modified PT in Maise with Mulching-petpt_2012
 
     val t1k = "where θ is soil water content in 0–1.0 m soil (cm3 cm−3), θF is field capacity (cm3 cm−3) and θw is wilting point (cm3 cm−3)."
-  failingTest should s"find definitions from t1k: ${t1k}" taggedAs(Somebody) in {
+  passingTest should s"find definitions from t1k: ${t1k}" taggedAs(Somebody) in {
     val desired =  Seq(
       "θ" -> Seq("soil water content in 0–1.0 m soil"),
-      "θF" -> Seq("field capacity"), // fixme: both θF and F are captured as variables. Two distinctive rules are extracting definitions for the variables.
-      "θw" -> Seq("wilting point")   // fixme: Definition of "θw" is not extracted.
+      "θF" -> Seq("field capacity"),
+      "θw" -> Seq("wilting point")
     )
     val mentions = extractMentions(t1k)
     testDefinitionEvent(mentions, desired)
