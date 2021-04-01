@@ -320,8 +320,15 @@ class GCC2CAST:
         condition_expr = self.parse_conditional_expr(stmt)
 
         if is_loop:
+            # GCC inverts loop expressions to check if the EXIT condition
+            # i.e., given "while (count < 100)", gcc converts that to "if (count > 99) leave loop;"
+            # So, to revert to the original loop condition, add a boolean NOT
+            condition_expr = UnaryOp(
+                op=UnaryOperator.NOT,
+                value=condition_expr,
+                source_refs=condition_expr.source_refs,
+            )
             return [Loop(expr=condition_expr, body=false_res)]
-
         else:
             # TODO handle or else
             return [ModelIf(expr=condition_expr, body=true_res, orelse=[])]
