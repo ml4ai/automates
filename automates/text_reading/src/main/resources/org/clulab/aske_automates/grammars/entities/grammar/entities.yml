@@ -10,10 +10,21 @@ rules:
       [chunk='B-NP' & !mention=Avoid & !entity=NUMBER]? [chunk='I-NP' & !mention=Avoid & !word = /\(|\)|,|=|\[|\]/]+
       |
       [chunk='B-NP' & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
-      |
-      [chunk='B-ADJP' & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/] [chunk='I-ADJP' & tag=/NN/ & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
       #todo: can we add parens in avoid without making it invisible in rules?
 
+  - name: single_VP # note: edited the pattern to include single lower case VPs as well. changing pattern didn't break more rules, but needs to check if this cause any errors.
+    label: Concept
+    priority: 1
+    type: token
+    pattern: |
+      [chunk='B-VP' & word = /[a-zA-Z]/ & !mention=Avoid]
+
+  - name: single_adjP # note: added due to def test t1k. needs to check if this cause any errors.
+    label: Concept
+    priority: 1
+    type: token
+    pattern: |
+      [chunk='I-ADJP' & tag = "NN" & !mention=Avoid & !word = /\(|\)|,|=|\[|\]/]
 
   - name: participle_or_adj
     label: Concept
@@ -22,13 +33,12 @@ rules:
     pattern: |
       [tag=/VBN|JJ/]
 
-  # note: error? (repetition) 
-  # - name: single_capital_VP
-  #   label: Concept
-  #   priority: 1
-  #   type: token
-  #   pattern: |
-  #     [chunk='B-VP' & word = /[A-Z]/]
+  - name: single_capital_VP
+    label: Concept
+    priority: 1
+    type: token
+    pattern: |
+      [chunk='B-VP' & word = /[A-Z]/]
 
 #  - name: simple-vp
 #    label: Concept

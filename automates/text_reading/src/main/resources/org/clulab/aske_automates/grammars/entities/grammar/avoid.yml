@@ -123,6 +123,13 @@ rules:
     pattern: |
       [lemma = "e.g"]
 
+  - name: "etc"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [word = /etc|ETC|et cetera/]
+
   - name: "email"
     label: Avoid
     priority: 2
@@ -156,4 +163,4 @@ rules:
     priority: 2
     type: token
     pattern: |
-      (?<= [word=/For/] [word="this"]) [word="research"]
+      (?<= [word="For"] [word="this"]) [word="research"]
