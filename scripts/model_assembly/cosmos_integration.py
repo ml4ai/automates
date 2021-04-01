@@ -103,8 +103,10 @@ def main():
                     else:
                         name2results[row_data["pdf_name"]] = [row_data]
                 for pdf_name, pdf_data in name2results.items():
+                    no_end_pdf_name = pdf_name.replace(".pdf", "")
                     pdf_json_data_path = parquet_filepath.replace(
-                        "documents.parquet", f"{pdf_name}--COSMOS-data.json"
+                        "documents.parquet",
+                        f"{no_end_pdf_name}--COSMOS-data.json",
                     )
                     json.dump(pdf_data, open(pdf_json_data_path, "w"))
 
