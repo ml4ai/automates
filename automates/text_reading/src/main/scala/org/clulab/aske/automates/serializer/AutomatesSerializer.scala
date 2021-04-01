@@ -1,6 +1,7 @@
 package org.clulab.aske.automates.serializer
 
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment}
+
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.odin
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
@@ -152,7 +153,18 @@ object AutomatesJSONSerializer {
     val attType = json("attType").str
     val toReturn = attType match {
       case "MentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
-      case "DiscontinuousCharOffset" => new DiscontinuousCharOffsetAttachment(json("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt)), json("discontinuousArgument").str, attType)
+      case "DiscontinuousCharOffset" => new DiscontinuousCharOffsetAttachment(json("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt)), attType)
+      case "ParamSetAtt" => new ParamSetAttachment(json("attachedTo").str, attType)
+      case "ParamSettingIntervalAtt" => {
+        var inclLower: Option[Boolean] = None
+        var inclUpper: Option[Boolean] = None
+        if (!json("inclusiveLower").isNull) inclLower = Some(json("inclusiveLower").bool)
+        if (!json("inclusiveUpper").isNull) inclUpper = Some(json("inclusiveUpper").bool)
+
+        new ParamSettingIntAttachment(inclLower, inclUpper, json("attachedTo").str, attType)
+      }
+
+      case "UnitAtt" => new UnitAttachment(json("attachedTo").str, attType)
       case _ => ???
     }
     toReturn
@@ -258,6 +270,9 @@ object AutomatesJSONSerializer {
     attachment match {
       case a: MentionLocationAttachment => a.toUJson
       case a: DiscontinuousCharOffsetAttachment => a.toUJson
+      case a: ParamSetAttachment => a.toUJson
+      case a: ParamSettingIntAttachment => a.toUJson
+      case a: UnitAttachment => a.toUJson
       case _ => ???
     }
   }
@@ -324,7 +339,8 @@ object AutomatesJSONSerializer {
         "sentence" -> tb.sentence,
         "document" -> tb.document.equivalenceHash.toString,
         "keep" -> tb.keep,
-        "foundBy" -> tb.foundBy
+        "foundBy" -> tb.foundBy,
+        "attachments" -> AutomatesJSONSerializer.toUJson(tb.attachments)
       )
     }
   }

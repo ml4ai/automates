@@ -2,13 +2,13 @@ package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.aske.automates.actions.ExpansionHandler
-import org.clulab.odin._
+import org.clulab.odin.{Mention, _}
 import org.clulab.odin.impl.Taxonomy
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.DiscontinuousCharOffsetAttachment
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
@@ -33,8 +33,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (expandable, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Definition"))
 
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs)
-      keepOneWithSameSpanAfterExpansion(expanded) ++ other
-//      expanded ++ other
+      val (conjDefType2, otherDefs) = expanded.partition(_.label.contains("Type2"))
+      // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
+      val allDefs = noDefOverlap(conjDefType2) ++ otherDefs
+      keepOneWithSameSpanAfterExpansion(allDefs) ++ other
+//      allDefs ++ other
 
     } else {
       mentions
@@ -96,7 +99,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
     // has to be used for mentions in the same sentence - token intervals are per sentence
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
-    for (m <- mentions) {
+    // start with longest - the shorter overlapping ones should be subsumed this way
+    for (m <- mentions.sortBy(_.tokenInterval).reverse) {
       if (intervalMentionMap.isEmpty) {
         intervalMentionMap += (m.tokenInterval -> Seq(m))
       } else {
@@ -119,6 +123,68 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     intervalMentionMap.toMap
   }
 
+
+  def processParamSettingInt(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      var inclLower: Option[Boolean] = None
+      var inclUpper: Option[Boolean] = None
+      for (arg <- m.arguments) {
+        arg._1 match {
+          case "valueLeastExcl" => {
+            newArgs("valueLeast") = arg._2
+            inclLower = Some(false)
+          }
+          case "valueLeastIncl" => {
+          newArgs("valueLeast") = arg._2
+            inclLower = Some(true)
+        }
+          case "valueMostExcl" => {
+            newArgs("valueMost") = arg._2
+            inclUpper = Some(false)
+          }
+          case "valueMostIncl" => {
+            newArgs("valueMost") = arg._2
+            inclUpper = Some(true)
+          }
+
+          case _ => newArgs(arg._1) = arg._2
+        }
+      }
+
+
+      val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
+      newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
+    }
+    newMentions
+  }
+
+  def processUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      val att = new UnitAttachment(attachedTo, "UnitAtt")
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
+  }
+
+
+  def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+
+      val att = new UnitAttachment(attachedTo, "ParamSetAtt")
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
+  }
+
   def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     // used to avoid vars like R(t) being found as separate R, t, R(t, and so on
     val maxInGroup = new ArrayBuffer[Mention]()
@@ -132,7 +198,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     maxInGroup.distinct
   }
-
 
 
   /** Keeps the longest mention for each group of overlapping mentions **/
@@ -160,10 +225,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val spanGroups = sameSentMentions.groupBy(_.tokenInterval)
 
       for (sg <- spanGroups) {
+        // check the max number of args (conj defs type 2 have at least two var-def pairs (i.e., at least 4 args)
+        val maxNumOfArgs = sg._2.maxBy(_.arguments.values.flatten.toList.length).arguments.values.flatten.toList.length
         // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
         val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
-        // chose a mention with most vars - if they have the same span and same (max) num of vars, it shouldnt matter which one it is, so take the first one
-        val chosenMen = sg._2.filter(_.arguments("variable").length == maxNumOfVars).head
+        // chose a mention with most args and most vars - if they have the same span and same (max) num of args and vars, it shouldnt matter which one it is, so take the first one
+        val chosenMen = sg._2.filter(m => m.arguments("variable").length == maxNumOfVars & m.arguments.values.flatten.toList.length==maxNumOfArgs).head
         mns.append(chosenMen)
       }
     }
@@ -198,6 +265,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mens.toVector.distinct
   }
 
+  def noDefOverlap(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // used for type2 conj definitions
+    // only keep the ones that have the same number of vars and definitions
+    val sameNumOfVarsAndDefs = mentions.filter(m => m.arguments("variable").length == m.arguments("definition").length)
+    // and avoid the ones where there is def overlap
+    sameNumOfVarsAndDefs.filter(m => m.arguments("definition").map(_.startOffset).distinct.length == m.arguments("definition").length)
+  }
 
   def getEdgesForMention(m: Mention): List[(Int, Int, String)] = {
     // return only edges within the token interval of the mention
@@ -215,9 +289,19 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
       for (gr1 <- groupedByTokenOverlap.values) {
         // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
-        if (gr1.exists(_.label=="ConjDefinition")) {
-          val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
-          toReturn.append(longestConjDef)
+        if (gr1.exists(_.label.contains("ConjDefinition"))) {
+          // type 2 has same num of vars and definitions (a minimum of two pairs)
+          val (type2, type1) = gr1.partition(_.label.contains("Type2"))
+
+          if (type2.isEmpty) {
+            // use conf defs type 1 only if there are no overlapping (more complete) type 2 definitions
+            val longestConjDef = gr1.filter(_.label == "ConjDefinition").maxBy(_.tokenInterval.length)
+            toReturn.append(longestConjDef)
+          } else {
+            val longestConjDef = gr1.filter(_.label == "ConjDefinitionType2").maxBy(_.tokenInterval.length)
+            toReturn.append(longestConjDef)
+          }
+
         } else {
           for (men <- gr1) toReturn.append(men)
         }
@@ -280,7 +364,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String), preconj: Seq[Int]): Mention = {
     // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
     val sortedConj = List(conjEdge._1, conjEdge._2).sorted
-    val tokInAsList = m.arguments("definition").head.tokenInterval.toList
+    val defMention = m.arguments("definition").head
+    val tokInAsList = defMention.tokenInterval.toList
 
     val newTokenInt = tokInAsList.filter(idx => (idx < sortedConj.head || idx >= sortedConj.last) & !preconj.contains(idx))
 
@@ -294,9 +379,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val defText = defTextWordsWithInd.map(_._1)
     val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
     if (charOffsetsForAttachment.length > 1) {
-      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
-      val menWithAttachment = m.withAttachment(attachment)
-      menWithAttachment
+      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment,  "DiscontinuousCharOffset")
+      // attach the attachment to the def arg
+      val defMenWithAttachment = defMention.withAttachment(attachment)
+      val newArgs = Map("variable" -> Seq(m.arguments("variable").head), "definition" -> Seq(defMenWithAttachment))
+
+        copyWithArgs(m, newArgs)
     } else m
 
   }
@@ -321,21 +409,31 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // all that have conj (to be grouped further) and those with no conj
     val (withConj, withoutConj) = withoutOverlap.partition(m => hasConj(m))
     // defs that were found as ConjDefinitions - that is events with multiple variables (at least partially) sharing a definitions vs definitions that were found with standard rule that happened to have conjunctions in their definitions
-    val (conjDefs, standardDefsWithConj) = withConj.partition(_.label matches "ConjDefinition")
+    val (conjDefs, standardDefsWithConj) = withConj.partition(_.label.contains("ConjDefinition"))
+    val (conjType2, conjType1) = withConj.partition(_.label.contains("Type2"))
 
     val toReturn = new ArrayBuffer[Mention]()
+
+
+    for (m <- untangleConjunctionsType2(conjType2)) {
+      toReturn.append(m)
+    }
     // the defs found with conj definition rules should be processed differently from standard defs that happen to have conjs
-    for (m <- untangleConjunctions(conjDefs)) {
+    for (m <- untangleConjunctions(conjType1)) {
       toReturn.append(m)
     }
 
     for (m <- standardDefsWithConj) {
-      val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
-      // take max conjunction hop contained inside the definition - that will be removed
-      val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
-      val preconj = m.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
-      val newMention = returnWithoutConj(m, maxConj, preconj)
-      toReturn.append(newMention)
+      // only apply this to definitions where var is to the right of the definition, e.g., '...individuals who are either Susceptible (S), Infected (I), or Recovered (R)." In other cases observed so far, it removes chunks of definitions it shouldn't remove
+      if (m.arguments("variable").head.startOffset > m.arguments("definition").head.startOffset) {
+        val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
+        // take max conjunction hop contained inside the definition - that will be removed
+        val maxConj = edgesForOnlyThisMen.filter(_._3.startsWith("conj")).sortBy(triple => math.abs(triple._1 - triple._2)).reverse.head
+        val preconj = m.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
+        val newMention = returnWithoutConj(m, maxConj, preconj)
+        toReturn.append(newMention)
+      } else toReturn.append(m)
+
     }
     // make sure to add non-conj events
     for (m <- withoutConj) toReturn.append(m)
@@ -347,6 +445,42 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   }
 
+  def untangleConjunctionsType2(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    // conj def type 2 - equal number of vars and defs, but at least 2 of each
+    val toReturn = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val variableArgs = m.arguments("variable")
+      val defArgs = m.arguments("definition")
+      // should have correct number of args, but doing a sanity check
+      if (variableArgs.length == defArgs.length) {
+        // corresponding vars and defs will come in the same order, eg "v1, v2, and v3 stand for def1, def2, and def3, respectively"
+        val varsSortedByTokenInt = variableArgs.sortBy(_.tokenInterval)
+        val defsSortedByTokenInt = defArgs.sortBy(_.tokenInterval)
+        for ((v, i) <- varsSortedByTokenInt.zipWithIndex) {
+          val newDefMen = defsSortedByTokenInt(i)
+          val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefMen))
+          val newInt = Interval(math.min(v.tokenInterval.start, newDefMen.tokenInterval.start), math.max(v.tokenInterval.end, newDefMen.tokenInterval.end))
+          toReturn.append(new EventMention(
+            m.labels,
+            newInt,
+            m.asInstanceOf[EventMention].trigger,
+            newArgs,
+            m.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+            m.sentence,
+            m.document,
+            m.keep,
+            m.foundBy ++ "++untangleConjunctionsType2",
+            Set.empty
+          ))
+        }
+      } else {
+        logger.debug(s"Number of vars is not equal to number of defs:\nvariables: ${variableArgs.map(_.text).mkString(",")}\n${defArgs.map(_.text).mkString(",")}")
+      }
+    }
+
+    toReturn
+
+  }
 
   /*
   a method for handling `ConjDefinition`s - definitions that were found with a special rule---the def has to have at least two conjoined variables and at least one (at least partially) shared definition
@@ -394,7 +528,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             // store char offsets for discont def as attachments
             val charOffsetsForAttachment= getDiscontCharOffset(headDef, newDefTokenInt.toList)
 
-            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "DiscontinuousCharOffset")
             defAttachments.append(attachment)
 
             previousIndices.append(int)
@@ -407,25 +541,50 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         for ((v, i) <- variables.zipWithIndex) {
           // if there are new defs, we will assume that they should be matched with the vars in the linear left to right order
           if (newDefinitions.nonEmpty) {
+
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
             val newInt = Interval(math.min(v.tokenInterval.start, newDefinitions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDefinitions(i).tokenInterval.end))
             // construct a new definition with new token int, foundBy, and args
-            val newDefMen = new EventMention(
-              mostComplete.labels,
-              newInt,
-              mostComplete.asInstanceOf[EventMention].trigger,
-              newArgs,
-              mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
-              mostComplete.sentence,
-              mostComplete.document,
-              mostComplete.keep,
-              mostComplete.foundBy ++ "++untangleConjunctions",
-              Set.empty
-            )
+            val newDefMen = mostComplete match {
+              case e: EventMention => {
+                new EventMention(
+                  mostComplete.labels,
+                  newInt,
+                  mostComplete.asInstanceOf[EventMention].trigger,
+                  newArgs,
+                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+                  mostComplete.sentence,
+                  mostComplete.document,
+                  mostComplete.keep,
+                  mostComplete.foundBy ++ "++untangleConjunctions",
+                  Set.empty
+                )
+              }
+              case r: RelationMention => {
+                new RelationMention(
+                  mostComplete.labels,
+                  newInt,
+                  newArgs,
+                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+                  mostComplete.sentence,
+                  mostComplete.document,
+                  mostComplete.keep,
+                  mostComplete.foundBy ++ "++untangleConjunctions",
+                  Set.empty
+                )
+              }
+              case _ => ???
+
+            }
+
             if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
-              val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
-              toReturn.append(newDefWithAtt)
+              val defWithAtt = newDefinitions(i).withAttachment(defAttachments(i))
+              val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(defWithAtt))
+              val newDefMenWithAtt = copyWithArgs(mostComplete, newArgs)
+              toReturn.append(newDefMenWithAtt)
             } else {
+              val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+              val newDefMen = copyWithArgs(mostComplete, newArgs)
               toReturn.append(newDefMen)
             }
 
@@ -433,18 +592,36 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           } else {
             val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(headDef))
             val newInt = Interval(math.min(v.tokenInterval.start, headDef.tokenInterval.start), math.max(v.tokenInterval.end, headDef.tokenInterval.end))
-            val newDefMen = new EventMention(
-              mostComplete.labels,
-              newInt,
-              mostComplete.asInstanceOf[EventMention].trigger,
-              newArgs,
-              mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
-              mostComplete.sentence,
-              mostComplete.document,
-              mostComplete.keep,
-              mostComplete.foundBy ++ "++untangleConjunctions",
-              Set.empty
-            )
+            val newDefMen = mostComplete match {
+              case e: EventMention => {
+                new EventMention(
+                  mostComplete.labels,
+                  newInt,
+                  mostComplete.asInstanceOf[EventMention].trigger,
+                  newArgs,
+                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+                  mostComplete.sentence,
+                  mostComplete.document,
+                  mostComplete.keep,
+                  mostComplete.foundBy ++ "++untangleConjunctions",
+                  Set.empty
+                )
+              }
+              case r: RelationMention => {
+                new RelationMention(
+                  mostComplete.labels,
+                  newInt,
+                  newArgs,
+                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+                  mostComplete.sentence,
+                  mostComplete.document,
+                  mostComplete.keep,
+                  mostComplete.foundBy ++ "++untangleConjunctions",
+                  Set.empty
+                )
+              }
+              case _ => ???
+            }
             toReturn.append(newDefMen)
           }
         }
@@ -555,10 +732,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable was found with a Gazetteer passed through the webservice, keep it
+      if (v == null) return false
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
+      if (v.words.length < 3 && v.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
       if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for var that include a greek letter---those are found as separate words even if there is not space
+      if (v.words.length==4) {
+        // to account for vars like R(t)
+        if (v.words(1) == "(" & v.words(3) == ")" ) return true
+      }
       if (v.words.length != 1) return false
+      if (v.words.head.contains("-") & v.words.head.last.isDigit) return false
       // Else, the variable candidate has length 1
       val word = v.words.head
       if (freqWords.contains(word.toLowerCase())) return false //filter out potential variables that are freq words
@@ -579,11 +763,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
     }
+
+
     for {
       m <- mentions
       (varMention, isArg) = m match {
         case tb: TextBoundMention => (m, false)
-        case rm: RelationMention => (m.arguments.getOrElse("variable", Seq()).head, true)
+        case rm: RelationMention => {
+          if (m.arguments.contains("variable")) {
+            (m.arguments("variable").head, true)
+          } else (null, false)
+        }
         case em: EventMention => (m.arguments.getOrElse("variable", Seq()).head, true)
         case _ => ???
       }
@@ -639,6 +829,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     //select shorter as var is only applicable to one rule, so it can't be part of the regular def. action flow
     val varAndDef = selectShorterAsVariable(mentions, state)
     val toReturn = if (varAndDef.nonEmpty) definitionActionFlow(varAndDef, state) else Seq.empty
+    toReturn
+  }
+
+  def unitActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = processUnits(looksLikeAUnit(mentions, state), state)
     toReturn
   }
 
