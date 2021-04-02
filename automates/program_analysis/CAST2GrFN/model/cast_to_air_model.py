@@ -94,7 +94,7 @@ class C2ASourceRef(object):
     """
 
     file: str
-    line_start: int
+    line_begin: int
     col_start: int
     line_end: int
     col_end: int

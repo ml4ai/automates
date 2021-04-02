@@ -379,10 +379,10 @@ class CASTToAIRVisitor(CASTVisitor):
         # Gather what global variables need to be inputted into the container.
         # These would have been added as additional arguments to the container
         # during previous processing.
-        arg_start = len(node.arguments)
-        container_args_list = called_func.arguments if called_func is not None else []
-        while arg_start < len(container_args_list):
-            v = container_args_list[arg_start]
+        container_args_list = (
+            called_func.vars_from_previous_scope if called_func is not None else []
+        )
+        for v in container_args_list:
             input_var = self.check_and_add_container_var(v)
             input_vars.append(input_var)
 
@@ -400,8 +400,6 @@ class CASTToAIRVisitor(CASTVisitor):
 
             self.state.add_variable(output_var)
             output_vars.append(output_var)
-
-            arg_start += 1
 
         src_ref = C2ASourceRef("", -1, -1, -1, -1)
         if len(node.source_refs) > 0:
@@ -540,7 +538,6 @@ class CASTToAIRVisitor(CASTVisitor):
             for var in arg.input_variables:
                 self.state.add_variable(var)
                 argument_vars.append(var)
-                print(f"Added var {var.build_identifier()}")
         self.state.current_function.add_arguments(argument_vars)
 
         body_result = self.visit_node_list_and_flatten(node.body)
@@ -673,16 +670,16 @@ class CASTToAIRVisitor(CASTVisitor):
         line_low = -1
         line_high = -1
         for b in body_result:
-            if b.source_ref.line_start is not None:
-                if b.source_ref.line_start > -1 and b.source_ref.line_start < line_low:
-                    line_low = b.source_ref.line_start
+            if b.source_ref.line_begin is not None:
+                if b.source_ref.line_begin > -1 and b.source_ref.line_begin < line_low:
+                    line_low = b.source_ref.line_begin
                 elif (
                     b.source_ref.line_end is not None
                     and b.source_ref.line_end > line_high
                 ):
                     line_high = b.source_ref.line_end
-                elif b.source_ref.line_start > line_high:
-                    line_high = b.source_ref.line_start
+                elif b.source_ref.line_begin > line_high:
+                    line_high = b.source_ref.line_begin
 
         cond_con.add_body_source_ref(
             C2ASourceRef(source_file_name, line_low, -1, line_high, -1)
@@ -1104,9 +1101,7 @@ class CASTToAIRVisitor(CASTVisitor):
 
             global_body = []
             for r in roots:
-                root_container_call = Call(
-                    func=Name(name=r), arguments=[], source_refs=[]
-                )
+                root_container_call = Call(func=r, arguments=[], source_refs=[])
                 root_result = self.visit(root_container_call)
                 global_body.extend(root_result)
 
@@ -1160,8 +1155,6 @@ class CASTToAIRVisitor(CASTVisitor):
             if var_obj is None:
                 raise C2AValueError(f"Error: Unable to find variable with name: {name}")
             var_obj = self.check_and_add_container_var(var_obj)
-
-        print(node.name)
 
         return additional_lambas + [
             C2AExpressionLambda(
@@ -1295,7 +1288,7 @@ class CASTToAIRVisitor(CASTVisitor):
     def retrieve_source_ref(self, source_ref: SourceRef):
         return C2ASourceRef(
             file=source_ref.source_file_name,
-            line_start=source_ref.row_start,
+            line_begin=source_ref.row_start,
             line_end=source_ref.row_end,
             col_start=source_ref.col_start,
             col_end=source_ref.col_end,
