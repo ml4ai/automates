@@ -267,7 +267,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val argsOfGivenType = mention.arguments(argType)
     val groupedByTokenInt = groupByTokenOverlap(argsOfGivenType)
     // if there is an overlap in args, those will be grouped => the number of groups will be lower than the number of args
-    if (groupedByTokenInt.keys.toList.length == argsOfGivenType.length) true else false
+    groupedByTokenInt.keys.toList.length == argsOfGivenType.length
   }
 
   def noDefOverlap(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
