@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Set, Any, Tuple
+from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from dataclasses import dataclass
@@ -10,6 +10,7 @@ import uuid
 import datetime
 import json
 import re
+import os
 import random
 
 import networkx as nx
@@ -1513,7 +1514,7 @@ class CausalAnalysisGraph(nx.DiGraph):
             G,
             GrFN.subgraphs,
             GrFN.uid,
-            GrFN.date_created,
+            GrFN.timestamp,
             GrFN.namespace,
             GrFN.scope,
             GrFN.name,
@@ -1571,6 +1572,19 @@ class CausalAnalysisGraph(nx.DiGraph):
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
         return A
+
+    def to_igraph_gml(self, filepath: str) -> NoReturn:
+        filename = os.path.join(
+            filepath,
+            f"{self.namespace}__{self.scope}__{self.name}--igraph.gml",
+        )
+
+        V = [str(v) for v in super().nodes]
+        E = [(str(e1), str(e2)) for e1, e2 in super().edges]
+        iG = nx.DiGraph()
+        iG.add_nodes_from(V)
+        iG.add_edges_from(E)
+        nx.write_gml(iG, filename)
 
     def to_json(self) -> str:
         """Outputs the contents of this GrFN to a JSON object string.

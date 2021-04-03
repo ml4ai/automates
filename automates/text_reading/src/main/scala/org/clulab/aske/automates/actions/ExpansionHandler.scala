@@ -415,7 +415,7 @@ object ExpansionHandler {
     "^case".r,
     "^cc$".r,
     "ccomp".r,
-    "compound".r, //note: one more test passed with compound added here. needs to check if this causes any issue.
+    "compound".r, //note: needed because of definition test t1h
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,

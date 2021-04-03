@@ -14,7 +14,10 @@ from distutils.version import LooseVersion
 here = os.path.abspath(os.path.dirname(__file__))
 
 EXTRAS_REQUIRE = {
-    "dev": ["jupyter", "jupyter-contrib-nbextensions",],
+    "dev": [
+        "jupyter",
+        "jupyter-contrib-nbextensions",
+    ],
     "test": ["pytest>=4.4.0", "pytest-cov", "pytest-xdist"],
     "docs": [
         "sphinx",
@@ -62,6 +65,7 @@ setup(
         "pygraphviz==1.7",
         "pytest==6.2.2",
         "pytest-cov==2.11.1",
+        "python-igraph==0.9.1",
         "Pygments==2.7.4",
         "SALib==1.3.12",
         "seaborn==0.10.0",
@@ -77,11 +81,13 @@ setup(
         "pdf2image",
         "webcolors",
         "lxml",
-        "Pillow"
+        "Pillow",
     ],
     extras_require=EXTRAS_REQUIRE,
     python_requires=">=3.8",
     entry_points={
-        "console_scripts": ["codex = automates.apps.CodeExplorer.app:main",]
+        "console_scripts": [
+            "codex = automates.apps.CodeExplorer.app:main",
+        ]
     },
 )

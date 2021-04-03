@@ -49,7 +49,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (int <- intervals) {
       if (tokenInt.intersect(int).nonEmpty) overlapping.append(int)
     }
-    return overlapping.maxBy(_.length)
+    overlapping.maxBy(_.length)
   }
 
   def keepWithGivenArgs(mentions: Seq[Mention], argTypes: Seq[String]): Seq[Mention] = {
@@ -63,19 +63,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def groupByDefOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    // only apply this when there is one var and one def
     // group mentions by token overlap of a given argument
     // has to be used for mentions in the same sentence - token intervals are per sentence
-    // only apply this when there is one var and one def
 
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
-//    val intervalVarMap = mutable.Map[Interval, Mention]()
     val mentionsWithRightArgs = keepWithGivenArgs(mentions, Seq("definition"))
     for (m <- mentionsWithRightArgs) {
       // assume there's one of each arg
       val defTextBoundMention = m.arguments("definition").head
       if (intervalMentionMap.isEmpty) {
         intervalMentionMap += (defTextBoundMention.tokenInterval -> Seq(m))
-//        intervalVarMap += (defTextBoundMention.tokenInterval -> variableTextBoundMention)
       } else {
         if (intervalMentionMap.keys.exists(k => k.intersect(defTextBoundMention.tokenInterval).nonEmpty)) {
           val interval = findOverlappingInterval(defTextBoundMention.tokenInterval, intervalMentionMap.keys.toList)
@@ -261,8 +259,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
     }
 
-    val mens = mns.toList
-    mens.toVector.distinct
+    mns.toVector.distinct
+  }
+
+  def noOverlapInGivenArg(mention: Mention, argType: String): Boolean = {
+    // check if mention contains overlapping args of a given type
+    val argsOfGivenType = mention.arguments(argType)
+    val groupedByTokenInt = groupByTokenOverlap(argsOfGivenType)
+    // if there is an overlap in args, those will be grouped => the number of groups will be lower than the number of args
+    groupedByTokenInt.keys.toList.length == argsOfGivenType.length
   }
 
   def noDefOverlap(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -270,7 +275,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // only keep the ones that have the same number of vars and definitions
     val sameNumOfVarsAndDefs = mentions.filter(m => m.arguments("variable").length == m.arguments("definition").length)
     // and avoid the ones where there is def overlap
-    sameNumOfVarsAndDefs.filter(m => m.arguments("definition").map(_.startOffset).distinct.length == m.arguments("definition").length)
+    sameNumOfVarsAndDefs.filter(noOverlapInGivenArg(_, "definition"))
+
   }
 
   def getEdgesForMention(m: Mention): List[(Int, Int, String)] = {
@@ -279,7 +285,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def filterOutOverlappingDefMen(mentions: Seq[Mention]): Seq[Mention] = {
-    // input is only mentions with the label ConjDefinition or Definition with conjunctions
+    // input is only mentions with the label ConjDefinition (types 1 and 2) or Definition with conjunctions
     // this is to get rid of conj definitions that are redundant in the presence of a more complete ConjDefinition
     val toReturn = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
@@ -437,9 +443,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // make sure to add non-conj events
     for (m <- withoutConj) toReturn.append(m)
 
-//    toReturn
-//    keepLongest(toReturn)
 
+    // filter by start offset can eliminate the shorter definition 'index' if there are two overlapping definitions - "index" and "index card"; filter by end offset can eliminate the shorter definition 'index' if there are two overlapping definitions - "index" and "leaf area index"
     filterDefsByOffsets(filterDefsByOffsets(toReturn, "varAndDefStartOffset"), "varAndDefEndOffset")
 
   }
@@ -464,7 +469,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             newInt,
             m.asInstanceOf[EventMention].trigger,
             newArgs,
-            m.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+            m.paths, // the paths are off
             m.sentence,
             m.document,
             m.keep,
@@ -564,7 +569,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.labels,
                   newInt,
                   newArgs,
-                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+                  mostComplete.paths, // the paths are off
                   mostComplete.sentence,
                   mostComplete.document,
                   mostComplete.keep,
@@ -598,7 +603,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   newInt,
                   mostComplete.asInstanceOf[EventMention].trigger,
                   newArgs,
-                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+                  mostComplete.paths, // the paths are off
                   mostComplete.sentence,
                   mostComplete.document,
                   mostComplete.keep,
@@ -611,7 +616,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.labels,
                   newInt,
                   newArgs,
-                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
+                  mostComplete.paths, // the paths are off
                   mostComplete.sentence,
                   mostComplete.document,
                   mostComplete.keep,
