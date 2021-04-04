@@ -4,9 +4,9 @@
   <!-- <a href="https://github.com/ml4ai/automates">
    <img src="https://img.shields.io/github/license/ml4ai/automates" />
   </a> -->
-  <a href="https://hub.docker.com/r/ml4ailab/automates">
-     <img src="https://img.shields.io/docker/cloud/build/ml4ailab/automates" alt="Docker cloud build status">
-  </a>
+  <!-- <a href="https://hub.docker.com/r/ml4ailab/automates">
+     <img src="https://img.shields.io/docker/cloud/build/ml4ailab/automates" alt="Docker cloud build status"> 
+  </a> -->
   <a href="https://github.com/ml4ai/automates/actions">
     <img src="https://img.shields.io/github/workflow/status/ml4ai/automates/Continuous%20Integration?label=tests" alt="GH Actions build status">
   </a>
@@ -26,8 +26,9 @@ For all operating systems, the first step of the installation process is to clon
 
 ### Linux and macOS
 - Create a new [Python virtualenv](https://docs.python.org/3/library/venv.html)
+- Activate your new Python virtualenv
 - Install Graphviz as defined below
-- Run `python setup.py .` from the root of the AutoMATES directory
+- Run `pip install -e .` from the root of the AutoMATES directory
 
 #### GraphViz installation
 ##### Debian flavored linux

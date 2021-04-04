@@ -55,7 +55,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val groundToSVODefault = true
   private val appendToGrFNDefault = true
   private val defaultSerializerName = "AutomatesJSONSerializer" // other - "JSONSerializer"
-  private val debugDefault = false
+  private val debugDefault = true
+
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
 
@@ -278,6 +279,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.variableShortNames,
         argsForGrounding.definitionMentions,
         argsForGrounding.parameterSettingMentions,
+        argsForGrounding.intervalParameterSettingMentions,
         argsForGrounding.unitMentions,
         argsForGrounding.commentDefinitionMentions,
         argsForGrounding.equationChunksAndSource,
@@ -315,7 +317,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val mentions = textMentions
       .filter(m => m.label matches mentionType)
-      .filter(hasRequiredArgs)
     mentions
   }
 
@@ -326,17 +327,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_defs"
     val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
     (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_defs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_defs")))
-    // val ujsonMentions = json("mentions") //the mentions loaded from json in the ujson format
-    //transform the mentions into json4s format, used by mention serializer
-//    val jvalueMentions = upickle.default.transform(
-//      ujsonMentions
-//    ).to(Json4sJson)
-//    val textMentions = JSONSerializer.toMentions(jvalueMentions)
-//
-//    val mentions = textMentions
-//      .filter(m => m.label matches mentionType)
-//      .filter(hasRequiredArgs)
-//    mentions
   }
 
 

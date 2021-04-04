@@ -27,13 +27,12 @@ class MentionLocationAttachment(pageNum: Int, blockIdx: Int, attType: String) ex
     "attType" -> attType) //"MentionLocation"
 }
 
-class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], discontArg: String, attType: String) extends AutomatesAttachment {
+class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], attType: String) extends AutomatesAttachment {
 
   override def toJson: JsValue = ???
 
   def toUJson: ujson.Value = ujson.Obj(
     "charOffsets" -> offsetsToUJson(charOffsets),
-    "discontinuousArgument" -> discontArg, //which argument the discontinuous char offset describes
     "attType" -> attType) //"DiscontinuousCharOffset"
 
   def offsetsToUJson(charOffsets: Seq[(Int, Int)]): ujson.Value = {
@@ -43,3 +42,57 @@ class DiscontinuousCharOffsetAttachment(charOffsets: Seq[(Int, Int)], discontArg
 
 }
 
+
+class ParamSetAttachment(attachedTo: String, attType: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = {
+    val toReturn = ujson.Obj()
+
+    toReturn("attachedTo") = attachedTo
+    toReturn("attType") = attType //"ParamSetAtt"
+    toReturn
+  }
+
+}
+
+class ParamSettingIntAttachment(inclusiveLower: Option[Boolean], inclusiveUpper: Option[Boolean], attachedTo: String, attType: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = {
+    val toReturn = ujson.Obj()
+
+    if (inclusiveLower.isDefined) {
+      toReturn("inclusiveLower") = inclusiveLower.get
+    } else {
+      toReturn("inclusiveLower") = ujson.Null
+    }
+
+    if (inclusiveUpper.isDefined) {
+      toReturn("inclusiveUpper") = inclusiveUpper.get
+    } else {
+      toReturn("inclusiveUpper") = ujson.Null
+    }
+
+    toReturn("attachedTo") = attachedTo
+    toReturn("attType") = attType //"ParamSettingIntervalAtt"
+    toReturn
+  }
+
+}
+
+class UnitAttachment(attachedTo: String, attType: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = {
+    val toReturn = ujson.Obj()
+
+    toReturn("attachedTo") = attachedTo
+    toReturn("attType") = attType //"UnitAtt"
+    toReturn
+  }
+
+}

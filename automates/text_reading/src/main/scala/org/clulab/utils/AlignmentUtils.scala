@@ -22,6 +22,8 @@ object AlignmentJsonUtils {
   /**stores methods that are specific to processing json with alignment components;
     * other related methods are in GrFNParser*/
 
+  case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDefs: Seq[String])
+
   /**get arguments for the aligner depending on what data are provided**/
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): alignmentArguments = {
 
@@ -50,24 +52,33 @@ object AlignmentJsonUtils {
     val definitionMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
-        .filter(m => m.label matches "Definition")
-        .filter(hasRequiredArgs))
+        .filter(m => m.label.contains("Definition"))
+        .filter(m => hasRequiredArgs(m, "definition")))
     } else None
+
 
     val parameterSettingMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
         .filter(m => m.label matches "ParameterSetting")
-        .filter(hasRequiredArgs))
+        )
     } else None
+
+
+    val intervalParameterSettingMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
+        .filter(m => m.label matches "IntervalParameterSetting")
+      )
+    } else None
+
 
     val unitMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
-        .filter(m => m.label matches "Unit")
-        .filter(hasRequiredArgs))
+        .filter(m => m.label matches "UnitRelation")
+        )
     } else None
-
 
     // get the equations
     val equationChunksAndSource = if (jsonObj.contains("equations")) {
@@ -94,7 +105,7 @@ object AlignmentJsonUtils {
 
       val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
       Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames, source)
-        .filter(hasRequiredArgs))
+        .filter(m => hasRequiredArgs(m, "definition")))
     } else None
 
 
@@ -108,7 +119,7 @@ object AlignmentJsonUtils {
 
 
 
-    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")

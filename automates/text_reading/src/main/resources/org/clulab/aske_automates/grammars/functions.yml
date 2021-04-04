@@ -56,7 +56,7 @@ rules:
       output:Concept = (nsubj | <nsubj ccomp nummod)
 
   #double_epidemic
-  
+
   - name: proportional_to
     label: Function
     priority: ${priority}
@@ -67,7 +67,7 @@ rules:
       trigger = [lemma = "proportional"]
       input:Concept+ = nmod_to | <amod? conj_and
       output:Concept = <amod? nsubj
-      #fixme: inputs and outputs need to be expanded. 
+      #fixme: inputs and outputs need to be expanded.
       #todo: the number of inputs should not be fixed as two. -> fixed.
 
   - name: sum_of
@@ -160,9 +160,9 @@ rules:
       trigger = [lemma = "composite"] (?="of")
       input:Concept+ = nmod_of | nmod_of conj_and
       output:Concept = <nmod_as dobj
-  
+
     # needs to see if this function works too extensively.
-  - name: input_plus_input 
+  - name: input_plus_input
     label: Function
     priority: ${priority}
     type: dependency
@@ -173,7 +173,7 @@ rules:
       input:Concept+ = <cc | <cc conj_plus
       output:Concept = <cc <dobj nsubj
 
-  - name: ratio_of 
+  - name: ratio_of
     label: Function
     priority: ${priority}
     type: dependency

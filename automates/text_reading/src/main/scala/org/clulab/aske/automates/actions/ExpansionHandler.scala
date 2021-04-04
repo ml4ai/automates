@@ -415,6 +415,7 @@ object ExpansionHandler {
     "^case".r,
     "^cc$".r,
     "ccomp".r,
+    "compound".r, //note: needed because of definition test t1h
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
@@ -461,7 +462,7 @@ object ExpansionHandler {
   val VALID_INCOMING = Set[scala.util.matching.Regex](
     "acl:relcl".r,
     "^nmod_for".r,
-//    "^amod$".r,
+//    "amod".r,
 //    "^compound$".r//,
     "nmod_at".r,
     "^nmod_of".r,

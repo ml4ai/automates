@@ -32,10 +32,12 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Var,
 )
 
-from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import C2ATypeError
+from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
+    C2ATypeError,
+)
 from automates.program_analysis.CAST2GrFN.cast import CAST
-import automates.model_assembly.networks as networks
 from automates.model_assembly.networks import GroundedFunctionNetwork
+from automates.utils.misc import rd
 
 
 def get_grfn_from_json_file(file):
@@ -46,8 +48,7 @@ def get_grfn_from_json_file(file):
 def run_around_tests():
     # Before each test, set the seed for generating uuids to 0 for consistency
     # between tests and expected output
-    networks.rd = random.Random()
-    networks.rd.seed(0)
+    rd.seed(0)
     # Run the test function
     yield
 
@@ -86,7 +87,9 @@ def cast_with_all_nodes():
 
     class_func_assign_expr = UnaryOp(
         op=UnaryOperator.USUB,
-        value=BinaryOp(op=BinaryOperator.ADD, left=class_func_arg_name, right=number),
+        value=BinaryOp(
+            op=BinaryOperator.ADD, left=class_func_arg_name, right=number
+        ),
     )
     class_func_assign = Assignment(left=var, right=class_func_assign_expr)
 
@@ -101,7 +104,10 @@ def cast_with_all_nodes():
 
     class_field_var = Var(val="exampleClassVar", type="String")
     class_def = ClassDef(
-        name="ExampleClass", bases=[], funcs=[class_func_def], fields=[class_field_var]
+        name="ExampleClass",
+        bases=[],
+        funcs=[class_func_def],
+        fields=[class_field_var],
     )
 
     obj_var = Var(val="exampleObject", type="ExampleClass")
@@ -114,7 +120,9 @@ def cast_with_all_nodes():
     true_expr = BinaryOp(
         op=BinaryOperator.EQ, left=Number(number=1), right=Number(number=1)
     )
-    if_node = ModelIf(expr=true_expr, body=[continue_node], orelse=[break_node])
+    if_node = ModelIf(
+        expr=true_expr, body=[continue_node], orelse=[break_node]
+    )
 
     attr = Attribute(value=obj_var, attr=Name(name="exampleClassFunction"))
     attr_expr = Expr(expr=attr)
@@ -129,12 +137,21 @@ def cast_with_all_nodes():
     )
     dict_var = Var(val="exampleDict", type="Dict")
     dict_assign = Assignment(left=dict_var, right=Dict(values=[], keys=[]))
-    dict_subscript = Expr(Subscript(value=dict_var, slice=String(string="key")))
+    dict_subscript = Expr(
+        Subscript(value=dict_var, slice=String(string="key"))
+    )
 
     func_def = FunctionDef(
         name="exampleFunction",
         func_args=[],
-        body=[obj_assign, loop, set_assign, list_assign, dict_assign, dict_subscript],
+        body=[
+            obj_assign,
+            loop,
+            set_assign,
+            list_assign,
+            dict_assign,
+            dict_subscript,
+        ],
     )
 
     m = Module(name="ExampleModule", body=[class_def, func_def])
@@ -246,13 +263,17 @@ def pid_c_cast():
                         op=BinaryOperator.MULT,
                         left=BinaryOp(
                             op=BinaryOperator.ADD,
-                            left=Attribute(value=Name(name="pid"), attr="integral"),
+                            left=Attribute(
+                                value=Name(name="pid"), attr="integral"
+                            ),
                             right=Attribute(value=Name(name="pid"), attr="Kd"),
                         ),
                         right=BinaryOp(
                             op=BinaryOperator.SUB,
                             left=Attribute(value=Name(name="pid"), attr="err"),
-                            right=Attribute(value=Name(name="pid"), attr="err_last"),
+                            right=Attribute(
+                                value=Name(name="pid"), attr="err_last"
+                            ),
                         ),
                     ),
                 ),
@@ -270,7 +291,9 @@ def pid_c_cast():
                 right=Number(number=1.0),
             ),
         ),
-        ModelReturn(value=Attribute(value=Name(name="pid"), attr="ActualSpeed")),
+        ModelReturn(
+            value=Attribute(value=Name(name="pid"), attr="ActualSpeed")
+        ),
     ]
     pid_realize_func = FunctionDef(
         name="PID_realize",
@@ -285,7 +308,9 @@ def pid_c_cast():
 
     main_loop_speed_assign = Assignment(
         left=Var(val=Name(name="speed")),
-        right=Call(func=Name(name="PID_init"), arguments=[Number(number=20.0)]),
+        right=Call(
+            func=Name(name="PID_init"), arguments=[Number(number=20.0)]
+        ),
     )
     main_loop_count_assign = Assignment(
         left=Var(val=Name(name="count")),
@@ -297,7 +322,9 @@ def pid_c_cast():
     )
     main_loop = Loop(
         expr=BinaryOp(
-            op=BinaryOperator.LT, left=Name(name="count"), right=Number(number=100)
+            op=BinaryOperator.LT,
+            left=Name(name="count"),
+            right=Number(number=100),
         ),
         body=[main_loop_speed_assign, main_loop_count_assign],
     )
@@ -321,7 +348,8 @@ def pid_c_cast():
 
 
 def test_basic_function_def_and_assignment(
-    basic_function_def_and_assignment_grfn, basic_function_def_and_assignment_cast
+    basic_function_def_and_assignment_grfn,
+    basic_function_def_and_assignment_cast,
 ):
     generated_grfn = basic_function_def_and_assignment_cast.to_GrFN()
     assert generated_grfn == basic_function_def_and_assignment_grfn
