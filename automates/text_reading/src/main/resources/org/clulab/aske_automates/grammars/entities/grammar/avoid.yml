@@ -164,3 +164,10 @@ rules:
     type: token
     pattern: |
       (?<= [word="For"] [word="this"]) [word="research"]
+
+  - name: "apostrophe_s"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      (?<= [word="'"]) [word="s"]

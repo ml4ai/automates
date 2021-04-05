@@ -311,7 +311,7 @@ rules:
     example: "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
     action: ${action}
     pattern: |
-      @variable:Variable [word = ","] (@definition: Concept ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","]
+      @variable:Variable [word = ","] (@definition: Concept ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","] (?! [word = "and"])
 
 
   - name: def_is_var_equal

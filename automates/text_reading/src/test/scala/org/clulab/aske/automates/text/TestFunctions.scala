@@ -103,6 +103,86 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  // Tests from 2003-DSSAT
+
+  val t1f = "the soil water content of each layer is updated by adding or subtracting daily flows of water to or from the layer due to each process."
+  failingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "the soil water content of each layer" -> Seq("daily flows of water", "the layer due to each process"), // note: same inputs, same output but different trigger word. (add and subtract, each) how can we capture such cases?
+      "the soil water content of each layer" -> Seq("daily flows of water", "the layer due to each process")
+    )
+    val mentions = extractMentions(t1f)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
+  failingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"), // note: only one rule applies even when multiple rules should apply. needs to find out why.
+      "deep soil temperature boundary condition" -> Seq("average annual air temperature", "amplitude of monthly mean temperatures")
+    )
+    val mentions = extractMentions(t2f)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t3f = "This module brings together soil, plant and atmosphere inputs and computes light interception by the canopy, potential evapotranspiration (ET) as well as actual soil evaporation and plant transpiration"
+  failingTest should s"find functions from t3f: ${t3f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "light interception" -> Seq("canopy", "potential evapotranspiration", "actual soil evaporation", "plant transpiration")
+    )
+    val mentions = extractMentions(t3f)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t4f = "Actual soil evaporation is the minimum of the potential and soil-limiting calculations on a daily basis."
+  failingTest should s"find functions from t4f: ${t4f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Actual soil evaporation" -> Seq("potential and soil-limiting calculations on a daily basis") // note: would input be one chunk? or two with conjunction?
+    )
+    val mentions = extractMentions(t4f)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t5f = "Photosynthesis of sunlit and shaded leaves is computed hourly using the asymptotic exponential response equation, " +
+    "where quantum efficiency and light-saturated photosynthesis rate variables are dependent on CO2 and temperature"
+  failingTest should s"find functions from t5f: ${t5f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "quantum efficiency" -> Seq("CO2", "temperature"), // fixme: for now, function extraction is done only once.
+      "light-saturated photosynthesis rate variables" -> Seq("CO2", "temperature")
+    )
+    val mentions = extractMentions(t5f)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t6f = "Hourly canopy photosynthesis on a land area basis is computed from the sum of sunlit and shaded leaf contributions " +
+    "by multiplying sunlit and shaded leaf photosynthetic rates by their respective LAIs."
+  failingTest should s"find functions from t6f: ${t6f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf contributions"),
+      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf photosynthetic rates", "their respective LAIs") // note: Photosynthesis is not captured as a concept here. What could be the reason for this?
+    )
+    val mentions = extractMentions(t6f)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t7f = "Maintenance respiration depends on temperature as well as gross photosynthesis and total crop mass minus protein and oil in the seed."
+  failingTest should s"find functions from t7f: ${t7f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Maintenance respiration" -> Seq("temperature", "gross photosynthesis", "total crop mass minus protein", "oil in the seed")
+    )
+    val mentions = extractMentions(t7f)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t8f = "Daily growth rate is modified by temperature and assimilate availability."
+  failingTest should s"find functions from t8f: ${t8f}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Daily growth rate" -> Seq("temperature", "assimilate availability") //fixme: "assimilate availability" is not captured as an input (bad parsing)
+    )
+    val mentions = extractMentions(t8f)
+    testFunctionEvent(mentions, desired)
+  }
+
 }
 
 
@@ -136,3 +216,14 @@ class TestFunctions extends ExtractionTest {
   // todo: "The surface energy balance partitions the available energy (Rn−G) between turbulent heat fluxes (λE and H):"
   // todo: "The ARTS E model requires inputs of Lai, net radiation, Rh, air temperature, wind speed, canopy height, precipitation, and maximum soil available water content (Mawc) as model parameters."
   // todo: "The SWB model requires as inputs precipitation, E0, air temperature, and Mawc. Its outputs are Ea, soil water content, and runoff."
+
+  // Tests from 2003-DSSAT
+  // todo: potential root water uptake is computed by calculating a maximum water flow to roots in each layer and summing these values
+  // todo: It also computes the root water uptake of each soil layer. The daily weather values as well as all soil properties and current soil water content, by layer, are required as input. In addition, leaf area index (LAI) and root length density for each layer are needed.
+  // todo: The potential ET is partitioned into potential soil evaporation based on the fraction of solar energy reaching the soil surface, based on a negative exponential function of LAI, and potential plant transpiration.
+  // todo: This ratio is typically used in the Plant modules to reduce photosynthesis in proportion to relative decreases in transpiration.
+  // todo: a ratio of potential root water uptake and potential transpiration is used to reduce plant turgor and expansive growth of crops
+  // todo: The daily canopy photosynthesis option, modified from the method used in SOYGRO V5.4 (Jones et al., 1989), predicts daily gross photosynthesis as a function of daily irradiance for a full canopy, which is then multiplied by factors 0/1 for light interception, temperature, leaf nitrogen status, and water deficit.
+  // todo: Daylength may affect the total number of leaves formed by altering the duration of the floral induction phase, and thus, floral initiation. //note: does this counts as a function example?
+  // todo: The amount of new dry matter available for growth each day may also be modified by the most limiting of water or nitrogen stress, and temperature, and is sensitive to atmospheric CO2 concentration.
+  // todo: An important aspect of many of these studies is a consideration that weather influences the performance of crops, interacting in complex ways with soil and management. # note: influence - function?

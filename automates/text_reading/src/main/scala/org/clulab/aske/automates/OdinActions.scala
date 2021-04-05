@@ -724,7 +724,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val newArgs = Map("input" -> Seq(v), "output" -> Seq(k))
       }
     toReturn.append(copyWithArgs(f, newArgs))
-    } 
+    }
   toReturn
   }
 
