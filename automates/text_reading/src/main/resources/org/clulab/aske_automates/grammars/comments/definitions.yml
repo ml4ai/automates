@@ -4,13 +4,13 @@ rules:
 
 ####DEFINITIONS####
 
-  - name: var_definition
-    label: Definition
+  - name: var_description
+    label: Description
     priority: ${priority}
     type: token
     example: "EEQ Equilibrium evaporation (mm/d)"
 #    action: looksLikeAVariable #don't use this action here---the illegal "vars" should have been
     #filtered out in the entity rule
     pattern: |
-      @variable:Variable (?<definition> [word = /.*\w+.*/ & !tag="-LRB-"]+)
+      @variable:Variable (?<description> [word = /.*\w+.*/ & !tag="-LRB-"]+)
 

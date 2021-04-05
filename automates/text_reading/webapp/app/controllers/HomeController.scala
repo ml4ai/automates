@@ -88,7 +88,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     source.close()
 
     
-    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Definition")
+    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Description")
 //    val grfnPath = json("grfn").str
 //    val grfnFile = new File(grfnPath)
 //    val grfn = ujson.read(grfnFile.readString())
@@ -114,7 +114,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val (doc, mentions) = processPlayText(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
     for (em <- mentions) {
-      if (em.label matches "Definition") {
+      if (em.label matches "Description") {
         println("Mention: " + em.text)
         println("att: " + em.attachments.mkString(" "))
       }
@@ -277,11 +277,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         json,
         argsForGrounding.variableNames,
         argsForGrounding.variableShortNames,
-        argsForGrounding.definitionMentions,
+        argsForGrounding.descriptionMentions,
         argsForGrounding.parameterSettingMentions,
         argsForGrounding.intervalParameterSettingMentions,
         argsForGrounding.unitMentions,
-        argsForGrounding.commentDefinitionMentions,
+        argsForGrounding.commentDescriptionMentions,
         argsForGrounding.equationChunksAndSource,
         argsForGrounding.svoGroundings,
         groundToSVO,
@@ -354,8 +354,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val paper1values = paper1obj("variable_defs").arr
     val paper2values = paper2obj("variable_defs").arr
 
-    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
-    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
+    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_description"))
+    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_description"))
 
 
     // get alignments

@@ -25,7 +25,7 @@ class TestCommentVariables extends ExtractionFromCommentsTest {
   }
 
 
-  //From PET.for that I got from Paul---the sample in github repo does not have multiline var definitions
+  //From PET.for that I got from Paul---the sample in github repo does not have multiline var descriptions
   val t3 = "S is the rate of change of saturated vapor pressure of air with           temperature (Pa/K)"
   passingTest should s"extract variables from t3: ${t3}" taggedAs(Somebody) in {
 

@@ -34,7 +34,7 @@ import scala.collection.parallel.ParSeq
 
 import upickle.default._
 
-case class Prediction(paperId: String, eqnId:String, latexIdentifier: String, textVariable: Option[String], definitions: Option[Seq[String]])
+case class Prediction(paperId: String, eqnId:String, latexIdentifier: String, textVariable: Option[String], descriptions: Option[Seq[String]])
 object Prediction{
   implicit val rw: ReadWriter[Prediction] = macroRW
 }
@@ -112,31 +112,31 @@ class AlignmentBaseline() {
     //IF MENTIONS NOT PREVIOUSLY EXPORTED:
     //extract the mentions
     //      val textMentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(eqn_id)))
-    ////      //only get the definition mentions
-    //      val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
+    ////      //only get the description mentions
+    //      val textDescriptionMentions = textMentions.seq.filter(_ matches "Description")
     //
     //      //IF WANT TO EXPORT THE MENTIONS FOR EACH FILE:
     //      val exporter = new SerializedExporter("./input/LREC/Baseline/extractedMentions/" + eqn_id)
-    //      exporter.export(textDefinitionMentions)
+    //      exporter.export(textDescriptionMentions)
     //      exporter.close()
     //      println("exported ID: " + eqn_id)
 
     //IF HAVE PREVIOUSLY EXPORTED MENTIONS:
 
-    val textDefinitionMentions = SerializedMentions
+    val textDescriptionMentions = SerializedMentions
       .load(s"$extractedMentionsDir/${eqn_id}.serialized")
-      .filter(mention => mention matches "Definition")
-//    textDefinitionMentions.foreach(DisplayUtils.displayMention)
-    //      for (td <- textDefinitionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("definition").head.text)
+      .filter(mention => mention matches "Description")
+//    textDescriptionMentions.foreach(DisplayUtils.displayMention)
+    //      for (td <- textDescriptionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("description").head.text)
 
-    val groupedByCommonVar = textDefinitionMentions
+    val groupedByCommonVar = textDescriptionMentions
       .groupBy(_.arguments("variable").head.text)
-      .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("definition").head.text).distinct) //the definitions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
+      .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("description").head.text).distinct) //the descriptions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
 //    groupedByCommonVar.foreach(println)
 
     val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, renderedAll.toMap, mathSymbols, word2greekDict.toMap, pdfalignDir, paperId, eq).seq
 //    latexTextMatches.foreach(println)
-    // val filtered = latexTextMatches.filter(p => p.definitions.exists(defs => defs.exists(d => (d.count(_.isLetter)/d.length) > 0.7 )))
+    // val filtered = latexTextMatches.filter(p => p.descriptions.exists(defs => defs.exists(d => (d.count(_.isLetter)/d.length) > 0.7 )))
 
 
     println("+++++++++")
@@ -483,11 +483,11 @@ class AlignmentBaseline() {
     equationFileNames
   }
 
-  //used to finding a better definition---takes into account the amount of language characters in the definition and also the length of the definition
+  //used to finding a better description---takes into account the amount of language characters in the description and also the length of the description
   def moreLanguagey(mentions: Seq[Mention]): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
 
-    val sorted = mentions.sortBy(m => (m.arguments("definition").head.text.filter(c => valid contains c).length.toFloat / m.arguments("definition").head.text.length, m.arguments("definition").head.text.length)).reverse
+    val sorted = mentions.sortBy(m => (m.arguments("description").head.text.filter(c => valid contains c).length.toFloat / m.arguments("description").head.text.length, m.arguments("description").head.text.length)).reverse
 
     sorted
   }

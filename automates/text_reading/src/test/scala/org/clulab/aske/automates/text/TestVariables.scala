@@ -181,7 +181,7 @@ class TestVariables extends ExtractionTest {
   val t5b = "The average soil water potential (S , J kg−1) is calculated based on a representative root length fraction for each soil layer (fr,j):"
   failingTest should s"extract variables from t5b: ${t5b}" taggedAs(Somebody) in {
 
-    val desired = Seq("S", "fr,j") //todo: make sure there's a definition test for this sent; need to do sth with the vars that contain commas (in the paper, 'r,j' is the subscript)
+    val desired = Seq("S", "fr,j") //todo: make sure there's a description test for this sent; need to do sth with the vars that contain commas (in the paper, 'r,j' is the subscript)
     val mentions = extractMentions(t5b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }

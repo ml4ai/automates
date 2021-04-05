@@ -4,7 +4,7 @@ import java.io.File
 
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, hasUnitArg}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDescriptionMentions, hasRequiredArgs, hasUnitArg}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
@@ -49,11 +49,11 @@ object AlignmentJsonUtils {
     } else None
 
 
-    val definitionMentions = if (allMentions.nonEmpty) {
+    val descriptionMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
-        .filter(m => m.label.contains("Definition"))
-        .filter(m => hasRequiredArgs(m, "definition")))
+        .filter(m => m.label.contains("Description"))
+        .filter(m => hasRequiredArgs(m, "description")))
     } else None
 
 
@@ -101,11 +101,11 @@ object AlignmentJsonUtils {
       Some(getSourceFromSrcVariables(variableNames.get))
     } else None
 
-    val commentDefinitionMentions = if (jsonObj.contains("source_code")) {
+    val commentDescriptionMentions = if (jsonObj.contains("source_code")) {
 
       val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
-      Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames, source)
-        .filter(m => hasRequiredArgs(m, "definition")))
+      Some(getCommentDescriptionMentions(localCommentReader, json, variableShortNames, source)
+        .filter(m => hasRequiredArgs(m, "description")))
     } else None
 
 
@@ -119,7 +119,7 @@ object AlignmentJsonUtils {
 
 
 
-    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    alignmentArguments(json, variableNames, variableShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")

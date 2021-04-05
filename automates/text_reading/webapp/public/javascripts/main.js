@@ -91,7 +91,7 @@ var collData = {
          "borderColor": "darken",
          "arcs": [
              {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
-             {"type": "definition", "labels": ["definition"], "borderColor": "darken", "bgColor":"violet"}
+             {"type": "description", "labels": ["description"], "borderColor": "darken", "bgColor":"violet"}
          ]
        },
        {
