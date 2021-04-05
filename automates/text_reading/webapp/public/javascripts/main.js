@@ -1,7 +1,7 @@
 var bratLocation = 'assets/brat';
 
 // Color names used
-var baseConceptColor = '#CCD1D1';
+var basePhraseColor = '#CCD1D1';
 var causalEventColor = '#BB8FCE';
 var variableColor = '#ef9f6e';
 var parameterSettingColor = '#99daef';
@@ -34,10 +34,10 @@ var webFontURLs = [
 
 var collData = {
     entity_types: [ {
-        "type"   : "Concept",
-        "labels" : ["Concept"],
+        "type"   : "Phrase",
+        "labels" : ["Phrase"],
         // Blue is a nice colour for a person?
-        "bgColor": baseConceptColor,
+        "bgColor": basePhraseColor,
         // Use a slightly darker version of the bgColor for the border
         "borderColor": "darken"
     },

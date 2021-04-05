@@ -22,7 +22,7 @@ rules:
     the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
     action: ${action}
     pattern: |
-      @variable:Concept [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
+      @variable:Phrase [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
 
   - name: concept_unit
     label: UnitRelation
@@ -33,7 +33,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma = /express|give/]
-      variable: Concept = <acl | nsubjpass
+      variable: Phrase = <acl | nsubjpass
       unit: Unit+ = <acl appos | nmod_in nmod_per? appos compound  #todo: add an action to split these up and merge if
       #overlap and keep the longer unit?
 
@@ -59,7 +59,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [tag = "CD"]
-      variable: Concept = <nummod </nmod_of|nmod_between/
+      variable: Phrase = <nummod </nmod_of|nmod_between/
       unit: Unit = <nummod
 
   - name: var_equals_value_unit

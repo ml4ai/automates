@@ -30,4 +30,4 @@ rules:
     example: ""
     pattern: |
       trigger = [word = /[Mm]odel/]
-      variable:Concept = compound [word = /[A-Z]*/]
+      variable:Phrase = compound [word = /[A-Z]*/]

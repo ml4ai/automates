@@ -35,7 +35,7 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     action: processParamSetting
     pattern: |
-      (@variable:Variable|@variable:Concept [!tag="CD"]) (?<trigger> [word="="]) @value:Value
+      (@variable:Variable|@variable:Phrase [!tag="CD"]) (?<trigger> [word="="]) @value:Value
 
 
     # this was specifically for a param settings described in latex; should not hurt
@@ -46,8 +46,8 @@ rules:
     example: ""
     action: processParamSetting
     pattern: |
-      # @trigger:Concept "=" @Value:Value
-      (@variable:Variable|@variable:Concept) [word="&"] [word="="] @value:Value
+      # @trigger:Phrase "=" @Value:Value
+      (@variable:Variable|@variable:Phrase) [word="&"] [word="="] @value:Value
 
   - name: var-vary_between
     label: IntervalParameterSetting
@@ -92,7 +92,7 @@ rules:
     example: "but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='>']
-      variable:Concept = <advmod <nummod | <amod compound? | <dep
+      variable:Phrase = <advmod <nummod | <amod compound? | <dep
       valueLeastExcl:Value = <advmod [tag = "CD"] | >nummod [tag = "CD"] | >dep [tag="CD"]
 
 
@@ -104,7 +104,7 @@ rules:
     example: "but simulated yield decreased rapidly for Kcbmax < 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='<']
-      variable:Concept = </dep|advmod/ <nummod? <dep | <advmod <nummod
+      variable:Phrase = </dep|advmod/ <nummod? <dep | <advmod <nummod
       valueMostExcl:Value = </dep|advmod/ [tag = "CD"]
 
   - name: var_hard-coded
@@ -115,7 +115,7 @@ rules:
     example: "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
     pattern: |
       trigger = [word=/(?i)^hard-coded/]
-      variable:Concept = nsubj
+      variable:Phrase = nsubj
       value:Value = /nmod_to/
 
 
@@ -158,8 +158,8 @@ rules:
     example: "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed measurements to a standard height of 2.0 m"
     pattern: |
       trigger = [word = "standard" & tag = "JJ"]
-      variable: Concept = <amod <nmod_to dobj
-      value: Concept = <amod nmod_of nummod [entity = "NUMBER"]
+      variable: Phrase = <amod <nmod_to dobj
+      value: Phrase = <amod nmod_of nummod [entity = "NUMBER"]
 
   - name: var-DOY
     label: ParameterSetting
@@ -178,7 +178,7 @@ rules:
     example: "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed measurements to a standard height of 2.0 m"
     pattern: |
       trigger = [word=/(?i)adjust/]
-      variable:Concept = dobj
+      variable:Phrase = dobj
       value:Value = nmod_to nmod_of nummod
 
   # fixme: the 5-10 days is found as one token; this needs to be interval
