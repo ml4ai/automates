@@ -20,7 +20,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: "K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, respectively"
-    action: noDefOverlap
+    action: noDescrOverlap
     pattern: |
       trigger = [lemma="be"]
       variable:Variable{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]

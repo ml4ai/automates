@@ -26,9 +26,8 @@ class TestDescriptions extends ExtractionTest {
       "EORATIO" -> Seq("maximum Kcs at LAI = 6.0"),
       "Kcs" -> Seq("DSSAT-CSM crop coefficient")
     )
-    // fixme: maximum is found as def for Kcs
+    // fixme: maximum is found as descr for Kcs
     val mentions = extractMentions(t2a)
-    val defMentions = mentions.seq.filter(_ matches "Description")
     testDescriptionEvent(mentions, desired)
   }
 
@@ -72,7 +71,7 @@ class TestDescriptions extends ExtractionTest {
     "the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998)."
     passingTest should s"find descriptions from t7a: ${t7a}" taggedAs(Somebody) in {
       val desired = Seq(
-        "KEP" -> Seq("energy extinction coefficient of the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo") // the def will eventually be the whole sentence
+        "KEP" -> Seq("energy extinction coefficient of the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo") // the descr will eventually be the whole sentence
       )
       val mentions = extractMentions(t7a)
       testDescriptionEvent(mentions, desired)
@@ -247,7 +246,7 @@ class TestDescriptions extends ExtractionTest {
     failingTest should s"find descriptions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
         "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
-      ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a description for Ta by var_appos_def rule. (Ta,rl is one variable)
+      ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a description for Ta by var_appos_descr rule. (Ta,rl is one variable)
       val mentions = extractMentions(t12b)
       testDescriptionEvent(mentions, desired)
 
@@ -323,7 +322,7 @@ class TestDescriptions extends ExtractionTest {
 
     val desired = Seq(
       "r0" -> Seq("root radius"), // fixme: when variable and description are separated by parenthesis, it is not captured by var_cop_description rule. -> fixed
-      "rm" -> Seq("radius of the root extraction zone"), // fixme: roots (rm) sequence is captured as def (var) by comma_appos_var rule.
+      "rm" -> Seq("radius of the root extraction zone"), // fixme: roots (rm) sequence is captured as descr (var) by comma_appos_var rule.
       "R" -> Seq("root density")
     )
     val mentions = extractMentions(t7c)
@@ -361,7 +360,7 @@ class TestDescriptions extends ExtractionTest {
   val t2e = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld)"
   failingTest should s"find descriptions from t2e: ${t2e}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Rnl" -> Seq("net long-wave radiation"), //fixme: var_cop_description overrode the var_appos_def rule. (maybe due to "keep the longest" principle?) -> fixed, but now two descriptions are captured
+      "Rnl" -> Seq("net long-wave radiation"), //fixme: var_cop_description overrode the var_appos_descr rule. (maybe due to "keep the longest" principle?) -> fixed, but now two descriptions are captured
       "Rlu" -> Seq("upward long-wave radiation from the standardized surface"), //fixme: description was not captured. (maybe due to the overlapping?)
       "Rld" -> Seq("downward long-wave radiation from the sky"), //fixme: needs to expand to include the "downward long-wave radiation from the" part (issue occurred due to bad parsing)
     )

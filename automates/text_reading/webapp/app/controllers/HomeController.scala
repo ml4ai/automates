@@ -320,7 +320,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     mentions
   }
 
-  def readDefTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
+  def readDescrTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
 
     val modelComparisonInputFile = new File(pathToModelComparisonInput)
     val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr

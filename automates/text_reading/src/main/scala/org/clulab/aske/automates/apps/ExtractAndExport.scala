@@ -67,10 +67,10 @@ object ExtractAndExport extends App {
 //      }
 //
 //    }
-    val defMentions = mentions.filter(_ matches "Description")
+    val descrMentions = mentions.filter(_ matches "Description")
 
     println("Description mentions: ")
-    for (dm <- defMentions) {
+    for (dm <- descrMentions) {
       println("----------------")
       println(dm.text)
 //      println(dm.foundBy)

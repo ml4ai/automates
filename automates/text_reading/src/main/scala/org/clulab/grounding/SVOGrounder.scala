@@ -246,9 +246,9 @@ object SVOGrounder {
   * type of mentions) to a sequence of results from the SVO ontology, and converts these mappings into an object
   * writable with upickle */
   def groundDescriptionsToSVO(mentions: Seq[Mention], k: Int): Seq[SVOGrounding] = {
-    //sanity check to make sure all the passed mentions are def mentions
-    val (defMentions, other) = mentions.partition(m => m matches "Description")
-    val groundings = groundMentionsWithSparql(defMentions, k)
+    //sanity check to make sure all the passed mentions are descr mentions
+    val (descrMentions, other) = mentions.partition(m => m matches "Description")
+    val groundings = groundMentionsWithSparql(descrMentions, k)
     val groundingsObj =
       for {
         gr <- groundings

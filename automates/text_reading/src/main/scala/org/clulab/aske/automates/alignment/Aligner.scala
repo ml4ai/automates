@@ -69,9 +69,9 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   def getRelevantTextFromGlobalVar(glv: GlobalVariable): String = {
     // ["variable", "description"]
     relevantArgs match {
-      case x if x.contains("variable") & x.contains("description")=> glv.identifier + " " + glv.textFromAllDefs.mkString(" ")
+      case x if x.contains("variable") & x.contains("description")=> glv.identifier + " " + glv.textFromAllDescrs.mkString(" ")
       case x if x.contains("variable") => glv.identifier
-      case x if x.contains("description") => glv.textFromAllDefs.mkString(" ")
+      case x if x.contains("description") => glv.textFromAllDescrs.mkString(" ")
       case _ => ???
     }
   }

@@ -36,7 +36,7 @@ class TestVariables extends ExtractionTest {
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }
 
-  val t2a = "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 " +
+  val t2a = "where LAI is the simulated leaf area index, EORATIO is descrined as the maximum Kcs at LAI = 6.0 " +
     "(Sau et al., 2004; Thorp et al., 2010), and Kcs is the DSSAT-CSM crop coefficient. "
   passingTest should s"extract variables from t2a: ${t2a}" taggedAs(Becky) in {
 
@@ -212,7 +212,7 @@ class TestVariables extends ExtractionTest {
 
   val t9b = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
   passingTest should s"extract variables from t9b: ${t9b}" taggedAs(Somebody) in {
-    val desired = Seq("Tx", "Lsc", "Lpwp") //fixme: units found as variables; 'research TX' is found as var; need to apply looksLikeAVar to units and param settings, not only defs
+    val desired = Seq("Tx", "Lsc", "Lpwp") //fixme: units found as variables; 'research TX' is found as var; need to apply looksLikeAVar to units and param settings, not only descrs
     val mentions = extractMentions(t9b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)
   }

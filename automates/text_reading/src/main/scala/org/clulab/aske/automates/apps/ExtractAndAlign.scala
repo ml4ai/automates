@@ -144,17 +144,17 @@ object ExtractAndAlign {
     } else outputJson
   }
 
-  def getGlobalVars(defMentions: Seq[Mention]): Seq[GlobalVariable] = {
+  def getGlobalVars(descrMentions: Seq[Mention]): Seq[GlobalVariable] = {
 
     // fixme: if there's period at the end - replace with nothing - so can group by text.replace(".", "")?
-    val groupedVars = defMentions.groupBy(_.arguments("variable").head.text)
+    val groupedVars = descrMentions.groupBy(_.arguments("variable").head.text)
     val allGlobalVars = new ArrayBuffer[GlobalVariable]()
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
       val identifier = gr._1
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
-      val textFromAllDefs = gr._2.map(m => m.arguments("description").head.text)
-      val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDefs)
+      val textFromAllDescrs = gr._2.map(m => m.arguments("description").head.text)
+      val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs)
       allGlobalVars.append(glVar)
 
     }
@@ -173,13 +173,13 @@ object ExtractAndAlign {
 
   }
 
-  def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitThroughDefAlignments: Seq[Seq[Alignment]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
+  def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitThroughDescrAlignments: Seq[Seq[Alignment]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
 
-    val updatedTextVars = if (textToUnitThroughDefAlignments.length > 0) {
+    val updatedTextVars = if (textToUnitThroughDescrAlignments.length > 0) {
 
       for {
-        topK <- textToUnitThroughDefAlignments
+        topK <- textToUnitThroughDescrAlignments
         alignment <- topK
         textVarLinkElement = textVarLinkElements(alignment.src)
         unit = if (hasArg(unitMentions.get(alignment.dst), "unit")) {
@@ -359,7 +359,7 @@ object ExtractAndAlign {
       }
       // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDefs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(TEXT_TO_UNIT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
@@ -389,7 +389,7 @@ object ExtractAndAlign {
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDefs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(TEXT_TO_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
       }
@@ -411,7 +411,7 @@ object ExtractAndAlign {
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDefs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(TEXT_TO_INT_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
       }
@@ -778,14 +778,14 @@ object ExtractAndAlign {
 
   /* Align description mentions from two sources; not currently used */
  def getInterModelComparisonLinkElements(
-                       defMentions1:
+                       descrMentions1:
                        Seq[Mention],
-                       defMention2: Seq[Mention]
+                       descrMentions2: Seq[Mention]
                      ): Map[String, Seq[String]] = {
 
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
 
-      linkElements("TEXT_VAR1") = defMentions1.map { mention =>
+      linkElements("TEXT_VAR1") = descrMentions1.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
         val originalSentence = mention.sentenceObj.words.mkString(" ")
@@ -803,7 +803,7 @@ object ExtractAndAlign {
 
       }
 
-      linkElements("TEXT_VAR2") = defMention2.map { mention =>
+      linkElements("TEXT_VAR2") = descrMentions2.map { mention =>
         val docId = mention.document.id.getOrElse("unk_text_file")
         val sent = mention.sentence
         val originalSentence = mention.sentenceObj.words.mkString(" ")
@@ -861,7 +861,7 @@ object ExtractAndAlign {
   }
 
 
-  def mkLinkHypothesisTextVarDef(variables: Seq[String], descriptions: Seq[String], debug: Boolean): Seq[Obj] = {
+  def mkLinkHypothesisTextVarDescr(variables: Seq[String], descriptions: Seq[String], debug: Boolean): Seq[Obj] = {
 
     assert(variables.length == descriptions.length)
     for {

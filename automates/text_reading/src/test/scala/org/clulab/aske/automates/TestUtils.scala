@@ -113,9 +113,9 @@ object TestUtils {
 
       val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
       for {
-        (desiredVar, desiredDefs) <- desired
+        (desiredVar, desiredDescrs) <- desired
         correspondingMentions = grouped.getOrElse(desiredVar, Seq())
-      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
+      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDescrs)
     }
 
 
@@ -203,9 +203,9 @@ object TestUtils {
 
       val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
       for {
-        (desiredVar, desiredDefs) <- desired
+        (desiredVar, desiredDescrs) <- desired
         correspondingMentions = grouped.getOrElse(desiredVar, Seq())
-      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
+      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDescrs)
     }
 
 

@@ -33,11 +33,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (expandable, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Description"))
 
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs)
-      val (conjDefType2, otherDefs) = expanded.partition(_.label.contains("Type2"))
+      val (conjDescrType2, otherDescrs) = expanded.partition(_.label.contains("Type2"))
       // only keep type 2 conj descriptions that do not have description arg overlap AFTER expansion
-      val allDefs = noDefOverlap(conjDefType2) ++ otherDefs
-      keepOneWithSameSpanAfterExpansion(allDefs) ++ other
-//      allDefs ++ other
+      val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
+      keepOneWithSameSpanAfterExpansion(allDescrs) ++ other
+//      allDescrs ++ other
 
     } else {
       mentions
@@ -62,8 +62,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn
   }
 
-  def groupByDefOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
-    // only apply this when there is one var and one def
+  def groupByDescrOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    // only apply this when there is one var and one descr
     // group mentions by token overlap of a given argument
     // has to be used for mentions in the same sentence - token intervals are per sentence
 
@@ -71,23 +71,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val mentionsWithRightArgs = keepWithGivenArgs(mentions, Seq("description"))
     for (m <- mentionsWithRightArgs) {
       // assume there's one of each arg
-      val defTextBoundMention = m.arguments("description").head
+      val descrTextBoundMention = m.arguments("description").head
       if (intervalMentionMap.isEmpty) {
-        intervalMentionMap += (defTextBoundMention.tokenInterval -> Seq(m))
+        intervalMentionMap += (descrTextBoundMention.tokenInterval -> Seq(m))
       } else {
-        if (intervalMentionMap.keys.exists(k => k.intersect(defTextBoundMention.tokenInterval).nonEmpty)) {
-          val interval = findOverlappingInterval(defTextBoundMention.tokenInterval, intervalMentionMap.keys.toList)
+        if (intervalMentionMap.keys.exists(k => k.intersect(descrTextBoundMention.tokenInterval).nonEmpty)) {
+          val interval = findOverlappingInterval(descrTextBoundMention.tokenInterval, intervalMentionMap.keys.toList)
           val currMen = intervalMentionMap(interval)
           val updMen = currMen :+ m
-          if (interval.length >= defTextBoundMention.tokenInterval.length) {
+          if (interval.length >= descrTextBoundMention.tokenInterval.length) {
             intervalMentionMap += (interval -> updMen)
           } else {
-            intervalMentionMap += (defTextBoundMention.tokenInterval -> updMen)
+            intervalMentionMap += (descrTextBoundMention.tokenInterval -> updMen)
             intervalMentionMap.remove(interval)
           }
 
         } else {
-          intervalMentionMap += (defTextBoundMention.tokenInterval -> Seq(m))
+          intervalMentionMap += (descrTextBoundMention.tokenInterval -> Seq(m))
         }
       }
     }
@@ -213,7 +213,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def keepOneWithSameSpanAfterExpansion(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     // after expanding descriptions and ConjDescriptions, eliminate redundant mentions;
-    // out of overlapping mentions, keep the ones that have more than one variable - those are the conj descriptions that can be "untangled" - those are the events that have more than one var-def combos in them
+    // out of overlapping mentions, keep the ones that have more than one variable - those are the conj descriptions that can be "untangled" - those are the events that have more than one var-descr combos in them
     val mns = new ArrayBuffer[Mention]()
 
     // group by sentence
@@ -223,9 +223,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val spanGroups = sameSentMentions.groupBy(_.tokenInterval)
 
       for (sg <- spanGroups) {
-        // check the max number of args (conj defs type 2 have at least two var-def pairs (i.e., at least 4 args)
+        // check the max number of args (conj descrs type 2 have at least two var-descr pairs (i.e., at least 4 args)
         val maxNumOfArgs = sg._2.maxBy(_.arguments.values.flatten.toList.length).arguments.values.flatten.toList.length
-        // check the max num of variables in the mentions in the overlapping group - we want to preserve conj defs and those will have most vars
+        // check the max num of variables in the mentions in the overlapping group - we want to preserve conj descrs and those will have most vars
         val maxNumOfVars = sg._2.maxBy(_.arguments("variable").length).arguments("variable").length
         // chose a mention with most args and most vars - if they have the same span and same (max) num of args and vars, it shouldnt matter which one it is, so take the first one
         val chosenMen = sg._2.filter(m => m.arguments("variable").length == maxNumOfVars & m.arguments.values.flatten.toList.length==maxNumOfArgs).head
@@ -237,8 +237,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mens.toVector.distinct
   }
 
-  def filterDefsByOffsets(mentions: Seq[Mention], filterBy: String ,state: State = new State()): Seq[Mention] = {
-    // get rid of overlapping descriptions; depending on when we need to use it, we will check def start offset or end offset - it also makes sense to do both directions
+  def filterDescrsByOffsets(mentions: Seq[Mention], filterBy: String ,state: State = new State()): Seq[Mention] = {
+    // get rid of overlapping descriptions; depending on when we need to use it, we will check descr start offset or end offset - it also makes sense to do both directions
     val mns = new ArrayBuffer[Mention]()
 
     // group by sentence
@@ -246,14 +246,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for ((sentId, sameSentMentions) <- sentGroup) {
 
       val spanGroups = filterBy match {
-        case "varAndDefStartOffset" => sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head, m.arguments("description").head.startOffset))
-        case "varAndDefEndOffset" => sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head, m.arguments("description").head.endOffset))
+        case "varAndDescrStartOffset" => sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head, m.arguments("description").head.startOffset))
+        case "varAndDescrEndOffset" => sameSentMentions.filter(_.arguments.contains("variable")).groupBy(m => (m.arguments("variable").head, m.arguments("description").head.endOffset))
         case _ => ???
 
       }
 
       for (sg <- spanGroups) {
-        // out of the overlapping group, choose the one with longest def
+        // out of the overlapping group, choose the one with longest descr
         val chosenMen = sg._2.maxBy(_.arguments("description").head.text.length)
         mns.append(chosenMen)
       }
@@ -270,12 +270,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     groupedByTokenInt.keys.toList.length == argsOfGivenType.length
   }
 
-  def noDefOverlap(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+  def noDescrOverlap(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     // used for type2 conj descriptions
     // only keep the ones that have the same number of vars and descriptions
-    val sameNumOfVarsAndDefs = mentions.filter(m => m.arguments("variable").length == m.arguments("description").length)
-    // and avoid the ones where there is def overlap
-    sameNumOfVarsAndDefs.filter(noOverlapInGivenArg(_, "description"))
+    val sameNumOfVarsAndDescrs = mentions.filter(m => m.arguments("variable").length == m.arguments("description").length)
+    // and avoid the ones where there is descr overlap
+    sameNumOfVarsAndDescrs.filter(noOverlapInGivenArg(_, "description"))
 
   }
 
@@ -284,7 +284,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
   }
 
-  def filterOutOverlappingDefMen(mentions: Seq[Mention]): Seq[Mention] = {
+  def filterOutOverlappingDescrMen(mentions: Seq[Mention]): Seq[Mention] = {
     // input is only mentions with the label ConjDescription (types 1 and 2) or Description with conjunctions
     // this is to get rid of conj descriptions that are redundant in the presence of a more complete ConjDescription
     val toReturn = new ArrayBuffer[Mention]()
@@ -294,18 +294,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
       for (gr1 <- groupedByTokenOverlap.values) {
-        // if there are ConjDefs among overlapping defs (at this point, all of them are withConj), then pick the longest conjDef
+        // if there are ConjDescrs among overlapping decsrs (at this point, all of them are withConj), then pick the longest conjDescr
         if (gr1.exists(_.label.contains("ConjDescription"))) {
           // type 2 has same num of vars and descriptions (a minimum of two pairs)
           val (type2, type1) = gr1.partition(_.label.contains("Type2"))
 
           if (type2.isEmpty) {
-            // use conf defs type 1 only if there are no overlapping (more complete) type 2 descriptions
-            val longestConjDef = gr1.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
-            toReturn.append(longestConjDef)
+            // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
+            val longestConjDescr = gr1.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
+            toReturn.append(longestConjDescr)
           } else {
-            val longestConjDef = gr1.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
-            toReturn.append(longestConjDef)
+            val longestConjDescr = gr1.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
+            toReturn.append(longestConjDescr)
           }
 
         } else {
@@ -322,7 +322,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
      mentions.distinct
    }
 
-  // this should be the def text bound mention
+  // this should be the descr text bound mention
   def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
     val charOffsets = new ArrayBuffer[Array[Int]]
     var spanStartAndEndOffset = new ArrayBuffer[Int]()
@@ -369,25 +369,25 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String), preconj: Seq[Int]): Mention = {
     // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
     val sortedConj = List(conjEdge._1, conjEdge._2).sorted
-    val defMention = m.arguments("description").head
-    val tokInAsList = defMention.tokenInterval.toList
+    val descrMention = m.arguments("description").head
+    val tokInAsList = descrMention.tokenInterval.toList
 
     val newTokenInt = tokInAsList.filter(idx => (idx < sortedConj.head || idx >= sortedConj.last) & !preconj.contains(idx))
 
     val charOffsets = new ArrayBuffer[Int]()
     val wordsWIndex = m.sentenceObj.words.zipWithIndex
 
-    val defTextWordsWithInd = wordsWIndex.filter(w => newTokenInt.contains(w._2))
-    for (ind <- defTextWordsWithInd.map(_._2)) {
+    val descrTextWordsWithInd = wordsWIndex.filter(w => newTokenInt.contains(w._2))
+    for (ind <- descrTextWordsWithInd.map(_._2)) {
       charOffsets.append(m.sentenceObj.startOffsets(ind))
     }
-    val defText = defTextWordsWithInd.map(_._1)
+    val descrText = descrTextWordsWithInd.map(_._1)
     val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
     if (charOffsetsForAttachment.length > 1) {
       val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment,  "DiscontinuousCharOffset")
-      // attach the attachment to the def arg
-      val defMenWithAttachment = defMention.withAttachment(attachment)
-      val newArgs = Map("variable" -> Seq(m.arguments("variable").head), "description" -> Seq(defMenWithAttachment))
+      // attach the attachment to the descr arg
+      val descrMenWithAttachment = descrMention.withAttachment(attachment)
+      val newArgs = Map("variable" -> Seq(m.arguments("variable").head), "description" -> Seq(descrMenWithAttachment))
 
         copyWithArgs(m, newArgs)
     } else m
@@ -408,13 +408,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // fixme: account for cases when one conj is not part of the extracted description
     //todo: if plural noun (eg entopies) - lemmatize?
 
-    val (defs, nondefs) = mentions.partition(_.label.contains("Description"))
-    // check if there's overlap between conjdefs and standard defs; if there is, drop the standard def; add nondefs
-    val withoutOverlap = filterOutOverlappingDefMen(defs) ++ nondefs
+    val (descrs, nondescrs) = mentions.partition(_.label.contains("Description"))
+    // check if there's overlap between conjdescrs and standard descrs; if there is, drop the standard descr; add nondescrs
+    val withoutOverlap = filterOutOverlappingDescrMen(descrs) ++ nondescrs
     // all that have conj (to be grouped further) and those with no conj
     val (withConj, withoutConj) = withoutOverlap.partition(m => hasConj(m))
-    // defs that were found as ConjDescriptions - that is events with multiple variables (at least partially) sharing a descriptions vs descriptions that were found with standard rule that happened to have conjunctions in their descriptions
-    val (conjDefs, standardDefsWithConj) = withConj.partition(_.label.contains("ConjDescription"))
+    // descrs that were found as ConjDescriptions - that is events with multiple variables (at least partially) sharing a descriptions vs descriptions that were found with standard rule that happened to have conjunctions in their descriptions
+    val (conjDescrs, standardDescrsWithConj) = withConj.partition(_.label.contains("ConjDescription"))
     val (conjType2, conjType1) = withConj.partition(_.label.contains("Type2"))
 
     val toReturn = new ArrayBuffer[Mention]()
@@ -423,12 +423,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (m <- untangleConjunctionsType2(conjType2)) {
       toReturn.append(m)
     }
-    // the defs found with conj description rules should be processed differently from standard defs that happen to have conjs
+    // the descrs found with conj description rules should be processed differently from standard descrs that happen to have conjs
     for (m <- untangleConjunctions(conjType1)) {
       toReturn.append(m)
     }
 
-    for (m <- standardDefsWithConj) {
+    for (m <- standardDescrsWithConj) {
       // only apply this to descriptions where var is to the right of the description, e.g., '...individuals who are either Susceptible (S), Infected (I), or Recovered (R)." In other cases observed so far, it removes chunks of descriptions it shouldn't remove
       if (m.arguments("variable").head.startOffset > m.arguments("description").head.startOffset) {
         val edgesForOnlyThisMen = m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
@@ -445,25 +445,25 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
     // filter by start offset can eliminate the shorter description 'index' if there are two overlapping descriptions - "index" and "index card"; filter by end offset can eliminate the shorter description 'index' if there are two overlapping descriptions - "index" and "leaf area index"
-    filterDefsByOffsets(filterDefsByOffsets(toReturn, "varAndDefStartOffset"), "varAndDefEndOffset")
+    filterDescrsByOffsets(filterDescrsByOffsets(toReturn, "varAndDescrStartOffset"), "varAndDescrEndOffset")
 
   }
 
   def untangleConjunctionsType2(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    // conj def type 2 - equal number of vars and defs, but at least 2 of each
+    // conj descr type 2 - equal number of vars and descrs, but at least 2 of each
     val toReturn = new ArrayBuffer[Mention]()
     for (m <- mentions) {
       val variableArgs = m.arguments("variable")
-      val defArgs = m.arguments("description")
+      val descrArgs = m.arguments("description")
       // should have correct number of args, but doing a sanity check
-      if (variableArgs.length == defArgs.length) {
-        // corresponding vars and defs will come in the same order, eg "v1, v2, and v3 stand for def1, def2, and def3, respectively"
+      if (variableArgs.length == descrArgs.length) {
+        // corresponding vars and descrs will come in the same order, eg "v1, v2, and v3 stand for descr1, descr2, and descr3, respectively"
         val varsSortedByTokenInt = variableArgs.sortBy(_.tokenInterval)
-        val defsSortedByTokenInt = defArgs.sortBy(_.tokenInterval)
+        val descrsSortedByTokenInt = descrArgs.sortBy(_.tokenInterval)
         for ((v, i) <- varsSortedByTokenInt.zipWithIndex) {
-          val newDefMen = defsSortedByTokenInt(i)
-          val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDefMen))
-          val newInt = Interval(math.min(v.tokenInterval.start, newDefMen.tokenInterval.start), math.max(v.tokenInterval.end, newDefMen.tokenInterval.end))
+          val newDescrMen = descrsSortedByTokenInt(i)
+          val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDescrMen))
+          val newInt = Interval(math.min(v.tokenInterval.start, newDescrMen.tokenInterval.start), math.max(v.tokenInterval.end, newDescrMen.tokenInterval.end))
           toReturn.append(new EventMention(
             m.labels,
             newInt,
@@ -478,7 +478,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           ))
         }
       } else {
-        logger.debug(s"Number of vars is not equal to number of defs:\nvariables: ${variableArgs.map(_.text).mkString(",")}\n${defArgs.map(_.text).mkString(",")}")
+        logger.debug(s"Number of vars is not equal to number of descrs:\nvariables: ${variableArgs.map(_.text).mkString(",")}\n${descrArgs.map(_.text).mkString(",")}")
       }
     }
 
@@ -487,7 +487,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   /*
-  a method for handling `ConjDescription`s - descriptions that were found with a special rule---the def has to have at least two conjoined variables and at least one (at least partially) shared description
+  a method for handling `ConjDescription`s - descriptions that were found with a special rule---the descr has to have at least two conjoined variables and at least one (at least partially) shared description
    */
   def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
@@ -498,9 +498,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val groupedByIntervalOverlap = groupByTokenOverlap(gr1._2)
       for (gr <- groupedByIntervalOverlap) {
         val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
-        // out of overlapping defs, take the longest one
-        val headDef = mostComplete.arguments("description").head
-        val edgesForOnlyThisMen = headDef.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDef.tokenInterval.start && math.max(edge._1, edge._2) <= headDef.tokenInterval.end)
+        // out of overlapping descrs, take the longest one
+        val headDescr = mostComplete.arguments("description").head
+        val edgesForOnlyThisMen = headDescr.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDescr.tokenInterval.start && math.max(edge._1, edge._2) <= headDescr.tokenInterval.end)
         val conjEdges = edgesForOnlyThisMen.filter(_._3.startsWith("conj"))
         val conjNodes = new ArrayBuffer[Int]()
         for (ce <- conjEdges) {
@@ -508,32 +508,32 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           conjNodes.append(ce._2)
         }
         val allConjNodes = conjNodes.distinct.sorted
-        val preconj = headDef.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
+        val preconj = headDescr.sentenceObj.dependencies.get.outgoingEdges.flatten.filter(_._2.contains("cc:preconj")).map(_._1)
         val previousIndices = new ArrayBuffer[Int]()
 
         val newDescriptions = new ArrayBuffer[Mention]()
-        val defAttachments = new ArrayBuffer[DiscontinuousCharOffsetAttachment]()
+        val descrAttachments = new ArrayBuffer[DiscontinuousCharOffsetAttachment]()
 
         if (allConjNodes.nonEmpty) {
 
           for (int <- allConjNodes.sorted) {
-            val headDefStartToken = headDef.tokenInterval.start
-            // the new def token interval is the longest def available with words like `both` and `either` removed and ...
-            var newDefTokenInt = headDef.tokenInterval.filter(item => (item >= headDefStartToken & item <= int) & !preconj.contains(item))
-            //...with intervening conj hops removed, e.g., in `a and b are the blah of c and d, respectively`, for the def of b, we will want to remove `c and ` - which make up the intervening conj hop
+            val headDescrStartToken = headDescr.tokenInterval.start
+            // the new descr token interval is the longest descr available with words like `both` and `either` removed and ...
+            var newDescrTokenInt = headDescr.tokenInterval.filter(item => (item >= headDescrStartToken & item <= int) & !preconj.contains(item))
+            //...with intervening conj hops removed, e.g., in `a and b are the blah of c and d, respectively`, for the descr of b, we will want to remove `c and ` - which make up the intervening conj hop
             if (previousIndices.nonEmpty) {
-              newDefTokenInt = newDefTokenInt.filter(ind => ind < previousIndices.head || ind >= int )
+              newDescrTokenInt = newDescrTokenInt.filter(ind => ind < previousIndices.head || ind >= int )
             }
 
-            val wordsWIndex = headDef.sentenceObj.words.zipWithIndex
-//            val defText = wordsWIndex.filter(w => newDefTokenInt.contains(w._2)).map(_._1)
-            val newDef = new TextBoundMention(headDef.labels, Interval(newDefTokenInt.head, newDefTokenInt.last + 1), headDef.sentence, headDef.document, headDef.keep, headDef.foundBy, headDef.attachments)
-            newDescriptions.append(newDef)
-            // store char offsets for discont def as attachments
-            val charOffsetsForAttachment= getDiscontCharOffset(headDef, newDefTokenInt.toList)
+            val wordsWIndex = headDescr.sentenceObj.words.zipWithIndex
+//            val descrText = wordsWIndex.filter(w => newDescrTokenInt.contains(w._2)).map(_._1)
+            val newDescr = new TextBoundMention(headDescr.labels, Interval(newDescrTokenInt.head, newDescrTokenInt.last + 1), headDescr.sentence, headDescr.document, headDescr.keep, headDescr.foundBy, headDescr.attachments)
+            newDescriptions.append(newDescr)
+            // store char offsets for discont descr as attachments
+            val charOffsetsForAttachment= getDiscontCharOffset(headDescr, newDescrTokenInt.toList)
 
             val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "DiscontinuousCharOffset")
-            defAttachments.append(attachment)
+            descrAttachments.append(attachment)
 
             previousIndices.append(int)
           }
@@ -543,13 +543,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         // get the conjoined vars
         val variables = mostComplete.arguments("variable")
         for ((v, i) <- variables.zipWithIndex) {
-          // if there are new defs, we will assume that they should be matched with the vars in the linear left to right order
+          // if there are new descrs, we will assume that they should be matched with the vars in the linear left to right order
           if (newDescriptions.nonEmpty) {
 
             val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
             val newInt = Interval(math.min(v.tokenInterval.start, newDescriptions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDescriptions(i).tokenInterval.end))
             // construct a new description with new token int, foundBy, and args
-            val newDefMen = mostComplete match {
+            val newDescrMen = mostComplete match {
               case e: EventMention => {
                 new EventMention(
                   mostComplete.labels,
@@ -581,22 +581,22 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
             }
 
-            if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
-              val defWithAtt = newDescriptions(i).withAttachment(defAttachments(i))
-              val newArgs = Map("variable" -> Seq(v), "description" -> Seq(defWithAtt))
-              val newDefMenWithAtt = copyWithArgs(mostComplete, newArgs)
-              toReturn.append(newDefMenWithAtt)
+            if (descrAttachments(i).toUJson("charOffsets").arr.length > 1) {
+              val descrWithAtt = newDescriptions(i).withAttachment(descrAttachments(i))
+              val newArgs = Map("variable" -> Seq(v), "description" -> Seq(descrWithAtt))
+              val newDescrMenWithAtt = copyWithArgs(mostComplete, newArgs)
+              toReturn.append(newDescrMenWithAtt)
             } else {
               val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
-              val newDefMen = copyWithArgs(mostComplete, newArgs)
-              toReturn.append(newDefMen)
+              val newDescrMen = copyWithArgs(mostComplete, newArgs)
+              toReturn.append(newDescrMen)
             }
 
-            // if there are no new defs, we just assume that the description is shared between all the variables
+            // if there are no new descrs, we just assume that the description is shared between all the variables
           } else {
-            val newArgs = Map("variable" -> Seq(v), "description" -> Seq(headDef))
-            val newInt = Interval(math.min(v.tokenInterval.start, headDef.tokenInterval.start), math.max(v.tokenInterval.end, headDef.tokenInterval.end))
-            val newDefMen = mostComplete match {
+            val newArgs = Map("variable" -> Seq(v), "description" -> Seq(headDescr))
+            val newInt = Interval(math.min(v.tokenInterval.start, headDescr.tokenInterval.start), math.max(v.tokenInterval.end, headDescr.tokenInterval.end))
+            val newDescrMen = mostComplete match {
               case e: EventMention => {
                 new EventMention(
                   mostComplete.labels,
@@ -626,7 +626,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
               }
               case _ => ???
             }
-            toReturn.append(newDefMen)
+            toReturn.append(newDescrMen)
           }
         }
       }
@@ -712,19 +712,19 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
       val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
       val description = changeLabel(sorted.last, DESCRIPTION_LABEL) // the longest if the description
-      val defMention = m match {
+      val descrMention = m match {
         case rm: RelationMention => rm.copy(
           arguments = Map(VARIABLE_ARG -> Seq(variable), DESCRIPTION_ARG -> Seq(description)),
           foundBy=foundBy(rm.foundBy),
           tokenInterval = Interval(math.min(variable.start, description.start), math.max(variable.end, description.end)))
 //         case em: EventMention => em.copy(//alexeeva wrote this to try to try to fix an appos. dependency rule
-        //is changing the keys in 'paths' to variable and defintion bc as of now they show up downstream (in the expansion handler) as c1 and c2
+        //is changing the keys in 'paths' to variable and description bc as of now they show up downstream (in the expansion handler) as c1 and c2
 //           arguments = Map(VARIABLE_ARG -> Seq(variable), DEFINITION_ARG -> Seq(description)),
 //           foundBy=foundBy(em.foundBy),
 //           tokenInterval = Interval(math.min(variable.start, description.start), math.max(variable.end, description.end)))
         case _ => ???
       }
-      Seq(variable, defMention)
+      Seq(variable, descrMention)
     }
 
     mentions.flatMap(mkDescriptionMention)
@@ -802,7 +802,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
 
-  def defIsNotVar(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def descrIsNotVar(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions in which descriptions are not also variables
     //and the variable and the description don't overlap
     for {
@@ -810,29 +810,29 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if !m.words.contains("not") //make sure, the description is not negative
 
       variableMention = m.arguments.getOrElse("variable", Seq())
-      defMention = m.arguments.getOrElse("description", Seq())
+      descrMention = m.arguments.getOrElse("description", Seq())
       if (
-        defMention.nonEmpty && //there has to be a description
-        looksLikeADef(defMention, state).nonEmpty && //make sure the def looks like a def
-        defMention.head.text.length > 4 && //the def can't be the length of a var
-        !defMention.head.text.contains("=") &&
-        looksLikeAVariable(defMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be a variable)
+        descrMention.nonEmpty && //there has to be a description
+        looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
+        descrMention.head.text.length > 4 && //the descr can't be the length of a var
+        !descrMention.head.text.contains("=") &&
+        looksLikeAVariable(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be a variable)
         &&
-        defMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
-        ) || (defMention.nonEmpty && freqWords.contains(defMention.head.text)) //the description can be one short, frequent word
+        descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
+        ) || (descrMention.nonEmpty && freqWords.contains(descrMention.head.text)) //the description can be one short, frequent word
     } yield m
   }
 
 
   def descriptionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val toReturn = defIsNotVar(looksLikeAVariable(mentions, state), state)
+    val toReturn = descrIsNotVar(looksLikeAVariable(mentions, state), state)
     toReturn
   }
 
   def descriptionActionFlowSpecialCase(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    //select shorter as var is only applicable to one rule, so it can't be part of the regular def. action flow
-    val varAndDef = selectShorterAsVariable(mentions, state)
-    val toReturn = if (varAndDef.nonEmpty) descriptionActionFlow(varAndDef, state) else Seq.empty
+    //select shorter as var is only applicable to one rule, so it can't be part of the regular descr. action flow
+    val varAndDescr = selectShorterAsVariable(mentions, state)
+    val toReturn = if (varAndDescr.nonEmpty) descriptionActionFlow(varAndDescr, state) else Seq.empty
     toReturn
   }
 
@@ -869,19 +869,19 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield m
   }
 
-  def looksLikeADef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
     for {
       m <- mentions
-      definText = m match {
+      descrText = m match {
         case tb: TextBoundMention => m
         case rm: RelationMention => m.arguments.getOrElse("description", Seq()).head
         case em: EventMention => m.arguments.getOrElse("description", Seq()).head
         case _ => ???
       }
 
-      if definText.text.filter(c => valid contains c).length.toFloat / definText.text.length > 0.60
-      // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded def like "Susceptible (S)"
+      if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
+      // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
 //      if m.tags.get.exists(_.contains("N"))
 
     } yield m

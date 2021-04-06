@@ -300,7 +300,7 @@ class AlignmentBaseline() {
   }
 
   def getLatexTextMatches(
-    var2Defs: Map[String, Seq[String]],
+    var2Descrs: Map[String, Seq[String]],
     allEqVarCandidates: Seq[String],
     renderedAll: Map[String, String],
     mathSymbols: Seq[String],
@@ -314,7 +314,7 @@ class AlignmentBaseline() {
     //all the matches from one file name will go here:1
     val latexTextMatches = new ArrayBuffer[Prediction]()
     //for every extracted mention
-    for (variable <- var2Defs.keys) {
+    for (variable <- var2Descrs.keys) {
       //best Latex candidates, out of which we'll take the max (to account for some font info)
 //      val bestCandidates = new ArrayBuffer[String]()
         //for every candidate eq var
@@ -330,7 +330,7 @@ class AlignmentBaseline() {
       // choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
         val bestCand = bestCandidates.maxBy(numLetters)
-        val pred = Prediction(paperId, eqnId, bestCand.trim, Some(variable), Some(var2Defs(variable)))
+        val pred = Prediction(paperId, eqnId, bestCand.trim, Some(variable), Some(var2Descrs(variable)))
         latexTextMatches.append(pred)
       }
     }
