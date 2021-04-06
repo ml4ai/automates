@@ -33,14 +33,26 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
   passingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody, Interval) in {
 
     val desired = Seq(
-      "KEP" -> Seq("0.5", "0.8") //todo: need a rule for "range from"
+      "KEP" -> Seq("0.5", "0.8")
     )
 
     val mentions = extractMentions(t3a)
     testParameterSettingEventInterval(mentions, desired)
   }
 
-//
+  val t4a = "Under full irrigation, Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield " +
+    "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
+  failingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t4a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+            "Kcbmax" -> Seq("0.9", "1.5"),
+            "Kcbmax" -> Seq("1.15") //todo: need to have some mechanism to preserve ><=. some sort of attachment? similar to count in wm or use 'valueMin'/'valueMax' for the var
+    )
+    val mentions = extractMentions(t4a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+
+  //
 //  // Tests from paper: 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
 //  val t1b = "Rns and Rnl are generally positive or zero in value."
 //  failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody, Interval) in {

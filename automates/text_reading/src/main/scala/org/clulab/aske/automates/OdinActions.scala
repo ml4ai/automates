@@ -2,20 +2,20 @@ package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.aske.automates.actions.ExpansionHandler
-import org.clulab.odin._
+import org.clulab.odin.{Mention, _}
 import org.clulab.odin.impl.Taxonomy
 import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.DiscontinuousCharOffsetAttachment
-import org.clulab.aske.automates.entities.EntityHelper
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
+
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.io.{BufferedSource, Source}
+
 
 
 
@@ -72,6 +72,68 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
     }
     intervalMentionMap.toMap
+  }
+
+
+  def processParamSettingInt(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]() //Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      var inclLower: Option[Boolean] = None
+      var inclUpper: Option[Boolean] = None
+      for (arg <- m.arguments) {
+        arg._1 match {
+          case "valueLeastExcl" => {
+            newArgs("valueLeast") = arg._2
+            inclLower = Some(false)
+          }
+          case "valueLeastIncl" => {
+          newArgs("valueLeast") = arg._2
+            inclLower = Some(true)
+        }
+          case "valueMostExcl" => {
+            newArgs("valueMost") = arg._2
+            inclUpper = Some(false)
+          }
+          case "valueMostIncl" => {
+            newArgs("valueMost") = arg._2
+            inclUpper = Some(true)
+          }
+
+          case _ => newArgs(arg._1) = arg._2
+        }
+      }
+
+
+      val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
+      newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
+    }
+    newMentions
+  }
+
+  def processUnits(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      val att = new UnitAttachment(attachedTo, "UnitAtt")
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
+  }
+
+
+  def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+
+      val att = new UnitAttachment(attachedTo, "ParamSetAtt")
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
   }
 
   def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -187,7 +249,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def returnWithoutConj(m: Mention, conjEdge: (Int, Int, String), preconj: Seq[Int]): Mention = {
     // only change the mention if there is a discontinuous char offset - if there is, make it into an attachment
     val sortedConj = List(conjEdge._1, conjEdge._2).sorted
-    val tokInAsList = m.arguments("definition").head.tokenInterval.toList
+    val defMention = m.arguments("definition").head
+    val tokInAsList = defMention.tokenInterval.toList
 
     val newTokenInt = tokInAsList.filter(idx => (idx < sortedConj.head || idx >= sortedConj.last) & !preconj.contains(idx))
 
@@ -201,9 +264,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val defText = defTextWordsWithInd.map(_._1)
     val charOffsetsForAttachment= getDiscontCharOffset(m, newTokenInt)
     if (charOffsetsForAttachment.length > 1) {
-      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
-      val menWithAttachment = m.withAttachment(attachment)
-      menWithAttachment
+      val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment,  "DiscontinuousCharOffset")
+      // attach the attachment to the def arg
+      val defMenWithAttachment = defMention.withAttachment(attachment)
+      val newArgs = Map("variable" -> Seq(m.arguments("variable").head), "definition" -> Seq(defMenWithAttachment))
+
+        copyWithArgs(m, newArgs)
     } else m
 
   }
@@ -296,7 +362,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             // store char offsets for discont def as attachments
             val charOffsetsForAttachment= getDiscontCharOffset(headDef, newDefTokenInt.toList)
 
-            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "definition", "DiscontinuousCharOffset")
+            val attachment = new DiscontinuousCharOffsetAttachment(charOffsetsForAttachment, "DiscontinuousCharOffset")
             defAttachments.append(attachment)
 
             previousIndices.append(int)
@@ -309,12 +375,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         for ((v, i) <- variables.zipWithIndex) {
           // if there are new defs, we will assume that they should be matched with the vars in the linear left to right order
           if (newDefinitions.nonEmpty) {
-            val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
-            val newDefMen = copyWithArgs(mostComplete, newArgs)
             if (defAttachments(i).toUJson("charOffsets").arr.length > 1) {
-              val newDefWithAtt = newDefMen.withAttachment(defAttachments(i))
-              toReturn.append(newDefWithAtt)
+              val defWithAtt = newDefinitions(i).withAttachment(defAttachments(i))
+              val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(defWithAtt))
+              val newDefMenWithAtt = copyWithArgs(mostComplete, newArgs)
+              toReturn.append(newDefMenWithAtt)
             } else {
+              val newArgs = Map("variable" -> Seq(v), "definition" -> Seq(newDefinitions(i)))
+              val newDefMen = copyWithArgs(mostComplete, newArgs)
               toReturn.append(newDefMen)
             }
 
@@ -422,10 +490,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable was found with a Gazetteer passed through the webservice, keep it
+      if (v == null) return false
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
       if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for var that include a greek letter---those are found as separate words even if there is not space
+      if (v.words.length==4) {
+        // to account for vars like R(t)
+        if (v.words(1) == "(" & v.words(3) == ")" ) return true
+      }
       if (v.words.length != 1) return false
+      if (v.words.head.contains("-") & v.words.head.last.isDigit) return false
       // Else, the variable candidate has length 1
       val word = v.words.head
       if (freqWords.contains(word.toLowerCase())) return false //filter out potential variables that are freq words
@@ -446,11 +520,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
     }
+
+
     for {
       m <- mentions
       (varMention, isArg) = m match {
         case tb: TextBoundMention => (m, false)
-        case rm: RelationMention => (m.arguments.getOrElse("variable", Seq()).head, true)
+        case rm: RelationMention => {
+          if (m.arguments.contains("variable")) {
+            (m.arguments("variable").head, true)
+          } else (null, false)
+        }
         case em: EventMention => (m.arguments.getOrElse("variable", Seq()).head, true)
         case _ => ???
       }
@@ -509,7 +589,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn
   }
 
-
+  def unitActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = processUnits(looksLikeAUnit(mentions, state), state)
+    toReturn
+  }
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
