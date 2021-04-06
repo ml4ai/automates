@@ -22,7 +22,8 @@ ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}-alignment.json"
 
 def main():
     caller = TextReadingInterface("http://localhost:9000")
-    caller.extract_mentions(DOC_PATH, MENTIONS_PATH)
+    if not os.path.isfile(MENTIONS_PATH):
+        caller.extract_mentions(DOC_PATH, MENTIONS_PATH)
     hypothesis_data = caller.get_link_hypotheses(
         MENTIONS_PATH, EQN_PATH, GrFN_PATH, COMM_PATH
     )

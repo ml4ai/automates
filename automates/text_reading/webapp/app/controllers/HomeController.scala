@@ -190,17 +190,14 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def cosmos_json_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
-    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
-    val jsonPath = pathJson("pathToJson").str
-    val jsonFile = new File(jsonPath)
-    val json = ujson.read(jsonFile.readString())
-    val cosmosFileStr = json("path_to_cosmos_json").str
-    logger.info(s"Extracting mentions from $jsonFile")
+    val pathJson = ujson.read(data)
+    val jsonPath = pathJson("pathToCosmosJson").str
+    logger.info(s"Extracting mentions from $jsonPath")
 
     // cosmos stores information about each block on each pdf page
     // for each block, we load the text (content) and the location of the text (page_num and block order/index on the page)
     val loader = new CosmosJsonDataLoader
-    val textsAndLocations = loader.loadFile(cosmosFileStr)
+    val textsAndLocations = loader.loadFile(jsonPath)
     val texts = textsAndLocations.map(_.split("::").head)
     val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
 
@@ -217,16 +214,18 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt)
       val pageNum = location.head
       val blockIdx = location.last
-//
-      for (m <- menInTextBlocks) {
 
+      for (m <- menInTextBlocks) {
         val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
         mentionsWithLocations.append(newMen)
       }
     }
 
-    val parsed_output = AutomatesJSONSerializer.serializeMentions(mentionsWithLocations)
-    Ok(write(parsed_output))
+    val outFile = pathJson("outfile").str
+    AutomatesExporter(outFile).export(mentionsWithLocations)
+
+    Ok("")
+
   }
   /**
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:
