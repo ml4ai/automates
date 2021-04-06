@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Iterable, Set, Any, Tuple
 from abc import ABC, abstractmethod
 from functools import singledispatch
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from itertools import product
 from copy import deepcopy
 
@@ -16,10 +16,10 @@ from networkx.algorithms.simple_paths import all_simple_paths
 from pygraphviz import AGraph
 
 from .sandbox import load_lambda_function
+from .air import AutoMATES_IR
 from .structures import (
     GenericContainer,
     LoopContainer,
-    LambdaType,
     GenericStmt,
     CallStmt,
     LambdaStmt,
@@ -30,22 +30,20 @@ from .structures import (
     ObjectDefinition,
     VariableDefinition,
     TypeDefinition,
-    DataType,
-    MeasurementType,
     GrFNExecutionException,
 )
 from .metadata import (
     TypedMetadata,
     ProvenanceData,
+    MeasurementType,
+    LambdaType,
+    DataType,
     DomainSet,
     DomainInterval,
     SuperSet,
     MetadataType,
     MetadataMethod,
-    CodeCollectionReference,
-    CodeSpanReference,
     Domain,
-    GrFNCreation,
 )
 from ..utils.misc import choose_font, uuid
 
@@ -83,8 +81,9 @@ class GenericNode(ABC):
 class VariableNode(GenericNode):
     identifier: VariableIdentifier
     metadata: List[TypedMetadata]
-    value: Any
-    input_value: Any
+    object_ref: str = None
+    value: Any = None
+    input_value: Any = None
 
     def __hash__(self):
         return hash(self.uid)
@@ -98,7 +97,7 @@ class VariableNode(GenericNode):
     @classmethod
     def from_id(cls, idt: VariableIdentifier, data: VariableDefinition):
         # TODO: use domain constraint information in the future
-        d_type = DataType.from_name(data.domain_name)
+        d_type = DataType.from_str(data.domain_name)
         m_type = MeasurementType.from_name(data.domain_name)
 
         def create_domain_elements():
@@ -108,7 +107,7 @@ class VariableNode(GenericNode):
                     DomainSet(
                         d_type,
                         set_type,
-                        (lambda x: SuperSet.ismember(x, set_type)),
+                        "lambda x: SuperSet.ismember(x, set_type)",
                     )
                 ]
             elif MeasurementType.isa_numerical(m_type):
@@ -128,13 +127,8 @@ class VariableNode(GenericNode):
             m_type,
             create_domain_elements(),
         )
-        return cls(
-            GenericNode.create_node_id(),
-            idt,
-            [dom],
-            None,
-            None,
-        )
+        metadata = [dom] + data.metadata
+        return cls(GenericNode.create_node_id(), idt, metadata)
 
     def get_fullname(self):
         return f"{self.name}\n({self.index})"
@@ -214,20 +208,19 @@ class VariableNode(GenericNode):
 
     @classmethod
     def from_dict(cls, data: dict):
-        identifier = VariableIdentifier.from_str(data["identifier"])
         return cls(
             data["uid"],
-            identifier,
+            VariableIdentifier.from_str(data["identifier"]),
+            data["object_ref"],
             [TypedMetadata.from_dict(mdict) for mdict in data["metadata"]],
-            None,
-            None,
         )
 
     def to_dict(self) -> dict:
         return {
             "uid": self.uid,
             "identifier": str(self.identifier),
-            "metadata": asdict(self.metadata),
+            "object_ref": self.object_ref,
+            "metadata": [m.to_dict() for m in self.metadata],
         }
 
 
@@ -236,6 +229,7 @@ class LambdaNode(GenericNode):
     func_type: LambdaType
     func_str: str
     function: callable
+    metadata: List[TypedMetadata]
 
     def __hash__(self):
         return hash(self.uid)
@@ -287,28 +281,33 @@ class LambdaNode(GenericNode):
         return self.function.__code__.co_varnames
 
     @classmethod
-    def from_AIR(cls, lm_id: str, lm_type: str, lm_str: str):
+    def from_AIR(
+        cls, lm_id: str, lm_type: str, lm_str: str, mdata: List[TypedMetadata]
+    ):
         lambda_fn = load_lambda_function(lm_str)
-        return cls(lm_id, "", lm_type, lm_str, lambda_fn)
+        if mdata is None:
+            mdata = list()
+        return cls(lm_id, lm_type, lm_str, lambda_fn, mdata)
 
     @classmethod
     def from_dict(cls, data: dict):
         lambda_fn = load_lambda_function(data["lambda"])
         lambda_type = LambdaType.from_str(data["type"])
+        metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
         return cls(
             data["uid"],
-            data["reference"],
             lambda_type,
             data["lambda"],
             lambda_fn,
+            metadata,
         )
 
     def to_dict(self) -> dict:
         return {
             "uid": self.uid,
-            "reference": self.reference,
             "type": str(self.func_type),
             "lambda": self.func_str,
+            "metadata": [m.to_dict() for m in self.metadata],
         }
 
 
@@ -409,6 +408,7 @@ class GrFNSubgraph:
     type: str
     border_color: str
     nodes: Iterable[GenericNode]
+    metadata: List[TypedMetadata]
 
     def __hash__(self):
         return hash(self.__str__())
@@ -618,6 +618,7 @@ class GrFNSubgraph:
             con.__class__.__name__,
             cls.get_border_color(con.__class__.__name__),
             [],
+            con.metadata,
         )
 
     def get_input_interface_hyper_edge(self, hyper_edges):
@@ -709,6 +710,7 @@ class GrFNSubgraph:
             type_str,
             cls.get_border_color(type_str),
             subgraph_nodes,
+            [TypedMetadata.from_data(d) for d in data["metadata"]],
         )
 
     def to_dict(self):
@@ -722,6 +724,7 @@ class GrFNSubgraph:
             "type": self.type,
             "border_color": self.border_color,
             "nodes": [n.uid for n in self.nodes],
+            "metadata": [m.to_dict() for m in self.metadata],
         }
 
 
@@ -832,6 +835,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         H: List[HyperEdge],
         S: nx.DiGraph,
         T: List[GrFNType],
+        M: List[TypedMetadata],
     ):
         super().__init__(G)
         self.hyper_edges = H
@@ -843,6 +847,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         self.scope = id.scope
         self.name = id.con_name
         self.label = f"{self.name} ({self.namespace}.{self.scope})"
+        self.metadata = M
 
         self.variables = [n for n in self.nodes if isinstance(n, VariableNode)]
         self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
@@ -970,30 +975,33 @@ class GroundedFunctionNetwork(nx.DiGraph):
         }
 
     @classmethod
-    def from_AIR(
-        cls,
-        con_id: ContainerIdentifier,
-        containers: Dict[ContainerIdentifier, GenericContainer],
-        variables: Dict[VariableIdentifier, VariableDefinition],
-        types: Dict[TypeIdentifier, TypeDefinition],
-        objects: List[ObjectDefinition],
-    ):
+    def from_AIR(cls, air: AutoMATES_IR):
         network = nx.DiGraph()
         hyper_edges = list()
         Occs = dict()
         subgraphs = nx.DiGraph()
 
-        def add_variable_node(id: VariableIdentifier) -> VariableNode:
-            var_data = variables[id]
-            node = VariableNode.from_id(id, var_data)
+        def add_variable_node(
+            v_id: VariableIdentifier, v_data: VariableDefinition
+        ) -> VariableNode:
+            node = VariableNode.from_id(v_id, v_data)
             network.add_node(node, **(node.get_kwargs()))
             return node
 
+        variable_nodes = {
+            v_id: add_variable_node(v_id, v_data)
+            for v_id, v_data in air.variables.items()
+        }
+
         def add_lambda_node(
-            lambda_type: LambdaType, lambda_str: str
+            lambda_type: LambdaType,
+            lambda_str: str,
+            metadata: List[TypedMetadata] = None,
         ) -> LambdaNode:
             lambda_id = GenericNode.create_node_id()
-            node = LambdaNode.from_AIR(lambda_id, lambda_type, lambda_str)
+            node = LambdaNode.from_AIR(
+                lambda_id, lambda_type, lambda_str, metadata
+            )
             network.add_node(node, **(node.get_kwargs()))
             return node
 
@@ -1030,7 +1038,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 func = add_lambda_node(
                     LambdaType.INTERFACE, interface_func_str
                 )
-                out_nodes = [add_variable_node(id) for id in con.arguments]
+                # out_nodes = [add_variable_node(id) for id in con.arguments]
+                out_nodes = [variable_nodes[v_id] for v_id in con.arguments]
                 add_hyper_edge(inputs, func, out_nodes)
                 con_subgraph.nodes.append(func)
 
@@ -1039,7 +1048,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 )
             else:
                 live_variables.update(
-                    {id: add_variable_node(id) for id in con.arguments}
+                    {v_id: variable_nodes[v_id] for v_id in con.arguments}
                 )
 
             con_subgraph.nodes.extend(list(live_variables.values()))
@@ -1054,8 +1063,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
             if len(inputs) > 0:
                 # Do this only if this is not the starting container
-                returned_vars = [live_variables[id] for id in con.returns]
-                update_vars = [live_variables[id] for id in con.updated]
+                returned_vars = [variable_nodes[v_id] for v_id in con.returns]
+                update_vars = [variable_nodes[v_id] for v_id in con.updated]
                 output_vars = returned_vars + update_vars
 
                 out_var_names = [n.identifier.var_name for n in output_vars]
@@ -1081,16 +1090,17 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-            new_con = containers[stmt.call_id]
+            new_con = air.containers[stmt.call_id]
             if stmt.call_id not in Occs:
                 Occs[stmt.call_id] = 0
 
-            inputs = [live_variables[id] for id in stmt.inputs]
+            inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
             (con_outputs, interface_func) = translate_container(
                 new_con, inputs, subgraph
             )
             Occs[stmt.call_id] += 1
-            out_nodes = [add_variable_node(var) for var in stmt.outputs]
+            out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
+            # out_nodes = [add_variable_node(var) for var in stmt.outputs]
             subgraph.nodes.extend(out_nodes)
             add_hyper_edge(con_outputs, interface_func, out_nodes)
             for output_node in out_nodes:
@@ -1103,9 +1113,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-            inputs = [live_variables[id] for id in stmt.inputs]
-            out_nodes = [add_variable_node(var) for var in stmt.outputs]
-            func = add_lambda_node(stmt.type, stmt.func_str)
+            inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
+            out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
+            # out_nodes = [add_variable_node(var) for var in stmt.outputs]
+            func = add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
 
             subgraph.nodes.append(func)
             subgraph.nodes.extend(out_nodes)
@@ -1115,13 +1126,20 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
 
-        start_container = containers[con_id]
-        Occs[con_id] = 0
+        start_container = air.containers[air.entrypoint]
+        Occs[air.entrypoint] = 0
         translate_container(start_container, [])
         grfn_uid = str(uuid.uuid4())
         date_created = datetime.datetime.now().strftime("%Y-%m-%d")
         return cls(
-            grfn_uid, con_id, date_created, network, hyper_edges, subgraphs, []
+            grfn_uid,
+            air.entrypoint,
+            date_created,
+            network,
+            hyper_edges,
+            subgraphs,
+            [],
+            air.metadata,
         )
 
     def to_FCG(self):
@@ -1408,6 +1426,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "variables": [var.to_dict() for var in self.variables],
             "functions": [func.to_dict() for func in self.lambdas],
             "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
+            "metadata": [m.to_dict() for m in self.metadata],
         }
 
         return json.dumps(data)
@@ -1459,13 +1478,15 @@ class GroundedFunctionNetwork(nx.DiGraph):
         # TODO: fix this to actually gather typedefs
         T = []
 
+        M = [TypedMetadata.from_data(d) for d in data["metadata"]]
+
         # Add edges to the new DiGraph using the re-created hyper-edge objects
         for edge in H:
             G.add_edges_from([(var, edge.lambda_fn) for var in edge.inputs])
             G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
 
         identifier = GenericIdentifier.from_str(data["identifier"])
-        return cls(data["uid"], identifier, data["timestamp"], G, H, S, T)
+        return cls(data["uid"], identifier, data["timestamp"], G, H, S, T, M)
 
 
 class CausalAnalysisGraph(nx.DiGraph):
