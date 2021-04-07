@@ -341,6 +341,7 @@ class HyperEdge:
                     variable.value = variable.input_value
                 else:
                     variable.value = out_val
+                print(variable.identifier)
 
     def __eq__(self, other) -> bool:
         return (
@@ -459,13 +460,71 @@ class GrFNSubgraph:
 
         # Find the hyper edge nodes with no input to initialize the execution
         # queue and var nodes with no incoming edges
-        node_execute_queue = [e.lambda_fn for e in hyper_edges if not e.inputs]
+        node_execute_queue = [
+            e.lambda_fn for e in hyper_edges if len(e.inputs) == 0
+        ]
         node_execute_queue.extend(
             [s for n in standalone_vars for s in grfn.successors(n)]
         )
+
         if input_interface_hyper_edge_node:
             node_execute_queue.insert(
                 0, input_interface_hyper_edge_node.lambda_fn
+            )
+
+        # Need to recurse to a different subgraph if no nodes to execute here
+        if len(node_execute_queue) == 0:
+            global_literal_nodes = [
+                n
+                for n in grfn.nodes
+                if isinstance(n, LambdaNode)
+                and grfn.in_degree(n) == 0
+                and n.func_type == LambdaType.LITERAL
+            ]
+            global_output_vars = [
+                n
+                for n in grfn.nodes
+                if isinstance(n, VariableNode) and grfn.out_degree(n) == 0
+            ]
+
+            # Choose a literal node with maximum distance to the output
+            # to begin recursing.
+            lit_node_to_max_dist = dict()
+            for (l_node, o_node) in product(
+                global_literal_nodes, global_output_vars
+            ):
+                max_dist = max(
+                    [
+                        len(path)
+                        for path in all_simple_paths(grfn, l_node, o_node)
+                    ]
+                )
+                lit_node_to_max_dist[l_node] = max_dist
+            lits_by_dist = sorted(
+                list(lit_node_to_max_dist.items()),
+                key=lambda t: t[1],
+                reverse=True,
+            )
+            (L_node, _) = lits_by_dist[0]
+            subgraph = node_to_subgraph[L_node]
+            subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
+            subgraph_input_interface = subgraph.get_input_interface_hyper_edge(
+                subgraph_hyper_edges
+            )
+            subgraph_outputs = subgraph(
+                grfn,
+                subgraphs_to_hyper_edges,
+                node_to_subgraph,
+                all_nodes_visited,
+            )
+
+            node_execute_queue.extend(
+                set(
+                    f_node
+                    for o_node in subgraph_outputs
+                    for f_node in grfn.successors(o_node)
+                    if f_node not in all_nodes_visited
+                )
             )
 
         while node_execute_queue:
@@ -916,8 +975,12 @@ class GroundedFunctionNetwork(nx.DiGraph):
         result.
 
         Args:
-            inputs: Input set where keys are the names of input nodes in the
-                GrFN and each key points to a set of input values (or just one)
+            inputs: Input set where keys are the identifier strings of input
+            nodes in the GrFN and each key points to a set of input values
+            (or just one)
+            literals: Input set where keys are the identifier strings of
+            variable nodes in the GrFN that inherit directly from a literal
+            node and each key points to a set of input values (or just one)
 
         Returns:
             A set of outputs from executing the GrFN, one for every set of
@@ -925,7 +988,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
         """
         self.np_shape = (1,)
         # TODO: update this function to work with new GrFN object
-        full_inputs = {self.input_name_map[n]: v for n, v in inputs.items()}
+        full_inputs = {
+            self.input_identifier_map[n]: v for n, v in inputs.items()
+        }
         # Set input values
         for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
@@ -1413,7 +1478,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         """
         data = {
             "uid": self.uid,
-            "identifier": "::".join(
+            "entry_point": "::".join(
                 ["@container", self.namespace, self.scope, self.name]
             ),
             "timestamp": self.timestamp,
@@ -1477,7 +1542,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             G.add_edges_from([(var, edge.lambda_fn) for var in edge.inputs])
             G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
 
-        identifier = GenericIdentifier.from_str(data["identifier"])
+        identifier = GenericIdentifier.from_str(data["entry_point"])
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T)
 
 
