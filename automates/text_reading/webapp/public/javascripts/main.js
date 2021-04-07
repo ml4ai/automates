@@ -103,7 +103,17 @@ var collData = {
                {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
                {"type": "value", "labels": ["value"], "borderColor": "darken", "bgColor":"violet"}
            ]
-         }
+         },
+         {
+                    "type": "Description",
+                    "labels": ["DESCRIPTION"],
+                    "bgColor": "#CCD1D1",
+                    "borderColor": "darken",
+                    "arcs": [
+                        {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
+                        {"type": "description", "labels": ["description"], "borderColor": "darken", "bgColor":"violet"}
+                    ]
+                  }
     ]
 };
 
