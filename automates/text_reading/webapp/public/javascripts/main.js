@@ -4,6 +4,7 @@ var bratLocation = 'assets/brat';
 var basePhraseColor = '#CCD1D1';
 var causalEventColor = '#BB8FCE';
 var variableColor = '#ef9f6e';
+var descriptionColor = "#78d6d6";
 var parameterSettingColor = '#99daef';
 var valueColor = '#b0a0e5';
 
@@ -107,7 +108,7 @@ var collData = {
          {
                     "type": "Description",
                     "labels": ["DESCRIPTION"],
-                    "bgColor": "#CCD1D1",
+                    "bgColor": descriptionColor,
                     "borderColor": "darken",
                     "arcs": [
                         {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
