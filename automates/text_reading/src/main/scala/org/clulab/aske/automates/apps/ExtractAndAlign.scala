@@ -604,7 +604,7 @@ object ExtractAndAlign {
       case "UnitRelation" => {
         makeArgObject(mention.arguments("unit").head, page, block, "unit")
       }
-      case "Definition" | "ConjDefinition" => {
+      case "Definition" | "ConjDefinition" | "ConjDefinitionType2" => {
         makeArgObject(mention.arguments("definition").head, page, block, "definition")
       }
       case _ => ???
