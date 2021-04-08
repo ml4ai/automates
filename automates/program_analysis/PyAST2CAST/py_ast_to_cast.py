@@ -276,7 +276,7 @@ class PyASTToCAST(ast.NodeVisitor):
         #Figure out how to do range() and other function calls
         count_var = Assignment(Var(Name("i_"),"integer"),Number(0))
         loop_cond = BinaryOp(BinaryOperator.LT,Name("i_"),Call(Name("len"),[Name(node.iter.id)]))
-        loop_assign = Assignment(Var("integer",Name(node.target.id)),Subscript(Name(node.iter.id),Name("i_")))
+        loop_assign = Assignment(Var(Name(node.target.id),"integer"),Subscript(Name(node.iter.id),Name("i_")))
         loop_increment = Assignment(Var(Name("i_"),"integer"),BinaryOp(BinaryOperator.ADD,Name("i_"),Number(1)))
 
         return Loop(expr=loop_cond,body=[loop_assign]+body+[loop_increment])

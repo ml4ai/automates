@@ -1,8 +1,7 @@
-# If with an else
-def main:
+def main():
     x = 10
     if(x == 5):
-        pass
+        x = 1
     else:
-        pass
-    x = 2
+        x = 2
+    x = 3
