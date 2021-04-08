@@ -35,6 +35,10 @@ rules:
     vars:
       priority: 7
 
+  - import: "org/clulab/aske_automates/grammars/functions.yml"
+    vars:
+      action: functionActionFlow
+      priority: 8
 
 
 #  - import: "org/clulab/aske_automates/grammars/template.yml"

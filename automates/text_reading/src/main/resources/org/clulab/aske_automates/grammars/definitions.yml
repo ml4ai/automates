@@ -8,12 +8,23 @@ rules:
     label: ConjDefinition
     priority: ${priority}
     type: dependency
-    example: "LAI is the actual leaf area index"
+    example: "where s1 and s2 are parameters of a logistic curve"
     pattern: |
       trigger = [lemma="be"]
       variable:Variable{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       definition: Concept = <cop nmod_of? nmod_in? conj_and?
 
+
+  - name: var_cop_conj_definition2
+    label: ConjDefinitionType2
+    priority: ${priority}
+    type: dependency
+    example: "K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, respectively"
+    action: noDefOverlap
+    pattern: |
+      trigger = [lemma="be"]
+      variable:Variable{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept{2,} = <cop nmod_of? nmod_in? conj_and?
 
   - name: var_equals_def_token #needed bc of bad parse
     label: Definition
@@ -60,7 +71,7 @@ rules:
     example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
     action: ${action}
     pattern: |
-      (?<= [word = /a|the|,/])? (?<definition> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Variable #(?! [chunk = I-NP])
+      (?<= [word = /a|the|,/])? (?<definition> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Variable (?! [chunk = I-NP])
 #      |
 #      (?<definition> [word = /.*/]) (?<variable> [entity = "B-GreekLetter"])
 
@@ -137,7 +148,7 @@ rules:
     action: ${action}
     example: "and W represents the soil limitation to water uptake of each layer."
 #    action: looksLikeAVariable #//whatever is before 'represent' should be a variable, so might not have to use lookslikeavar, at least until we have allowed short lower-case variables
-#    action: ${action}
+  #  action: ${action}
     pattern: |
       trigger = [word=/(?i)represent|denote/]
       variable:Variable = /${agents}/
@@ -149,25 +160,21 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance; where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
+    example: "where LAI is the simulated leaf area index, EORATIO is defined as the maximum Kcs at LAI = 6.0 (Sau et al., 2004; Thorp et al., 2010)"
 #    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
-      variable:Concept = nsubjpass | advcl nsubj
-      definition:Concept = nmod_as [!entity = "NUMBER"]
-      #fixme: need to limit to 'find first nsubj you find' to account for the second example
+      variable:Variable = nsubjpass # | advcl nsubj
+      definition:Concept = nmod_as [!entity = "NUMBER"] # todo: needs to expand the definition to include "at LAI = 6.0"
 
-
-  - name: var_cop_definition_greek
+  - name: var_is_defined_token
     label: Definition
     priority: ${priority}
-    type: dependency
-    example: "LAI is the actual leaf area index"
-    action: looksLikeAVariableWithGreek
+    type: token
+    example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance;"
+    # action: ${action}
     pattern: |
-      trigger = [lemma="be"]
-      variable:Concept = (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
+      @variable:Variable ([word = "("] ([word = /.*/])* [word = ")"])? [lemma = "be"] [word = "defined"] [word = "as"] ([word=/a|an|the/])? (?<definition> [word = /.*/ & tag = /^NN|^JJ/]* ([tag = IN] [tag = /^NN/] [word = "="] [entity =  NUMBER])?)
 
   - name: var_cop_definition
     label: Definition
@@ -177,9 +184,18 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma="be"]
-      variable:Variable = <cop nsubj | (<cop /${agents}/ | <cop <dep appos ) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      definition: Concept = <cop | <cop (?! case) nmod_for? compound? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
+      variable:Variable = (<cop /${agents}/ appos? | <cop <dep appos) [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
+      definition: Concept = <cop (?! case) nmod_for? nmod_at? compound? conj_or? [!entity = /NUMBER|B-unit/ & !tag=/^JJ/]
 
+# disabled for now - overwrites successful dependency-based extractions
+#  - name: var_is_def_token # needed because of bad parse
+#    label: Definition
+#    priority: ${priority}
+#    type: token
+#    example: "in which L (m) is the root length, z (m) is the total rooted soil depth, Ap (m2) is the surface area and Ar (m2) is the root surface area."
+#    action: ${action}
+#    pattern: |
+#      @variable:Variable ([word = "("] [word = /.*/]? [word = ")"])? [lemma = "be"] [word = /a|an|the/] (@definition:Concept [!entity = /NUMBER|B-unit/ & !tag=/^JJ/])
 
   - name: def_cop_var
     label: Definition
@@ -199,7 +215,7 @@ rules:
     action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," ([word = "denoted"] [word = "as"])? @variable:Variable (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
       (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
@@ -226,7 +242,7 @@ rules:
     label: Definition
     priority: ${priority}
     type: dependency
-    example: "The Toomre factor varies with radius and is given by Q(r)."
+    example: "which is the τ, transmissibility, multiplied by the average number of people exposed"
     action: ${action}
     pattern: |
       trigger = [lemma=/,/]
@@ -285,7 +301,7 @@ rules:
     example: "where r is the infection rate and a the removal rate of infectives. where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux."
     action: ${action}
     pattern: |
-      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Variable [word=/a|an|the/] (?<definition> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter"]{1,5})
+      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Variable [word = "the"] (?<definition> [word = /.*/ & tag = /NN|JJ/ & !entity = "B-GreekLetter"]{1,5})
 
 
   - name: var_comma_def_comma
