@@ -202,7 +202,7 @@ hit
 eye
 usb
 php
-etc
+# etc -> deleted to extract variable ETc, created a rule for etc in avoid.yml
 msn
 fee
 las
