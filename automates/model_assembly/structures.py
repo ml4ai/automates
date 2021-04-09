@@ -120,11 +120,7 @@ class GenericDefinition(ABC):
                 tuple(data["source_refs"]),
             )
         else:
-            return TypeDefinition(
-                GenericIdentifier.from_str(data["name"]),
-                data["type"],
-                tuple(data["attributes"]),
-            )
+            return TypeDefinition.from_data(data)
 
 
 @dataclass(frozen=True)
@@ -169,6 +165,35 @@ class VariableDefinition(GenericDefinition):
 class TypeFieldDefinition:
     name: str
     type: str
+    metadata: List[TypedMetadata]
+
+    @classmethod
+    def from_air_data(cls, data: dict, file_uid: str) -> TypeFieldDefinition:
+        code_span_data = {
+            "source_ref": data["source_ref"],
+            "file_uid": file_uid,
+            "code_type": "type_field",
+        }
+        return cls(
+            data["name"],
+            data["type"],
+            [CodeSpanReference.from_air_data(code_span_data)],
+        )
+
+    @classmethod
+    def from_data(cls, data: dict) -> TypeFieldDefinition:
+        return cls(
+            data["name"],
+            data["type"],
+            [TypedMetadata.from_data(d) for d in data["metadata"]],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "metadata": [d.to_dict() for d in self.metadata],
+        }
 
 
 @dataclass(frozen=True)
@@ -176,6 +201,52 @@ class TypeDefinition(GenericDefinition):
     name: str
     metatype: str
     fields: List[TypeFieldDefinition]
+    metadata: List[TypedMetadata]
+
+    @classmethod
+    def from_air_data(cls, data: dict) -> TypeDefinition:
+        code_span_data = {
+            "source_ref": data["source_ref"],
+            "file_uid": data["file_uid"],
+            "code_type": "type_def",
+        }
+        metadata = [CodeSpanReference.from_air_data(code_span_data)]
+        return cls(
+            "",
+            "",
+            data["name"],
+            data["metatype"],
+            [
+                TypeFieldDefinition.from_air_data(d, data["file_uid"])
+                for d in data["fields"]
+            ],
+            metadata,
+        )
+
+    @classmethod
+    def from_data(cls, data: dict) -> TypeDefinition:
+        # code_span_data = {
+        #     "source_ref": data["source_ref"],
+        #     "file_uid": data["file_uid"],
+        #     "code_type": "type_def",
+        # }
+        metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+        return cls(
+            "",
+            "",
+            data["name"],
+            data["metatype"],
+            [TypeFieldDefinition.from_data(d) for d in data["fields"]],
+            metadata,
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "metatype": self.metatype,
+            "fields": [fdef.to_dict() for fdef in self.fields],
+            "metadata": [d.to_dict() for d in self.metadata],
+        }
 
 
 @dataclass(frozen=True)

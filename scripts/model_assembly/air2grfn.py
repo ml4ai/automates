@@ -16,6 +16,9 @@ def main():
     grfn_pdf_name = air_filepath.replace("AIR.json", "GrFN.pdf")
     A.draw(grfn_pdf_name, prog="dot")
 
+    G2 = GroundedFunctionNetwork.from_json(grfn_file)
+    assert G == G2
+
 
 if __name__ == "__main__":
     main()

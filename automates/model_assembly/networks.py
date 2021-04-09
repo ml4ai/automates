@@ -212,7 +212,7 @@ class VariableNode(GenericNode):
             data["uid"],
             VariableIdentifier.from_str(data["identifier"]),
             data["object_ref"],
-            [TypedMetadata.from_dict(mdict) for mdict in data["metadata"]],
+            [TypedMetadata.from_data(mdict) for mdict in data["metadata"]],
         )
 
     def to_dict(self) -> dict:
@@ -834,7 +834,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         G: nx.DiGraph,
         H: List[HyperEdge],
         S: nx.DiGraph,
-        T: List[GrFNType],
+        T: List[TypeDefinition],
         M: List[TypedMetadata],
     ):
         super().__init__(G)
@@ -851,7 +851,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         self.variables = [n for n in self.nodes if isinstance(n, VariableNode)]
         self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
-        self.types = []
+        self.types = T
 
         root_subgraphs = [s for s in self.subgraphs if not s.parent]
         if len(root_subgraphs) != 1:
@@ -1138,7 +1138,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             network,
             hyper_edges,
             subgraphs,
-            [],
+            air.type_definitions,
             air.metadata,
         )
 
@@ -1426,6 +1426,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "variables": [var.to_dict() for var in self.variables],
             "functions": [func.to_dict() for func in self.lambdas],
             "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
+            "types": [t_def.to_dict() for t_def in self.types],
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
@@ -1476,7 +1477,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
 
         # TODO: fix this to actually gather typedefs
-        T = []
+        T = [TypeDefinition.from_data(t) for t in data["types"]]
 
         M = [TypedMetadata.from_data(d) for d in data["metadata"]]
 

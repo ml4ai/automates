@@ -8,6 +8,7 @@ from .structures import (
     VariableDefinition,
     GenericContainer,
     GenericIdentifier,
+    TypeDefinition,
 )
 
 
@@ -16,7 +17,7 @@ class AutoMATES_IR:
         self.entrypoint = e
         self.containers = C
         self.variables = V
-        self.types = T
+        self.type_definitions = T
         self.objects = O
         self.documentation = D
         self.metadata = M
@@ -25,7 +26,7 @@ class AutoMATES_IR:
     def from_json(cls, filepath: str) -> AutoMATES_IR:
         data = json.load(open(filepath, "r"))
 
-        C, V, T, O, D = dict(), dict(), dict(), dict(), dict()
+        C, V, O, D = dict(), dict(), dict(), dict()
 
         code_refs = CodeCollectionReference.from_sources(data["sources"])
         code_file_uid = code_refs.files[0].uid
@@ -40,16 +41,14 @@ class AutoMATES_IR:
             new_var = VariableDefinition.from_data(var_data)
             V[new_var.identifier] = new_var
 
+        T = list()
         for type_data in data["types"]:
-            new_type = GenericDefinition.from_dict(type_data)
-            T[new_type.identifier] = new_type
+            type_data.update({"file_uid": code_file_uid})
+            T.append(TypeDefinition.from_air_data(type_data))
 
         for con_data in data["containers"]:
             con_data.update({"file_uid": code_file_uid})
             new_container = GenericContainer.from_dict(con_data)
-            # for in_var in new_container.arguments:
-            #     if in_var not in V:
-            #         V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
         # TODO Paul - is it fine to switch from keying by filename to keying by

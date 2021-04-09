@@ -293,11 +293,14 @@ class CodeSpan(BaseMetadata):
 
     @classmethod
     def from_source_ref(cls, source_ref: Dict[str, int]) -> CodeSpan:
+        def get_ref_with_default(ref: str) -> Union[int, None]:
+            return source_ref[ref] if ref in source_ref else None
+
         return cls(
-            source_ref["line_begin"],
-            source_ref["line_end"],
-            source_ref["col_start"],
-            source_ref["col_end"],
+            get_ref_with_default("line_begin"),
+            get_ref_with_default("line_end"),
+            get_ref_with_default("col_start"),
+            get_ref_with_default("col_end"),
         )
 
     @classmethod
