@@ -100,7 +100,7 @@ class CASTToAIRVisitor(CASTVisitor):
         left_res = self.visit(node.left)
         self.state.set_variable_context(previous_context)
 
-        source_ref = C2ASourceRef("", -1, -1, -1, -1)
+        source_ref = C2ASourceRef("", None, None, None, None)
         if node.source_refs is not None and len(node.source_refs) > 0:
             source_ref = self.retrieve_source_ref(node.source_refs[0])
 
@@ -242,7 +242,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     [],
                     [],
                     C2ALambdaType.UNKNOWN,
-                    C2ASourceRef("", -1, -1, -1, -1),
+                    C2ASourceRef("", None, None, None, None),
                     f"{attr_var_name}",
                     node,
                 )
@@ -401,7 +401,7 @@ class CASTToAIRVisitor(CASTVisitor):
             self.state.add_variable(output_var)
             output_vars.append(output_var)
 
-        src_ref = C2ASourceRef("", -1, -1, -1, -1)
+        src_ref = C2ASourceRef("", None, None, None, None)
         if len(node.source_refs) > 0:
             src_ref = self.retrieve_source_ref(node.source_refs[0])
         container_call_lambda = C2AContainerCallLambda(
@@ -431,7 +431,44 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return NotImplemented
+        name = node.name
+
+        source_ref = (
+            {"line_begin": None, "col_start": None, "line_end": None, "col_end": None},
+        )
+        if len(node.source_refs) > 0:
+            class_source_ref = node.source_refs[0]
+            source_ref = (
+                {
+                    "line_begin": class_source_ref.row_start,
+                    "col_start": class_source_ref.col_start,
+                    "line_end": class_source_ref.row_end,
+                    "col_end": class_source_ref.col_end,
+                },
+            )
+
+        fields = []
+        for f in node.fields:
+            field_source_ref = f.source_refs[0]
+            fields.append(
+                {
+                    "name": f.val.name,
+                    "type": f.type,
+                    "source_ref": {
+                        "line_begin": field_source_ref.row_start,
+                        "col_start": field_source_ref.col_start,
+                    },
+                }
+            )
+
+        air_type_def = C2ATypeDef(
+            name=name,
+            given_type=C2ATypeDef.C2AType.OBJECT,
+            fields=fields,
+            function_identifiers=[],
+            source_ref=source_ref,
+        )
+        self.state.add_type(air_type_def)
 
     @visit.register
     def _(self, node: Dict):
@@ -470,7 +507,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 [],
                 [],
                 C2ALambdaType.UNKNOWN,
-                C2ASourceRef("", -1, -1, -1, -1),
+                C2ASourceRef("", None, None, None, None),
                 lambda_expr,
                 node,
             )
@@ -510,7 +547,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        source_ref = SourceRef("", -1, -1, -1, -1)
+        source_ref = SourceRef("", None, None, None, None)
         if node.source_refs is not None and len(node.source_refs) > 0:
             source_ref = self.retrieve_source_ref(node.source_refs[0])
 
@@ -585,7 +622,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 [],
                 [],
                 C2ALambdaType.UNKNOWN,
-                C2ASourceRef("", -1, -1, -1, -1),
+                C2ASourceRef("", None, None, None, None),
                 lambda_expr,
                 node,
             )
@@ -601,7 +638,7 @@ class CASTToAIRVisitor(CASTVisitor):
     ):
         node_name = f"{condition_type}_{condition_num}"
 
-        cond_source_ref = C2ASourceRef("", -1, -1, -1, -1)
+        cond_source_ref = C2ASourceRef("", None, None, None, None)
         source_file_name = cond_source_ref.file
 
         container_identifier = C2AIdentifierInformation(
@@ -621,7 +658,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     [],
                     [],
                     [],
-                    C2ASourceRef("", -1, -1, -1, -1),
+                    C2ASourceRef("", None, None, None, None),
                     [],
                     cond_source_ref,
                     dict(),
@@ -633,7 +670,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     [],
                     [],
                     [],
-                    C2ASourceRef("", -1, -1, -1, -1),
+                    C2ASourceRef("", None, None, None, None),
                     [],
                     cond_source_ref,
                 )
@@ -659,10 +696,6 @@ class CASTToAIRVisitor(CASTVisitor):
             cond_assign_lambda.cast,
         )
 
-        # Add the condition var into the variable list
-        for v in cond_assign_lambda_with_correct_type.output_variables:
-            self.state.add_variable(v)
-
         body_result = self.visit_node_list_and_flatten(body)
         body_result.extend(cond_assign_result[:-1])
         body_result.append(cond_assign_lambda_with_correct_type)
@@ -682,7 +715,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     line_high = b.source_ref.line_begin
 
         cond_con.add_body_source_ref(
-            C2ASourceRef(source_file_name, line_low, -1, line_high, -1)
+            C2ASourceRef(source_file_name, line_low, None, line_high, None)
         )
 
         # TODO add orelse result information in
@@ -778,7 +811,9 @@ class CASTToAIRVisitor(CASTVisitor):
                                 )
                                 vars[idx] = new_var
 
-                                if new_var not in set(self.state.variables):
+                                if not self.state.is_var_identifier_in_variables(
+                                    new_var.build_identifier()
+                                ):
                                     self.state.add_variable(new_var)
 
                     enumerate_vars_and_update_version(b.input_variables)
@@ -803,7 +838,6 @@ class CASTToAIRVisitor(CASTVisitor):
                         most_updated_in_loop.type_name,
                         most_updated_in_loop.source_ref,
                     )
-                    self.state.add_variable(most_updated_in_loop)
                     self.state.add_variable(new_ov)
                     matching_vars[idx] = (
                         iv,
@@ -824,8 +858,6 @@ class CASTToAIRVisitor(CASTVisitor):
                     )
                     for vars in matching_vars
                 ]
-                for v in to_output_from_input_decision:
-                    self.state.add_variable(v)
 
                 initial_vars = [
                     vars[0].identifier_information.name + "_initial"
@@ -855,7 +887,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     to_output_from_input_decision,
                     [],
                     C2ALambdaType.DECISION,
-                    C2ASourceRef(source_file_name, line_high, -1, -1, -1),
+                    C2ASourceRef(source_file_name, line_high, None, None, None),
                     input_decision_lambda_str,
                     # TODO actually fill out ast
                     None,
@@ -891,7 +923,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     callee_output_vars,
                     [],
                     C2ALambdaType.DECISION,
-                    C2ASourceRef(source_file_name, line_high, -1, -1, -1),
+                    C2ASourceRef(source_file_name, line_high, None, None, None),
                     output_decision_lambda_str,
                     # TODO actually fill out ast
                     None,
@@ -941,7 +973,6 @@ class CASTToAIRVisitor(CASTVisitor):
                 #     f"lambda {','.join([v.identifier_information.name for v in cond_vars])}"
                 #     f",{','.join([v.identifier_information.name for v in all_output_vars])}:"
                 #     f"{[f'COND_{condition_num}_{i}' for i in cond_con.output_per_condition.keys()]}"
-
                 # )
 
                 decision = C2AExpressionLambda(
@@ -955,7 +986,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     outputs,
                     [],
                     C2ALambdaType.DECISION,
-                    C2ASourceRef("", -1, -1, -1, -1),  # TODO
+                    C2ASourceRef("", None, None, None, None),  # TODO
                     lambda_expr,
                     None,  # TODO
                 )
@@ -1001,7 +1032,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 caller_output_vars,
                 [],
                 C2ALambdaType.CONTAINER,
-                C2ASourceRef(source_file_name, line_low, -1, -1, -1),
+                C2ASourceRef(source_file_name, line_low, None, None, None),
             )
         ]
 
@@ -1088,9 +1119,6 @@ class CASTToAIRVisitor(CASTVisitor):
         ]
 
         global_var_results = self.visit_node_list_and_flatten(global_var_nodes)
-        for var_lambda in global_var_results:
-            for v in var_lambda.output_variables:
-                self.state.add_variable(v)
 
         self.visit_node_list_and_flatten(non_var_global_nodes)
 
@@ -1116,7 +1144,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 list(),
                 list(),
                 global_var_results + global_body,
-                C2ASourceRef("", -1, -1, -1, -1),  # TODO source ref
+                C2ASourceRef("", None, None, None, None),  # TODO source ref
                 [],
                 "",
             )
@@ -1191,7 +1219,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 [],
                 [],
                 C2ALambdaType.UNKNOWN,
-                C2ASourceRef("", -1, -1, -1, -1),
+                C2ASourceRef("", None, None, None, None),
                 node.number,
                 node,
             )
@@ -1304,7 +1332,7 @@ class CASTToAIRVisitor(CASTVisitor):
         source_ref = (
             self.retrieve_source_ref(node.source_refs[0])
             if node.source_refs is not None and len(node.source_refs) > 0
-            else C2ASourceRef("", -1, -1, -1, -1)
+            else C2ASourceRef("", None, None, None, None)
         )
         if var_obj is None:
             var_obj = C2AVariable(

@@ -411,7 +411,7 @@ class C2AIfContainer(C2AContainerDef):
     # Represents the reference to the source code where the conditional for this if is
     condition_source_ref: C2ASourceRef
     # Output vars per each condition in the if block. Represent else condition
-    # as conidition number -1.
+    # as condition number -1.
     output_per_condition: Dict[int, List[C2AVariable]]
 
     def add_condition_outputs(self, condition_num, outputs):
@@ -443,14 +443,14 @@ class C2AIfContainer(C2AContainerDef):
 
 @dataclass(repr=True, frozen=True)
 class C2ATypeDef(object):
-    class C2AType(Enum):
-        INTEGER = 1
-        FLOAT = 2
-        STRING = 3
-        LIST = 4
-        DICT = 5
-        SET = 6
-        OBJECT = 7
+    class C2AType(str, Enum):
+        INTEGER = "integer"
+        FLOAT = "float"
+        STRING = "string"
+        LIST = "list"
+        DICT = "dict"
+        SET = "set"
+        OBJECT = "object"
 
     name: str
     given_type: C2AType
@@ -459,7 +459,7 @@ class C2ATypeDef(object):
     source_ref: C2ASourceRef
 
     def to_AIR(self):
-        return self
+        return self.__dict__
 
 
 class C2AAttributeAccessState(object):
@@ -515,7 +515,7 @@ class C2AAttributeAccessState(object):
                 [attr_var],
                 [],
                 C2ALambdaType.EXTRACT,
-                C2ASourceRef("", -1, -1, -1, -1),
+                C2ASourceRef("", None, None, None, None),
                 self.build_extract_lambda(var, [attr_var]),
                 None,
             )
@@ -539,7 +539,7 @@ class C2AAttributeAccessState(object):
                 [],
                 [],
                 C2ALambdaType.PACK,
-                C2ASourceRef("", -1, -1, -1, -1),
+                C2ASourceRef("", None, None, None, None),
                 "",  # will be filled out when "get_outstandin_pack_node" is called
                 None,
             )
@@ -629,6 +629,9 @@ class C2AState(object):
     def add_variable(self, var: C2AVariable):
         self.variables.append(var)
 
+    def add_type(self, type: C2ATypeDef):
+        self.types.append(type)
+
     def get_scope_stack(self):
         """
         Returns the current scope of the CAST to AIR state
@@ -648,6 +651,12 @@ class C2AState(object):
         top = self.scope_stack[-1]
         self.scope_stack = self.scope_stack[:-1]
         return top
+
+    def is_var_identifier_in_variables(self, identifier):
+        for v in self.variables:
+            if v.build_identifier() == identifier:
+                return True
+        return False
 
     def find_highest_version_var_in_scope(self, var_name, scope):
         """
