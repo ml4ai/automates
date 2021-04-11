@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  assembly:
+    image: ml4ailab/automates:latest
+    volumes:
+      - $DATA_DIR:/Data
+      - .:/automates
+    depends_on:
+      - "text_reading"
+    working_dir: /automates/scripts/model_assembly
+    command: python alignment_experiment.py /Data/ASKE-E/integration-wg/DSSAT-evapotranspiration-models/PT-model/PETPT--GrFN.json /Data/ASKE-E/integration-wg/DSSAT-evapotranspiration-models/PT-model/PETPT--documentation.json /Data/ASKE-E/integration-wg/DSSAT-evapotranspiration-models/PT-model/PT-2012-ET\ Measurement\ and\ Estimation\ Using\ Modified\ PT\ in\ Maise\ with\ Mulching-petpt_2012.pdf /Data/ASKE-E/integration-wg/DSSAT-evapotranspiration-models/PT-model/PT-2012-ET_equations.txt -a text_reading -p 9000
+  text_reading:
+    image: ml4ailab/automates:text_reading
+    ports:
+      - "9000:9000"
+    volumes:
+      - $DATA_DIR:/Data
+      - ./automates/text_reading:/automates/text_reading
+    depends_on:
+      - "scienceparse"
+  scienceparse:
+    image: allenai/scienceparse:2.0.3
+    ports:
+      - "8080:8080"
