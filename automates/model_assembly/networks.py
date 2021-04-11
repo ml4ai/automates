@@ -913,12 +913,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 if d == 0 and isinstance(n, VariableNode)
             ]
         )
-
-        self.literal_vars = [
-            v
-            for v in self.variables
-            if list(self.predecessors(v))[0].func_type == LambdaType.LITERAL
-        ]
+        self.literal_vars = list()
+        for var_node in self.variables:
+            preds = list(self.predecessors(var_node))
+            if len(preds) > 0 and preds[0].func_type == LambdaType.LITERAL:
+                self.literal_vars.append(var_node)
         self.outputs = [
             n
             for n, d in self.out_degree()
@@ -969,7 +968,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         return f"{self.label}\n{size_str}"
 
     def __call__(
-        self, inputs: Dict[str, Any], literals: Dict[str, Any]
+        self, inputs: Dict[str, Any], literals: Dict[str, Any] = None
     ) -> Iterable[Any]:
         """Executes the GrFN over a particular set of inputs and returns the
         result.
@@ -989,7 +988,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
         self.np_shape = (1,)
         # TODO: update this function to work with new GrFN object
         full_inputs = {
-            self.input_identifier_map[n]: v for n, v in inputs.items()
+            self.input_identifier_map[VariableIdentifier.from_str(n)]: v
+            for n, v in inputs.items()
         }
         # Set input values
         for input_node in [n for n in self.inputs if n in full_inputs]:
@@ -1007,28 +1007,34 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
             input_node.input_value = value
 
-        literal_ids = set(
-            [VariableIdentifier.from_str(var_id) for var_id in literals.keys()]
-        )
-        lit_id2val = {lit_id: literals[str(lit_id)] for lit_id in literal_ids}
-        literal_overrides = [
-            (var_node, lit_id2val[identifier])
-            for identifier, var_node in self.literal_identifier_map.items()
-            if identifier in literal_ids
-        ]
-        for input_node, value in literal_overrides:
-            # TODO: need to find a way to incorporate a 32/64 bit check here
-            if isinstance(value, float):
-                value = np.array([value], dtype=np.float64)
-            if isinstance(value, int):
-                value = np.array([value], dtype=np.int64)
-            elif isinstance(value, list):
-                value = np.array(value)
-                self.np_shape = value.shape
-            elif isinstance(value, np.ndarray):
-                self.np_shape = value.shape
+        if literals is not None:
+            literal_ids = set(
+                [
+                    VariableIdentifier.from_str(var_id)
+                    for var_id in literals.keys()
+                ]
+            )
+            lit_id2val = {
+                lit_id: literals[str(lit_id)] for lit_id in literal_ids
+            }
+            literal_overrides = [
+                (var_node, lit_id2val[identifier])
+                for identifier, var_node in self.literal_identifier_map.items()
+                if identifier in literal_ids
+            ]
+            for input_node, value in literal_overrides:
+                # TODO: need to find a way to incorporate a 32/64 bit check here
+                if isinstance(value, float):
+                    value = np.array([value], dtype=np.float64)
+                if isinstance(value, int):
+                    value = np.array([value], dtype=np.int64)
+                elif isinstance(value, list):
+                    value = np.array(value)
+                    self.np_shape = value.shape
+                elif isinstance(value, np.ndarray):
+                    self.np_shape = value.shape
 
-            input_node.input_value = value
+                input_node.input_value = value
 
         # Configure the np array shape for all lambda nodes
         for n in self.lambdas:
@@ -1542,7 +1548,13 @@ class GroundedFunctionNetwork(nx.DiGraph):
             G.add_edges_from([(var, edge.lambda_fn) for var in edge.inputs])
             G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
 
-        identifier = GenericIdentifier.from_str(data["entry_point"])
+        if "entry_point" in data:
+            entry_point = data["entry_point"]
+        elif "identifier" in data:
+            entry_point = data["identifier"]
+        else:
+            entry_point = ""
+        identifier = GenericIdentifier.from_str(entry_point)
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T)
 
 

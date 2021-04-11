@@ -51,7 +51,8 @@ def grfn_with_types():
 
 
 def test_basic_assignment_execution(basic_assignment_grfn):
-    inputs = {"input": 37}
+    print(basic_assignment_grfn.input_identifier_map)
+    inputs = {"initial::@global.main::input::-1": 37}
     result = basic_assignment_grfn(inputs)
 
     assert "output" in result
@@ -59,7 +60,11 @@ def test_basic_assignment_execution(basic_assignment_grfn):
 
 
 def test_loop_execution(loop_grfn):
-    inputs = {"input": 5, "increment": 1}
+    print(loop_grfn.input_identifier_map)
+    inputs = {
+        "initial::@global.main::input::-1": 5,
+        "initial::@global.main::increment::-1": 1,
+    }
     result = loop_grfn(inputs)
 
     assert "result" in result
@@ -67,7 +72,11 @@ def test_loop_execution(loop_grfn):
 
 
 def test_loop_execution_no_iterations(loop_grfn):
-    inputs = {"input": 1, "increment": 1}
+    print(loop_grfn.input_identifier_map)
+    inputs = {
+        "initial::@global.main::input::-1": 1,
+        "initial::@global.main::increment::-1": 1,
+    }
     result = loop_grfn(inputs)
 
     assert "result" in result
@@ -75,7 +84,8 @@ def test_loop_execution_no_iterations(loop_grfn):
 
 
 def test_loops_and_user_defined_types(grfn_with_types):
-    inputs = {"count": 0}
+    print(grfn_with_types.input_identifier_map)
+    inputs = {"PID::@global.main::count::0": 0}
     result = grfn_with_types(inputs)
 
     assert "count" in result and "pid" in result
