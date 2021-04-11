@@ -30,6 +30,7 @@ def main():
             for field_key, row_data in parquet_data.items():
                 for row_idx, datum in row_data.items():
                     row_idx_num = int(row_idx)
+                    row_order_parquet_data[row_idx_num][field_key] = datum
 
             if filename == "documents.parquet":
                 # Sorts the content sections by page number and then by
@@ -92,11 +93,30 @@ def main():
                     row_order_parquet_data.insert(
                         edit_dict["ins_idx"], edit_dict["val"]
                     )
-            
-            parquet_json_filepath = parquet_filepath.replace(
-                ".parquet", ".json"
-            )
-            json.dump(row_order_parquet_data, open(parquet_json_filepath, "w"))
+                row_order_parquet_data.sort(key=lambda d: (d["pdf_name"]))
+
+                name2results = dict()
+                for row_data in row_order_parquet_data:
+                    pdf_name = row_data["pdf_name"].replace(".pdf", "")
+                    if row_data["pdf_name"] in name2results:
+                        name2results[row_data["pdf_name"]].append(row_data)
+                    else:
+                        name2results[row_data["pdf_name"]] = [row_data]
+                for pdf_name, pdf_data in name2results.items():
+                    no_end_pdf_name = pdf_name.replace(".pdf", "")
+                    pdf_json_data_path = parquet_filepath.replace(
+                        "documents.parquet",
+                        f"{no_end_pdf_name}--COSMOS-data.json",
+                    )
+                    json.dump(pdf_data, open(pdf_json_data_path, "w"))
+
+            if filename != "documents.parquet":
+                parquet_json_filepath = parquet_filepath.replace(
+                    ".parquet", ".json"
+                )
+                json.dump(
+                    row_order_parquet_data, open(parquet_json_filepath, "w")
+                )
 
 
 if __name__ == "__main__":
