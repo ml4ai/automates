@@ -6,10 +6,20 @@ from typing import NoReturn
 
 import networkx as nx
 
+from automates.utils.misc import rd
 from automates.model_assembly.expression_visitor import (
     ExpressionVisitor,
     nodes2DiGraph,
 )
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # Before each test, set the seed for generating uuids to 0 for consistency
+    # between tests and expected output
+    rd.seed(0)
+    # Run the test function
+    yield
 
 
 def create_expr_trees(test_cases) -> list:
