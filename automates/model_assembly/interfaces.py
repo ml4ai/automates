@@ -1,5 +1,6 @@
 import os
 import json
+from typing import List, Dict, NoReturn
 
 import requests
 
@@ -127,3 +128,27 @@ class TextReadingInterface:
 class EquationReadingInterface:
     # TODO: define this for interface to EqDec and Cosmos equation-detection
     pass
+
+
+class CosmosInterface:
+    def __init__(self):
+        pass
+
+    def convert_parquet_collection(self, parquet_filenames: List[str]) -> Dict:
+        pass
+
+    def find_parquet_files(self, outdir_path: str) -> List:
+        return [
+            os.path.join(outdir_path, fname)
+            for fname in os.listdir(outdir_path)
+            if fname.endswith(".parquet")
+        ]
+
+    def parquet2dict(self, parquet_file) -> Dict:
+        pass
+
+    def parquet2Json(self, parquet_file) -> str:
+        pass
+
+    def parquet2JsonFile(self, parquet_file, json_filename) -> NoReturn:
+        pass
