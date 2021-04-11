@@ -13,5 +13,7 @@
   - Causal
   - Definition:
     - ConjDefinition
+    - ConjDefinitionType2
   - ParameterSetting
   - IntervalParameterSetting
+  - Function

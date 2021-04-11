@@ -172,7 +172,7 @@ class TestVariables extends ExtractionTest {
   }
 
   val t4b = "The plant conductance is calculated by inverting the transpiration equation using a maximum expected transpiration (Tx, mm d−1), the soil water potential at field capacity ( Sfc, J kg−1) and the leaf water potential at the onset of stomatal closure ( Lsc, J kg−1):"
-  failingTest should s"extract variables from t4b: ${t4b}" taggedAs(Somebody) in {
+  passingTest should s"extract variables from t4b: ${t4b}" taggedAs(Somebody) in {
 
     val desired = Seq("Tx", "Sfc", "Lsc") //todo: finds units as vars; action at the end, if unit => not a var?
     val mentions = extractMentions(t4b)
@@ -211,7 +211,7 @@ class TestVariables extends ExtractionTest {
   }
 
   val t9b = "For this research Tx = 10 mm d−1, Lsc = −1100 J kg−1 and Lpwp = −2000 J kg−1."
-  failingTest should s"extract variables from t9b: ${t9b}" taggedAs(Somebody) in {
+  passingTest should s"extract variables from t9b: ${t9b}" taggedAs(Somebody) in {
     val desired = Seq("Tx", "Lsc", "Lpwp") //fixme: units found as variables; 'research TX' is found as var; need to apply looksLikeAVar to units and param settings, not only defs
     val mentions = extractMentions(t9b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)

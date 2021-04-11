@@ -86,7 +86,9 @@ class OdinEngine(
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
     val (definitionMentions, other) = events.partition(_.label.contains("Definition"))
-    (loadableAttributes.actions.keepLongest(other) ++ loadableAttributes.actions.untangleConj(definitionMentions)).toVector
+
+    val untangled = loadableAttributes.actions.untangleConj(definitionMentions)
+    (loadableAttributes.actions.keepLongest(other) ++ untangled).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -137,6 +139,7 @@ object OdinEngine {
   val VARIABLE_GAZETTEER_LABEL: String = "VariableGazetteer"
   val UNIT_LABEL: String = "UnitRelation"
   val MODEL_LABEL: String = "Model"
+  val FUNCTION_LABEL: String = "Function"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"
@@ -144,6 +147,8 @@ object OdinEngine {
   val DEFINITION_ARG: String = "definition"
   val VALUE_ARG: String = "value"
   val UNIT_ARG: String = "unit"
+  val FUNCTION_INPUT_ARG: String = "input"
+  val FUNCTION_OUTPUT_ARG: String = "output"
 
 
   val logger = LoggerFactory.getLogger(this.getClass())

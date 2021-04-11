@@ -97,7 +97,8 @@ rules:
     type: token
     example: "a per-capita rate γ"
     pattern: |
-      [word=/[A-Za-z]\./] (?![word=/^[a-z]/])
+      [word=/[A-Za-z]\./ & !word=/al.|i.e/] (?![word=/^[a-z]/])
+      # exclude "al." as in "et al." and i.e as in i.e., <example>
 
   - name: compound_var
     label: Variable
@@ -105,7 +106,7 @@ rules:
     type: token
     example: "The density of water (ρw); R(t)"
     pattern: |
-      [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")"
+      [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # excluded units from variables.
       |
       [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
 
