@@ -117,7 +117,7 @@ class GenericDefinition(ABC):
                 data["domain"]["mutable"],
                 name_str,
                 data["domain_constraint"],
-                tuple(data["source_refs"]),
+                list(data["source_refs"]),
             )
         else:
             return TypeDefinition.from_data(data)
@@ -145,9 +145,11 @@ class VariableDefinition(GenericDefinition):
     def from_data(cls, data: dict) -> VariableDefinition:
         var_id = VariableIdentifier.from_str(data["name"])
         type_str = "type"
+        file_ref = data["file_uid"] if "file_uid" in data else ""
+        src_ref = data["source_refs"][0] if "source_refs" in data else ""
         code_span_data = {
-            "source_ref": data["source_refs"][0],
-            "file_uid": data["file_uid"],
+            "source_ref": src_ref,
+            "file_uid": file_ref,
             "code_type": "variable_name",
         }
         metadata = [CodeSpanReference.from_air_data(code_span_data)]
@@ -185,7 +187,9 @@ class TypeFieldDefinition:
         return cls(
             data["name"],
             data["type"],
-            [TypedMetadata.from_data(d) for d in data["metadata"]],
+            [TypedMetadata.from_data(d) for d in data["metadata"]]
+            if "metadata" in data
+            else [],
         )
 
     def to_dict(self) -> dict:
@@ -205,9 +209,11 @@ class TypeDefinition(GenericDefinition):
 
     @classmethod
     def from_air_data(cls, data: dict) -> TypeDefinition:
+        file_ref = data["file_uid"] if "file_uid" in data else ""
+        src_ref = data["source_ref"] if "source_ref" in data else ""
         code_span_data = {
-            "source_ref": data["source_ref"],
-            "file_uid": data["file_uid"],
+            "source_ref": src_ref,
+            "file_uid": file_ref,
             "code_type": "type_def",
         }
         metadata = [CodeSpanReference.from_air_data(code_span_data)]
@@ -225,11 +231,6 @@ class TypeDefinition(GenericDefinition):
 
     @classmethod
     def from_data(cls, data: dict) -> TypeDefinition:
-        # code_span_data = {
-        #     "source_ref": data["source_ref"],
-        #     "file_uid": data["file_uid"],
-        #     "code_type": "type_def",
-        # }
         metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
         return cls(
             "",
@@ -257,6 +258,7 @@ class ObjectDefinition(GenericDefinition):
 class GenericContainer(ABC):
     def __init__(self, data: dict):
         self.identifier = GenericIdentifier.from_str(data["name"])
+        file_reference = data["file_uid"] if "file_uid" in data else ""
         self.arguments = [
             VariableIdentifier.from_str_and_con(var_str, self.identifier)
             for var_str in data["arguments"]
@@ -270,12 +272,14 @@ class GenericContainer(ABC):
             for var_str in data["return_value"]
         ]
         self.statements = [
-            GenericStmt.create_statement(stmt, self, data["file_uid"])
+            GenericStmt.create_statement(stmt, self, file_reference)
             for stmt in data["body"]
         ]
+        src_ref = data["body_source_ref"] if "body_source_ref" in data else ""
+        file_ref = data["file_uid"] if "file_uid" in data else ""
         code_span_data = {
-            "source_ref": data["body_source_ref"],
-            "file_uid": data["file_uid"],
+            "source_ref": src_ref,
+            "file_uid": file_ref,
             "code_type": "code_block",
         }
         self.metadata = [CodeSpanReference.from_air_data(code_span_data)]
@@ -409,8 +413,9 @@ class CallStmt(GenericStmt):
     def __init__(self, stmt: dict, con: GenericContainer, file_ref: str):
         super().__init__(stmt, con)
         self.call_id = GenericIdentifier.from_str(stmt["function"]["name"])
+        src_ref = stmt["source_ref"] if "source_ref" in stmt else ""
         code_span_data = {
-            "source_ref": stmt["source_ref"],
+            "source_ref": src_ref,
             "file_uid": file_ref,
             "code_type": "function_call",
         }
@@ -436,8 +441,9 @@ class LambdaStmt(GenericStmt):
         # self.lambda_node_name = f"{self.parent.name}::" + self.name
         self.type = LambdaType.get_lambda_type(type_str, len(self.inputs))
         self.func_str = stmt["function"]["code"]
+        src_ref = stmt["source_ref"] if "source_ref" in stmt else ""
         code_span_data = {
-            "source_ref": stmt["source_ref"],
+            "source_ref": src_ref,
             "file_uid": file_ref,
             "code_type": "expression",
         }

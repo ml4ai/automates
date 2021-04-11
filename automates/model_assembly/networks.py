@@ -211,8 +211,10 @@ class VariableNode(GenericNode):
         return cls(
             data["uid"],
             VariableIdentifier.from_str(data["identifier"]),
-            data["object_ref"],
-            [TypedMetadata.from_data(mdict) for mdict in data["metadata"]],
+            data["object_ref"] if "object_ref" in data else "",
+            [TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
+            if "metadata" in data
+            else [],
         )
 
     def to_dict(self) -> dict:
@@ -293,7 +295,10 @@ class LambdaNode(GenericNode):
     def from_dict(cls, data: dict):
         lambda_fn = load_lambda_function(data["lambda"])
         lambda_type = LambdaType.from_str(data["type"])
-        metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+        if "metadata" in data:
+            metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+        else:
+            metadata = []
         return cls(
             data["uid"],
             lambda_type,
@@ -710,7 +715,9 @@ class GrFNSubgraph:
             type_str,
             cls.get_border_color(type_str),
             subgraph_nodes,
-            [TypedMetadata.from_data(d) for d in data["metadata"]],
+            [TypedMetadata.from_data(d) for d in data["metadata"]]
+            if "metadata" in data
+            else [],
         )
 
     def to_dict(self):
@@ -779,8 +786,8 @@ class GrFNLoopSubgraph(GrFNSubgraph):
         }
         first_decision_vars = {
             v
-            for l in initial_decision
-            for v in grfn.predecessors(l)
+            for lm_node in initial_decision
+            for v in grfn.predecessors(lm_node)
             if isinstance(v, VariableNode)
         }
 
@@ -852,6 +859,20 @@ class GroundedFunctionNetwork(nx.DiGraph):
         self.variables = [n for n in self.nodes if isinstance(n, VariableNode)]
         self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
         self.types = T
+
+        # NOTE: removing detached variables from GrFN
+        del_indices = list()
+        for idx, var_node in enumerate(self.variables):
+            found_var = False
+            for edge in self.hyper_edges:
+                if var_node in edge.inputs or var_node in edge.outputs:
+                    found_var = True
+                    break
+            if not found_var:
+                self.remove_node(var_node)
+                del_indices.append(idx)
+        for idx in del_indices:
+            del self.variables[idx]
 
         root_subgraphs = [s for s in self.subgraphs if not s.parent]
         if len(root_subgraphs) != 1:
@@ -1477,9 +1498,17 @@ class GroundedFunctionNetwork(nx.DiGraph):
         H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
 
         # TODO: fix this to actually gather typedefs
-        T = [TypeDefinition.from_data(t) for t in data["types"]]
+        T = (
+            [TypeDefinition.from_data(t) for t in data["types"]]
+            if "types" in data
+            else []
+        )
 
-        M = [TypedMetadata.from_data(d) for d in data["metadata"]]
+        M = (
+            [TypedMetadata.from_data(d) for d in data["metadata"]]
+            if "metadata" in data
+            else []
+        )
 
         # Add edges to the new DiGraph using the re-created hyper-edge objects
         for edge in H:
