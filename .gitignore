@@ -93,3 +93,6 @@ tmp
 
 # Model assembly stuff
 *align_payload.json
+
+# Docker build stuff
+.env
