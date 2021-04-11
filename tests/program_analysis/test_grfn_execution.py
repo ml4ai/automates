@@ -106,3 +106,34 @@ def test_loops_and_user_defined_types(grfn_with_types):
     }
 
     assert result == expected_result
+
+
+def test_PID_model_execution():
+    PID = GroundedFunctionNetwork.from_json(
+        "tests/data/model_assembly/GrFN_examples/PID-model--GrFN.json"
+    )
+
+    output = PID(
+        {},
+        {
+            "PID::@global.PID_realize::speed::0": 10,
+            "PID::@global.PID_init::pid.Kp::0": 0.15,
+        },
+    )
+
+    expected_output = {
+        "pid": {
+            "SetSpeed": 10,
+            "ActualSpeed": 3.65,
+            "err": 10,
+            "err_last": 10,
+            "voltage": 3.65,
+            "integral": 10,
+            "Kp": 0.15,
+            "Ki": 0.015,
+            "Kd": 0.2,
+        },
+        "speed": 3.65,
+    }
+
+    assert output == expected_output
