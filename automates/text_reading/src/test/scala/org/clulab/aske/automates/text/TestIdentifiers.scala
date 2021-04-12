@@ -3,7 +3,7 @@ package org.clulab.aske.automates.text
 import org.clulab.aske.automates.TestUtils._
 import org.clulab.aske.automates.OdinEngine.VARIABLE_LABEL
 
-class TestVariables extends ExtractionTest {
+class TestIdentifiers extends ExtractionTest {
 
   val t1 = "where Kcdmin is the minimum crop coefficient"
   passingTest should s"extract variables from t1: ${t1}" taggedAs(Somebody) in {
@@ -157,7 +157,7 @@ class TestVariables extends ExtractionTest {
   val t2b = "where fi is the daily fractional light interception, ETo is the daily reference evapotranspiration (mm d−1), pwp is the water content at permanent wilting point (m3 m−3), $z is the soil layer thickness (m), and kl is the water extraction rate, an empiric soil–root factor for the fraction of available water that can be supplied to the plant from each rooted soil layer."
   failingTest should s"extract variables from t2b: ${t2b}" taggedAs(Somebody) in {
 
-    val desired = Seq("fi", "ETo", "pwp", "$z", "kl") //todo: missing the last three, finding 'm' as a variable; adjust the lookLikeAVariable action to allow short lower-case vars, probably by checking a lexicon to see if the candidate var is an existing word, e.g. at/or/cat...
+    val desired = Seq("fi", "ETo", "pwp", "$z", "kl") //todo: missing the last three, finding 'm' as a variable; adjust the lookLikeAnIdentifier action to allow short lower-case vars, probably by checking a lexicon to see if the candidate var is an existing word, e.g. at/or/cat...
     //todo: units are also found as vars
     val mentions = extractMentions(t2b)
     testTextBoundMention(mentions, VARIABLE_LABEL, desired)

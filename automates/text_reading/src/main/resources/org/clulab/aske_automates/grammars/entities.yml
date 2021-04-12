@@ -8,7 +8,7 @@ rules:
     priority: ${priority}
     type: token
     example: ""
-    action: looksLikeAVariable
+    action: looksLikeAnIdentifier
     pattern: |
       (?<! equation) [mention=Phrase]
 
@@ -24,7 +24,7 @@ rules:
     label: Identifier
     priority: ${priority}
     type: token
-    action: looksLikeAVariable
+    action: looksLikeAnIdentifier
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
     pattern: |
       (?<variable> [word = /.*/]) (?=calculation)

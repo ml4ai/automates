@@ -4,7 +4,7 @@ rules:
 
 
   ####VALUES####
-  ###Possible improvement: many of these rules can potentially take both variables and concepts as their "variable" argument; to avoid writing a separate rule for each of the two cases, we can have one rule that has concept as a variable arg, but then apply an action which reassigns the label of the argument to "Identifier" if it passes the looksLikeAVariable heuristic. This could increase the number of false positives, though, so for now we will just add concepts to rules strictly based on when they appear in literature (instead of using this action flow to all rules)
+  ###Possible improvement: many of these rules can potentially take both variables and concepts as their "variable" argument; to avoid writing a separate rule for each of the two cases, we can have one rule that has concept as a variable arg, but then apply an action which reassigns the label of the argument to "Identifier" if it passes the looksLikeAnIdentifier heuristic. This could increase the number of false positives, though, so for now we will just add concepts to rules strictly based on when they appear in literature (instead of using this action flow to all rules)
 
   - name: var-equals_value
     label: ParameterSetting

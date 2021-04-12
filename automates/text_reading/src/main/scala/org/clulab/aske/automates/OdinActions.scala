@@ -28,7 +28,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // expand arguments
 
       val (vars, non_vars) = mentions.partition(m => m.label == "Identifier")
-      val expandedVars = keepLongestVariable(vars)
+      val expandedVars = keepLongestIdentifier(vars)
 
       val (expandable, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Description"))
 
@@ -126,7 +126,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val newMentions = new ArrayBuffer[Mention]() //Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
     for (m <- mentions) {
       val newArgs = mutable.Map[String, Seq[Mention]]() //Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
-      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
       var inclLower: Option[Boolean] = None
       var inclUpper: Option[Boolean] = None
       for (arg <- m.arguments) {
@@ -163,7 +163,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
       val newArgs = mutable.Map[String, Seq[Mention]]()
-      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
       val att = new UnitAttachment(attachedTo, "UnitAtt")
       newMentions.append(m.withAttachment(att))
     }
@@ -175,7 +175,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
       val newArgs = mutable.Map[String, Seq[Mention]]()
-      val attachedTo = if (m.arguments.exists(arg => looksLikeAVariable(arg._2, state).nonEmpty)) "variable" else "concept"
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
 
       val att = new UnitAttachment(attachedTo, "ParamSetAtt")
       newMentions.append(m.withAttachment(att))
@@ -183,7 +183,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     newMentions
   }
 
-  def keepLongestVariable(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+  def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     // used to avoid vars like R(t) being found as separate R, t, R(t, and so on
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
@@ -694,7 +694,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentionsDisplayOnlyArgs
   }
 
-  def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
 
     def mkDescriptionMention(m: Mention): Seq[Mention] = {
@@ -705,9 +705,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // The longest mention (i.e., the description) should be at least 3 characters, else it's likely a false positive
       // todo: tune
       // todo: should we constrain on the length of the variable name??
-      // looksLikeAVariable is there to eliminate some false negatives, e.g., 'radiometer' in 'the Rn device (radiometer)':
+      // looksLikeAnIdentifier is there to eliminate some false negatives, e.g., 'radiometer' in 'the Rn device (radiometer)':
       // might need to revisit
-      if (sorted.last.text.length < 3 || looksLikeAVariable(Seq(sorted.head), state).isEmpty) {
+      if (sorted.last.text.length < 3 || looksLikeAnIdentifier(Seq(sorted.head), state).isEmpty) {
         return Seq.empty
       }
       val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
@@ -731,7 +731,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
 
-  def looksLikeAVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def looksLikeAnIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
     //returns mentions that look like a variable
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
@@ -785,7 +785,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield m
   }
 
-  def looksLikeAVariableWithGreek(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def looksLikeAnIdentifierWithGreek(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //returns mentions that look like a variable
     for {
       m <- mentions
@@ -816,7 +816,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
         descrMention.head.text.length > 4 && //the descr can't be the length of a var
         !descrMention.head.text.contains("=") &&
-        looksLikeAVariable(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be a variable)
+        looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be a variable)
         &&
         descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
         ) || (descrMention.nonEmpty && freqWords.contains(descrMention.head.text)) //the description can be one short, frequent word
@@ -825,13 +825,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def descriptionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val toReturn = descrIsNotVar(looksLikeAVariable(mentions, state), state)
+    val toReturn = descrIsNotVar(looksLikeAnIdentifier(mentions, state), state)
     toReturn
   }
 
   def descriptionActionFlowSpecialCase(mentions: Seq[Mention], state: State): Seq[Mention] = {
     //select shorter as var is only applicable to one rule, so it can't be part of the regular descr. action flow
-    val varAndDescr = selectShorterAsVariable(mentions, state)
+    val varAndDescr = selectShorterAsIdentifier(mentions, state)
     val toReturn = if (varAndDescr.nonEmpty) descriptionActionFlow(varAndDescr, state) else Seq.empty
     toReturn
   }
