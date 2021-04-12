@@ -346,6 +346,19 @@ class PyASTToCAST(ast.NodeVisitor):
         
         return ModelIf(node_test, node_body, node_orelse)
 
+    def visit_Import(self, node:ast.Import):
+        """Visits a PyAST import node, which is used for importing libraries
+        that are used in programs. In particular, it's imports in the form of
+        'import X', where X is some library.
+
+        Args:
+            node (ast.Import): A PyAST Import node
+
+        Returns: 
+        """
+
+        return ModelBreak()
+
     def visit_List(self, node:ast.List):
         """Visits a PyAST List node. Which is used to represent Python lists.
 
