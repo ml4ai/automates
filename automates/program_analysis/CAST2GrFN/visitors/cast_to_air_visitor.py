@@ -264,9 +264,15 @@ class CASTToAIRVisitor(CASTVisitor):
             "Gte": ">=",
             "Lt": "<",
             "Lte": "<=",
-            "Not": "not ",
             "Eq": "==",
             "NotEq": "!=",
+            "BitXor": "^",
+            "BitAnd": "&",
+            "BitOr": "|",
+            "LShift": "<<",
+            "RShift": ">>",
+            "Not": "not ",
+            "USub": "- ",
         }
         return op_map[op] if op in op_map else None
 
@@ -296,7 +302,7 @@ class CASTToAIRVisitor(CASTVisitor):
                     [],
                     C2ALambdaType.UNKNOWN,
                     source_ref,
-                    f"({left_result[-1].lambda_expr}) {op_result} ({right_result[-1].lambda_expr})",
+                    f"({left_result[-1].lambda_expr} {op_result} {right_result[-1].lambda_expr})",
                     node,
                 )
             ]

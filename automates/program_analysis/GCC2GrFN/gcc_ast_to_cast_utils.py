@@ -20,6 +20,11 @@ GCC_OPS_TO_CAST_OPS = {
     "eq_expr": BinaryOperator.EQ,
     "ne_expr": BinaryOperator.NOTEQ,
     "negate_expr": UnaryOperator.USUB,
+    "lshift_expr": BinaryOperator.LSHIFT,
+    "rshift_expr": BinaryOperator.RSHIFT,
+    "bit_xor_expr": BinaryOperator.BITXOR,
+    "bit_and_expr": BinaryOperator.BITAND,
+    "bit_ior_expr": BinaryOperator.BITOR,
 }
 
 GCC_CONST_OPS = ["integer_cst", "real_cst"]
@@ -97,6 +102,8 @@ def gcc_type_to_var_type(type, type_ids_to_defined_types):
         or type_name == "float_type"
     ):
         return "Number"
+    elif type_name == "boolean_type":
+        return "Boolean"
     elif type_name == "pointer_type" or type_name == "array_type":
         return "List"
     elif (

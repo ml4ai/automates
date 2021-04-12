@@ -247,7 +247,10 @@ class LambdaNode(GenericNode):
         elif isinstance(res, list):
             return [item for item in res]
         elif len(values) == 0:
-            res = np.full(self.np_shape, res, dtype=np.float64)
+            if all([isinstance(v, int) for v in values]):
+                res = np.full(self.np_shape, res, dtype=np.int64)
+            else:
+                res = np.full(self.np_shape, res, dtype=np.float64)
         return res
 
     def get_kwargs(self):
