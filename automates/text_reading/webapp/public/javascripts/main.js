@@ -43,8 +43,8 @@ var collData = {
         "borderColor": "darken"
     },
     {
-            "type"   : "Variable",
-            "labels" : ["Variable"],
+            "type"   : "Identifier",
+            "labels" : ["Identifier"],
             // Blue is a nice colour for a person?
             "bgColor": variableColor,
             // Use a slightly darker version of the bgColor for the border
@@ -86,8 +86,8 @@ var collData = {
         ]
       },
      {
-         "type": "Variable",
-         "labels": ["VARIABLE"],
+         "type": "Identifier",
+         "labels": ["IDENTIFIER"],
          "bgColor": variableColor,
          "borderColor": "darken",
          "arcs": [

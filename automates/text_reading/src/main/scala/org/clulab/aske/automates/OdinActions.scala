@@ -27,7 +27,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     if (expansionHandler.nonEmpty) {
       // expand arguments
 
-      val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
+      val (vars, non_vars) = mentions.partition(m => m.label == "Identifier")
       val expandedVars = keepLongestVariable(vars)
 
       val (expandable, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Description"))
@@ -671,7 +671,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val mentionsDisplayOnlyArgs = for {
       m <- mentions
       arg <- m.arguments.values.flatten
-    } yield copyWithLabel(arg, "Variable")
+    } yield copyWithLabel(arg, "Identifier")
 
     mentionsDisplayOnlyArgs
   }

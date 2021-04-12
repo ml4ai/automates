@@ -135,7 +135,7 @@ object OdinEngine {
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
-  val VARIABLE_LABEL: String = "Variable"
+  val VARIABLE_LABEL: String = "Identifier"
   val VARIABLE_GAZETTEER_LABEL: String = "VariableGazetteer"
   val UNIT_LABEL: String = "UnitRelation"
   val MODEL_LABEL: String = "Model"

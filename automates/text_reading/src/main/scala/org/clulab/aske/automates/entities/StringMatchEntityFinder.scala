@@ -78,7 +78,7 @@ object GrFNEntityFinder {
 
     // Make a StringMatchEF based on the variable names
     // todo: send in the taxonomy path
-    StringMatchEntityFinder.fromStrings(variableShortNames, "Variable") // todo: GrFNVariable?
+    StringMatchEntityFinder.fromStrings(variableShortNames, "Identifier") // todo: GrFNVariable?
   }
 }
 

@@ -71,7 +71,7 @@ rules:
     type: token
     pattern: |
       #avoids previously found Variables
-      [mention=Variable]
+      [mention=Identifier]
 
   - name: "YEAR"
     label: Avoid

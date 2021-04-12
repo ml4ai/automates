@@ -27,7 +27,7 @@ rules:
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
       trigger = [word = "product"] (?="of")
-      input:Variable+ = nmod_of conj_and?
+      input:Identifier+ = nmod_of conj_and?
       output:Phrase = (nsubj | <nmod_as nsubjpass)
 
   #covidactnow

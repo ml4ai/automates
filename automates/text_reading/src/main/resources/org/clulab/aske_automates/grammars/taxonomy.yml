@@ -1,6 +1,6 @@
 - Entity:
   - Phrase:
-      - Variable:
+      - Identifier:
         - VariableGazetteer
       - Model
   - Measurement:
