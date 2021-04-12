@@ -169,12 +169,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   /**
-    * Extract mentions from a serialized Document json. Expected fields in the json obj passed in:
-    *  'json' : path to the Science Parse json file. In the curl post request, the data argument will look like this: "--data '{"json": "someDirectory/petpno_Penman.json"}'"
+    * Extract mentions from a json produced by running Science Parse on a pdf file. Expected fields in the json obj passed in:
+    *  'json' : path to the Science Parse json file, 'outfile' : path to the json file to store extracted mentions. In the curl post request, the data argument will look like this: "--data '{"json": "someDirectory/petpno_Penman.json", "outfile": path/to/output..json}'"
     * @return Seq[Mention] (json serialized)
     */
 
-  def jsonDoc_to_mentions: Action[AnyContent] = Action { request =>
+  def json_doc_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
     val jsonFile = json("json").str
@@ -182,9 +182,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val loader = new ScienceParsedDataLoader
     val texts = loader.loadFile(jsonFile)
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonFile)))
-    val mentionsJson = serializer.jsonAST(mentions)
-    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-    Ok(parsed_output)
+    val outFile = json("outfile").str
+    AutomatesExporter(outFile).export(mentions)
+    Ok("")
   }
 
 

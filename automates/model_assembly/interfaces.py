@@ -24,13 +24,21 @@ class TextReadingInterface:
             )
             print(f"HTTP {res} for /pdf_to_mentions on {doc_path}")
 
-        elif doc_path.endswith(".json"):
+        elif doc_path.endswith("--COSMOS-data.json"):
             res = requests.post(
                 f"{self.webservice}/cosmos_json_to_mentions",
                 headers={"Content-type": "application/json"},
                 json={"pathToCosmosJson": doc_path, "outfile": out_path},
             )
             print(f"HTTP {res} for /cosmos_json_to_mentions on {doc_path}")
+        elif doc_path.endswith(".json"):
+            res = requests.post(
+                f"{self.webservice}/json_doc_to_mentions",
+                headers={"Content-type": "application/json"},
+                json={"json": doc_path, "outfile": out_path},
+            )
+            print(f"HTTP {res} for /json_doc_to_mentions on {doc_path}")
+
         else:
             raise ValueError(f"Unknown input document extension in file {doc_path} (pdf or json expected)")
 
