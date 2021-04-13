@@ -1,0 +1,231 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "bases": [],
+                    "fields": [
+                        {
+                            "node_type": "Var",
+                            "type": "String",
+                            "val": {
+                                "node_type": "Name",
+                                "name": "exampleClassVar"
+                            }
+                        }
+                    ],
+                    "funcs": [
+                        {
+                            "body": [
+                                {
+                                    "left": {
+                                        "node_type": "Var",
+                                        "type": "Number",
+                                        "val": {
+                                            "node_type": "Name",
+                                            "name": "exampleVar"
+                                        }
+                                    },
+                                    "node_type": "Assignment",
+                                    "right": {
+                                        "node_type": "UnaryOp",
+                                        "op": "USub",
+                                        "value": {
+                                            "left": {
+                                                "node_type": "Var",
+                                                "type": "Number",
+                                                "val": {
+                                                    "node_type": "Name",
+                                                    "name": "exampleArg"
+                                                }
+                                            },
+                                            "node_type": "BinaryOp",
+                                            "op": "Add",
+                                            "right": {
+                                                "node_type": "Number",
+                                                "number": 36.2
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "node_type": "ModelReturn",
+                                    "value": {
+                                        "node_type": "String",
+                                        "string": "str"
+                                    }
+                                }
+                            ],
+                            "func_args": [
+                                {
+                                    "node_type": "Var",
+                                    "type": "Number",
+                                    "val": {
+                                        "node_type": "Name",
+                                        "name": "exampleArg"
+                                    }
+                                }
+                            ],
+                            "name": "exampleClassFunction",
+                            "node_type": "FunctionDef"
+                        }
+                    ],
+                    "name": "ExampleClass",
+                    "node_type": "ClassDef"
+                },
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "type": "ExampleClass",
+                                "val": {
+                                    "node_type": "Name",
+                                    "name": "exampleObject"
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "arguments": [],
+                                "func": {
+                                    "name": "ExampleClass",
+                                    "node_type": "Name"
+                                },
+                                "node_type": "Call"
+                            }
+                        },
+                        {
+                            "body": [
+                                {
+                                    "body": [
+                                        {
+                                            "node_type": "ModelContinue"
+                                        }
+                                    ],
+                                    "expr": {
+                                        "left": {
+                                            "node_type": "Number",
+                                            "number": 1
+                                        },
+                                        "node_type": "BinaryOp",
+                                        "op": "Eq",
+                                        "right": {
+                                            "node_type": "Number",
+                                            "number": 1
+                                        }
+                                    },
+                                    "node_type": "ModelIf",
+                                    "orelse": [
+                                        {
+                                            "node_type": "ModelBreak"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "expr": {
+                                        "attr": {
+                                            "name": "exampleClassFunction",
+                                            "node_type": "Name"
+                                        },
+                                        "node_type": "Attribute",
+                                        "value": {
+                                            "node_type": "Var",
+                                            "type": "ExampleClass",
+                                            "val": {
+                                                "node_type": "Name",
+                                                "name": "exampleObject"
+                                            }
+                                        }
+                                    },
+                                    "node_type": "Expr"
+                                }
+                            ],
+                            "expr": {
+                                "left": {
+                                    "node_type": "Number",
+                                    "number": 1
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Eq",
+                                "right": {
+                                    "node_type": "Number",
+                                    "number": 1
+                                }
+                            },
+                            "node_type": "Loop"
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "type": "Set",
+                                "val": {
+                                    "node_type": "Name",
+                                    "name": "exampleSet"
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "node_type": "Set",
+                                "values": []
+                            }
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "type": "List",
+                                "val": {
+                                    "node_type": "Name",
+                                    "name": "exampleList"
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "node_type": "List",
+                                "values": []
+                            }
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "type": "Dict",
+                                "val": {
+                                    "node_type": "Name",
+                                    "name": "exampleDict"
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "keys": [],
+                                "node_type": "Dict",
+                                "values": []
+                            }
+                        },
+                        {
+                            "expr": {
+                                "node_type": "Subscript",
+                                "slice": {
+                                    "node_type": "String",
+                                    "string": "key"
+                                },
+                                "value": {
+                                    "node_type": "Var",
+                                    "type": "Dict",
+                                    "val": {
+                                        "node_type": "Name",
+                                        "name": "exampleDict"
+                                    }
+                                }
+                            },
+                            "node_type": "Expr"
+                        }
+                    ],
+                    "func_args": [],
+                    "name": "exampleFunction",
+                    "node_type": "FunctionDef"
+                }
+            ],
+            "name": "ExampleModule",
+            "node_type": "Module"
+        }
+    ]
+}
