@@ -917,11 +917,6 @@ object ExtractAndAlign {
         hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(GLOBAL_VAR), EQN_TO_TEXT, alignments(EQN_TO_TEXT), debug))
       }
 
-      // Comment -> Text Var
-      if (linkElements.contains(COMMENT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
-      }
-
       // TextVar to Unit (through var)
       if (linkElements.contains(UNIT_THRU_VAR)) {
         hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_VAR), TEXT_VAR_TO_UNIT, alignments(TEXT_VAR_TO_UNIT), debug))
