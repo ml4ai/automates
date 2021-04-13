@@ -125,7 +125,8 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        # TODO: fix this to send types, objects and metadata
+        # TODO: fix this to send objects and metadata
+        #       (and documentation as a form of metadata)
         air = AutoMATES_IR(
             GenericIdentifier.from_str(
                 "@container::initial::@global::exampleFunction"

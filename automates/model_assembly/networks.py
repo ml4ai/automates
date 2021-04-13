@@ -1168,7 +1168,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 func = add_lambda_node(
                     LambdaType.INTERFACE, interface_func_str
                 )
-                # out_nodes = [add_variable_node(id) for id in con.arguments]
                 out_nodes = [variable_nodes[v_id] for v_id in con.arguments]
                 add_hyper_edge(inputs, func, out_nodes)
                 con_subgraph.nodes.append(func)
@@ -1230,7 +1229,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
             )
             Occs[stmt.call_id] += 1
             out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
-            # out_nodes = [add_variable_node(var) for var in stmt.outputs]
             subgraph.nodes.extend(out_nodes)
             add_hyper_edge(con_outputs, interface_func, out_nodes)
             for output_node in out_nodes:
@@ -1245,7 +1243,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
         ) -> None:
             inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
             out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
-            # out_nodes = [add_variable_node(var) for var in stmt.outputs]
             func = add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
 
             subgraph.nodes.append(func)
@@ -1606,7 +1603,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
 
-        # TODO: fix this to actually gather typedefs
         T = (
             [TypeDefinition.from_data(t) for t in data["types"]]
             if "types" in data
