@@ -65,6 +65,7 @@ CAST_NODES_TYPES_LIST = [
     Number,
     Set,
     String,
+    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
@@ -199,6 +200,14 @@ class CAST(object):
         elif isinstance(data, (float, int, str)):
             # If we see a primitave type, simply return its value
             return data
+        elif all(k in data for k in ("row_start", "row_end", "col_start", "col_end")):
+            return SourceRef(
+                row_start=data["row_start"],
+                row_end=data["row_end"],
+                col_start=data["col_start"],
+                col_end=data["col_end"],
+                source_file_name=data["source_file_name"],
+            )
 
         if "node_type" in data:
             # Create the object specified by "node_type" object with the values
