@@ -699,7 +699,7 @@ object ExtractAndAlign {
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(INT_PARAM_SETTING_THRU_CONCEPT) = throughVar.map { mention =>
+        linkElements(INT_PARAM_SETTING_THRU_CONCEPT) = throughConcept.map { mention =>
           mentionToIDedObjString(mention, INT_PARAM_SETTING_THRU_CONCEPT)
         }
       }
@@ -719,8 +719,8 @@ object ExtractAndAlign {
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(PARAM_SETTING_THRU_CONCEPT) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, PARAM_SETTING_THRU_VAR)
+        linkElements(PARAM_SETTING_THRU_CONCEPT) = throughConcept.map { mention =>
+          mentionToIDedObjString(mention, PARAM_SETTING_THRU_CONCEPT)
         }
       }
 
@@ -739,7 +739,7 @@ object ExtractAndAlign {
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(UNIT_THRU_CONCEPT) = throughVar.map { mention =>
+        linkElements(UNIT_THRU_CONCEPT) = throughConcept.map { mention =>
           mentionToIDedObjString(mention, UNIT_THRU_CONCEPT)
         }
       }
@@ -924,12 +924,12 @@ object ExtractAndAlign {
 
       // TextVar to Unit (through var)
       if (linkElements.contains(UNIT_THRU_VAR)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(GLOBAL_VAR), TEXT_VAR_TO_UNIT, alignments(TEXT_VAR_TO_UNIT), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_VAR), TEXT_VAR_TO_UNIT, alignments(TEXT_VAR_TO_UNIT), debug))
       }
 
       // TextVar to Unit (through concept)
       if (linkElements.contains(UNIT_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(GLOBAL_VAR), TEXT_TO_UNIT, alignments(TEXT_TO_UNIT), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_CONCEPT), TEXT_TO_UNIT, alignments(TEXT_TO_UNIT), debug))
       }
 
       // TextVar to ParamSetting (through var)
@@ -939,7 +939,7 @@ object ExtractAndAlign {
 
       // TextVar to ParamSetting (through concept)
       if (linkElements.contains(PARAM_SETTING_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_TO_PARAM_SETTING, alignments(TEXT_TO_PARAM_SETTING), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_CONCEPT), TEXT_TO_PARAM_SETTING, alignments(TEXT_TO_PARAM_SETTING), debug))
       }
 
       // TextVar to IntervalParamSetting (through var)
