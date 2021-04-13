@@ -80,15 +80,16 @@ def test_roundtrip_json_serialization(Si_Obj):
 def test_Sobol():
     N = 1000
     B = {
-        "tmax": [0.0, 40.0],
-        "tmin": [0.0, 40.0],
-        "srad": [0.0, 30.0],
-        "msalb": [0.0, 1.0],
-        "xhlai": [0.0, 20.0],
+        "PETPT::petpt::tmax::-1": [0.0, 40.0],
+        "PETPT::petpt::tmin::-1": [0.0, 40.0],
+        "PETPT::petpt::srad::-1": [0.0, 30.0],
+        "PETPT::petpt::msalb::-1": [0.0, 1.0],
+        "PETPT::petpt::xhlai::-1": [0.0, 20.0],
     }
     petpt_grfn = GroundedFunctionNetwork.from_json(
         "tests/data/model_analysis/PT_GrFN.json"
     )
+    print(petpt_grfn.input_name_map)
     (indices, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
         N, petpt_grfn, B, save_time=True
     )
