@@ -25,6 +25,9 @@ GCC_OPS_TO_CAST_OPS = {
     "bit_xor_expr": BinaryOperator.BITXOR,
     "bit_and_expr": BinaryOperator.BITAND,
     "bit_ior_expr": BinaryOperator.BITOR,
+    "bit_not_expr": UnaryOperator.INVERT,
+    "logical_or": BinaryOperator.OR,
+    "logical_and": BinaryOperator.AND,
 }
 
 GCC_CONST_OPS = ["integer_cst", "real_cst"]

@@ -272,7 +272,10 @@ class CASTToAIRVisitor(CASTVisitor):
             "LShift": "<<",
             "RShift": ">>",
             "Not": "not ",
+            "Invert": "~",
             "USub": "- ",
+            "And": "&&",
+            "Or": "||",
         }
         return op_map[op] if op in op_map else None
 
