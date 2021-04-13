@@ -143,13 +143,7 @@ class CAST(object):
             C[new_container.identifier] = new_container
 
         grfn = GroundedFunctionNetwork.from_AIR(
-<<<<<<< HEAD
             GenericIdentifier.from_str("@container::initial::@global::main"),
-=======
-            GenericIdentifier.from_str(
-                "@container::initial::@global::exampleFunction"
-            ),
->>>>>>> f521961fdd6aa862f58db50acf0929f9b9b18768
             C,
             V,
             T,
