@@ -143,7 +143,13 @@ class CAST(object):
             C[new_container.identifier] = new_container
 
         grfn = GroundedFunctionNetwork.from_AIR(
+<<<<<<< HEAD
             GenericIdentifier.from_str("@container::initial::@global::main"),
+=======
+            GenericIdentifier.from_str(
+                "@container::initial::@global::exampleFunction"
+            ),
+>>>>>>> f521961fdd6aa862f58db50acf0929f9b9b18768
             C,
             V,
             T,
@@ -223,6 +229,20 @@ class CAST(object):
         """
         nodes = cls.parse_cast_json(json_data["nodes"])
         return cls(nodes)
+
+    @classmethod
+    def from_json_file(cls, json_filepath):
+        """
+        Loads json CAST data from a file and returns the created CAST object
+
+        Args:
+            json_filepath: string of a full filepath to a JSON file
+                           representing a CAST with a `nodes` field
+
+        Returns:
+            CAST: The parsed CAST object.
+        """
+        return cls.from_json_data(json.load(open(json_filepath, "r")))
 
     @classmethod
     def from_json_str(cls, json_str):
