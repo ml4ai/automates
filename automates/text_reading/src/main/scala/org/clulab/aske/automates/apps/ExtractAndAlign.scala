@@ -28,39 +28,42 @@ import scala.collection.mutable.ArrayBuffer
 case class alignmentArguments(json: Value, variableNames: Option[Seq[String]], variableShortNames: Option[Seq[String]], commentDescriptionMentions: Option[Seq[Mention]], descriptionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], intervalParameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]])
 
 object ExtractAndAlign {
+  // Link element types
   val COMMENT = "comment"
-  val TEXT = "text"
-  val TEXT_VAR = "text_var"
-  val GLOBAL_VAR = "global_var"
-  val CONCEPT_PARAM_SETTING = "concept_param_setting"
-  val VAR_PARAM_SETTING = "var_param_setting"
-  val CONCEPT_UNIT = "concept_unit"
-  val VAR_UNIT = "var_unit"
-  val SOURCE = "source"
-  val EQUATION = "equation"
-  val FULL_TEXT_EQUATION = "full_text_equation"
+  val TEXT_VAR = "text_var" // stores information about each variable, e.g., identifier, associated description, arguments, and when available location in the original document (e.g., in the pdf)
+  val GLOBAL_VAR = "global_var" // stores ids of text variables that are likely different instances of the same global variable
+  val SOURCE = "source" // identifiers found in source code
+  val EQUATION = "equation" // an equation extracted from the original document
   val SVO_GROUNDING = "SVOgrounding"
-  val SRC_TO_COMMENT = "source_to_comment"
-  val TEXT_VAR_TO_UNIT = "text_var_to_unit"
-  val TEXT_TO_UNIT = "text_to_unit"
-  val TEXT_VAR_TO_PARAM_SETTING = "text_var_to_param_setting"
-  val TEXT_VAR_TO_INT_PARAM_SETTING = "text_var_to_int_param_setting"
-  val TEXT_TO_INT_PARAM_SETTING = "text_to_int_param_setting"
-  val TEXT_TO_PARAM_SETTING = "text_to_param_setting"
+  // Below, "through concept" means the arg in question is attached to a variable concept,
+  // e.g., tempterature is measured in celsius, while "though identifier" means the arg is attached ti an identidier, e.g., T is measured in celsius.
   val INT_PARAM_SETTING_THRU_CONCEPT = "int_param_setting_through_concept"
-  val INT_PARAM_SETTING_THRU_VAR = "int_param_setting_through_var"
+  val INT_PARAM_SETTING_THRU_IDENTIFIER = "int_param_setting_through_identifier"
   val PARAM_SETTING_THRU_CONCEPT = "parameter_setting_through_concept"
-  val PARAM_SETTING_THRU_VAR = "parameter_setting_through_var"
-  val UNIT_THRU_VAR = "unit_through_var"
+  val PARAM_SETTING_THRU_IDENTIFIER = "parameter_setting_through_identifier"
   val UNIT_THRU_CONCEPT = "unit_through_concept"
-  val EQN_TO_TEXT = "equation_to_text"
-  val COMMENT_TO_TEXT = "comment_to_text"
-  val TEXT_TO_SVO = "textToSVO"
+  val UNIT_THRU_IDENTIFIER = "unit_through_identifier"
+  val FULL_TEXT_EQUATION = "full_text_equation"
+
+  // Relations between links
+  val SRC_TO_COMMENT = "source_to_comment"
+  val GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER = "global_var_to_unit_through_identifier"
+  val GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT = "global_var_to_unit_through_concept"
+  val GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER = "global_var_to_param_setting_through_identifier"
+  val GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT = "global_var_to_param_setting_through_concept"
+  val GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER = "global_var_to_interval_param_setting_through_identifier"
+  val GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT = "global_var_to_interval_param_setting_through_concept"
+
+  val EQN_TO_GLOBAL_VAR = "equation_to_global_var"
+  val COMMENT_TO_GLOBAL_VAR = "comment_to_global_var"
+  val GLOBAL_VAR_TO_SVO = "global_var_to_svo"
+
+  // labels and argument names
   val DESCRIPTION = "description"
   val VARIABLE = "variable"
   val DESCR_LABEL = "Description"
-  val PARAMETER_SETTING_LABEL = "parameter_setting"
-  val INTERVAL_PARAMETER_SETTING_LABEL = "interval_parameter_setting"
+  val PARAMETER_SETTING_LABEL = "ParameterSetting"
+  val INTERVAL_PARAMETER_SETTING_LABEL = "IntervalParameterSetting"
   val UNIT_LABEL = "Unit"
 
   val logger = LoggerFactory.getLogger(this.getClass())
@@ -124,8 +127,8 @@ object ExtractAndAlign {
     // fixme: rethink svo grounding
 //    linkElements(TEXT_VAR) =  if (groundToSVO) {
 //      // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
-//      if (alignments.contains("TEXT_TO_SVO")) {
-//        updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(TEXT_TO_SVO))
+//      if (alignments.contains("GLOBAL_VAR_TO_SVO")) {
+//        updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(GLOBAL_VAR_TO_SVO))
 //      } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
 //
 //    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
@@ -355,13 +358,13 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(TEXT_VAR_TO_UNIT) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
       // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(TEXT_TO_UNIT) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
     }
 
@@ -371,7 +374,7 @@ object ExtractAndAlign {
       val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), SVOgroundings.get.map(_._1.toLowerCase))
 
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-      alignments(TEXT_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
+      alignments(GLOBAL_VAR_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
     }
 
 
@@ -384,14 +387,14 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(TEXT_VAR_TO_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(TEXT_TO_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
     }
@@ -406,14 +409,14 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(TEXT_VAR_TO_INT_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(TEXT_TO_INT_PARAM_SETTING) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
     }
@@ -424,14 +427,14 @@ object ExtractAndAlign {
       if (allGlobalVars.nonEmpty && equationChunksAndSource.isDefined) {
         val equationToTextAlignments = alignmentHandler.editDistance.alignEqAndTexts(equationChunksAndSource.get.unzip._1, allGlobalVars.map(_.identifier))
         // group by src idx, and keep only top k (src, dst, score) for each src idx
-        alignments(EQN_TO_TEXT) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
+        alignments(EQN_TO_GLOBAL_VAR) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
       }
 
     /** Align the comment descriptions to the text descriptions */
     if (allGlobalVars.nonEmpty && commentDescriptionMentions.isDefined) {
       val commentToTextAlignments = alignmentHandler.w2v.alignMentionsAndGlobalVars(commentDescriptionMentions.get, allGlobalVars)
       // group by src idx, and keep only top k (src, dst, score) for each src idx
-      alignments(COMMENT_TO_TEXT) = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
+      alignments(COMMENT_TO_GLOBAL_VAR) = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
     }
 
     alignments.toMap
@@ -619,8 +622,8 @@ object ExtractAndAlign {
     val originalSentence = mention.sentenceObj.words.mkString(" ")
     val offsets = mention.tokenInterval.toString()
     val args = mentionType match {
-      case INT_PARAM_SETTING_THRU_VAR | INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention)
-      case PARAM_SETTING_THRU_VAR | PARAM_SETTING_THRU_CONCEPT | UNIT_THRU_VAR | UNIT_THRU_CONCEPT | TEXT_VAR =>  getArgObj(mention)
+      case INT_PARAM_SETTING_THRU_IDENTIFIER | INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention)
+      case PARAM_SETTING_THRU_IDENTIFIER | PARAM_SETTING_THRU_CONCEPT | UNIT_THRU_IDENTIFIER | UNIT_THRU_CONCEPT | TEXT_VAR =>  getArgObj(mention)
       case _ => ???
     }
 
@@ -693,8 +696,8 @@ object ExtractAndAlign {
        .attachments, "ParamSettingIntervalAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(INT_PARAM_SETTING_THRU_VAR) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, INT_PARAM_SETTING_THRU_VAR)
+        linkElements(INT_PARAM_SETTING_THRU_IDENTIFIER) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, INT_PARAM_SETTING_THRU_IDENTIFIER)
         }
       }
 
@@ -712,8 +715,8 @@ object ExtractAndAlign {
         .attachments, "ParamSetAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(PARAM_SETTING_THRU_VAR) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, PARAM_SETTING_THRU_VAR)
+        linkElements(PARAM_SETTING_THRU_IDENTIFIER) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, PARAM_SETTING_THRU_IDENTIFIER)
 
         }
       }
@@ -733,8 +736,8 @@ object ExtractAndAlign {
         .attachments, "UnitAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(UNIT_THRU_VAR) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, UNIT_THRU_VAR)
+        linkElements(UNIT_THRU_IDENTIFIER) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, UNIT_THRU_IDENTIFIER)
         }
       }
 
@@ -908,43 +911,43 @@ object ExtractAndAlign {
 
       // Comment -> Text Var
       if (linkElements.contains(COMMENT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_TEXT, alignments(COMMENT_TO_TEXT), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_GLOBAL_VAR, alignments(COMMENT_TO_GLOBAL_VAR), debug))
       }
 
       // Equation -> Text
       if (linkElements.contains(EQUATION)) {
         println("has eq and text")
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(GLOBAL_VAR), EQN_TO_TEXT, alignments(EQN_TO_TEXT), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(GLOBAL_VAR), EQN_TO_GLOBAL_VAR, alignments(EQN_TO_GLOBAL_VAR), debug))
       }
 
       // TextVar to Unit (through var)
-      if (linkElements.contains(UNIT_THRU_VAR)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_VAR), TEXT_VAR_TO_UNIT, alignments(TEXT_VAR_TO_UNIT), debug))
+      if (linkElements.contains(UNIT_THRU_IDENTIFIER)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_IDENTIFIER), GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER), debug))
       }
 
       // TextVar to Unit (through concept)
       if (linkElements.contains(UNIT_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_CONCEPT), TEXT_TO_UNIT, alignments(TEXT_TO_UNIT), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_CONCEPT), GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT), debug))
       }
 
       // TextVar to ParamSetting (through var)
-      if (linkElements.contains(PARAM_SETTING_THRU_VAR)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_PARAM_SETTING, alignments(TEXT_VAR_TO_PARAM_SETTING), debug))
+      if (linkElements.contains(PARAM_SETTING_THRU_IDENTIFIER)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_IDENTIFIER), GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER), debug))
       }
 
       // TextVar to ParamSetting (through concept)
       if (linkElements.contains(PARAM_SETTING_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_CONCEPT), TEXT_TO_PARAM_SETTING, alignments(TEXT_TO_PARAM_SETTING), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_CONCEPT), GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT), debug))
       }
 
       // TextVar to IntervalParamSetting (through var)
-      if (linkElements.contains(INT_PARAM_SETTING_THRU_VAR)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_VAR), TEXT_VAR_TO_INT_PARAM_SETTING, alignments(TEXT_VAR_TO_INT_PARAM_SETTING), debug))
+      if (linkElements.contains(INT_PARAM_SETTING_THRU_IDENTIFIER)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_IDENTIFIER), GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER), debug))
       }
 
       // TextVar to IntervalParamSetting (through concept)
       if (linkElements.contains(INT_PARAM_SETTING_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_CONCEPT), TEXT_TO_INT_PARAM_SETTING, alignments(TEXT_TO_INT_PARAM_SETTING), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_CONCEPT), GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT), debug))
       }
 
     }
@@ -1018,9 +1021,9 @@ object ExtractAndAlign {
     val source = if (grfn.obj.get("source").isDefined) {
       Some(grfn.obj("source").arr.mkString(";"))
     } else None
-    // Get source variables
-    val variableNames = Some(GrFNParser.getVariables(grfn))
-    val variableShortNames = Some(GrFNParser.getVariableShortNames(variableNames.get))
+    // Get source identifiers
+    val identifierNames = Some(GrFNParser.getVariables(grfn))
+    val variableShortNames = Some(GrFNParser.getVariableShortNames(identifierNames.get))
 
     // Get comment descriptions
     val commentDescriptionMentions = getCommentDescriptionMentions(localCommentReader, grfn, variableShortNames, source)
@@ -1057,7 +1060,7 @@ object ExtractAndAlign {
     // Ground the extracted text mentions, the comments, and the equation variables to the grfn variables
     val groundedGrfn = groundMentions(
       grfn: Value,
-      variableNames,
+      identifierNames,
       variableShortNames,
       Some(textDescriptionMentions),
       Some(parameterSettingMentions),

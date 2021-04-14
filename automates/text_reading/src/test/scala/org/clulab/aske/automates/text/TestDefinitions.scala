@@ -35,7 +35,7 @@ class TestDescriptions extends ExtractionTest {
     "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
   failingTest should s"find descriptions from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Kcdmin" -> Seq("minimum crop coefficient", "Kcd at LAI = 0"), // note: conjunction? is it possible to capture two different descriptions for one variable?
+      "Kcdmin" -> Seq("minimum crop coefficient", "Kcd at LAI = 0"), // note: conjunction? is it possible to capture two different descriptions for one identifier?
       "Kcdmax" -> Seq("maximum crop coefficient at high LAI"),
       "SKc" -> Seq("shaping parameter") //todo: should this be expanded?
     )
@@ -151,9 +151,9 @@ class TestDescriptions extends ExtractionTest {
       "fi" -> Seq("daily fractional light interception"),
       "ETo" -> Seq("daily reference evapotranspiration"),
       "pwp" -> Seq("water content at permanent wilting point"),
-      "Δz" -> Seq("soil layer thickness"), //note: in order to capture "$z" as one variable, a rule was added under compound_var rule.
+      "Δz" -> Seq("soil layer thickness"), //note: in order to capture "$z" as one identifier, a rule was added under compound_identifier rule.
       "kl" -> Seq("water extraction rate", "empiric soil–root factor for the fraction of available water that can " +
-        "be supplied to the plant from each rooted soil layer") //note: is it possible to capture two different descriptions for one variable?
+        "be supplied to the plant from each rooted soil layer") //note: is it possible to capture two different descriptions for one identifier?
     )
     val mentions = extractMentions(t2b)
     testDescriptionEvent(mentions, desired)
@@ -184,7 +184,7 @@ class TestDescriptions extends ExtractionTest {
   }
 
   val t5b = "The average soil water potential (S, J kg−1) is calculated based on a representative root length " +
-    "fraction for each soil layer (fr,j):" //fixme: allow commas in var in the lookslikeavar rule? r,j are two comma-separated subscripts here.
+    "fraction for each soil layer (fr,j):" //fixme: allow commas in identifier in the lookslikeaidentifier rule? r,j are two comma-separated subscripts here.
   failingTest should s"find descriptions from t5b: ${t5b}" taggedAs(Somebody) in {
     val desired = Seq(
       "S" -> Seq("average soil water potential"),
@@ -246,7 +246,7 @@ class TestDescriptions extends ExtractionTest {
     failingTest should s"find descriptions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
         "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
-      ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a description for Ta by var_appos_descr rule. (Ta,rl is one variable)
+      ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a description for Ta by identifier_appos_descr rule. (Ta,rl is one identifier)
       val mentions = extractMentions(t12b)
       testDescriptionEvent(mentions, desired)
 
@@ -256,7 +256,7 @@ class TestDescriptions extends ExtractionTest {
     passingTest should s"find descriptions from t13b: ${t13b}" taggedAs(Somebody) in {
       val desired = Seq(
         "s1" -> Seq("parameters of a logistic curve"),
-        "s2" -> Seq("parameters of a logistic curve"), // fixme: description for s2 is captured twice by both var_cop_conj_description and var_cop_description.
+        "s2" -> Seq("parameters of a logistic curve"), // fixme: description for s2 is captured twice by both identifier_cop_conj_description and identifier_cop_description.
         "w" -> Seq("soil limitation") // need to expand this to "to water uptake of each layer" (needs to be reviewed - expansion handler?)
       )
       val mentions = extractMentions(t13b)
@@ -280,14 +280,14 @@ class TestDescriptions extends ExtractionTest {
     "head (m)."
     failingTest should s"find descriptions from t2c: ${t2c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "t" -> Seq("time"), // fixme: d is captured as a variable here. needs to be fixed. (needs to be reviewed - difficulty of distinguishing "units" and "variables")
+        "t" -> Seq("time"), // fixme: d is captured as a identifier here. needs to be fixed. (needs to be reviewed - difficulty of distinguishing "units" and "identifiers")
         "C" -> Seq("differential water capacity"),
         "q" -> Seq("water flux density"),
         "r" -> Seq("distance from the axial center"),
         "S" -> Seq("sink or source term"), //two separate concepts, not going to pass without expansion? (todo: try expand on conj_or!)
         "H" -> Seq("hydraulic head")
       )
-      //fixme: "var_description_appos_bidir++selectShorter" rule wrongly extracted two additional descriptions.
+      //fixme: "identifier_description_appos_bidir++selectShorter" rule wrongly extracted two additional descriptions.
       val mentions = extractMentions(t2c)
       testDescriptionEvent(mentions, desired)
     }
@@ -305,8 +305,8 @@ class TestDescriptions extends ExtractionTest {
     "and Ar (m2) is the root surface area."
     failingTest should s"find descriptions from t5c: ${t5c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "L" -> Seq("root length"), //fixme: both L and z are captured as compound variables with "(m)". -> fixed
-        "z" -> Seq("total rooted soil depth"), //z is not found as concept bc it's found as B-VP: need a surface rule where var is any word but use a looksLikeAVar on it? -> fixed
+        "L" -> Seq("root length"), //fixme: both L and z are captured as compound identifiers with "(m)". -> fixed
+        "z" -> Seq("total rooted soil depth"), //z is not found as concept bc it's found as B-VP: need a surface rule where identifier is any word but use a looksLikeAVar on it? -> fixed
         "Ap" -> Seq("surface area"),
         "Ar" -> Seq("root surface area") //todo: bad parse; have to have a surface rule -> fixed
       )
@@ -321,8 +321,8 @@ class TestDescriptions extends ExtractionTest {
   failingTest should s"find descriptions from t7c: ${t7c}" taggedAs(Somebody) in {
 
     val desired = Seq(
-      "r0" -> Seq("root radius"), // fixme: when variable and description are separated by parenthesis, it is not captured by var_cop_description rule. -> fixed
-      "rm" -> Seq("radius of the root extraction zone"), // fixme: roots (rm) sequence is captured as descr (var) by comma_appos_var rule.
+      "r0" -> Seq("root radius"), // fixme: when identifier and description are separated by parenthesis, it is not captured by identifier_cop_description rule. -> fixed
+      "rm" -> Seq("radius of the root extraction zone"), // fixme: roots (rm) sequence is captured as descr (identifier) by comma_appos_identifier rule.
       "R" -> Seq("root density")
     )
     val mentions = extractMentions(t7c)
@@ -360,7 +360,7 @@ class TestDescriptions extends ExtractionTest {
   val t2e = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld)"
   failingTest should s"find descriptions from t2e: ${t2e}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Rnl" -> Seq("net long-wave radiation"), //fixme: var_cop_description overrode the var_appos_descr rule. (maybe due to "keep the longest" principle?) -> fixed, but now two descriptions are captured
+      "Rnl" -> Seq("net long-wave radiation"), //fixme: identifier_cop_description overrode the identifier_appos_descr rule. (maybe due to "keep the longest" principle?) -> fixed, but now two descriptions are captured
       "Rlu" -> Seq("upward long-wave radiation from the standardized surface"), //fixme: description was not captured. (maybe due to the overlapping?)
       "Rld" -> Seq("downward long-wave radiation from the sky"), //fixme: needs to expand to include the "downward long-wave radiation from the" part (issue occurred due to bad parsing)
     )
@@ -548,9 +548,9 @@ class TestDescriptions extends ExtractionTest {
       "under optimum soil water conditions, and achieving full production under the given climatic conditions."
   failingTest should s"find descriptions from t3h: ${t3h}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "ETc" -> Seq("crop evapotranspiration under standard conditions"), // todo: ETc should be captured as a variable. -> fixed (descriptions not captured properly. needs new rules.)
+      "ETc" -> Seq("crop evapotranspiration under standard conditions"), // todo: ETc should be captured as an identifier. -> fixed (descriptions not captured properly. needs new rules.)
       "ETc" -> Seq("evapotranspiration from disease-free, well-fertilized crops, grown in large fields, " + // fixme: this should be captured as the description.
-      "under optimum soil water conditions, and achieving full production under the given climatic conditions") // todo: need to allow two descriptions per variable.
+      "under optimum soil water conditions, and achieving full production under the given climatic conditions") // todo: need to allow two descriptions per identifier.
     )
     val mentions = extractMentions(t3h)
     testDescriptionEvent(mentions, desired)
@@ -585,7 +585,7 @@ class TestDescriptions extends ExtractionTest {
   failingTest should s"find descriptions from t1i: ${t1i}" taggedAs(Somebody) in {
     val desired =  Seq(
       "S" -> Seq("Susceptible"),
-      "E" -> Seq("exposed"), // fixme: Descriptions of I1, I2, I3 are not extracted (needs to be reviewed - needs a new conj_rule?) // todo: check if I1, I2, I3 are actually variables (covid act now p.2)
+      "E" -> Seq("exposed"), // fixme: Descriptions of I1, I2, I3 are not extracted (needs to be reviewed - needs a new conj_rule?) // todo: check if I1, I2, I3 are actually identifiers (covid act now p.2)
       "I" -> Seq("infected"),
       "I1" -> Seq("mild"),
       "I2" -> Seq("moderate"),

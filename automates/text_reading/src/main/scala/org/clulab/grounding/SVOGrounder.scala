@@ -242,7 +242,7 @@ object SVOGrounder {
   //            SUPPORT METHODS
   // ======================================================
 
-  /**takes a series of mentions, maps each variable in the description mentions (currently the only groundable
+  /**takes a series of mentions, maps each variable/identifier in the description mentions (currently the only groundable
   * type of mentions) to a sequence of results from the SVO ontology, and converts these mappings into an object
   * writable with upickle */
   def groundDescriptionsToSVO(mentions: Seq[Mention], k: Int): Seq[SVOGrounding] = {

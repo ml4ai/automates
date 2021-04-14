@@ -27,10 +27,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     if (expansionHandler.nonEmpty) {
       // expand arguments
 
-      val (vars, non_vars) = mentions.partition(m => m.label == "Identifier")
-      val expandedVars = keepLongestIdentifier(vars)
+      val (identifiers, non_identifiers) = mentions.partition(m => m.label == "Identifier")
+      val expandedVars = keepLongestIdentifier(identifiers)
 
-      val (expandable, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Description"))
+      val (expandable, other) = (expandedVars ++ non_identifiers).partition(m => m.label.contains("Description"))
 
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs)
       val (conjDescrType2, otherDescrs) = expanded.partition(_.label.contains("Type2"))
@@ -184,7 +184,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    // used to avoid vars like R(t) being found as separate R, t, R(t, and so on
+    // used to avoid identifiers like R(t) being found as separate R, t, R(t, and so on
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
     for (gbs <- groupedBySent) {
@@ -667,7 +667,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     copy
   }
 
-  def variableArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+  def identifierArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val mentionsDisplayOnlyArgs = for {
       m <- mentions
       arg <- m.arguments.values.flatten
@@ -700,7 +700,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     def mkDescriptionMention(m: Mention): Seq[Mention] = {
       val outer = m.arguments("c1").head
       val inner = m.arguments("c2").head
-      if (outer.text.split(" ").last.length == 1 & inner.text.length == 1) return Seq.empty // this is a filter that helps avoid splitting of compound variables, e.g. the rate R(t) - t should not be extracted as a variable with a description 'rate R'
+      if (outer.text.split(" ").last.length == 1 & inner.text.length == 1) return Seq.empty // this is a filter that helps avoid splitting of compound variables/identifiers, e.g. the rate R(t) - t should not be extracted as a variable with a description 'rate R'
       val sorted = Seq(outer, inner).sortBy(_.text.length)
       // The longest mention (i.e., the description) should be at least 3 characters, else it's likely a false positive
       // todo: tune
@@ -710,7 +710,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (sorted.last.text.length < 3 || looksLikeAnIdentifier(Seq(sorted.head), state).isEmpty) {
         return Seq.empty
       }
-      val variable = changeLabel(sorted.head, VARIABLE_LABEL) // the shortest is the variable
+      val variable = changeLabel(sorted.head, IDENTIFIER_LABEL) // the shortest is the variable/identifier
       val description = changeLabel(sorted.last, DESCRIPTION_LABEL) // the longest if the description
       val descrMention = m match {
         case rm: RelationMention => rm.copy(
@@ -733,25 +733,25 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAnIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
-    //returns mentions that look like a variable
+    //returns mentions that look like an identifier
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
-      // If the variable was found with a Gazetteer passed through the webservice, keep it
+      // If the variable/identifier was found with a Gazetteer passed through the webservice, keep it
       if (v == null) return false
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
       if (v.words.length < 3 && v.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
-      if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for var that include a greek letter---those are found as separate words even if there is not space
+      if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for identifiers that include a greek letter---those are found as separate words even if there is not space
       if (v.words.length==4) {
-        // to account for vars like R(t)
+        // to account for identifiers like R(t)
         if (v.words(1) == "(" & v.words(3) == ")" ) return true
       }
       if (v.words.length != 1) return false
       if (v.words.head.contains("-") & v.words.head.last.isDigit) return false
-      // Else, the variable candidate has length 1
+      // Else, the identifier candidate has length 1
       val word = v.words.head
       if (freqWords.contains(word.toLowerCase())) return false //filter out potential variables that are freq words
       if (word.length > 6) return false
-      // a variable cannot be a unit
+      // an identifier/variable cannot be a unit
       if (v.entities.get.exists(_ == "B-unit")) return false
       val tag = v.tags.get.head
       if (tag == "POS") return false
@@ -762,7 +762,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         |
         word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
         |
-        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0//this is too specific; trying to get to single-letter vars with a subscript (e.g., u2) without getting units like m-2
+        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0//this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
       |
           (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
@@ -771,6 +771,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
     for {
       m <- mentions
+      // Identifiers are extracted as a variable argument
       (varMention, isArg) = m match {
         case tb: TextBoundMention => (m, false)
         case rm: RelationMention => {
@@ -786,7 +787,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def looksLikeAnIdentifierWithGreek(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    //returns mentions that look like a variable
+    //returns mentions that look like an identifier
     for {
       m <- mentions
       varMention = m match {
@@ -816,7 +817,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
         descrMention.head.text.length > 4 && //the descr can't be the length of a var
         !descrMention.head.text.contains("=") &&
-        looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be a variable)
+        looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
         &&
         descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
         ) || (descrMention.nonEmpty && freqWords.contains(descrMention.head.text)) //the description can be one short, frequent word
@@ -830,7 +831,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def descriptionActionFlowSpecialCase(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    //select shorter as var is only applicable to one rule, so it can't be part of the regular descr. action flow
+    //select shorter as var (identifier) is only applicable to one rule, so it can't be part of the regular descr. action flow
     val varAndDescr = selectShorterAsIdentifier(mentions, state)
     val toReturn = if (varAndDescr.nonEmpty) descriptionActionFlow(varAndDescr, state) else Seq.empty
     toReturn

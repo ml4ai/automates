@@ -24,7 +24,7 @@ class TestConjunctions extends ExtractionTest {
   failingTest should s"find descriptions from t2: ${t2}" taggedAs (Somebody) in {
 
     val desired = Seq(
-      "RHmax" -> Seq("maximum relative humidity"), // todo: how to extract two distinct descriptions for the two variables?
+      "RHmax" -> Seq("maximum relative humidity"), // todo: how to extract two distinct descriptions for the two identifiers?
       "RHmin" -> Seq("minimum relative humidity")
     )
     val mentions = extractMentions(t2)
@@ -82,9 +82,9 @@ class TestConjunctions extends ExtractionTest {
       "evaporation coefficient and crop transpiration coefficient, respectively."
   failingTest should s"find descriptions from t7: ${t7}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "Rns" -> Seq("net radiation obtained by soil surface"), // fixme: Only "Rns" is captured as variable here. The description is also incomplete. ("net radiation")
+      "Rns" -> Seq("net radiation obtained by soil surface"), // fixme: Only "Rns" is captured as identifier here. The description is also incomplete. ("net radiation")
       "Rnc" -> Seq("net radiation intercepted by crop canopy"),
-      "αs" -> Seq("soil evaporation coefficient"), // fixme: Only "αs" is captured as variable here.
+      "αs" -> Seq("soil evaporation coefficient"), // fixme: Only "αs" is captured as identifier here.
       "αc" -> Seq("crop transpiration coefficient") // fixme: The description for "αc" was not captured.
     )
     val mentions = extractMentions(t7)
