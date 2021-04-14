@@ -80,7 +80,7 @@ def get_builtin_func_cast(operator):
         return Call(func="max", arguments=[], source_refs=[])
     else:
         # TODO custom exception
-        raise Exception(f"Error: Unknown gcc builting func: {operator}")
+        raise Exception(f"Error: Unknown gcc builtin func: {operator}")
 
 
 def get_const_value(operand):

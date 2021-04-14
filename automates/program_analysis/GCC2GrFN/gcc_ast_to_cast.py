@@ -80,8 +80,20 @@ class GCC2CAST:
         for f in functions:
             body.append(self.parse_function(f))
 
+        source_language = "unknown"
+        if "mainInputFilename" in self.gcc_ast:
+            main_input_file = self.gcc_ast["mainInputFilename"]
+            file_extension = main_input_file.split(".")[-1]
+            print(f"main input file {main_input_file} and {file_extension}")
+            if file_extension == "c":
+                source_language = "c"
+            elif file_extension == "cpp":
+                source_language = "cpp"
+            elif file_extension in {"f", "for", "f90"}:
+                source_language = "fortran"
+
         file_module = Module(name=input_file.rsplit(".")[0], body=body)
-        return CAST([file_module])
+        return CAST([file_module], source_language)
 
     def get_source_refs(self, obj):
         source_refs = []
@@ -307,8 +319,8 @@ class GCC2CAST:
         func_name = function["value"]["name"]
         # TODO not sure if this is a permenant solution, but ignore these
         # unexpected builtin calls for now
-        if "__builtin_" in func_name and not is_gcc_builtin_func(func_name):
-            return []
+        # if "__builtin_" in func_name and not is_gcc_builtin_func(func_name):
+        #     return []
 
         cast_args = []
         for arg in arguments:

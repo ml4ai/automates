@@ -54,14 +54,21 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     var,
 )
 
+from automates.program_analysis.CAST2GrFN.visitors.cast_to_air_function_map import (
+    is_builtin_func,
+    get_builtin_func_info,
+)
+
 
 class CASTToAIRVisitor(CASTVisitor):
     cast_nodes: typing.List[AstNode]
     state: C2AState
+    cast_source_language: str
 
-    def __init__(self, cast_nodes: typing.List[AstNode]):
+    def __init__(self, cast_nodes: typing.List[AstNode], cast_source_language: str):
         self.cast_nodes = cast_nodes
         self.state = C2AState()
+        self.cast_source_language = cast_source_language
 
     def to_air(self):
         """
@@ -366,6 +373,33 @@ class CASTToAIRVisitor(CASTVisitor):
                 self.state.current_module,
                 C2AIdentifierType.CONTAINER,
             )
+            input_vars = []
+            arg_lambdas = []
+            for arg in node.arguments:
+                arg_res = self.visit(arg)
+                arg_lambdas.extend(arg_res)
+                input_vars.extend(arg_res[-1].input_variables)
+
+            # TODO include additional info about original function
+            if is_builtin_func(self.cast_source_language, called_func_name):
+                builtin_info = get_builtin_func_info(
+                    self.cast_source_language, called_func_name
+                )
+                called_func_name = builtin_info["grfn_implementation"]
+
+            # TODO need to include arg lambdas too if not empty
+            return [
+                C2AExpressionLambda(
+                    called_func_identifier,
+                    input_vars,
+                    [],
+                    [],
+                    lambda_type,
+                    C2ASourceRef("", None, None, None, None),
+                    f"{called_func_name}({','.join([a.lambda_expr for a in arg_lambdas])})",
+                    node,
+                )
+            ]
 
         input_vars = []
         output_vars = []

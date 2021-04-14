@@ -4,6 +4,10 @@ import re
 
 import numpy as np
 
+# Import math functions that may be used in lambda functions. Import here so
+# they can be used in the eval() call of lambda strings
+from math import cos, exp
+
 
 UNSAFE_BUILTINS = re.compile(
     r"""

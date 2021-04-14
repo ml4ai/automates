@@ -90,9 +90,11 @@ class CAST(object):
     """
 
     nodes: typing.List[AstNode]
+    cast_source_language: str
 
-    def __init__(self, nodes: typing.List[AstNode]):
+    def __init__(self, nodes: typing.List[AstNode], cast_source_language: str):
         self.nodes = nodes
+        self.cast_source_language = cast_source_language
 
     def __eq__(self, other):
         return len(self.nodes) == len(other.nodes) and all(
@@ -103,7 +105,7 @@ class CAST(object):
         )
 
     def to_GrFN(self):
-        c2a_visitor = CASTToAIRVisitor(self.nodes)
+        c2a_visitor = CASTToAIRVisitor(self.nodes, self.cast_source_language)
         air = c2a_visitor.to_air()
 
         main_container = [c for c in air["containers"] if c["name"].endswith("::main")]
