@@ -4,7 +4,7 @@ rules:
 
 ####DEFINITIONS####
 
-  - name: var_cop_conj_description
+  - name: identifier_cop_conj_description
     label: ConjDescription
     priority: ${priority}
     type: dependency
@@ -15,7 +15,7 @@ rules:
       description: Phrase = <cop nmod_of? nmod_in? conj_and?
 
 
-  - name: var_cop_conj_description2
+  - name: identifier_cop_conj_description2
     label: ConjDescriptionType2
     priority: ${priority}
     type: dependency
@@ -26,7 +26,7 @@ rules:
       variable:Identifier{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       description: Phrase{2,} = <cop nmod_of? nmod_in? conj_and?
 
-  - name: var_equals_descr_token #needed bc of bad parse
+  - name: identifier_equals_descr_token #needed bc of bad parse
     label: Description
     priority: ${priority}
     type: token
@@ -38,7 +38,7 @@ rules:
       @variable:Identifier "(" [word = /[\w\d]*/]{1,5} ")" "=" (?<description> [word = /.*/ & tag = /^(NN|JJ)/ & !word = /(=|,|\[)/ & !entity = "B-GreekLetter"]{1,5})
 #
 
-  - name: var_equals_descr #needed bc of bad parse
+  - name: identifier_equals_descr #needed bc of bad parse
     label: Description
     priority: ${priority}
     type: dependency
@@ -76,7 +76,7 @@ rules:
 #      (?<description> [word = /.*/]) (?<variable> [entity = "B-GreekLetter"])
 
 
-  - name: var_stands_for_descr
+  - name: identifier_stands_for_descr
     label: Description
     priority: ${priority}
     type: dependency
@@ -87,19 +87,19 @@ rules:
       description:Phrase = nmod_for
       variable:Identifier = nsubj
 
-  - name: var_description_appos_bidir
+  - name: identifier_description_appos_bidir
     label: Description
     priority: ${priority}
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    #action: variableArguments
+    #action: identifierArguments
     action: descriptionActionFlowSpecialCase
     pattern: |
       @c1:Phrase "(" @c2:Phrase ")"
       #todo: check why -LRB- stopped working; maybe try to have both in the rule?
 
 
-  - name: description_var_appos_unit
+  - name: description_identifier_appos_unit
     label: Description
     priority: ${priority}
     type: token
@@ -141,7 +141,7 @@ rules:
 #      @description:Phrase [word = "of"] (@variable:Identifier [!entity = /B-unit/]) [word = "="]
 #
 
-  - name: var_verb
+  - name: identifier_verb
     label: Description
     priority: ${priority}
     type: dependency
@@ -156,7 +156,7 @@ rules:
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
 
-  - name: var_is_defined
+  - name: identifier_is_defined
     label: Description
     priority: ${priority}
     type: dependency
@@ -167,7 +167,7 @@ rules:
       variable:Identifier = nsubjpass # | advcl nsubj
       description:Phrase = nmod_as [!entity = "NUMBER"] # todo: needs to expand the description to include "at LAI = 6.0"
 
-  - name: var_is_defined_token
+  - name: identifier_is_defined_token
     label: Description
     priority: ${priority}
     type: token
@@ -176,7 +176,7 @@ rules:
     pattern: |
       @variable:Identifier ([word = "("] ([word = /.*/])* [word = ")"])? [lemma = "be"] [word = "defined"] [word = "as"] ([word=/a|an|the/])? (?<description> [word = /.*/ & tag = /^NN|^JJ/]* ([tag = IN] [tag = /^NN/] [word = "="] [entity =  NUMBER])?)
 
-  - name: var_cop_description
+  - name: identifier_cop_description
     label: Description
     priority: ${priority}
     type: dependency
@@ -197,7 +197,7 @@ rules:
 #    pattern: |
 #      @variable:Identifier ([word = "("] [word = /.*/]? [word = ")"])? [lemma = "be"] [word = /a|an|the/] (@description:Phrase [!entity = /NUMBER|B-unit/ & !tag=/^JJ/])
 
-  - name: descr_cop_var
+  - name: descr_cop_identifier
     label: Description
     priority: ${priority}
     type: dependency
@@ -208,7 +208,7 @@ rules:
       description:Phrase = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = "," & !word = "which"]
       variable:Identifier =  <cop  [!entity = /NUMBER|B-unit/ ]
 
-  - name: comma_appos_var
+  - name: comma_appos_identifier
     label: Description
     priority: ${priority}
     type: token
@@ -238,7 +238,7 @@ rules:
 #      variable:Identifier = <punct >appos [!entity="B-unit"]
 #      description: Phrase = <punct
 
-  - name: var_appos_descr
+  - name: identifier_appos_descr
     label: Description
     priority: ${priority}
     type: dependency
@@ -262,7 +262,7 @@ rules:
       description: Phrase = nsubjpass
 
 
-  - name: multiplied_by_descr_var
+  - name: multiplied_by_descr_identifier
     label: Description
     priority: ${priority}
     type: dependency
@@ -294,17 +294,17 @@ rules:
       [word=/a|an|the/] (?<description> [tag=/JJ|VBN/] [tag=/^N/] ) @variable:Identifier (?![tag=/^N/])
 
 
-  - name: var_ellipsis_descr
+  - name: identifier_ellipsis_descr
     label: Description
     priority: ${priority}
-    type: token            # todo: conflict with comma_appos_var rule. needs to be fixed.
+    type: token            # todo: conflict with comma_appos_identifier rule. needs to be fixed.
     example: "where r is the infection rate and a the removal rate of infectives. where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux."
     action: ${action}
     pattern: |
       (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Identifier [word = "the"] (?<description> [word = /.*/ & tag = /NN|JJ/ & !entity = "B-GreekLetter"]{1,5})
 
 
-  - name: var_comma_descr_comma
+  - name: identifier_comma_descr_comma
     label: Description
     priority: ${priority}
     type: token
@@ -314,7 +314,7 @@ rules:
       @variable:Identifier [word = ","] (@description: Phrase ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","]
 
 
-  - name: descr_is_var_equal
+  - name: descr_is_identifier_equal
     label: Description
     priority: ${priority}
     type: token

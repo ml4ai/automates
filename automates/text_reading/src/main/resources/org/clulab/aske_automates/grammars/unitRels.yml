@@ -5,7 +5,7 @@ rules:
   ####UNIT RELATIONS####
   ###See Possible improvement note in parameterSettings.yml
 
-  - name: var_unit_rel
+  - name: identifier_unit_rel
     label: UnitRelation
     priority: ${priority}
     type: token
@@ -38,7 +38,7 @@ rules:
       #overlap and keep the longer unit?
 
 
-  - name: var_taken_as_unit
+  - name: identifier_taken_as_unit
     label: UnitRelation
     priority: ${priority}
     type: dependency
@@ -48,7 +48,7 @@ rules:
       trigger = [lemma = /take/]
       variable: Identifier = nsubjpass nmod_of? appos
       unit: Unit+ = nmod_as
-      #todo: this rule is looking specifically for a variable and not a concept to attach the unit to; can combine with similar rules in future
+      #todo: this rule is looking specifically for an identifier and not a concept to attach the unit to; can combine with similar rules in future
 
   - name: concept_value_unit
     label: UnitRelation
@@ -62,7 +62,7 @@ rules:
       variable: Phrase = <nummod </nmod_of|nmod_between/
       unit: Unit = <nummod
 
-  - name: var_equals_value_unit
+  - name: identifier_equals_value_unit
     label: UnitRelation
     priority: ${priority}
     type: dependency
@@ -73,7 +73,7 @@ rules:
       variable: Identifier = <amod
       unit: Unit = dep
 
-  - name: var_of_value_unit
+  - name: identifier_of_value_unit
     label: UnitRelation
     priority: ${priority}
     type: token
