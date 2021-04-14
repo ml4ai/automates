@@ -1205,7 +1205,13 @@ class GroundedFunctionNetwork(nx.DiGraph):
     def to_AGraph(self):
         """ Export to a PyGraphviz AGraph object. """
         var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
-        input_nodes = set([v for v in var_nodes if self.in_degree(v) == 0])
+        input_nodes = []
+        for v in var_nodes:
+            if self.in_degree(v) == 0 or (
+                len(list(self.predecessors(v))) == 1
+                and list(self.predecessors(v))[0].func_type == LambdaType.LITERAL
+            ):
+                input_nodes.append(v)
         output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
 
         A = nx.nx_agraph.to_agraph(self)
@@ -1245,17 +1251,44 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 for func_set in func_sets:
                     func_set = list(func_set.intersection(set(subgraph.nodes)))
 
-                    container_subgraph.add_subgraph(func_set, rank="same")
+                    container_subgraph.add_subgraph(
+                        func_set,
+                    )
                     output_var_nodes = list()
                     for func_node in func_set:
                         succs = list(self.successors(func_node))
                         output_var_nodes.extend(succs)
                     output_var_nodes = set(output_var_nodes) - output_nodes
                     var_nodes = output_var_nodes.intersection(subgraph.nodes)
-                    container_subgraph.add_subgraph(list(var_nodes), rank="same")
+                    container_subgraph.add_subgraph(
+                        list(var_nodes),
+                    )
 
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
+
+        unique_var_names = {
+            "::".join(n.name.split("::")[:-1])
+            for n in A.nodes()
+            if len(n.name.split("::")) > 2
+        }
+        for name in unique_var_names:
+            max_var_version = max(
+                [
+                    int(n.name.split("::")[-1])
+                    for n in A.nodes()
+                    if n.name.startswith(name)
+                ]
+            )
+            for i in range(max_var_version + 1):
+                e = A.add_edge(f"{name}::{i - 1}", f"{name}::{i}")
+                e = A.get_edge(f"{name}::{i - 1}", f"{name}::{i}")
+                e.attr["color"] = "invis"
+
+        for agraph_node in [
+            a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
+        ]:
+            agraph_node.attr["rank"] = "max"
 
         return A
 
