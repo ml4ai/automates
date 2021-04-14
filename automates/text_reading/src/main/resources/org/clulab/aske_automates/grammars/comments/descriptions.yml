@@ -4,7 +4,7 @@ rules:
 
 ####DEFINITIONS####
 
-  - name: var_description
+  - name: comment_identifier_description
     label: Description
     priority: ${priority}
     type: token

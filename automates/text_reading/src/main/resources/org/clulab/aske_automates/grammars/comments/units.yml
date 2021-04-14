@@ -4,7 +4,7 @@ rules:
 
   ####UNITS####
 
-  - name: var_unit
+  - name: comment_identifier_unit
     label: UnitRelation
     priority: ${priority}
     type: token
