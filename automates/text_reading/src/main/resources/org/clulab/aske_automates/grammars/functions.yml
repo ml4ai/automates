@@ -312,7 +312,7 @@ rules:
     priority: ${priority}
     type: dependency
     action: ${action}
-    example: "The number of GDD occurring on a calendar day is a function of a triangular or trapezoidal function defined by a base temperature, one or two optimum temperatures, and a maximum temperature above which development does not occur."
+    example: "Daily growth rate is modified by temperature and assimilate availability."
     pattern: |
       trigger = [lemma = "modify"] (?= "by")
       input:Concept+ = nmod_agent | conj_and

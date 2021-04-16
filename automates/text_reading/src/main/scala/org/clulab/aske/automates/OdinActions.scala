@@ -30,13 +30,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (vars, non_vars) = mentions.partition(m => m.label == "Variable")
       val expandedVars = keepLongestVariable(vars)
 
-      val (expandable, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Definition"))
+      val (definitions, other) = (expandedVars ++ non_vars).partition(m => m.label.contains("Definition"))
+      val (functions, nonExpandable) = other.partition(m => m.label.contains("Function"))
 
-      val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs)
-      val (conjDefType2, otherDefs) = expanded.partition(_.label.contains("Type2"))
+      val expandedDefinitions = expansionHandler.get.expandArguments(definitions, state, validArgs)
+      val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
+      val (conjDefType2, otherDefs) = expandedDefinitions.partition(_.label.contains("Type2"))
       // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDefs = noDefOverlap(conjDefType2) ++ otherDefs
-      keepOneWithSameSpanAfterExpansion(allDefs) ++ other
+      keepOneWithSameSpanAfterExpansion(allDefs) ++ expandedFunction ++ nonExpandable
 //      allDefs ++ other
 
     } else {
@@ -694,39 +696,65 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentionsDisplayOnlyArgs
   }
 
-  def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val (functions, other) = mentions.partition(_.label == "Function")
-    val toReturn = ArrayBuffer[Mention]()
-    for (f <- functions) {
-      val inputMention = f.arguments.getOrElse("input", Seq())
-      val outputMention = f.arguments.getOrElse("output", Seq())
-      val newInputs = new ArrayBuffer[Mention]()
-      val newOutputs = new ArrayBuffer[Mention]()
-      for (i <- inputMention) {
-        if (looksLikeAVariable(Seq(i), state).nonEmpty) {
-          val copyInput = copyWithLabel(i, "Variable") // copy with label Variable + add to newArgs
-          newInputs.append(copyInput)
-      } else {
-        newInputs.append(i)
-      }
-    }
-      for (o <- outputMention) {
-        if (looksLikeAVariable(Seq(o), state).nonEmpty) {
-          val copyOutput = copyWithLabel(o, "Variable") // copy with label Variable + add to newArgs
-          newOutputs.append(copyOutput)
-      } else {
-        newOutputs.append(o)
-      }
-    }
-      for {
-        v <- newInputs
-        k <- newOutputs
-        val newArgs = Map("input" -> Seq(v), "output" -> Seq(k))
-      }
-    toReturn.append(copyWithArgs(f, newArgs))
-    }
-  toReturn
-  }
+//  def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
+//    val toReturn = new ArrayBuffer[Mention]()
+//    val (functions, other) = mentions.partition(_.label == "Function")
+//    for (f <- functions) {
+//      val newArgs = mutable.Map[String, Seq[Mention]]()
+//      for (argType <- f.arguments) {
+//        val argPerType = new ArrayBuffer[Mention]()
+//        val sameInterval = argType._2.groupBy(_.tokenInterval) // group by token intervals
+//        for (i <- sameInterval) { // for each group, check if there's multiple inputs/outputs
+//        val (inputs, other) = i._2.partition(i._2 => i._2.
+//        }
+//      }
+////        // for each group, check if there's multiple inputs/outputs
+////        // if there's only one input or output, return that
+////        // if there are more than one, pick one that has "Variable" label
+////      }
+//
+////    val (functions, other) = mentions.partition(_.label == "Function")
+////    val sameInterval = functions.groupBy(_.tokenInterval)
+////    for {(interval, mns) <- sameInterval
+////                           if !mns.contains("Variable")
+////                           } for (m <- mns) toReturn append m
+////
+//    mentions
+//  }
+
+//  def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
+//    val (functions, other) = mentions.partition(_.label == "Function")
+//    val toReturn = ArrayBuffer[Mention]()
+//    for (f <- functions) {
+//      val inputMention = f.arguments.getOrElse("input", Seq())
+//      val outputMention = f.arguments.getOrElse("output", Seq())
+//      val newInputs = new ArrayBuffer[Mention]()
+//      val newOutputs = new ArrayBuffer[Mention]()
+//      for (i <- inputMention) {
+//        if (looksLikeAVariable(Seq(i), state).nonEmpty) {
+//          val copyInput = copyWithLabel(i, "Variable") // copy with label Variable + add to newArgs
+//          newInputs.append(copyInput)
+//        } else {
+//          newInputs.append(i)
+//        }
+//      }
+//      for (o <- outputMention) {
+//        if (looksLikeAVariable(Seq(o), state).nonEmpty) {
+//          val copyOutput = copyWithLabel(o, "Variable") // copy with label Variable + add to newArgs
+//          newOutputs.append(copyOutput)
+//        } else {
+//          newOutputs.append(o)
+//        }
+//      }
+//      for {
+//        v <- newInputs
+//        k <- newOutputs
+//        val newArgs = Map("input" -> Seq(v), "output" -> Seq(k))
+//      }
+//        toReturn.append(copyWithArgs(f, newArgs))
+//    }
+//    toReturn
+//  }
 
   def selectShorterAsVariable(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
