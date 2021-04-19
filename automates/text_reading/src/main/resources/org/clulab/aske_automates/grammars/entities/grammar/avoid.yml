@@ -61,7 +61,7 @@ rules:
     pattern: |
       #avoids pointers to equations/figures as those are frequently found as variables
       #might need to be revisited
-      [word=/(?i)figs?|eqs?|tables?/] [word="."]?
+      [word=/(?i)\b(figs?|eqs?|tables?)\b/] [word="."]?
 
   # todo: verify that this prevents double finding when the StringMatchEF is used
   # todo: verify there are no expansion ramifications due to Avoid label
@@ -106,7 +106,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [word = /Ms|Mrs?/] (?=[entity="PERSON"])   
+      [word = /\b(Ms|Mrs?)\b/] (?=[entity="PERSON"])
       
 
   - name: "determiners"
@@ -114,7 +114,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [lemma = /this|the/]
+      [lemma = /\b(this|the)\b/]
 
   - name: "eg"
     label: Avoid
@@ -128,7 +128,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [word = /etc|ETC|et cetera/]
+      [word = /\b(etc|ETC)\b|et cetera/]
 
   - name: "email"
     label: Avoid

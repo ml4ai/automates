@@ -417,7 +417,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val (withConj, withoutConj) = withoutOverlap.partition(m => hasConj(m))
     // defs that were found as ConjDefinitions - that is events with multiple variables (at least partially) sharing a definitions vs definitions that were found with standard rule that happened to have conjunctions in their definitions
     val (conjDefs, standardDefsWithConj) = withConj.partition(_.label.contains("ConjDefinition"))
-    val (conjType2, conjType1) = withConj.partition(_.label.contains("Type2"))
+    val (conjType2, conjType1) = conjDefs.partition(_.label.contains("Type2"))
 
     val toReturn = new ArrayBuffer[Mention]()
 
