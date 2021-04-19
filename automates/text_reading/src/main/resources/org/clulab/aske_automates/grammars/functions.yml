@@ -14,7 +14,7 @@ rules:
     example: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
     pattern: |
       trigger = [word = "difference"]
-      input:Concept+ = nmod_between (conj_and | amod)?
+      input:Concept+ = nmod_between (conj_and)?
       output:Concept = (nsubj | <nmod_from nsubjpass | <nmod_as <acl nsubj)
       # note: if the sequence of inputs matter (if it has to be "input1 - input2"), the rule needs to be fixed.
 
@@ -34,7 +34,7 @@ rules:
     label: Function
     priority: ${priority}
     type: dependency
-    action: filterFunction
+    action: ${action}
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
       trigger = [word = "product"] (?="of")
