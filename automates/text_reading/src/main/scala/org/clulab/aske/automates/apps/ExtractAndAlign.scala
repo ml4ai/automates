@@ -31,32 +31,32 @@ object ExtractAndAlign {
   // Link element types
   val COMMENT = "comment"
   val TEXT_VAR = "text_var" // stores information about each variable, e.g., identifier, associated description, arguments, and when available location in the original document (e.g., in the pdf)
-  val GLOBAL_VAR = "global_var" // stores ids of text variables that are likely different instances of the same global variable
+  val GLOBAL_VAR = "gvar" // stores ids of text variables that are likely different instances of the same global variable
   val SOURCE = "source" // identifiers found in source code
   val EQUATION = "equation" // an equation extracted from the original document
   val SVO_GROUNDING = "SVOgrounding"
   // Below, "through concept" means the arg in question is attached to a variable concept,
   // e.g., tempterature is measured in celsius, while "though identifier" means the arg is attached ti an identidier, e.g., T is measured in celsius.
-  val INT_PARAM_SETTING_THRU_CONCEPT = "int_param_setting_through_concept"
-  val INT_PARAM_SETTING_THRU_IDENTIFIER = "int_param_setting_through_identifier"
-  val PARAM_SETTING_THRU_CONCEPT = "parameter_setting_through_concept"
-  val PARAM_SETTING_THRU_IDENTIFIER = "parameter_setting_through_identifier"
-  val UNIT_THRU_CONCEPT = "unit_through_concept"
-  val UNIT_THRU_IDENTIFIER = "unit_through_identifier"
+  val INT_PARAM_SETTING_VIA_CNCPT = "int_param_setting_via_cncpt"
+  val INT_PARAM_SETTING_VIA_IDFR = "int_param_setting_via_idfr"
+  val PARAM_SETTING_VIA_CNCPT = "parameter_setting_via_cncpt"
+  val PARAM_SETTING_VIA_IDFR = "parameter_setting_via_idfr"
+  val UNIT_VIA_CNCPT = "unit_via_cncpt"
+  val UNIT_VIA_IDFR = "unit_via_idfr"
   val FULL_TEXT_EQUATION = "full_text_equation"
 
   // Relations between links
   val SRC_TO_COMMENT = "source_to_comment"
-  val GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER = "global_var_to_unit_through_identifier"
-  val GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT = "global_var_to_unit_through_concept"
-  val GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER = "global_var_to_param_setting_through_identifier"
-  val GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT = "global_var_to_param_setting_through_concept"
-  val GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER = "global_var_to_interval_param_setting_through_identifier"
-  val GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT = "global_var_to_interval_param_setting_through_concept"
+  val GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER = "gvar_to_unit_via_idfr" //fixme: gvar; through -> by; idfr = identifier; cncpt - concept
+  val GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT = "gvar_to_unit_via_cpcpt"
+  val GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER = "gvar_to_param_setting_via_idfr"
+  val GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT = "gvar_to_param_setting_via_cpcpt"
+  val GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER = "gvar_to_interval_param_setting_via_idfr"
+  val GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT = "gvar_to_interval_param_setting_via_cpcpt"
 
-  val EQN_TO_GLOBAL_VAR = "equation_to_global_var"
-  val COMMENT_TO_GLOBAL_VAR = "comment_to_global_var"
-  val GLOBAL_VAR_TO_SVO = "global_var_to_svo"
+  val EQN_TO_GLOBAL_VAR = "equation_to_gvar"
+  val COMMENT_TO_GLOBAL_VAR = "comment_to_gvar"
+  val GLOBAL_VAR_TO_SVO = "gvar_to_svo"
 
   // labels and argument names
   val DESCRIPTION = "description"
@@ -622,8 +622,8 @@ object ExtractAndAlign {
     val originalSentence = mention.sentenceObj.words.mkString(" ")
     val offsets = mention.tokenInterval.toString()
     val args = mentionType match {
-      case INT_PARAM_SETTING_THRU_IDENTIFIER | INT_PARAM_SETTING_THRU_CONCEPT => getIntParamSetArgObj(mention)
-      case PARAM_SETTING_THRU_IDENTIFIER | PARAM_SETTING_THRU_CONCEPT | UNIT_THRU_IDENTIFIER | UNIT_THRU_CONCEPT | TEXT_VAR =>  getArgObj(mention)
+      case INT_PARAM_SETTING_VIA_IDFR | INT_PARAM_SETTING_VIA_CNCPT => getIntParamSetArgObj(mention)
+      case PARAM_SETTING_VIA_IDFR | PARAM_SETTING_VIA_CNCPT | UNIT_VIA_IDFR | UNIT_VIA_CNCPT | TEXT_VAR =>  getArgObj(mention)
       case _ => ???
     }
 
@@ -696,14 +696,14 @@ object ExtractAndAlign {
        .attachments, "ParamSettingIntervalAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(INT_PARAM_SETTING_THRU_IDENTIFIER) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, INT_PARAM_SETTING_THRU_IDENTIFIER)
+        linkElements(INT_PARAM_SETTING_VIA_IDFR) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, INT_PARAM_SETTING_VIA_IDFR)
         }
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(INT_PARAM_SETTING_THRU_CONCEPT) = throughConcept.map { mention =>
-          mentionToIDedObjString(mention, INT_PARAM_SETTING_THRU_CONCEPT)
+        linkElements(INT_PARAM_SETTING_VIA_CNCPT) = throughConcept.map { mention =>
+          mentionToIDedObjString(mention, INT_PARAM_SETTING_VIA_CNCPT)
         }
       }
 
@@ -715,15 +715,15 @@ object ExtractAndAlign {
         .attachments, "ParamSetAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(PARAM_SETTING_THRU_IDENTIFIER) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, PARAM_SETTING_THRU_IDENTIFIER)
+        linkElements(PARAM_SETTING_VIA_IDFR) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, PARAM_SETTING_VIA_IDFR)
 
         }
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(PARAM_SETTING_THRU_CONCEPT) = throughConcept.map { mention =>
-          mentionToIDedObjString(mention, PARAM_SETTING_THRU_CONCEPT)
+        linkElements(PARAM_SETTING_VIA_CNCPT) = throughConcept.map { mention =>
+          mentionToIDedObjString(mention, PARAM_SETTING_VIA_CNCPT)
         }
       }
 
@@ -736,14 +736,14 @@ object ExtractAndAlign {
         .attachments, "UnitAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
-        linkElements(UNIT_THRU_IDENTIFIER) = throughVar.map { mention =>
-          mentionToIDedObjString(mention, UNIT_THRU_IDENTIFIER)
+        linkElements(UNIT_VIA_IDFR) = throughVar.map { mention =>
+          mentionToIDedObjString(mention, UNIT_VIA_IDFR)
         }
       }
 
       if (throughConcept.nonEmpty) {
-        linkElements(UNIT_THRU_CONCEPT) = throughConcept.map { mention =>
-          mentionToIDedObjString(mention, UNIT_THRU_CONCEPT)
+        linkElements(UNIT_VIA_CNCPT) = throughConcept.map { mention =>
+          mentionToIDedObjString(mention, UNIT_VIA_CNCPT)
         }
       }
     }
@@ -921,33 +921,33 @@ object ExtractAndAlign {
       }
 
       // TextVar to Unit (through var)
-      if (linkElements.contains(UNIT_THRU_IDENTIFIER)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_IDENTIFIER), GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER), debug))
+      if (linkElements.contains(UNIT_VIA_IDFR)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_VIA_IDFR), GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_UNIT_THROUGH_IDENTIFIER), debug))
       }
 
       // TextVar to Unit (through concept)
-      if (linkElements.contains(UNIT_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_THRU_CONCEPT), GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT), debug))
+      if (linkElements.contains(UNIT_VIA_CNCPT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(UNIT_VIA_CNCPT), GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_UNIT_THROUGH_CONCEPT), debug))
       }
 
       // TextVar to ParamSetting (through var)
-      if (linkElements.contains(PARAM_SETTING_THRU_IDENTIFIER)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_IDENTIFIER), GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER), debug))
+      if (linkElements.contains(PARAM_SETTING_VIA_IDFR)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_VIA_IDFR), GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_IDENTIFIER), debug))
       }
 
       // TextVar to ParamSetting (through concept)
-      if (linkElements.contains(PARAM_SETTING_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_THRU_CONCEPT), GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT), debug))
+      if (linkElements.contains(PARAM_SETTING_VIA_CNCPT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(PARAM_SETTING_VIA_CNCPT), GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_PARAM_SETTING_THROUGH_CONCEPT), debug))
       }
 
       // TextVar to IntervalParamSetting (through var)
-      if (linkElements.contains(INT_PARAM_SETTING_THRU_IDENTIFIER)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_IDENTIFIER), GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER), debug))
+      if (linkElements.contains(INT_PARAM_SETTING_VIA_IDFR)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_VIA_IDFR), GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER, alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_IDENTIFIER), debug))
       }
 
       // TextVar to IntervalParamSetting (through concept)
-      if (linkElements.contains(INT_PARAM_SETTING_THRU_CONCEPT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_THRU_CONCEPT), GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT), debug))
+      if (linkElements.contains(INT_PARAM_SETTING_VIA_CNCPT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_VAR), linkElements(INT_PARAM_SETTING_VIA_CNCPT), GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT, alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_THROUGH_CONCEPT), debug))
       }
 
     }
