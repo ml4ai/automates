@@ -203,6 +203,17 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
+  val t1c = "We therefore assume that S(0) = 6.8 – 0.5 = 6.3 million."
+  failingTest should s"extract the parameter setting(s) from t1c: ${t1c}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "S(0)" -> Seq("6.3") // fixme: is million a param setting or unit?
+    )
+    val mentions = extractMentions(t1c)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+
+
 //  val t4b = "The value of RHmax generally exceeds 90% and approaches 100%."
 //  passingTest should s"extract the parameter setting(s) from t1b: ${t4b}" taggedAs(Somebody) in {
 //    val desired = Seq(
