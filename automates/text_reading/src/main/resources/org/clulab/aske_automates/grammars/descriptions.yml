@@ -2,7 +2,7 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-####DEFINITIONS####
+####DESCRIPTIONS####
 
   - name: identifier_cop_conj_description
     label: ConjDescription

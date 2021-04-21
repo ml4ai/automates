@@ -4,7 +4,7 @@ rules:
 
 
 
-####VARIABLES####
+####IDENTIFIERS####
 
   - name: comment_identifier_is_defined
     label: Identifier

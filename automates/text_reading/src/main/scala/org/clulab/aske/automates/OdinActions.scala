@@ -28,9 +28,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // expand arguments
 
       val (identifiers, non_identifiers) = mentions.partition(m => m.label == "Identifier")
-      val expandedVars = keepLongestIdentifier(identifiers)
+      val expandedIdentifiers = keepLongestIdentifier(identifiers)
 
-      val (expandable, other) = (expandedVars ++ non_identifiers).partition(m => m.label.contains("Description"))
+      val (expandable, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
 
       val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs)
       val (conjDescrType2, otherDescrs) = expanded.partition(_.label.contains("Type2"))

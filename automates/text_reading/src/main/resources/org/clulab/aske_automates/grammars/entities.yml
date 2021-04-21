@@ -2,7 +2,7 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-####VARIABLES####
+####IDENTIFIERS####
   - name: identifier-duck-rule
     label: Identifier
     priority: ${priority}
