@@ -1,0 +1,333 @@
+from __future__ import annotations
+import igraph
+import copy
+import numpy
+from typing import List
+from dataclasses import dataclass, field
+
+
+def observed_graph(g):
+    """
+    Constructs a subgraph containing only observed edges
+    :param g: Input graph
+    :return: Subgraph containing only observed edges
+    """
+    g_obs = copy.deepcopy(g)
+    unobs_edges = g_obs.es.select(description="U")
+    g_obs.delete_edges(unobs_edges)
+    return g_obs
+
+
+def unobserved_graph(g):
+    """
+    Constructs an unobserved graph
+    :param g: Input graph
+    :return: unobserved graph
+    """
+    g_copy = copy.deepcopy(g)
+    unobs_edges = g_copy.es.select(description="U")
+    u1 = len(unobs_edges)
+    if u1 > 0:
+        u = g_copy.es.select(description="U")
+        edges_to_remove = []
+        for edge in u:
+            edge_tuple = edge.tuple
+            if edge_tuple[1] > edge_tuple[0]:
+                edges_to_remove.append(edge.index)
+        g_copy.delete_edges(edges_to_remove)
+        e = g_copy.es.select(description="U")
+        e_len = len(e)
+        new_nodes = []
+        for i in range(e_len):
+            new_nodes.append("".join(["u_{", str(i + 1), "}"]))
+        g_copy.add_vertices(new_nodes, attributes={"description": ["U"] * e_len})
+        edge_list = []
+        for i in range(e_len):
+            a = g_copy.vs.select(name=new_nodes[i]).indices[0]
+            b = e[i].tuple[0]
+            edge_list.append((a, b))
+            c = e[i].tuple[1]
+            edge_list.append((a, c))
+        g_copy.add_edges(edge_list, attributes={"description": ["O"]*len(edge_list)})
+        obs_edges = g_copy.es.select(description_ne="U")
+        g_unobs = g_copy.subgraph_edges(obs_edges, delete_vertices=False)
+        return g_unobs
+    return g
+
+
+def ts(nodes, topo_order):  # topo must be a list of names
+    """
+    Orders nodes by their topological order
+    :param nodes: Nodes to be ordered
+    :param topo_order: Order to arrange nodes
+    :return: Ordered nodes (indices)
+    """
+    node_set = set(nodes)
+    return [n for n in topo_order if n in node_set]
+
+
+def ancestors(node, g, topo):
+    """
+    Finds all ancestors of a node and orders them
+    :param node: node (indicated by its index)
+    :param g: graph
+    :param topo: topological ordering
+    :return: Ancestors of node in topological ordering topo
+    """
+    an_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="in")).flat)
+    an_names = to_names(an_ind, g)
+    an = ts(an_names, topo)
+    return an
+
+
+def descendents(node, g, topo):
+    """
+    Finds all descendants of a node and orders them
+    :param node: node (indicated by its index)
+    :param g: graph
+    :param topo: topological ordering
+    :return: Descendants of node in topological ordering topo
+    """
+    des_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="out")).flat)
+    des_names = to_names(des_ind, g)
+    des = ts(des_names, topo)
+    return des
+
+
+def connected(node, g, topo):
+    """
+    Finds all neighbors of a node and orders them (all connected nodes)
+    :param node: node (indicated by its index)
+    :param g: graph
+    :param topo: topological ordering
+    :return: Neighbors of node in topological ordering topo
+    """
+    con_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="all")).flat)
+    con_names = to_names(con_ind, g)
+    con = ts(con_names, topo)
+    return con
+
+
+# Assume "O" and "U" are specified in "description" attribute
+def compare_graphs(g1, g2):
+    """
+    Determines if two graphs are the same (including edge descriptions)
+    :param g1: First graph
+    :param g2: Second graph
+    :return: T/F indicating if G1 is the same as G2
+    """
+    e1 = numpy.array(g1.get_edgelist())
+    n1 = numpy.shape(e1)[0]
+    e2 = numpy.array(g2.get_edgelist())
+    n2 = numpy.shape(e2)[0]
+    if n1 != n2:
+        return False
+    if "description" in g1.es.attributes():
+        e1 = numpy.append(e1, numpy.transpose([g1.es["description"]]), axis=1)
+    else:
+        e1 = numpy.append(e1, numpy.transpose([numpy.repeat("O", n1)]), axis=1)
+    if "description" in g2.es.attributes():
+        e2 = numpy.append(e2, numpy.transpose([g2.es["description"]]), axis=1)
+    else:
+        e2 = numpy.append(e2, numpy.transpose([numpy.repeat("O", n2)]), axis=1)
+    return numpy.array_equal(e1, e2)
+
+
+# Edge Selection Function (for line 3 section of ID)
+def eselect(x, g):
+    """
+    Determines which edges should remain when cutting incoming arrows to x
+    :param x: list of vertices
+    :param g: graph
+    :return: list of edges to keep
+    """
+    edges = set(g.es.select().indices)
+    to = set(g.es.select(_to_in=g.vs.select(name_in=x).indices).indices)
+    frm = set(g.es.select(_from_in=g.vs.select(name_in=x).indices).indices)
+    description = set(g.es.select(description="U").indices)
+    selection = edges - (to | (frm & description))
+    return list(selection)
+
+
+def get_expression(prob, start_sum=False, single_source=False, target_sym="^*("):
+    """
+    Converts a class probability object to LaTeX plaintext
+    :param prob: an object of class probability
+    :param start_sum: should a sum be started
+    :param single_source: is there only one source?
+    :param target_sym: ?  todo: fix this
+    :return: LaTeX plaintext
+    """
+    p = ""
+    s_print = len(prob.sumset) > 0
+    if s_print:
+        sum_string = ",".join(prob.sumset)
+        if start_sum:
+            p = "".join([p, "\\left(\\sum_{", sum_string, "}"])
+        else:
+            p = "".join([p, "\\sum_{", sum_string, "}"])
+    if prob.fraction:
+        p = "".join([p, "\\frac{", get_expression(prob.num, start_sum=False, single_source=single_source, \
+                                                  target_sym=target_sym), "}{",
+                     get_expression(prob.num, start_sum=False, \
+                                    single_source=single_source, target_sym=target_sym), "}"])
+    if prob.sum: # This might be broken
+        p = "".join([p, "\\left("])
+        add_strings = []
+        i = 1
+        for child in prob.children:
+            new_sum = False
+            if child.product or child.sum:
+                new_sum = True
+            add_strings.append("".join(["w_{", i, "}^{(", child.weight, ")}", get_expression(child, start_sum=new_sum, \
+                               single_source=single_source, target_sym=target_sym)]))
+            i = i + 1
+        p = "".join([p, add_strings, "\\right"])
+
+    if prob.product:
+        for child in prob.children:
+            new_sum = False
+            if child.product or child.sum:
+                new_sum = True
+            p = "".join([p, get_expression(child, start_sum=new_sum, single_source=single_source, \
+                                           target_sym=target_sym)])
+
+    if not (prob.sum or prob.product or prob.fraction):
+        p = "".join([p, "P"])
+        if len(prob.do) > 0:
+            do_string = "".join([prob.do])
+            p = "".join([p, "_{", do_string, "}"])
+        var_string = ",".join(prob.var)
+        if prob.domain > 0:
+            if prob.dom == 1:
+                p = "".join([p, target_sym, var_string])
+            else:
+                if single_source:
+                    p = "".join([p, "(", var_string])
+                else:
+                    p = "".join([p, "^{(", str(prob.domain - 1), ")}(", var_string])
+        else:
+            p = "".join([p, "(", var_string])
+        if len(prob.cond) > 0:
+            cond_string = ",".join(prob.cond)  # prob.cond must have elements that are strings
+            cond_string = "".join(["\u007C", cond_string, ")"])
+        else:
+            cond_string = ")"
+        p = "".join([p, cond_string])
+    if s_print and start_sum:
+        p = ",".join([p, "\\right)"])
+    return p
+
+
+def c_components(g, topo):
+    """
+    Finds c-components in graph g
+    :param g: graph
+    :param topo: topological ordering
+    :return: list of c-components (each c-component is a list of nodes)
+    """
+    a = g.get_adjacency()
+    n = a.shape[0]
+    v = g.vs["name"]
+    bidirected = []
+    for i in range(0, n):
+        for j in range(0, n):
+            if a[i][j] >= 1 and a[j][i] >= 1:
+                bidirected.append(i)
+                bidirected.append(j)
+    bidirected_edges = g.es.select(_within=bidirected)
+    g_bidirected = g.subgraph_edges(bidirected_edges, delete_vertices=False)
+    subgraphs = g_bidirected.decompose()
+    cc = []
+    cc_rank = []
+    for subgraph in subgraphs:
+        nodes = ts(subgraph.vs["name"], topo)
+        cc.append(nodes)
+        rank = 0
+        for node in nodes:
+            rank = rank + topo.index(node)
+        cc_rank.append(rank)
+    (cc_sorted, rank_sorted) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1]))))
+    cc_sorted.reverse()
+    return cc_sorted
+
+
+def parse_joint(p, v, cond, var, topo):
+    p_new = Probability()
+    p_num = copy.deepcopy(p)
+    p_num.sumset = ts(set(p.sumset) | (set(var) - set(v) - set(cond)), topo)
+    if len(cond) > 0:
+        p_den = copy.deepcopy(p)
+        p_den.sumset = ts(set(p.sumset) | (set(var) - set(cond)), topo)
+        p_new.fraction = True
+        p_new.num = copy.deepcopy(p_num)
+        p_new.den = copy.deepcopy(p_den)
+    else:
+        p_new = copy.deepcopy(p_num)
+    return p_new
+
+
+def to_names(indices, g):
+    """
+    converts vertex indices indices to vertex names
+    :param indices: list of indices
+    :param g: graph (with named nodes)
+    :return: list of vertex names
+    """
+    name_list = g.vs["name"]
+    name_sorted = [name_list[i] for i in indices]
+    return name_sorted
+
+
+@dataclass(unsafe_hash=True)
+class Probability:
+    var: list = field(default_factory=list)  # This was a string before, altered to fit var_string = ",".join(prob.var)
+    cond: list = field(default_factory=list)
+    sumset: list = field(default_factory=list)
+    do: str = ""
+    product: bool = False
+    children: list = field(default_factory=list)
+    fraction: bool = False
+    den: list = field(default_factory=list)
+    num: list = field(default_factory=list)
+    domain: int = 0
+    sum: bool = False
+    weight: list = field(default_factory=list)
+
+
+@dataclass(unsafe_hash=True)
+class Call:
+    y: str = ""
+    x: str = ""
+    z: str = ""
+    p: Probability = Probability()
+    g: igraph.Graph = igraph.Graph()
+    line: int = 0
+    v: list = field(default_factory=list)
+    id_check: bool = False
+    ancestors: list = field(default_factory=list)
+    w: list = field(default_factory=list)
+    an_xbar: list = field(default_factory=list)
+    s: list = field(default_factory=list)
+    s_prime: list = field(default_factory=list)
+
+
+@dataclass(unsafe_hash=True)
+class TreeNode:
+    root: Probability = Probability()
+    call: Call = Call()
+    children: List[TreeNode] = field(default_factory=list)
+
+
+@dataclass(unsafe_hash=True)
+class ResultsInternal:
+    p: Probability = Probability()
+    tree: TreeNode = TreeNode()
+
+
+@dataclass(unsafe_hash=True)
+class Results:
+    query: dict = field(default_factory=dict)
+    algorithm: str = ""
+    p: str = ""
+    tree: TreeNode = TreeNode()
