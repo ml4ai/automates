@@ -18,7 +18,7 @@ class MissingEnumError(Exception):
 
 class AutoMATESBaseEnum(Enum):
     def __str__(self):
-        return str(self.name).lower()
+        return self.name.lower()
 
     @abstractclassmethod
     def from_str(cls, child_cls: Type, data: str):
@@ -146,30 +146,58 @@ class LambdaType(AutoMATESBaseEnum):
     PACK = auto()
     OPERATOR = auto()
 
-    def __str__(self):
-        return str(self.name)
+    def shortname(self):
+        return self.__str__()[0]
+
+    @classmethod
+    def get_lambda_type(cls, type_str: str, num_inputs: int):
+        expected_val = cls.from_str(type_str)
+        if num_inputs == 0 and expected_val == cls.ASSIGN:
+            return cls.LITERAL
+        else:
+            return expected_val
+
+    @classmethod
+    def from_str(cls, data: str):
+        return super().from_str(cls, data)
+
+
+@unique
+class FunctionType(AutoMATESBaseEnum):
+    ASSIGN = auto()
+    LITERAL = auto()
+    CONDITION = auto()
+    DECISION = auto()
+    INTERFACE = auto()
+    EXTRACT = auto()
+    PACK = auto()
+    OPERATOR = auto()
+    CONDITIONAL = auto()
+    CONTAINER = auto()
+    ITERABLE = auto()
 
     def shortname(self):
         return self.__str__()[0]
 
     @classmethod
     def get_lambda_type(cls, type_str: str, num_inputs: int):
-        if type_str == "assign":
-            if num_inputs == 0:
-                return cls.LITERAL
-            return cls.ASSIGN
-        elif type_str == "condition":
-            return cls.CONDITION
-        elif type_str == "decision":
-            return cls.DECISION
-        elif type_str == "interface":
-            return cls.INTERFACE
-        elif type_str == "pack":
-            return cls.PACK
-        elif type_str == "extract":
-            return cls.EXTRACT
+        expected_val = cls.from_str(type_str)
+        if num_inputs == 0 and expected_val == cls.ASSIGN:
+            return cls.LITERAL
         else:
-            raise ValueError(f"Unrecognized lambda type name: {type_str}")
+            return expected_val
+
+    @classmethod
+    def from_con(cls, con_type_name: str) -> FunctionType:
+        con_type = con_type_name.replace("Container", "").lower()
+        if con_type == "func":
+            return cls.CONTAINER
+        elif con_type == "cond":
+            return cls.CONDITIONAL
+        elif con_type == "loop":
+            return cls.ITERABLE
+        else:
+            raise ValueError(f"Unexpected Container type: {type(con)}")
 
     @classmethod
     def from_str(cls, data: str):

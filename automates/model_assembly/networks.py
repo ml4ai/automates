@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractclassmethod
 from functools import singledispatch
 from dataclasses import dataclass
 from itertools import product
@@ -8,6 +8,7 @@ from copy import deepcopy
 
 import datetime
 import json
+import ast
 import re
 import os
 
@@ -18,6 +19,7 @@ from pygraphviz import AGraph
 
 from .sandbox import load_lambda_function
 from .air import AutoMATES_IR
+from .expression_visitor import ExpressionVisitor, ExprOperatorNode
 from .structures import (
     GenericContainer,
     LoopContainer,
@@ -38,6 +40,7 @@ from .metadata import (
     ProvenanceData,
     MeasurementType,
     LambdaType,
+    FunctionType,
     DataType,
     DomainSet,
     DomainInterval,
@@ -228,6 +231,145 @@ class VariableNode(GenericNode):
 
 
 @dataclass(repr=False, frozen=False)
+class BaseFuncNode(ABC):
+    uid: str
+    type: FunctionType
+    input_variables: List[str]
+    output_variables: List[str]
+    hyper_edges: List[HyperEdge]
+    metadata: List[TypedMetadata]
+
+    def __eq__(self, other: BaseFuncNode) -> bool:
+        return self.uid == other.uid
+
+    @classmethod
+    def from_air(
+        cls,
+        container: GenericContainer,
+        air: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode]
+    ):
+        # NOTE: this method should only be called from FuncNodes that are
+        # derived from container definitions in AIR JSON
+        inputs = [
+            VariableNode.from_identifier(var_id)
+            for var_id in container.arguments
+        ]
+        all_output_ids = container.updated + container.returns
+        outputs = [
+            VariableNode.from_identifier(var_id) for var_id in all_output_ids
+        ]
+
+        edges = list()
+        for stmt in container.statements:
+            if isinstance(stmt, CallStmt):
+                # Create a new Container type function node defintion
+                pass
+            elif isinstance(stmt, LambdaStmt):
+                # Create a new Computation type function node definiton
+                pass
+            else:
+                raise TypeError(f"Unrecognized statement type: {type(stmt)}")
+
+        # TODO: figure out how to use pre-created VariableNode's and IDs here
+        edges = [
+            HyperEdge.from_statement(stmt) for stmt in container.statements
+        ]
+        return (
+            str(uuid.uuid4()),
+            FunctionType.from_con(container.__class__.__name__),
+            inputs,
+            outputs,
+            edges,
+            container.metadata,
+        )
+
+    @abstractclassmethod
+    def from_data(cls, data: Dict[str, Any]):
+        return (
+            data["uid"],
+            FunctionType.from_str(data["type"]),
+            data["input_variables"],
+            data["output_variables"],
+            [HyperEdge.from_data(h_def) for h_def in data["hyper_edges"]],
+            [TypedMetadata.from_data(m_def) for m_def in data["metadata"]],
+        )
+
+    @abstractmethod
+    def to_data(self) -> Dict[str, Any]:
+        return {
+            "uid": self.uid,
+            "identifier": None,
+            "type": str(self.type),
+            "input_variables": self.input_variables,
+            "output_variables": self.output_variables,
+            "expression": None,
+            "exit": None,
+            "hyper_edges": [h.to_data() for h in self.hyper_edges],
+            "metadata": [m.to_data() for m in self.metadata],
+        }
+
+
+@dataclass(repr=False, frozen=False)
+class OperationFuncNode(BaseFuncNode):
+    identifier: str
+
+    @classmethod
+    def from_data(cls, data: Dict[str, Any]):
+        return cls(*(super().from_data(data)), data["identifier"])
+
+    def to_data(self) -> Dict[str, Any]:
+        data = super().to_data()
+        data.update({"identifier": self.identifier})
+        return data
+
+
+@dataclass(repr=False, frozen=False)
+class ComputationFuncNode(BaseFuncNode):
+    expression: str
+    executable: callable
+
+    @classmethod
+    def from_data(cls, data: Dict[str, Any]):
+        base_values = super().from_data(data)
+        expr = data["expression"]
+        return cls(*base_values, expr, load_lambda_function(expr))
+
+    def to_data(self) -> Dict[str, Any]:
+        data = super().to_data()
+        data.update({"expression": self.expression})
+        return data
+
+
+@dataclass(repr=False, frozen=False)
+class ContainerFuncNode(BaseFuncNode):
+    identifier: ContainerIdentifier
+    exit: ContainerIdentifier = None
+
+    @classmethod
+    def from_air(cls, container: GenericContainer) -> ContainerFuncNode:
+        # TODO: implement this for BaseFuncNode
+        base_values = super().from_air(container)
+        con_id = container.identifier
+        hyper_edges = base_values[4]
+        exit_id = None
+        for edge in hyper_edges:
+            first_output = edge.outputs[0]
+            if first_output.identifier.var_name == "EXIT":
+                exit_id = first_output.identifier
+        return cls(*base_values, con_id, exit=exit_id)
+
+    @classmethod
+    def from_data(cls, data: Dict[str, Any]):
+        return cls(*(super().from_data(data)), data["identifier"])
+
+    def to_data(self) -> Dict[str, Any]:
+        data = super().to_data()
+        data.update({"identifier": self.identifier})
+        return data
+
+
+@dataclass(repr=False, frozen=False)
 class LambdaNode(GenericNode):
     func_type: LambdaType
     func_str: str
@@ -320,11 +462,11 @@ class LambdaNode(GenericNode):
 @dataclass
 class HyperEdge:
     inputs: Iterable[VariableNode]
-    lambda_fn: LambdaNode
+    func_node: BaseFuncNode
     outputs: Iterable[VariableNode]
 
     def __call__(self):
-        result = self.lambda_fn(
+        result = self.func_node(
             *[
                 var.value if var.value is not None else var.input_value
                 for var in self.inputs
@@ -332,14 +474,14 @@ class HyperEdge:
         )
         # If we are in the exit decision hyper edge and in vectorized execution
         if (
-            self.lambda_fn.func_type == LambdaType.DECISION
+            self.func_node.func_type == LambdaType.DECISION
             and any([o.identifier.var_name == "EXIT" for o in self.inputs])
-            and self.lambda_fn.np_shape != (1,)
+            and self.func_node.np_shape != (1,)
         ):
             # Initialize seen exits to an array of False if it does not exist
             if not hasattr(self, "seen_exits"):
                 self.seen_exits = np.full(
-                    self.lambda_fn.np_shape, False, dtype=np.bool
+                    self.func_node.np_shape, False, dtype=np.bool
                 )
 
             # Gather the exit conditions for this execution
@@ -364,7 +506,7 @@ class HyperEdge:
             for i, out_val in enumerate(result):
                 variable = self.outputs[i]
                 if (
-                    self.lambda_fn.func_type == LambdaType.LITERAL
+                    self.func_node.func_type == LambdaType.LITERAL
                     and variable.input_value is not None
                 ):
                     variable.value = variable.input_value
@@ -374,7 +516,7 @@ class HyperEdge:
 
     def __eq__(self, other) -> bool:
         return (
-            self.lambda_fn == other.lambda_fn
+            self.func_node == other.func_node
             and all([i1 == i2 for i1, i2 in zip(self.inputs, other.inputs)])
             and all([o1 == o2 for o1, o2 in zip(self.outputs, other.outputs)])
         )
@@ -382,7 +524,7 @@ class HyperEdge:
     def __hash__(self):
         return hash(
             (
-                self.lambda_fn.uid,
+                self.func_node.uid,
                 tuple([inp.uid for inp in self.inputs]),
                 tuple([out.uid for out in self.outputs]),
             )
@@ -399,7 +541,7 @@ class HyperEdge:
     def to_dict(self) -> dict:
         return {
             "inputs": [n.uid for n in self.inputs],
-            "function": self.lambda_fn.uid,
+            "function": self.func_node.uid,
             "outputs": [n.uid for n in self.outputs],
         }
 
@@ -1543,6 +1685,21 @@ class GroundedFunctionNetwork(nx.DiGraph):
         :rtype: type
         :raises ExceptionName: Why the exception is raised.
         """
+        subgraph_funcs = [sgraph.to_dict() for sgraph in self.subgraphs]
+        lambda_funcs = [func.to_dict() for func in self.lambdas]
+        visitor = ExpressionVisitor()
+        expr_node_lists = [
+            visitor.visit(ast.parse(lm_node.func_str))
+            for lm_node in self.lambdas
+        ]
+        operator_nodes = list()
+        for expr_nodes_obj in expr_node_lists:
+            expr_nodes = expr_nodes_obj.nodes
+            for expr_node in expr_nodes:
+                if isinstance(expr_node, ExprOperatorNode):
+                    new_op_func = dict()
+
+        operator_func_defs = []
         data = {
             "uid": self.uid,
             "entry_point": "::".join(
@@ -1551,8 +1708,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "timestamp": self.timestamp,
             "hyper_edges": [edge.to_dict() for edge in self.hyper_edges],
             "variables": [var.to_dict() for var in self.variables],
-            "functions": [func.to_dict() for func in self.lambdas],
-            "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
+            "functions": subgraph_funcs + lambda_funcs + operator_funcs,
             "types": [t_def.to_dict() for t_def in self.types],
             "metadata": [m.to_dict() for m in self.metadata],
         }

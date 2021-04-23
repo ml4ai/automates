@@ -70,11 +70,11 @@ class VariableIdentifier(GenericIdentifier):
         name = ""
         idx = -1
         if len(split) == 3:
-            # Identifier is depricated <id type>::<name>::<version> style
+            # Identifier is depricated <var_id type>::<name>::<version> style
             (_, name, idx) = split
             return cls(con.namespace, con.con_name, name, int(idx))
         elif len(split) == 5:
-            # Identifier is <id type>::<module>::<scope>::<name>::<version>
+            # Identifier is <var_id type>::<module>::<scope>::<name>::<version>
             (_, ns, sc, name, idx) = split
             return cls(ns, sc, name, int(idx))
         else:
@@ -131,9 +131,9 @@ class VariableDefinition(GenericDefinition):
     metadata: List[TypedMetadata]
 
     @classmethod
-    def from_identifier(cls, id: VariableIdentifier):
+    def from_identifier(cls, var_id: VariableIdentifier):
         return cls(
-            id,
+            var_id,
             "type",
             False,
             "None",
@@ -287,6 +287,8 @@ class GenericContainer(ABC):
         # NOTE: store base name as key and update index during wiring
         self.variables = dict()
         self.code_type = CodeType.UNKNOWN
+
+        # TODO: these should be moved to code role analysis
         self.code_stats = {
             "num_calls": 0,
             "max_call_depth": 0,
@@ -384,10 +386,10 @@ class GenericStmt(ABC):
     @abstractmethod
     def __str__(self):
         inputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.inputs]
+            [f"{var_id.var_name} ({var_id.index})" for var_id in self.inputs]
         )
         outputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.outputs]
+            [f"{var_id.var_name} ({var_id.index})" for var_id in self.outputs]
         )
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
