@@ -164,7 +164,7 @@ rules:
 #    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
-      variable:Variable = nsubjpass # | advcl nsubj
+      variable:Variable = nsubjpass (appos?) | advcl nsubj
       definition:Concept = nmod_as [!entity = "NUMBER"] # todo: needs to expand the definition to include "at LAI = 6.0"
 
   - name: var_is_defined_token

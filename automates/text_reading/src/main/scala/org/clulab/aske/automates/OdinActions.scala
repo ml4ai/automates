@@ -200,16 +200,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
 
-  /** Keeps the longest mention for each group of overlapping mentions **/
+  /** Keeps the longest mention for each group of overlapping mentions **/ // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (functions, other) = mentions.partition(_.label == "Function")
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
-      (k, v) <- mentions.groupBy(m => (m.sentence, m.label))
+      (k, v) <- other.groupBy(m => (m.sentence, m.label))
       m <- v
       // for overlapping mentions starting at the same token, keep only the longest
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    mns.toVector.distinct
+    mns.toVector.distinct ++ functions
   }
 
 

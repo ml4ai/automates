@@ -673,8 +673,19 @@ class TestDefinitions extends ExtractionTest {
     val t5l = "The inverse of λ = 2.45 MJ kg-1 is approximately 0.408 kg MJ-1."
   passingTest should s"find NO definitions from t5l: ${t5l}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
-    val mentions = extractMentions(t11f)
+    val mentions = extractMentions(t5l)
     testDefinitionEvent(mentions, desired)
   }
 
+  // Tests from paper: PEN-2018-Step by Step Calculation of the Penman-Monteith ET-petpen_PM
+
+    val t1m = "Reference evapotranspiration (ETo) is defined as the rate at which readily available soil water is vaporized from specified vegetated surfaces (Jensen et al., 1990)."
+  passingTest should s"find definitions from t1m: ${t1m}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "ETo" -> Seq("Reference evapotranspiration"),
+      "ETo" -> Seq("rate at which readily available soil water is vaporized from specified vegetated surfaces")
+    )
+    val mentions = extractMentions(t1m)
+    testDefinitionEvent(mentions, desired)
+  }
 }
