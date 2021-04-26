@@ -210,7 +210,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // for overlapping mentions starting at the same token, keep only the longest
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    mns.toVector.distinct ++ functions
+    val fns: Iterable[Mention] = for {
+      // if the label is "Function", find mentions of the same label and same trigger
+      (k, v) <- functions.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
+      m <- v
+      // for overlapping mentions starting at the same token, keep only the longest
+      longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+    } yield longest
+    mns.toVector.distinct ++ fns.toVector.distinct
   }
 
 
