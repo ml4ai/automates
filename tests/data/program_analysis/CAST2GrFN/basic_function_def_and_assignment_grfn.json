@@ -42,7 +42,7 @@
                         "method": "program_analysis_pipeline",
                         "timestamp": "2021-04-11 11:50:21.314391"
                     },
-                    "code_type": "expression",
+                    "code_type": "block",
                     "code_file_reference_uid": "",
                     "code_span": {
                         "line_begin": null,
@@ -75,7 +75,7 @@
                         "method": "program_analysis_pipeline",
                         "timestamp": "2021-04-11 11:50:21.314407"
                     },
-                    "code_type": "code_block",
+                    "code_type": "block",
                     "code_file_reference_uid": "",
                     "code_span": {
                         "line_begin": null,
