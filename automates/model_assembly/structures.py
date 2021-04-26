@@ -150,7 +150,7 @@ class VariableDefinition(GenericDefinition):
         code_span_data = {
             "source_ref": src_ref,
             "file_uid": file_ref,
-            "code_type": "variable_name",
+            "code_type": "identifier",
         }
         metadata = [CodeSpanReference.from_air_data(code_span_data)]
         return cls(
@@ -174,7 +174,7 @@ class TypeFieldDefinition:
         code_span_data = {
             "source_ref": data["source_ref"],
             "file_uid": file_uid,
-            "code_type": "type_field",
+            "code_type": "identifier",
         }
         return cls(
             data["name"],
@@ -214,7 +214,7 @@ class TypeDefinition(GenericDefinition):
         code_span_data = {
             "source_ref": src_ref,
             "file_uid": file_ref,
-            "code_type": "type_def",
+            "code_type": "block",
         }
         metadata = [CodeSpanReference.from_air_data(code_span_data)]
         return cls(
@@ -280,7 +280,7 @@ class GenericContainer(ABC):
         code_span_data = {
             "source_ref": src_ref,
             "file_uid": file_ref,
-            "code_type": "code_block",
+            "code_type": "block",
         }
         self.metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
@@ -417,7 +417,7 @@ class CallStmt(GenericStmt):
         code_span_data = {
             "source_ref": src_ref,
             "file_uid": file_ref,
-            "code_type": "function_call",
+            "code_type": "block",
         }
         self.metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
@@ -445,7 +445,7 @@ class LambdaStmt(GenericStmt):
         code_span_data = {
             "source_ref": src_ref,
             "file_uid": file_ref,
-            "code_type": "expression",
+            "code_type": "block",
         }
         self.metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
