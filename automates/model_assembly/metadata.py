@@ -200,12 +200,8 @@ class DataType(AutoMATESBaseEnum):
 
 @unique
 class CodeSpanType(AutoMATESBaseEnum):
-    VARIABLE_NAME = auto()
-    CODE_BLOCK = auto()
-    TYPE_DEF = auto()
-    TYPE_FIELD = auto()
-    FUNCTION_CALL = auto()
-    EXPRESSION = auto()
+    IDENTIFIER = auto()
+    BLOCK = auto()
 
     @classmethod
     def from_str(cls, data: str):
