@@ -15,11 +15,11 @@ def sensitivity_visualizer():
         "tests/data/model_analysis/PT_GrFN.json"
     )
     var_bounds = {
-        "tmax": [-30.0, 60.0],
-        "tmin": [-30.0, 60.0],
-        "srad": [0.0, 30.0],
-        "msalb": [0.0, 1.0],
-        "xhlai": [0.0, 20.0],
+        "PETPT::petpt::tmax::-1": [-30.0, 60.0],
+        "PETPT::petpt::tmin::-1": [-30.0, 60.0],
+        "PETPT::petpt::srad::-1": [0.0, 30.0],
+        "PETPT::petpt::msalb::-1": [0.0, 1.0],
+        "PETPT::petpt::xhlai::-1": [0.0, 20.0],
     }
 
     sensitivity_indices_lst = []
