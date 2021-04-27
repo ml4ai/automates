@@ -186,13 +186,14 @@ class ExpressionVisitor(ast.NodeVisitor):
         """
         key_uids = list()
         for key, val in zip(node.keys, node.values):
-            val_uid = ExprAbstractNode.create_node_id()
-            self.nodes.append(
-                ExprValueNode(
-                    val_uid,
-                    val.value if isinstance(val, ast.Constant) else val.id,
-                )
-            )
+            self.generic_visit(val)
+            val_uid = self.uid_stack.get()
+            # self.nodes.append(
+            #     ExprValueNode(
+            #         val_uid,
+            #         val.value if isinstance(val, ast.Constant) else val.id,
+            #     )
+            # )
 
             key_uid = ExprAbstractNode.create_node_id()
             self.nodes.append(ExprVariableNode(key_uid, key.value, [val_uid]))
