@@ -60,6 +60,7 @@ class ExprAbstractNode(ABC):
 class ExprVariableNode(ExprAbstractNode):
     """Class def for nodes that hold variables from a GrFN Lambda expression"""
 
+    grfn_uid: str
     identifier: str
     children: List[ExprAbstractNode]
 
@@ -75,6 +76,7 @@ class ExprVariableNode(ExprAbstractNode):
     def to_dict(self) -> dict:
         return {
             "uid": self.uid,
+            "grfn_uid": self.grfn_uid,
             "type": "VARIABLE",
             "identifier": self.identifier,
             "children": self.children,
@@ -107,10 +109,36 @@ class ExprOperatorNode(ExprAbstractNode):
 
 
 @dataclass(repr=False, frozen=False)
+class ExprDefinitionNode(ExprAbstractNode):
+    """Class def for nodes that hold defs from a GrFN Lambda expression"""
+
+    def_type: str
+    children: List[ExprAbstractNode]
+
+    def __hash__(self) -> hash:
+        return hash(self.uid)
+
+    def __eq__(self, other) -> bool:
+        return self.uid == other.uid
+
+    def get_label(self) -> str:
+        return str(f"DEFINITION\n({self.def_type})")
+
+    def to_dict(self) -> dict:
+        return {
+            "uid": self.uid,
+            "type": "DEFINITION",
+            "definition": self.def_type,
+            "children": self.children,
+        }
+
+
+@dataclass(repr=False, frozen=False)
 class ExprValueNode(ExprAbstractNode):
     """Class def for nodes that hold values from a GrFN Lambda expression"""
 
     value: str
+    children: List[ExprAbstractNode]
 
     def __hash__(self) -> hash:
         return hash(self.uid)
@@ -122,7 +150,12 @@ class ExprValueNode(ExprAbstractNode):
         return str(f"VALUE\n({self.value})")
 
     def to_dict(self) -> dict:
-        return {"uid": self.uid, "type": "VALUE", "value": self.value}
+        return {
+            "uid": self.uid,
+            "type": "VALUE",
+            "value": self.value,
+            "children": self.children,
+        }
 
 
 class ExpressionVisitor(ast.NodeVisitor):
@@ -147,12 +180,17 @@ class ExpressionVisitor(ast.NodeVisitor):
         """
         return self.nodes
 
+    @staticmethod
+    def reverse_uid_list(uids) -> List:
+        return list(reversed(uids))
+
     def visit_Lambda(self, node: ast.Lambda) -> NoReturn:
-        """Adds the starting position RETURN node for the root of an expression
+        """Adds the starting position LAMBDA node for the root of an expression
         tree.
 
-        This function also empties the list of nodes before beginning to
-        process a new lambda expression.
+        The expected children of a lambda node are [ARUGMENTS, RETURN]. This
+        function also empties the list of nodes before beginning to process a
+        new lambda expression.
 
         Args:
             node (ast.Lambda): a Python AST Lambda node
@@ -160,10 +198,45 @@ class ExpressionVisitor(ast.NodeVisitor):
         self.nodes = list()
 
         self.generic_visit(node)
+        return_uid = ExprAbstractNode.create_node_id()
+        root_op_node = self.uid_stack.get()
+        return_node = ExprOperatorNode(return_uid, "RETURN", [root_op_node])
+        self.nodes.append(return_node)
+        args_node = self.uid_stack.get()
+        lambda_uid = ExprAbstractNode.create_node_id()
+        self.nodes.append(
+            ExprDefinitionNode(lambda_uid, "LAMBDA", [args_node, return_uid])
+        )
+
+    def visit_arguments(self, node: ast.arguments) -> NoReturn:
+        """Creates an ARGUMENTS node that contains an ordered list of the
+        arguments to a lambda expression as its children.
+
+        Args:
+            node (ast.arguments): A Python AST arguments node
+        """
+        self.generic_visit(node)
         new_uid = ExprAbstractNode.create_node_id()
-        n1 = self.uid_stack.get()
-        new_node = ExprOperatorNode(new_uid, "RETURN", [n1])
-        self.nodes.append(new_node)
+        self.nodes.append(
+            ExprDefinitionNode(
+                new_uid,
+                "ARGUMENTS",
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.args))]
+                ),
+            )
+        )
+        self.uid_stack.put(new_uid)
+
+    def visit_arg(self, node: ast.arg) -> NoReturn:
+        """Creates a VariableNode for an input argument to a lambda expression.
+
+        Args:
+            node (ast.arg): A Python AST Arg node
+        """
+        new_uid = ExprAbstractNode.create_node_id()
+        self.nodes.append(ExprVariableNode(new_uid, "", node.arg, []))
+        self.uid_stack.put(new_uid)
 
     def visit_Constant(self, node: ast.Constant) -> NoReturn:
         """Adds a ValueNode as a leaf that stores some non-variable value to
@@ -173,7 +246,7 @@ class ExpressionVisitor(ast.NodeVisitor):
             node (ast.Constant): a Python AST Constant node
         """
         new_uid = ExprAbstractNode.create_node_id()
-        self.nodes.append(ExprValueNode(new_uid, node.value))
+        self.nodes.append(ExprValueNode(new_uid, node.value, []))
         self.uid_stack.put(new_uid)
 
     def visit_Dict(self, node: ast.Dict) -> NoReturn:
@@ -196,11 +269,20 @@ class ExpressionVisitor(ast.NodeVisitor):
             # )
 
             key_uid = ExprAbstractNode.create_node_id()
-            self.nodes.append(ExprVariableNode(key_uid, key.value, [val_uid]))
+            if isinstance(key, ast.Constant):
+                self.nodes.append(ExprValueNode(key_uid, key.value, [val_uid]))
+            elif isinstance(key, ast.Name):
+                self.nodes.append(
+                    ExprVariableNode(key_uid, "", key.id, [val_uid])
+                )
+            else:
+                raise TypeError(
+                    f"Unrecognized value type in dict: {type(key)}"
+                )
             key_uids.append(key_uid)
 
         new_uid = ExprAbstractNode.create_node_id()
-        self.nodes.append(ExprVariableNode(new_uid, "COMPOSITE", key_uids))
+        self.nodes.append(ExprVariableNode(new_uid, "", "COMPOSITE", key_uids))
         self.uid_stack.put(new_uid)
 
     def visit_List(self, node: ast.List) -> NoReturn:
@@ -217,11 +299,10 @@ class ExpressionVisitor(ast.NodeVisitor):
         self.nodes.append(
             ExprVariableNode(
                 new_uid,
+                "",
                 "LIST",
-                list(
-                    reversed(
-                        [self.uid_stack.get() for _ in range(len(node.elts))]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.elts))]
                 ),
             )
         )
@@ -241,11 +322,10 @@ class ExpressionVisitor(ast.NodeVisitor):
         self.nodes.append(
             ExprVariableNode(
                 new_uid,
+                "",
                 "TUPLE",
-                list(
-                    reversed(
-                        [self.uid_stack.get() for _ in range(len(node.elts))]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.elts))]
                 ),
             )
         )
@@ -258,7 +338,7 @@ class ExpressionVisitor(ast.NodeVisitor):
             node (ast.Name): a Python AST Name node
         """
         new_uid = ExprAbstractNode.create_node_id()
-        self.nodes.append(ExprVariableNode(new_uid, node.id, []))
+        self.nodes.append(ExprVariableNode(new_uid, "", node.id, []))
         self.uid_stack.put(new_uid)
 
     def visit_Subscript(self, node: ast.Subscript) -> NoReturn:
@@ -267,14 +347,17 @@ class ExpressionVisitor(ast.NodeVisitor):
         Args:
             node (ast.Name): a Python AST Subscript node
         """
+        self.generic_visit(node)
         new_uid = ExprAbstractNode.create_node_id()
-        if isinstance(node.slice.value, ast.Constant):
-            node_name = f"{node.value.id}.{node.slice.value.value}"
-        elif isinstance(node.slice.value, ast.Name):
-            node_name = f"{node.value.id}.{node.slice.value.id}"
-        else:
-            raise TypeError(f"Unexpected AST type: {type(node.slice.value)}")
-        self.nodes.append(ExprVariableNode(new_uid, node_name, []))
+        self.nodes.append(
+            ExprOperatorNode(
+                new_uid,
+                "ACCESS",
+                self.reverse_uid_list(
+                    [self.uid_stack.get(), self.uid_stack.get()]
+                ),
+            )
+        )
         self.uid_stack.put(new_uid)
 
     def visit_BinOp(self, node: ast.BinOp) -> NoReturn:
@@ -290,7 +373,9 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 node.op.__class__.__name__,
-                list(reversed([self.uid_stack.get(), self.uid_stack.get()])),
+                self.reverse_uid_list(
+                    [self.uid_stack.get(), self.uid_stack.get()]
+                ),
             )
         )
         self.uid_stack.put(new_uid)
@@ -324,17 +409,13 @@ class ExpressionVisitor(ast.NodeVisitor):
         new_uid = ExprAbstractNode.create_node_id()
         comp_ops_list = [op.__class__.__name__ for op in node.ops]
         comp_ops_name = " / ".join(comp_ops_list)
+        num_comp_ops = len(node.comparators) + 1
         self.nodes.append(
             ExprOperatorNode(
                 new_uid,
                 comp_ops_name,
-                list(
-                    reversed(
-                        [
-                            self.uid_stack.get()
-                            for _ in range(len(node.comparators) + 1)
-                        ]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(num_comp_ops)]
                 ),
             )
         )
@@ -353,10 +434,8 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 node.op.__class__.__name__,
-                list(
-                    reversed(
-                        [self.uid_stack.get() for _ in range(len(node.values))]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(len(node.values))]
                 ),
             )
         )
@@ -375,14 +454,8 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 "IfExpr",
-                list(
-                    reversed(
-                        [
-                            self.uid_stack.get(),
-                            self.uid_stack.get(),
-                            self.uid_stack.get(),
-                        ]
-                    )
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(3)]
                 ),
             )
         )
@@ -402,8 +475,8 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 f"{node.func.id}()",
-                list(
-                    reversed([self.uid_stack.get() for _ in range(num_args)])
+                self.reverse_uid_list(
+                    [self.uid_stack.get() for _ in range(num_args)]
                 ),
             )
         )

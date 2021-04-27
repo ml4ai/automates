@@ -1,1 +1,470 @@
-[{"id": "ifexp", "nodes": [{"uid": "e3e70682-c209-4cac-629f-6fbed82c07cd", "type": "VARIABLE", "identifier": "c", "children": []}, {"uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639", "type": "OPERATOR", "operator": "IfExpr", "children": ["e3e70682-c209-4cac-629f-6fbed82c07cd", "f728b4fa-4248-5e3a-0a5d-2f346baa9455", "eb1167b3-67a9-c378-7c65-c1e582e2e662"]}, {"uid": "e443df78-9558-867f-5ba9-1faf7a024204", "type": "OPERATOR", "operator": "RETURN", "children": ["f7c1bd87-4da5-e709-d471-3d60c8a70639"]}]}, {"id": "compound_ifexp", "nodes": [{"uid": "23a7711a-8133-2876-37eb-dcd9e87a1613", "type": "VARIABLE", "identifier": "c1", "children": []}, {"uid": "1846d424-c17c-6279-23c6-612f48268673", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c", "type": "VARIABLE", "identifier": "c2", "children": []}, {"uid": "b4862b21-fb97-d435-8856-1712e8e5216a", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "259f4329-e6f4-590b-9a16-4106cf6a659e", "type": "VARIABLE", "identifier": "z", "children": []}, {"uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9", "type": "OPERATOR", "operator": "IfExpr", "children": ["fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c", "b4862b21-fb97-d435-8856-1712e8e5216a", "259f4329-e6f4-590b-9a16-4106cf6a659e"]}, {"uid": "5487ce1e-af19-922a-d9b8-a714e61a441c", "type": "OPERATOR", "operator": "IfExpr", "children": ["23a7711a-8133-2876-37eb-dcd9e87a1613", "1846d424-c17c-6279-23c6-612f48268673", "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9"]}, {"uid": "5a921187-19c7-8df4-8f4f-f31e78de5857", "type": "OPERATOR", "operator": "RETURN", "children": ["5487ce1e-af19-922a-d9b8-a714e61a441c"]}]}, {"id": "multi_cond_ifexp", "nodes": [{"uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2", "type": "VARIABLE", "identifier": "c1", "children": []}, {"uid": "8d723104-f773-83c1-3458-a748e9bb17bc", "type": "VARIABLE", "identifier": "c2", "children": []}, {"uid": "85776e9a-dd84-f39e-7154-5a137a1d5006", "type": "OPERATOR", "operator": "Or", "children": ["a3f2c9bf-9c63-16b9-50f2-44556f25e2a2", "8d723104-f773-83c1-3458-a748e9bb17bc"]}, {"uid": "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "b5d32b16-6619-4cb1-d710-37d1b83e90ec", "type": "OPERATOR", "operator": "IfExpr", "children": ["85776e9a-dd84-f39e-7154-5a137a1d5006", "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3", "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"]}, {"uid": "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c", "type": "OPERATOR", "operator": "RETURN", "children": ["b5d32b16-6619-4cb1-d710-37d1b83e90ec"]}]}, {"id": "indexed_expr", "nodes": [{"uid": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545", "type": "VARIABLE", "identifier": "x.0", "children": []}, {"uid": "baf3897a-3e70-f16a-5548-5822de1b372a", "type": "OPERATOR", "operator": "RETURN", "children": ["d3fbf47a-7e5b-1e7f-9ca5-499d004ae545"]}]}, {"id": "str_indexed_expr", "nodes": [{"uid": "101fbccc-ded7-33e8-b421-eaeb534097ca", "type": "VARIABLE", "identifier": "x.test", "children": []}, {"uid": "38c1962e-9148-624f-eac1-c14f30e9c5cc", "type": "OPERATOR", "operator": "RETURN", "children": ["101fbccc-ded7-33e8-b421-eaeb534097ca"]}]}, {"id": "var_indexed_expr", "nodes": [{"uid": "247a8333-f7b0-b7d2-cda8-056c3d15eef7", "type": "VARIABLE", "identifier": "x.y", "children": []}, {"uid": "1759edc3-72ae-2244-8b01-63c1cd9d2b7d", "type": "OPERATOR", "operator": "RETURN", "children": ["247a8333-f7b0-b7d2-cda8-056c3d15eef7"]}]}, {"id": "exprs_in_list", "nodes": [{"uid": "e005b860-51ef-1922-fe43-c49e149818d1", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "7d41e602-eece-328b-ff7b-118e820865d6", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711", "type": "OPERATOR", "operator": "Add", "children": ["e005b860-51ef-1922-fe43-c49e149818d1", "7d41e602-eece-328b-ff7b-118e820865d6"]}, {"uid": "552f233a-8c25-166a-1ff3-9849b4e1357d", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "3405095c-8a50-06c1-ec18-8efbd080e66e", "type": "VALUE", "value": 3}, {"uid": "8c1745a7-9a6a-5f92-cca7-4147f6be1f72", "type": "OPERATOR", "operator": "Mult", "children": ["552f233a-8c25-166a-1ff3-9849b4e1357d", "3405095c-8a50-06c1-ec18-8efbd080e66e"]}, {"uid": "1775336d-71ea-cd05-49a3-e80e966e1277", "type": "VALUE", "value": 1}, {"uid": "5129fb7c-6288-e1a5-cc45-782198a6416d", "type": "OPERATOR", "operator": "Add", "children": ["8c1745a7-9a6a-5f92-cca7-4147f6be1f72", "1775336d-71ea-cd05-49a3-e80e966e1277"]}, {"uid": "2f120554-4a53-08cc-3dfa-bc08935ddd72", "type": "VARIABLE", "identifier": "x.2", "children": []}, {"uid": "0870e15c-2fcd-81b5-d24b-ace4307bf326", "type": "VARIABLE", "identifier": "LIST", "children": ["4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711", "5129fb7c-6288-e1a5-cc45-782198a6416d", "2f120554-4a53-08cc-3dfa-bc08935ddd72"]}, {"uid": "42930b33-a81a-d477-fb36-75b89cdeb3e6", "type": "OPERATOR", "operator": "RETURN", "children": ["0870e15c-2fcd-81b5-d24b-ace4307bf326"]}]}, {"id": "exprs_in_tuple", "nodes": [{"uid": "adc0da7a-16fe-baa0-11af-923d79fdef7c", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "2648ee38-e074-05eb-2156-63abc1f254b8", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "148b2758-d7ab-7928-09e4-69e6ec62b2c8", "type": "OPERATOR", "operator": "Add", "children": ["adc0da7a-16fe-baa0-11af-923d79fdef7c", "2648ee38-e074-05eb-2156-63abc1f254b8"]}, {"uid": "d450fe4a-ec4f-217b-b306-d1a8e5eeac76", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "d67e55fd-642b-fa42-aef9-c00b8a64c1b9", "type": "VALUE", "value": 3}, {"uid": "85940927-468f-f53d-864a-7a50b48d73f1", "type": "OPERATOR", "operator": "Mult", "children": ["d450fe4a-ec4f-217b-b306-d1a8e5eeac76", "d67e55fd-642b-fa42-aef9-c00b8a64c1b9"]}, {"uid": "37176e84-d977-e993-3c49-d76fcfc6e625", "type": "VALUE", "value": 1}, {"uid": "d3447490-96fd-35d0-adf2-0806e5214606", "type": "OPERATOR", "operator": "Add", "children": ["85940927-468f-f53d-864a-7a50b48d73f1", "37176e84-d977-e993-3c49-d76fcfc6e625"]}, {"uid": "46743741-9466-e472-6b5f-5241f323ca74", "type": "VARIABLE", "identifier": "x.2", "children": []}, {"uid": "a425799a-a905-d750-7e1e-a9c573581a81", "type": "VARIABLE", "identifier": "TUPLE", "children": ["148b2758-d7ab-7928-09e4-69e6ec62b2c8", "d3447490-96fd-35d0-adf2-0806e5214606", "46743741-9466-e472-6b5f-5241f323ca74"]}, {"uid": "fb82860d-eabc-a8d0-b341-facdff0ac0f1", "type": "OPERATOR", "operator": "RETURN", "children": ["a425799a-a905-d750-7e1e-a9c573581a81"]}]}, {"id": "call_expr", "nodes": [{"uid": "5306f3f5-1516-6570-5b7c-709acb175a5a", "type": "VARIABLE", "identifier": "max", "children": []}, {"uid": "964a870c-7c87-9b74-1d87-8f9f9cdf5a86", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "30bcab0e-d857-0102-55d4-4936a1515607", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "4562be7f-bb42-e0b2-0426-465e3e37952d", "type": "OPERATOR", "operator": "max()", "children": ["964a870c-7c87-9b74-1d87-8f9f9cdf5a86", "30bcab0e-d857-0102-55d4-4936a1515607"]}, {"uid": "5f3f5638-3870-1a14-b490-b6081dfc8352", "type": "VARIABLE", "identifier": "min", "children": []}, {"uid": "6d16ee18-5521-16dd-2ba4-b180cb69ca38", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "c87a7463-19c1-6a0d-0feb-d845d0dfae43", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "38018b47-b29a-8b06-daf6-6c5f2577bffa", "type": "VARIABLE", "identifier": "z", "children": []}, {"uid": "a25b59fd-92e8-e269-d12e-cbc40b9475b1", "type": "OPERATOR", "operator": "min()", "children": ["6d16ee18-5521-16dd-2ba4-b180cb69ca38", "c87a7463-19c1-6a0d-0feb-d845d0dfae43", "38018b47-b29a-8b06-daf6-6c5f2577bffa"]}, {"uid": "9a27d858-88c1-32ad-efbf-c19ee8f6cf32", "type": "OPERATOR", "operator": "Add", "children": ["4562be7f-bb42-e0b2-0426-465e3e37952d", "a25b59fd-92e8-e269-d12e-cbc40b9475b1"]}, {"uid": "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec", "type": "OPERATOR", "operator": "RETURN", "children": ["9a27d858-88c1-32ad-efbf-c19ee8f6cf32"]}]}]
+[
+    {
+        "id": "ifexp",
+        "nodes": [
+            {
+                "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+                "type": "VARIABLE",
+                "identifier": "c",
+                "children": []
+            },
+            {
+                "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+                "type": "OPERATOR",
+                "operator": "IfExpr",
+                "children": [
+                    "e3e70682-c209-4cac-629f-6fbed82c07cd",
+                    "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                    "eb1167b3-67a9-c378-7c65-c1e582e2e662"
+                ]
+            },
+            {
+                "uid": "e443df78-9558-867f-5ba9-1faf7a024204",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "f7c1bd87-4da5-e709-d471-3d60c8a70639"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "compound_ifexp",
+        "nodes": [
+            {
+                "uid": "23a7711a-8133-2876-37eb-dcd9e87a1613",
+                "type": "VARIABLE",
+                "identifier": "c1",
+                "children": []
+            },
+            {
+                "uid": "1846d424-c17c-6279-23c6-612f48268673",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                "type": "VARIABLE",
+                "identifier": "c2",
+                "children": []
+            },
+            {
+                "uid": "b4862b21-fb97-d435-8856-1712e8e5216a",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+                "type": "OPERATOR",
+                "operator": "IfExpr",
+                "children": [
+                    "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                    "b4862b21-fb97-d435-8856-1712e8e5216a",
+                    "259f4329-e6f4-590b-9a16-4106cf6a659e"
+                ]
+            },
+            {
+                "uid": "5487ce1e-af19-922a-d9b8-a714e61a441c",
+                "type": "OPERATOR",
+                "operator": "IfExpr",
+                "children": [
+                    "23a7711a-8133-2876-37eb-dcd9e87a1613",
+                    "1846d424-c17c-6279-23c6-612f48268673",
+                    "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9"
+                ]
+            },
+            {
+                "uid": "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "5487ce1e-af19-922a-d9b8-a714e61a441c"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "multi_cond_ifexp",
+        "nodes": [
+            {
+                "uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                "type": "VARIABLE",
+                "identifier": "c1",
+                "children": []
+            },
+            {
+                "uid": "8d723104-f773-83c1-3458-a748e9bb17bc",
+                "type": "VARIABLE",
+                "identifier": "c2",
+                "children": []
+            },
+            {
+                "uid": "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                "type": "OPERATOR",
+                "operator": "Or",
+                "children": [
+                    "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                    "8d723104-f773-83c1-3458-a748e9bb17bc"
+                ]
+            },
+            {
+                "uid": "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "b5d32b16-6619-4cb1-d710-37d1b83e90ec",
+                "type": "OPERATOR",
+                "operator": "IfExpr",
+                "children": [
+                    "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                    "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+                    "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"
+                ]
+            },
+            {
+                "uid": "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "b5d32b16-6619-4cb1-d710-37d1b83e90ec"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "indexed_expr",
+        "nodes": [
+            {
+                "uid": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
+                "type": "VARIABLE",
+                "identifier": "x.0",
+                "children": []
+            },
+            {
+                "uid": "baf3897a-3e70-f16a-5548-5822de1b372a",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "str_indexed_expr",
+        "nodes": [
+            {
+                "uid": "101fbccc-ded7-33e8-b421-eaeb534097ca",
+                "type": "VARIABLE",
+                "identifier": "x.test",
+                "children": []
+            },
+            {
+                "uid": "38c1962e-9148-624f-eac1-c14f30e9c5cc",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "101fbccc-ded7-33e8-b421-eaeb534097ca"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "var_indexed_expr",
+        "nodes": [
+            {
+                "uid": "247a8333-f7b0-b7d2-cda8-056c3d15eef7",
+                "type": "VARIABLE",
+                "identifier": "x.y",
+                "children": []
+            },
+            {
+                "uid": "1759edc3-72ae-2244-8b01-63c1cd9d2b7d",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "247a8333-f7b0-b7d2-cda8-056c3d15eef7"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "exprs_in_list",
+        "nodes": [
+            {
+                "uid": "e005b860-51ef-1922-fe43-c49e149818d1",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "7d41e602-eece-328b-ff7b-118e820865d6",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
+                "type": "OPERATOR",
+                "operator": "Add",
+                "children": [
+                    "e005b860-51ef-1922-fe43-c49e149818d1",
+                    "7d41e602-eece-328b-ff7b-118e820865d6"
+                ]
+            },
+            {
+                "uid": "552f233a-8c25-166a-1ff3-9849b4e1357d",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "3405095c-8a50-06c1-ec18-8efbd080e66e",
+                "type": "VALUE",
+                "value": 3
+            },
+            {
+                "uid": "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
+                "type": "OPERATOR",
+                "operator": "Mult",
+                "children": [
+                    "552f233a-8c25-166a-1ff3-9849b4e1357d",
+                    "3405095c-8a50-06c1-ec18-8efbd080e66e"
+                ]
+            },
+            {
+                "uid": "1775336d-71ea-cd05-49a3-e80e966e1277",
+                "type": "VALUE",
+                "value": 1
+            },
+            {
+                "uid": "5129fb7c-6288-e1a5-cc45-782198a6416d",
+                "type": "OPERATOR",
+                "operator": "Add",
+                "children": [
+                    "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
+                    "1775336d-71ea-cd05-49a3-e80e966e1277"
+                ]
+            },
+            {
+                "uid": "2f120554-4a53-08cc-3dfa-bc08935ddd72",
+                "type": "VARIABLE",
+                "identifier": "x.2",
+                "children": []
+            },
+            {
+                "uid": "0870e15c-2fcd-81b5-d24b-ace4307bf326",
+                "type": "VARIABLE",
+                "identifier": "LIST",
+                "children": [
+                    "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
+                    "5129fb7c-6288-e1a5-cc45-782198a6416d",
+                    "2f120554-4a53-08cc-3dfa-bc08935ddd72"
+                ]
+            },
+            {
+                "uid": "42930b33-a81a-d477-fb36-75b89cdeb3e6",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "0870e15c-2fcd-81b5-d24b-ace4307bf326"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "exprs_in_tuple",
+        "nodes": [
+            {
+                "uid": "adc0da7a-16fe-baa0-11af-923d79fdef7c",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "2648ee38-e074-05eb-2156-63abc1f254b8",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "148b2758-d7ab-7928-09e4-69e6ec62b2c8",
+                "type": "OPERATOR",
+                "operator": "Add",
+                "children": [
+                    "adc0da7a-16fe-baa0-11af-923d79fdef7c",
+                    "2648ee38-e074-05eb-2156-63abc1f254b8"
+                ]
+            },
+            {
+                "uid": "d450fe4a-ec4f-217b-b306-d1a8e5eeac76",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "d67e55fd-642b-fa42-aef9-c00b8a64c1b9",
+                "type": "VALUE",
+                "value": 3
+            },
+            {
+                "uid": "85940927-468f-f53d-864a-7a50b48d73f1",
+                "type": "OPERATOR",
+                "operator": "Mult",
+                "children": [
+                    "d450fe4a-ec4f-217b-b306-d1a8e5eeac76",
+                    "d67e55fd-642b-fa42-aef9-c00b8a64c1b9"
+                ]
+            },
+            {
+                "uid": "37176e84-d977-e993-3c49-d76fcfc6e625",
+                "type": "VALUE",
+                "value": 1
+            },
+            {
+                "uid": "d3447490-96fd-35d0-adf2-0806e5214606",
+                "type": "OPERATOR",
+                "operator": "Add",
+                "children": [
+                    "85940927-468f-f53d-864a-7a50b48d73f1",
+                    "37176e84-d977-e993-3c49-d76fcfc6e625"
+                ]
+            },
+            {
+                "uid": "46743741-9466-e472-6b5f-5241f323ca74",
+                "type": "VARIABLE",
+                "identifier": "x.2",
+                "children": []
+            },
+            {
+                "uid": "a425799a-a905-d750-7e1e-a9c573581a81",
+                "type": "VARIABLE",
+                "identifier": "TUPLE",
+                "children": [
+                    "148b2758-d7ab-7928-09e4-69e6ec62b2c8",
+                    "d3447490-96fd-35d0-adf2-0806e5214606",
+                    "46743741-9466-e472-6b5f-5241f323ca74"
+                ]
+            },
+            {
+                "uid": "fb82860d-eabc-a8d0-b341-facdff0ac0f1",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "a425799a-a905-d750-7e1e-a9c573581a81"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "call_expr",
+        "nodes": [
+            {
+                "uid": "5306f3f5-1516-6570-5b7c-709acb175a5a",
+                "type": "VARIABLE",
+                "identifier": "max",
+                "children": []
+            },
+            {
+                "uid": "964a870c-7c87-9b74-1d87-8f9f9cdf5a86",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "30bcab0e-d857-0102-55d4-4936a1515607",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "4562be7f-bb42-e0b2-0426-465e3e37952d",
+                "type": "OPERATOR",
+                "operator": "max()",
+                "children": [
+                    "964a870c-7c87-9b74-1d87-8f9f9cdf5a86",
+                    "30bcab0e-d857-0102-55d4-4936a1515607"
+                ]
+            },
+            {
+                "uid": "5f3f5638-3870-1a14-b490-b6081dfc8352",
+                "type": "VARIABLE",
+                "identifier": "min",
+                "children": []
+            },
+            {
+                "uid": "6d16ee18-5521-16dd-2ba4-b180cb69ca38",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "c87a7463-19c1-6a0d-0feb-d845d0dfae43",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "38018b47-b29a-8b06-daf6-6c5f2577bffa",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "a25b59fd-92e8-e269-d12e-cbc40b9475b1",
+                "type": "OPERATOR",
+                "operator": "min()",
+                "children": [
+                    "6d16ee18-5521-16dd-2ba4-b180cb69ca38",
+                    "c87a7463-19c1-6a0d-0feb-d845d0dfae43",
+                    "38018b47-b29a-8b06-daf6-6c5f2577bffa"
+                ]
+            },
+            {
+                "uid": "9a27d858-88c1-32ad-efbf-c19ee8f6cf32",
+                "type": "OPERATOR",
+                "operator": "Add",
+                "children": [
+                    "4562be7f-bb42-e0b2-0426-465e3e37952d",
+                    "a25b59fd-92e8-e269-d12e-cbc40b9475b1"
+                ]
+            },
+            {
+                "uid": "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "9a27d858-88c1-32ad-efbf-c19ee8f6cf32"
+                ]
+            }
+        ]
+    }
+]
