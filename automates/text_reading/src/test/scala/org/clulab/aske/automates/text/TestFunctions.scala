@@ -187,7 +187,6 @@ class TestFunctions extends ExtractionTest {
 
 }
 
-
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
   // todo: "The values for Cn consider the time step and aerodynamic roughness of the surface (i.e., reference type)."
   // todo: "The constant in the denominator, Cd, considers the time step, bulk surface resistance, and aerodynamic roughness of the surface (the latter two terms vary with reference type, time step and daytime/nighttime)."

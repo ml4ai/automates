@@ -27,3 +27,13 @@ passive_mark_verbs: "marked|defined|indicated|characterized"
 transparent_nouns: "level|amount|quantit" # do we need these in general?
 
 # Todo: nmod_from "X will follow from Y"
+
+# FUNCTION TRIGGERS
+
+functionTrigger1: "[lemma = influence]|[lemma = modify]|[lemma = govern]"
+
+functionTrigger2: "[word = product]|[word = inverse]|[word = sum]|[word = mean]|[word = composite]|[word = minimum]|[word = maximum]|[word = function]"
+
+functionTrigger3: "[lemma = estimate] | [lemma = calculate] | [lemma = compute] | [lemma = determine]"
+
+functionTrigger4: "[word = ratio] | [word = fraction]"

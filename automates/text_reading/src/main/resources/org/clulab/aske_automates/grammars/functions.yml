@@ -2,9 +2,51 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-  # todo: a lot of inputs and outputs need to be expanded.
   # todo: some of the rules have very similar structure, though their trigger words differ. Would it be possible to capture them in a single rule?
-  # fixme: only one rule applies even when multiple rules should apply. needs to find out why. (i.e. t2f)
+
+  - name: trigger1_by # modify, influence, govern is the trigger for this rule
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
+    pattern: |
+      trigger = ${functionTrigger1} (?= "by")
+      input:Concept+ = nmod_agent | conj_and
+      output:Concept = nsubjpass
+
+  - name: trigger2_of # product, inverse, sum, mean, composite, minimum, maximum, function is the trigger for this rule
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
+    pattern: |
+      trigger = ${functionTrigger2} (?= "of")
+      input:Concept+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and
+      output:Concept = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod
+
+  - name: trigger3_from # estimate, calculate, compute, determine is the trigger for this rule
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
+    pattern: |
+      trigger = ${functionTrigger3} (?= "from")
+      input:Concept+ = nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj
+      output:Concept = nsubjpass (conj_or)? | dobj
+
+  - name: trigger4_of_to # ratio, fraction is the trigger for this rule
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
+    pattern: |
+      trigger = ${functionTrigger4} (?= "of")
+      input:Concept+ = nmod_of | nmod_at? nmod_to
+      output:Concept = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj
 
   - name: difference_between
     label: Function
@@ -30,17 +72,6 @@ rules:
       output:Concept = (<conj_or)? <advcl_by nsubjpass | xcomp dobj
       # note: if the sequence of inputs matter (if it has to be "input2 - input1"), the rule needs to be fixed.
 
-  - name: product_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-    pattern: |
-      trigger = [word = "product"] (?="of")
-      input:Concept+ = nmod_of conj_and?
-      output:Concept = (nsubj | <nmod_as nsubjpass)
-
   - name: multiplication
     label: Function
     priority: ${priority}
@@ -65,30 +96,7 @@ rules:
       input:Concept+ = (dobj | <acl | nmod_by)
       output:Concept = (<advcl_by nsubjpass | <acl <nmod_as (nmod_since | <acl))
 
-  # note: this rule has only one input.
-  - name: inverse_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "γ is the inverse of the mean recovery time, in days."
-    pattern: |
-      trigger = [word = "inverse"] (?="of")
-      input:Concept = nmod_of
-      output:Concept = (nsubj | <nsubj ccomp nummod)
-
   #double_epidemic
-
-  - name: sum_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "The incubation period (the time from first infection to the appearances of symptoms) plus the onset to admission interval is equal to the sum of the latent period and the infectious period and is therefore equal to 1/b + 1/a."
-    pattern: |
-      trigger = [word = "sum"] (?="of")
-      input:Concept+ = nmod_of | (nmod_of)? conj_and
-      output:Concept = ((<nmod_to)? nsubj | <nmod_as dobj) #todo: output needs to be expanded.
 
   - name: add_to
     label: Function
@@ -103,17 +111,6 @@ rules:
       #todo: how to extract sets of "one output & inputs" multiple times?
       # (i.e. infiltration & the amount applied, the amount of rainfall as one set and runoff & the amount applied, the amount of rainfall as the other)
 
-  - name: mean_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "the mean air temperature, T, for a daily time step is preferred as the mean of the daily maximum and daily minimum air temperatures..."
-    pattern: |
-      trigger = [word = "mean"] (?="of")
-      input:Concept+ = nmod_of | nmod_of conj_and
-      output:Concept = <nmod_as nsubjpass
-
   - name: partitioned_as
     label: Function
     priority: ${priority}
@@ -124,28 +121,6 @@ rules:
       trigger = [lemma = "partition"] (?="as")
       input:Concept+ = nmod_as | nmod_as conj_and
       output:Concept = nsubjpass
-
-  - name: fraction_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "where fG is fraction of G to Rns, with a value of 0.35 obtained by the observed G and calculated Rns for this study, which was similar with Choudhury et al. (1987) in a wheat field."
-    pattern: |
-      trigger = [lemma = "fraction"] (?="of")
-      input:Concept+ = nmod_of | nmod_to
-      output:Concept = nsubj
-
-  - name: composite_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "two-source E models have been proposed which treat total E as a composite of vegetation transpiration and soil evaporation"
-    pattern: |
-      trigger = [lemma = "composite"] (?="of")
-      input:Concept+ = nmod_of | nmod_of conj_and
-      output:Concept = <nmod_as dobj
 
     # needs to see if this function works too extensively.
   - name: input_plus_input
@@ -159,62 +134,7 @@ rules:
       input:Concept+ = <cc | <cc conj_plus
       output:Concept = <cc <dobj nsubj
 
-  - name: ratio_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
-    pattern: |
-      trigger = [lemma = "ratio"] (?="of")
-      input:Concept+ = nmod_of | (nmod_at)? nmod_to
-      output:Concept = <nmod_as <acl nsubj | nsubj acl_to dobj
-
-  - name: minimum_or_maximum_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Actual soil evaporation is the minimum of the potential and soil-limiting calculations on a daily basis."
-    pattern: |
-      trigger = [lemma = "minimum"] (?="of") | [lemma = "maximum"] (?="of")
-      input:Concept+ = nmod_of | conj_and
-      output:Concept = nsubj | <nmod_as nsubjpass
-
   # note: relation rules? (the relation between input and output is too vague to be denoted as "function")
-
-  - name: estimated_from
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
-    pattern: |
-      trigger = [lemma = "estimate"]
-      input:Concept = nmod_from | xcomp dobj
-      output:Concept = nsubjpass
-
-  - name: calculate
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "The actual vapor pressure of air for hourly periods can be calculated from relative humidity (RH) and saturation vapor pressure at the corresponding air temperature (from Eq. 37):"
-    pattern: |
-      trigger = [lemma = "calculate"]
-      input:Concept+ = nmod_from | nmod_from conj_and | advcl_based_on | nsubj:xsubj
-      output:Concept = nsubjpass | dobj
-
-  - name: function_of
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Daily Rso is a function of the time of year and latitude."
-    pattern: |
-      trigger = [word = "function"] (?="of")
-      input:Concept+ = nmod_of | nmod_of (nmod_of)? conj_and
-      output:Concept = (csubj)? nsubj | <nmod_as (nsubjpass)?
 
   - name: proportional_to
     label: Function
@@ -237,9 +157,10 @@ rules:
     example: "This one-dimensional model computes the daily changes in soil water content by soil layer due to infiltration of rainfall and irrigation, vertical drainage, unsaturated flow, soil evaporation, and root water uptake processes."
     pattern: |
       trigger = [lemma = "compute"]
-      input:Concept+ = dobj nmod_in nmod_by | xcomp dobj | xcomp dobj nmod_of conj_and | nmod_from | nmod_by | advcl dobj | advcl_based_on | nmod_during nmod_based_on | dobj nmod_based_on
+      input:Concept+ = dobj nmod_in nmod_by | xcomp dobj nmod_of conj_and | nmod_by | advcl dobj | advcl_based_on | nmod_during nmod_based_on | dobj nmod_based_on
       output:Concept = dobj | nsubjpass (conj_or)?
       # fixme: this rule doesn't work properly (too many patterns). needs to be fixed.
+      # note: this rule is not fully subsumed under the generalized rule.
 
   - name: be_based_on
     label: Function
@@ -285,17 +206,6 @@ rules:
       input:Concept+ = nsubj
       output:Concept = nmod_to
 
-  - name: governed_by
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Rate of development is governed by thermal time, or growing degree-days (GDD), which is computed based on the daily maximum and minimum temperatures."
-    pattern: |
-      trigger = [lemma = "govern"] (?= "by")
-      input:Concept+ = nmod_agent
-      output:Concept = nsubjpass
-
   - name: function_defined_by
     label: Function
     priority: ${priority}
@@ -306,28 +216,6 @@ rules:
       trigger = (?<= "function") [lemma = "define"] (?= "by")
       input:Concept+ = nmod_by
       output:Concept = <acl
-
-  - name: modified_by
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Daily growth rate is modified by temperature and assimilate availability."
-    pattern: |
-      trigger = [lemma = "modify"] (?= "by")
-      input:Concept+ = nmod_agent | conj_and
-      output:Concept = nsubjpass
-
-  - name: influenced_by
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
-    pattern: |
-      trigger = [lemma = "influence"] (?= "by")
-      input:Concept+ = nmod_agent
-      output:Concept = nsubjpass
 
   - name: affecting_output
     label: Function
@@ -340,25 +228,158 @@ rules:
       input:Concept+ = <acl <nsubj
       output:Concept = dobj
 
-  - name: determined_from
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "ETc can be determined from ETo using a crop specific coefficient (Kc)."
-    pattern: |
-      trigger = [lemma = "determine"]
-      input:Concept+ = nmod_from (acl dobj appos)? #fixme: expansion is too broad.
-      output:Concept = nsubjpass
+# rules subsumed under generalized rules (trigger1_by or trigger2_of)
 
-
-#  - name: general_function_rule_tested
+#  - name: product_of
 #    label: Function
 #    priority: ${priority}
 #    type: dependency
 #    action: ${action}
-#    example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
+#    example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
 #    pattern: |
-#      trigger = [word = /.+/]
-#      input:Concept+ = nmod_between (conj_and)? | nmod_from | (<conj_or)? dobj | <conj_or nmod_from | nmod_of conj_and? | nmod_by | <acl | nmod_of | (nmod_of)? conj_and | nmod_as conj_and?
-#      output:Concept = (<nmod_to)? nsubj | (<nmod_from | <nmod_as)? nsubjpass | <nmod_as <acl nsubj | (<conj_or)? <advcl_by nsubjpass | xcomp dobj | <acl <nmod_as (nmod_since | <acl) | <nsubj ccomp nummod | <nmod_as dobj
+#      trigger = [word = "product"] (?="of")
+#      input:Concept+ = nmod_of conj_and?
+#      output:Concept = (nsubj | <nmod_as nsubjpass)
+
+#  - name: inverse_of
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "γ is the inverse of the mean recovery time, in days."
+#    pattern: |
+#      trigger = [word = "inverse"] (?="of")
+#      input:Concept = nmod_of
+#      output:Concept = (nsubj | <nsubj ccomp nummod)
+
+#  - name: sum_of
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "The incubation period (the time from first infection to the appearances of symptoms) plus the onset to admission interval is equal to the sum of the latent period and the infectious period and is therefore equal to 1/b + 1/a."
+#    pattern: |
+#      trigger = [word = "sum"] (?="of")
+#      input:Concept+ = nmod_of | (nmod_of)? conj_and
+#      output:Concept = ((<nmod_to)? nsubj | <nmod_as dobj)
+
+#  - name: mean_of
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "the mean air temperature, T, for a daily time step is preferred as the mean of the daily maximum and daily minimum air temperatures..."
+#    pattern: |
+#      trigger = [word = "mean"] (?="of")
+#      input:Concept+ = nmod_of | nmod_of conj_and
+#      output:Concept = <nmod_as nsubjpass
+
+#  - name: composite_of
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "two-source E models have been proposed which treat total E as a composite of vegetation transpiration and soil evaporation"
+#    pattern: |
+#      trigger = [lemma = "composite"] (?="of")
+#      input:Concept+ = nmod_of | nmod_of conj_and
+#      output:Concept = <nmod_as dobj
+
+#  - name: minimum_or_maximum_of
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Actual soil evaporation is the minimum of the potential and soil-limiting calculations on a daily basis."
+#    pattern: |
+#      trigger = [lemma = "minimum"] (?="of") | [lemma = "maximum"] (?="of")
+#      input:Concept+ = nmod_of | conj_and
+#      output:Concept = nsubj | <nmod_as nsubjpass
+
+#  - name: function_of
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Daily Rso is a function of the time of year and latitude."
+#    pattern: |
+#      trigger = [word = "function"] (?="of")
+#      input:Concept+ = nmod_of | nmod_of (nmod_of)? conj_and
+#      output:Concept = (csubj)? nsubj | <nmod_as (nsubjpass)?
+
+#  - name: governed_by
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Rate of development is governed by thermal time, or growing degree-days (GDD), which is computed based on the daily maximum and minimum temperatures."
+#    pattern: |
+#      trigger = [lemma = "govern"] (?= "by")
+#      input:Concept+ = nmod_agent
+#      output:Concept = nsubjpass
+
+#  - name: modified_by
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Daily growth rate is modified by temperature and assimilate availability."
+#    pattern: |
+#      trigger = [lemma = "modify"] (?= "by")
+#      input:Concept+ = nmod_agent | conj_and
+#      output:Concept = nsubjpass
+
+#  - name: estimated_from
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
+#    pattern: |
+#      trigger = [lemma = "estimate"]
+#      input:Concept = nmod_from | xcomp dobj
+#      output:Concept = nsubjpass
+
+#  - name: calculate
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "The actual vapor pressure of air for hourly periods can be calculated from relative humidity (RH) and saturation vapor pressure at the corresponding air temperature (from Eq. 37):"
+#    pattern: |
+#      trigger = [lemma = "calculate"]
+#      input:Concept+ = nmod_from | nmod_from conj_and | advcl_based_on | nsubj:xsubj
+#      output:Concept = nsubjpass | dobj
+
+#  - name: determined_from
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "ETc can be determined from ETo using a crop specific coefficient (Kc)."
+#    pattern: |
+#      trigger = [lemma = "determine"]
+#      input:Concept+ = nmod_from
+#      output:Concept = nsubjpass
+
+#  - name: fraction_of
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "where fG is fraction of G to Rns, with a value of 0.35 obtained by the observed G and calculated Rns for this study, which was similar with Choudhury et al. (1987) in a wheat field."
+#    pattern: |
+#      trigger = [lemma = "fraction"] (?="of")
+#      input:Concept+ = nmod_of | nmod_to
+#      output:Concept = nsubj
+
+  #  - name: ratio_of
+  #    label: Function
+  #    priority: ${priority}
+  #    type: dependency
+  #    action: ${action}
+  #    example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
+  #    pattern: |
+  #      trigger = [lemma = "ratio"] (?="of")
+  #      input:Concept+ = nmod_of | (nmod_at)? nmod_to
+  #      output:Concept = <nmod_as <acl nsubj | nsubj acl_to dobj
