@@ -16,7 +16,7 @@ import play.api.test.Helpers._
   *
   * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
   */
-class TestAlign extends PlaySpec with GuiceOneAppPerTest with Injecting {
+class TestAlignEndpoint extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
 
   new GuiceApplicationBuilder()
