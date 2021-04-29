@@ -7,12 +7,17 @@ from automates.model_assembly.interfaces import TextReadingInterface
 
 def main(args):
     CUR_DIR = os.getcwd()
-    MODEL_NAME = args.grfn_file.replace("--GrFN.json", "")
+    MODEL_NAME = os.path.basename(args.grfn_file).replace("--GrFN.json", "")
 
     MENTIONS_PATH = f"{CUR_DIR}/{MODEL_NAME}--mentions.json"
     ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}--alignment.json"
+
     caller = TextReadingInterface(f"http://{args.address}:{args.port}")
-    caller.extract_mentions(args.doc_file, MENTIONS_PATH)
+    if not os.path.isfile(MENTIONS_PATH):
+        caller.extract_mentions(args.doc_file, MENTIONS_PATH)
+    else:
+        print(f"Mentions have been previously extracted and are stored in {MENTIONS_PATH}")
+
     hypothesis_data = caller.get_link_hypotheses(
         MENTIONS_PATH, args.eqn_file, args.grfn_file, args.comm_file
     )
