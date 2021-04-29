@@ -1,6 +1,7 @@
 import json
 from typing import List
 from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 
 
 # class Serializable:
@@ -8,23 +9,27 @@ from dataclasses import dataclass
 #         return json.dumps(self, default=lambda o: o.__dict__)
 
 
+@dataclass_json
 @dataclass
-class Type(dict):
+class Type:
     name: str
 
 
+@dataclass_json
 @dataclass
-class Variable(dict):
+class Variable:
     name: str
 
 
+@dataclass_json
 @dataclass
-class Box(dict):
+class Box:
     name: str
 
 
+@dataclass_json
 @dataclass
-class Gromet(dict):
+class Gromet:
     root: Box
     types: List[Type]
     variables: List[Variable]
@@ -40,5 +45,5 @@ def example():
 
 
 if __name__ == "__main__":
-    json.dump(example().__dict__, open("example.json", "w"))
+    json.dump(example().to_json(), open("example.json", "w"))
 
