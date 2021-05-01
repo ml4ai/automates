@@ -4,14 +4,14 @@ rules:
 
   # todo: some of the rules have very similar structure, though their trigger words differ. Would it be possible to capture them in a single rule?
 
-  - name: trigger1_by # modify, influence, govern is the trigger for this rule
+  - name: trigger1_by # modify, influence, govern, limit, control, dominate is the trigger for this rule
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
     pattern: |
-      trigger = ${functionTrigger1} (?= "by")
+      trigger = ${functionTrigger1}
       input:Concept+ = nmod_agent | conj_and
       output:Concept = nsubjpass
 
@@ -23,19 +23,19 @@ rules:
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
       trigger = ${functionTrigger2} (?= "of")
-      input:Concept+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and
+      input:Concept+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos
       output:Concept = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod
 
-  - name: trigger3_from # estimate, calculate, compute, determine is the trigger for this rule
+  - name: trigger3_from # estimate, calculate, compute, determine, predict is the trigger for this rule
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
     pattern: |
-      trigger = ${functionTrigger3} (?= "from")
-      input:Concept+ = nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj
-      output:Concept = nsubjpass (conj_or)? | dobj
+      trigger = ${functionTrigger3}
+      input:Concept+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of
+      output:Concept = nsubjpass conj_or? | dobj
 
   - name: trigger4_of_to # ratio, fraction is the trigger for this rule
     label: Function
@@ -47,6 +47,17 @@ rules:
       trigger = ${functionTrigger4} (?= "of")
       input:Concept+ = nmod_of | nmod_at? nmod_to
       output:Concept = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj
+
+  - name: trigger5_by_Ving # potential pattern
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The evaporation from the plant surfaces Ep is predicted by using an empirical relation based on local data..."
+    pattern: |
+      trigger = ${functionTrigger5}
+      input:Concept+ = advcl_by dobj
+      output:Concept = nsubjpass
 
   - name: difference_between
     label: Function
@@ -123,16 +134,16 @@ rules:
       output:Concept = nsubjpass
 
     # needs to see if this function works too extensively.
-  - name: input_plus_input
+  - name: plus_or_minus
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "Ea equals the water input plus a fraction extracted from soil water, caused by this soil water deficit condition."
     pattern: |
-      trigger = [lemma = "plus"]
-      input:Concept+ = <cc | <cc conj_plus
-      output:Concept = <cc <dobj nsubj
+      trigger = [lemma = "plus"] | [lemma = "minus"]
+      input:Concept+ = <cc (conj_plus | conj_minus)?
+      output:Concept = <cc (<dobj | <nmod_to) nsubj
 
   # note: relation rules? (the relation between input and output is too vague to be denoted as "function")
 
@@ -217,16 +228,70 @@ rules:
       input:Concept+ = nmod_by
       output:Concept = <acl
 
-  - name: affecting_output
+  - name: affect_or_limit
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "The only factors affecting ETo are climatic parameters..."
     pattern: |
-      trigger = [lemma = "affect"]
-      input:Concept+ = <acl <nsubj
+      trigger = [lemma = "affect"]|[lemma = "limit"]
+      input:Concept+ = <acl <nsubj | nsubj
       output:Concept = dobj
+
+  - name: related_to
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The only factors affecting ETo are climatic parameters..."
+    pattern: |
+      trigger = [word = "related"] (?= "to")
+      input:Concept+ = nmod_to nmod_through?
+      output:Concept = nsubj
+
+  - name: equation
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The model was used to obtain the total evaporation rate E = Es + Ep of a developing grain sorghum (Sorghum bicolor L.) canopy in central Texas"
+    pattern: |
+      trigger = [word = "="]
+      input:Concept+ = dobj | parataxis nsubjpass
+      output:Concept = nsubj
+
+  - name: convert_to
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Albedo values ε used for converting daily solar radiation Rs to net solar radiation are calculated for a developing canopy on the basis of the leaf area index from an empirical equation developed from local data,"
+    pattern: |
+      trigger = [lemma = "convert"]
+      input:Concept+ = <advcl_for <acl | dobj
+      output:Concept = nmod_to
+
+  - name: change_in_proportion_to
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
+    pattern: |
+      trigger = [lemma = "proportion"] (?="to")
+      input:Concept+ = nmod_to
+      output:Concept = <nmod_in nsubjpass
+
+# note: how to write a token rule for function extraction? (with multiple inputs)
+#  - name: minus_token_rule # needed due to bad parsing
+#    label: Function
+#    priority: ${priority}
+#    type: token
+#    action: ${action}
+#    example: "e.g., the equation ΣEs1 = ΣEs1 - P is interpreted to mean that a new value of ΣEs1 is equal to the previously calculated value of ΣEs1 minus P."
+#    pattern: |
+#      @output:Concept [lemma = "be"] [word = "equal"] [word = "to"] [word = /.*/]+ @input:Concept [word = "minus"] @input:Concept
 
 # rules subsumed under generalized rules (trigger1_by or trigger2_of)
 

@@ -34,6 +34,15 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  val t4a = "The actual vapor pressure can be measured or it can be calculated from various humidity data, such as measured dew point temperature, wet-bulb and dry-bulb temperature, or relative humidity and air temperature data."
+  failingTest should s"find functions from t4a: ${t4a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "The actual vapor pressure" -> Seq("various humidity data", "air temperature data") // todo: how can we deal with pronouns (i.e. it)? + another issue is the "such as" part. (needs discourse parsing?)
+    )
+    val mentions = extractMentions(t3a)
+    testFunctionEvent(mentions, desired)
+  }
+
   // Tests from paper: COVID_ACT_NOW
   val t1b = "Initial conditions for total cases and total exposed are calculated by dividing hospitalizations by the hospitalization rate."
   failingTest should s"find functions from t1b: ${t1b}" taggedAs(Somebody) in {
@@ -183,7 +192,55 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
-  // Tests from paper: PEN-2018-Step by Step Calculation of the Penman-Monteith ET-petpen_PM
+  // model for predicting evaporation from a row crop with incomplete cover
+  val t1g = "The crop evaporation rate is calculated by adding the soil surface and plant surface components (each of these requiring daily numbers for the leaf area index), the potential evaporation, the rainfall, and the net radiation above the canopy."
+  failingTest should s"find functions from t1g: ${t1g}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "crop evaporation rate" -> Seq("soil surface components", "plant surface components") // fixme: This example has a conjunction issue. It's also not sure what's the complete set of inputs. (two or five, including "the potential evaporation, the rainfall, net radiation above the canopy." as inputs as well?)
+    )
+    val mentions = extractMentions(t1g)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t2g = "The evaporation from the soil surface Es is calculated in two stages: (1) the constant rate stage in which Es is limited only by the supply of energy to the surface and (2) the falling rate stage in which water movement to the evaporating sites near the surface is controlled by the hydraulic properties of the soil."
+  failingTest should s"find functions from t2g: ${t2g}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Es" -> Seq("supply of energy to the surface"), // fixme: one additional, unwanted concept is captured as an input due to bad parsing.
+      "water movement to the evaporating sites near the surface" -> Seq("hydraulic properties of the soil")
+    )
+    val mentions = extractMentions(t2g)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t3g = "The model was used to obtain the total evaporation rate E = Es + Ep of a developing grain sorghum (Sorghum bicolor L.) canopy in central Texas."
+  failingTest should s"find functions from t3g: ${t3g}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "E" -> Seq("Es", "Ep") // fixme: "Es" is expanded too broadly due to bad parsing
+    )
+    val mentions = extractMentions(t3g)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t4g = "Albedo values ε used for converting daily solar radiation Rs to net solar radiation are calculated for a developing canopy on the basis of the leaf area index Laε from an empirical equation developed from local data,"
+  failingTest should s"find functions from t4g: ${t4g}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "net solar radiation" -> Seq("ε", "Rs"), // fixme: inputs are not filtered properly
+      "ε" -> Seq("Laε")
+    )
+    val mentions = extractMentions(t4g)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t5g = "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
+  failingTest should s"find functions from t5g: ${t5g}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "canopy density" -> Seq("Wind speed"), // fixme: same rule does not extract more than one set of input/output.
+      "canopy density" -> Seq("Rno"),
+      "canopy density" -> Seq("vapor pressure deficit")
+    )
+    val mentions = extractMentions(t5g)
+    testFunctionEvent(mentions, desired)
+  }
 
 }
 
@@ -191,7 +248,6 @@ class TestFunctions extends ExtractionTest {
   // todo: "The values for Cn consider the time step and aerodynamic roughness of the surface (i.e., reference type)."
   // todo: "The constant in the denominator, Cd, considers the time step, bulk surface resistance, and aerodynamic roughness of the surface (the latter two terms vary with reference type, time step and daytime/nighttime)."
   // todo: "The density of water (ρw) is taken as 1.0 Mg m-3 so that the inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
-  // todo: "The actual vapor pressure can be measured or it can be calculated from various humidity data, such as measured dew point temperature, wet-bulb and dry-bulb temperature, or relative humidity and air temperature data."
   // todo: "For daily calculation time steps, average dew point temperature can be computed by averaging over hourly periods"
   // todo: "Extraterrestrial radiation, Ra, defined as the short-wave solar radiation in the absence of an atmosphere, is a well-behaved function of the day of the year, time of day, and latitude."
   // todo: "For daily (24-hour) periods, Ra can be estimated from the solar constant, the solar declination, and the day of the year"
@@ -228,3 +284,8 @@ class TestFunctions extends ExtractionTest {
   // todo: Daylength may affect the total number of leaves formed by altering the duration of the floral induction phase, and thus, floral initiation. //note: does this counts as a function example?
   // todo: The amount of new dry matter available for growth each day may also be modified by the most limiting of water or nitrogen stress, and temperature, and is sensitive to atmospheric CO2 concentration.
   // todo: An important aspect of many of these studies is a consideration that weather influences the performance of crops, interacting in complex ways with soil and management. # note: influence - function?
+
+// Tests from model for predicting evaporation from a row crop with incomplete cover
+// todo: As the plant cover increases, the evaporation rate becomes more dependent on the leaf area [Penman et al., 1967] and the potential evaporation so long as the soil water available to the plant roots is not limited
+// todo: In the falling rate stage (stage 2), the surface soil water content has decreased below a threshold value, so that Es depends on the flux of water through the upper layer of soil to the evaporating site near the surface.
+// todo: These data demonstrate that the initial fast rate of drying is followed by a decreasing rate.

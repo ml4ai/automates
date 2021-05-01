@@ -217,11 +217,11 @@ rules:
     pattern: |
       (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," ([word = "denoted"] [word = "as"])? @variable:Variable (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Variable [word = ","] (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
-      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      (@definition: Concept [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Variable (?! /.*/) (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
-      @definition: Concept "," @variable:Variable (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      @definition: Concept "," @variable:Variable (?! [lemma = "be"]|[word = ","] [word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
       @definition: Concept "(" @variable:Variable ")" (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |

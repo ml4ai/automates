@@ -688,4 +688,14 @@ class TestDefinitions extends ExtractionTest {
     val mentions = extractMentions(t1m)
     testDefinitionEvent(mentions, desired)
   }
+
+  // Tests from paper: model for predicting evaporation from a row crop with incomplete cover
+
+  val t1n = "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
+  failingTest should s"find NO definitions from t1n: ${t1n}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])] // fixme: Wind speed is captured as a definition for Rno. -> fixed by changing comma_appos_var rule
+    val mentions = extractMentions(t1n)
+    testDefinitionEvent(mentions, desired)
+  }
+
 }
