@@ -61,8 +61,8 @@ object TestUtils {
 
     // Event Specific
 
-    def testDefinitionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
-      testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
+    def testDescriptionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, DESCRIPTION_LABEL, VARIABLE_ARG, DESCRIPTION_ARG, desired)
     }
 
     def testFunctionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
@@ -113,20 +113,20 @@ object TestUtils {
 
       val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
       for {
-        (desiredVar, desiredDefs) <- desired
+        (desiredVar, desiredDescrs) <- desired
         correspondingMentions = grouped.getOrElse(desiredVar, Seq())
-      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
+      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDescrs)
     }
 
 
     def testBinaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
-      val variableDefinitionPairs = for {
+      val identifierDescriptionPairs = for {
         m <- ms
         a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
         a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(TextUtils.getMentionText(_))
       } yield (a1, a2)
 
-      arg2Strings.foreach(arg2String => variableDefinitionPairs should contain ((arg1String, arg2String)))
+      arg2Strings.foreach(arg2String => identifierDescriptionPairs should contain ((arg1String, arg2String)))
     }
 
     //used for parameter setting tests where the setting is an interval
@@ -160,8 +160,8 @@ object TestUtils {
 
     // Event Specific
 
-    def testDefinitionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
-      testBinaryEvent(mentions, DEFINITION_LABEL, VARIABLE_ARG, DEFINITION_ARG, desired)
+    def testDescriptionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, DESCRIPTION_LABEL, VARIABLE_ARG, DESCRIPTION_ARG, desired)
     }
 
     def testFunctionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
@@ -203,20 +203,20 @@ object TestUtils {
 
       val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
       for {
-        (desiredVar, desiredDefs) <- desired
+        (desiredVar, desiredDescrs) <- desired
         correspondingMentions = grouped.getOrElse(desiredVar, Seq())
-      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDefs)
+      } testBinaryEventStrings(correspondingMentions, arg1Role, desiredVar, arg2Role, desiredDescrs)
     }
 
 
     def testBinaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2Strings: Seq[String]) = {
-      val variableDefinitionPairs = for {
+      val identifierDescriptionPairs = for {
         m <- ms
         a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(_.text)
         a2 <- m.arguments.getOrElse(arg2Role, Seq()).map(_.text)
       } yield (a1, a2)
 
-      arg2Strings.foreach(arg2String => variableDefinitionPairs should contain ((arg1String, arg2String)))
+      arg2Strings.foreach(arg2String => identifierDescriptionPairs should contain ((arg1String, arg2String)))
     }
 
     def mentionHasArguments(m: Mention, argName: String, argValues: Seq[String]): Unit = {

@@ -13,21 +13,21 @@ rules:
       [word=/^DSSAT|^CSM/] | [word=/[A-Z]*/] (?=[word=/[Mm]odel/])
 
   - name: model2
-    label: Variable
+    label: Identifier
     priority: ${priority}
     type: dependency
     example: ""
     action: modelArguments
     pattern: |
       trigger = [word = /[Mm]odel/]
-      variable:Variable = compound
+      variable:Identifier = compound
 
   - name: model3
-    label: Variable
+    label: Identifier
     priority: ${priority}
     type: dependency
     action: modelArguments
     example: ""
     pattern: |
       trigger = [word = /[Mm]odel/]
-      variable:Concept = compound [word = /[A-Z]*/]
+      variable:Phrase = compound [word = /[A-Z]*/]

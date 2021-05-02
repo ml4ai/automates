@@ -88,7 +88,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     source.close()
 
     
-    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Definition")
+    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Description")
 //    val grfnPath = json("grfn").str
 //    val grfnFile = new File(grfnPath)
 //    val grfn = ujson.read(grfnFile.readString())
@@ -114,7 +114,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val (doc, mentions) = processPlayText(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
     for (em <- mentions) {
-      if (em.label matches "Definition") {
+      if (em.label matches "Description") {
         println("Mention: " + em.text)
         println("att: " + em.attachments.mkString(" "))
       }
@@ -231,7 +231,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:
     *  'mentions' : file path to Odin serialized mentions
     *  'equations': path to the decoded equations
-    *  'grfn'     : path to the grfn file, already expected to have comments and vars
+    *  'grfn'     : path to the grfn file, already expected to have comments and vars/identifiers
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
@@ -267,20 +267,20 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       } else defaultSerializerName
     } else defaultSerializerName
 
-    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
+    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables/identifiers and comments). The json can also contain svo groundings with the key "SVOgroundings".
     if (jsonObj.contains("mentions") && (jsonObj.contains("equations") || jsonObj.contains("source_code"))) {
       val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
 
       // ground!
       val groundings = ExtractAndAlign.groundMentions(
         json,
-        argsForGrounding.variableNames,
-        argsForGrounding.variableShortNames,
-        argsForGrounding.definitionMentions,
+        argsForGrounding.identifierNames,
+        argsForGrounding.identifierShortNames,
+        argsForGrounding.descriptionMentions,
         argsForGrounding.parameterSettingMentions,
         argsForGrounding.intervalParameterSettingMentions,
         argsForGrounding.unitMentions,
-        argsForGrounding.commentDefinitionMentions,
+        argsForGrounding.commentDescriptionMentions,
         argsForGrounding.equationChunksAndSource,
         argsForGrounding.svoGroundings,
         groundToSVO,
@@ -319,13 +319,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     mentions
   }
 
-  def readDefTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
+  def readDescrTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
 
     val modelComparisonInputFile = new File(pathToModelComparisonInput)
     val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
-    val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_defs"
-    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
-    (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_defs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_defs")))
+    val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_descrs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_descrs"
+    (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_descrs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_descrs")))
   }
 
 
@@ -344,17 +344,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val inputFilePath = json("input_file").str
     val modelComparisonInputFile = new File(inputFilePath)
     val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
-    val paper1obj = ujsonObj.head.obj// keys: grfn_uid, "variable_defs"
-    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
+    val paper1obj = ujsonObj.head.obj// keys: grfn_uid, "variable_descrs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_descrs"
 
     val paper1id = paper1obj("grfn_uid").str
     val paper2id = paper2obj("grfn_uid").str
 
-    val paper1values = paper1obj("variable_defs").arr
-    val paper2values = paper2obj("variable_defs").arr
+    val paper1values = paper1obj("variable_descrs").arr
+    val paper2values = paper2obj("variable_descrs").arr
 
-    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
-    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
+    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_description"))
+    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_description"))
 
 
     // get alignments
