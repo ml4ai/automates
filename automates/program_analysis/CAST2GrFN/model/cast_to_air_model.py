@@ -754,9 +754,28 @@ class C2AState(object):
         var_air = [v.to_AIR() for v in self.variables]
         types_air = [t.to_AIR() for t in self.types]
 
-        # TODO actually create AIR objects for AIR -> GrFN
-        # I think the AIR intermediate structure will need to change
-        # to reflect changes in grfn such as typing.
-        # C, V, T, D = dict(), dict(), dict(), dict()
+        # Trim variables that are just defined and hanging. This seems like a
+        # bug BUT it is actually a remnant of how GCC gives variable definitions.
+        all_inputted_vars = {
+            v for c in container_air for l in c["body"] for v in l["input"]
+        }
+        all_outputted_vars = {
+            v for c in container_air for l in c["body"] for v in l["output"]
+        }
+        all_inputted_vars.update({v for c in container_air for v in c["return_value"]})
+        all_inputted_vars.update({v for c in container_air for v in c["arguments"]})
+
+        def is_hanging_lambda(l):
+            return len(l["input"]) == 0 and all(
+                [v not in all_inputted_vars for v in l["output"]]
+            )
+
+        for c in container_air:
+            hanging_lambda_vars = [
+                v for l in c["body"] if is_hanging_lambda(l) for v in l["output"]
+            ]
+            # Trim variables
+            var_air = [v for v in var_air if v["name"] not in hanging_lambda_vars]
+            c["body"] = [l for l in c["body"] if not is_hanging_lambda(l)]
 
         return {"containers": container_air, "variables": var_air, "types": types_air}

@@ -117,8 +117,10 @@ class GenericDefinition(ABC):
         else:
             return TypeDefinition(
                 GenericIdentifier.from_str(data["name"]),
-                data["type"],
-                tuple(data["attributes"]),
+                data["given_type"],
+                data["name"],
+                data["given_type"],
+                tuple(data["fields"]),
             )
 
 

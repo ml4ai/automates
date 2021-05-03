@@ -6,11 +6,13 @@ from dataclasses import dataclass
 from itertools import product
 from copy import deepcopy
 
-import uuid
 import datetime
 import json
 import re
 import random
+from numpy.core.fromnumeric import var
+
+from numpy.lib.arraysetops import isin
 
 import networkx as nx
 import numpy as np
@@ -229,29 +231,43 @@ class LambdaNode(GenericNode):
             )
 
         try:
-            if self.np_shape != (1,):
-                res = self.v_function(*values)
+            if len(values) != 0:
+                res = [self.function(*inputs) for inputs in zip(*values)]
             else:
-                res = self.function(*values)
-            if isinstance(res, tuple):
-                return [item for item in res]
-            else:
-                return [self.parse_result(values, res)]
+                res = self.function()
+
+            return self.parse_result(values, res)
         except Exception as e:
             print(f"Exception occured in {self.func_str}")
             raise GrFNExecutionException(e)
 
     def parse_result(self, values, res):
-        if isinstance(res, dict):
-            res = {k: self.parse_result(values, v) for k, v in res.items()}
-        elif isinstance(res, list):
-            return [item for item in res]
-        elif len(values) == 0:
-            if all([isinstance(v, int) for v in values]):
-                res = np.full(self.np_shape, res, dtype=np.int64)
-            else:
-                res = np.full(self.np_shape, res, dtype=np.float64)
-        return res
+        if (
+            self.func_type == LambdaType.INTERFACE
+            or self.func_type == LambdaType.DECISION
+        ):
+            # Interfaces and decision nodes should output a tuple of the
+            # correct variables. However, if there is only one var in the
+            # tuple it is outputting, python collapses this to a single
+            # var, so handle this scenario
+            if not isinstance(res[0], tuple):
+                return [[r] for r in res]
+            return np.transpose(res)
+        else:
+            if isinstance(res, dict):
+                res = {k: self.parse_result(values, v) for k, v in res.items()}
+            elif len(values) == 0:
+                # if all([isinstance(v, int) for v in values]):
+                if isinstance(res, int):
+                    res = np.full(self.np_shape, res, dtype=np.int64)
+                # elif all([isinstance(v, int) for v in values]):
+                elif isinstance(res, float):
+                    res = np.full(self.np_shape, res, dtype=np.float64)
+                elif isinstance(res, list):
+                    res = [np.array(res)] * self.np_shape[0]
+                else:
+                    res = np.full(self.np_shape, res)
+            return [res]
 
     def get_kwargs(self):
         return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
@@ -295,12 +311,15 @@ class HyperEdge:
     outputs: Iterable[VariableNode]
 
     def __call__(self):
-        result = self.lambda_fn(
-            *[
-                var.value if var.value is not None else var.input_value
-                for var in self.inputs
-            ]
-        )
+        inputs = [
+            var.value
+            if var.value is not None
+            else var.input_value
+            if var.input_value is not None
+            else [None]
+            for var in self.inputs
+        ]
+        result = self.lambda_fn(*inputs)
         # If we are in the exit decision hyper edge and in vectorized execution
         if (
             self.lambda_fn.func_type == LambdaType.DECISION
@@ -901,8 +920,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if isinstance(value, int):
                 value = np.array([value], dtype=np.int64)
             elif isinstance(value, list):
-                value = np.array(value)
-                self.np_shape = value.shape
+                value = np.array([value])
             elif isinstance(value, np.ndarray):
                 self.np_shape = value.shape
 
@@ -964,6 +982,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
             con_name = con.identifier
             if con_name not in Occs:
                 Occs[con_name] = 0
+            else:
+                Occs[con_name] += 1
 
             con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name], parent)
             live_variables = dict()
@@ -1082,7 +1102,6 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-
             # The var inputs into this decision node defined inside the loop
             # may not be defined yet, so guard against that
             if subgraph.type == "LoopContainer" and stmt.type == LambdaType.DECISION:
@@ -1101,6 +1120,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
                         )
                     Occs[stmt] = stmt
                     return True
+                elif stmt in Occs:
+                    del Occs[stmt]
             else:
                 add_live_variables(live_variables, subgraph, stmt.outputs)
 
@@ -1242,7 +1263,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
             )
 
             input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
-            container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+            # container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+            container_subgraph.add_subgraph(
+                [v.uid for v in input_var_nodes], rank="same"
+            )
 
             for new_subgraph in self.subgraphs.successors(subgraph):
                 populate_subgraph(new_subgraph, container_subgraph)
@@ -1260,9 +1284,20 @@ class GroundedFunctionNetwork(nx.DiGraph):
                         output_var_nodes.extend(succs)
                     output_var_nodes = set(output_var_nodes) - output_nodes
                     var_nodes = output_var_nodes.intersection(subgraph.nodes)
+                    # var_nodes = []
+                    # [
+                    #     container_subgraph.add_node(v.uid, label=str(v), name=str(v))
+                    #     for v in var_nodes
+                    # ]z
+                    # print(f"for container {container_subgraph.name}")
+                    # print([v.uid for v in succs])
+
                     container_subgraph.add_subgraph(
-                        list(var_nodes),
+                        [v.uid for v in var_nodes],
                     )
+                    # container_subgraph.add_subgraph(
+                    #     list(var_nodes),
+                    # )
 
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
@@ -1280,9 +1315,16 @@ class GroundedFunctionNetwork(nx.DiGraph):
                     if n.name.startswith(name)
                 ]
             )
-            for i in range(max_var_version + 1):
-                e = A.add_edge(f"{name}::{i - 1}", f"{name}::{i}")
-                e = A.get_edge(f"{name}::{i - 1}", f"{name}::{i}")
+            min_var_version = min(
+                [
+                    int(n.name.split("::")[-1])
+                    for n in A.nodes()
+                    if n.name.startswith(name)
+                ]
+            )
+            for i in range(min_var_version, max_var_version):
+                e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
+                e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
                 e.attr["color"] = "invis"
 
         for agraph_node in [

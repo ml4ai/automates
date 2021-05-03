@@ -34,7 +34,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 )
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     is_pass_through_expr,
-    is_gcc_builtin_func,
+    is_allowed_gcc_builtin_func,
     is_valid_operator,
     is_const_operator,
     is_casting_operator,
@@ -44,6 +44,7 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     get_const_value,
     gcc_type_to_var_type,
     default_cast_val_for_gcc_types,
+    default_cast_val,
 )
 
 
@@ -59,6 +60,7 @@ class GCC2CAST:
 
     def to_cast(self):
         input_file = self.gcc_ast["mainInputFilename"]
+        input_file_stripped = input_file.split("/")[-1]
         functions = self.gcc_ast["functions"]
         types = self.gcc_ast["recordTypes"]
         global_variables = self.gcc_ast["globalVariables"]
@@ -82,9 +84,7 @@ class GCC2CAST:
 
         source_language = "unknown"
         if "mainInputFilename" in self.gcc_ast:
-            main_input_file = self.gcc_ast["mainInputFilename"]
-            file_extension = main_input_file.split(".")[-1]
-            print(f"main input file {main_input_file} and {file_extension}")
+            file_extension = input_file_stripped.split(".")[-1]
             if file_extension == "c":
                 source_language = "c"
             elif file_extension == "cpp":
@@ -92,7 +92,9 @@ class GCC2CAST:
             elif file_extension in {"f", "for", "f90"}:
                 source_language = "fortran"
 
-        file_module = Module(name=input_file.rsplit(".")[0], body=body)
+        file_module = Module(
+            name=input_file_stripped.split("/")[-1].rsplit(".")[0], body=body
+        )
         return CAST([file_module], source_language)
 
     def get_source_refs(self, obj):
@@ -127,15 +129,18 @@ class GCC2CAST:
 
     def parse_variable(self, variable, parse_value=False):
         if "name" not in variable:
-            return None
+            if "code" in variable and variable["code"] == "addr_expr":
+                variable = variable["value"]
+            else:
+                return None
         var_type = variable["type"]
         name = variable["name"]
         name = name.replace(".", "_")
         cast_type = gcc_type_to_var_type(var_type, self.type_ids_to_defined_types)
 
-        line = variable["line_start"]
-        col = variable["col_start"]
-        file = variable["file"]
+        line = variable["line_start"] if "line_start" in variable else None
+        col = variable["col_start"] if "col_start" in variable else None
+        file = variable["file"] if "file" in variable else None
         source_ref = SourceRef(source_file_name=file, col_start=col, row_start=line)
 
         var_node = Var(
@@ -154,6 +159,17 @@ class GCC2CAST:
         else:
             return var_node
 
+    def parse_variable_definition(self, v):
+        var = self.parse_variable(v)
+        default_val = default_cast_val_for_gcc_types(
+            v["type"], self.type_ids_to_defined_types
+        )
+        if "id" in v:
+            self.variables_ids_to_expression[v["id"]] = default_val
+        if var != None:
+            return Assignment(left=var, right=default_val)
+        return None
+
     def parse_operand(self, operand):
         code = operand["code"]
         if code == "ssa_name":
@@ -170,22 +186,72 @@ class GCC2CAST:
                 return Name(name=name)
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
+        elif code == "addr_expr":
+            value = operand["value"]
+            val_code = value["code"]
+            if is_const_operator(val_code):
+                return get_const_value(value)
+            else:
+                name = value["name"]
+                name = name.replace(".", "_")
+                return Name(name=name)
+
+    def parse_pointer_arithmetic_expr(self, op):
+        pointer = self.parse_operand(op[0])
+        offset_with_type_mult = self.parse_operand(op[1])
+        source_refs = [SourceRef()]
+
+        # Offsets for pointer arithmetic will be a binary op performing
+        # the multiplication of the pointer for the particular type with the
+        # RHS being the actual position calculation. So, remove the
+        # type multiplication part.
+        # TODO does this apply for void pointers?
+        offset = offset_with_type_mult.right
+
+        return Subscript(
+            value=Name(name=pointer.name), slice=offset, source_refs=source_refs
+        )
 
     def parse_array_ref_operand(self, operand):
         array = operand["array"]
-        pointer = array["pointer"]
-        name = pointer["name"]
+        if "name" in array:
+            name = array["name"]
+        elif "pointer" in array:
+            pointer = array["pointer"]
+            name = pointer["name"]
+        name = name.replace(".", "_")
 
         index = operand["index"]
         index_result = self.parse_operand(index)
 
         return Subscript(value=Name(name=name), slice=index_result)
 
+    def parse_constructor(self, operand):
+        type = operand["type"]
+        source_refs = self.get_source_refs(operand)
+        if type["type"] == "array_type":
+            size_bytes = type["size"]
+            component_type = type["componentType"]
+            array_type = component_type["type"]
+            array_type_size = component_type["size"]
+            actual_size = int(size_bytes / array_type_size)
+
+            vals = [
+                default_cast_val("Number", self.type_ids_to_defined_types)
+            ] * actual_size
+            # TODO we should probably add type and size into list nodes?
+            return List(values=vals, source_refs=source_refs)
+
     def parse_mem_ref_operand(self, operand):
-        pointer = operand["pointer"]
-        name = pointer["name"]
         offset = operand["offset"]
         index = offset["value"]
+        pointer = self.parse_operand(operand["pointer"])
+        # In this scenario we have already created the susbscript
+        # from a pointer_plus_expr
+        if isinstance(pointer, Subscript) and index == 0:
+            return pointer
+        name = pointer.name
+        name = name.replace(".", "_")
 
         # TODO how will we handle complex memory references? i.e.
         # different pointer types, complex calculations for pointer location
@@ -209,9 +275,10 @@ class GCC2CAST:
         elif code == "array_ref":
             assign_var = self.parse_array_ref_operand(lhs)
 
-        if assign_var is None and "id" in lhs:
+        if "id" in lhs:
             self.variables_ids_to_expression[lhs["id"]] = assign_value
-            return []
+            if assign_var is None:
+                return []
         elif "ssa_id" in lhs:
             ssa_id = lhs["ssa_id"]
             self.ssa_ids_to_expression[ssa_id] = assign_value
@@ -225,7 +292,8 @@ class GCC2CAST:
 
     def parse_component_ref(self, operand):
         value = operand["value"]
-        var_name = value["name"]
+        name = value["name"]
+        var_name = name.replace(".", "_")
         member = operand["member"]
         field = member["name"]
 
@@ -259,9 +327,11 @@ class GCC2CAST:
                 assign_value = Number(number=get_const_value(operands[0]))
             elif is_pass_through_expr(operator):
                 if "name" in operands[0]:
-                    assign_value = Name(name=operands[0]["name"])
+                    name = operands[0]["name"].replace(".", "_")
+                    name = name.replace(".", "_")
+                    assign_value = Name(name=name)
                 elif "id" in operands[0]:
-                    assign_value = self.variable_ids_to_expression(operands[0]["id"])
+                    assign_value = self.variables_ids_to_expression[operands[0]["id"]]
                 else:
                     assign_value = self.parse_operand(operands[0])
             elif (
@@ -276,7 +346,11 @@ class GCC2CAST:
                 assign_value = self.parse_component_ref(operands[0])[0]
             elif operator == "mem_ref":
                 assign_value = self.parse_mem_ref_operand(operands[0])
-            elif is_gcc_builtin_func(operator):
+            elif operator == "pointer_plus_expr":
+                assign_value = self.parse_pointer_arithmetic_expr(operands)
+            elif operator == "constructor":
+                assign_value = self.parse_constructor(operands[0])
+            elif is_allowed_gcc_builtin_func(operator):
                 assign_value = get_builtin_func_cast(operator)
                 for arg in operands:
                     assign_value.arguments.append(self.parse_operand(arg))
@@ -319,8 +393,8 @@ class GCC2CAST:
         func_name = function["value"]["name"]
         # TODO not sure if this is a permenant solution, but ignore these
         # unexpected builtin calls for now
-        # if "__builtin_" in func_name and not is_gcc_builtin_func(func_name):
-        #     return []
+        if "__builtin_" in func_name and not is_allowed_gcc_builtin_func(func_name):
+            return []
 
         cast_args = []
         for arg in arguments:
@@ -376,8 +450,20 @@ class GCC2CAST:
             return [Loop(expr=condition_expr, body=loop_body)]
         else:
             temp = self.current_basic_block
-            false_res = self.parse_basic_block(false_block)
             true_res = self.parse_basic_block(true_block)
+
+            true_exit_target = true_block["edges"][0]["target"]
+            false_exit_target = false_block["edges"][0]["target"]
+
+            false_res = []
+            # If the exit targets for the conditions are the same, then we have
+            # an else/elif condition because they both point to the block after
+            # this second condition. Otherwise, we only have one condition and
+            # the "false block" is the normal block of code following the if,
+            # so do not evaluate it here.
+            if true_exit_target == false_exit_target:
+                false_res = self.parse_basic_block(false_block)
+
             self.current_basic_block = temp
             return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]
 
@@ -417,13 +503,6 @@ class GCC2CAST:
             cast_statements.extend(self.parse_statement(stmt, statements))
 
         result_statements = cast_statements
-        if "edges" in bb:
-            edges = bb["edges"]
-            for e in edges:
-                target_edge = int(e["target"])
-                result_statements += self.parse_basic_block(
-                    [bb for bb in self.basic_blocks if bb["index"] == target_edge][0]
-                )
 
         return result_statements
 
@@ -431,12 +510,20 @@ class GCC2CAST:
         name = f["name"]
         self.basic_blocks = f["basicBlocks"]
         parameters = f["parameters"] if "parameters" in f else []
+        var_declarations = (
+            f["variableDeclarations"] if "variableDeclarations" in f else []
+        )
+
+        body = []
+        for v in var_declarations:
+            res = self.parse_variable_definition(v)
+            if res != None:
+                body.append(res)
 
         arguments = []
         for p in parameters:
             arguments.append(self.parse_variable(p))
 
-        body = []
         for bb in self.basic_blocks:
             res = self.parse_basic_block(bb)
             body.extend(res)

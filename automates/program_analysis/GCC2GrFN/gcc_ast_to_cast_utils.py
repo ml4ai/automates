@@ -4,6 +4,8 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     UnaryOperator,
     VarType,
     Number,
+    Boolean,
+    String,
     Dict,
     List,
 )
@@ -30,12 +32,20 @@ GCC_OPS_TO_CAST_OPS = {
     "logical_and": BinaryOperator.AND,
 }
 
-GCC_CONST_OPS = ["integer_cst", "real_cst"]
+GCC_CONST_OPS = ["integer_cst", "real_cst", "string_cst"]
 
 GCC_CASTING_OPS = ["float_expr", "int_expr"]
 GCC_TRUNC_OPS = ["trunc_div_expr", "trunc_mod_expr", "fix_trunc_expr"]
 GCC_PASS_THROUGH_EXPR = {"var_decl", "parm_decl", "ssa_name", "paren_expr"}
-GCC_BUILTIN_FUNC_EXPR = {"max_expr"}
+GCC_BUILTIN_FUNC_EXPR = {"max_expr", "min_expr"}
+GCC_BUILTIN_FUNC = {
+    "__builtin_max",
+    "__builtin_sqrtf",
+    "__builtin_iroundf",
+    "__builtin_expf",
+    "__builtin_cosf",
+    "__builtin_sqrtf",
+}
 
 
 def is_casting_operator(op):
@@ -50,8 +60,8 @@ def is_pass_through_expr(op):
     return op in GCC_PASS_THROUGH_EXPR
 
 
-def is_gcc_builtin_func(op):
-    return op in GCC_BUILTIN_FUNC_EXPR
+def is_allowed_gcc_builtin_func(op):
+    return op in GCC_BUILTIN_FUNC_EXPR or op in GCC_BUILTIN_FUNC
 
 
 def is_valid_operator(op):
@@ -65,9 +75,11 @@ def is_valid_operator(op):
         or op in GCC_PASS_THROUGH_EXPR
         or op in GCC_BUILTIN_FUNC_EXPR
         or op == "array_ref"
+        or op == "constructor"
         or op == "nop_expr"
         or op == "component_ref"
         or op == "mem_ref"
+        or op == "pointer_plus_expr"
     )
 
 
@@ -78,6 +90,8 @@ def is_const_operator(op):
 def get_builtin_func_cast(operator):
     if operator == "max_expr":
         return Call(func="max", arguments=[], source_refs=[])
+    elif operator == "min_expr":
+        return Call(func="min", arguments=[], source_refs=[])
     else:
         # TODO custom exception
         raise Exception(f"Error: Unknown gcc builtin func: {operator}")
@@ -88,6 +102,8 @@ def get_const_value(operand):
         return operand["value"]
     elif operand["code"] == "real_cst":
         return float(operand["decimal"])
+    elif operand["code"] == "string_cst":
+        return String(string=operand["value"])
 
 
 def get_cast_operator(op):
@@ -127,6 +143,8 @@ def gcc_type_to_var_type(type, type_ids_to_defined_types):
 def default_cast_val(type, type_ids_to_defined_types):
     if type == "Number":
         return Number(number=-1)
+    elif type == "Boolean":
+        return Boolean(boolean=None)
     elif type == "List":
         return List(values=[])
     elif type.startswith("object$"):
@@ -164,6 +182,8 @@ def default_cast_val_for_gcc_types(type, type_ids_to_defined_types):
         or type_name == "float_type"
     ):
         return default_cast_val("Number", type_ids_to_defined_types)
+    elif type_name == "boolean_type":
+        return default_cast_val("Boolean", type_ids_to_defined_types)
     elif type_name == "pointer_type" or type_name == "array_type":
         return default_cast_val("List", type_ids_to_defined_types)
     elif type_name == "record_type":

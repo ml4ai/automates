@@ -108,7 +108,12 @@ class CAST(object):
         c2a_visitor = CASTToAIRVisitor(self.nodes, self.cast_source_language)
         air = c2a_visitor.to_air()
 
-        main_container = [c for c in air["containers"] if c["name"].endswith("::main")]
+        main_container = [
+            c["name"] for c in air["containers"] if c["name"].endswith("::main")
+        ]
+        global_container = [
+            c["name"] for c in air["containers"] if c["name"].endswith("::global")
+        ]
 
         called_containers = [
             s["function"]["name"]
@@ -121,10 +126,12 @@ class CAST(object):
         ]
 
         container_id_to_start_from = None
-        if len(root_containers) > 0:
-            container_id_to_start_from = root_containers[0]
+        if len(global_container) > 0:
+            container_id_to_start_from = global_container[0]
         elif len(main_container) > 0:
             container_id_to_start_from = main_container[0]
+        elif len(root_containers) > 0:
+            container_id_to_start_from = root_containers[0]
         else:
             # TODO
             raise Exception("Error: Unable to find root container to build GrFN.")
@@ -229,7 +236,7 @@ class CAST(object):
         )
 
     @classmethod
-    def from_json_data(cls, json_data):
+    def from_json_data(cls, json_data, cast_source_language="unknown"):
         """
         Parses json CAST data object and returns the created CAST object
 
@@ -241,7 +248,7 @@ class CAST(object):
             CAST: The parsed CAST object.
         """
         nodes = cls.parse_cast_json(json_data["nodes"])
-        return cls(nodes)
+        return cls(nodes, cast_source_language)
 
     @classmethod
     def from_json_str(cls, json_str):
