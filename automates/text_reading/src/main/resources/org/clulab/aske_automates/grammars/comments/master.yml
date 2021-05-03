@@ -9,7 +9,7 @@ rules:
     vars:
       priority: 1
 #
-  - import: "org/clulab/aske_automates/grammars/comments/definitions.yml"
+  - import: "org/clulab/aske_automates/grammars/comments/descriptions.yml"
     vars:
       priority: 2
 

@@ -2,80 +2,80 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-####VARIABLES####
-  - name: var-duck-rule
-    label: Variable
+####IDENTIFIERS####
+  - name: identifier-duck-rule
+    label: Identifier
     priority: ${priority}
     type: token
     example: ""
-    action: looksLikeAVariable
+    action: looksLikeAnIdentifier
     pattern: |
-      (?<! equation) [mention=Concept]
+      (?<! equation) [mention=Phrase]
 
 #  - name: var-noun_of
-#    label: Variable
+#    label: Identifier
 #    priority: ${priority}
 #    type: token
 #    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
 #    pattern: |
-#      (?<=calculation of|value of) (@Concept [word = /.*/])
+#      (?<=calculation of|value of) (@Phrase [word = /.*/])
 
-  - name: var-calculation
-    label: Variable
+  - name: identifier-calculation
+    label: Identifier
     priority: ${priority}
     type: token
-    action: looksLikeAVariable
+    action: looksLikeAnIdentifier
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
     pattern: |
       (?<variable> [word = /.*/]) (?=calculation)
 
-  - name: var_versus
-    label: Variable
+  - name: identifier_versus
+    label: Identifier
     priority: ${priority}
     type: token
     example: "SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
     pattern: |
-        @Concept (?= versus [] /curve|plot/)
+        @Phrase (?= versus [] /curve|plot/)
 
-  - name: var_in_equation
-    label: Variable
+  - name: identifier_in_equation
+    label: Identifier
     priority: ${priority}
     type: token
     example: "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
     pattern: |
-      (@Concept [word = /.*/]) (?= in equation)
+      (@Phrase [word = /.*/]) (?= in equation)
 
 
-  - name: var_a_comma
-    label: Variable
+  - name: identifier_a_comma
+    label: Identifier
     priority: ${priority}
     type: token
-    action: variableArguments
+    action: identifierArguments
     example: "while a, aP and b are..."
     pattern: |
       [word="a"] (?= ",")
 
 
-  - name: var_where-dep
-    label: Variable
+  - name: identifier_where-dep
+    label: Identifier
     priority: ${priority}
     type: dependency
-    action: variableArguments
+    action: identifierArguments
     example: "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
     pattern: |
       trigger = [lemma = "where"]
-      variable:Concept+ = </advmod|advcl/+ conj_and? (nsubj|nsubjpass)
+      variable:Phrase+ = </advmod|advcl/+ conj_and? (nsubj|nsubjpass)
 
-  - name: var_and
-    label: Variable
+  - name: identifier_and
+    label: Identifier
     priority: ${priority}
     type: token
-    action: variableArguments
+    action: identifierArguments
     example: "E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      (?<=product of|values for) @variable:Concept and @variable:Concept
+      (?<=product of|values for) @variable:Phrase and @variable:Phrase
 
-  - name: var_model
+  - name: model
     label: Model
     priority: ${priority}
     type: token
@@ -83,16 +83,16 @@ rules:
     pattern: |
       [word=/^DSSAT|^CSM/]
 
-  - name: var_greek
-    label: Variable
+  - name: identifier_greek
+    label: Identifier
     priority: ${priority}
     type: token
     example: "a per-capita rate γ"
     pattern: |
       [entity="B-GreekLetter"]
 
-  - name: end_of_sent_var
-    label: Variable
+  - name: end_of_sent_identifier
+    label: Identifier
     priority: ${priority}
     type: token
     example: "a per-capita rate γ"
@@ -100,22 +100,22 @@ rules:
       [word=/[A-Za-z]\./ & !word=/al.|i.e/] (?![word=/^[a-z]/])
       # exclude "al." as in "et al." and i.e as in i.e., <example>
 
-  - name: compound_var
-    label: Variable
+  - name: compound_identifier
+    label: Identifier
     priority: ${priority}
     type: token
     example: "The density of water (ρw); R(t)"
     pattern: |
-      [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # excluded units from variables.
+      [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # excluded units from identifiers.
       |
       [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
 
 
 #  - name: var_greek_and_latin
-#    label: Variable
+#    label: Identifier
 #    priority: ${priority}
 #    type: token
-#    action: looksLikeAVariable
+#    action: looksLikeAIdentifier
 #    example: "The density of water (ρw) is taken as 1.0 Mg m-3."
 #    pattern: |
 #      [chunk = /B-NP|I-NP/ & !word = /\(|\)|,|=|\[|\]/]? [entity="B-GreekLetter"] [chunk = "I-NP"]?

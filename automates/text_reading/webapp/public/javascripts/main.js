@@ -1,9 +1,10 @@
 var bratLocation = 'assets/brat';
 
 // Color names used
-var baseConceptColor = '#CCD1D1';
+var basePhraseColor = '#CCD1D1';
 var causalEventColor = '#BB8FCE';
 var variableColor = '#ef9f6e';
+var descriptionColor = "#78d6d6";
 var parameterSettingColor = '#99daef';
 var valueColor = '#b0a0e5';
 
@@ -34,16 +35,16 @@ var webFontURLs = [
 
 var collData = {
     entity_types: [ {
-        "type"   : "Concept",
-        "labels" : ["Concept"],
+        "type"   : "Phrase",
+        "labels" : ["Phrase"],
         // Blue is a nice colour for a person?
-        "bgColor": baseConceptColor,
+        "bgColor": basePhraseColor,
         // Use a slightly darker version of the bgColor for the border
         "borderColor": "darken"
     },
     {
-            "type"   : "Variable",
-            "labels" : ["Variable"],
+            "type"   : "Identifier",
+            "labels" : ["Identifier"],
             // Blue is a nice colour for a person?
             "bgColor": variableColor,
             // Use a slightly darker version of the bgColor for the border
@@ -85,13 +86,13 @@ var collData = {
         ]
       },
      {
-         "type": "Variable",
-         "labels": ["VARIABLE"],
+         "type": "Identifier",
+         "labels": ["IDENTIFIER"],
          "bgColor": variableColor,
          "borderColor": "darken",
          "arcs": [
              {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
-             {"type": "definition", "labels": ["definition"], "borderColor": "darken", "bgColor":"violet"}
+             {"type": "description", "labels": ["description"], "borderColor": "darken", "bgColor":"violet"}
          ]
        },
        {
@@ -103,7 +104,17 @@ var collData = {
                {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
                {"type": "value", "labels": ["value"], "borderColor": "darken", "bgColor":"violet"}
            ]
-         }
+         },
+         {
+                    "type": "Description",
+                    "labels": ["DESCRIPTION"],
+                    "bgColor": descriptionColor,
+                    "borderColor": "darken",
+                    "arcs": [
+                        {"type": "variable", "labels": ["variable"], "borderColor": "darken", "bgColor":"violet"},
+                        {"type": "description", "labels": ["description"], "borderColor": "darken", "bgColor":"violet"}
+                    ]
+                  }
     ]
 };
 

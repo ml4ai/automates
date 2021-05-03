@@ -59,19 +59,19 @@ rules:
     priority: 2
     type: token
     pattern: |
-      #avoids pointers to equations/figures as those are frequently found as variables
+      #avoids pointers to equations/figures as those are frequently found as identifiers
       #might need to be revisited
       [word=/(?i)\b(figs?|eqs?|tables?)\b/] [word="."]?
 
   # todo: verify that this prevents double finding when the StringMatchEF is used
   # todo: verify there are no expansion ramifications due to Avoid label
-  - name: "prev_found_variable"
+  - name: "prev_found_identifier"
     label: Avoid
     priority: 2
     type: token
     pattern: |
       #avoids previously found Variables
-      [mention=Variable]
+      [mention=Identifier]
 
   - name: "YEAR"
     label: Avoid

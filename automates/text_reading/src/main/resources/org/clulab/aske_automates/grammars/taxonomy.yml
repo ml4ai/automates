@@ -1,6 +1,6 @@
 - Entity:
-  - Concept:
-      - Variable:
+  - Phrase:
+      - Identifier:
         - VariableGazetteer
       - Model
   - Measurement:
@@ -11,9 +11,9 @@
 - Event:
   - Conj
   - Causal
-  - Definition:
-    - ConjDefinition
-    - ConjDefinitionType2
+  - Description:
+    - ConjDescription
+    - ConjDescriptionType2
   - ParameterSetting
   - IntervalParameterSetting
   - Function

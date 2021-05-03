@@ -85,9 +85,9 @@ class OdinEngine(
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
-    val (definitionMentions, other) = events.partition(_.label.contains("Definition"))
+    val (descriptionMentions, other) = events.partition(_.label.contains("Description"))
 
-    val untangled = loadableAttributes.actions.untangleConj(definitionMentions)
+    val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     (loadableAttributes.actions.keepLongest(other) ++ untangled).toVector
   }
 
@@ -131,11 +131,11 @@ object OdinEngine {
   lazy val proc: Processor = new FastNLPProcessor()
 
   // Mention labels
-  val DEFINITION_LABEL: String = "Definition"
+  val DESCRIPTION_LABEL: String = "Description"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
-  val VARIABLE_LABEL: String = "Variable"
+  val IDENTIFIER_LABEL: String = "Identifier"
   val VARIABLE_GAZETTEER_LABEL: String = "VariableGazetteer"
   val UNIT_LABEL: String = "UnitRelation"
   val MODEL_LABEL: String = "Model"
@@ -144,7 +144,7 @@ object OdinEngine {
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"
   val VALUE_MOST_ARG: String = "valueMost"
-  val DEFINITION_ARG: String = "definition"
+  val DESCRIPTION_ARG: String = "description"
   val VALUE_ARG: String = "value"
   val UNIT_ARG: String = "unit"
   val FUNCTION_INPUT_ARG: String = "input"
