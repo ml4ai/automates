@@ -569,9 +569,9 @@ void dump_real_cst(tree op)
   json_field("bits");
   fprintf(json_f, "\"%08x%08x\"", (int)buf[1], (int)buf[0]);
 
-  char string[100];
-  real_to_decimal(string, &r, sizeof(string), 0, 1);
   json_field("decimal");
+  char string[12];
+  real_to_decimal(string, &r, sizeof(string), 0, 1);
   fprintf(json_f, "\"%s\"", string);
 }
 
