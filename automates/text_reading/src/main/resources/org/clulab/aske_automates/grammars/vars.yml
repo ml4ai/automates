@@ -38,4 +38,4 @@ functionTrigger3: "[lemma = estimate]|[lemma = calculate]|[lemma = compute]|[lem
 
 functionTrigger4: "[word = ratio] | [word = fraction]"
 
-functionTrigger5: "[lemma = predict]"
+functionTrigger5: "[lemma = predict]|[lemma = estimate]"

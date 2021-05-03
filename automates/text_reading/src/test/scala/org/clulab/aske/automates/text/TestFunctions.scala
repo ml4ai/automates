@@ -4,7 +4,6 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestFunctions extends ExtractionTest {
 
-  // todo: how should we test functions that have multiple inputs, or just one input (more than or less than 2)?
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
 
   val t1a = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
@@ -39,7 +38,34 @@ class TestFunctions extends ExtractionTest {
     val desired = Seq(
       "The actual vapor pressure" -> Seq("various humidity data", "air temperature data") // todo: how can we deal with pronouns (i.e. it)? + another issue is the "such as" part. (needs discourse parsing?)
     )
-    val mentions = extractMentions(t3a)
+    val mentions = extractMentions(t4a)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t5a = "Extraterrestrial radiation, Ra, defined as the short-wave solar radiation in the absence of an atmosphere, is a well-behaved function of the day of the year, time of day, and latitude."
+  failingTest should s"find functions from t5a: ${t5a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Extraterrestrial radiation" -> Seq("day of the year", "time of day", "latitude") // todo: trigger should not expand + output part is expanded too broadly.
+    )
+    val mentions = extractMentions(t5a)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t6a = "For daily (24-hour) periods, Ra can be estimated from the solar constant, the solar declination, and the day of the year."
+  failingTest should s"find functions from t6a: ${t6a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Ra" -> Seq("solar constant", "solar declination", "day of the year") // fixme: output is not captured correctly. + overlap in inputs is not solved.
+    )
+    val mentions = extractMentions(t6a)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t7a = "The value for Rso is a function of the time of year and latitude, and, in addition, the time of day for hourly calculation periods."
+  failingTest should s"find functions from t7a: ${t7a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "value for Rso" -> Seq("time of year", "latitude", "time of day for hourly calculation periods") // fixme: the last input is not captured. ("and, in addition" part is blocking it from extracted.)
+    )
+    val mentions = extractMentions(t7a)
     testFunctionEvent(mentions, desired)
   }
 
@@ -50,6 +76,15 @@ class TestFunctions extends ExtractionTest {
       "Initial conditions for total cases and total exposed" -> Seq("hospitalizations", "hospitalization rate")
     )
     val mentions = extractMentions(t1b)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t2b = "Cases estimated by multiplying confirmed cases by 20."
+  failingTest should s"find functions from t2b: ${t2b}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Cases" -> Seq("confirmed cases", "20")
+    )
+    val mentions = extractMentions(t2b)
     testFunctionEvent(mentions, desired)
   }
 
@@ -242,17 +277,38 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  val t6g = "The evaporation rate in this special case Esx is first approximated as equal to 0.8P."
+  failingTest should s"find functions from t6g: ${t6g}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Esx" -> Seq("0.8", "P") // fixme: a description part ("evaporation rate") is captured as an output, instead of the variable ("Esx"). Also, the numeral value ("0.8") and the variable ("P") is not captured separately.
+    )
+    val mentions = extractMentions(t6g)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t7g = "The model was used to compute daily Es, Ep, and total E."
+  failingTest should s"find NO functions from t7g: ${t7g}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t7g) // fixme: models and equations should not be captured as an input (make a list to avoid?)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t8g = "For example, consider a case in which the average air temperature is 32°C, Lai = 2.7, Rn0 = 5.0, E0 = 5.0, and ΣEs1 < U."
+  failingTest should s"find NO functions from t8g: ${t8g}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(t8g) // fixme: when the right side of the equal sign is a numeral value, the equation should not be captured as a function, but as a parameter setting.
+    testFunctionEvent(mentions, desired)
+  }
+
 }
 
+  // note: below are the example sentences that contain functional relations (I think), but I'm not sure what to do about with them for now.
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
   // todo: "The values for Cn consider the time step and aerodynamic roughness of the surface (i.e., reference type)."
   // todo: "The constant in the denominator, Cd, considers the time step, bulk surface resistance, and aerodynamic roughness of the surface (the latter two terms vary with reference type, time step and daytime/nighttime)."
   // todo: "The density of water (ρw) is taken as 1.0 Mg m-3 so that the inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
   // todo: "For daily calculation time steps, average dew point temperature can be computed by averaging over hourly periods"
-  // todo: "Extraterrestrial radiation, Ra, defined as the short-wave solar radiation in the absence of an atmosphere, is a well-behaved function of the day of the year, time of day, and latitude."
-  // todo: "For daily (24-hour) periods, Ra can be estimated from the solar constant, the solar declination, and the day of the year"
   // todo: "The value for Rso is a function of the time of year and latitude, and, in addition, the time of day for hourly calculation periods."
-  // todo: "Extraterrestrial radiation, Ra, defined as the short-wave solar radiation in the absence of an atmosphere, is a well-behaved function of the day of the year, time of day, latitude, and longitude."
 
   // Tests from COVID_ACT_NOW
   // todo: "Cases estimated by multiplying confirmed cases by 20."
@@ -269,7 +325,7 @@ class TestFunctions extends ExtractionTest {
   // todo: "The different growing stages were divided by our local visual observations of maize development characteristics and phenology, combined with changes of maize height and leaf area (Allen et al., 1998; Xu et al., 2002)."
 
   // Tests from Global estimation of evapotranspiration using a leaf area index-based surface energy and water balance model
-  // todo: "introducing a simple biophysical model for canopy conductance (Gc), defined as a constant maximumstomatal conductance gsmax of 12.2mm s−1 multiplied by air relative humidity (Rh) and Lai (Gc=gs max×Rh×Lai)"
+  // todo: "introducing a simple biophysical model for canopy conductance (Gc), defined as a constant maximum stomatal conductance gs max of 12.2mm s−1 multiplied by air relative humidity (Rh) and Lai (Gc=gs max×Rh×Lai)"
   // todo: "The surface energy balance partitions the available energy (Rn−G) between turbulent heat fluxes (λE and H):"
   // todo: "The ARTS E model requires inputs of Lai, net radiation, Rh, air temperature, wind speed, canopy height, precipitation, and maximum soil available water content (Mawc) as model parameters."
   // todo: "The SWB model requires as inputs precipitation, E0, air temperature, and Mawc. Its outputs are Ea, soil water content, and runoff."
@@ -289,3 +345,5 @@ class TestFunctions extends ExtractionTest {
 // todo: As the plant cover increases, the evaporation rate becomes more dependent on the leaf area [Penman et al., 1967] and the potential evaporation so long as the soil water available to the plant roots is not limited
 // todo: In the falling rate stage (stage 2), the surface soil water content has decreased below a threshold value, so that Es depends on the flux of water through the upper layer of soil to the evaporating site near the surface.
 // todo: These data demonstrate that the initial fast rate of drying is followed by a decreasing rate.
+// todo: In the Adelanto soil, the evaporation rate began to decline below the approximate Eo of 8 mm/day when the cumulative evaporation reached about 12 mm.
+// todo: A plot of (9) expressing Ep as a fraction of E0 versus Lai is given in Figure 5.
