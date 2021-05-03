@@ -16,10 +16,16 @@ def cleanup():
     os.remove("ast.json")
 
 
+@pytest.fixture(scope="module", autouse=True)
+def run_before_tests(request):
+    # prepare something ahead of all tests
+    results = subprocess.run([])
+
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     assert os.path.exists(
-        "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
+        GCC_PLUGIN_IMAGE
     ), f"Error: GCC AST dump plugin does not exist at expected location: {GCC_PLUGIN_IMAGE}"
     # Before each test, set the seed for generating uuids to 0 for consistency
     # between tests and expected output
@@ -32,18 +38,16 @@ def run_around_tests():
     cleanup()
 
 
-def run_gcc_plugin_with_c_file(c_file):
-    gpp_command = GCC_10_BIN_DIRECTORY + "g++-10.1"
+def run_gcc_plugin_with_for_file(c_file):
+    gpp_command = GCC_10_BIN_DIRECTORY + "gfortran++-10.1"
     plugin_option = f"-fplugin={GCC_PLUGIN_IMAGE}"
-    # Runs g++ with the given c file. This should create the file ast.json
-    # with the programs ast inside of it.
+    # Runs gfortrsn with the given fortran file. This should create the file
+    # ast.json with the programs ast inside of it.
     results = subprocess.run(
         [
             gpp_command,
             plugin_option,
             "-c",
-            "-x",
-            "c++",
             c_file,
             "-o",
             "/dev/null",
@@ -54,9 +58,8 @@ def run_gcc_plugin_with_c_file(c_file):
     assert results.returncode == 0
 
 
-def test_c_simple_function_and_assignments():
-    run_gcc_plugin_with_c_file(
-        f"{GCC_TEST_DATA_DIRECTORY}/simple_function_and_assignments/simple_function_and_assignments.c"
-    )
+# TODO all pre-existing for2py tests
 
-    assert os.path.exists("./ast.json")
+
+def test_simple_soilt_routine():
+    pass
