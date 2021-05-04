@@ -9,54 +9,74 @@ def toy1_example() -> Gromet:
 
     ports = [
         # input ports to 'toy1'
-        Port(uid=UidPort("P:toy1.in.x"), box=UidBox("B:toy1"),type=UidType("T:Float"), name="x", metadata=None),
-        Port(uid=UidPort("P:toy1.in.y"), box=UidBox("B:toy1"), type=UidType("T:Int"), name="y", metadata=None),
+        Port(uid=UidPort("P:toy1.in.x"), box=UidBox("B:toy1"),
+             type=UidType("T:Float"), name="x", metadata=None),
+        Port(uid=UidPort("P:toy1.in.y"), box=UidBox("B:toy1"),
+             type=UidType("T:Int"), name="y", metadata=None),
         # output ports to 'toy1'
-        Port(uid=UidPort("P:toy1.out.x"), box=UidBox("B:toy1"), type=UidType("T:Float"), name="x1", metadata=None),
-        Port(uid=UidPort("P:toy1.out.z"), box=UidBox("B:toy1"), type=UidType("T:Float"), name="x1", metadata=None),
+        Port(uid=UidPort("P:toy1.out.x"), box=UidBox("B:toy1"),
+             type=UidType("T:Float"), name="x1", metadata=None),
+        Port(uid=UidPort("P:toy1.out.z"), box=UidBox("B:toy1"),
+             type=UidType("T:Float"), name="x1", metadata=None),
 
         # input ports to 'toy1_set_z_exp'
-        Port(uid=UidPort("P:toy1_set_z_exp.in.x"), box=UidBox("B:toy1_set_z_exp"), type=UidType("T:Float"), name="x", metadata=None),
-        Port(uid=UidPort("P:toy1_set_z_exp.in.y"), box=UidBox("B:toy1_set_z_exp"), type=UidType("T:Float"), name="y", metadata=None),
+        Port(uid=UidPort("P:toy1_set_z_exp.in.x"), box=UidBox("B:toy1_set_z_exp"),
+             type=UidType("T:Float"), name="x", metadata=None),
+        Port(uid=UidPort("P:toy1_set_z_exp.in.y"), box=UidBox("B:toy1_set_z_exp"),
+             type=UidType("T:Float"), name="y", metadata=None),
         # output ports to 'toy1_set_z_exp'
-        Port(uid=UidPort("P:toy1_set_z_exp.out.z"), box=UidBox("B:toy1_set_z_exp"), type=UidType("T:Float"), name="z", metadata=None),
+        Port(uid=UidPort("P:toy1_set_z_exp.out.z"), box=UidBox("B:toy1_set_z_exp"),
+             type=UidType("T:Float"), name="z", metadata=None),
 
         # input ports to 'toy1_reset_x_exp'
-        Port(uid=UidPort("P:toy1_reset_x_exp.in.z"), box=UidBox("B:toy1_reset_x_exp"), type=UidType("T:Float"), name="z", metadata=None),
+        Port(uid=UidPort("P:toy1_reset_x_exp.in.z"), box=UidBox("B:toy1_reset_x_exp"),
+             type=UidType("T:Float"), name="z", metadata=None),
         # output ports to 'toy1_reset_x_exp'
-        Port(uid=UidPort("P:toy1_reset_x_exp.out.x"), box=UidBox("B:toy1_reset_x_exp"), type=UidType("T:Float"), name="x", metadata=None),
+        Port(uid=UidPort("P:toy1_reset_x_exp.out.x"), box=UidBox("B:toy1_reset_x_exp"),
+             type=UidType("T:Float"), name="x", metadata=None),
 
         # input ports to 'add1'
-        Port(uid=UidPort("P:add1.in.x"), box=UidBox("B:add1"), type=UidType("T:Float"), name="x", metadata=None),
+        Port(uid=UidPort("P:add1.in.x"), box=UidBox("B:add1"),
+             type=UidType("T:Float"), name="x", metadata=None),
         # output ports to 'add1'
-        Port(uid=UidPort("P:add1.out.result"), box=UidBox("B:add1"), type=UidType("T:Float"), name=None, metadata=None),
+        Port(uid=UidPort("P:add1.out.result"), box=UidBox("B:add1"),
+             type=UidType("T:Float"), name=None, metadata=None),
 
         # input ports to 'add1'
-        Port(uid=UidPort("P:add1_exp.in.x"), box=UidBox("B:add1_exp"), type=UidType("T:Float"), name="x", metadata=None),
+        Port(uid=UidPort("P:add1_exp.in.x"), box=UidBox("B:add1_exp"),
+             type=UidType("T:Float"), name="x", metadata=None),
         # output ports to 'add1'
-        Port(uid=UidPort("P:add1_exp.out.result"), box=UidBox("B:add1_exp"), type=UidType("T:Float"), name=None, metadata=None),
+        Port(uid=UidPort("P:add1_exp.out.result"), box=UidBox("B:add1_exp"),
+             type=UidType("T:Float"), name=None, metadata=None),
     ]
 
     wires = [
-        WireDirected(uid=UidWire("W:add1_x"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:add1_x"), type=UidType("T:Float"),
+                     value=None, metadata=None,
                      input=UidPort("P:add1.in.x"),
                      output=UidPort("P:add1_exp.in.x")),
-        WireDirected(uid=UidWire("W:add1_result"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:add1_result"), type=UidType("T:Float"),
+                     value=None, metadata=None,
                      input=UidPort("P:add1_exp.out.result"),
                      output=UidPort("P:add1.out.result")),
-        WireDirected(uid=UidWire("W:toy1_x"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:toy1_x"), type=UidType("T:Float"),
+                     value=None, metadata=None,
                      input=UidPort("P:toy1.in.x"),
                      output=UidPort("P:toy1_set_z_exp.in.x")),
-        WireDirected(uid=UidWire("W:toy1_y"), type=UidType("T:Int"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:toy1_y"), type=UidType("T:Int"),
+                     value=None, metadata=None,
                      input=UidPort("P:toy1.in.y"),
                      output=UidPort("P:toy1_set_z_exp.in.y")),
-        WireDirected(uid=UidWire("W:toy1_set_z1"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:toy1_set_z1"), type=UidType("T:Float"),
+                     value=None, metadata=None,
                      input=UidPort("P:toy1_set_z_exp.out.z"),
                      output=UidPort("P:toy1_reset_x_exp.in.z")),
-        WireDirected(uid=UidWire("W:toy1_set_z2"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:toy1_set_z2"), type=UidType("T:Float"),
+                     value=None, metadata=None,
                      input=UidPort("P:toy1_set_z_exp.out.z"),
                      output=UidPort("P:toy1.out.z")),
-        WireDirected(uid=UidWire("W:toy1_reset_x"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:toy1_reset_x"), type=UidType("T:Float"),
+                     value=None, metadata=None,
                      input=UidPort("P:toy1_reset_x_exp.out.x"),
                      output=UidPort("P:toy1.out.x")),
     ]
@@ -75,12 +95,12 @@ def toy1_example() -> Gromet:
     add1_exp = Expression(uid=UidBox("B:add1_exp"),
                           name=None,
                           input_ports=[UidPort("P:add1_exp.in.x")],
-                          output_ports=[UidPort("P:add1_exp.out.result")],
+                          output_ports=UidPort("P:add1_exp.out.result"),
                           wiring=e3,
                           metadata=None)
 
     add1 = Function(uid=UidBox("B:add1"),
-                    name="add1",
+                    name=UidOp("add1"),
                     input_ports=[UidPort("P:add1.in.x")],
                     output_ports=[UidPort("P:add1.out.result")],
                     wiring=[UidWire("W:add1_x"), UidWire("W:add1_result")],
@@ -100,7 +120,7 @@ def toy1_example() -> Gromet:
                    name=None,
                    input_ports=[UidPort("P:toy1_set_z_exp.in.x"),
                                 UidPort("P:toy1_set_z_exp.in.y")],
-                   output_ports=[UidPort("P:toy1_set_z_exp.out.z")],
+                   output_ports=UidPort("P:toy1_set_z_exp.out.z"),
                    wiring=e1,
                    metadata=None)
 
@@ -113,7 +133,7 @@ def toy1_example() -> Gromet:
         Expression(uid=UidBox("B:toy1_reset_x_exp"),
                    name=None,
                    input_ports=[UidPort("P:toy1_reset_x_exp.in.z")],
-                   output_ports=[UidPort("P:toy1_reset_x_exp.out.x")],
+                   output_ports=UidPort("P:toy1_reset_x_exp.out.x"),
                    wiring=e2,
                    metadata=None)
 
@@ -130,16 +150,16 @@ def toy1_example() -> Gromet:
              add1, add1_exp]
 
     variables = [
-        Variable(name="x", type=UidType("Float"),
+        Variable(uid=UidVariable("var1"), name="x", type=UidType("Float"),
                  wires=[UidWire("W:toy1_x")],
                  metadata=None),
-        Variable(name="y", type=UidType("Float"),
+        Variable(uid=UidVariable("var2"), name="y", type=UidType("Float"),
                  wires=[UidWire("W:toy1_y")],
                  metadata=None),
-        Variable(name="z", type=UidType("Float"),
+        Variable(uid=UidVariable("var3"), name="z", type=UidType("Float"),
                  wires=[UidWire("W:toy1_set_z")],
                  metadata=None),
-        Variable(name="x.1", type=UidType("Float"),
+        Variable(uid=UidVariable("var4"), name="x", type=UidType("Float"),
                  wires=[UidWire("W:toy1_reset_x")],
                  metadata=None)
     ]
