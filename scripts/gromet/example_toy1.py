@@ -40,23 +40,25 @@ def toy1_example() -> Gromet:
     wires = [
         WireDirected(uid=UidWire("W:add1_x"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:add1.in.x"),
-                     output=[UidPort("P:add1_exp.in.x")]),
+                     output=UidPort("P:add1_exp.in.x")),
         WireDirected(uid=UidWire("W:add1_result"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:add1_exp.out.result"),
-                     output=[UidPort("P:add1.out.result")]),
+                     output=UidPort("P:add1.out.result")),
         WireDirected(uid=UidWire("W:toy1_x"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:toy1.in.x"),
-                     output=[UidPort("P:toy1_set_z_exp.in.x")]),
+                     output=UidPort("P:toy1_set_z_exp.in.x")),
         WireDirected(uid=UidWire("W:toy1_y"), type=UidType("T:Int"), value=None, metadata=None,
                      input=UidPort("P:toy1.in.y"),
-                     output=[UidPort("P:toy1_set_z_exp.in.y")]),
-        WireDirected(uid=UidWire("W:toy1_set_z"), type=UidType("T:Float"), value=None, metadata=None,
+                     output=UidPort("P:toy1_set_z_exp.in.y")),
+        WireDirected(uid=UidWire("W:toy1_set_z1"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:toy1_set_z_exp.out.z"),
-                     output=[UidPort("P:toy1_reset_x_exp.in.z"),
-                             UidPort("P:toy1.out.z")]),
+                     output=UidPort("P:toy1_reset_x_exp.in.z")),
+        WireDirected(uid=UidWire("W:toy1_set_z2"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:toy1_set_z_exp.out.z"),
+                     output=UidPort("P:toy1.out.z")),
         WireDirected(uid=UidWire("W:toy1_reset_x"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:toy1_reset_x_exp.out.x"),
-                     output=[UidPort("P:toy1.out.x")]),
+                     output=UidPort("P:toy1.out.x")),
     ]
 
     # ====================
@@ -120,7 +122,7 @@ def toy1_example() -> Gromet:
                     input_ports=[],
                     output_ports=[],
                     wiring=[UidWire("W:toy1_x"), UidWire("W:toy1_y"),
-                            UidWire("W:toy1_set_z"),
+                            UidWire("W:toy1_set_z1"), UidWire("W:toy1_set_z2"),
                             UidWire("W:toy1_reset_x")],
                     metadata=None)
 

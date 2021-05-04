@@ -162,13 +162,10 @@ class Wire:
 class WireDirected(Wire):
     """
     Directed Wire base.
-    Has optional single input and (multiple) output Port(s).
-    A directed Wire can only have a single source.
-    The output Port(s) indicate "reads" of the Wire value (of which there
-    can be zero or more).
+    Has optional single input and single output Port.
     """
     input: Union[UidPort, None]
-    output: Union[List[UidPort], None]
+    output: Union[UidPort, None]
 
 
 @dataclass_json
