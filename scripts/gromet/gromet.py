@@ -1,18 +1,6 @@
 import json
 from typing import NewType, List, Tuple, Union
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
-
-
-# REQUIREMENTS:
-# dataclasses-json
-#   Install with: `pip install dataclasses-json`
-#   This package provides decorator that makes native dataclasses JSON-serializable
-
-# TODO: Method for hacking inherited constant values
-# https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
-# TODO: Use the above to explicitly annotate Gromet syntax type names into JSON
-#       OR: Get fancy and create a custom decorator!
+from dataclasses import dataclass, field, asdict
 
 
 """
@@ -38,28 +26,10 @@ Expression Boxes represent a special kind of Box whose internal 'wiring' are
 # GroMEt syntactic types
 # -----------------------------------------------------------------------------
 
-# The following gromet spec as a "grammar" is ambiguous: there are children
-#   that could be one of several types
-# For this reason, need to have an explicit "gromet_element" field that
+# The following gromet spec as a "grammar" is not guaranteed to
+#   be unambiguous.
+# For this reason, adding explicit "gromet_element" field that
 #   represents the Type of GroMEt syntactic element
-
-# Here's a so-far failed attempt to provide a top level class that could
-# automatically add the class name as a field to any inheriting GroMEt element.
-# The problem
-#   If you don't provide default assignment (None), then serializing
-#      won't include the field
-#      BUT: then all inheriting dataclasses MUST also all provide default values!
-#   If you remove the default assignment, then the constructor REQUIRES
-#      requires you specify teh gromet_class manuall, which defeats the purpose...
-
-# @dataclass_json
-# @dataclass
-# class GrometElm:
-#     gromet_class: str = None
-#
-#     def __post_init__(self):
-#         self.gromet_class = type(self).__name__
-#         print(f"My field is {type(self).__name__}")
 
 
 @dataclass
@@ -102,8 +72,6 @@ UidGromet = NewType('UidGromet', str)
 # --------------------
 # Metadata
 
-
-@dataclass_json
 @dataclass
 class Metadatum(GrometElm):
     """
@@ -122,7 +90,6 @@ Metadata = NewType('Metadata', Union[List[Metadatum], None])
 # --------------------
 # Type
 
-@dataclass_json
 @dataclass
 class Type(GrometElm):
     """
@@ -140,7 +107,6 @@ class Type(GrometElm):
 # --------------------
 # Literal
 
-@dataclass_json
 @dataclass
 class Literal(GrometElm):
     """
@@ -159,7 +125,6 @@ class Literal(GrometElm):
 # --------------------
 # Port
 
-@dataclass_json
 @dataclass
 class Port(GrometElm):
     """
@@ -177,7 +142,6 @@ class Port(GrometElm):
 # --------------------
 # Wire
 
-@dataclass_json
 @dataclass
 class Wire(GrometElm):
     """
@@ -191,7 +155,6 @@ class Wire(GrometElm):
     metadata: Metadata
 
 
-@dataclass_json
 @dataclass
 class WireDirected(Wire):
     """
@@ -202,7 +165,6 @@ class WireDirected(Wire):
     output: Union[UidPort, None]
 
 
-@dataclass_json
 @dataclass
 class WireUndirected(Wire):
     """
@@ -216,7 +178,6 @@ class WireUndirected(Wire):
 # --------------------
 # Junction
 
-@dataclass_json
 @dataclass
 class Junction(GrometElm):
     """
@@ -231,7 +192,6 @@ class Junction(GrometElm):
 # --------------------
 # Box
 
-@dataclass_json
 @dataclass
 class Box(GrometElm):
     """
@@ -249,7 +209,6 @@ class Box(GrometElm):
     metadata: Metadata
 
 
-@dataclass_json
 @dataclass
 class BoxUndirected(Box):
     """
@@ -264,7 +223,6 @@ class BoxUndirected(Box):
     ports: Union[List[UidPort], None]
 
 
-@dataclass_json
 @dataclass
 class BoxDirected(Box):
     # NOTE: This is NOT redundant since Ports are not oriented,
@@ -275,7 +233,6 @@ class BoxDirected(Box):
 
 # Relations
 
-@dataclass_json
 @dataclass
 class Relation(BoxUndirected):
     """
@@ -287,7 +244,6 @@ class Relation(BoxUndirected):
 
 # Functions
 
-@dataclass_json
 @dataclass
 class Function(BoxDirected):
     """
@@ -297,7 +253,6 @@ class Function(BoxDirected):
     name: Union[UidOp, None]
 
 
-@dataclass_json
 @dataclass
 class Exp(GrometElm):
     """
@@ -316,7 +271,6 @@ class Exp(GrometElm):
     args: Union[List[Union[UidPort, Literal, 'Exp']], None]
 
 
-@dataclass_json
 @dataclass
 class Expression(Function):
     """
@@ -333,7 +287,6 @@ class Expression(Function):
     output_ports: UidPort  # forces output to be a single Port
 
 
-@dataclass_json
 @dataclass
 class Predicate(Function):
     """
@@ -344,7 +297,6 @@ class Predicate(Function):
     output_ports: UidPort  # forces output to be a single Port
 
 
-@dataclass_json
 @dataclass
 class Loop(Function):
     """
@@ -375,7 +327,6 @@ class Loop(Function):
 # --------------------
 # Variable
 
-@dataclass_json
 @dataclass
 class Variable(GrometElm):
     """
@@ -395,7 +346,6 @@ class Variable(GrometElm):
 # --------------------
 # Gromet top level
 
-@dataclass_json
 @dataclass
 class Gromet(GrometElm):
     uid: UidGromet
@@ -417,7 +367,7 @@ class Gromet(GrometElm):
 def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
     if dst_file is None:
         dst_file = f"{gromet.name}.json"
-    json.dump(gromet.to_dict(),  # gromet.to_dict(),
+    json.dump(asdict(gromet),  # gromet.to_dict(),
               open(dst_file, "w"),
               indent=2)
 
@@ -428,76 +378,76 @@ def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
 
 if __name__ == "__main__":
     t = Type(uid=UidType("myType"), name="myType", metadata=None)
-    print(json.dumps(t.to_dict()))
+    print(json.dumps(asdict(t)))
 
     lit = Literal(uid=UidLiteral("myLiteral"), type=UidType("myType"),
                   value="infty", metadata=None)
-    print(json.dumps(lit.to_dict()))
+    print(json.dumps(asdict(lit)))
 
     p = Port(uid=UidPort("myPort"), box=UidBox("myBox"), type=UidType("Int"),
              name="myPort", metadata=None)
-    print(json.dumps(p.to_dict()))
+    print(json.dumps(asdict(p)))
 
     w = Wire(uid=UidWire("myWire"), type=UidType("Float"), value=None,
              metadata=None)
-    print(json.dumps(w.to_dict()))
+    print(json.dumps(asdict(w)))
 
     wd = WireDirected(uid=UidWire("myDirectedWire"), type=UidType("Float"), value=None,
                       input=UidPort("inPort"),
                       output=UidPort("outPort"),
                       metadata=None)
-    print(json.dumps(wd.to_dict()))
+    print(json.dumps(asdict(wd)))
 
     wu = WireUndirected(uid=UidWire("myUndirectedWire"), type=UidType("Float"), value=None,
                         ports=[UidPort("p1"), UidPort("p2")],
                         metadata=None)
-    print(json.dumps(wu.to_dict()))
+    print(json.dumps(asdict(wu)))
 
     j = Junction(uid=UidJunction("myJunction"), type=UidType("Float"), metadata=None)
-    print(json.dumps(j.to_dict()))
+    print(json.dumps(asdict(j)))
 
     b = Box(uid=UidBox("myBox"), name="aBox", wiring=[UidWire("myWire")], metadata=None)
-    print(json.dumps(b.to_dict()))
+    print(json.dumps(asdict(b)))
 
     bu = BoxUndirected(uid=UidBox("myBoxUndirected"), name="aBox", wiring=[UidWire("myWire")],
                        ports=[UidPort("myPort")], metadata=None)
-    print(json.dumps(bu.to_dict()))
+    print(json.dumps(asdict(bu)))
 
     bd = BoxDirected(uid=UidBox("myBoxDirected"), name="aBox",
                      wiring=[UidWire("myWire")],
                      input_ports=[UidPort("in1"), UidPort("in2")],
                      output_ports=[UidPort("out1"), UidPort("out2")],
                      metadata=None)
-    print(json.dumps(bd.to_dict()))
+    print(json.dumps(asdict(bd)))
 
     r = Relation(uid=UidBox("myRelation"), name="aBox", wiring=[UidWire("myWire")],
                  ports=[UidPort("p1"), UidPort("p2")], metadata=None)
-    print(json.dumps(r.to_dict()))
+    print(json.dumps(asdict(r)))
 
     f = Function(uid=UidBox("myFunction"), name=UidOp("aBox"),
                  wiring=[UidWire("myWire")],
                  input_ports=[UidPort("in1"), UidPort("in2")],
                  output_ports=[UidPort("out1"), UidPort("out2")],
                  metadata=None)
-    print(json.dumps(f.to_dict()))
+    print(json.dumps(asdict(f)))
 
     exp = Exp(operator=UidOp("myExp"),
               args=[UidPort("p1"), UidPort("p2")])
-    print(json.dumps(exp.to_dict()))
+    print(json.dumps(asdict(exp)))
 
     e = Expression(uid=UidBox("myExpression"), name=UidOp("aBox"),
                    wiring=exp,
                    input_ports=[UidPort("in1"), UidPort("in2")],
                    output_ports=UidPort("out"),
                    metadata=None)
-    print(json.dumps(e.to_dict()))
+    print(json.dumps(asdict(e)))
 
     pred = Predicate(uid=UidBox("myPredicate"), name=UidOp("aBox"),
                      wiring=[UidWire("myWire")],
                      input_ports=[UidPort("in1"), UidPort("in2")],
                      output_ports=UidPort("outBooleanPort"),
                      metadata=None)
-    print(json.dumps(pred.to_dict()))
+    print(json.dumps(asdict(pred)))
 
     loop = Loop(uid=UidBox("myLoop"), name=UidOp("myLoop"),
                 input_ports=[UidPort("in1"), UidPort("in2")],
@@ -508,14 +458,14 @@ if __name__ == "__main__":
                          (UidPort("out2"), UidPort("in2"))],
                 exit=pred,
                 metadata=None)
-    print(json.dumps(loop.to_dict(), indent=2))
+    print(json.dumps(asdict(loop), indent=2))
 
     v = Variable(uid=UidVariable("myVariable"),
                  name="nameOfMyVar",
                  type=UidType("myType"),
                  wires=[UidWire("wire1"), UidWire("wire2")],
                  metadata=None)
-    print(json.dumps(v.to_dict()))
+    print(json.dumps(asdict(v)))
 
     g = Gromet(
         uid=UidGromet("myGromet"),
@@ -529,4 +479,4 @@ if __name__ == "__main__":
         variables=[v],
         metadata=None
     )
-    print(json.dumps(g.to_dict(), indent=2))
+    print(json.dumps(asdict(g), indent=2))
