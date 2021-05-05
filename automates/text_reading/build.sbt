@@ -33,6 +33,7 @@ libraryDependencies ++= {
   )
 }
 
+libraryDependencies += guice
 
 lazy val core = project in file(".")
 
