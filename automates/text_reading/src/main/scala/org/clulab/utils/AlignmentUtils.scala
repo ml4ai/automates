@@ -4,7 +4,7 @@ import java.io.File
 
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDefinitionMentions, hasRequiredArgs, hasUnitArg}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDescriptionMentions, hasRequiredArgs, hasUnitArg}
 import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
@@ -21,6 +21,8 @@ import scala.collection.mutable.ArrayBuffer
 object AlignmentJsonUtils {
   /**stores methods that are specific to processing json with alignment components;
     * other related methods are in GrFNParser*/
+
+  case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDescrs: Seq[String])
 
   /**get arguments for the aligner depending on what data are provided**/
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): alignmentArguments = {
@@ -47,27 +49,36 @@ object AlignmentJsonUtils {
     } else None
 
 
-    val definitionMentions = if (allMentions.nonEmpty) {
+    val descriptionMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
-        .filter(m => m.label matches "Definition")
-        .filter(hasRequiredArgs))
+        .filter(m => m.label.contains("Description"))
+        .filter(m => hasRequiredArgs(m, "description")))
     } else None
+
 
     val parameterSettingMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
         .filter(m => m.label matches "ParameterSetting")
-        .filter(hasRequiredArgs))
+        )
     } else None
+
+
+    val intervalParameterSettingMentions = if (allMentions.nonEmpty) {
+      Some(allMentions
+        .get
+        .filter(m => m.label matches "IntervalParameterSetting")
+      )
+    } else None
+
 
     val unitMentions = if (allMentions.nonEmpty) {
       Some(allMentions
         .get
-        .filter(m => m.label matches "Unit")
-        .filter(hasRequiredArgs))
+        .filter(m => m.label matches "UnitRelation")
+        )
     } else None
-
 
     // get the equations
     val equationChunksAndSource = if (jsonObj.contains("equations")) {
@@ -76,25 +87,25 @@ object AlignmentJsonUtils {
     } else None
 
 //    for (item <- equationChunksAndSource.get) println(item._1 + " | " + item._2)
-    val variableNames = if (jsonObj.contains("source_code")) {
+    val identifierNames = if (jsonObj.contains("source_code")) {
       Some(json("source_code").obj("variables").arr.map(_.obj("name").str))
     } else None
-    // The variable names only (excluding the scope info)
-    val variableShortNames = if (variableNames.isDefined) {
-      var shortNames = GrFNParser.getVariableShortNames(variableNames.get)
+    // The identifier names only (excluding the scope info)
+    val identifierShortNames = if (identifierNames.isDefined) {
+      var shortNames = GrFNParser.getVariableShortNames(identifierNames.get)
       Some(shortNames)
     } else None
     // source code comments
 
-    val source = if (variableNames.isDefined) {
-      Some(getSourceFromSrcVariables(variableNames.get))
+    val source = if (identifierNames.isDefined) {
+      Some(getSourceFromSrcIdentifiers(identifierNames.get))
     } else None
 
-    val commentDefinitionMentions = if (jsonObj.contains("source_code")) {
+    val commentDescriptionMentions = if (jsonObj.contains("source_code")) {
 
       val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
-      Some(getCommentDefinitionMentions(localCommentReader, json, variableShortNames, source)
-        .filter(hasRequiredArgs))
+      Some(getCommentDescriptionMentions(localCommentReader, json, identifierShortNames, source)
+        .filter(m => hasRequiredArgs(m, "description")))
     } else None
 
 
@@ -108,24 +119,24 @@ object AlignmentJsonUtils {
 
 
 
-    alignmentArguments(json, variableNames, variableShortNames, commentDefinitionMentions, definitionMentions, parameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    alignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")
     .obj("variables")
     .arr.map(_.obj("name").str)
 
-  def getVariableShortNames(json: Value): Seq[String] = {
-    getVariableShortNames(getVariables(json))
+  def getIdentifierShortNames(json: Value): Seq[String] = {
+    getIdentifierShortNames(getVariables(json))
   }
 
-  def getSourceFromSrcVariables(variables: Seq[String]): String = {
+  def getSourceFromSrcIdentifiers(identifiers: Seq[String]): String = {
     // fixme: getting source from all variables provided---if there are more than one, the source field will list all of them; need a different solution if the source is different for every variable/comment
-    variables.map(name => name.split("::")(1)).distinct.mkString(";")
+    identifiers.map(name => name.split("::")(1)).distinct.mkString(";")
   }
 
-  def getVariableShortNames(variableNames: Seq[String]): Seq[String] = for (
-    name <- variableNames
+  def getIdentifierShortNames(identifierNames: Seq[String]): Seq[String] = for (
+    name <- identifierNames
   ) yield name.split("::").reverse.slice(1, 2).mkString("")
 
   def getCommentDocs(json: Value, source: Option[String]): Seq[Document] = {
