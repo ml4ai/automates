@@ -989,7 +989,16 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables = dict()
             if len(inputs) > 0:
                 in_var_names = [n.identifier.var_name for n in inputs]
-                in_var_str = ",".join(in_var_names)
+
+                seen_input_vars = {}
+                in_var_name_with_occurence = []
+                for v in in_var_names:
+                    if v not in seen_input_vars:
+                        seen_input_vars[v] = 0
+                    in_var_name_with_occurence.append(f"{v}_{seen_input_vars[v]}")
+                    seen_input_vars[v] += 1
+                in_var_str = ",".join(in_var_name_with_occurence)
+
                 interface_func_str = f"lambda {in_var_str}:({in_var_str})"
                 func = add_lambda_node(LambdaType.INTERFACE, interface_func_str)
                 out_nodes = [add_variable_node(id) for id in con.arguments]
@@ -1284,53 +1293,48 @@ class GroundedFunctionNetwork(nx.DiGraph):
                         output_var_nodes.extend(succs)
                     output_var_nodes = set(output_var_nodes) - output_nodes
                     var_nodes = output_var_nodes.intersection(subgraph.nodes)
-                    # var_nodes = []
-                    # [
-                    #     container_subgraph.add_node(v.uid, label=str(v), name=str(v))
-                    #     for v in var_nodes
-                    # ]z
-                    # print(f"for container {container_subgraph.name}")
-                    # print([v.uid for v in succs])
 
                     container_subgraph.add_subgraph(
                         [v.uid for v in var_nodes],
                     )
-                    # container_subgraph.add_subgraph(
-                    #     list(var_nodes),
-                    # )
 
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
 
-        unique_var_names = {
-            "::".join(n.name.split("::")[:-1])
-            for n in A.nodes()
-            if len(n.name.split("::")) > 2
-        }
-        for name in unique_var_names:
-            max_var_version = max(
-                [
-                    int(n.name.split("::")[-1])
-                    for n in A.nodes()
-                    if n.name.startswith(name)
-                ]
-            )
-            min_var_version = min(
-                [
-                    int(n.name.split("::")[-1])
-                    for n in A.nodes()
-                    if n.name.startswith(name)
-                ]
-            )
-            for i in range(min_var_version, max_var_version):
-                e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
-                e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
-                e.attr["color"] = "invis"
 
-        for agraph_node in [
-            a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
-        ]:
-            agraph_node.attr["rank"] = "max"
+        # TODO this code helps with the layout of the graph. However, it assumes
+        # all var nodes start at -1 and are consecutive. This is currently not 
+        # the case, so it creates random hanging var nodes if run. Fix this.
+        
+        # unique_var_names = {
+        #     "::".join(n.name.split("::")[:-1])
+        #     for n in A.nodes()
+        #     if len(n.name.split("::")) > 2
+        # }
+        # for name in unique_var_names:
+        #     max_var_version = max(
+        #         [
+        #             int(n.name.split("::")[-1])
+        #             for n in A.nodes()
+        #             if n.name.startswith(name)
+        #         ]
+        #     )
+        #     min_var_version = min(
+        #         [
+        #             int(n.name.split("::")[-1])
+        #             for n in A.nodes()
+        #             if n.name.startswith(name)
+        #         ]
+        #     )
+        #     for i in range(min_var_version, max_var_version):
+        #         e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
+        #         e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
+        #         e.attr["color"] = "invis"
+
+        # for agraph_node in [
+        #     a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
+        # ]:
+        #     agraph_node.attr["rank"] = "max"
 
         return A
 
