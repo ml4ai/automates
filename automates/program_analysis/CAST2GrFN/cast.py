@@ -111,9 +111,6 @@ class CAST(object):
         main_container = [
             c["name"] for c in air["containers"] if c["name"].endswith("::main")
         ]
-        global_container = [
-            c["name"] for c in air["containers"] if c["name"].endswith("::global")
-        ]
 
         called_containers = [
             s["function"]["name"]
@@ -126,9 +123,7 @@ class CAST(object):
         ]
 
         container_id_to_start_from = None
-        if len(global_container) > 0:
-            container_id_to_start_from = global_container[0]
-        elif len(main_container) > 0:
+        if len(main_container) > 0:
             container_id_to_start_from = main_container[0]
         elif len(root_containers) > 0:
             container_id_to_start_from = root_containers[0]
