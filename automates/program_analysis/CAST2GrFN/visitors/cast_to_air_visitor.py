@@ -385,7 +385,6 @@ class CASTToAIRVisitor(CASTVisitor):
                 v_ref,
             )
             self.state.add_variable(var_obj)
-            print(var_obj.identifier_information)
             container = self.state.find_container(var_obj.identifier_information.scope)
             container.add_arguments([var_obj])
             container.add_var_used_from_previous_scope(var_obj)
@@ -1339,9 +1338,7 @@ class CASTToAIRVisitor(CASTVisitor):
         TODO
         """
 
-        if isinstance(node.value, Number):
-            return []
-        elif isinstance(node.value, Name):
+        if isinstance(node.value, Name):
             val_result = self.visit(node.value)
             self.state.current_function.add_outputs(val_result[-1].input_variables)
             return []
