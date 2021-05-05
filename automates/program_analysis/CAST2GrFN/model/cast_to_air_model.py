@@ -273,9 +273,9 @@ class C2AContainerCallLambda(C2ALambda):
                 "name": self.identifier_information.build_identifier(),
                 "type": self.container_type.value,
             },
-            "input": build_unique_list_with_order(
-                self.input_variables, lambda v: v.build_identifier()
-            ),
+            # Note: Do not build a unique list because the same var could be
+            # passed in multiple times
+            "input": [v.build_identifier() for v in self.input_variables],
             "output": build_unique_list_with_order(
                 self.output_variables, lambda v: v.build_identifier()
             ),
@@ -758,9 +758,6 @@ class C2AState(object):
         # bug BUT it is actually a remnant of how GCC gives variable definitions.
         all_inputted_vars = {
             v for c in container_air for l in c["body"] for v in l["input"]
-        }
-        all_outputted_vars = {
-            v for c in container_air for l in c["body"] for v in l["output"]
         }
         all_inputted_vars.update({v for c in container_air for v in c["return_value"]})
         all_inputted_vars.update({v for c in container_air for v in c["arguments"]})
