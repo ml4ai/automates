@@ -23,7 +23,7 @@ rules:
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
       trigger = ${functionTrigger2} (?= "of")
-      input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos
+      input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos | nmod_in appos
       output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod
 
   - name: trigger3_from # estimate, calculate, compute, determine, predict is the trigger for this rule

@@ -9,7 +9,7 @@ class TestFunctions extends ExtractionTest {
   val t1a = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
   failingTest should s"find functions from t1a: ${t1a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Rnl" -> Seq("difference between upward long-wave radiation from the standardized surface", "downward long-wave radiation from the sky")
+      "Rnl" -> Seq("upward long-wave radiation from the standardized surface", "downward long-wave radiation from the sky")
     )
     val mentions = extractMentions(t1a)
     testFunctionEvent(mentions, desired)
@@ -63,7 +63,7 @@ class TestFunctions extends ExtractionTest {
   val t7a = "The value for Rso is a function of the time of year and latitude, and, in addition, the time of day for hourly calculation periods."
   failingTest should s"find functions from t7a: ${t7a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "value for Rso" -> Seq("time of year", "latitude", "time of day for hourly calculation periods") // fixme: the last input is not captured. ("and, in addition" part is blocking it from extracted.)
+      "value for Rso" -> Seq("time of year", "latitude", "time of day for hourly calculation periods") // fixme: the last input is not captured. ("and, in addition" part is blocking it from extracted.) -> fixed
     )
     val mentions = extractMentions(t7a)
     testFunctionEvent(mentions, desired)
@@ -71,7 +71,7 @@ class TestFunctions extends ExtractionTest {
 
   // Tests from paper: COVID_ACT_NOW
   val t1b = "Initial conditions for total cases and total exposed are calculated by dividing hospitalizations by the hospitalization rate."
-  failingTest should s"find functions from t1b: ${t1b}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t1b: ${t1b}" taggedAs(Somebody) in {
     val desired = Seq(
       "Initial conditions for total cases and total exposed" -> Seq("hospitalizations", "hospitalization rate")
     )
@@ -101,7 +101,7 @@ class TestFunctions extends ExtractionTest {
 
   // Tests from PT-2012-ET Measurement and Estimation Using Modified PT in Maise with Mulching-petpt_2012
   val t1d = "In this model, ET is a product of the equilibrium evaporation (ETeq) and PT coefficient (α), where ETeq can be obtained from meteorological data (net radiation, soil heat flux, and air temperature)."
-  failingTest should s"find functions from t1d: ${t1d}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t1d: ${t1d}" taggedAs(Somebody) in {
     val desired = Seq(
       "ET" -> Seq("equilibrium evaporation", "PT coefficient")
     )
@@ -120,7 +120,7 @@ class TestFunctions extends ExtractionTest {
 
   // Tests from Global estimation of evapotranspiration using a leaf area index-based surface energy and water balance model
   val t1e = "calculating total E (E0) as the sum of the canopy transpiration and soil evaporation, assuming the absence of soil water stress"
-  passingTest should s"find functions from t1e: ${t1e}" taggedAs(Somebody) in {
+  failingTest should s"find functions from t1e: ${t1e}" taggedAs(Somebody) in {
     val desired = Seq(
       "total E" -> Seq("canopy transpiration", "soil evaporation")
     )
@@ -150,10 +150,10 @@ class TestFunctions extends ExtractionTest {
   // Tests from 2003-DSSAT
 
   val t1f = "the soil water content of each layer is updated by adding or subtracting daily flows of water to or from the layer due to each process."
-  failingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "the soil water content of each layer" -> Seq("daily flows of water", "the layer due to each process"), // note: same inputs, same output but different trigger word. (add and subtract, each) how can we capture such cases?
-      "the soil water content of each layer" -> Seq("daily flows of water", "the layer due to each process")
+      "the soil water content of each layer" -> Seq("daily flows of water", "layer"),
+      "the soil water content of each layer" -> Seq("daily flows of water", "layer")
     )
     val mentions = extractMentions(t1f)
     testFunctionEvent(mentions, desired)
@@ -179,7 +179,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t4f = "Actual soil evaporation is the minimum of the potential and soil-limiting calculations on a daily basis."
-  failingTest should s"find functions from t4f: ${t4f}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t4f: ${t4f}" taggedAs(Somebody) in {
     val desired = Seq(
       "Actual soil evaporation" -> Seq("potential and soil-limiting calculations on a daily basis") // note: would input be one chunk? or two with conjunction?
     )
@@ -203,7 +203,7 @@ class TestFunctions extends ExtractionTest {
   failingTest should s"find functions from t6f: ${t6f}" taggedAs(Somebody) in {
     val desired = Seq(
       "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf contributions"),
-      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf photosynthetic rates", "their respective LAIs") // note: Photosynthesis is not captured as a concept here. What could be the reason for this?
+      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf photosynthetic rates", "their respective LAIs")
     )
     val mentions = extractMentions(t6f)
     testFunctionEvent(mentions, desired)
@@ -269,9 +269,9 @@ class TestFunctions extends ExtractionTest {
   val t5g = "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
   failingTest should s"find functions from t5g: ${t5g}" taggedAs(Somebody) in {
     val desired = Seq(
-      "canopy density" -> Seq("Wind speed"), // fixme: same rule does not extract more than one set of input/output.
-      "canopy density" -> Seq("Rno"),
-      "canopy density" -> Seq("vapor pressure deficit")
+      "Wind speed" -> Seq("canopy density"), // fixme: same rule does not extract more than one set of input/output.
+      "Rno" -> Seq("canopy density"),
+      "vapor pressure deficit" -> Seq("canopy density")
     )
     val mentions = extractMentions(t5g)
     testFunctionEvent(mentions, desired)
@@ -296,7 +296,7 @@ class TestFunctions extends ExtractionTest {
   val t8g = "For example, consider a case in which the average air temperature is 32°C, Lai = 2.7, Rn0 = 5.0, E0 = 5.0, and ΣEs1 < U."
   failingTest should s"find NO functions from t8g: ${t8g}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
-    val mentions = extractMentions(t8g) // fixme: when the right side of the equal sign is a numeral value, the equation should not be captured as a function, but as a parameter setting.
+    val mentions = extractMentions(t8g) // fixme: when the right side of an equal sign is only a numerical value, the equation should not be captured as a function, but as a parameter setting.
     testFunctionEvent(mentions, desired)
   }
 

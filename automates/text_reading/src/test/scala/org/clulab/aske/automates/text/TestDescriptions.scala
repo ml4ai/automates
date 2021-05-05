@@ -596,6 +596,16 @@ class TestDescriptions extends ExtractionTest {
     testDescriptionEvent(mentions, desired)
   }
 
+    val t6h = "Wilting point Wp and field capacity Wc were calculated from soil depth and soil texture information, i.e., the relative proportion of sand, silt and clay, according to a set of prediction equations developed by Saxton et al. (1986)."
+  failingTest should s"find descriptions from t6h: ${t6h}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "Wp" -> Seq("Wilting point"), // fixme: description for Wp is not captured.
+      "Wc" -> Seq("field capacity")
+    )
+    val mentions = extractMentions(t6h)
+    testDescriptionEvent(mentions, desired)
+  }
+
 // Tests from paper: Covid_Act_Now_Model_Reference
 
     val t1i = "Susceptible (S) individuals may become exposed (E) to the virus, then infected (I) at varying " +
