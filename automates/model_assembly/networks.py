@@ -512,7 +512,6 @@ class HyperEdge:
                     variable.value = variable.input_value
                 else:
                     variable.value = out_val
-                print(variable.identifier)
 
     def __eq__(self, other) -> bool:
         return (

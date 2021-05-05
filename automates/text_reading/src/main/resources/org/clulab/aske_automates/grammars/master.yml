@@ -13,9 +13,9 @@ rules:
     vars:
       priority: 2
 
-  - import: "org/clulab/aske_automates/grammars/definitions.yml"
+  - import: "org/clulab/aske_automates/grammars/descriptions.yml"
     vars:
-      action: definitionActionFlow #note: there are two rules that do not use this action flow
+      action: descriptionActionFlow #note: there are two rules that do not use this action flow
       priority: 3
 
   - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"

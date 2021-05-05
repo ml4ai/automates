@@ -67,10 +67,10 @@ object ExtractAndExport extends App {
 //      }
 //
 //    }
-    val defMentions = mentions.filter(_ matches "Definition")
+    val descrMentions = mentions.filter(_ matches "Description")
 
-    println("Definition mentions: ")
-    for (dm <- defMentions) {
+    println("Description mentions: ")
+    for (dm <- descrMentions) {
       println("----------------")
       println(dm.text)
 //      println(dm.foundBy)
@@ -159,7 +159,7 @@ case class AutomatesExporter(filename: String) extends Exporter {
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString().replace(".json", "_mentions.tsv") ))
-    val contentMentions = mentions.filter(m => (m.label matches "Definition") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting"))
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting"))
     for (m <- contentMentions) {
       pw.write(m.label + "\t" + m.text.trim())
       for (arg <- m.arguments) pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())

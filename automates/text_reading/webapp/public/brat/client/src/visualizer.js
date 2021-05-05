@@ -1374,7 +1374,7 @@ var Visualizer = (function($, window, undefined) {
                   styleMap[targetRef] = {};
               }
               if (styleMap[targetRef][attribute] !== undefined) {
-                  console.log('warning: multiple style definitions for',
+                  console.log('warning: multiple style descriptions for',
                               targetRef, attribute);
               }
               styleMap[targetRef][attribute] = value;

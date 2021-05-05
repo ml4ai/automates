@@ -34,7 +34,7 @@ import scala.collection.parallel.ParSeq
 
 import upickle.default._
 
-case class Prediction(paperId: String, eqnId:String, latexIdentifier: String, textVariable: Option[String], definitions: Option[Seq[String]])
+case class Prediction(paperId: String, eqnId:String, latexIdentifier: String, textVariable: Option[String], descriptions: Option[Seq[String]])
 object Prediction{
   implicit val rw: ReadWriter[Prediction] = macroRW
 }
@@ -102,8 +102,8 @@ class AlignmentBaseline() {
 //    println("allEqVarCandidates:" + allEqVarCandidates.mkString(", "))
 
     val renderedAll = mutable.HashMap[String, String]()
-    for (variableCand <- allEqVarCandidates) {
-      renderedAll.put(variableCand, customRender(variableCand))
+    for (identifierCand <- allEqVarCandidates) {
+      renderedAll.put(identifierCand, customRender(identifierCand))
     }
     //for every file, get the text of the file
     //      val texts: Seq[String] = dataLoader.loadFile(paper)
@@ -112,31 +112,31 @@ class AlignmentBaseline() {
     //IF MENTIONS NOT PREVIOUSLY EXPORTED:
     //extract the mentions
     //      val textMentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(eqn_id)))
-    ////      //only get the definition mentions
-    //      val textDefinitionMentions = textMentions.seq.filter(_ matches "Definition")
+    ////      //only get the description mentions
+    //      val textDescriptionMentions = textMentions.seq.filter(_ matches "Description")
     //
     //      //IF WANT TO EXPORT THE MENTIONS FOR EACH FILE:
     //      val exporter = new SerializedExporter("./input/LREC/Baseline/extractedMentions/" + eqn_id)
-    //      exporter.export(textDefinitionMentions)
+    //      exporter.export(textDescriptionMentions)
     //      exporter.close()
     //      println("exported ID: " + eqn_id)
 
     //IF HAVE PREVIOUSLY EXPORTED MENTIONS:
 
-    val textDefinitionMentions = SerializedMentions
+    val textDescriptionMentions = SerializedMentions
       .load(s"$extractedMentionsDir/${eqn_id}.serialized")
-      .filter(mention => mention matches "Definition")
-//    textDefinitionMentions.foreach(DisplayUtils.displayMention)
-    //      for (td <- textDefinitionMentions) println("var: " + td.arguments("variable").head.text + " def: " + td.arguments("definition").head.text)
+      .filter(mention => mention matches "Description")
+//    textDescriptionMentions.foreach(DisplayUtils.displayMention)
+    //      for (td <- textDescriptionMentions) println("identifier: " + td.arguments("variable").head.text + " def: " + td.arguments("description").head.text)
 
-    val groupedByCommonVar = textDefinitionMentions
+    val groupedByCommonVar = textDescriptionMentions
       .groupBy(_.arguments("variable").head.text)
-      .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("definition").head.text).distinct) //the definitions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
+      .mapValues(seq => moreLanguagey(seq).map(m => m.arguments("description").head.text).distinct) //the descriptions are sorted such that the first priority is the proportion of nat language text over len of def (we want few special chars in defs) and the second priority is length
 //    groupedByCommonVar.foreach(println)
 
     val latexTextMatches = getLatexTextMatches(groupedByCommonVar, allEqVarCandidates, renderedAll.toMap, mathSymbols, word2greekDict.toMap, pdfalignDir, paperId, eq).seq
 //    latexTextMatches.foreach(println)
-    // val filtered = latexTextMatches.filter(p => p.definitions.exists(defs => defs.exists(d => (d.count(_.isLetter)/d.length) > 0.7 )))
+    // val filtered = latexTextMatches.filter(p => p.descriptions.exists(defs => defs.exists(d => (d.count(_.isLetter)/d.length) > 0.7 )))
 
 
     println("+++++++++")
@@ -150,12 +150,12 @@ class AlignmentBaseline() {
     }
 
     // GETTING SIMPLE VARS FROM LATEX
-    //which latex identifiers we got from text---used for filtering out the simple variables that have already been found from reading the text
+    //which latex identifiers we got from text---used for filtering out the simple identifiers that have already been found from reading the text
     val latexIdentifiersFromText = latexTextMatches.map(_.latexIdentifier)
     val renderedLatexIdentifiersFromText = latexIdentifiersFromText.map(render(_, pdfalignDir))
 
-    //the simple var predictions (for the vars that were not found through reading text) will go here
-    val simpleVars = getSimpleVars(equationStr, pdfalignDir, greekWords)
+    //the simple identifier predictions (for the identidiers that were not found through reading text) will go here
+    val simpleVars = getSimpleIdentifiers(equationStr, pdfalignDir, greekWords)
 
     val simpleValsNotFoundInText = for {
       sv <- simpleVars
@@ -220,7 +220,7 @@ class AlignmentBaseline() {
 
   //Simple latex equation segmenter
   //Sample equation: \ \mathcal { L } = \mathcal { L } _ { A } + \lambda _ { 1 } \mathcal { L } _ { 1 } + \lambda _ { 2 } \mathcal { L } _ { p e r p }
-  def getSimpleVars(eqString: String, pdfalignDir: String, greekLetterWords: Seq[String]): Seq[String] = {
+  def getSimpleIdentifiers(eqString: String, pdfalignDir: String, greekLetterWords: Seq[String]): Seq[String] = {
     val simpleVars = new ArrayBuffer[String]()
     val fontStrings = "(\\\\mathcal|\\\\mathrm|\\\\mathbf|\\\\mathrm|\\\\pmb|\\\\mathcal|\\\\boldsymbol|\\\\mathbf|\\\\acute|\\\\grave|\\\\ddotv|\\\\tilde|\\\\bar|\\\\breve|\\\\check|\\\\hat|\\\\vec|\\\\dot|\\\\ddot|\\\\textrm|\\\\textsf|\\\\texttt|\\\\textup|\\\\textit|\\\\textsl|\\\\textsc|\\\\uppercase|\\\\textbf|\\\\textmd|\\\\textlf|\\\\mathbb)"
 
@@ -233,7 +233,7 @@ class AlignmentBaseline() {
     val pattern4 = s"${fontStrings}\\s\\{\\s\\D\\s\\}".r
 
     for (m <- pattern0.findAllIn(eqString)) println("> " + m)
-    val afterPatt0 = pattern0.replaceAllIn(eqString, "") //don't append these to possible vars---we don't care what's in the sum if it's not defined
+    val afterPatt0 = pattern0.replaceAllIn(eqString, "") //don't append these to possible identifiers---we don't care what's in the sum if it's not defined
 
     //what we find with patt 1:
     for (m <- pattern1.findAllIn(afterPatt0)) {
@@ -300,21 +300,21 @@ class AlignmentBaseline() {
   }
 
   def getLatexTextMatches(
-    var2Defs: Map[String, Seq[String]],
-    allEqVarCandidates: Seq[String],
-    renderedAll: Map[String, String],
-    mathSymbols: Seq[String],
-    word2greekDict: Map[String, String],
-    pdfalignDir: String,
-    paperId: String,
-    eqnId: String): Seq[Prediction] = {
+                           identifier2Descrs: Map[String, Seq[String]],
+                           allEqVarCandidates: Seq[String],
+                           renderedAll: Map[String, String],
+                           mathSymbols: Seq[String],
+                           word2greekDict: Map[String, String],
+                           pdfalignDir: String,
+                           paperId: String,
+                           eqnId: String): Seq[Prediction] = {
 
     //for every extracted var-def var, find the best matching latex candidate var by iteratively replacing math symbols until the variables match up; out of those, return max length with matching curly brackets
 
     //all the matches from one file name will go here:1
     val latexTextMatches = new ArrayBuffer[Prediction]()
     //for every extracted mention
-    for (variable <- var2Defs.keys) {
+    for (identifier <- identifier2Descrs.keys) {
       //best Latex candidates, out of which we'll take the max (to account for some font info)
 //      val bestCandidates = new ArrayBuffer[String]()
         //for every candidate eq var
@@ -322,7 +322,7 @@ class AlignmentBaseline() {
           cand <- allEqVarCandidates
           renderedCand = renderedAll(cand)
           //check if the candidate matches the var extracted from text and return the good candidate or str "None"
-          resultOfMatching = findMatchingVar(variable, cand, renderedCand, mathSymbols, word2greekDict, pdfalignDir)
+          resultOfMatching = findMatchingIdentifier(identifier, cand, renderedCand, mathSymbols, word2greekDict, pdfalignDir)
 //          _ = println(resultOfMatching)
           if resultOfMatching.isDefined
         } yield resultOfMatching.get
@@ -330,7 +330,7 @@ class AlignmentBaseline() {
       // choose the most complete (longest) out of the candidates and add it to the seq of matches for this file
       if (bestCandidates.nonEmpty) {
         val bestCand = bestCandidates.maxBy(numLetters)
-        val pred = Prediction(paperId, eqnId, bestCand.trim, Some(variable), Some(var2Defs(variable)))
+        val pred = Prediction(paperId, eqnId, bestCand.trim, Some(identifier), Some(identifier2Descrs(identifier)))
         latexTextMatches.append(pred)
       }
     }
@@ -340,17 +340,17 @@ class AlignmentBaseline() {
 
   def numLetters(s: String): Int = s.count(_.isLetter)
 
-  def findMatchingVar(
-                       variable: String,
-                       latexCandidateVar: String,
-                       renderedLatexCandidateVar: String,
-                       mathSymbols: Seq[String],
-                       word2greekDict: Map[String, String],
-                       pdfalignDir: String): Option[String] = {
+  def findMatchingIdentifier(
+                              identifier: String,
+                              latexCandidateVar: String,
+                              renderedLatexCandidateVar: String,
+                              mathSymbols: Seq[String],
+                              word2greekDict: Map[String, String],
+                              pdfalignDir: String): Option[String] = {
 
 
     //if the rendered value matches the variable extracted from text, then return the latex candidate variable (not the rendered value) as matching
-    if (renderedLatexCandidateVar == variable) {
+    if (renderedLatexCandidateVar == identifier) {
 //      println(" --> rendered == variable")
 //      println(" --> rendered: " + renderedLatexCandidateVar)
       //return the candidate
@@ -387,21 +387,21 @@ class AlignmentBaseline() {
     replaceWordWithGreek(equationCandidates.head, word2greekDict)
   }
 
-  def replaceGreekWithWord(varName: String, greek2wordDict: Map[String, String]): String = {
-    var toReturn = varName
+  def replaceGreekWithWord(identifierName: String, greek2wordDict: Map[String, String]): String = {
+    var toReturn = identifierName
     for (k <- greek2wordDict.keys) {
-      if (varName.contains(k)) {
+      if (identifierName.contains(k)) {
         toReturn = toReturn.replace(k, s"""\${greek2wordDict(k)}""")
       }
     }
     toReturn
   }
 
-  def replaceWordWithGreek(varName: String, word2greekDict: Map[String, String]): String = {
-    var toReturn = varName
+  def replaceWordWithGreek(identifierName: String, word2greekDict: Map[String, String]): String = {
+    var toReturn = identifierName
     for (k <- word2greekDict.keys) {
       val escaped = """\""" + k
-      if (varName.contains(escaped)) {
+      if (identifierName.contains(escaped)) {
         toReturn = toReturn.replace(escaped, word2greekDict(k))
       }
     }
@@ -411,7 +411,7 @@ class AlignmentBaseline() {
 
   def getAllEqVarCandidates(equation: String): Seq[String] = {
     //just getting all continuous partitions from the equation,
-    //for now, even those containing mathematical symbols---bc we extract compound vars that can contain anything
+    //for now, even those containing mathematical symbols---bc we extract compound identifiers that can contain anything
     //maybe still get rid of the equal sign, integral, some types of font info
     val eqCandidates = new ArrayBuffer[String]()
     for (i <- 0 to equation.length) {
@@ -425,15 +425,15 @@ class AlignmentBaseline() {
 
 
   def processOneAnnotatedEquation(fileName: File): Map[String, Seq[String]] = {
-    //for now just a seq of (eq-var, def) tuples
+    //for now just a seq of (eq-identifier, def) tuples
     val goldFile = new File(fileName.toString.replace("ParsedJsons", "gold"))
 
     val file = ujson.read(goldFile.readString())
-    val entries = mutable.Map[String, Seq[String]]() //append var -> Seq[def] here
+    val entries = mutable.Map[String, Seq[String]]() //append identifier -> Seq[def] here
     for (entry <- file.arr) { //one entry
-//      val entryMap = mutable.Map[String, Seq[String]]() //append var -> Seq[def] here
-      var variable = new ArrayBuffer[String]()
-      var description = new ArrayBuffer[String]()
+//      val entryMap = mutable.Map[String, Seq[String]]() //append identifier -> Seq[def] here
+      val identifier = new ArrayBuffer[String]()
+      val description = new ArrayBuffer[String]()
       for (annType <- entry.obj) if (annType._1 == "equation" || annType._1 == "description") {
         for (entity <- annType._2.arr) { //entity is every instance of whatever we are looking at
           val entityArr = new ArrayBuffer[String]()
@@ -446,13 +446,13 @@ class AlignmentBaseline() {
 
           }
           if (annType._1 == "equation") {
-            variable.append(entityArr.mkString(""))
+            identifier.append(entityArr.mkString(""))
           } else {
             description.append(entityArr.mkString(" ").replaceAll(",|\\.|:", ""))
           }
         }
       }
-      entries += (variable.head -> description)
+      entries += (identifier.head -> description)
     }
 
     entries.toMap
@@ -483,11 +483,11 @@ class AlignmentBaseline() {
     equationFileNames
   }
 
-  //used to finding a better definition---takes into account the amount of language characters in the definition and also the length of the definition
+  //used to finding a better description---takes into account the amount of language characters in the description and also the length of the description
   def moreLanguagey(mentions: Seq[Mention]): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
 
-    val sorted = mentions.sortBy(m => (m.arguments("definition").head.text.filter(c => valid contains c).length.toFloat / m.arguments("definition").head.text.length, m.arguments("definition").head.text.length)).reverse
+    val sorted = mentions.sortBy(m => (m.arguments("description").head.text.filter(c => valid contains c).length.toFloat / m.arguments("description").head.text.length, m.arguments("description").head.text.length)).reverse
 
     sorted
   }
@@ -552,11 +552,11 @@ object AlignmentBaseline {
     process.!!.trim
   }
 
-  def replaceWordWithGreek(varName: String, word2greekDict: Map[String, String]): String = {
-    var toReturn = varName
+  def replaceWordWithGreek(identifierName: String, word2greekDict: Map[String, String]): String = {
+    var toReturn = identifierName
     for (k <- word2greekDict.keys) {
       val escaped = """\""" + k
-      if (varName.contains(escaped)) {
+      if (identifierName.contains(escaped)) {
         toReturn = toReturn.replace(escaped, word2greekDict(k))
       }
     }
@@ -564,10 +564,10 @@ object AlignmentBaseline {
     toReturn
   }
 
-  def replaceGreekWithWord(varName: String, greek2wordDict: Map[String, String]): String = {
-    var toReturn = varName
+  def replaceGreekWithWord(identifierName: String, greek2wordDict: Map[String, String]): String = {
+    var toReturn = identifierName
     for (k <- greek2wordDict.keys) {
-      if (varName.contains(k)) {
+      if (identifierName.contains(k)) {
         toReturn = toReturn.replace(k, s"""\\\\${greek2wordDict(k)}""")
       }
     }

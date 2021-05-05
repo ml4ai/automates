@@ -197,7 +197,7 @@ class FunctionType(AutoMATESBaseEnum):
         elif con_type == "loop":
             return cls.ITERABLE
         else:
-            raise ValueError(f"Unexpected Container type: {type(con)}")
+            raise ValueError(f"Unexpected Container type: {type(con_type)}")
 
     @classmethod
     def from_str(cls, data: str):
@@ -228,12 +228,8 @@ class DataType(AutoMATESBaseEnum):
 
 @unique
 class CodeSpanType(AutoMATESBaseEnum):
-    VARIABLE_NAME = auto()
-    CODE_BLOCK = auto()
-    TYPE_DEF = auto()
-    TYPE_FIELD = auto()
-    FUNCTION_CALL = auto()
-    EXPRESSION = auto()
+    IDENTIFIER = auto()
+    BLOCK = auto()
 
     @classmethod
     def from_str(cls, data: str):

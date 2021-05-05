@@ -4,14 +4,14 @@ rules:
 
 
 
-####VARIABLES####
+####IDENTIFIERS####
 
-  - name: var_is_defined
-    label: Variable
+  - name: comment_identifier_is_defined
+    label: Identifier
     priority: 1
     type: token
     example: "E0 is calculated as the product of Kcd and ETpm."
-    action: looksLikeAVariable
+    action: looksLikeAnIdentifier
     pattern: |
       ^[chunk="B-NP" & !tag="CD"]
 

@@ -57,7 +57,7 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
 /**
   * Performs an exhaustive pairwise alignment, comparing each src item with each dst item independently of the others.
   * @param w2v
-  * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "variable" or "definition")
+  * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "variable" or "description")
   */
 class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) extends Aligner {
   def this(w2vPath: String, relevantArgs: Set[String]) = this(new Word2Vec(w2vPath), relevantArgs)
@@ -67,11 +67,11 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   }
 
   def getRelevantTextFromGlobalVar(glv: GlobalVariable): String = {
-    // ["variable", "definition"]
+    // ["variable", "description"]
     relevantArgs match {
-      case x if x.contains("variable") & x.contains("definition")=> glv.identifier + " " + glv.textFromAllDefs.mkString(" ")
+      case x if x.contains("variable") & x.contains("description")=> glv.identifier + " " + glv.textFromAllDescrs.mkString(" ")
       case x if x.contains("variable") => glv.identifier
-      case x if x.contains("definition") => glv.textFromAllDefs.mkString(" ")
+      case x if x.contains("description") => glv.textFromAllDescrs.mkString(" ")
       case _ => ???
     }
   }

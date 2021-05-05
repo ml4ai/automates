@@ -12,7 +12,7 @@ POST     /groundMentionsToSVO       controllers.HomeController.groundMentionsToS
 POST    /process_text               controllers.HomeController.process_text
 POST    /pdf_to_mentions            controllers.HomeController.pdf_to_mentions
 POST    /align                      controllers.HomeController.align
-POST    /jsonDoc_to_mentions        controllers.HomeController.jsonDoc_to_mentions
+POST    /json_doc_to_mentions        controllers.HomeController.json_doc_to_mentions
 POST    /cosmos_json_to_mentions    controllers.HomeController.cosmos_json_to_mentions
 POST    /alignMentionsFromTwoModels    controllers.HomeController.alignMentionsFromTwoModels
 

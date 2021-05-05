@@ -88,7 +88,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     source.close()
 
     
-    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Definition")
+    val defMentions = JSONSerializer.toMentions(mentionsJson4s).filter(m => m.label matches "Description")
 //    val grfnPath = json("grfn").str
 //    val grfnFile = new File(grfnPath)
 //    val grfn = ujson.read(grfnFile.readString())
@@ -114,7 +114,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val (doc, mentions) = processPlayText(ieSystem, text)
     println(s"Sentence returned from processPlaySentence : ${doc.sentences.head.getSentenceText}")
     for (em <- mentions) {
-      if (em.label matches "Definition") {
+      if (em.label matches "Description") {
         println("Mention: " + em.text)
         println("att: " + em.attachments.mkString(" "))
       }
@@ -169,12 +169,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   /**
-    * Extract mentions from a serialized Document json. Expected fields in the json obj passed in:
-    *  'json' : path to the Science Parse json file. In the curl post request, the data argument will look like this: "--data '{"json": "someDirectory/petpno_Penman.json"}'"
+    * Extract mentions from a json produced by running Science Parse on a pdf file. Expected fields in the json obj passed in:
+    *  'json' : path to the Science Parse json file, 'outfile' : path to the json file to store extracted mentions. In the curl post request, the data argument will look like this: "--data '{"json": "someDirectory/petpno_Penman.json", "outfile": path/to/output..json}'"
     * @return Seq[Mention] (json serialized)
     */
 
-  def jsonDoc_to_mentions: Action[AnyContent] = Action { request =>
+  def json_doc_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val json = ujson.read(data)
     val jsonFile = json("json").str
@@ -182,25 +182,22 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val loader = new ScienceParsedDataLoader
     val texts = loader.loadFile(jsonFile)
     val mentions = texts.flatMap(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonFile)))
-    val mentionsJson = serializer.jsonAST(mentions)
-    val parsed_output = PlayUtils.toPlayJson(mentionsJson)
-    Ok(parsed_output)
+    val outFile = json("outfile").str
+    AutomatesExporter(outFile).export(mentions)
+    Ok("")
   }
 
 
   def cosmos_json_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
-    val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
-    val jsonPath = pathJson("pathToJson").str
-    val jsonFile = new File(jsonPath)
-    val json = ujson.read(jsonFile.readString())
-    val cosmosFileStr = json("path_to_cosmos_json").str
-    logger.info(s"Extracting mentions from $jsonFile")
+    val pathJson = ujson.read(data)
+    val jsonPath = pathJson("pathToCosmosJson").str
+    logger.info(s"Extracting mentions from $jsonPath")
 
     // cosmos stores information about each block on each pdf page
     // for each block, we load the text (content) and the location of the text (page_num and block order/index on the page)
     val loader = new CosmosJsonDataLoader
-    val textsAndLocations = loader.loadFile(cosmosFileStr)
+    val textsAndLocations = loader.loadFile(jsonPath)
     val texts = textsAndLocations.map(_.split("::").head)
     val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
 
@@ -217,22 +214,24 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt)
       val pageNum = location.head
       val blockIdx = location.last
-//
-      for (m <- menInTextBlocks) {
 
+      for (m <- menInTextBlocks) {
         val newMen = m.withAttachment(new MentionLocationAttachment(pageNum, blockIdx, "MentionLocation"))
         mentionsWithLocations.append(newMen)
       }
     }
 
-    val parsed_output = AutomatesJSONSerializer.serializeMentions(mentionsWithLocations)
-    Ok(write(parsed_output))
+    val outFile = pathJson("outfile").str
+    AutomatesExporter(outFile).export(mentionsWithLocations)
+
+    Ok("")
+
   }
   /**
     * Align mentions from text, code, comment. Expected fields in the json obj passed in:
     *  'mentions' : file path to Odin serialized mentions
     *  'equations': path to the decoded equations
-    *  'grfn'     : path to the grfn file, already expected to have comments and vars
+    *  'grfn'     : path to the grfn file, already expected to have comments and vars/identifiers
     * @return decorated grfn with link elems and link hypotheses
     */
   def align: Action[AnyContent] = Action { request =>
@@ -268,20 +267,20 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       } else defaultSerializerName
     } else defaultSerializerName
 
-    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables and comments). The json can also contain svo groundings with the key "SVOgroundings".
+    //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables/identifiers and comments). The json can also contain svo groundings with the key "SVOgroundings".
     if (jsonObj.contains("mentions") && (jsonObj.contains("equations") || jsonObj.contains("source_code"))) {
       val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
 
       // ground!
       val groundings = ExtractAndAlign.groundMentions(
         json,
-        argsForGrounding.variableNames,
-        argsForGrounding.variableShortNames,
-        argsForGrounding.definitionMentions,
+        argsForGrounding.identifierNames,
+        argsForGrounding.identifierShortNames,
+        argsForGrounding.descriptionMentions,
         argsForGrounding.parameterSettingMentions,
         argsForGrounding.intervalParameterSettingMentions,
         argsForGrounding.unitMentions,
-        argsForGrounding.commentDefinitionMentions,
+        argsForGrounding.commentDescriptionMentions,
         argsForGrounding.equationChunksAndSource,
         argsForGrounding.svoGroundings,
         groundToSVO,
@@ -320,13 +319,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     mentions
   }
 
-  def readDefTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
+  def readDescrTextsFromJsonForModelComparison(pathToModelComparisonInput: String): (ujson.Obj, ujson.Obj) = {
 
     val modelComparisonInputFile = new File(pathToModelComparisonInput)
     val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
-    val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_defs"
-    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
-    (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_defs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_defs")))
+    val paper1obj = ujsonObj.head// keys: grfn_uid, "variable_descrs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_descrs"
+    (ujson.Obj(paper1obj("grfn_uid").str -> paper1obj("variable_descrs")), ujson.Obj(paper2obj("grfn_uid").str -> paper2obj("variable_descrs")))
   }
 
 
@@ -345,17 +344,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val inputFilePath = json("input_file").str
     val modelComparisonInputFile = new File(inputFilePath)
     val ujsonObj = ujson.read(modelComparisonInputFile.readString()).arr
-    val paper1obj = ujsonObj.head.obj// keys: grfn_uid, "variable_defs"
-    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_defs"
+    val paper1obj = ujsonObj.head.obj// keys: grfn_uid, "variable_descrs"
+    val paper2obj = ujsonObj.last.obj // keys: grfn_uid, "variable_descrs"
 
     val paper1id = paper1obj("grfn_uid").str
     val paper2id = paper2obj("grfn_uid").str
 
-    val paper1values = paper1obj("variable_defs").arr
-    val paper2values = paper2obj("variable_defs").arr
+    val paper1values = paper1obj("variable_descrs").arr
+    val paper2values = paper2obj("variable_descrs").arr
 
-    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
-    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_definition"))
+    val paper1texts = paper1values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_description"))
+    val paper2texts = paper2values.map(v => v.obj("code_identifier") + " " + v.obj("text_identifier") + " " + v.obj("text_description"))
 
 
     // get alignments

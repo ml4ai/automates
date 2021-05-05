@@ -4,7 +4,7 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestUnits extends ExtractionTest {
 
-//todo: these tests are only here for the purpose of testing if the rules are extracting what they should; ultimately, they should be checking if the units are attached to variables themselves and not to the concepts/definitions of variables
+//todo: these tests are only here for the purpose of testing if the rules are extracting what they should; ultimately, they should be checking if the units are attached to variables themselves and not to the concepts/descriptions of variables
 
   val t1a = "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required."
   passingTest should s"extract variables and units from t1a: ${t1a}" taggedAs(Somebody) in {
