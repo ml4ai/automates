@@ -90,22 +90,119 @@ Metadata = NewType('Metadata', Union[List[Metadatum], None])
 # --------------------
 # Type
 
+
 @dataclass
-class Type(GrometElm):
+class TypeDeclaration(GrometElm):
+    name: UidType
+    metadata: Metadata
+
+
+@dataclass
+class Type:
     """
     Type Specification.
     Constructed as an expression of the GroMEt Type Algebra
     """
-    uid: UidType
-    name: str
-    metadata: Metadata
+    type: str = field(init=False)
+
+    def __post_init__(self):
+        self.type = type(self).__name__
 
 
 # TODO: GroMEt type algebra: "sublangauge" for specifying types
 
 
+# Atomics
+
+@dataclass
+class Atomic(Type):
+    pass
+
+
+@dataclass
+class Any(Atomic):
+    pass
+
+
+@dataclass
+class Nothing(Atomic):
+    pass
+
+
+@dataclass
+class Number(Atomic):
+    pass
+
+
+@dataclass
+class Integer(Number):
+    pass
+
+
+@dataclass
+class Real(Number):
+    pass
+
+
+@dataclass
+class Float(Real):
+    pass
+
+
+@dataclass
+class Boolean(Atomic):
+    pass
+
+
+@dataclass
+class Character(Atomic):
+    pass
+
+
+@dataclass
+class Symbol(Atomic):
+    pass
+
+
+# Composites
+
+@dataclass
+class Composite(Type):
+    pass
+
+
+# Algebra
+
+@dataclass
+class Prod(Composite):
+    element_type: List[UidType]
+    cardinality: Union[int, None]
+
+
+@dataclass
+class String(Prod):
+    element_type: List[UidType] = (UidType("Character"),)
+
+
+@dataclass
+class Sum(Composite):
+    element_type: List[UidType]
+
+
+@dataclass
+class NamedAttribute(Composite):
+    name: str
+    element_type: UidType
+
+
+@dataclass
+class Map(Prod):
+    element_type: List[Tuple[UidType, UidType]]
+
+
 # --------------------
 # Literal
+
 
 @dataclass
 class Literal(GrometElm):
@@ -115,12 +212,21 @@ class Literal(GrometElm):
     """
     uid: Union[UidLiteral, None]  # allows anonymous literals
     type: UidType
-    value: str  # TODO
+    value: 'Val'  # TODO
     metadata: Metadata
 
 
 # TODO: "sublanguage" for specifying instances
 
+@dataclass
+class Val(GrometElm):
+    val: Union[str, List['Val', 'AttributeVal']]
+
+
+@dataclass
+class AttributeVal(GrometElm):
+    name: str
+    val: Val
 
 # --------------------
 # Port
