@@ -115,31 +115,32 @@ object GrFNParser {
   }
 
 
-  def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, definition: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value, spans: ujson.Value): ujson.Obj = {
+//  def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, description: String, svo_terms: String, unit: String, paramSetting: ujson.Value, svo: ujson.Value, spans: ujson.Value): ujson.Obj = {
+def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, identifier: String, description: String, svo_terms: String, svo: ujson.Value, spans: ujson.Value): ujson.Obj = {
     val linkElement = ujson.Obj(
       "uid" -> uid,
       "source" -> source,
       "original_sentence" -> originalSentence,
       "identifier" -> identifier,
-      "definition" -> definition,
+      "description" -> description,
       "svo_terms" -> svo_terms,
-      "paramSetting" -> paramSetting,
+//      "paramSetting" -> paramSetting,
       "svo_groundings" -> svo,
       "spans" -> ujson.Arr(spans)
 //      "svo_query_terms" -> svoQueryTerms
     )
-    if (unit == "null") linkElement("unit") = ujson.Null else linkElement("unit") = unit
+//    if (unit == "null") linkElement("unit") = ujson.Null else linkElement("unit") = unit
     linkElement
   }
 
-  def mkTextVarLinkElementForModelComparison(uid: String, source: String, originalSentence: String, identifier: String, definition: String, debug: Boolean): ujson.Obj = {
+  def mkTextVarLinkElementForModelComparison(uid: String, source: String, originalSentence: String, identifier: String, description: String, debug: Boolean): ujson.Obj = {
     val linkElement = if (debug) {
       ujson.Obj(
         "uid" -> uid,
         "source" -> source,
         "original_sentence" -> originalSentence,
         "identifier" -> identifier,
-        "definition" -> definition,
+        "description" -> description,
       )
     } else {
       ujson.Obj(
@@ -162,12 +163,12 @@ object GrFNParser {
     linkElement
   }
 
-  def mkModelComparisonTextLinkElement(elemType: String, source: String, identifier: String, definition: String, sentence: String): ujson.Obj = {
+  def mkModelComparisonTextLinkElement(elemType: String, source: String, identifier: String, description: String, sentence: String): ujson.Obj = {
     val linkElement = ujson.Obj(
       "type" -> elemType,
       "source" -> source,
       "identifier" -> identifier,
-      "definition" -> definition,
+      "description" -> description,
       "sentence" -> sentence
     )
     linkElement
@@ -212,24 +213,30 @@ object GrFNParser {
     sparqlResuJson
   }
 
-  def mkHypothesis(elem1: String, elem2: String, score: Double, debug: Boolean): ujson.Obj = {
-    val splitEl1 = elem1.split("::")
-    val splitEl2 = elem2.split("::")
-    val el1 = splitEl1(0)
-    val el2 = splitEl2(0)
-    //to confirm the content of elements is correct, add elem1 and elem2 to the hypothesis without splitting
+  def mkHypothesis(elem1: String, elem2: String, linkType: String, score: Double, debug: Boolean): ujson.Obj = {
+
+    val el1json = ujson.read(elem1).obj
+    val el2json = ujson.read(elem2).obj
+    val el1Id = el1json("uid").str
+    val el2Id = el2json("uid").str
+
     val hypothesis = if (debug) {
-      val idAndIdentifier1 = splitEl1(0) + "::" + splitEl1(3) + "::" + splitEl1(4)
-      val idAndIdentifier2 = splitEl2(0) + "::" + splitEl2(3) + "::" + splitEl2(4)
+  //todo: make sure all elements have a content field if possible or make it optional here
+      val el1text = el1json("content").str
+      val el2text = el2json("content").str
+      val idAndIdentifier1 = el1Id + "::" + el1text
+      val idAndIdentifier2 = el2Id + "::" + el2text
       ujson.Obj(
         "element_1" -> idAndIdentifier1,
         "element_2" -> idAndIdentifier2,
+        "link_type" -> linkType,
         "score" -> score
       )
     } else {
       ujson.Obj(
-        "element_1" -> el1,
-        "element_2" -> el2,
+        "element_1" -> el1Id,
+        "element_2" -> el2Id,
+        "link_type" -> linkType,
         "score" -> score
       )
     }
@@ -238,10 +245,10 @@ object GrFNParser {
 
   def mkHypothesis(elem1: Value, elem2: Value, score: Double, debug: Boolean): ujson.Obj = {
     val hypothesis = if (debug) {
-      // for debugging alignment quality; fixme: this is readable but not a pretty json
+      // for debugging alignment quality
       ujson.Obj(
-        "grfn1_var_uid" -> elem1.obj.mkString(" "),
-        "grfn2_var_uid" -> elem2.obj.mkString(" "),
+        "grfn1_var_uid" -> elem1.obj,
+        "grfn2_var_uid" -> elem2.obj,
         "score" -> score
       )
     } else {

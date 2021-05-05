@@ -7,6 +7,7 @@ import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.clulab.aske.automates.apps.AlignmentBaseline
+import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
 
 case class AlignmentHandler(editDistance: VariableEditDistanceAligner, w2v: PairwiseW2VAligner) {
   def this(w2vPath: String, relevantArgs: Set[String]) =
@@ -56,13 +57,27 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
 /**
   * Performs an exhaustive pairwise alignment, comparing each src item with each dst item independently of the others.
   * @param w2v
-  * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "variable" or "definition")
+  * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "variable" or "description")
   */
 class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) extends Aligner {
   def this(w2vPath: String, relevantArgs: Set[String]) = this(new Word2Vec(w2vPath), relevantArgs)
 
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
     alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()), dstMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()))
+  }
+
+  def getRelevantTextFromGlobalVar(glv: GlobalVariable): String = {
+    // ["variable", "description"]
+    relevantArgs match {
+      case x if x.contains("variable") & x.contains("description")=> glv.identifier + " " + glv.textFromAllDescrs.mkString(" ")
+      case x if x.contains("variable") => glv.identifier
+      case x if x.contains("description") => glv.textFromAllDescrs.mkString(" ")
+      case _ => ???
+    }
+  }
+
+  def alignMentionsAndGlobalVars(srcMentions: Seq[Mention], glVars: Seq[GlobalVariable]): Seq[Alignment] = {
+    alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()), glVars.map(getRelevantTextFromGlobalVar(_).toLowerCase()))
   }
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {

@@ -246,6 +246,20 @@ class CAST(object):
         return cls(nodes, cast_source_language)
 
     @classmethod
+    def from_json_file(cls, json_filepath):
+        """
+        Loads json CAST data from a file and returns the created CAST object
+
+        Args:
+            json_filepath: string of a full filepath to a JSON file
+                           representing a CAST with a `nodes` field
+
+        Returns:
+            CAST: The parsed CAST object.
+        """
+        return cls.from_json_data(json.load(open(json_filepath, "r")))
+
+    @classmethod
     def from_json_str(cls, json_str):
         """
         Parses json CAST string and returns the created CAST object
