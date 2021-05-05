@@ -188,25 +188,125 @@ def test_function_call():
     }
 
 
-@pytest.mark.skip(reason="Developing still")
-def test_one_variable_for_multiple_args():
-    pass
+def test_function_call_one_variable_for_multiple_args():
+    test_name = "function_call_one_variable_for_multiple_args"
+    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
+    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+
+    assert os.path.exists("./ast.json")
+
+    gcc_ast_obj = json.load(open("./ast.json"))
+
+    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    cast = GCC2CAST(gcc_ast_obj).to_cast()
+    assert expected_cast == cast
+
+    expected_grfn = GroundedFunctionNetwork.from_json(
+        f"{test_dir}/{test_name}--GrFN.json"
+    )
+    grfn = cast.to_GrFN()
+
+    assert expected_grfn == grfn
+
+    inputs = {}
+    result = grfn(inputs)
+    assert result == {
+        "x": np.array([25]),
+    }
 
 
-@pytest.mark.skip(reason="Developing still")
-def test_function_call_no_starting_nodes_in_root():
+def test_function_call_no_args():
+    test_name = "function_call_no_args"
+    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
+    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+
+    assert os.path.exists("./ast.json")
+
+    gcc_ast_obj = json.load(open("./ast.json"))
+
+    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    cast = GCC2CAST(gcc_ast_obj).to_cast()
+    assert expected_cast == cast
+
+    expected_grfn = GroundedFunctionNetwork.from_json(
+        f"{test_dir}/{test_name}--GrFN.json"
+    )
+    grfn = cast.to_GrFN()
+
+    assert expected_grfn == grfn
+
     # TODO cannot currently execute GrFN with no starting node in root container
-    # (This should be fixed when master is merged in?)
+    # (This should be fixed when master is merged in?) no_starting_nodes_in_root
+    # inputs = {}
+    # result = grfn(inputs)
+    # assert result == {
+    #     "x": np.array([25]),
+    # }
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_function_call_with_literal_return():
+    test_name = "function_call_with_literal_return"
+    test_dir = f"{GCC_TEST_DATA_DIRECTORY}/{test_name}"
+    run_gcc_plugin_with_c_file(f"{test_dir}/{test_name}.c")
+
+    assert os.path.exists("./ast.json")
+
+    gcc_ast_obj = json.load(open("./ast.json"))
+
+    expected_cast_json = json.load(open(f"{test_dir}/{test_name}--CAST.json"))
+    expected_cast = CAST.from_json_data(expected_cast_json)
+    cast = GCC2CAST(gcc_ast_obj).to_cast()
+    assert expected_cast == cast
+
+    expected_grfn = GroundedFunctionNetwork.from_json(
+        f"{test_dir}/{test_name}--GrFN.json"
+    )
+    grfn = cast.to_GrFN()
+
+    assert expected_grfn == grfn
+
+    inputs = {}
+    result = grfn(inputs)
+    assert result == {
+        "x": np.array([5]),
+    }
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_function_same_func_multiple_times():
     pass
 
 
 @pytest.mark.skip(reason="Developing still")
-def test_function_call_with_args():
+def test_function_call_literal_args():
+    pass
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_function_call_expression_ergs():
+    pass
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_function_call_with_mixed_args():
     pass
 
 
 @pytest.mark.skip(reason="Developing still")
 def test_function_call_with_complex_return():
+    pass
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_function_no_args_void_return():
+    pass
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_function_no_args_void_return_obj_update():
     pass
 
 
