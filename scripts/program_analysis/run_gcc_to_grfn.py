@@ -158,8 +158,11 @@ def run_gcc_pipeline():
     #     "x2_avg": 1,
     # }
 
-    # GE Simple PI controller inputs
-    inputs = {"integrator_state": 0, "argv": [], "argc": 0}
+    # GE Simple PI controller dynamics inputs
+    inputs = {
+        "GE_simple_PI_controller_dynamics::GE_simple_PI_controller_dynamics.main::integrator_state::-1": 0
+        # "GE_simple_PI_controller::GE_simple_PI_controller.main::integrator_state::-1": 0
+    }
 
     result = grfn(inputs)
     from pprint import pprint
