@@ -48,7 +48,7 @@ def unobserved_graph(g):
             edge_list.append((a, b))
             c = e[i].tuple[1]
             edge_list.append((a, c))
-        g_copy.add_edges(edge_list, attributes={"description": ["O"]*len(edge_list)})
+        g_copy.add_edges(edge_list, attributes={"description": ["O"] * len(edge_list)})
         obs_edges = g_copy.es.select(description_ne="U")
         g_unobs = g_copy.subgraph_edges(obs_edges, delete_vertices=False)
         return g_unobs
@@ -171,7 +171,7 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
                                                   target_sym=target_sym), "}{",
                      get_expression(prob.num, start_sum=False, \
                                     single_source=single_source, target_sym=target_sym), "}"])
-    if prob.sum: # This might be broken
+    if prob.sum:  # This might be broken
         p = "".join([p, "\\left("])
         add_strings = []
         i = 1
@@ -180,7 +180,8 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
             if child.product or child.sum:
                 new_sum = True
             add_strings.append("".join(["w_{", i, "}^{(", child.weight, ")}", get_expression(child, start_sum=new_sum, \
-                               single_source=single_source, target_sym=target_sym)]))
+                                                                                             single_source=single_source,
+                                                                                             target_sym=target_sym)]))
             i = i + 1
         p = "".join([p, add_strings, "\\right"])
 
@@ -300,6 +301,7 @@ class Call:
     y: str = ""
     x: str = ""
     z: str = ""
+    z_prime: str = ""
     p: Probability = Probability()
     g: igraph.Graph = igraph.Graph()
     line: int = 0
@@ -331,3 +333,7 @@ class Results:
     algorithm: str = ""
     p: str = ""
     tree: TreeNode = TreeNode()
+
+
+class IDANotIdentifiable(Exception):
+    pass

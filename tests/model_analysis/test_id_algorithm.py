@@ -1,5 +1,6 @@
 import pytest
 import igraph
+import automates.model_analysis.graph_manipulation as gm
 from automates.model_analysis.identification_algorithms import identifiability
 
 
@@ -21,5 +22,26 @@ def test_non_identifiability():
     g.es["description"] = ["O", "O", "O", "U", "U", "U", "U", "U", "U", "U", "U", "O"]
     y = ["Y1", "Y2"]
     x = ["X"]
-    with pytest.raises(Exception):
+    with pytest.raises(gm.IDANotIdentifiable):
         identifiability(y, x, g)
+
+def test_conditional_identifiability():
+    g = igraph.Graph(edges=[[0, 1], [1, 2], [0, 1], [1, 0]])
+    g.vs["name"] = ["X", "Z", "Y"]
+    g.es["description"] = ["O", "O", "U", "U"]
+    y = ["Y"]
+    x = ["X"]
+    z = ["Z"]
+    results = identifiability(y, x, g, z)
+    assert results == "\\frac{P(Y|X,Z)}{\\sum_{Y}P(Y|X,Z)}"
+
+
+def test_conditional_non_identifiability():
+    g = igraph.Graph(edges=[[0, 1], [2, 1], [0, 1], [1, 0]])
+    g.vs["name"] = ["X", "Z", "Y"]
+    g.es["description"] = ["O", "O", "U", "U"]
+    y = ["Y"]
+    x = ["X"]
+    z = ["Z"]
+    with pytest.raises(gm.IDANotIdentifiable):
+        identifiability(y, x, g, z)

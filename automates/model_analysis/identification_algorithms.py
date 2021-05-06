@@ -50,18 +50,18 @@ def identifiability(y, x, g, z=None, steps=False, stop_on_noid=True):
         res_prob = gm.Probability(fraction=True, num=res_num, den=res_den)
     res_tree = res.tree
     if res.tree.call.id_check:
-        output = gm.Results(query={"y": y, "x": x, "z": z}, algorithm=algo, p=gm.get_expression(res_prob), tree=res_tree)
+        output = gm.Results(query={"y": y, "x": x, "z": z}, algorithm=algo, p=gm.get_expression(res_prob),
+                            tree=res_tree)
         if steps:
             return output
         return output.p
     else:
         if stop_on_noid:
-            raise Exception("Not Identifiable")  # todo: write specific exception class
+            raise gm.IDANotIdentifiable("Not Identifiable")
         output = gm.Results(query={"y": y, "x": x, "z": z}, algorithm=algo, p="", tree=res_tree)
         if steps:
             return output
         return output.p
-
 
 
 def compute_ID(y, x, p, g, g_obs, v, topo, tree):
@@ -229,3 +229,20 @@ def compute_IDC(y, x, z, p, g, g_obs, v, topo, tree):
         tree.call = gm.Call(y=y, x=x, z=z, p=gm.Probability(var=v), g=g, v=v, id_check=False)
     else:
         tree.call = gm.Call(y=y, x=x, z=z, p=p, g=g, v=v, id_check=False)
+    g_xz = gm.unobserved_graph(g)
+    elist = gm.eselect2(g_xz)  # todo: write this
+    g_xz = g_xz.subgraph_edges(elist, delete_vertices=False)
+    for node in z:
+        cond = list(set(z) - set(node))
+        if gm.wrap_dsep(g_xz, y, node, list(set(x) | set(cond))):
+            tree.call.line = 9
+            tree.call.z_prime = node
+            nxt = compute_IDC(y, gm.ts(set(x) | set(node), topo), cond, p, g, g_obs, v, topo, gm.TreeNode())
+            tree.children.append(nxt.tree)
+            tree.call.id_check = nxt.tree.call.id_check
+            return gm.ResultsInternal(p=nxt.p, tree=tree)
+    nxt = compute_ID(gm.ts(set(y) | set(z), topo), x, p, g, g_obs, v, topo, gm.TreeNode())
+    tree.call.line = 10
+    tree.call.id_check = nxt.tree.call.id_check
+    tree.children.append(nxt.tree)
+    return gm.ResultsInternal(p=nxt.p, tree=tree)
