@@ -182,7 +182,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 f"Unable to handle left hand of assignment of type {type(node.left)}"
             )
 
-        return right_res[:-1] + [
+        assign_lambda_list = [
             C2AExpressionLambda(
                 C2AIdentifierInformation(
                     C2ALambdaType.ASSIGN,
@@ -199,6 +199,16 @@ class CASTToAIRVisitor(CASTVisitor):
                 node,
             )
         ]
+
+        if isinstance(node.right, Call):
+            to_assign_from_output_interface = output_variables[-1]
+            assign_lambda = right_res[-2]
+            assign_lambda.output_variables[0] = to_assign_from_output_interface
+            assign_lambda_list = []
+            # TODO remove result var
+            result_var = assign_lambda.output_variables[0]
+
+        return right_res[:-1] + assign_lambda_list
 
     @visit.register
     def _(self, node: Attribute):
@@ -498,6 +508,7 @@ class CASTToAIRVisitor(CASTVisitor):
         src_ref = C2ASourceRef("", None, None, None, None)
         if len(node.source_refs) > 0:
             src_ref = self.retrieve_source_ref(node.source_refs[0])
+
         container_call_lambda = C2AContainerCallLambda(
             called_func_identifier,
             input_vars,
