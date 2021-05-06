@@ -1,6 +1,6 @@
 from automates.program_analysis.CAST2GrFN.model.cast import source_ref
 from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
-from typing import List, Dict, Set
+from typing import List, Dict, NoReturn, Set
 from enum import Enum
 from dataclasses import dataclass
 
@@ -756,15 +756,32 @@ class C2AState(object):
 
         # Trim variables that are just defined and hanging. This seems like a
         # bug BUT it is actually a remnant of how GCC gives variable definitions.
-        all_inputted_vars = {
+        all_input_vars = {
             v for c in container_air for l in c["body"] for v in l["input"]
         }
-        all_inputted_vars.update({v for c in container_air for v in c["return_value"]})
-        all_inputted_vars.update({v for c in container_air for v in c["arguments"]})
+        all_return_vars = {v for c in container_air for v in c["return_value"]}
+        all_arg_vars = {v for c in container_air for v in c["arguments"]}
+        # all_vars_into_lambdbas = {*all_input_vars, *all_return_vars, *all_arg_vars}
+
+        all_vars_passed_through_lambdas = {
+            v_name
+            for c in container_air
+            for l in c["body"]
+            for v_name in l["input"] + l["output"]
+            if len(l["input"]) > 0
+        }
+        hanging_vars = [
+            v["name"]
+            for v in var_air
+            if v["name"] not in all_vars_passed_through_lambdas
+        ]
 
         def is_hanging_lambda(l):
             return len(l["input"]) == 0 and all(
-                [v not in all_inputted_vars for v in l["output"]]
+                [
+                    v not in {*all_input_vars, *all_return_vars, *all_arg_vars}
+                    for v in l["output"]
+                ]
             )
 
         for c in container_air:
@@ -773,6 +790,22 @@ class C2AState(object):
             ]
             # Trim variables
             var_air = [v for v in var_air if v["name"] not in hanging_lambda_vars]
+            if "return_value" in c:
+                hanging_ret_vars = {v for v in c["return_value"] if v in hanging_vars}
+                c["return_value"] = [
+                    v for v in c["return_value"] if v not in hanging_ret_vars
+                ]
+                all_return_vars.difference_update(hanging_ret_vars)
+                var_air = [v for v in var_air if v["name"] not in hanging_ret_vars]
+
+            if "arguments" in c:
+                hanging_arg_vars = {v for v in c["arguments"] if v in hanging_vars}
+                c["arguments"] = [
+                    v for v in c["arguments"] if v not in hanging_arg_vars
+                ]
+                all_arg_vars.difference_update(hanging_arg_vars)
+                var_air = [v for v in var_air if v["name"] not in hanging_arg_vars]
+
             c["body"] = [l for l in c["body"] if not is_hanging_lambda(l)]
 
         return {"containers": container_air, "variables": var_air, "types": types_air}
