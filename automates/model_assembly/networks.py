@@ -474,9 +474,7 @@ class GrFNSubgraph:
 
         # Find the hyper edge nodes with no input to initialize the execution
         # queue and var nodes with no incoming edges
-        node_execute_queue = [
-            e.lambda_fn for e in hyper_edges if len(e.inputs) == 0
-        ]
+        node_execute_queue = [e.lambda_fn for e in hyper_edges if len(e.inputs) == 0]
         node_execute_queue.extend(
             [s for n in standalone_vars for s in grfn.successors(n)]
         )
@@ -502,14 +500,9 @@ class GrFNSubgraph:
             # Choose a literal node with maximum distance to the output
             # to begin recursing.
             lit_node_to_max_dist = dict()
-            for (l_node, o_node) in product(
-                global_literal_nodes, global_output_vars
-            ):
+            for (l_node, o_node) in product(global_literal_nodes, global_output_vars):
                 max_dist = max(
-                    [
-                        len(path)
-                        for path in all_simple_paths(grfn, l_node, o_node)
-                    ]
+                    [len(path) for path in all_simple_paths(grfn, l_node, o_node)]
                 )
                 lit_node_to_max_dist[l_node] = max_dist
             lits_by_dist = sorted(
@@ -830,7 +823,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
             exit_var_node.value is None
             or (isinstance(exit_var_node.value, bool) and not exit_var_node.value)
             or (
-                isinstance(exit_var_node.value, np.ndarray)
+                isinstance(exit_var_node.value, (np.ndarray, list))
                 and not all(exit_var_node.value)
             )
         ):
@@ -1007,14 +1000,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         if literals is not None:
             literal_ids = set(
-                [
-                    VariableIdentifier.from_str(var_id)
-                    for var_id in literals.keys()
-                ]
+                [VariableIdentifier.from_str(var_id) for var_id in literals.keys()]
             )
-            lit_id2val = {
-                lit_id: literals[str(lit_id)] for lit_id in literal_ids
-            }
+            lit_id2val = {lit_id: literals[str(lit_id)] for lit_id in literal_ids}
             literal_overrides = [
                 (var_node, lit_id2val[identifier])
                 for identifier, var_node in self.literal_identifier_map.items()
@@ -1409,11 +1397,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
 
-
         # TODO this code helps with the layout of the graph. However, it assumes
-        # all var nodes start at -1 and are consecutive. This is currently not 
+        # all var nodes start at -1 and are consecutive. This is currently not
         # the case, so it creates random hanging var nodes if run. Fix this.
-        
+
         # unique_var_names = {
         #     "::".join(n.name.split("::")[:-1])
         #     for n in A.nodes()
