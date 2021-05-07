@@ -200,7 +200,10 @@ class CASTToAIRVisitor(CASTVisitor):
             )
         ]
 
-        if isinstance(node.right, Call):
+        if (
+            isinstance(node.right, Call)
+            and right_res[-1].container_type != C2ALambdaType.OPERATOR
+        ):
             to_assign_from_output_interface = output_variables[-1]
             assign_lambda = right_res[-2]
             assign_lambda.output_variables[0] = to_assign_from_output_interface
@@ -864,7 +867,6 @@ class CASTToAIRVisitor(CASTVisitor):
             cond_assign_lambda.lambda_expr,
             cond_assign_lambda.cast,
         )
-
         body_result = self.visit_node_list_and_flatten(body)
         body_result.extend(cond_assign_result[:-1])
         body_result.append(cond_assign_lambda_with_correct_type)
