@@ -90,7 +90,7 @@ def toy1_example() -> Gromet:
     # Expression add1_exp
     e3 = Exp(operator=UidOp("+"),
              args=[UidPort("P:add1_exp.in.x"),
-                   Literal(uid=None, type=UidType("Int"), value="1", metadata=None)])
+                   Literal(uid=None, type=UidType("Int"), value=Val("1"), metadata=None)])
     # the anonymous Expression
     add1_exp = Expression(uid=UidBox("B:add1_exp"),
                           name=None,

@@ -8,138 +8,176 @@ from gromet import *  # never do this :)
 def simple_sir_gromet() -> Gromet:
 
     variables = [
-        Variable(name="S", type=UidType("Float"),
-                 wires=[UidWire("W:S1"), UidWire("W:S2")],
+        Variable(uid=UidVariable("S"), name="S", type=UidType("Float"),
+                 wires=[UidWire("W:S1.1"), UidWire("W:S1.2"),
+                        UidWire("W:S2")],
                  metadata=None),
-        Variable(name="I", type=UidType("Float"),
-                 wires=[UidWire("W:I1"), UidWire("W:I2")],
+        Variable(uid=UidVariable("I"), name="I", type=UidType("Float"),
+                 wires=[UidWire("W:I1.1"), UidWire("W:I1.2"), UidWire("W:I1.3"),
+                        UidWire("W:I2")],
                  metadata=None),
-        Variable(name="R", type=UidType("Float"),
-                 wires=[UidWire("W:R1"), UidWire("W:R2")],
+        Variable(uid=UidVariable("R"), name="R", type=UidType("Float"),
+                 wires=[UidWire("W:R1.1"), UidWire("W:R1.2"),
+                        UidWire("W:R2")],
                  metadata=None),
-        Variable(name="beta", type=UidType("Float"),
+        Variable(uid=UidVariable("beta"), name="beta", type=UidType("Float"),
                  wires=[UidWire("W:beta")],
                  metadata=None),
-        Variable(name="gamma", type=UidType("Float"),
+        Variable(uid=UidVariable("gamma"), name="gamma", type=UidType("Float"),
                  wires=[UidWire("W:gamma")],
                  metadata=None),
-        Variable(name="dt", type=UidType("Float"),
-                 wires=[UidWire("W:dt")],
+        Variable(uid=UidVariable("dt"), name="dt", type=UidType("Float"),
+                 wires=[UidWire("W:dt.1"), UidWire("W:dt.2")],
                  metadata=None),
-        Variable(name="recovered", type=UidType("Float"),
-                 wires=[UidWire("W:recovered")],
+        Variable(uid=UidVariable("infected"), name="infected", type=UidType("Float"),
+                 wires=[UidWire("W:infected.1"), UidWire("W:infected.2")],
                  metadata=None),
-        Variable(name="infected", type=UidType("Float"),
-                 wires=[UidWire("W:infected")],
+        Variable(uid=UidVariable("recovered"), name="recovered", type=UidType("Float"),
+                 wires=[UidWire("W:recovered.1"), UidWire("W:recovered.2")],
                  metadata=None),
     ]
 
     wires = [
         # Var "S"
-        WireDirected(uid=UidWire("W:S1"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:S1.1"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:sir.in.S"),
-                     output=[UidPort("P:infected_exp.in.S"),
-                             UidPort("P:S_exp.in.S")]),
+                     output=UidPort("P:infected_exp.in.S")),
+        WireDirected(uid=UidWire("W:S1.1"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:sir.in.S"),
+                     output=UidPort("P:S_exp.in.S")),
+
         # Var "I"
-        WireDirected(uid=UidWire("W:I1"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:I1.1"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:sir.in.I"),
-                     output=[UidPort("P:infected_exp.in.I"),
-                             UidPort("P:recovered_exp.in.I"),
-                             UidPort("P:I_update_exp.in.I")]),
+                     output=UidPort("P:infected_exp.in.I")),
+        WireDirected(uid=UidWire("W:I1.2"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:sir.in.I"),
+                     output=UidPort("P:recovered_exp.in.I")),
+        WireDirected(uid=UidWire("W:I3"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:sir.in.I"),
+                     output=UidPort("P:I_update_exp.in.I")),
         # Var "R"
-        WireDirected(uid=UidWire("W:R1"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:R1.1"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:sir.in.R"),
-                     output=[UidPort("P:infected_exp.in.R"),
-                             UidPort("P:I_update_exp.in.R")]),
+                     output=UidPort("P:infected_exp.in.R")),
+        WireDirected(uid=UidWire("W:R1.2"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:sir.in.R"),
+                     output=UidPort("P:I_update_exp.in.R")),
         # Var "beta"
         WireDirected(uid=UidWire("W:beta"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:sir.in.beta"),
-                     output=[UidPort("P:infected_exp.in.beta")]),
+                     output=UidPort("P:infected_exp.in.beta")),
         # Var "gamma"
         WireDirected(uid=UidWire("W:gamma"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:sir.in.gamma"),
-                     output=[UidPort("P:recovered_exp.in.gamma")]),
+                     output=UidPort("P:recovered_exp.in.gamma")),
         # Var "dt"
-        WireDirected(uid=UidWire("W:dt"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:dt.1"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:sir.in.dt"),
-                     output=[UidPort("P:infected_exp.in.dt"),
-                             UidPort("P:recovered_exp.in.dt")]),
+                     output=UidPort("P:infected_exp.in.dt")),
+        WireDirected(uid=UidWire("W:dt.2"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:sir.in.dt"),
+                     output=UidPort("P:recovered_exp.in.dt")),
 
         # Wire for Var "infected"
-        WireDirected(uid=UidWire("W:infected"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:infected.1"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:infected_exp.out.infected"),
-                     output=[UidPort("P:S_update_exp.in.infected"),
-                             UidPort("P:I_update_exp.in.infected")]),
+                     output=UidPort("P:S_update_exp.in.infected")),
+        WireDirected(uid=UidWire("W:infected.2"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:infected_exp.out.infected"),
+                     output=UidPort("P:I_update_exp.in.infected")),
 
         # Wire for Var "recovered"
-        WireDirected(uid=UidWire("W:recovered"), type=UidType("T:Float"), value=None, metadata=None,
+        WireDirected(uid=UidWire("W:recovered.1"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:recovered_exp.out.recovered"),
-                     output=[UidPort("P:I_update_exp.in.recovered"),
-                             UidPort("P:R_update_exp.in.recovered")]),
+                     output=UidPort("P:I_update_exp.in.recovered")),
+        WireDirected(uid=UidWire("W:recovered.2"), type=UidType("T:Float"), value=None, metadata=None,
+                     input=UidPort("P:recovered_exp.out.recovered"),
+                     output=UidPort("P:R_update_exp.in.recovered")),
 
         # part of Var "S"
         WireDirected(uid=UidWire("W:S2"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:S_update_exp.out.S"),
-                     output=[UidPort("P:sir.out.S")]),
+                     output=UidPort("P:sir.out.S")),
 
         # part of Var "I"
         WireDirected(uid=UidWire("W:I2"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:I_update_exp.out.I"),
-                     output=[UidPort("P:sir.out.I")]),
+                     output=UidPort("P:sir.out.I")),
 
         # part of Var "R"
         WireDirected(uid=UidWire("W:R2"), type=UidType("T:Float"), value=None, metadata=None,
                      input=UidPort("P:R_update_exp.out.R"),
-                     output=[UidPort("P:sir.out.R")]),
+                     output=UidPort("P:sir.out.R")),
     ]
 
     ports = [
         # The input ports to the 'sir' outer/parent Function
-        Port(uid=UidPort("P:sir.in.S"), type=UidType("T:Float"), name="S", metadata=None),
-        Port(uid=UidPort("P:sir.in.I"), type=UidType("T:Float"), name="I", metadata=None),
-        Port(uid=UidPort("P:sir.in.R"), type=UidType("T:Float"), name="R", metadata=None),
-        Port(uid=UidPort("P:sir.in.beta"), type=UidType("T:Float"), name="beta", metadata=None),
-        Port(uid=UidPort("P:sir.in.gamma"), type=UidType("T:Float"), name="gamma", metadata=None),
-        Port(uid=UidPort("P:sir.in.dt"), type=UidType("T:Float"), name="dt", metadata=None),
+        Port(uid=UidPort("P:sir.in.S"), box=UidBox("B:sir"), type=UidType("T:Float"), name="S", metadata=None),
+        Port(uid=UidPort("P:sir.in.I"), box=UidBox("B:sir"), type=UidType("T:Float"), name="I", metadata=None),
+        Port(uid=UidPort("P:sir.in.R"), box=UidBox("B:sir"), type=UidType("T:Float"), name="R", metadata=None),
+        Port(uid=UidPort("P:sir.in.beta"), box=UidBox("B:sir"), type=UidType("T:Float"), name="beta", metadata=None),
+        Port(uid=UidPort("P:sir.in.gamma"), box=UidBox("B:sir"), type=UidType("T:Float"), name="gamma", metadata=None),
+        Port(uid=UidPort("P:sir.in.dt"), box=UidBox("B:sir"), type=UidType("T:Float"), name="dt", metadata=None),
         # The output ports to the 'sir' outer/parent Function
-        Port(uid=UidPort("P:sir.out.S"), type=UidType("T:Float"), name="S", metadata=None),
-        Port(uid=UidPort("P:sir.out.I"), type=UidType("T:Float"), name="I", metadata=None),
-        Port(uid=UidPort("P:sir.out.R"), type=UidType("T:Float"), name="R", metadata=None),
+        Port(uid=UidPort("P:sir.out.S"), box=UidBox("B:sir"), type=UidType("T:Float"), name="S", metadata=None),
+        Port(uid=UidPort("P:sir.out.I"), box=UidBox("B:sir"), type=UidType("T:Float"), name="I", metadata=None),
+        Port(uid=UidPort("P:sir.out.R"), box=UidBox("B:sir"), type=UidType("T:Float"), name="R", metadata=None),
 
         # The input ports to the 'infected_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:infected_exp.in.S"), type=UidType("T:Float"), name="S", metadata=None),
-        Port(uid=UidPort("P:infected_exp.in.I"), type=UidType("T:Float"), name="I", metadata=None),
-        Port(uid=UidPort("P:infected_exp.in.R"), type=UidType("T:Float"), name="R", metadata=None),
-        Port(uid=UidPort("P:infected_exp.in.beta"), type=UidType("T:Float"), name="beta", metadata=None),
-        Port(uid=UidPort("P:infected_exp.in.dt"), type=UidType("T:Float"), name="dt", metadata=None),
+        Port(uid=UidPort("P:infected_exp.in.S"), box=UidBox("B:infected_exp"),
+             type=UidType("T:Float"), name="S", metadata=None),
+        Port(uid=UidPort("P:infected_exp.in.I"), box=UidBox("B:infected_exp"),
+             type=UidType("T:Float"), name="I", metadata=None),
+        Port(uid=UidPort("P:infected_exp.in.R"), box=UidBox("B:infected_exp"),
+             type=UidType("T:Float"), name="R", metadata=None),
+        Port(uid=UidPort("P:infected_exp.in.beta"), box=UidBox("B:infected_exp"),
+             type=UidType("T:Float"), name="beta", metadata=None),
+        Port(uid=UidPort("P:infected_exp.in.dt"), box=UidBox("B:infected_exp"),
+             type=UidType("T:Float"), name="dt", metadata=None),
         # The output ports to the 'infected_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:infected_exp.out.infected"), type=UidType("T:Float"), name="infected", metadata=None),
+        Port(uid=UidPort("P:infected_exp.out.infected"), box=UidBox("B:infected_exp"),
+             type=UidType("T:Float"), name="infected", metadata=None),
 
         # The input ports to the 'recovered_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:recovered_exp.in.I"), type=UidType("T:Float"), name="I", metadata=None),
-        Port(uid=UidPort("P:recovered_exp.in.gamma"), type=UidType("T:Float"), name="gamma", metadata=None),
-        Port(uid=UidPort("P:recovered_exp.in.dt"), type=UidType("T:Float"), name="dt", metadata=None),
+        Port(uid=UidPort("P:recovered_exp.in.I"), box=UidBox("B:recovered_exp"),
+             type=UidType("T:Float"), name="I", metadata=None),
+        Port(uid=UidPort("P:recovered_exp.in.gamma"), box=UidBox("B:recovered_exp"),
+             type=UidType("T:Float"), name="gamma", metadata=None),
+        Port(uid=UidPort("P:recovered_exp.in.dt"), box=UidBox("B:recovered_exp"),
+             type=UidType("T:Float"), name="dt", metadata=None),
         # The output ports to the 'recovered_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:recovered_exp.out.recovered"), type=UidType("T:Float"), name="recovered", metadata=None),
+        Port(uid=UidPort("P:recovered_exp.out.recovered"), box=UidBox("B:recovered_exp"),
+             type=UidType("T:Float"), name="recovered", metadata=None),
 
         # The input ports to the 'S_update_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:S_update_exp.in.S"), type=UidType("T:Float"), name="S", metadata=None),
-        Port(uid=UidPort("P:S_update_exp.in.infected"), type=UidType("T:Float"), name="infected", metadata=None),
+        Port(uid=UidPort("P:S_update_exp.in.S"), box=UidBox("B:S_update_exp"),
+             type=UidType("T:Float"), name="S", metadata=None),
+        Port(uid=UidPort("P:S_update_exp.in.infected"), box=UidBox("B:S_update_exp"),
+             type=UidType("T:Float"), name="infected", metadata=None),
         # The output ports to the 'S_update_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:S_update_exp.out.S"), type=UidType("T:Float"), name="S", metadata=None),
+        Port(uid=UidPort("P:S_update_exp.out.S"), box=UidBox("B:S_update_exp"),
+             type=UidType("T:Float"), name="S", metadata=None),
 
         # The input ports to the 'I_update_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:I_update_exp.in.I"), type=UidType("T:Float"), name="I", metadata=None),
-        Port(uid=UidPort("P:I_update_exp.in.infected"), type=UidType("T:Float"), name="infected", metadata=None),
-        Port(uid=UidPort("P:I_update_exp.in.recovered"), type=UidType("T:Float"), name="recovered", metadata=None),
+        Port(uid=UidPort("P:I_update_exp.in.I"), box=UidBox("B:I_update_exp"),
+             type=UidType("T:Float"), name="I", metadata=None),
+        Port(uid=UidPort("P:I_update_exp.in.infected"), box=UidBox("B:I_update_exp"),
+             type=UidType("T:Float"), name="infected", metadata=None),
+        Port(uid=UidPort("P:I_update_exp.in.recovered"), box=UidBox("B:I_update_exp"),
+             type=UidType("T:Float"), name="recovered", metadata=None),
         # The output ports to the 'I_update_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:I_update_exp.out.I"), type=UidType("T:Float"), name="I", metadata=None),
+        Port(uid=UidPort("P:I_update_exp.out.I"), box=UidBox("B:I_update_exp"),
+             type=UidType("T:Float"), name="I", metadata=None),
 
         # The input ports to the 'R_update_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:R_update_exp.in.R"), type=UidType("T:Float"), name="R", metadata=None),
-        Port(uid=UidPort("P:R_update_exp.in.recovered"), type=UidType("T:Float"), name="recovered", metadata=None),
+        Port(uid=UidPort("P:R_update_exp.in.R"), box=UidBox("B:R_update_exp"),
+             type=UidType("T:Float"), name="R", metadata=None),
+        Port(uid=UidPort("P:R_update_exp.in.recovered"), box=UidBox("B:R_update_exp"),
+             type=UidType("T:Float"), name="recovered", metadata=None),
         # The output ports to the 'R_update_exp' anonymous assignment Expression
-        Port(uid=UidPort("P:R_update_exp.out.R"), type=UidType("T:Float"), name="R", metadata=None)
+        Port(uid=UidPort("P:R_update_exp.out.R"), box=UidBox("B:R_update_exp"),
+             type=UidType("T:Float"), name="R", metadata=None)
     ]
 
     # Expression 'infected_exp' (SIR-simple line 46) -- input: (S I R beta dt)
@@ -151,7 +189,7 @@ def simple_sir_gromet() -> Gromet:
                    UidPort("P:infected_exp.in.I")])
     # e2 : (* e1 Literal(-1)) -> e2
     e2 = Exp(operator=UidOp("*"),
-             args=[e1, Literal(uid=None, type=UidType("Int"), value="-1", metadata=None)])
+             args=[e1, Literal(uid=None, type=UidType("Int"), value=Val("-1"), metadata=None)])
     # e3 : (+ S I R) -> e3
     e3 = Exp(operator=UidOp("+"),
              args=[UidPort("P:infected_exp.in.S"),
@@ -169,7 +207,7 @@ def simple_sir_gromet() -> Gromet:
                                            UidPort("P:infected_exp.in.R"),
                                            UidPort("P:infected_exp.in.beta"),
                                            UidPort("P:infected_exp.in.dt")],
-                              output_ports=[UidPort("P:infected_exp.out.infected")],
+                              output_ports=UidPort("P:infected_exp.out.infected"),
                               wiring=e5,
                               metadata=None)
 
@@ -185,7 +223,7 @@ def simple_sir_gromet() -> Gromet:
                                input_ports=[UidPort("P:recovered_exp.in.I"),
                                             UidPort("P:recovered_exp.in.gamma"),
                                             UidPort("P:recovered_exp.in.dt")],
-                               output_ports=[UidPort("P:recovered_exp.out.infected")],
+                               output_ports=UidPort("P:recovered_exp.out.infected"),
                                wiring=e7,
                                metadata=None)
 
@@ -199,7 +237,7 @@ def simple_sir_gromet() -> Gromet:
                               name=None,
                               input_ports=[UidPort("P:S_update_exp.in.S"),
                                            UidPort("P:S_update_exp.in.infected")],
-                              output_ports=[UidPort("P:S_update_exp.out.S")],
+                              output_ports=UidPort("P:S_update_exp.out.S"),
                               wiring=e8,
                               metadata=None)
 
@@ -217,7 +255,7 @@ def simple_sir_gromet() -> Gromet:
                               input_ports=[UidPort("P:I_update_exp.in.I"),
                                            UidPort("P:I_update_exp.in.infected"),
                                            UidPort("P:I_update_exp.in.recovered")],
-                              output_ports=[UidPort("P:I_update_exp.out.I")],
+                              output_ports=UidPort("P:I_update_exp.out.I"),
                               wiring=e10,
                               metadata=None)
 
@@ -231,7 +269,7 @@ def simple_sir_gromet() -> Gromet:
                               name=None,
                               input_ports=[UidPort("P:R_update_exp.in.R"),
                                            UidPort("P:R_update_exp.in.recovered")],
-                              output_ports=[UidPort("P:R_update_exp.out.R")],
+                              output_ports=UidPort("P:R_update_exp.out.R"),
                               wiring=e11,
                               metadata=None)
 
@@ -253,7 +291,7 @@ def simple_sir_gromet() -> Gromet:
                            UidWire("W:S2"), UidWire("W:I2"), UidWire("W:R2")],
                    metadata=None)
 
-    g = Gromet(
+    _g = Gromet(
         uid=UidGromet("SimpleSIR"),
         name="SimpleSIR",
         framework_type="FunctionNetwork",
@@ -267,7 +305,7 @@ def simple_sir_gromet() -> Gromet:
         metadata=None
     )
 
-    return g
+    return _g
 
 
 # -----------------------------------------------------------------------------
@@ -276,4 +314,3 @@ def simple_sir_gromet() -> Gromet:
 
 if __name__ == "__main__":
     gromet_to_json(simple_sir_gromet())
-

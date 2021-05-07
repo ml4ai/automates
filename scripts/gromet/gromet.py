@@ -36,12 +36,12 @@ Expression Boxes represent a special kind of Box whose internal 'wiring' are
 class GrometElm(object):
     """
     Base class for all Gromet Elements.
-    Implements __post_init__ that saves gromet_elm class name.
+    Implements __post_init__ that saves syntactic type (syntax) as GroMEt element class name.
     """
-    gromet_elm: str = field(init=False)
+    syntax: str = field(init=False)
 
     def __post_init__(self):
-        self.gromet_elm = type(self).__name__
+        self.syntax = type(self).__name__
 
 
 # --------------------
@@ -92,12 +92,6 @@ Metadata = NewType('Metadata', Union[List[Metadatum], None])
 
 
 @dataclass
-class TypeDeclaration(GrometElm):
-    name: UidType
-    metadata: Metadata
-
-
-@dataclass
 class Type:
     """
     Type Specification.
@@ -108,6 +102,12 @@ class Type:
     def __post_init__(self):
         self.type = type(self).__name__
 
+
+@dataclass
+class TypeDeclaration(GrometElm):
+    name: UidType
+    type: Type
+    metadata: Metadata
 
 # TODO: GroMEt type algebra: "sublangauge" for specifying types
 
@@ -181,7 +181,7 @@ class Prod(Composite):
 
 @dataclass
 class String(Prod):
-    element_type: List[UidType] = (UidType("Character"),)
+    element_type: List[UidType]
 
 
 @dataclass
@@ -220,13 +220,14 @@ class Literal(GrometElm):
 
 @dataclass
 class Val(GrometElm):
-    val: Union[str, List['Val', 'AttributeVal']]
+    val: Union[str, List[Union['Val', 'AttributeVal']]]
 
 
 @dataclass
 class AttributeVal(GrometElm):
     name: str
     val: Val
+
 
 # --------------------
 # Port
@@ -303,9 +304,10 @@ class Box(GrometElm):
     """
     Box base.
     A Box may have a name
-    A Bpx may have wiring (set of wiring connecting Ports of Boxes)
+    A Box may have wiring (set of wiring connecting Ports of Boxes)
     """
     uid: UidBox
+    # type: UidType  # Box semantic type
     name: Union[str, None]
 
     # NOTE: Redundant since Wiring specified Port, which in turn specifies Box
@@ -346,6 +348,13 @@ class Relation(BoxUndirected):
     TODO: what is its semantics?
     """
     pass
+
+
+@dataclass
+class PetriEvent(Relation):
+    enabling_condition: Relation
+    rate: Relation
+    effect: Relation
 
 
 # Functions
@@ -458,7 +467,7 @@ class Gromet(GrometElm):
     name: Union[str, None]
     framework_type: str
     root: Union[UidBox, None]
-    types: Union[List[Type], None]
+    types: Union[List[TypeDeclaration], None]
     ports: Union[List[Port], None]
     wires: Union[List[Wire], None]
     boxes: List[Box]
@@ -483,11 +492,13 @@ def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    t = Type(uid=UidType("myType"), name="myType", metadata=None)
+    t = TypeDeclaration(name=UidType("myType"),
+                        type=Type(),
+                        metadata=None)
     print(json.dumps(asdict(t)))
 
     lit = Literal(uid=UidLiteral("myLiteral"), type=UidType("myType"),
-                  value="infty", metadata=None)
+                  value=Val("infty"), metadata=None)
     print(json.dumps(asdict(lit)))
 
     p = Port(uid=UidPort("myPort"), box=UidBox("myBox"), type=UidType("Int"),
