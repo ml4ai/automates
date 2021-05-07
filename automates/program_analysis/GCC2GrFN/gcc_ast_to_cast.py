@@ -425,8 +425,11 @@ class GCC2CAST:
         true_block = [bb for bb in self.basic_blocks if bb["index"] == true_edge][0]
         false_block = [bb for bb in self.basic_blocks if bb["index"] == false_edge][0]
 
+        potential_block_with_goto = [
+            bb for bb in self.basic_blocks if bb["index"] == true_edge - 1
+        ][0]
         is_loop = False
-        for false_bb_stmt in false_block["statements"]:
+        for false_bb_stmt in potential_block_with_goto["statements"]:
             if (
                 false_bb_stmt["type"] == "goto"
                 and false_bb_stmt["target"] == self.current_basic_block["index"]
@@ -437,7 +440,7 @@ class GCC2CAST:
 
         if is_loop:
             temp = self.current_basic_block
-            loop_body = self.parse_basic_block(false_block)
+            loop_body = self.parse_body(false_edge, true_edge)
             self.current_basic_block = temp
             # GCC inverts loop expressions to check if the EXIT condition
             # i.e., given "while (count < 100)", gcc converts that to "if (count > 99) leave loop;"
@@ -466,6 +469,15 @@ class GCC2CAST:
 
             self.current_basic_block = temp
             return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]
+
+    def parse_body(self, start_block, end_block):
+        blocks = [
+            bb
+            for bb in self.basic_blocks
+            if bb["index"] >= start_block or bb["index"] <= end_block
+        ]
+
+        return [node for b in blocks for node in self.parse_basic_block(b)]
 
     def parse_statement(self, stmt, statements):
         stmt_type = stmt["type"]
