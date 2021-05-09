@@ -80,6 +80,42 @@ def ancestors(node, g, topo):
     return an
 
 
+def ancestors_unsort(node, g):
+    """
+    Finds all ancestors of a node without the need for a topological ordering
+    :param node: set of nodes of which to find ancestors
+    :param g: graph
+    :return: Ancestors of nodes
+    """
+    an_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="in")).flat)
+    an_names = to_names(an_ind, g)
+    return an_names
+
+
+def parents_unsort(node, g_obs):
+    """
+    Finds the parents (unsorted) of a node
+    :param node: node
+    :param g_obs: graph
+    :return: parents of node
+    """
+    pa_ind = list(numpy.concatenate(g_obs.neighborhood(node, order=1, mode="in")).flat)
+    pa_names = to_names(pa_ind, g_obs)
+    return pa_names
+
+
+def children_unsort(node, g):
+    """
+    Finds the children (unsorted) of a node
+    :param node: node
+    :param g: graph
+    :return: children of node
+    """
+    ch_ind = list(numpy.concatenate(g.neighborhood(node, order=1, mode="out")).flat)
+    ch_names = to_names(ch_ind, g)
+    return ch_names
+
+
 def descendents(node, g, topo):
     """
     Finds all descendants of a node and orders them
@@ -278,6 +314,133 @@ def to_names(indices, g):
     name_list = g.vs["name"]
     name_sorted = [name_list[i] for i in indices]
     return name_sorted
+
+
+def wrap_d_sep(g, x, y, z):
+    """
+    Does some quick checks before testing d-separation
+    :param g: Graph
+    :param x: nodes
+    :param y: nodes
+    :param z: nodes
+    :return: T/F if x is separated from y given z in g
+    """
+    if x == y:
+        return False
+    if len(x) == 0 or len(y) == 0:
+        return True
+    else:
+        return d_sep(g, x, y, z)
+
+
+def d_sep(g, x, y, z):
+    """
+    From R package causaleffect:
+
+    "Implements relevant path separation (rp-separation) for testing d-separation. For details, see:
+
+    Relevant Path Separation: A Faster Method for Testing Independencies in Bayesian Networks
+    Cory J. Butz, Andre E. dos Santos, Jhonatan S. Oliveira;
+    Proceedings of the Eighth International Conference on Probabilistic Graphical Models,
+    PMLR 52:74-85, 2016."
+
+    :param g: graph
+    :param x: nodes
+    :param y: nodes
+    :param z: nodes
+    :return: T/F if x is separated from y given z in g
+    """
+    an_z = ancestors_unsort(z, g)
+    an_xyz = ancestors_unsort(list(set(x) | set(y) | set(z)), g)
+    stack_top = len(x)
+    stack_size = max(stack_top, 64)
+    stack = [False]*stack_size
+    stack[0:stack_top] = [True]*len(range(0, stack_top))
+    stack_names = [None]*stack_size
+    stack_names[0:stack_top] = copy.deepcopy(x)
+    visited_top = 0
+    visited_size = 64
+    visited = [False]*visited_size
+    visited_names = [None]*visited_size
+    is_visited = False
+    while stack_top > 0:
+        is_visited = False
+        el = stack[stack_top - 1]
+        el_name = stack_names[stack_top - 1]
+        stack_top = stack_top - 1
+        if visited_top > 0:
+            for i in range(0, visited_top):
+                if el == visited[i] and el_name == visited_names[i]:
+                    is_visited = True
+                    break
+        if not is_visited:
+            if el_name in y:
+                return False
+            visited_top = visited_top + 1
+            if visited_top > visited_size:
+                visited_old = copy.deepcopy(visited)
+                visited_size_old = visited_size
+                visited_names_old = copy.deepcopy(visited_names)
+                visited_size = 2*visited_size
+                visited = [False]*visited_size
+                visited[0:visited_size_old] = copy.deepcopy(visited_old)
+                visited_names = [None]*visited_size
+                visited_names[0:visited_size_old] = copy.deepcopy(visited_names_old)
+            visited[visited_top - 1] = el
+            visited_names[visited_top - 1] = el_name
+            if el and (not (el_name in z)):
+                visitable_parents = list((set(parents_unsort(el_name, g))-set(el_name)) & set(an_xyz))
+                visitable_children = list((set(children_unsort(el_name, g))-set(el_name)) & set(an_xyz))
+                n_vis_pa = len(visitable_parents)
+                n_vis_ch = len(visitable_children)
+                if n_vis_pa + n_vis_ch > 0:
+                    while n_vis_pa + n_vis_ch + stack_top > stack_size:
+                        stack_old = copy.deepcopy(stack)
+                        stack_names_old = copy.deepcopy(stack_names)
+                        stack_size_old = stack_size
+                        stack_size = 2*stack_size
+                        stack = [False]*stack_size
+                        stack[0:stack_size_old] = copy.deepcopy(stack_old)
+                        stack_names = [None]*stack_size
+                        stack_names[0:stack_size_old] = copy.deepcopy(stack_names_old)
+                    stack_add = stack_top + n_vis_pa + n_vis_ch
+                    stack[stack_top:stack_add] = [True]*n_vis_pa + [False]*n_vis_ch
+                    stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents) + copy.deepcopy(visitable_children)
+                    stack_top = stack_add
+            elif not el:
+                if not (el_name in z):
+                    visitable_children = list((set(children_unsort(el_name, g)) - set(el_name)) & set(an_xyz))
+                    n_vis_ch = len(visitable_children)
+                    if n_vis_ch > 0:
+                        while n_vis_ch + stack_top > stack_size:
+                            stack_old = copy.deepcopy(stack)
+                            stack_size_old = stack_size
+                            stack_names_old = copy.deepcopy(stack_names)
+                            stack_size = 2*stack_size
+                            stack = [False]*stack_size
+                            stack[0:stack_size_old] = copy.deepcopy(stack_old)
+                            stack_names[0:stack_size_old] = copy.deepcopy(stack_names_old)
+                        stack_add = stack_top + n_vis_ch
+                        stack[stack_top:stack_add] = [False]*n_vis_ch
+                        stack_names[stack_top:stack_add] = copy.deepcopy(visitable_children)
+                        stack_top = stack_add
+                if el_name in an_z:
+                    visitable_parents = list((set(parents_unsort(el_name, g)) - set(el_name) & set(an_xyz)))
+                    n_vis_pa = len(visitable_parents)
+                    if n_vis_pa > 0:
+                        while n_vis_pa + stack_top > stack_size:
+                            stack_old = copy.deepcopy(stack)
+                            stack_size_old = stack_size
+                            stack_names_old = copy.deepcopy(stack_names)
+                            stack_size = 2*stack_size
+                            stack = [False]*stack_size
+                            stack[0:stack_size_old] = copy.deepcopy(stack_old)
+                            stack_names[0:stack_size_old] = stack_names_old
+                        stack_add = stack_top + n_vis_pa
+                        stack[stack_top:stack_add] = [True]*n_vis_pa
+                        stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents)
+                        stack_top = stack_add
+    return True
 
 
 @dataclass(unsafe_hash=True)

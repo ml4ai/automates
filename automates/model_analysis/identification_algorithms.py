@@ -234,7 +234,7 @@ def compute_IDC(y, x, z, p, g, g_obs, v, topo, tree):
     g_xz = g_xz.subgraph_edges(elist, delete_vertices=False)
     for node in z:
         cond = list(set(z) - set(node))
-        if gm.wrap_dsep(g_xz, y, node, list(set(x) | set(cond))):
+        if gm.wrap_d_sep(g_xz, y, node, list(set(x) | set(cond))):
             tree.call.line = 9
             tree.call.z_prime = node
             nxt = compute_IDC(y, gm.ts(set(x) | set(node), topo), cond, p, g, g_obs, v, topo, gm.TreeNode())
