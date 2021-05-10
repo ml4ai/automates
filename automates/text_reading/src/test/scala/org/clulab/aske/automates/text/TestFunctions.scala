@@ -331,7 +331,8 @@ class TestFunctions extends ExtractionTest {
   // todo: "The SWB model requires as inputs precipitation, E0, air temperature, and Mawc. Its outputs are Ea, soil water content, and runoff."
 
   // Tests from 2003-DSSAT
-  // todo: potential root water uptake is computed by calculating a maximum water flow to roots in each layer and summing these values
+  // todo: potential root water uptake is computed by calculating a maximum water flow to roots in each layer and summing these values (hierarchical function)
+
   // todo: It also computes the root water uptake of each soil layer. The daily weather values as well as all soil properties and current soil water content, by layer, are required as input. In addition, leaf area index (LAI) and root length density for each layer are needed.
   // todo: The potential ET is partitioned into potential soil evaporation based on the fraction of solar energy reaching the soil surface, based on a negative exponential function of LAI, and potential plant transpiration.
   // todo: This ratio is typically used in the Plant modules to reduce photosynthesis in proportion to relative decreases in transpiration.

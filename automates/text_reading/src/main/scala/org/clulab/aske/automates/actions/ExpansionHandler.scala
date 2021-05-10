@@ -22,10 +22,12 @@ class ExpansionHandler() extends LazyLogging {
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
-    val res = mentions.flatMap(expandArgs(_, state, validArgs))
+    val (functions, other) = mentions.partition(_.label == "Function")
+    val function_res = functions.flatMap(expandFunctionArgs(_, state, validArgs))
+    val other_res = other.flatMap(expandArgs(_, state, validArgs))
 
     // Useful for debug
-    res
+    function_res ++ other_res
   }
 
   def expandArgs(mention: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
@@ -37,6 +39,20 @@ class ExpansionHandler() extends LazyLogging {
 //    println(s"$proportion --> ${mention.sentenceObj.getSentenceText}")
     if (proportion > threshold) {
       expandArgsWithSyntax(mention, state, validArgs)
+    } else {
+      expandArgsWithSurface(mention, state, validArgs)
+    }
+  }
+
+  def expandFunctionArgs(mention: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+    val sentLength: Double = mention.sentenceObj.getSentenceText.length
+    val normalChars: Double = mention.sentenceObj.getSentenceText.filter(c => valid contains c).length
+    val proportion = normalChars / sentLength
+    val threshold = 0.8 // fixme: tune
+    //    println(s"$proportion --> ${mention.sentenceObj.getSentenceText}")
+    if (proportion > threshold) {
+      expandFunctionArgsWithSyntax(mention, state, validArgs)
     } else {
       expandArgsWithSurface(mention, state, validArgs)
     }
@@ -111,7 +127,69 @@ class ExpansionHandler() extends LazyLogging {
     Seq(copyWithNewArgs(m, newArgs.toMap)) ++ newArgs.values.toSeq.flatten
   }
 
+  def expandFunctionArgsWithSyntax(m: Mention, state: State, validArgs: List[String]): Seq[Mention] = {
+    // Helper method to figure out which mentions are the closest to the trigger
+    def distToTrigger(trigger: Option[TextBoundMention], m: Mention): Int = {
+      if (trigger.isDefined) {
+        // get the trigger
+        val t = trigger.get
+        if (m.start < t.start) {
+          // mention to the left of the trigger
+          math.abs(t.start - m.end)
+        } else if (m.start > t.end) {
+          // mention to the right of the trigger
+          math.abs(m.start - t.end)
+        } else {
+          logger.debug(s"distToTrigger: Unexpected overlap of trigger and argument: \n\t" +
+            s"sent: [${m.sentenceObj.getSentenceText}]\n\tRULE: " +
+            s"${m.foundBy}\n\ttrigger: ${t.text}\torig: [${m.text}]\n")
+          m.start
+        }
+      } else {
+        m.start
+      }
+    }
+    // Get the trigger of the mention, if there is one
+    val trigger = m match {
+      case rm: RelationMention => None
+      case em: EventMention => Some(em.trigger)
+      case _ => throw new RuntimeException("Trying to get the trigger from a mention with no trigger")
+    }
+    var stateToAvoid = if (trigger.nonEmpty) State(Seq(trigger.get)) else new State()
 
+    // Make the new arguments
+    val newArgs = scala.collection.mutable.HashMap[String, Seq[Mention]]()
+    for ((argType, argMentions) <- m.arguments) {
+      if (validArgs.contains(argType)) {
+        // Sort, because we want to expand the closest first so they don't get subsumed
+        val sortedClosestFirst = argMentions.sortBy(distToTrigger(trigger, _))
+        val expandedArgs = new ArrayBuffer[Mention]
+        // Expand each one, updating the state as we go
+        for (argToExpand <- sortedClosestFirst) {
+          //          println("arg to expand: " + argToExpand.text + " " + argToExpand.foundBy + " " + argToExpand.labels)
+          val expanded = expandIfNotAvoidForFunction(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m)
+          //          println("expanded arg: " + expanded.text + " " + expanded.foundBy + " " + expanded.labels)
+          expandedArgs.append(expanded)
+          // Add the mention to the ones to avoid so we don't suck it up
+          stateToAvoid = stateToAvoid.updated(Seq(expanded))
+        }
+        // Handle attachments
+        // todo: here we aren't really using attachments, but we can add them back in as needed
+        val attached = expandedArgs
+          //.map(addSubsumedAttachments(_, state))
+          //.map(attachDCT(_, state))
+          //.map(addOverlappingAttachmentsTextBounds(_, state))
+          .map(EntityHelper.trimEntityEdges)
+        // Store
+        newArgs.put(argType, attached)
+      } else {
+        newArgs.put(argType, argMentions)
+      }
+
+    }
+    // Return the event with the expanded args as well as the arg mentions themselves
+    Seq(copyWithNewArgs(m, newArgs.toMap)) ++ newArgs.values.toSeq.flatten
+  }
 
   /*
       Entity Expansion Helper Methods
@@ -130,6 +208,50 @@ class ExpansionHandler() extends LazyLogging {
     }
 
 //    println("EXPANDED: " + expanded.text + " " + expanded.labels + " " + expanded.foundBy)
+    //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
+
+    // split expanded at trigger (only thing in state to avoid)
+    val triggerOption = stateToAvoid.mentionsFor(orig.sentence).headOption
+    triggerOption match {
+      case None => expanded
+      case Some(trigger) =>
+        // keep the half that is on the same side as original Mention
+        if (trigger.tokenInterval overlaps expanded.tokenInterval) {
+          if (orig.tokenInterval.end <= trigger.tokenInterval.start) {
+            // orig is to the left of trigger
+            replaceMentionsInterval(expanded, Interval(expanded.start, trigger.start))
+          } else if (orig.tokenInterval.start >= trigger.tokenInterval.end) {
+            // orig is to the right of trigger
+            replaceMentionsInterval(expanded, Interval(trigger.end, expanded.end))
+          } else {
+            //throw new RuntimeException("original mention overlaps trigger")
+            // This shouldn't happen, but Odin seems to handle this situation gracefully (by not extracting anything),
+            // I guess here we'll do the same (i.e., not throw an exception)
+            logger.debug(s"ExpandIfNotAvoid: Unexpected overlap of trigger and argument: \n\t" +
+              s"sent: [${orig.sentenceObj.getSentenceText}]\n\tRULE: " +
+              s"${trigger.foundBy}\n\ttrigger: ${trigger.text}\torig: [${orig.text}]\n")
+            logger.debug(s"Trigger sent: [${trigger.sentenceObj.getSentenceText}]")
+            logger.debug(DisplayUtils.mentionToDisplayString(m))
+
+            stateToAvoid.allMentions.foreach(DisplayUtils.displayMention)
+            orig
+          }
+        } else {
+          expanded
+        }
+    }
+
+  }
+
+  def expandIfNotAvoidForFunction(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention): Mention = {
+
+    //    println("ORIGINAL: " + orig.text + " " + orig.labels + " " + orig.foundBy)
+    val expanded = orig match {
+      case tbm: TextBoundMention => expandFunction(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, maxHopLength = ExpansionHandler.MAX_HOP_LENGTH, stateToAvoid)
+      case _ => orig
+    }
+
+    //    println("EXPANDED: " + expanded.text + " " + expanded.labels + " " + expanded.foundBy)
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
 
     // split expanded at trigger (only thing in state to avoid)
@@ -185,6 +307,20 @@ class ExpansionHandler() extends LazyLogging {
     outgoingExpanded
   }
 
+  def expandFunction(entity: Mention, maxHops: Int, maxHopLength: Int, stateFromAvoid: State): Mention = {
+    // Expand the incoming to recapture any triggers which were avoided
+    val interval1 = traverseIncomingLocalFunction(entity, maxHops, maxHopLength, stateFromAvoid, entity.sentenceObj)
+    val incomingExpanded = entity.asInstanceOf[TextBoundMention].copy(tokenInterval = interval1)
+    // Expand on outgoing deps
+    val interval2 = traverseOutgoingLocalFunction(incomingExpanded, maxHops, maxHopLength, stateFromAvoid, entity.sentenceObj)
+
+    val outgoingExpanded = incomingExpanded.asInstanceOf[TextBoundMention].copy(tokenInterval = interval2)
+    //    println("\noriginal:  " + entity.text + " " + entity.labels.mkString("") + " " + entity.foundBy)
+    //    println("expanded:  " + incomingExpanded.text + " " + incomingExpanded.labels.mkString("") ++ incomingExpanded.foundBy)
+
+    outgoingExpanded
+  }
+
   /** Used by expand to selectively traverse the provided syntactic dependency graph **/
   @tailrec
   private def traverseOutgoingLocal(
@@ -223,6 +359,42 @@ class ExpansionHandler() extends LazyLogging {
     traverseOutgoingLocal(Set.empty, m.tokenInterval.toSet, outgoingRelations = outgoing, incomingRelations = incoming, numHops, maxHopLength, m.sentence, stateFromAvoid, sentence)
   }
 
+  private def traverseOutgoingLocalFunction(
+                                     tokens: Set[Int],
+                                     newTokens: Set[Int],
+                                     outgoingRelations: Array[Array[(Int, String)]],
+                                     incomingRelations: Array[Array[(Int, String)]],
+                                     remainingHops: Int,
+                                     maxHopLength: Int,
+                                     sent: Int,
+                                     state: State,
+                                     sentence: Sentence
+
+                                   ): Interval = {
+    if (remainingHops == 0) {
+      val allTokens = tokens ++ newTokens
+      Interval(allTokens.min, allTokens.max + 1)
+    } else {
+      val newNewTokens = for{
+        tok <- newTokens
+        if outgoingRelations.nonEmpty && tok < outgoingRelations.length
+        (nextTok, dep) <- outgoingRelations(tok)
+        if isValidOutgoingDependencyFunction(dep, sentence.words(nextTok), remainingHops)
+        if math.abs(tok - nextTok) < maxHopLength //limit the possible length of hops (in tokens)---helps with bad parses
+        if state.mentionsFor(sent, nextTok).isEmpty
+        if hasValidIncomingDependenciesFunction(nextTok, incomingRelations)
+        // avoid expanding if there is a stray opening paren
+        if !sentence.words.slice(tok, nextTok).contains(")")
+      } yield nextTok
+      traverseOutgoingLocalFunction(tokens ++ newTokens, newNewTokens, outgoingRelations, incomingRelations, remainingHops - 1, maxHopLength, sent, state, sentence)
+    }
+  }
+  private def traverseOutgoingLocalFunction(m: Mention, numHops: Int, maxHopLength: Int, stateFromAvoid: State, sentence: Sentence): Interval = {
+    val outgoing = outgoingEdges(m.sentenceObj)
+    val incoming = incomingEdges(m.sentenceObj)
+    traverseOutgoingLocalFunction(Set.empty, m.tokenInterval.toSet, outgoingRelations = outgoing, incomingRelations = incoming, numHops, maxHopLength, m.sentence, stateFromAvoid, sentence)
+  }
+
   /** Used by expand to selectively traverse the provided syntactic dependency graph **/
   @tailrec
   private def traverseIncomingLocal(
@@ -259,6 +431,40 @@ class ExpansionHandler() extends LazyLogging {
     traverseIncomingLocal(Set.empty, m.tokenInterval.toSet, incomingRelations = incoming, numHops, maxHopLength, m.sentence, stateFromAvoid, sentence, Set.empty)
   }
 
+  private def traverseIncomingLocalFunction(
+                                     tokens: Set[Int],
+                                     newTokens: Set[Int],
+                                     incomingRelations: Array[Array[(Int, String)]],
+                                     remainingHops: Int,
+                                     maxHopLength: Int,
+                                     sent: Int,
+                                     state: State,
+                                     sentence: Sentence,
+                                     deps: Set[String]
+
+                                   ): Interval = {
+    if (remainingHops == 0 || deps.contains("acl:relcl")) { //stop expanding if the previous expansion was on rel clause - expands too much otherwise
+      val allTokens = tokens ++ newTokens
+      Interval(allTokens.min, allTokens.max + 1)
+    } else {
+      val yielded = for{
+        tok <- newTokens
+        if incomingRelations.nonEmpty && tok < incomingRelations.length
+        (nextTok, dep) <- incomingRelations(tok)
+        if isValidIncomingDependencyFunction(dep)
+        if math.abs(tok - nextTok) < maxHopLength //limit the possible length of hops (in tokens)---helps with bad parses
+        if state.mentionsFor(sent, nextTok).isEmpty
+      } yield (nextTok, dep)
+      val newNewTokens = yielded.map(_._1)
+      val deps = yielded.map(_._2)
+      traverseIncomingLocalFunction(tokens ++ newTokens, newNewTokens, incomingRelations, remainingHops - 1, maxHopLength, sent, state, sentence, deps)
+    }
+  }
+  private def traverseIncomingLocalFunction(m: Mention, numHops: Int, maxHopLength: Int, stateFromAvoid: State, sentence: Sentence): Interval = {
+    val incoming = incomingEdges(m.sentenceObj)
+    traverseIncomingLocalFunction(Set.empty, m.tokenInterval.toSet, incomingRelations = incoming, numHops, maxHopLength, m.sentence, stateFromAvoid, sentence, Set.empty)
+  }
+
   def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.universalEnhancedDependencies match {
     case None => sys.error("sentence has no dependencies")
     case Some(dependencies) => dependencies.outgoingEdges
@@ -285,6 +491,21 @@ class ExpansionHandler() extends LazyLogging {
     VALID_INCOMING.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
   }
 
+  def isValidOutgoingDependencyFunction(dep: String, token: String, remainingHops: Int): Boolean = {
+    (
+      VALID_OUTGOING_FUNCTION.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
+        ! INVALID_OUTGOING_FUNCTION.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
+      ) // || (
+    //      // Allow exception to close parens, etc.
+    //      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
+    //      )
+  }
+
+  /** Ensure incoming dependency may be safely traversed */
+  def isValidIncomingDependencyFunction(dep: String): Boolean = {
+    VALID_INCOMING_FUNCTION.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
+  }
+
   def notInvalidConjunction(dep: String, hopsRemaining: Int): Boolean = {
     // If it's not a coordination/conjunction, don't worry
     if (EntityConstraints.COORD_DEPS.exists(pattern => pattern.findFirstIn(dep).isEmpty)) {
@@ -302,6 +523,12 @@ class ExpansionHandler() extends LazyLogging {
   def hasValidIncomingDependencies(tokenIdx: Int, incomingDependencies: Array[Array[(Int, String)]]): Boolean = {
     if (incomingDependencies.nonEmpty && tokenIdx < incomingDependencies.length) {
       incomingDependencies(tokenIdx).forall(pair => ! INVALID_INCOMING.exists(pattern => pattern.findFirstIn(pair._2).nonEmpty))
+    } else true
+  }
+
+  def hasValidIncomingDependenciesFunction(tokenIdx: Int, incomingDependencies: Array[Array[(Int, String)]]): Boolean = {
+    if (incomingDependencies.nonEmpty && tokenIdx < incomingDependencies.length) {
+      incomingDependencies(tokenIdx).forall(pair => ! INVALID_INCOMING_FUNCTION.exists(pattern => pattern.findFirstIn(pair._2).nonEmpty))
     } else true
   }
 
@@ -470,6 +697,75 @@ object ExpansionHandler {
     "nmod_under".r,
     "nmod_in".r//,
 //    "dobj".r
+  )
+
+  val INVALID_OUTGOING_FUNCTION = Set[scala.util.matching.Regex](
+    //    "^nmod_including$".r,
+    "acl:relcl".r,
+//    "acl".r,
+    "acl_until".r,
+    "advcl_to".r,
+    "^advcl_because".r,
+    "advmod".r,
+    //"amod".r,
+    "^case".r,
+    "^cc$".r,
+    "ccomp".r,
+    "compound".r, //note: needed because of description test t1h
+    "^conj".r,
+    "cop".r,
+    "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
+    "nmod_at".r,
+    "nmod_through".r,
+    "^nmod_as".r,
+    "^nmod_because".r,
+    "^nmod_due_to".r,
+    "^nmod_except".r,
+    "^nmod_given".r,
+    "^nmod_since".r,
+    "^nmod_without$".r,
+    "nummod".r,
+    "^nsubj".r,
+    "^punct".r,
+    "^ref$".r,
+    "appos".r
+    //"nmod_for".r,
+    //    "nmod".r
+  )
+
+  val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](
+    //"^nmod_with$".r,
+    //    "^nmod_without$".r,
+    //    "^nmod_except$".r
+    //    "^nmod_despite$".r
+  )
+
+  // regexes describing valid outgoing dependencies
+  val VALID_OUTGOING_FUNCTION = Set[scala.util.matching.Regex](
+    //    "^amod$".r, "^advmod$".r,
+    //    "^dobj$".r,
+    //    "^compound".r, // replaces nn
+    //    "^name".r, // this is equivalent to compound when NPs are tagged as named entities, otherwise unpopulated
+    //    // ex.  "isotonic fluids may reduce the risk" -> "isotonic fluids may reduce the risk associated with X.
+    //    "^acl_to".r, // replaces vmod
+    //    "xcomp".r, // replaces vmod
+    //    // Changed from processors......
+    //        "^nmod_at".r, // replaces prep_
+    //    //    "case".r
+    //    "^ccomp".r
+    ".+".r
+  )
+
+  val VALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](
+    "acl:relcl".r,
+    "^nmod_for".r,
+    //    "amod".r,
+    //    "^compound$".r//,
+    "nmod_at".r,
+    "^nmod_of".r,
+    "nmod_under".r,
+    "nmod_in".r//,
+    //    "dobj".r
   )
 
   def apply() = new ExpansionHandler()
