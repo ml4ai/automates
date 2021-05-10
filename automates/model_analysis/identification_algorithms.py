@@ -38,16 +38,19 @@ def identifiability(y, x, g, z=None, steps=False, stop_on_noid=True):
         if len(set(x) & set(z)) > 0:
             raise ValueError("Sets 'x' and 'z' are not disjoint.")
     if z is None:
-        res = compute_ID(y, x, gm.Probability(), g, g_obs, topo, topo, [])
+        res = compute_ID(y, x, gm.Probability(), g, g_obs, topo, topo, gm.TreeNode())
         algo = "id"
         res_prob = res.p
     else:
-        res = compute_IDC(y, x, z, gm.Probability(), g, g_obs, topo, topo, [])
+        res = compute_IDC(y, x, z, gm.Probability(), g, g_obs, topo, topo, gm.TreeNode())
         algo = "idc"
         res_num = res.p
         res_den = res.p
         res_den.sumset = list(set(y) | set(res_den.sumset))
-        res_prob = gm.Probability(fraction=True, num=res_num, den=res_den)
+        res_prob = gm.Probability(fraction=True)
+        res_prob.num = deepcopy(res_num)
+        res_prob.den = deepcopy(res_den)
+
     res_tree = res.tree
     if res.tree.call.id_check:
         output = gm.Results(query={"y": y, "x": x, "z": z}, algorithm=algo, p=gm.get_expression(res_prob),

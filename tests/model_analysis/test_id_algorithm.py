@@ -26,7 +26,7 @@ def test_non_identifiability():
         identifiability(y, x, g)
 
 def test_conditional_identifiability():
-    g = igraph.Graph(edges=[[0, 1], [1, 2], [0, 1], [1, 0]])
+    g = igraph.Graph(edges=[[0, 1], [1, 2], [0, 1], [1, 0]], directed=True)
     g.vs["name"] = ["X", "Z", "Y"]
     g.es["description"] = ["O", "O", "U", "U"]
     y = ["Y"]
@@ -37,7 +37,7 @@ def test_conditional_identifiability():
 
 
 def test_conditional_non_identifiability():
-    g = igraph.Graph(edges=[[0, 1], [2, 1], [0, 1], [1, 0]])
+    g = igraph.Graph(edges=[[0, 1], [2, 1], [0, 1], [1, 0]], directed=True)
     g.vs["name"] = ["X", "Z", "Y"]
     g.es["description"] = ["O", "O", "U", "U"]
     y = ["Y"]
@@ -45,3 +45,23 @@ def test_conditional_non_identifiability():
     z = ["Z"]
     with pytest.raises(gm.IDANotIdentifiable):
         identifiability(y, x, g, z)
+
+g = igraph.Graph(edges=[[0, 1], [1, 2], [0, 1], [1, 0]], directed=True)
+g.vs["name"] = ["X", "Z", "Y"]
+g.es["description"] = ["O", "O", "U", "U"]
+y = ["Y"]
+x = ["X"]
+z = ["Z"]
+
+results = identifiability(y, x, g, z)
+print(results)
+
+
+# g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [0, 2], [0, 4], [0, 3], [1, 3], [2, 0], [4, 0], \
+#                              [3, 0], [3, 1]], directed=True)
+# g.vs["name"] = ["W1", "X", "Y1", "W2", "Y2"]
+# g.es["description"] = ["O", "O", "O", "U", "U", "U", "U", "U", "U", "U", "U"]
+# y = ["Y1", "Y2"]
+# x = ["X"]
+# results = identifiability(y, x, g)
+# print(results)

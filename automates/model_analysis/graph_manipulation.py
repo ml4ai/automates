@@ -74,7 +74,11 @@ def ancestors(node, g, topo):
     :param topo: topological ordering
     :return: Ancestors of node in topological ordering topo
     """
-    an_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="in")).flat)
+    an_list = g.neighborhood(node, order=g.vcount(), mode="in")
+    an_set = set()
+    for ans in an_list:
+        an_set = an_set | set(ans)
+    an_ind = list(an_set)
     an_names = to_names(an_ind, g)
     an = ts(an_names, topo)
     return an
@@ -87,7 +91,11 @@ def ancestors_unsort(node, g):
     :param g: graph
     :return: Ancestors of nodes
     """
-    an_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="in")).flat)
+    an_list = g.neighborhood(node, order=g.vcount(), mode="in")
+    an_set = set()
+    for ans in an_list:
+        an_set = an_set | set(ans)
+    an_ind = list(an_set)
     an_names = to_names(an_ind, g)
     return an_names
 
@@ -99,7 +107,11 @@ def parents_unsort(node, g_obs):
     :param g_obs: graph
     :return: parents of node
     """
-    pa_ind = list(numpy.concatenate(g_obs.neighborhood(node, order=1, mode="in")).flat)
+    pa_list = g_obs.neighborhood(node, order=1, mode="in")
+    pa_set = set()
+    for pas in pa_list:
+        pa_set = pa_set | set(pas)
+    pa_ind = list(pa_set)
     pa_names = to_names(pa_ind, g_obs)
     return pa_names
 
@@ -111,7 +123,11 @@ def children_unsort(node, g):
     :param g: graph
     :return: children of node
     """
-    ch_ind = list(numpy.concatenate(g.neighborhood(node, order=1, mode="out")).flat)
+    ch_list = g.neighborhood(node, order=1, mode="out")
+    ch_set = set()
+    for chs in ch_list:
+        ch_set = ch_set | set(chs)
+    ch_ind = list(ch_set)
     ch_names = to_names(ch_ind, g)
     return ch_names
 
@@ -124,7 +140,11 @@ def descendents(node, g, topo):
     :param topo: topological ordering
     :return: Descendants of node in topological ordering topo
     """
-    des_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="out")).flat)
+    des_list = g.neighborhood(node, order=g.vcount(), mode="out")
+    des_set = set()
+    for des in des_list:
+        des_set = des_set | set(des)
+    des_ind = list(des_set)
     des_names = to_names(des_ind, g)
     des = ts(des_names, topo)
     return des
@@ -369,14 +389,14 @@ def d_sep(g, x, y, z):
     an_xyz = ancestors_unsort(list(set(x) | set(y) | set(z)), g)
     stack_top = len(x)
     stack_size = max(stack_top, 64)
-    stack = [False]*stack_size
-    stack[0:stack_top] = [True]*len(range(0, stack_top))
-    stack_names = [None]*stack_size
+    stack = [False] * stack_size
+    stack[0:stack_top] = [True] * len(range(0, stack_top))
+    stack_names = [None] * stack_size
     stack_names[0:stack_top] = copy.deepcopy(x)
     visited_top = 0
     visited_size = 64
-    visited = [False]*visited_size
-    visited_names = [None]*visited_size
+    visited = [False] * visited_size
+    visited_names = [None] * visited_size
     is_visited = False
     while stack_top > 0:
         is_visited = False
@@ -396,16 +416,16 @@ def d_sep(g, x, y, z):
                 visited_old = copy.deepcopy(visited)
                 visited_size_old = visited_size
                 visited_names_old = copy.deepcopy(visited_names)
-                visited_size = 2*visited_size
-                visited = [False]*visited_size
+                visited_size = 2 * visited_size
+                visited = [False] * visited_size
                 visited[0:visited_size_old] = copy.deepcopy(visited_old)
-                visited_names = [None]*visited_size
+                visited_names = [None] * visited_size
                 visited_names[0:visited_size_old] = copy.deepcopy(visited_names_old)
             visited[visited_top - 1] = el
             visited_names[visited_top - 1] = el_name
             if el and (not (el_name in z)):
-                visitable_parents = list((set(parents_unsort(el_name, g))-set(el_name)) & set(an_xyz))
-                visitable_children = list((set(children_unsort(el_name, g))-set(el_name)) & set(an_xyz))
+                visitable_parents = list((set(parents_unsort([el_name], g)) - set([el_name])) & set(an_xyz))
+                visitable_children = list((set(children_unsort([el_name], g)) - set([el_name])) & set(an_xyz))
                 n_vis_pa = len(visitable_parents)
                 n_vis_ch = len(visitable_children)
                 if n_vis_pa + n_vis_ch > 0:
@@ -413,14 +433,15 @@ def d_sep(g, x, y, z):
                         stack_old = copy.deepcopy(stack)
                         stack_names_old = copy.deepcopy(stack_names)
                         stack_size_old = stack_size
-                        stack_size = 2*stack_size
-                        stack = [False]*stack_size
+                        stack_size = 2 * stack_size
+                        stack = [False] * stack_size
                         stack[0:stack_size_old] = copy.deepcopy(stack_old)
-                        stack_names = [None]*stack_size
+                        stack_names = [None] * stack_size
                         stack_names[0:stack_size_old] = copy.deepcopy(stack_names_old)
                     stack_add = stack_top + n_vis_pa + n_vis_ch
-                    stack[stack_top:stack_add] = [True]*n_vis_pa + [False]*n_vis_ch
-                    stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents) + copy.deepcopy(visitable_children)
+                    stack[stack_top:stack_add] = [True] * n_vis_pa + [False] * n_vis_ch
+                    stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents) + copy.deepcopy(
+                        visitable_children)
                     stack_top = stack_add
             elif not el:
                 if not (el_name in z):
@@ -431,28 +452,28 @@ def d_sep(g, x, y, z):
                             stack_old = copy.deepcopy(stack)
                             stack_size_old = stack_size
                             stack_names_old = copy.deepcopy(stack_names)
-                            stack_size = 2*stack_size
-                            stack = [False]*stack_size
+                            stack_size = 2 * stack_size
+                            stack = [False] * stack_size
                             stack[0:stack_size_old] = copy.deepcopy(stack_old)
                             stack_names[0:stack_size_old] = copy.deepcopy(stack_names_old)
                         stack_add = stack_top + n_vis_ch
-                        stack[stack_top:stack_add] = [False]*n_vis_ch
+                        stack[stack_top:stack_add] = [False] * n_vis_ch
                         stack_names[stack_top:stack_add] = copy.deepcopy(visitable_children)
                         stack_top = stack_add
                 if el_name in an_z:
-                    visitable_parents = list((set(parents_unsort(el_name, g)) - set(el_name) & set(an_xyz)))
+                    visitable_parents = list((set(parents_unsort([el_name], g)) - set([el_name]) & set(an_xyz)))
                     n_vis_pa = len(visitable_parents)
                     if n_vis_pa > 0:
                         while n_vis_pa + stack_top > stack_size:
                             stack_old = copy.deepcopy(stack)
                             stack_size_old = stack_size
                             stack_names_old = copy.deepcopy(stack_names)
-                            stack_size = 2*stack_size
-                            stack = [False]*stack_size
+                            stack_size = 2 * stack_size
+                            stack = [False] * stack_size
                             stack[0:stack_size_old] = copy.deepcopy(stack_old)
                             stack_names[0:stack_size_old] = stack_names_old
                         stack_add = stack_top + n_vis_pa
-                        stack[stack_top:stack_add] = [True]*n_vis_pa
+                        stack[stack_top:stack_add] = [True] * n_vis_pa
                         stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents)
                         stack_top = stack_add
     return True
@@ -460,18 +481,18 @@ def d_sep(g, x, y, z):
 
 @dataclass(unsafe_hash=True)
 class Probability:
-    var: list = field(default_factory=list)  # This was a string before, altered to fit var_string = ",".join(prob.var)
+    var: list = field(default_factory=list)
     cond: list = field(default_factory=list)
     sumset: list = field(default_factory=list)
     do: str = ""
     product: bool = False
     children: list = field(default_factory=list)
     fraction: bool = False
-    den: list = field(default_factory=list)
-    num: list = field(default_factory=list)
     domain: int = 0
     sum: bool = False
     weight: list = field(default_factory=list)
+    num: Probability = None
+    den: Probability = None
 
 
 @dataclass(unsafe_hash=True)
