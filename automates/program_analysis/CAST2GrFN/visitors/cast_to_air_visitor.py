@@ -66,7 +66,9 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        raise C2ATypeError(f"Unrecognized type in CASTToAIRVisitor.visit: {type(node)}")
+        raise C2ATypeError(
+            f"Unrecognized type in CASTToAIRVisitor.visit: {type(node)}"
+        )
 
     @visit.register
     def _(self, node: Assignment):

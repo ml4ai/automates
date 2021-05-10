@@ -1,37 +1,62 @@
 {
     "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639",
     "identifier": "@container::initial::@global::exampleFunction",
-    "timestamp": "2021-02-01",
+    "timestamp": "2021-04-11",
     "hyper_edges": [
         {
             "inputs": [],
             "function": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
             "outputs": [
-                "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+                "e3e70682-c209-4cac-629f-6fbed82c07cd"
             ]
         }
     ],
     "variables": [
         {
-            "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
-            "reference": "",
-            "identifier": "initial::@global.exampleFunction::exampleVar::-1",
-            "data_type": "float",
-            "kind": "continuous",
-            "domain": "(and (> v -infty) (< v infty))"
+            "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "identifier": "initial::@global.exampleFunction::{'name': 'exampleVar'}::-1",
+            "object_ref": null,
+            "metadata": [
+                {
+                    "type": "domain",
+                    "provenance": {
+                        "method": "program_analysis_pipeline",
+                        "timestamp": "2021-04-11 11:50:21.314436"
+                    },
+                    "data_type": "float",
+                    "measurement_scale": "continuous",
+                    "elements": []
+                }
+            ]
         }
     ],
     "functions": [
         {
             "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
-            "reference": "",
             "type": "LITERAL",
-            "lambda": "lambda : 36.2"
+            "lambda": "lambda : 36.2",
+            "metadata": [
+                {
+                    "type": "code_span_reference",
+                    "provenance": {
+                        "method": "program_analysis_pipeline",
+                        "timestamp": "2021-04-11 11:50:21.314391"
+                    },
+                    "code_type": "block",
+                    "code_file_reference_uid": "",
+                    "code_span": {
+                        "line_begin": null,
+                        "line_end": null,
+                        "col_begin": null,
+                        "col_end": null
+                    }
+                }
+            ]
         }
     ],
     "subgraphs": [
         {
-            "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
             "namespace": "initial",
             "scope": "@global",
             "basename": "exampleFunction",
@@ -41,8 +66,27 @@
             "border_color": "forestgreen",
             "nodes": [
                 "eb1167b3-67a9-c378-7c65-c1e582e2e662",
-                "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+                "e3e70682-c209-4cac-629f-6fbed82c07cd"
+            ],
+            "metadata": [
+                {
+                    "type": "code_span_reference",
+                    "provenance": {
+                        "method": "program_analysis_pipeline",
+                        "timestamp": "2021-04-11 11:50:21.314407"
+                    },
+                    "code_type": "block",
+                    "code_file_reference_uid": "",
+                    "code_span": {
+                        "line_begin": null,
+                        "line_end": null,
+                        "col_begin": null,
+                        "col_end": null
+                    }
+                }
             ]
         }
-    ]
+    ],
+    "types": [],
+    "metadata": []
 }

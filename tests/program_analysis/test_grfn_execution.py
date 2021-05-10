@@ -110,7 +110,7 @@ def test_loops_and_user_defined_types(grfn_with_types):
 
 def test_PID_model_execution():
     PID = GroundedFunctionNetwork.from_json(
-        "tests/data/model_assembly/GrFN_examples/PID-model--GrFN.json"
+        "tests/data/model_assembly/GrFN/PID-model--GrFN.json"
     )
 
     output = PID(
