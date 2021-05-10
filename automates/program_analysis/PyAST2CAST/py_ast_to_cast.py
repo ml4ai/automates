@@ -1,5 +1,7 @@
 from typing import Union
 import ast
+import os 
+import sys
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -7,6 +9,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Attribute,
     BinaryOp,
     BinaryOperator,
+    Boolean,
     Call,
     ClassDef,
     Dict,
@@ -47,6 +50,19 @@ class PyASTToCAST(ast.NodeVisitor):
 
     This class has no inherent fields of its own at this time.
     """
+    def __init__(self):
+        """Initializes any auxiliary data structures that are used 
+           for generating CAST.
+           The current data structures are:
+           - Aliases: A dictionary used to keep track of aliases that imports use
+                     (like import x as y, or from x import y as z)
+           - Visited: A list used to keep track of while files have been imported
+                     this is used to prevent a circular chain of imports that doesn't
+                     stop
+        """
+        self.aliases = {}
+        self.visited = set()
+        
 
     def visit_Assign(self, node: ast.Assign):
         """Visits a PyAST Assign node, and returns its CAST representation.
@@ -88,6 +104,35 @@ class PyASTToCAST(ast.NodeVisitor):
         value = self.visit(node.value)
         attr = Name(node.attr)
         return Attribute(value, attr)
+
+    def visit_AugAssign(self, node:ast.AugAssign):
+        """TODO
+
+        Args:
+            node (ast.AugAssign): [description]
+        """
+        # Convert AugAssign to regular Assign, and visit 
+        target = node.target
+        value = node.value
+
+        if type(target) == ast.Attribute:
+            convert = ast.Assign(
+                targets=[target], 
+                value=ast.BinOp(left=target,
+                                op=node.op,
+                                right=value)
+                                )
+                                
+        else: 
+            convert = ast.Assign(
+                targets=[target], 
+                value=ast.BinOp(left=ast.Name(target.id,ctx=ast.Load()),
+                                op=node.op,
+                                right=value)
+                                )
+
+        return self.visit(convert)
+
 
     def visit_BinOp(self, node: ast.BinOp):
         """Visits a PyAST BinOp node, which consists of all the arithmetic
@@ -146,7 +191,17 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns:
             Call: A CAST function call node
         """
-        args = [self.visit(arg) for arg in node.args]
+        args = []
+        func_args = []
+        kw_args = []
+        if len(node.args) > 0:
+            func_args = [self.visit(arg) for arg in node.args]
+        if len(node.keywords) > 0:
+            for arg in node.keywords:
+                kw_args.append(self.visit(arg.value))
+
+        args = func_args + kw_args
+
         if type(node.func) == ast.Attribute:
             return Call(self.visit(node.func), args)
         else:
@@ -238,7 +293,12 @@ class PyASTToCAST(ast.NodeVisitor):
             return Number(node.value)
         elif type(node.value) == str:
             return String(node.value)
+        elif type(node.value) == bool:
+            return Boolean(node.value)
+        elif node.value == None:
+            return Number(None)
         else:
+            print("Type",type(node.value),"not supported")
             raise TypeError
 
     def visit_Continue(self, node: ast.Continue):
@@ -306,25 +366,55 @@ class PyASTToCAST(ast.NodeVisitor):
 
         body = [self.visit(piece) for piece in (node.body + node.orelse)]
 
-        # TODO: Works with iterating over lists in the form of for i in LIST,
-        # Figure out how to do range() and other function calls
         count_var = Assignment(Var(Name("i_"), "integer"), Number(0))
-        loop_cond = BinaryOp(
-            BinaryOperator.LT,
-            Name("i_"),
-            Call(Name("len"), [Name(node.iter.id)]),
-        )
-        loop_assign = Assignment(
-            Var(Name(node.target.id), "integer"),
-            Subscript(Name(node.iter.id), Name("i_")),
-        )
-        loop_increment = Assignment(
+
+        if type(node.iter) == ast.Call:
+            loop_cond = BinaryOp(
+                BinaryOperator.LT,
+                Name("i_"),
+                Call(Name("len"), [iterable]),
+            )
+            if type(node.target) == ast.Tuple:
+                loop_assign = [Assignment(
+                    Tuple([Var(type="integer",val=Name(node.val.name+"_")) for node in target.values]),
+                    Subscript(Call(Name("list"),[iterable]), Name("i_"))
+                ),
+                Assignment(
+                    target,
+                    Tuple([Var(type="integer",val=Name(node.val.name+"_")) for node in target.values]),
+                )]
+            else:
+                loop_assign = [Assignment(
+                    Var(Name(node.target.id), "integer"),
+                    Subscript(Call(Name("list"),[iterable]), Name("i_")),
+                )]
+        else:
+            loop_cond = BinaryOp(
+                BinaryOperator.LT,
+                Name("i_"),
+                Call(Name("len"), [iterable]),
+            )
+            if type(node.target) == ast.Tuple:
+                loop_assign = [Assignment(
+                    Tuple([Var(type="integer",val=Name(node.val.name+"_")) for node in target.values]),
+                    Subscript(Name(node.iter.id), Name("i_"))
+                ),
+                Assignment(
+                    target,
+                    Tuple([Var(type="integer",val=Name(node.val.name+"_")) for node in target.values]),
+                )]
+            else:
+                loop_assign = [Assignment(
+                    Var(Name(node.target.id), "integer"),
+                    Subscript(Name(node.iter.id), Name("i_")),
+                )]
+        loop_increment = [Assignment(
             Var(Name("i_"), "integer"),
             BinaryOp(BinaryOperator.ADD, Name("i_"), Number(1)),
-        )
+        )]
 
         return Loop(
-            expr=loop_cond, body=[loop_assign] + body + [loop_increment]
+            expr=loop_cond, body=loop_assign + body + loop_increment
         )
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
@@ -369,6 +459,46 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return FunctionDef("LAMBDA", args, body)
 
+    def visit_ListComp(self, node: ast.ListComp):
+        """Visits a PyAST ListComp node, which are used for Python list comprehensions.
+        List comprehensions generate a list from some generator expression.
+
+        Args:
+            node (ast.ListComp): A PyAST list comprehension node
+
+        Returns:
+            Loop: 
+        """
+        generators = node.generators
+
+        first_gen = generators[0]
+        i = 1
+        outer_loop = None
+        if type(first_gen.iter) == ast.Subscript:
+            if type(first_gen.target) == ast.Tuple:
+                outer_loop = ast.For(target=first_gen.target,iter=first_gen.iter.value,body=[node.elt],orelse=[])
+            else:
+                outer_loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store()),iter=first_gen.iter.value,body=[node.elt],orelse=[])
+        elif type(first_gen.iter) == ast.Call:
+            if type(first_gen.target) == ast.Tuple:
+                outer_loop = ast.For(target=first_gen.target,iter=first_gen.iter.func,body=[node.elt],orelse=[])
+            else:
+                outer_loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store()),iter=first_gen.iter.func,body=[node.elt],orelse=[])
+        else:
+            if type(first_gen.target) == ast.Tuple:
+                outer_loop = ast.For(target=first_gen.target,iter=first_gen.iter,body=[node.elt],orelse=[])
+            else:
+                outer_loop = ast.For(target=ast.Name(id=first_gen.target.id,ctx=ast.Store()),iter=first_gen.iter,body=[node.elt],orelse=[])
+
+        visit_loop = self.visit(outer_loop)
+
+        #TODO: Multiple generators, if statements
+        while i < len(generators):    
+            i += 1
+
+        return visit_loop
+
+
     def visit_If(self, node: ast.If):
         """Visits a PyAST If node. Which is used to represent If statements.
         We visit each of the pieces accordingly and construct the CAST
@@ -396,7 +526,44 @@ class PyASTToCAST(ast.NodeVisitor):
         return ModelIf(node_test, node_body, node_orelse)
 
     def visit_Import(self, node:ast.Import):
-        """Visits a PyAST import node, which is used for importing libraries
+        """Visits a PyAST Import node, which is used for importing libraries
+        that are used in programs. In particular, it's imports in the form of
+        'import X', where X is some library.
+
+        Args:
+            node (ast.Import): A PyAST Import node
+
+        Returns: 
+        """
+        names = node.names
+        alias = names[0]
+
+        # Construct the path of the module, relative to where we are at
+        # (Still have to handle things like '..')
+        name = alias.name
+        path = "./"+name.replace(".","/")+".py"
+
+        if alias.asname != None:
+            self.aliases[alias.asname] = name
+            name = alias.asname
+
+        #print(os.getcwd())
+        #print(path)
+        #print(os.path.isfile(path))
+        if os.path.isfile(path):
+            true_name = self.aliases[name] if name in self.aliases else name
+            if true_name in self.visited:
+                return Module(name=true_name,body=[])
+            else:
+                file_contents = open(path).read()
+                self.visited.add(true_name)
+                return self.visit(ast.parse(file_contents))
+        else:
+            return Module(name=name,body=[])
+
+
+    def visit_ImportFrom(self, node:ast.ImportFrom):
+        """Visits a PyAST ImportFrom node, which is used for importing libraries
         that are used in programs. In particular, it's imports in the form of
         'import X', where X is some library.
 
@@ -406,7 +573,32 @@ class PyASTToCAST(ast.NodeVisitor):
         Returns: 
         """
 
-        return ModelBreak()
+        # Construct the path of the module, relative to where we are at
+        # (Still have to handle things like '..')
+        name = node.module
+        path = "./"+name.replace(".","/")+".py"
+
+        names = node.names
+
+        for alias in names:
+            if alias.asname != None:
+                self.aliases[alias.asname] = alias.name
+
+        #print(os.getcwd())
+        #print(path)
+        #print(os.path.isfile(path))
+        # TODO: Find only the functions that are being imported 
+        if os.path.isfile(path):
+            true_name = self.aliases[name] if name in self.aliases else name
+            if name in self.visited:
+                return Module(name=name,body=[])
+            else:
+                file_contents = open(path).read()
+                self.visited.add(name)
+                return self.visit(ast.parse(file_contents))
+        else:
+            return Module(name=name,body=[])
+
 
     def visit_List(self, node:ast.List):
         """Visits a PyAST List node. Which is used to represent Python lists.
@@ -500,6 +692,32 @@ class PyASTToCAST(ast.NodeVisitor):
 
         return UnaryOp(op, self.visit(operand))
 
+        #if node.lower == None and node.upper == None:
+         #   return []
+
+        #lower = []
+        #if node.lower != None:
+         #   lower = [self.visit(node.lower)]
+
+        #upper = []
+        #if node.upper != None:
+         #   upper = [self.visit(node.upper)]
+
+        #step = []
+        #if node.step != None:
+         #   step = [self.visit(node.step)]
+
+        #return lower + upper + step
+
+        #lower = "Start" if node.lower == None else str(node.lower.value)
+        #upper = "End" if node.upper == None else str(node.upper.value)
+        #step = "1" if node.step == None else str(node.step)
+
+        #return lower + " to " + upper + " step: " + step
+
+    def visit_ExtSlice(self, node:ast.ExtSlice):
+        return Number(333)
+
     def visit_Set(self, node: ast.Set):
         """Visits a PyAST Set node. Which is used to represent Python sets.
 
@@ -525,9 +743,61 @@ class PyASTToCAST(ast.NodeVisitor):
             Subscript: A CAST Subscript node
         """
         value = self.visit(node.value)
-        sl = self.visit(node.slice)
+
+        # 'Visit' the slice 
+        slc = node.slice
+
+        temp_list = "temp_"
+        temp_var = "i_"
+        new_list = Assignment(Var(Name(temp_list),"integer"),List([]))
+
+        if type(slc) == ast.Slice:
+            if slc.lower != None:
+                lower = self.visit(slc.lower)
+            else:
+                lower = Number(0)
+            
+            if slc.upper != None:
+                upper = self.visit(slc.upper)
+            else:
+                upper = Call(Name("len"), [node.value.id])
+
+            if slc.step != None:
+                step = self.visit(slc.step)
+            else:
+                step = Number(1)
+
+            loop_var = [Assignment(Var(Name(temp_var), "integer"), lower)]
+
+            loop_cond = BinaryOp(
+                BinaryOperator.LT,
+                Name(temp_var),
+                upper
+            )
+
+            body = [Call(Attribute(Name(temp_list),Name("append")),
+                        [Subscript(Name(node.value.id),Name(temp_var))])] 
+
+            loop_increment = [Assignment(
+                Var(Name(temp_var), "integer"),
+                BinaryOp(BinaryOperator.ADD, Name(temp_var), step),
+            )]
+
+            slice_loop = Loop(
+                expr=loop_cond, body=loop_var + body + loop_increment
+            )
+
+            return Subscript(value, slice_loop)
+        elif type(slc) == ast.ExtSlice:
+            dims = slc.dims 
+            return Number(99)
+
+        else:
+            sl = self.visit(slc) 
+
 
         return Subscript(value, sl)
+
 
     def visit_Index(self, node: ast.Index):
         """Visits a PyAST Index node, which represents the value being used
@@ -571,3 +841,28 @@ class PyASTToCAST(ast.NodeVisitor):
         body = [self.visit(piece) for piece in (node.body + node.orelse)]
 
         return Loop(expr=test, body=body)
+
+
+    def visit_With(self, node: ast.With):
+        """[summary]
+
+        Args:
+            node (ast.With): [description]
+        """
+
+        variables = [] 
+        for item in node.items:
+            variables.append([Assignment(left=self.visit(item.optional_vars),right=self.visit(item.context_expr))])
+
+        body = [self.visit(piece) for piece in node.body]
+
+        return variables + body        
+
+
+
+
+
+
+
+
+
