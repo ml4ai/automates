@@ -240,7 +240,7 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
     if prob.fraction:
         p = "".join([p, "\\frac{", get_expression(prob.num, start_sum=False, single_source=single_source, \
                                                   target_sym=target_sym), "}{",
-                     get_expression(prob.num, start_sum=False, \
+                     get_expression(prob.den, start_sum=False, \
                                     single_source=single_source, target_sym=target_sym), "}"])
     if prob.sum:  # This might be broken
         p = "".join([p, "\\left("])

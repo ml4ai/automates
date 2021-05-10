@@ -44,8 +44,8 @@ def identifiability(y, x, g, z=None, steps=False, stop_on_noid=True):
     else:
         res = compute_IDC(y, x, z, gm.Probability(), g, g_obs, topo, topo, gm.TreeNode())
         algo = "idc"
-        res_num = res.p
-        res_den = res.p
+        res_num = deepcopy(res.p)
+        res_den = deepcopy(res_num)
         res_den.sumset = list(set(y) | set(res_den.sumset))
         res_prob = gm.Probability(fraction=True)
         res_prob.num = deepcopy(res_num)
