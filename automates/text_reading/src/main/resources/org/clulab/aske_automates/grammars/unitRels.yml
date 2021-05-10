@@ -5,14 +5,14 @@ rules:
   ####UNIT RELATIONS####
   ###See Possible improvement note in parameterSettings.yml
 
-  - name: var_unit_rel
+  - name: identifier_unit_rel
     label: UnitRelation
     priority: ${priority}
     type: token
     example: "T = daily mean air temperature [°C]"
     action: ${action}
     pattern: |
-      @variable:Variable [word=/.*/ & !word = /,|\]|\./]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
+      @variable:Identifier [word=/.*/ & !word = /,|\]|\./]+? [word="["] (?<unit> [word = /.*/ & !tag="CD"]+) (?=[word="]"])
 #
   - name: concept_paren_unit
     label: UnitRelation
@@ -22,7 +22,7 @@ rules:
     the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
     action: ${action}
     pattern: |
-      @variable:Concept [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
+      @variable:Phrase [word="("] [word=/.*|,/]*? @unit: Unit (?=[word=")"])
 
   - name: concept_unit
     label: UnitRelation
@@ -33,12 +33,12 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma = /express|give/]
-      variable: Concept = <acl | nsubjpass
+      variable: Phrase = <acl | nsubjpass
       unit: Unit+ = <acl appos | nmod_in nmod_per? appos compound  #todo: add an action to split these up and merge if
       #overlap and keep the longer unit?
 
 
-  - name: var_taken_as_unit
+  - name: identifier_taken_as_unit
     label: UnitRelation
     priority: ${priority}
     type: dependency
@@ -46,9 +46,9 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma = /take/]
-      variable: Variable = nsubjpass nmod_of? appos
+      variable: Identifier = nsubjpass nmod_of? appos
       unit: Unit+ = nmod_as
-      #todo: this rule is looking specifically for a variable and not a concept to attach the unit to; can combine with similar rules in future
+      #todo: this rule is looking specifically for an identifier and not a concept to attach the unit to; can combine with similar rules in future
 
   - name: concept_value_unit
     label: UnitRelation
@@ -59,10 +59,10 @@ rules:
     action: ${action}
     pattern: |
       trigger = [tag = "CD"]
-      variable: Concept = <nummod </nmod_of|nmod_between/
+      variable: Phrase = <nummod </nmod_of|nmod_between/
       unit: Unit = <nummod
 
-  - name: var_equals_value_unit
+  - name: identifier_equals_value_unit
     label: UnitRelation
     priority: ${priority}
     type: dependency
@@ -70,16 +70,16 @@ rules:
     action: ${action}
     pattern: |
       trigger = [word = "="]
-      variable: Variable = <amod
+      variable: Identifier = <amod
       unit: Unit = dep
 
-  - name: var_of_value_unit
+  - name: identifier_of_value_unit
     label: UnitRelation
     priority: ${priority}
     type: token
     action: ${action}
     example: "We expect the time T of 5-10 days"
     pattern: |
-      @variable:Variable [word="of"] [entity="NUMBER"] @unit: Unit
+      @variable:Identifier [word="of"] [entity="NUMBER"] @unit: Unit
 
 

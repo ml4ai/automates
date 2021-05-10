@@ -9,7 +9,7 @@ rules:
     example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
     Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
     pattern: |
-      (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word=/-LRB-|\(/]) @unit:Concept (?=[word=/-RRB-|\)/])
+      (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word=/-LRB-|\(/]) @unit:Phrase (?=[word=/-RRB-|\)/])
       #Doesn't work for this [%/(dS m-1)]
       #helps with non-standard units
       #todo: soil layer thickness ($z, m)
@@ -92,7 +92,7 @@ rules:
 ##    action: looksLikeAUnit
 #    example: "The unit we use is [%/(dS m-1)]."
 #    pattern: |
-#      [entity = "Concept"] [word = "/"] [entity = "Concept"] [word = ")"] [word = "]"]
+#      [entity = "Phrase"] [word = "/"] [entity = "Phrase"] [word = ")"] [word = "]"]
 
 
 

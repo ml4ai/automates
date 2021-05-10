@@ -14,9 +14,9 @@ rules:
     example: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
     pattern: |
       trigger = [word = "difference"]
-      input:Concept+ = nmod_between (conj_and | amod)?
-      # input2:Concept = (nmod_between conj_and | nmod_between amod)
-      output:Concept = (nsubj | <nmod_from nsubjpass | <nmod_as <acl nsubj)
+      input:Phrase+ = nmod_between (conj_and | amod)?
+      # input2:Phrase = (nmod_between conj_and | nmod_between amod)
+      output:Phrase = (nsubj | <nmod_from nsubjpass | <nmod_as <acl nsubj)
       # note: if the sequence of inputs matter (if it has to be "input1 - input2"), the rule needs to be fixed.
 
   - name: product_of
@@ -27,8 +27,8 @@ rules:
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
       trigger = [word = "product"] (?="of")
-      input:Variable+ = nmod_of conj_and?
-      output:Concept = (nsubj | <nmod_as nsubjpass)
+      input:Identifier+ = nmod_of conj_and?
+      output:Phrase = (nsubj | <nmod_as nsubjpass)
 
   #covidactnow
 
@@ -40,8 +40,8 @@ rules:
     example: "Initial conditions for total cases and total exposed are calculated by dividing hospitalizations by the hospitalization rate."
     pattern: |
       trigger = [lemma = "divide"]
-      input:Concept+ = (dobj | <acl | nmod_by)
-      output:Concept = (<advcl_by nsubjpass | <acl <nmod_as (nmod_since | <acl))
+      input:Phrase+ = (dobj | <acl | nmod_by)
+      output:Phrase = (<advcl_by nsubjpass | <acl <nmod_as (nmod_since | <acl))
 
   # note: this rule has only one input.
   - name: inverse_of
@@ -52,8 +52,8 @@ rules:
     example: "γ is the inverse of the mean recovery time, in days."
     pattern: |
       trigger = [word = "inverse"] (?="of")
-      input:Concept = nmod_of
-      output:Concept = (nsubj | <nsubj ccomp nummod)
+      input:Phrase = nmod_of
+      output:Phrase = (nsubj | <nsubj ccomp nummod)
 
   #double_epidemic
 
@@ -65,8 +65,8 @@ rules:
     example: "The gain in the exposed class E is at a rate proportional to the number of people in the infective class I and that of the susceptibles S, that is rS(t)I(t), where r > 0 is a constant."
     pattern: |
       trigger = [lemma = "proportional"]
-      input:Concept+ = nmod_to | <amod? conj_and
-      output:Concept = <amod? nsubj
+      input:Phrase+ = nmod_to | <amod? conj_and
+      output:Phrase = <amod? nsubj
       #fixme: inputs and outputs need to be expanded.
       #todo: the number of inputs should not be fixed as two. -> fixed.
 
@@ -78,8 +78,8 @@ rules:
     example: "The incubation period (the time from first infection to the appearances of symptoms) plus the onset to admission interval is equal to the sum of the latent period and the infectious period and is therefore equal to 1/b + 1/a."
     pattern: |
       trigger = [word = "sum"] (?="of")
-      input:Concept+ = nmod_of | (nmod_of)? conj_and
-      output:Concept = ((<nmod_to)? nsubj | <nmod_as dobj) #todo: output needs to be expanded.
+      input:Phrase+ = nmod_of | (nmod_of)? conj_and
+      output:Phrase = ((<nmod_to)? nsubj | <nmod_as dobj) #todo: output needs to be expanded.
 
   - name: mean_of
     label: Function
@@ -89,8 +89,8 @@ rules:
     example: "the mean air temperature, T, for a daily time step is preferred as the mean of the daily maximum and daily minimum air temperatures..."
     pattern: |
       trigger = [word = "mean"] (?="of")
-      input:Concept+ = nmod_of | nmod_of conj_and
-      output:Concept = <nmod_as nsubjpass
+      input:Phrase+ = nmod_of | nmod_of conj_and
+      output:Phrase = <nmod_as nsubjpass
 
   # note: this rule can have multiple (more than 2) inputs. (fixed)
   # todo: how to incorporate optional arguments into the rule? (fixed)
@@ -102,8 +102,8 @@ rules:
     example: "Daily Rso is a function of the time of year and latitude."
     pattern: |
       trigger = [word = "function"] (?="of")
-      input:Concept+ = nmod_of | nmod_of (nmod_of)? conj_and
-      output:Concept = (nsubj | <nmod_as nsubjpass)
+      input:Phrase+ = nmod_of | nmod_of (nmod_of)? conj_and
+      output:Phrase = (nsubj | <nmod_as nsubjpass)
 
   # note: this rule has only one input.
   - name: estimated_from
@@ -114,8 +114,8 @@ rules:
     example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
     pattern: |
       trigger = [lemma = "estimate"] (?="from")
-      input:Concept = nmod_from
-      output:Concept = nsubjpass
+      input:Phrase = nmod_from
+      output:Phrase = nsubjpass
 
   - name: calculated_from
     label: Function
@@ -125,8 +125,8 @@ rules:
     example: "The actual vapor pressure of air for hourly periods can be calculated from relative humidity (RH) and saturation vapor pressure at the corresponding air temperature (from Eq. 37):"
     pattern: |
       trigger = [lemma = "calculate"] (?="from")
-      input:Concept+ = nmod_from | nmod_from conj_and
-      output:Concept = nsubjpass
+      input:Phrase+ = nmod_from | nmod_from conj_and
+      output:Phrase = nsubjpass
 
   - name: partitioned_as
     label: Function
@@ -136,8 +136,8 @@ rules:
     example: "λET can be partitioned as soil evaporation (λEs) and crop transpiration (λTc)"
     pattern: |
       trigger = [lemma = "partition"] (?="as")
-      input:Concept+ = nmod_as | nmod_as conj_and
-      output:Concept = nsubjpass
+      input:Phrase+ = nmod_as | nmod_as conj_and
+      output:Phrase = nsubjpass
 
   - name: fraction_of
     label: Function
@@ -147,8 +147,8 @@ rules:
     example: "where fG is fraction of G to Rns, with a value of 0.35 obtained by the observed G and calculated Rns for this study, which was similar with Choudhury et al. (1987) in a wheat field."
     pattern: |
       trigger = [lemma = "fraction"] (?="of")
-      input:Concept+ = nmod_of | nmod_to
-      output:Concept = nsubj
+      input:Phrase+ = nmod_of | nmod_to
+      output:Phrase = nsubj
 
   - name: composite_of
     label: Function
@@ -158,8 +158,8 @@ rules:
     example: "two-source E models have been proposed which treat total E as a composite of vegetation transpiration and soil evaporation"
     pattern: |
       trigger = [lemma = "composite"] (?="of")
-      input:Concept+ = nmod_of | nmod_of conj_and
-      output:Concept = <nmod_as dobj
+      input:Phrase+ = nmod_of | nmod_of conj_and
+      output:Phrase = <nmod_as dobj
 
     # needs to see if this function works too extensively.
   - name: input_plus_input
@@ -170,8 +170,8 @@ rules:
     example: "Ea equals the water input plus a fraction extracted from soil water, caused by this soil water deficit condition."
     pattern: |
       trigger = [lemma = "plus"]
-      input:Concept+ = <cc | <cc conj_plus
-      output:Concept = <cc <dobj nsubj
+      input:Phrase+ = <cc | <cc conj_plus
+      output:Phrase = <cc <dobj nsubj
 
   - name: ratio_of
     label: Function
@@ -181,6 +181,6 @@ rules:
     example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
     pattern: |
       trigger = [lemma = "ratio"] (?="of")
-      input:Concept+ = nmod_of | nmod_to
-      output:Concept = <nmod_as <acl nsubj
+      input:Phrase+ = nmod_of | nmod_to
+      output:Phrase = <nmod_as <acl nsubj
 

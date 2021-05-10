@@ -1,1 +1,338 @@
-[{"id": "and_op", "nodes": [{"uid": "50910bdc-8ef0-66d4-4279-b14dae55cdff", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "914591ae-f03d-866a-5dec-c06af24dfdd8", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "d8ab0b30-0ac0-cf0d-d974-c146e8ec01b3", "type": "OPERATOR", "operator": "And", "children": ["50910bdc-8ef0-66d4-4279-b14dae55cdff", "914591ae-f03d-866a-5dec-c06af24dfdd8"]}, {"uid": "9b8b71a1-b38a-05fb-f611-64cebfc74ca9", "type": "OPERATOR", "operator": "RETURN", "children": ["d8ab0b30-0ac0-cf0d-d974-c146e8ec01b3"]}]}, {"id": "multi_and_op", "nodes": [{"uid": "a4e695c9-b65d-1226-7e96-9cf3a7c5cb87", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "6f790959-a3e0-4b3b-756b-0715e7180322", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "2da44da1-89b5-b368-df14-c6125f58d5b5", "type": "VARIABLE", "identifier": "z", "children": []}, {"uid": "4a814d53-964d-db77-6025-f0ae35354579", "type": "VARIABLE", "identifier": "w", "children": []}, {"uid": "4578bab3-26a9-7465-2371-ea2c0247145f", "type": "OPERATOR", "operator": "And", "children": ["a4e695c9-b65d-1226-7e96-9cf3a7c5cb87", "6f790959-a3e0-4b3b-756b-0715e7180322", "2da44da1-89b5-b368-df14-c6125f58d5b5", "4a814d53-964d-db77-6025-f0ae35354579"]}, {"uid": "5e00ea6d-ca24-be4d-5667-2017555a4085", "type": "OPERATOR", "operator": "RETURN", "children": ["4578bab3-26a9-7465-2371-ea2c0247145f"]}]}, {"id": "or_op", "nodes": [{"uid": "c787ddfb-5697-f17c-17fd-3736b7ef941c", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "4505f4f6-0a8c-46c7-0921-5f4f9edb95f2", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "955d0e77-fb5e-b866-2640-211e29f2c3c7", "type": "OPERATOR", "operator": "Or", "children": ["c787ddfb-5697-f17c-17fd-3736b7ef941c", "4505f4f6-0a8c-46c7-0921-5f4f9edb95f2"]}, {"uid": "fd42f697-6511-1656-5c64-60364a1eb1b7", "type": "OPERATOR", "operator": "RETURN", "children": ["955d0e77-fb5e-b866-2640-211e29f2c3c7"]}]}, {"id": "multi_or_op", "nodes": [{"uid": "1d69d9fc-4b1c-b8bd-2130-260c8c69778f", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "ef0a81ed-3d5d-60bc-bb03-78eb7a62722e", "type": "VARIABLE", "identifier": "y", "children": []}, {"uid": "db66bfda-2df9-6747-4ed1-35530c5a876f", "type": "VARIABLE", "identifier": "z", "children": []}, {"uid": "4d7bd307-1224-11e6-ba89-82dd85e69ea9", "type": "VARIABLE", "identifier": "w", "children": []}, {"uid": "4c9a0ae1-5419-eefc-d5e7-3e3f673617d9", "type": "OPERATOR", "operator": "Or", "children": ["1d69d9fc-4b1c-b8bd-2130-260c8c69778f", "ef0a81ed-3d5d-60bc-bb03-78eb7a62722e", "db66bfda-2df9-6747-4ed1-35530c5a876f", "4d7bd307-1224-11e6-ba89-82dd85e69ea9"]}, {"uid": "8f928dc5-1972-4ce3-1bd0-94486a2b3200", "type": "OPERATOR", "operator": "RETURN", "children": ["4c9a0ae1-5419-eefc-d5e7-3e3f673617d9"]}]}]
+[
+    {
+        "id": "and_op",
+        "nodes": [
+            {
+                "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "type": "DEFINITION",
+                "definition": "ARGUMENTS",
+                "children": [
+                    "e3e70682-c209-4cac-629f-6fbed82c07cd",
+                    "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+                ]
+            },
+            {
+                "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "e443df78-9558-867f-5ba9-1faf7a024204",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "23a7711a-8133-2876-37eb-dcd9e87a1613",
+                "type": "OPERATOR",
+                "operator": "And",
+                "children": [
+                    "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+                    "e443df78-9558-867f-5ba9-1faf7a024204"
+                ]
+            },
+            {
+                "uid": "1846d424-c17c-6279-23c6-612f48268673",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "23a7711a-8133-2876-37eb-dcd9e87a1613"
+                ]
+            },
+            {
+                "uid": "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                "type": "DEFINITION",
+                "definition": "LAMBDA",
+                "children": [
+                    "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                    "1846d424-c17c-6279-23c6-612f48268673"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "multi_and_op",
+        "nodes": [
+            {
+                "uid": "b4862b21-fb97-d435-8856-1712e8e5216a",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "w",
+                "children": []
+            },
+            {
+                "uid": "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "5487ce1e-af19-922a-d9b8-a714e61a441c",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                "type": "DEFINITION",
+                "definition": "ARGUMENTS",
+                "children": [
+                    "b4862b21-fb97-d435-8856-1712e8e5216a",
+                    "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                    "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+                    "5487ce1e-af19-922a-d9b8-a714e61a441c"
+                ]
+            },
+            {
+                "uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "8d723104-f773-83c1-3458-a748e9bb17bc",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "w",
+                "children": []
+            },
+            {
+                "uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6",
+                "type": "OPERATOR",
+                "operator": "And",
+                "children": [
+                    "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                    "8d723104-f773-83c1-3458-a748e9bb17bc",
+                    "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                    "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3"
+                ]
+            },
+            {
+                "uid": "b5d32b16-6619-4cb1-d710-37d1b83e90ec",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"
+                ]
+            },
+            {
+                "uid": "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c",
+                "type": "DEFINITION",
+                "definition": "LAMBDA",
+                "children": [
+                    "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                    "b5d32b16-6619-4cb1-d710-37d1b83e90ec"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "or_op",
+        "nodes": [
+            {
+                "uid": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "baf3897a-3e70-f16a-5548-5822de1b372a",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "101fbccc-ded7-33e8-b421-eaeb534097ca",
+                "type": "DEFINITION",
+                "definition": "ARGUMENTS",
+                "children": [
+                    "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
+                    "baf3897a-3e70-f16a-5548-5822de1b372a"
+                ]
+            },
+            {
+                "uid": "38c1962e-9148-624f-eac1-c14f30e9c5cc",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "247a8333-f7b0-b7d2-cda8-056c3d15eef7",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "1759edc3-72ae-2244-8b01-63c1cd9d2b7d",
+                "type": "OPERATOR",
+                "operator": "Or",
+                "children": [
+                    "38c1962e-9148-624f-eac1-c14f30e9c5cc",
+                    "247a8333-f7b0-b7d2-cda8-056c3d15eef7"
+                ]
+            },
+            {
+                "uid": "e005b860-51ef-1922-fe43-c49e149818d1",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "1759edc3-72ae-2244-8b01-63c1cd9d2b7d"
+                ]
+            },
+            {
+                "uid": "7d41e602-eece-328b-ff7b-118e820865d6",
+                "type": "DEFINITION",
+                "definition": "LAMBDA",
+                "children": [
+                    "101fbccc-ded7-33e8-b421-eaeb534097ca",
+                    "e005b860-51ef-1922-fe43-c49e149818d1"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "multi_or_op",
+        "nodes": [
+            {
+                "uid": "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "552f233a-8c25-166a-1ff3-9849b4e1357d",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "3405095c-8a50-06c1-ec18-8efbd080e66e",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "w",
+                "children": []
+            },
+            {
+                "uid": "1775336d-71ea-cd05-49a3-e80e966e1277",
+                "type": "DEFINITION",
+                "definition": "ARGUMENTS",
+                "children": [
+                    "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
+                    "552f233a-8c25-166a-1ff3-9849b4e1357d",
+                    "3405095c-8a50-06c1-ec18-8efbd080e66e",
+                    "8c1745a7-9a6a-5f92-cca7-4147f6be1f72"
+                ]
+            },
+            {
+                "uid": "5129fb7c-6288-e1a5-cc45-782198a6416d",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "2f120554-4a53-08cc-3dfa-bc08935ddd72",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "y",
+                "children": []
+            },
+            {
+                "uid": "0870e15c-2fcd-81b5-d24b-ace4307bf326",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "z",
+                "children": []
+            },
+            {
+                "uid": "42930b33-a81a-d477-fb36-75b89cdeb3e6",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "w",
+                "children": []
+            },
+            {
+                "uid": "adc0da7a-16fe-baa0-11af-923d79fdef7c",
+                "type": "OPERATOR",
+                "operator": "Or",
+                "children": [
+                    "5129fb7c-6288-e1a5-cc45-782198a6416d",
+                    "2f120554-4a53-08cc-3dfa-bc08935ddd72",
+                    "0870e15c-2fcd-81b5-d24b-ace4307bf326",
+                    "42930b33-a81a-d477-fb36-75b89cdeb3e6"
+                ]
+            },
+            {
+                "uid": "2648ee38-e074-05eb-2156-63abc1f254b8",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "adc0da7a-16fe-baa0-11af-923d79fdef7c"
+                ]
+            },
+            {
+                "uid": "148b2758-d7ab-7928-09e4-69e6ec62b2c8",
+                "type": "DEFINITION",
+                "definition": "LAMBDA",
+                "children": [
+                    "1775336d-71ea-cd05-49a3-e80e966e1277",
+                    "2648ee38-e074-05eb-2156-63abc1f254b8"
+                ]
+            }
+        ]
+    }
+]

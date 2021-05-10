@@ -2,14 +2,27 @@ import pytest
 import pickle
 import json
 import ast
+import os
 from typing import NoReturn
 
 import networkx as nx
 
+from automates.utils.misc import rd
 from automates.model_assembly.expression_visitor import (
     ExpressionVisitor,
     nodes2DiGraph,
 )
+
+DATA_ROOT = "tests/data/model_assembly/expression_visitor/"
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # Before each test, set the seed for generating uuids to 0 for consistency
+    # between tests and expected output
+    rd.seed(0)
+    # Run the test function
+    yield
 
 
 def create_expr_trees(test_cases) -> list:
@@ -29,6 +42,7 @@ def compare_graph_lists(tests, expected_file) -> NoReturn:
 
 
 def test_single_value_returns():
+    expected_output_filename = os.path.join(DATA_ROOT, "single_values.json")
     test_cases = {
         "int_constant_return": "lambda : 0",
         "str_constant_return": "lambda : 'foo'",
@@ -41,13 +55,11 @@ def test_single_value_returns():
     }
 
     graphs = create_expr_trees(test_cases)
-    compare_graph_lists(
-        graphs,
-        "tests/data/model_assembly/expression_visitor/single_values.json",
-    )
+    compare_graph_lists(graphs, expected_output_filename)
 
 
 def test_unary_ops():
+    expected_output_filename = os.path.join(DATA_ROOT, "unary_ops.json")
     test_cases = {
         "negate_bool_x": "lambda x: not x",
         "invert_x": "lambda x: ~ x",
@@ -55,13 +67,11 @@ def test_unary_ops():
     }
 
     graphs = create_expr_trees(test_cases)
-    compare_graph_lists(
-        graphs,
-        "tests/data/model_assembly/expression_visitor/unary_ops.json",
-    )
+    compare_graph_lists(graphs, expected_output_filename)
 
 
 def test_binary_ops():
+    expected_output_filename = os.path.join(DATA_ROOT, "binary_ops.json")
     test_cases = {
         "add_op": "lambda x, y: x + y",
         "multi_add_op": "lambda w, x, y, z: x + y + z + w",
@@ -83,13 +93,11 @@ def test_binary_ops():
     }
 
     graphs = create_expr_trees(test_cases)
-    compare_graph_lists(
-        graphs,
-        "tests/data/model_assembly/expression_visitor/binary_ops.json",
-    )
+    compare_graph_lists(graphs, expected_output_filename)
 
 
 def test_boolean_ops():
+    expected_output_filename = os.path.join(DATA_ROOT, "boolean_ops.json")
     test_cases = {
         "and_op": "lambda x, y: x and y",
         "multi_and_op": "lambda w, x, y, z: x and y and z and w",
@@ -98,13 +106,11 @@ def test_boolean_ops():
     }
 
     graphs = create_expr_trees(test_cases)
-    compare_graph_lists(
-        graphs,
-        "tests/data/model_assembly/expression_visitor/boolean_ops.json",
-    )
+    compare_graph_lists(graphs, expected_output_filename)
 
 
 def test_comparative_ops():
+    expected_output_filename = os.path.join(DATA_ROOT, "comparative_ops.json")
     test_cases = {
         "eq_op": "lambda x, y: x == y",
         "multi_eq_op": "lambda w, x, y, z: x == y == z == w",
@@ -121,13 +127,11 @@ def test_comparative_ops():
     }
 
     graphs = create_expr_trees(test_cases)
-    compare_graph_lists(
-        graphs,
-        "tests/data/model_assembly/expression_visitor/comparative_ops.json",
-    )
+    compare_graph_lists(graphs, expected_output_filename)
 
 
 def test_complex_expr():
+    expected_output_filename = os.path.join(DATA_ROOT, "complex_ops.json")
     test_cases = {
         "ifexp": "lambda c, x, y: x if c else y",
         "compound_ifexp": "lambda c1,c2,x,y,z: x if c1 else y if c2 else z",
@@ -141,26 +145,20 @@ def test_complex_expr():
     }
 
     graphs = create_expr_trees(test_cases)
-    compare_graph_lists(
-        graphs,
-        "tests/data/model_assembly/expression_visitor/complex_ops.json",
-    )
+    compare_graph_lists(graphs, expected_output_filename)
 
 
 def test_nodes2DiGraph():
+    expected_network_filename = os.path.join(DATA_ROOT, "sample_network.pkl")
     lambda_str = "lambda x: 4 * x**3 + 2 * x + 1"
     visitor = ExpressionVisitor()
     visitor.visit(ast.parse(lambda_str))
     nodes = visitor.get_nodes()
-    G = nodes2DiGraph(nodes)
 
-    expected_G = pickle.load(
-        open(
-            "tests/data/model_assembly/expression_visitor/sample_network.pkl",
-            "rb",
-        )
-    )
+    G = nodes2DiGraph(nodes)
+    expected_G = pickle.load(open(expected_network_filename, "rb"))
 
     assert isinstance(G, nx.DiGraph)
-    assert len(G.nodes) == 12
+    assert len(G.nodes) == 15
     assert G.nodes == expected_G.nodes
+    assert G.edges == expected_G.edges

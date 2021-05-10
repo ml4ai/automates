@@ -35,6 +35,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 from automates.program_analysis.CAST2GrFN.visitors import (
     CASTToAIRVisitor,
 )
+from automates.model_assembly.air import AutoMATES_IR
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.model_assembly.structures import (
     GenericContainer,
@@ -142,13 +143,25 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
+<<<<<<< HEAD
         grfn = GroundedFunctionNetwork.from_AIR(
             GenericIdentifier.from_str("@container::initial::@global::main"),
+=======
+        # TODO: fix this to send objects and metadata
+        #       (and documentation as a form of metadata)
+        air = AutoMATES_IR(
+            GenericIdentifier.from_str(
+                "@container::initial::@global::exampleFunction"
+            ),
+>>>>>>> f382e4f365d9fbb57fb5f100a037561f355fc864
             C,
             V,
             T,
             [],
+            [],
+            [],
         )
+        grfn = GroundedFunctionNetwork.from_AIR(air)
         return grfn
 
     def write_cast_object(self, cast_value):

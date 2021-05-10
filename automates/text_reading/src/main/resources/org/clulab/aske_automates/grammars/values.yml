@@ -6,7 +6,7 @@ rules:
     label: Value
     priority: ${priority}
     type: token
-    #action: variableArguments
+    #action: identifierArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
       [entity = /NUMBER|PERCENT/ & tag = /CD/]
@@ -15,7 +15,7 @@ rules:
     label: Value
     priority: ${priority}
     type: token
-    #action: variableArguments
+    #action: identifierArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
       [entity = /NUMBER|PERCENT/ & tag = /CD/] [word = "x"] [entity = /NUMBER|PERCENT/ & tag = /CD/]

@@ -17,7 +17,6 @@ class StringMatchEntityFinder(strings: Set[String], label: String, taxonomyPath:
   val regexBuilder = new RegexBuilder()
   regexBuilder.add(strings.toSeq:_*)
   val regex = regexBuilder.mkPattern
-  // alexeeva: added neg lookbehind to avoid equation # to be found as a variable
   //           |     (?<! [word = equation]) /\\Q${stringToMatch}\\E/
   def extract(doc: Document): Seq[Mention] = {
     val ruleTemplate =
@@ -69,16 +68,16 @@ object GrFNEntityFinder {
     val grfnFile = new File(grfnPath)
     val grfn = ujson.read(grfnFile.readString())
 
-    // The variable names only (excluding the scope info)
-    val variableShortNames = if (grfn.obj.get("variables").isDefined) {
+    // The identifier names only (excluding the scope info)
+    val identifierShortNames = if (grfn.obj.get("variables").isDefined) {
       GrFNParser.getVariableShortNames(grfn)
     } else {
-      AlignmentJsonUtils.getVariableShortNames(grfn)
+      AlignmentJsonUtils.getIdentifierShortNames(grfn)
     }
 
-    // Make a StringMatchEF based on the variable names
+    // Make a StringMatchEF based on the identifier names
     // todo: send in the taxonomy path
-    StringMatchEntityFinder.fromStrings(variableShortNames, "Variable") // todo: GrFNVariable?
+    StringMatchEntityFinder.fromStrings(identifierShortNames, "Identifier") // todo: GrFNVariable?
   }
 }
 
