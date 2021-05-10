@@ -185,6 +185,21 @@ def eselect(x, g):
     return list(selection)
 
 
+def eselect2(g, x, z):
+    """
+    For use in compute_IDC. Selects all edges in g except incoming to x and outgoing from z.
+    :param g: graph
+    :param x: nodes
+    :param z: nodes
+    :return: The set of edges in g that are not incoming to x or outgoing from z.
+    """
+    edges = set(g.es.select().indices)
+    to_x = set(g.es.select(_to_in=g.vs.select(name_in=x).indices).indices)
+    from_z = set(g.es.select(_from_in=g.vs.select(name_in=z).indices).indices)
+    selection = edges - to_x - from_z
+    return selection
+
+
 def get_expression(prob, start_sum=False, single_source=False, target_sym="^*("):
     """
     Converts a class probability object to LaTeX plaintext

@@ -42,7 +42,7 @@ def identifiability(y, x, g, z=None, steps=False, stop_on_noid=True):
         algo = "id"
         res_prob = res.p
     else:
-        res = compute_IDC(y, x, z, gm.Probability(), g, g_obs, topo, topo, [])  # todo: write this
+        res = compute_IDC(y, x, z, gm.Probability(), g, g_obs, topo, topo, [])
         algo = "idc"
         res_num = res.p
         res_den = res.p
@@ -230,7 +230,7 @@ def compute_IDC(y, x, z, p, g, g_obs, v, topo, tree):
     else:
         tree.call = gm.Call(y=y, x=x, z=z, p=p, g=g, v=v, id_check=False)
     g_xz = gm.unobserved_graph(g)
-    elist = gm.eselect2(g_xz)  # todo: write this
+    elist = gm.eselect2(g_xz, x, z)
     g_xz = g_xz.subgraph_edges(elist, delete_vertices=False)
     for node in z:
         cond = list(set(z) - set(node))
