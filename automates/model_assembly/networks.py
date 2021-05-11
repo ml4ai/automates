@@ -89,7 +89,7 @@ class VariableNode(GenericNode):
         return self.uid == other.uid
 
     def __str__(self):
-        return str(self.identifier)
+        return str(self.identifier) + str(self.uid)
 
     @classmethod
     def from_id(cls, id: VariableIdentifier, data: VariableDefinition):
@@ -427,9 +427,10 @@ class GrFNSubgraph:
         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
         node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
         all_nodes_visited: Set[VariableNode],
+        vars_to_compute=[],
     ) -> List[GenericNode]:
         """
-        Handles the execution of the lambda functions within a subgraoh of
+        Handles the execution of the lambda functions within a subgraph of
         GrFN. We place the logic in this function versus directly in __call__
         so the logic can be shared in the loop subgraph type.
 
@@ -443,6 +444,9 @@ class GrFNSubgraph:
                 nodes to the subgraph they are contained in.
             all_nodes_visited (Set[VariableNode]):
                 Holds the set of all variable nodes that have been visited
+            vars_to_compute (List[VariableNode]):
+                List of nodes to compute the values of. If passed in, the
+                node_execute_queue will be set to this list.
 
         Raises:
             Exception: Raised when we find multiple input interface nodes.
@@ -472,65 +476,79 @@ class GrFNSubgraph:
         ]
         all_nodes_visited.update(standalone_vars)
 
-        # Find the hyper edge nodes with no input to initialize the execution
-        # queue and var nodes with no incoming edges
-        node_execute_queue = [e.lambda_fn for e in hyper_edges if len(e.inputs) == 0]
-        node_execute_queue.extend(
-            [s for n in standalone_vars for s in grfn.successors(n)]
-        )
-
-        if input_interface_hyper_edge_node:
-            node_execute_queue.insert(0, input_interface_hyper_edge_node.lambda_fn)
-
-        # Need to recurse to a different subgraph if no nodes to execute here
-        if len(node_execute_queue) == 0:
-            global_literal_nodes = [
-                n
-                for n in grfn.nodes
-                if isinstance(n, LambdaNode)
-                and grfn.in_degree(n) == 0
-                and n.func_type == LambdaType.LITERAL
+        reverse_path_execution = len(vars_to_compute) > 0
+        if not reverse_path_execution:
+            # Find the hyper edge nodes with no input to initialize the execution
+            # queue and var nodes with no incoming edges
+            node_execute_queue = [
+                e.lambda_fn for e in hyper_edges if len(e.inputs) == 0
             ]
-            global_output_vars = [
-                n
-                for n in grfn.nodes
-                if isinstance(n, VariableNode) and grfn.out_degree(n) == 0
-            ]
-
-            # Choose a literal node with maximum distance to the output
-            # to begin recursing.
-            lit_node_to_max_dist = dict()
-            for (l_node, o_node) in product(global_literal_nodes, global_output_vars):
-                max_dist = max(
-                    [len(path) for path in all_simple_paths(grfn, l_node, o_node)]
-                )
-                lit_node_to_max_dist[l_node] = max_dist
-            lits_by_dist = sorted(
-                list(lit_node_to_max_dist.items()),
-                key=lambda t: t[1],
-                reverse=True,
-            )
-            (L_node, _) = lits_by_dist[0]
-            subgraph = node_to_subgraph[L_node]
-            subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
-            subgraph_input_interface = subgraph.get_input_interface_hyper_edge(
-                subgraph_hyper_edges
-            )
-            subgraph_outputs = subgraph(
-                grfn,
-                subgraphs_to_hyper_edges,
-                node_to_subgraph,
-                all_nodes_visited,
-            )
-
             node_execute_queue.extend(
-                set(
-                    f_node
-                    for o_node in subgraph_outputs
-                    for f_node in grfn.successors(o_node)
-                    if f_node not in all_nodes_visited
-                )
+                [s for n in standalone_vars for s in grfn.successors(n)]
             )
+
+            if input_interface_hyper_edge_node:
+                node_execute_queue.insert(0, input_interface_hyper_edge_node.lambda_fn)
+
+            # Need to recurse to a different subgraph if no nodes to execute here
+            if len(node_execute_queue) == 0:
+                global_literal_nodes = [
+                    n
+                    for n in grfn.nodes
+                    if isinstance(n, LambdaNode)
+                    and grfn.in_degree(n) == 0
+                    and n.func_type == LambdaType.LITERAL
+                ]
+                global_output_vars = [
+                    n
+                    for n in grfn.nodes
+                    if isinstance(n, VariableNode) and grfn.out_degree(n) == 0
+                ]
+
+                # Choose a literal node with maximum distance to the output
+                # to begin recursing.
+                lit_node_to_max_dist = dict()
+                for (l_node, o_node) in product(
+                    global_literal_nodes, global_output_vars
+                ):
+                    max_dist = max(
+                        [len(path) for path in all_simple_paths(grfn, l_node, o_node)]
+                    )
+                    lit_node_to_max_dist[l_node] = max_dist
+                lits_by_dist = sorted(
+                    list(lit_node_to_max_dist.items()),
+                    key=lambda t: t[1],
+                    reverse=True,
+                )
+                (L_node, _) = lits_by_dist[0]
+                subgraph = node_to_subgraph[L_node]
+                subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
+                subgraph_input_interface = subgraph.get_input_interface_hyper_edge(
+                    subgraph_hyper_edges
+                )
+                subgraph_outputs = subgraph(
+                    grfn,
+                    subgraphs_to_hyper_edges,
+                    node_to_subgraph,
+                    all_nodes_visited,
+                )
+
+                node_execute_queue.extend(
+                    set(
+                        f_node
+                        for o_node in subgraph_outputs
+                        for f_node in grfn.successors(o_node)
+                        if f_node not in all_nodes_visited
+                    )
+                )
+        else:
+            node_execute_queue = [
+                succ
+                for var in vars_to_compute
+                for succ in grfn.predecessors(var)
+                # if (succ in self.nodes and succ not in all_nodes_visited)
+                # or (var in self.nodes and succ.func_type == LambdaType.INTERFACE)
+            ]
 
         while node_execute_queue:
             executed = True
@@ -600,17 +618,19 @@ class GrFNSubgraph:
             if executed:
                 all_nodes_visited.update(executed_visited_variables)
                 all_nodes_visited.add(node_to_execute)
-                node_execute_queue.extend(
-                    [
-                        succ
-                        for var in executed_visited_variables
-                        for succ in grfn.successors(var)
-                        if (succ in self.nodes and succ not in all_nodes_visited)
-                        or (
-                            var in self.nodes and succ.func_type == LambdaType.INTERFACE
-                        )
-                    ]
-                )
+                if not reverse_path_execution:
+                    node_execute_queue.extend(
+                        [
+                            succ
+                            for var in executed_visited_variables
+                            for succ in grfn.successors(var)
+                            if (succ in self.nodes and succ not in all_nodes_visited)
+                            or (
+                                var in self.nodes
+                                and succ.func_type == LambdaType.INTERFACE
+                            )
+                        ]
+                    )
             else:
                 node_execute_queue.extend(
                     [
@@ -817,17 +837,27 @@ class GrFNLoopSubgraph(GrFNSubgraph):
 
         var_results = set()
         initial_visited_nodes = set()
-        iterations = 0
+        prev_all_nodes_visited = all_nodes_visited
         # Loop until the exit value becomes true
-        while (
-            exit_var_node.value is None
-            or (isinstance(exit_var_node.value, bool) and not exit_var_node.value)
-            or (
-                isinstance(exit_var_node.value, (np.ndarray, list))
-                and not all(exit_var_node.value)
+        while True:
+            initial_visited_nodes = all_nodes_visited.copy()
+            initial_visited_nodes.update(first_decision_vars)
+            # Compute JUST the path to the exit variable so we can prevent
+            # computing all paths on the n+1 step
+            super().__call__(
+                grfn,
+                subgraphs_to_hyper_edges,
+                node_to_subgraph,
+                initial_visited_nodes,
+                vars_to_compute=input_interface.outputs + [exit_var_node],
             )
-        ):
-            iterations += 1
+
+            if (isinstance(exit_var_node.value, bool) and exit_var_node.value) or (
+                isinstance(exit_var_node.value, (np.ndarray, list))
+                and all(exit_var_node.value)
+            ):
+                break
+
             initial_visited_nodes = all_nodes_visited.copy()
             initial_visited_nodes.update(first_decision_vars)
             var_results = super().__call__(
@@ -836,7 +866,10 @@ class GrFNLoopSubgraph(GrFNSubgraph):
                 node_to_subgraph,
                 initial_visited_nodes,
             )
-        all_nodes_visited = all_nodes_visited.union(initial_visited_nodes)
+
+            prev_all_nodes_visited = initial_visited_nodes
+
+        all_nodes_visited = all_nodes_visited.union(prev_all_nodes_visited)
         return var_results
 
 

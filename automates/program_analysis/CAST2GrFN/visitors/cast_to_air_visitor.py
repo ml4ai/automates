@@ -346,7 +346,11 @@ class CASTToAIRVisitor(CASTVisitor):
         left_result = self.visit(node.left)
         right_result = self.visit(node.right)
         op_result = self.get_op(node.op)
-        source_ref = self.retrieve_source_ref(node.source_refs[0])
+        source_ref = C2ASourceRef(
+            file=None, line_begin=None, line_end=None, col_start=None, col_end=None
+        )
+        if node.source_refs != None:
+            source_ref = self.retrieve_source_ref(node.source_refs[0])
 
         return (
             left_result[:-1]
@@ -437,10 +441,13 @@ class CASTToAIRVisitor(CASTVisitor):
             )
             input_vars = []
             arg_lambdas = []
+            prev_context = self.state.current_context
+            self.state.set_variable_context(C2AVariableContext.LOAD)
             for arg in node.arguments:
                 arg_res = self.visit(arg)
                 arg_lambdas.extend(arg_res)
                 input_vars.extend(arg_res[-1].input_variables)
+            self.state.set_variable_context(prev_context)
 
             # TODO include additional info about original function
             if is_builtin_func(self.cast_source_language, called_func_name):
@@ -466,6 +473,8 @@ class CASTToAIRVisitor(CASTVisitor):
         input_vars = []
         output_vars = []
         arg_assign_lambdas = []
+        prev_context = self.state.current_context
+        self.state.set_variable_context(C2AVariableContext.LOAD)
         for arg in node.arguments:
             if isinstance(arg, Name):
                 name_res = self.visit(arg)
@@ -480,6 +489,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 assign_res = self.visit(arg_assign)
                 arg_assign_lambdas.extend(assign_res)
                 input_vars.extend(assign_res[-1].output_variables)
+        self.state.set_variable_context(prev_context)
 
         # Gather what global variables need to be inputted into the container.
         # These would have been added as additional arguments to the container
@@ -1600,7 +1610,7 @@ class CASTToAIRVisitor(CASTVisitor):
                         [],
                         C2ALambdaType.UNKNOWN,
                         source_ref,
-                        f"{val_result[-1].lambda_expr}[{slice_result[-1].lambda_expr}]",
+                        f"{val_result[-1].lambda_expr}[int({slice_result[-1].lambda_expr})]",
                         node,
                     )
                 ]
@@ -1620,7 +1630,12 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         val_result = self.visit(node.value)
         op_result = self.get_op(node.op)
-        source_ref = self.retrieve_source_ref(node.source_refs[0])
+
+        source_ref = C2ASourceRef(
+            file=None, line_begin=None, line_end=None, col_start=None, col_end=None
+        )
+        if node.source_refs != None:
+            source_ref = self.retrieve_source_ref(node.source_refs[0])
 
         return val_result[:-1] + [
             C2AExpressionLambda(

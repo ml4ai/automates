@@ -142,7 +142,7 @@ class C2AVariable(object):
             "mutable": False,  # TODO probably only mutable if object/list/dict type
         }
         if self.type_name == "Number":
-            domain["name"] = "float"
+            domain["name"] = "integer"
         elif self.type_name.startswith("object$"):
             name = self.type_name.split("object$")[-1]
             domain.update(
