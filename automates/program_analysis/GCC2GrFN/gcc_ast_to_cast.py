@@ -1,4 +1,5 @@
 from pprint import pprint
+from typing import cast
 
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.model.cast import (
@@ -49,42 +50,25 @@ from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
 
 
 class GCC2CAST:
-    def __init__(self, gcc_ast):
+    """
+    Takes a list of json objects where each object represents the GCC AST
+    for one file outputted from our ast_dump.cpp GCC plugin.
+    """
+
+    def __init__(self, gcc_asts):
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
-        self.gcc_ast = gcc_ast
+        self.gcc_asts = gcc_asts
         self.basic_blocks = []
         self.parsed_basic_blocks = []
         self.current_basic_block = None
         self.type_ids_to_defined_types = {}
 
     def to_cast(self):
-        input_file = self.gcc_ast["mainInputFilename"]
-        input_file_stripped = input_file.split("/")[-1]
-        functions = self.gcc_ast["functions"]
-        types = self.gcc_ast["recordTypes"]
-        global_variables = self.gcc_ast["globalVariables"]
-        body = []
-
-        # First fill out the ids to type names in case one type uses another
-        # before it is defined.
-        for t in types:
-            self.type_ids_to_defined_types[t["id"]] = ClassDef(name=t["name"])
-
-        for t in types:
-            full_type_def = self.parse_record_type(t)
-            self.type_ids_to_defined_types[t["id"]] = full_type_def
-            body.append(full_type_def)
-
-        for gv in global_variables:
-            body.append(self.parse_variable(gv, parse_value=True))
-
-        for f in functions:
-            body.append(self.parse_function(f))
-
+        modules = []
         source_language = "unknown"
-        if "mainInputFilename" in self.gcc_ast:
-            file_extension = input_file_stripped.split(".")[-1]
+        if "mainInputFilename" in self.gcc_asts[0]:
+            file_extension = self.gcc_asts[0]["mainInputFilename"].split(".")[-1]
             if file_extension == "c":
                 source_language = "c"
             elif file_extension == "cpp":
@@ -92,10 +76,40 @@ class GCC2CAST:
             elif file_extension in {"f", "for", "f90"}:
                 source_language = "fortran"
 
-        file_module = Module(
-            name=input_file_stripped.split("/")[-1].rsplit(".")[0], body=body
-        )
-        return CAST([file_module], source_language)
+        for gcc_ast in self.gcc_asts:
+            input_file = gcc_ast["mainInputFilename"]
+            input_file_stripped = input_file.split("/")[-1]
+            functions = gcc_ast["functions"]
+            types = gcc_ast["recordTypes"]
+            global_variables = gcc_ast["globalVariables"]
+            body = []
+
+            # First fill out the ids to type names in case one type uses another
+            # before it is defined.
+            for t in types:
+                self.type_ids_to_defined_types[t["id"]] = ClassDef(name=t["name"])
+
+            # Parse types defined in AST so we have them before they are referenced
+            for t in types:
+                full_type_def = self.parse_record_type(t)
+                self.type_ids_to_defined_types[t["id"]] = full_type_def
+                body.append(full_type_def)
+
+            # Parse global vars in AST so we have them before they are referenced
+            for gv in global_variables:
+                body.append(self.parse_variable(gv, parse_value=True))
+
+            # Parse each function
+            for f in functions:
+                body.append(self.parse_function(f))
+
+            modules.append(
+                Module(
+                    name=input_file_stripped.split("/")[-1].rsplit(".")[0], body=body
+                )
+            )
+
+        return CAST(modules, source_language)
 
     def get_source_refs(self, obj):
         source_refs = []
@@ -178,7 +192,7 @@ class GCC2CAST:
             del self.ssa_ids_to_expression[ssa_id]
             return stored_ssa_expr
         elif is_const_operator(code):
-            return Number(number=get_const_value(operand))
+            return get_const_value(operand)
         elif code == "var_decl" or code == "parm_decl":
             if "name" in operand:
                 name = operand["name"]
@@ -191,6 +205,8 @@ class GCC2CAST:
             val_code = value["code"]
             if is_const_operator(val_code):
                 return get_const_value(value)
+            elif val_code == "array_ref":
+                return self.parse_array_ref_operand(value)
             else:
                 name = value["name"]
                 name = name.replace(".", "_")
@@ -241,6 +257,9 @@ class GCC2CAST:
             ] * actual_size
             # TODO we should probably add type and size into list nodes?
             return List(values=vals, source_refs=source_refs)
+        elif type["type"] == "real_type":
+            return default_cast_val("Number", self.type_ids_to_defined_types)
+        print(type)
 
     def parse_mem_ref_operand(self, operand):
         offset = operand["offset"]
@@ -271,7 +290,10 @@ class GCC2CAST:
         elif code == "mem_ref":
             assign_var = self.parse_mem_ref_operand(lhs)
             if isinstance(assign_var, Name):
-                assign_var = Var(val=assign_var)
+                cast_type = cast_type = gcc_type_to_var_type(
+                    lhs["type"], self.type_ids_to_defined_types
+                )
+                assign_var = Var(val=assign_var, type=cast_type)
         elif code == "array_ref":
             assign_var = self.parse_array_ref_operand(lhs)
 
@@ -285,6 +307,12 @@ class GCC2CAST:
             return []
 
         source_refs = self.get_source_refs(stmt)
+
+        if isinstance(assign_var, Var) and assign_var.val.name == "growth_rate":
+            print(stmt)
+            print(
+                Assignment(left=assign_var, right=assign_value, source_refs=source_refs)
+            )
 
         return [
             Assignment(left=assign_var, right=assign_value, source_refs=source_refs)
@@ -324,7 +352,7 @@ class GCC2CAST:
         assign_value = None
         if is_valid_operator(operator):
             if is_const_operator(operator):
-                assign_value = Number(number=get_const_value(operands[0]))
+                assign_value = get_const_value(operands[0])
             elif is_pass_through_expr(operator):
                 if "name" in operands[0]:
                     name = operands[0]["name"].replace(".", "_")
@@ -474,7 +502,7 @@ class GCC2CAST:
         blocks = [
             bb
             for bb in self.basic_blocks
-            if bb["index"] >= start_block or bb["index"] <= end_block
+            if bb["index"] >= start_block and bb["index"] < end_block
         ]
 
         return [node for b in blocks for node in self.parse_basic_block(b)]

@@ -32,7 +32,7 @@ GCC_OPS_TO_CAST_OPS = {
     "logical_and": BinaryOperator.AND,
 }
 
-GCC_CONST_OPS = ["integer_cst", "real_cst", "string_cst"]
+GCC_CONST_OPS = ["integer_cst", "real_cst", "string_cst", "const_decl"]
 
 GCC_CASTING_OPS = ["float_expr", "int_expr"]
 GCC_TRUNC_OPS = ["trunc_div_expr", "trunc_mod_expr", "fix_trunc_expr"]
@@ -45,6 +45,7 @@ GCC_BUILTIN_FUNC = {
     "__builtin_expf",
     "__builtin_cosf",
     "__builtin_sqrtf",
+    "__builtin_powf",
 }
 
 
@@ -99,11 +100,15 @@ def get_builtin_func_cast(operator):
 
 def get_const_value(operand):
     if operand["code"] == "integer_cst":
-        return operand["value"]
+        return Number(number=operand["value"])
     elif operand["code"] == "real_cst":
-        return float(operand["decimal"])
+        return Number(number=float(operand["decimal"]))
     elif operand["code"] == "string_cst":
         return String(string=operand["value"])
+    elif operand["code"] == "const_decl":
+        return get_const_value(operand["value"])
+    else:
+        raise Exception(f"Error: Unknown const operand type {operand['code']}")
 
 
 def get_cast_operator(op):

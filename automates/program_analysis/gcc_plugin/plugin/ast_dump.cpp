@@ -606,7 +606,10 @@ static void dump_op(tree op)
       json_int_field("id", DEBUG_TEMP_UID(op));
       json_string_field("mangledName", IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(op)));
       json_string_field("name", IDENTIFIER_POINTER(DECL_NAME(op)));
-      dump_decl_srcref(op);
+      if (!DECL_IS_BUILTIN(op))
+      {
+        dump_decl_srcref(op);
+      }
       break;
 
     case PARM_DECL:
@@ -1393,6 +1396,44 @@ namespace
 
 /* Plugin initialization.  */
 
+FILE *generate_ast_file_ptr()
+{
+  // Make a copy of input file name for strdup so we dont mess up original ptr
+  char main_input_filename_copy[strlen(main_input_filename)];
+  strcpy(main_input_filename_copy, main_input_filename);
+
+  // Strip any path in front of file name
+  char *name, *tok = strtok(main_input_filename_copy, "/");
+  while (tok != NULL)
+  {
+    name = tok;
+    tok = strtok(NULL, "/");
+  }
+
+  // Strip file extension
+  for (int i = strlen(name) - 1; i != 0; i--)
+  {
+    if (name[i] == '.')
+    {
+      name[i] = '\0';
+      break;
+    }
+  }
+
+  char ast_file_name[strlen(name) + (11 * sizeof(char)) + 1];
+  sprintf(ast_file_name, "./%s_gcc_ast.json", name);
+
+  TRACE("json file name: %s\n", ast_file_name);
+  FILE *f_ptr = fopen(ast_file_name, "w");
+  if (f_ptr == NULL)
+  {
+    TRACE("Error opening ast json file: %s\n", ast_file_name);
+    exit(1);
+  }
+
+  return f_ptr;
+}
+
 int plugin_init(struct plugin_name_args *plugin_info,
                 struct plugin_gcc_version *version)
 {
@@ -1403,7 +1444,7 @@ int plugin_init(struct plugin_name_args *plugin_info,
   pass_info.ref_pass_instance_number = 1;
   pass_info.pos_op = PASS_POS_INSERT_AFTER;
 
-  json_f = fopen("./ast.json", "w");
+  json_f = generate_ast_file_ptr();
 
   /* Register this new pass with GCC */
   register_callback(plugin_info->base_name, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
