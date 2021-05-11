@@ -636,7 +636,10 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return NotImplemented
+        # For now, just ignore the node expressions. Eventually will need to
+        # handle in the case that it is a function call with an output
+        # expr_res = self.visit(node.expr)
+        return []
 
     def handle_packs_exiting_container(self, con):
         """
@@ -691,7 +694,7 @@ class CASTToAIRVisitor(CASTVisitor):
 
         def is_updated_collection(v):
             return (
-                v.type_name in {"List", "Set", "Dict"}
+                v.type_name in {"List", "Set", "Dict", "Tuple"}
                 and v.identifier_information.name in all_output_names_in_body
             )
 
@@ -728,7 +731,7 @@ class CASTToAIRVisitor(CASTVisitor):
             5. Perform cleanup by removing this functions name from the scope
                 and resetting fields that are applicable per function.
         """
-        source_ref = SourceRef("", None, None, None, None)
+        source_ref = C2ASourceRef("", None, None, None, None)
         if node.source_refs is not None and len(node.source_refs) > 0:
             source_ref = self.retrieve_source_ref(node.source_refs[0])
 
@@ -769,11 +772,7 @@ class CASTToAIRVisitor(CASTVisitor):
         self.state.reset_current_function()
         self.state.reset_conditional_count()
 
-    @visit.register
-    def _(self, node: List):
-        """
-        TODO
-        """
+    def handle_collection_object(self, node):
         # TODO refine more complex list definitions to pre calculate more
         # complex expressions
         input_vars = []
@@ -788,8 +787,11 @@ class CASTToAIRVisitor(CASTVisitor):
                 raise Exception(
                     "Error: Currently unable to handle complex expression in dictionary definition for {k}: {v}"
                 )
-
-        lambda_expr = f"[{','.join(list_value_lambdas)}]"
+        lambda_expr = ""
+        if isinstance(node, List):
+            lambda_expr = f"[{','.join(list_value_lambdas)}]"
+        elif isinstance(node, Tuple):
+            lambda_expr = f"({','.join(list_value_lambdas)})"
 
         return [
             C2AExpressionLambda(
@@ -808,6 +810,20 @@ class CASTToAIRVisitor(CASTVisitor):
                 node,
             )
         ]
+
+    @visit.register
+    def _(self, node: Tuple):
+        """
+        TODO
+        """
+        return self.handle_collection_object(node)
+
+    @visit.register
+    def _(self, node: List):
+        """
+        TODO
+        """
+        return self.handle_collection_object(node)
 
     def build_var_with_incremented_version(self, var):
         return C2AVariable(
@@ -1539,7 +1555,23 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
-        return NotImplemented
+        return [
+            C2AExpressionLambda(
+                C2AIdentifierInformation(
+                    C2ALambdaType.UNKNOWN,
+                    self.state.get_scope_stack(),
+                    self.state.current_module,
+                    C2AIdentifierType.LAMBDA,
+                ),
+                [],
+                [],
+                [],
+                C2ALambdaType.UNKNOWN,
+                C2ASourceRef("", None, None, None, None),
+                str(node.string),
+                node,
+            )
+        ]
 
     @visit.register
     def _(self, node: Subscript):
@@ -1615,13 +1647,6 @@ class CASTToAIRVisitor(CASTVisitor):
                     )
                 ]
             )
-
-    @visit.register
-    def _(self, node: Tuple):
-        """
-        TODO
-        """
-        return NotImplemented
 
     @visit.register
     def _(self, node: UnaryOp):
