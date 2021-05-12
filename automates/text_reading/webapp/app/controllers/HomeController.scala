@@ -268,7 +268,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     } else defaultSerializerName
 
     //align components if the right information is provided in the json---we have to have at least Mentions extracted from a paper and either the equations or the source code info (incl. source code variables/identifiers and comments). The json can also contain svo groundings with the key "SVOgroundings".
-    if (jsonObj.contains("mentions") && (jsonObj.contains("equations") || jsonObj.contains("source_code"))) {
+    if (jsonObj.contains("mentions") || (jsonObj.contains("equations") || jsonObj.contains("source_code"))) {
       val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
 
       // ground!
