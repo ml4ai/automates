@@ -34,8 +34,8 @@ rules:
     example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
     pattern: |
       trigger = ${functionTrigger3}
-      input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of
-      output:Phrase = nsubjpass conj_or? | dobj
+      input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of
+      output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
 
   - name: trigger4_of_to # ratio, fraction is the trigger for this rule
     label: Function

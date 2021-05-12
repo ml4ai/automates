@@ -300,6 +300,18 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  // Tests from paper: 1982-Comparison-of-PT and Penman Methods-petpt and petpen_PM_and_PT
+
+  val t1h = "In both cases Et was derived indirectly from calculated values of open water evaporation(Eo), using the equation: Et = f Eo where f was an empirical factor."
+  failingTest should s"find functions from t1h: ${t1h}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Et" -> Seq("calculated values of open water evaporation(Eo)"),
+      "Et" -> Seq("f", "Eo")
+    )
+    val mentions = extractMentions(t1h)
+    testFunctionEvent(mentions, desired)
+  }
+
 }
 
   // note: below are the example sentences that contain functional relations (I think), but I'm not sure what to do about with them for now.
