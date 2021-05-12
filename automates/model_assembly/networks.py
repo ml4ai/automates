@@ -89,7 +89,7 @@ class VariableNode(GenericNode):
         return self.uid == other.uid
 
     def __str__(self):
-        return str(self.identifier) + str(self.uid)
+        return f"{str(self.identifier)}::{str(self.uid)}"
 
     @classmethod
     def from_id(cls, id: VariableIdentifier, data: VariableDefinition):
@@ -993,7 +993,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
         return f"{self.label}\n{size_str}"
 
     def __call__(
-        self, inputs: Dict[str, Any], literals: Dict[str, Any] = None
+        self,
+        inputs: Dict[str, Any],
+        literals: Dict[str, Any] = None,
     ) -> Iterable[Any]:
         """Executes the GrFN over a particular set of inputs and returns the
         result.
@@ -1016,18 +1018,28 @@ class GroundedFunctionNetwork(nx.DiGraph):
             self.input_identifier_map[VariableIdentifier.from_str(n)]: v
             for n, v in inputs.items()
         }
-        # Set input values
+
+        # Check if vectorized input is given and configure the numpy shape
         for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
+            if isinstance(value, np.ndarray):
+                if self.np_shape != value.shape and self.np_shape != (1,):
+                    raise GrFNExecutionException(
+                        f"Error: Given two vectorized inputs with different shapes: '{value.shape}' and '{self.np_shape}'"
+                    )
+                self.np_shape = value.shape
+
+        # Set the values of input var nodes given in the inputs dict
+        for input_node in [n for n in self.inputs if n in full_inputs]:
+            value = full_inputs[input_node]
+
             # TODO: need to find a way to incorporate a 32/64 bit check here
             if isinstance(value, float):
-                value = np.array([value], dtype=np.float64)
+                value = np.full(self.np_shape, value, dtype=np.float64)
             if isinstance(value, int):
-                value = np.array([value], dtype=np.int64)
+                value = np.full(self.np_shape, value, dtype=np.int64)
             elif isinstance(value, list):
-                value = np.array([value])
-            elif isinstance(value, np.ndarray):
-                self.np_shape = value.shape
+                value = [np.array(value)] * self.np_shape[0]
 
             input_node.input_value = value
 

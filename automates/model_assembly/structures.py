@@ -81,7 +81,15 @@ class VariableIdentifier(GenericIdentifier):
 
     @classmethod
     def from_str(cls, var_id: str):
-        (ns, sc, vn, ix) = var_id.split("::")
+        split = var_id.split("::")
+        # We introduced a change where we now append "::<uid>" onto variable
+        # ids to create unique variable nodes for multiple calls to the same
+        # function. We should probably only have the else case, but to be safe
+        # for now, keep both around.
+        if len(split) == 4:
+            (ns, sc, vn, ix) = split
+        else:
+            (ns, sc, vn, ix, _) = split
         return cls(ns, sc, vn, int(ix))
 
     def __str__(self):
