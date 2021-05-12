@@ -9,6 +9,8 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import org.clulab.aske.automates.apps.AlignmentBaseline
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
 
+import scala.collection.mutable.ArrayBuffer
+
 case class AlignmentHandler(editDistance: VariableEditDistanceAligner, w2v: PairwiseW2VAligner) {
   def this(w2vPath: String, relevantArgs: Set[String]) =
     this(new VariableEditDistanceAligner(), new PairwiseW2VAligner(new Word2Vec(w2vPath), relevantArgs))
@@ -26,12 +28,32 @@ trait Aligner {
 
 class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
   def alignMentions(srcMentions: Seq[Mention], dstMentions: Seq[Mention]): Seq[Alignment] = {
-    alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs)), dstMentions.map(Aligner.getRelevantText(_, relevantArgs)))
+    alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs)), dstMentions.map(Aligner.getRelevantText(_, relevantArgs)), useBigrams = true)
   }
-  def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
+  def getBigrams(textStrings: Seq[String]): Seq[String] = {
+    val bigrams = new ArrayBuffer[String]()
+    // fixme: find a good place for this list
+    val stopwords = List("ourselves", "hers", "between", "yourself", "but", "again", "there", "about", "once", "during", "out", "very", "having", "with", "they", "own", "an", "be", "some", "for", "do", "its", "yours", "such", "into", "of", "most", "itself", "other", "off", "is", "s", "am", "or", "who", "as", "from", "him", "each", "the", "themselves", "until", "below", "are", "we", "these", "your", "his", "through", "don", "nor", "me", "were", "her", "more", "himself", "this", "down", "should", "our", "their", "while", "above", "both", "up", "to", "ours", "had", "she", "all", "no", "when", "at", "any", "before", "them", "same", "and", "been", "have", "in", "will", "on", "does", "yourselves", "then", "that", "because", "what", "over", "why", "so", "can", "did", "not", "now", "under", "he", "you", "herself", "has", "just", "where", "too", "only", "myself", "which", "those", "after", "few", "whom", "being", "if", "theirs", "my", "against", "a", "by", "doing", "it", "how", "further", "was", "here", "than")
+    val woStopWords = textStrings.filter(tok => !stopwords.contains(tok))
+    for (i <- 0 to textStrings.length - 2) {
+      bigrams.append(woStopWords.slice(i, i+2).mkString(" "))
+
+    }
+    for (b <- bigrams) println("bigram: " + b)
+    bigrams
+
+  }
+
+  def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String], useBigrams: Boolean): Seq[Alignment] = {
+    val srcTextsToCompare = if (useBigrams) {
+      val bigrams = getBigrams(srcTexts)
+      srcTexts ++ bigrams
+    } else {
+      srcTexts
+    }
     val exhaustiveScores = for {
-      (src, i) <- srcTexts.zipWithIndex
-      (dst, j) <- dstTexts.zipWithIndex
+      (src, i) <- srcTextsToCompare.zipWithIndex
+      (dst, j) <- srcTextsToCompare.zipWithIndex
       score = 1.0 / (editDistance(src, dst) + 1.0) // todo: is this good for long-term?
     } yield Alignment(i, j, score)
     // redundant but good for debugging
