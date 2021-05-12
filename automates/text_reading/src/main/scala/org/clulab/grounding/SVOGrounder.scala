@@ -78,7 +78,7 @@ object SVOGrounder {
 
   /** Grounding a sequence of mentions and return a pretty-printable json string*/
   def mentionsToGroundingsJson(mentions: Seq[Mention], k: Int): String = {
-    val seqOfGroundings = SeqOfGroundings(groundDefinitionsToSVO(mentions, k))
+    val seqOfGroundings = SeqOfGroundings(groundDescriptionsToSVO(mentions, k))
     write(seqOfGroundings, indent = 4)
   }
 
@@ -164,7 +164,7 @@ object SVOGrounder {
   /** grounding one mention; return a map from the name if the variable from the mention to its svo grounding */
   //todo: this should also probably return and option
   def groundOneMentionWithSparql(mention: Mention, k: Int): Map[String, Seq[sparqlResult]] = {
-    println("Started grounding a mention: " + mention.arguments("definition").head.text + " | var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
+    println("Started grounding a mention: " + mention.arguments("description").head.text + " | var text: " + mention.arguments("variable").head.text + " " + "| Label: " + mention.label)
     val terms = getTerms(mention).get.filter(t => t.length > 1) //get terms gets nouns, verbs, and adjs, and also returns reasonable collocations (multi-word combinations), e.g., syntactic head of the mention + (>compound | >amod)
 //    println("search terms: " + terms.mkString(" "))
     if (terms.nonEmpty) {
@@ -242,13 +242,13 @@ object SVOGrounder {
   //            SUPPORT METHODS
   // ======================================================
 
-  /**takes a series of mentions, maps each variable in the definition mentions (currently the only groundable
+  /**takes a series of mentions, maps each variable/identifier in the description mentions (currently the only groundable
   * type of mentions) to a sequence of results from the SVO ontology, and converts these mappings into an object
   * writable with upickle */
-  def groundDefinitionsToSVO(mentions: Seq[Mention], k: Int): Seq[SVOGrounding] = {
-    //sanity check to make sure all the passed mentions are def mentions
-    val (defMentions, other) = mentions.partition(m => m matches "Definition")
-    val groundings = groundMentionsWithSparql(defMentions, k)
+  def groundDescriptionsToSVO(mentions: Seq[Mention], k: Int): Seq[SVOGrounding] = {
+    //sanity check to make sure all the passed mentions are descr mentions
+    val (descrMentions, other) = mentions.partition(m => m matches "Description")
+    val groundings = groundMentionsWithSparql(descrMentions, k)
     val groundingsObj =
       for {
         gr <- groundings
@@ -266,15 +266,15 @@ object SVOGrounder {
   }
 
   /*get the terms (single-and multi-word) from the mention to run sparql queries with;
-  * only look at the terms in the definition mentions for now*/
+  * only look at the terms in the description mentions for now*/
   def getTerms(mention: Mention): Option[Seq[String]] = {
-    //todo: will depend on type of mention, e.g., for definitions, only look at the words in the definition arg, not var itself
+    //todo: will depend on type of mention, e.g., for descriptions, only look at the words in the description arg, not var itself
 //    println("Getting search terms for the mention")
-    if (mention matches "Definition") {
+    if (mention matches "Description") {
       val terms = new ArrayBuffer[String]()
 
       //the sparql query can't have spaces between words (can take words separated by underscores or dashes, so the compounds will include those)
-      val compounds = getCompounds(mention.arguments("definition").head)
+      val compounds = getCompounds(mention.arguments("description").head)
 
       if (compounds.nonEmpty) {
         for (c <- compounds.get) {
@@ -285,11 +285,11 @@ object SVOGrounder {
       }
 
 //      for (t <- compounds) println(s"term from compounds ${t.mkString("|")} ${t.length}")
-      //if there were no search terms found by getCompounds, just ground any nouns in the definition
+      //if there were no search terms found by getCompounds, just ground any nouns in the description
       if (terms.isEmpty) {
         //get terms from words
-        val lemmas = mention.arguments("definition").head.lemmas.get
-        val tags = mention.arguments("definition").head.tags.get
+        val lemmas = mention.arguments("description").head.lemmas.get
+        val tags = mention.arguments("description").head.tags.get
         for (i <- lemmas.indices) {
           //disregard words  other than nouns for now fixme: add other parts of speech?
           //disregard words that are too short---unlikely to ground well to svo
