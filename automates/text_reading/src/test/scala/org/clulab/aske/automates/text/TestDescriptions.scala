@@ -97,14 +97,14 @@ class TestDescriptions extends ExtractionTest {
 
   val t10a = "Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. (2012a) " +
     "recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
-  passingTest should s"find NO descriptions from t11a: ${t10a}" taggedAs(Somebody) in {
+  passingTest should s"find NO descriptions from t10a: ${t10a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t10a)
     testDescriptionEvent(mentions, desired)
   }
 
   val t11a = "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
-  passingTest should s"find NO descriptions from t12a: ${t11a}" taggedAs(Somebody) in {
+  passingTest should s"find NO descriptions from t11a: ${t11a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t11a)
     testDescriptionEvent(mentions, desired)
@@ -380,7 +380,7 @@ class TestDescriptions extends ExtractionTest {
   }
 
   val t4e = "For daily (24-hour) periods, Ra can be estimated from the solar constant, the solar declination, and the day of the year."
-  failingTest should s"find NO definitions from t4e: ${t4e}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t4e: ${t4e}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])] // fixme: comma_appos_var rule wrongly captured a definition for Ra.
     val mentions = extractMentions(t4e)
     testDescriptionEvent(mentions, desired)
@@ -719,7 +719,7 @@ class TestDescriptions extends ExtractionTest {
   // Tests from paper: model for predicting evaporation from a row crop with incomplete cover
 
   val t1n = "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
-  failingTest should s"find NO definitions from t1n: ${t1n}" taggedAs(Somebody) in {
+  passingTest should s"find NO definitions from t1n: ${t1n}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])] // fixme: Wind speed is captured as a definition for Rno. -> fixed by changing comma_appos_var rule
     val mentions = extractMentions(t1n)
     testDescriptionEvent(mentions, desired)

@@ -16,7 +16,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-  passingTest should s"find functions from t2a: ${t2a}" taggedAs(Somebody) in {
+  failingTest should s"find functions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "E0" -> Seq("Kcd", "ETpm")
     )
@@ -36,7 +36,7 @@ class TestFunctions extends ExtractionTest {
   val t4a = "The actual vapor pressure can be measured or it can be calculated from various humidity data, such as measured dew point temperature, wet-bulb and dry-bulb temperature, or relative humidity and air temperature data."
   failingTest should s"find functions from t4a: ${t4a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "The actual vapor pressure" -> Seq("various humidity data", "air temperature data") // todo: how can we deal with pronouns (i.e. it)? + another issue is the "such as" part. (needs discourse parsing?)
+      "The actual vapor pressure" -> Seq("various humidity data") // todo: how can we deal with pronouns (i.e. it)? + another issue is the "such as" part. (needs discourse parsing?)
     )
     val mentions = extractMentions(t4a)
     testFunctionEvent(mentions, desired)
@@ -129,7 +129,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2e = "Since air Rh, defined as ea divided by es, is also capable of representing the humidity deficit of air, there are arguments about the choice between Rh and D in E or stomatal conductance estimation."
-  passingTest should s"find functions from t2e: ${t2e}" taggedAs(Somebody) in {
+  failingTest should s"find functions from t2e: ${t2e}" taggedAs(Somebody) in {
     val desired = Seq(
       "air Rh" -> Seq("ea", "es")
     )
@@ -150,7 +150,7 @@ class TestFunctions extends ExtractionTest {
   // Tests from 2003-DSSAT
 
   val t1f = "the soil water content of each layer is updated by adding or subtracting daily flows of water to or from the layer due to each process."
-  passingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
+  failingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
     val desired = Seq(
       "the soil water content of each layer" -> Seq("daily flows of water", "layer"),
       "the soil water content of each layer" -> Seq("daily flows of water", "layer")
@@ -160,7 +160,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
-  failingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
     val desired = Seq(
       "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"), // note: only one rule applies even when multiple rules should apply. needs to find out why.
       "deep soil temperature boundary condition" -> Seq("average annual air temperature", "amplitude of monthly mean temperatures")
@@ -231,14 +231,14 @@ class TestFunctions extends ExtractionTest {
   val t1g = "The crop evaporation rate is calculated by adding the soil surface and plant surface components (each of these requiring daily numbers for the leaf area index), the potential evaporation, the rainfall, and the net radiation above the canopy."
   failingTest should s"find functions from t1g: ${t1g}" taggedAs(Somebody) in {
     val desired = Seq(
-      "crop evaporation rate" -> Seq("soil surface components", "plant surface components") // fixme: This example has a conjunction issue. It's also not sure what's the complete set of inputs. (two or five, including "the potential evaporation, the rainfall, net radiation above the canopy." as inputs as well?)
+      "crop evaporation rate" -> Seq("soil surface components", "plant surface components", "the potential evaporation", "the rainfall", "the net radiation above the canopy") // fixme: This example has a conjunction issue.
     )
     val mentions = extractMentions(t1g)
     testFunctionEvent(mentions, desired)
   }
 
   val t2g = "The evaporation from the soil surface Es is calculated in two stages: (1) the constant rate stage in which Es is limited only by the supply of energy to the surface and (2) the falling rate stage in which water movement to the evaporating sites near the surface is controlled by the hydraulic properties of the soil."
-  failingTest should s"find functions from t2g: ${t2g}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2g: ${t2g}" taggedAs(Somebody) in {
     val desired = Seq(
       "Es" -> Seq("supply of energy to the surface"), // fixme: one additional, unwanted concept is captured as an input due to bad parsing.
       "water movement to the evaporating sites near the surface" -> Seq("hydraulic properties of the soil")
@@ -267,9 +267,9 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t5g = "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
-  failingTest should s"find functions from t5g: ${t5g}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t5g: ${t5g}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Wind speed" -> Seq("canopy density"), // fixme: same rule does not extract more than one set of input/output.
+      "Wind speed" -> Seq("canopy density"), // fixme: same rule does not extract more than one set of input/output. -> fixed
       "Rno" -> Seq("canopy density"),
       "vapor pressure deficit" -> Seq("canopy density")
     )
@@ -308,13 +308,9 @@ class TestFunctions extends ExtractionTest {
   // todo: "The constant in the denominator, Cd, considers the time step, bulk surface resistance, and aerodynamic roughness of the surface (the latter two terms vary with reference type, time step and daytime/nighttime)."
   // todo: "The density of water (ρw) is taken as 1.0 Mg m-3 so that the inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
   // todo: "For daily calculation time steps, average dew point temperature can be computed by averaging over hourly periods"
-  // todo: "The value for Rso is a function of the time of year and latitude, and, in addition, the time of day for hourly calculation periods."
-
-  // Tests from COVID_ACT_NOW
-  // todo: "Cases estimated by multiplying confirmed cases by 20."
 
   // Tests from CHIME-online-manual
-  // todo: "which is the transmissibility τ multiplied by the average number of people exposed c."
+  // todo: "β can be interpreted as the effective contact rate: β=τ×c which is the transmissibility τ multiplied by the average number of people exposed c."
   
   // Tests from 2003-A-double-epidemic-model for the SARS_propagation
   // todo: "The rate of removal of the people in class E to the infective class I is proportional to the number of people in class E, that is bE(t), where b is a positive number."

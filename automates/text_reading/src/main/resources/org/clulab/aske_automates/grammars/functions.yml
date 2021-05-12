@@ -92,7 +92,8 @@ rules:
     pattern: |
       trigger = [lemma = "multiply"]
       input:Phrase+ = dobj | nmod_by
-      output:Phrase = <advcl_by nsubjpass
+      output:Phrase = <advcl_by nsubjpas
+
 
   #covidactnow
 
