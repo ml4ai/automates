@@ -34,6 +34,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 from automates.program_analysis.CAST2GrFN.visitors import (
     CASTToAIRVisitor,
 )
+from automates.model_assembly.air import AutoMATES_IR
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.model_assembly.structures import (
     GenericContainer,
@@ -159,7 +160,10 @@ class CAST(object):
             V,
             T,
             [],
+            [],
+            [],
         )
+        grfn = GroundedFunctionNetwork.from_AIR(air)
         return grfn
 
     def write_cast_object(self, cast_value):

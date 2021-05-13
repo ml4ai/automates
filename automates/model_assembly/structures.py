@@ -1,10 +1,11 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from enum import Enum, auto, unique
 from dataclasses import dataclass
 from typing import List
 import re
 
 from .code_types import CodeType
+from .metadata import LambdaType, TypedMetadata, CodeSpanReference
 
 
 @dataclass(repr=False, frozen=True)
@@ -81,7 +82,11 @@ class VariableIdentifier(GenericIdentifier):
 
     @classmethod
     def from_str(cls, var_id: str):
-        (ns, sc, vn, ix) = var_id.split("::")
+        elements = var_id.split("::")
+        if len(elements) == 4:
+            (ns, sc, vn, ix) = elements
+        else:
+            (_, ns, sc, vn, ix) = elements
         return cls(ns, sc, vn, int(ix))
 
     def __str__(self):
@@ -112,16 +117,10 @@ class GenericDefinition(ABC):
                 data["domain"]["mutable"],
                 name_str,
                 data["domain_constraint"],
-                tuple(data["source_refs"]),
+                list(data["source_refs"]),
             )
         else:
-            return TypeDefinition(
-                GenericIdentifier.from_str(data["name"]),
-                data["given_type"],
-                data["name"],
-                data["given_type"],
-                tuple(data["fields"]),
-            )
+            return TypeDefinition.from_data(data)
 
 
 @dataclass(frozen=True)
@@ -129,7 +128,7 @@ class VariableDefinition(GenericDefinition):
     is_mutable: bool
     domain_name: str
     domain_constraint: str
-    source_refs: tuple
+    metadata: List[TypedMetadata]
 
     @classmethod
     def from_identifier(cls, id: VariableIdentifier):
@@ -139,7 +138,28 @@ class VariableDefinition(GenericDefinition):
             False,
             "None",
             "(and (> v -infty) (< v infty))",
-            tuple(),
+            [],
+        )
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableDefinition:
+        var_id = VariableIdentifier.from_str(data["name"])
+        type_str = "type"
+        file_ref = data["file_uid"] if "file_uid" in data else ""
+        src_ref = data["source_refs"][0] if "source_refs" in data else ""
+        code_span_data = {
+            "source_ref": src_ref,
+            "file_uid": file_ref,
+            "code_type": "identifier",
+        }
+        metadata = [CodeSpanReference.from_air_data(code_span_data)]
+        return cls(
+            var_id,
+            type_str,
+            data["domain"]["mutable"],
+            data["domain"]["name"],
+            data["domain_constraint"],
+            metadata,
         )
 
 
@@ -147,6 +167,37 @@ class VariableDefinition(GenericDefinition):
 class TypeFieldDefinition:
     name: str
     type: str
+    metadata: List[TypedMetadata]
+
+    @classmethod
+    def from_air_data(cls, data: dict, file_uid: str) -> TypeFieldDefinition:
+        code_span_data = {
+            "source_ref": data["source_ref"],
+            "file_uid": file_uid,
+            "code_type": "identifier",
+        }
+        return cls(
+            data["name"],
+            data["type"],
+            [CodeSpanReference.from_air_data(code_span_data)],
+        )
+
+    @classmethod
+    def from_data(cls, data: dict) -> TypeFieldDefinition:
+        return cls(
+            data["name"],
+            data["type"],
+            [TypedMetadata.from_data(d) for d in data["metadata"]]
+            if "metadata" in data
+            else [],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "metadata": [d.to_dict() for d in self.metadata],
+        }
 
 
 @dataclass(frozen=True)
@@ -154,6 +205,49 @@ class TypeDefinition(GenericDefinition):
     name: str
     metatype: str
     fields: List[TypeFieldDefinition]
+    metadata: List[TypedMetadata]
+
+    @classmethod
+    def from_air_data(cls, data: dict) -> TypeDefinition:
+        file_ref = data["file_uid"] if "file_uid" in data else ""
+        src_ref = data["source_ref"] if "source_ref" in data else ""
+        code_span_data = {
+            "source_ref": src_ref,
+            "file_uid": file_ref,
+            "code_type": "block",
+        }
+        metadata = [CodeSpanReference.from_air_data(code_span_data)]
+        return cls(
+            "",
+            "",
+            data["name"],
+            data["metatype"],
+            [
+                TypeFieldDefinition.from_air_data(d, data["file_uid"])
+                for d in data["fields"]
+            ],
+            metadata,
+        )
+
+    @classmethod
+    def from_data(cls, data: dict) -> TypeDefinition:
+        metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+        return cls(
+            "",
+            "",
+            data["name"],
+            data["metatype"],
+            [TypeFieldDefinition.from_data(d) for d in data["fields"]],
+            metadata,
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "metatype": self.metatype,
+            "fields": [fdef.to_dict() for fdef in self.fields],
+            "metadata": [d.to_dict() for d in self.metadata],
+        }
 
 
 @dataclass(frozen=True)
@@ -164,6 +258,7 @@ class ObjectDefinition(GenericDefinition):
 class GenericContainer(ABC):
     def __init__(self, data: dict):
         self.identifier = GenericIdentifier.from_str(data["name"])
+        file_reference = data["file_uid"] if "file_uid" in data else ""
         self.arguments = [
             VariableIdentifier.from_str_and_con(var_str, self.identifier)
             for var_str in data["arguments"]
@@ -177,8 +272,17 @@ class GenericContainer(ABC):
             for var_str in data["return_value"]
         ]
         self.statements = [
-            GenericStmt.create_statement(stmt, self) for stmt in data["body"]
+            GenericStmt.create_statement(stmt, self, file_reference)
+            for stmt in data["body"]
         ]
+        src_ref = data["body_source_ref"] if "body_source_ref" in data else ""
+        file_ref = data["file_uid"] if "file_uid" in data else ""
+        code_span_data = {
+            "source_ref": src_ref,
+            "file_uid": file_ref,
+            "code_type": "block",
+        }
+        self.metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
         # NOTE: store base name as key and update index during wiring
         self.variables = dict()
@@ -260,173 +364,6 @@ class LoopContainer(GenericContainer):
         return f"<LOOP Con> -- {self.identifier.con_name}\n{base_str}\n"
 
 
-@unique
-class VarType(Enum):
-    BOOLEAN = auto()
-    STRING = auto()
-    INTEGER = auto()
-    SHORT = auto()
-    LONG = auto()
-    FLOAT = auto()
-    DOUBLE = auto()
-    ARRAY = auto()
-    STRUCT = auto()
-    UNION = auto()
-    OBJECT = auto()
-    NONE = auto()
-
-    def __str__(self):
-        return str(self.name).lower()
-
-    @classmethod
-    def from_name(cls, name: str):
-        name = name.lower()
-        if name == "float":
-            return cls.FLOAT
-        elif name == "string":
-            return cls.STRING
-        elif name == "boolean":
-            return cls.BOOLEAN
-        elif name == "integer":
-            return cls.INTEGER
-        # TODO update for2py pipeline to use list instead
-        elif name == "list" or name == "array":
-            return cls.ARRAY
-        elif name == "object":
-            return cls.OBJECT
-        elif name == "none" or name == "unknown":
-            return cls.NONE
-        else:
-            raise ValueError(f"VarType unrecognized name: {name}")
-
-
-@unique
-class DataType(Enum):
-    # NOTE: Refer to this stats data type blog post:
-    # https://towardsdatascience.com/data-types-in-statistics-347e152e8bee
-    NONE = auto()  # Used for undefined variable types
-    CATEGORICAL = auto()  # Labels used to represent a quality
-    BINARY = auto()  # Categorical measure with *only two* categories
-    NOMINAL = auto()  # Categorical measure with *many* categories
-    ORDINAL = auto()  # Categorical measure with many *ordered* categories
-    NUMERICAL = auto()  # Numbers used to express a quantity
-    DISCRETE = auto()  # Numerical measure with *countably infinite* options
-    CONTINUOUS = auto()  # Numerical measure w/ *uncountably infinite* options
-    INTERVAL = auto()  # Continuous measure *without* an absolute zero
-    RATIO = auto()  # Continuous measure *with* an absolute zero
-    COMPOSITE = auto()  # A collection of named fields with types
-
-    def __str__(self):
-        return str(self.name).lower()
-
-    @classmethod
-    def from_name(cls, name: str):
-        name = name.lower()
-        if name == "float":
-            return cls.CONTINUOUS
-        elif name == "string":
-            return cls.NOMINAL
-        elif name == "boolean":
-            return cls.BINARY
-        elif name == "integer":
-            return cls.DISCRETE
-        elif name == "object":
-            return cls.COMPOSITE
-        # TODO remove array after updating for2py to use list type
-        elif name == "none" or name == "unknown" or name == "list" or name == "array":
-            return cls.NONE
-        else:
-            raise ValueError(f"DataType unrecognized name: {name}")
-
-    @classmethod
-    def from_type_str(cls, type_str: str):
-        type_str = type_str.lower()
-        if type_str == "catgorical":
-            return cls.CATEGORICAL
-        elif type_str == "binary":
-            return cls.BINARY
-        elif type_str == "nominal":
-            return cls.NOMINAL
-        elif type_str == "ordinal":
-            return cls.ORDINAL
-        elif type_str == "numerical":
-            return cls.NUMERICAL
-        elif type_str == "discrete":
-            return cls.DISCRETE
-        elif type_str == "continuous":
-            return cls.CONTINUOUS
-        elif type_str == "interval":
-            return cls.INTERVAL
-        elif type_str == "ratio":
-            return cls.RATIO
-        elif type_str == "none":
-            return cls.NONE
-        else:
-            raise ValueError(f"DataType unrecognized name: {type_str}")
-
-
-@unique
-class LambdaType(Enum):
-    ASSIGN = auto()
-    LITERAL = auto()
-    CONDITION = auto()
-    DECISION = auto()
-    INTERFACE = auto()
-    EXTRACT = auto()
-    PACK = auto()
-    OPERATOR = auto()
-
-    def __str__(self):
-        return str(self.name)
-
-    def shortname(self):
-        return self.__str__()[0]
-
-    @classmethod
-    def get_lambda_type(cls, type_str: str, num_inputs: int):
-        if type_str == "assign":
-            if num_inputs == 0:
-                return cls.LITERAL
-            return cls.ASSIGN
-        elif type_str == "condition":
-            return cls.CONDITION
-        elif type_str == "decision":
-            return cls.DECISION
-        elif type_str == "interface":
-            return cls.INTERFACE
-        elif type_str == "pack":
-            return cls.PACK
-        elif type_str == "extract":
-            return cls.EXTRACT
-        else:
-            raise ValueError(f"Unrecognized lambda type name: {type_str}")
-
-    @classmethod
-    def from_str(cls, name: str):
-        if name == "ASSIGN":
-            return cls.ASSIGN
-        elif name == "CONDITION":
-            return cls.CONDITION
-        elif name == "DECISION":
-            return cls.DECISION
-        elif name == "LITERAL":
-            return cls.LITERAL
-        elif name == "INTERFACE":
-            return cls.INTERFACE
-        elif name == "PACK":
-            return cls.PACK
-        elif name == "EXTRACT":
-            return cls.EXTRACT
-        elif name == "OPERATOR":
-            return cls.OPERATOR
-        elif name == "PASS":
-            raise ValueError(
-                f'Using container interface node name {name}. Please update to "INTERFACE" '
-            )
-        else:
-            raise ValueError(f"Unrecognized lambda type name: {name}")
-
-
 class GenericStmt(ABC):
     def __init__(self, stmt: dict, p: GenericContainer):
         self.container = p
@@ -449,10 +386,10 @@ class GenericStmt(ABC):
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
     @staticmethod
-    def create_statement(stmt_data: dict, container: GenericContainer):
+    def create_statement(stmt_data: dict, container: GenericContainer, file_ref: str):
         func_type = stmt_data["function"]["type"]
         if func_type == "lambda":
-            return LambdaStmt(stmt_data, container)
+            return LambdaStmt(stmt_data, container, file_ref)
         elif func_type == "container":
             return CallStmt(stmt_data, container)
         elif func_type == "operator":
@@ -467,9 +404,16 @@ class GenericStmt(ABC):
 
 
 class CallStmt(GenericStmt):
-    def __init__(self, stmt: dict, con: GenericContainer):
+    def __init__(self, stmt: dict, con: GenericContainer, file_ref: str):
         super().__init__(stmt, con)
         self.call_id = GenericIdentifier.from_str(stmt["function"]["name"])
+        src_ref = stmt["source_ref"] if "source_ref" in stmt else ""
+        code_span_data = {
+            "source_ref": src_ref,
+            "file_uid": file_ref,
+            "code_type": "block",
+        }
+        self.metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
     def __repr__(self):
         return self.__str__()
@@ -493,7 +437,7 @@ class OperatorStmt(GenericStmt):
 
 
 class LambdaStmt(GenericStmt):
-    def __init__(self, stmt: dict, con: GenericContainer):
+    def __init__(self, stmt: dict, con: GenericContainer, file_ref: str):
         super().__init__(stmt, con)
         # NOTE Want to use the form below eventually
         # type_str = stmt["function"]["lambda_type"]
@@ -504,6 +448,13 @@ class LambdaStmt(GenericStmt):
         # self.lambda_node_name = f"{self.parent.name}::" + self.name
         self.type = LambdaType.get_lambda_type(type_str, len(self.inputs))
         self.func_str = stmt["function"]["code"]
+        src_ref = stmt["source_ref"] if "source_ref" in stmt else ""
+        code_span_data = {
+            "source_ref": src_ref,
+            "file_uid": file_ref,
+            "code_type": "block",
+        }
+        self.metadata = [CodeSpanReference.from_air_data(code_span_data)]
 
     def __repr__(self):
         return self.__str__()

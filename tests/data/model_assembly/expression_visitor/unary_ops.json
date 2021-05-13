@@ -1,1 +1,158 @@
-[{"id": "negate_bool_x", "nodes": [{"uid": "5306f3f5-1516-6570-5b7c-709acb175a5a", "grfn_uid": "", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "964a870c-7c87-9b74-1d87-8f9f9cdf5a86", "type": "DEFINITION", "definition": "ARGUMENTS", "children": ["5306f3f5-1516-6570-5b7c-709acb175a5a"]}, {"uid": "30bcab0e-d857-0102-55d4-4936a1515607", "grfn_uid": "", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "4562be7f-bb42-e0b2-0426-465e3e37952d", "type": "OPERATOR", "operator": "Not", "children": ["30bcab0e-d857-0102-55d4-4936a1515607"]}, {"uid": "5f3f5638-3870-1a14-b490-b6081dfc8352", "type": "OPERATOR", "operator": "RETURN", "children": ["4562be7f-bb42-e0b2-0426-465e3e37952d"]}, {"uid": "6d16ee18-5521-16dd-2ba4-b180cb69ca38", "type": "DEFINITION", "definition": "LAMBDA", "children": ["964a870c-7c87-9b74-1d87-8f9f9cdf5a86", "5f3f5638-3870-1a14-b490-b6081dfc8352"]}]}, {"id": "invert_x", "nodes": [{"uid": "c87a7463-19c1-6a0d-0feb-d845d0dfae43", "grfn_uid": "", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "38018b47-b29a-8b06-daf6-6c5f2577bffa", "type": "DEFINITION", "definition": "ARGUMENTS", "children": ["c87a7463-19c1-6a0d-0feb-d845d0dfae43"]}, {"uid": "a25b59fd-92e8-e269-d12e-cbc40b9475b1", "grfn_uid": "", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "9a27d858-88c1-32ad-efbf-c19ee8f6cf32", "type": "OPERATOR", "operator": "Invert", "children": ["a25b59fd-92e8-e269-d12e-cbc40b9475b1"]}, {"uid": "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec", "type": "OPERATOR", "operator": "RETURN", "children": ["9a27d858-88c1-32ad-efbf-c19ee8f6cf32"]}, {"uid": "d480865f-9b38-fe80-3042-e325a28f5ab0", "type": "DEFINITION", "definition": "LAMBDA", "children": ["38018b47-b29a-8b06-daf6-6c5f2577bffa", "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec"]}]}, {"id": "negate_x", "nodes": [{"uid": "176ea1b1-6426-4cd5-1ea4-5cd69371a71f", "grfn_uid": "", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "1db53334-fb03-23a1-d576-d4155ec17dbe", "type": "DEFINITION", "definition": "ARGUMENTS", "children": ["176ea1b1-6426-4cd5-1ea4-5cd69371a71f"]}, {"uid": "31d0b664-0589-f877-9b02-52440950fd13", "grfn_uid": "", "type": "VARIABLE", "identifier": "x", "children": []}, {"uid": "b7d6467b-2f5a-522a-f87f-43fdf6062541", "type": "OPERATOR", "operator": "USub", "children": ["31d0b664-0589-f877-9b02-52440950fd13"]}, {"uid": "ba26d851-35e8-579a-7aaf-0e891fb797fa", "type": "OPERATOR", "operator": "RETURN", "children": ["b7d6467b-2f5a-522a-f87f-43fdf6062541"]}, {"uid": "ade9b2b4-efdd-35f8-0fa3-4266ccfdba9b", "type": "DEFINITION", "definition": "LAMBDA", "children": ["1db53334-fb03-23a1-d576-d4155ec17dbe", "ba26d851-35e8-579a-7aaf-0e891fb797fa"]}]}]
+[
+    {
+        "id": "negate_bool_x",
+        "nodes": [
+            {
+                "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                "type": "DEFINITION",
+                "definition": "ARGUMENTS",
+                "children": [
+                    "e3e70682-c209-4cac-629f-6fbed82c07cd"
+                ]
+            },
+            {
+                "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+                "type": "OPERATOR",
+                "operator": "Not",
+                "children": [
+                    "eb1167b3-67a9-c378-7c65-c1e582e2e662"
+                ]
+            },
+            {
+                "uid": "e443df78-9558-867f-5ba9-1faf7a024204",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "f7c1bd87-4da5-e709-d471-3d60c8a70639"
+                ]
+            },
+            {
+                "uid": "23a7711a-8133-2876-37eb-dcd9e87a1613",
+                "type": "DEFINITION",
+                "definition": "LAMBDA",
+                "children": [
+                    "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                    "e443df78-9558-867f-5ba9-1faf7a024204"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "invert_x",
+        "nodes": [
+            {
+                "uid": "1846d424-c17c-6279-23c6-612f48268673",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                "type": "DEFINITION",
+                "definition": "ARGUMENTS",
+                "children": [
+                    "1846d424-c17c-6279-23c6-612f48268673"
+                ]
+            },
+            {
+                "uid": "b4862b21-fb97-d435-8856-1712e8e5216a",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                "type": "OPERATOR",
+                "operator": "Invert",
+                "children": [
+                    "b4862b21-fb97-d435-8856-1712e8e5216a"
+                ]
+            },
+            {
+                "uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "259f4329-e6f4-590b-9a16-4106cf6a659e"
+                ]
+            },
+            {
+                "uid": "5487ce1e-af19-922a-d9b8-a714e61a441c",
+                "type": "DEFINITION",
+                "definition": "LAMBDA",
+                "children": [
+                    "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                    "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "negate_x",
+        "nodes": [
+            {
+                "uid": "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                "type": "DEFINITION",
+                "definition": "ARGUMENTS",
+                "children": [
+                    "5a921187-19c7-8df4-8f4f-f31e78de5857"
+                ]
+            },
+            {
+                "uid": "8d723104-f773-83c1-3458-a748e9bb17bc",
+                "grfn_uid": "",
+                "type": "VARIABLE",
+                "identifier": "x",
+                "children": []
+            },
+            {
+                "uid": "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                "type": "OPERATOR",
+                "operator": "USub",
+                "children": [
+                    "8d723104-f773-83c1-3458-a748e9bb17bc"
+                ]
+            },
+            {
+                "uid": "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+                "type": "OPERATOR",
+                "operator": "RETURN",
+                "children": [
+                    "85776e9a-dd84-f39e-7154-5a137a1d5006"
+                ]
+            },
+            {
+                "uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6",
+                "type": "DEFINITION",
+                "definition": "LAMBDA",
+                "children": [
+                    "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                    "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3"
+                ]
+            }
+        ]
+    }
+]
