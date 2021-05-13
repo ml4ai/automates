@@ -39,7 +39,7 @@ def unobserved_graph(g):
         e_len = len(e)
         new_nodes = []
         for i in range(e_len):
-            new_nodes.append("".join(["u_{", str(i + 1), "}"]))
+            new_nodes.append(f"u_{{i + 1}}")
         g_copy.add_vertices(new_nodes, attributes={"description": ["U"] * e_len})
         edge_list = []
 
@@ -239,14 +239,15 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
     if s_print:
         sum_string = ",".join(prob.sumset)
         if start_sum:
-            p = "".join([p, "\\left(\\sum_{", sum_string, "}"])
+            p = f"{p}\\left(\\sum_{{{sum_string}}}"
         else:
-            p = "".join([p, "\\sum_{", sum_string, "}"])
+            p = f"{p}\\sum_{{{sum_string}}}"
     if prob.fraction:
         p = "".join([p, "\\frac{", get_expression(prob.num, start_sum=False, single_source=single_source, \
                                                   target_sym=target_sym), "}{",
                      get_expression(prob.den, start_sum=False, \
                                     single_source=single_source, target_sym=target_sym), "}"])
+        # p = f"{p}\\frac{{{get_expression(prob.num, start_sum=False, single_source=single_source, target_sym=target_sym)}}}{{{get_expression(prob.den, start_sum=False, single_source=single_source, target_sym=target_sym)}}}"
     if prob.sum:  # This might be broken
         p = "".join([p, "\\left("])
         add_strings = []
