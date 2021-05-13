@@ -409,6 +409,13 @@ def test_no_root_container():
 def test_array_usage():
     pass
 
+@pytest.mark.skip(reason="Developing still")
+def test_array_iterating_length():
+    pass
+
+@pytest.mark.skip(reason="Developing still")
+def test_array_updated_in_lower_scopes():
+    pass
 
 @pytest.mark.skip(reason="Developing still")
 def test_multi_file():
@@ -420,6 +427,29 @@ def test_source_refs():
     pass
 
 
+##### Model tests ######
+
+
 @pytest.mark.skip(reason="Developing still")
 def test_pid_controller():
+    pass
+
+
+# TODO move to fortran tests
+# @pytest.mark.skip(reason="Developing still")
+# def test_stemp_soilt_for():
+#     pass
+
+# @pytest.mark.skip(reason="Developing still")
+# def test_stemp_epic_soilt_for():
+#     pass
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_GE_simple_PI_controller():
+    pass
+
+
+@pytest.mark.skip(reason="Developing still")
+def test_simple_controller_bhpm():
     pass

@@ -308,12 +308,6 @@ class GCC2CAST:
 
         source_refs = self.get_source_refs(stmt)
 
-        if isinstance(assign_var, Var) and assign_var.val.name == "growth_rate":
-            print(stmt)
-            print(
-                Assignment(left=assign_var, right=assign_value, source_refs=source_refs)
-            )
-
         return [
             Assignment(left=assign_var, right=assign_value, source_refs=source_refs)
         ]

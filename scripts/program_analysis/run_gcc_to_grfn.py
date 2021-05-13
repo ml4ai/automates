@@ -77,6 +77,8 @@ def run_gcc_pipeline():
         GCC_PLUGIN_IMAGE_DIR + plugin_name
     ), f"Error: GCC AST dump plugin does not exist at expected location: {GCC_PLUGIN_IMAGE_DIR + plugin_name}"
 
+    print("Dumping GCC AST...")
+
     # Runs g++ with the given c file. This should create the file ast.json
     # with the programs ast inside of it.
     results = subprocess.run(
@@ -84,7 +86,8 @@ def run_gcc_pipeline():
             f"{GCC_10_BIN_DIRECTORY}/{compiler}",
             f"-fplugin={GCC_PLUGIN_IMAGE_DIR + plugin_name}",
             "-O0",
-            "-c",
+            # Need to use -c if only one file in order to make a .o file
+            "-c" if len(input_files) == 1 else "",
             # "-x",
             # "c++",
         ]
@@ -98,75 +101,86 @@ def run_gcc_pipeline():
         results.returncode == 0
     ), "Error: Received bad return code when executing GCC plugin: {results.returncode}"
 
-    assert os.path.exists(
-        "./ast.json"
-    ), "Error: ast.json file not created after executing GCC plugin"
+    ast_file_names = [
+        f"./{i.split('/')[-1].rsplit('.')[0]}_gcc_ast.json" for i in input_files
+    ]
 
-    # For now, assume the last input file is the program name. This is because
-    # the gcc plugin interprets the last input file listed as the "main input"
+    # Assert an ast was made for each input file
+    for a in ast_file_names:
+        assert os.path.exists(
+            a
+        ), f"Error: {a} file not created after executing GCC plugin"
+
+    # For now, assume the last input file is the overall program name.
     program_name = input_files[-1].rsplit(".")[0].rsplit("/")[-1]
-    gcc_ast_obj = json.load(open("./ast.json"))
-    cast = GCC2CAST(gcc_ast_obj).to_cast()
+    # Load json of each files ast
+    ast_jsons = [json.load(open(a)) for a in ast_file_names]
+
+    print("Turning GCC AST into CAST...")
+    cast = GCC2CAST(ast_jsons).to_cast()
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
+
+    print("Transforminf CAST into GrFN...")
     grfn = cast.to_GrFN()
     grfn.to_json_file(f"{program_name}--GrFN.json")
+
+    print("Transforminf GrFN into AGraph...")
     A = grfn.to_AGraph()
     A.draw(program_name + "--GrFN.pdf", prog="dot")
 
     # STEMP SOILT inputs
     # inputs = {
-    #     "albedo": 1,
-    #     "b": 1,
-    #     "cumdpt": 1,
-    #     "doy": 1,
-    #     "dp": 1,
-    #     "hday": 1,
-    #     "nlayr": 1,
-    #     "pesw": 1,
-    #     "srad": 1,
-    #     "tamp": 1,
-    #     "tav": 1,
-    #     "tavg": 1,
-    #     "tmax": 1,
-    #     "ww": 1,
-    #     "dsmid": [1, 1, 1, 1, 1],
-    #     "atot": 1,
-    #     "tma": [1, 1, 1, 1, 1],
-    #     "srftemp": 1,
-    #     "st": [1, 1, 1, 1, 1],
+    #     "stemp_soilt::stemp_soilt.soilt::albedo::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::b::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::cumdpt::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::doy::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::dp::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::hday::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::nlayr::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::pesw::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::srad::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::tamp::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::tav::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::tavg::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::tmax::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::ww::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::dsmid::-1": [1, 1, 1, 1, 1],
+    #     "stemp_soilt::stemp_soilt.soilt::atot::-1": 1,
+    #     "stemp_soilt::stemp_soilt.soilt::tma::-1": [1, 1, 1, 1, 1],
+    #     "stemp_soilt::stemp_soilt.soilt::st::-1": [1, 1, 1, 1, 1],
     # }
 
     # STEMP EPIC SOILT inputs
-    # inputs = {
-    #     "b": 1,
-    #     "bcv": 1,
-    #     "cumdpt": 1,
-    #     "dp": 1,
-    #     "dsmid": [1, 1, 1, 1, 1],
-    #     "nlayr": 1,
-    #     "pesw": 1,
-    #     "tav": 1,
-    #     "tavg": 1,
-    #     "tmax": 1,
-    #     "tmin": 1,
-    #     "wetday": 1,
-    #     "wft": 20,
-    #     "ww": 1,
-    #     "tma": [1, 2, 3, 4, 5],
-    #     "srftemp": 1,
-    #     "st": [1, 1, 1, 1, 1],
-    #     "x2_avg": 1,
-    # }
-
-    # GE Simple PI controller dynamics inputs
     inputs = {
-        "GE_simple_PI_controller_dynamics::GE_simple_PI_controller_dynamics.main::integrator_state::-1": 0
-        # "GE_simple_PI_controller::GE_simple_PI_controller.main::integrator_state::-1": 0
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::b::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::bcv::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::cumdpt::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dp::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dsmid::-1": [1, 1, 1, 1, 1],
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::nlayr::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::pesw::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tav::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tavg::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmax::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmin::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wetday::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wft::-1": 20,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::ww::-1": 1,
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::-1": [1, 2, 3, 4, 5],
+        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::st::-1": [1, 1, 1, 1, 1],
     }
 
+    # GE Simple PI controller dynamics inputs
+    # inputs = {
+    #     "GE_simple_PI_controller_dynamics::GE_simple_PI_controller_dynamics.main::integrator_state::-1": 0
+    #     # "GE_simple_PI_controller::GE_simple_PI_controller.main::integrator_state::-1": 0
+    # }
+
+    print("Executing GrFN...")
     result = grfn(inputs)
     from pprint import pprint
 
+    print("GrFn execution results:")
     pprint(result)
 
 
