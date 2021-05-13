@@ -2,7 +2,7 @@ taxonomy: org/clulab/aske_automates/grammars/entities/grammar/taxonomy.yml
 
 rules:
   - name: simple-np
-    label: Concept
+    label: Phrase
     priority: 1
     type: token
     pattern: |
@@ -13,35 +13,35 @@ rules:
       #todo: can we add parens in avoid without making it invisible in rules?
 
   - name: single_VP # note: edited the pattern to include single lower case VPs as well. changing pattern didn't break more rules, but needs to check if this cause any errors.
-    label: Concept
+    label: Phrase
     priority: 1
     type: token
     pattern: |
       [chunk='B-VP' & word = /[a-zA-Z]/ & !mention=Avoid]
 
   - name: single_adjP # note: added due to def test t1k. needs to check if this cause any errors.
-    label: Concept
+    label: Phrase
     priority: 1
     type: token
     pattern: |
       [chunk='I-ADJP' & tag = "NN" & !mention=Avoid & !word = /\(|\)|,|=|\[|\]/]
 
   - name: participle_or_adj
-    label: Concept
+    label: Phrase
     priority: 1
     type: token
     pattern: |
       [tag=/VBN|JJ/]
 
   - name: single_capital_VP
-    label: Concept
+    label: Phrase
     priority: 1
     type: token
     pattern: |
       [chunk='B-VP' & word = /[A-Z]/]
 
 #  - name: simple-vp
-#    label: Concept
+#    label: Phrase
 #    priority: 1
 #    type: token
 #    pattern: |
@@ -53,7 +53,7 @@ rules:
 
 #might be necessary for processing glossary of terms, e.g., p. 56 of 2005 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
 #  - name: adj_mascarading_for_noun
-#    label: Concept
+#    label: Phrase
 #    priority: 1
 #    type: token
 #    example: "Cd denominator constant that changes with reference type and calculation time step (s m-1)"

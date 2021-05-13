@@ -4,11 +4,11 @@ rules:
 
   ####UNITS####
 
-  - name: var_unit
+  - name: comment_identifier_unit
     label: UnitRelation
     priority: ${priority}
     type: token
     example: "EEQ Equilibrium evaporation (mm/d)"
     action: looksLikeAUnit
     pattern: |
-      @variable:Variable ([word = /.*/ & !word=/-LRB-|\(/]+) ([word=/-LRB-|\(/]) (?<unit> [word=/.*/]+) ([word=/\)|-RRB-/])
+      @variable:Identifier ([word = /.*/ & !word=/-LRB-|\(/]+) ([word=/-LRB-|\(/]) (?<unit> [word=/.*/]+) ([word=/\)|-RRB-/])

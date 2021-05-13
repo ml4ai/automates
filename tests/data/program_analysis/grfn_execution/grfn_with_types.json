@@ -604,287 +604,287 @@
             "uid": "VARIABLE4",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.ActualSpeed::0",
             "uid": "VARIABLE5",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.err::0",
             "uid": "VARIABLE6",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.err_last::0",
             "uid": "VARIABLE7",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.voltage::0",
             "uid": "VARIABLE8",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.integral::0",
             "uid": "VARIABLE9",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.Kp::0",
             "uid": "VARIABLE10",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.Ki::0",
             "uid": "VARIABLE11",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid.Kd::0",
             "uid": "VARIABLE12",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_init::pid::0",
             "uid": "VARIABLE13",
             "data_type": "object",
             "object_ref": "OBJECT1",
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main::pid::0",
             "uid": "VARIABLE14",
             "data_type": "object",
             "object_ref": "OBJECT1",
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main::count::0",
             "uid": "VARIABLE15",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::pid::0",
             "uid": "VARIABLE16",
             "data_type": "object",
             "object_ref": "OBJECT1",
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::count::0",
             "uid": "VARIABLE17",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid::0",
             "uid": "VARIABLE18",
             "data_type": "object",
             "object_ref": "OBJECT1",
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::speed::0",
             "uid": "VARIABLE19",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.ActualSpeed::0",
             "uid": "VARIABLE20",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.integral::0",
             "uid": "VARIABLE21",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.Kp::0",
             "uid": "VARIABLE22",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.Ki::0",
             "uid": "VARIABLE23",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.Kd::0",
             "uid": "VARIABLE24",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.err_last::0",
             "uid": "VARIABLE25",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.SetSpeed::0",
             "uid": "VARIABLE26",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.err::0",
             "uid": "VARIABLE27",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.integral::1",
             "uid": "VARIABLE28",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.voltage::0",
             "uid": "VARIABLE29",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.err_last::1",
             "uid": "VARIABLE30",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid.ActualSpeed::1",
             "uid": "VARIABLE31",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.PID_realize::pid::1",
             "uid": "VARIABLE32",
             "data_type": "object",
             "object_ref": "OBJECT1",
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::pid::1",
             "uid": "VARIABLE33",
             "data_type": "object",
             "object_ref": "OBJECT1",
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.loop_0::speed::0",
             "uid": "VARIABLE34",
             "data_type": "float",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::count::1",
             "uid": "VARIABLE35",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::COND_0_0::0",
             "uid": "VARIABLE36",
             "data_type": "boolean",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::EXIT::0",
             "uid": "VARIABLE37",
             "data_type": "boolean",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main::pid::1",
             "uid": "VARIABLE38",
             "data_type": "object",
             "object_ref": "OBJECT1",
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main::count::0",
             "uid": "VARIABLE39",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::pid::2",
             "uid": "VARIABLE40",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::count::2",
             "uid": "VARIABLE41",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::pid::3",
             "uid": "VARIABLE42",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         },
         {
             "identifier": "PID::@global.main.LOOP_0::count::3",
             "uid": "VARIABLE43",
             "data_type": "integer",
             "object_ref": null,
-            "metadata": {}
+            "metadata": []
         }
     ],
     "objects": [
         {
             "uid": "OBJECT1",
             "type": "TYPE1",
-            "metadata": {}
+            "metadata": []
         }
     ],
     "types": [
@@ -930,12 +930,7 @@
                     "type": "float"
                 }
             ],
-            "metadata": {
-                "line": [
-                    7,
-                    15
-                ]
-            }
+            "metadata": []
         }
     ]
 }

@@ -258,16 +258,15 @@ class ExpressionVisitor(ast.NodeVisitor):
             node (ast.Dict): A Python AST dictionary node
         """
         key_uids = list()
+        dict_name_uids = list()
+        need_to_pack = False
         for key, val in zip(node.keys, node.values):
-            val_uid = ExprAbstractNode.create_node_id()
-            if isinstance(val, ast.Constant):
-                self.nodes.append(ExprValueNode(val_uid, val.value, []))
-            elif isinstance(val, ast.Name):
-                self.nodes.append(ExprVariableNode(val_uid, "", val.id, []))
-            else:
-                raise TypeError(
-                    f"Unrecognized value type in dict: {type(val)}"
-                )
+            self.visit(val)
+            val_uid = self.uid_stack.get()
+            if key is None:
+                need_to_pack = True
+                dict_name_uids.append(val_uid)
+                continue
 
             key_uid = ExprAbstractNode.create_node_id()
             if isinstance(key, ast.Constant):
@@ -277,13 +276,22 @@ class ExpressionVisitor(ast.NodeVisitor):
                     ExprVariableNode(key_uid, "", key.id, [val_uid])
                 )
             else:
-                raise TypeError(
-                    f"Unrecognized value type in dict: {type(key)}"
-                )
+                raise TypeError(f"Unrecognized key type in dict: {type(key)}")
             key_uids.append(key_uid)
 
         new_uid = ExprAbstractNode.create_node_id()
-        self.nodes.append(ExprVariableNode(new_uid, "", "COMPOSITE", key_uids))
+        if need_to_pack:
+            pack_uid = ExprAbstractNode.create_node_id()
+            self.nodes.append(
+                ExprOperatorNode(pack_uid, "PACK", dict_name_uids)
+            )
+            self.nodes.append(
+                ExprVariableNode(new_uid, "", "COMPOSITE", [pack_uid])
+            )
+        else:
+            self.nodes.append(
+                ExprVariableNode(new_uid, "", "COMPOSITE", key_uids)
+            )
         self.uid_stack.put(new_uid)
 
     def visit_List(self, node: ast.List) -> NoReturn:

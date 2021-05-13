@@ -6,7 +6,7 @@ class TestConjunctions extends ExtractionTest {
 
   // conj tests
   val t1 = "The model consists of individuals who are either Susceptible (S), Infected (I), or Recovered (R)."
-  passingTest should s"find definitions from t1: ${t1}" taggedAs (Somebody) in {
+  passingTest should s"find descriptions from t1: ${t1}" taggedAs (Somebody) in {
 
     val desired = Seq(
 
@@ -17,22 +17,22 @@ class TestConjunctions extends ExtractionTest {
       "R" -> Seq("individuals who are Recovered")
     )
     val mentions = extractMentions(t1)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
   }
 
   val t2 = "where RHmax and RHmin are maximum and minimum relative humidity, respectively"
-  failingTest should s"find definitions from t2: ${t2}" taggedAs (Somebody) in {
+  failingTest should s"find descriptions from t2: ${t2}" taggedAs (Somebody) in {
 
     val desired = Seq(
-      "RHmax" -> Seq("maximum relative humidity"), // todo: how to extract two distinct definitions for the two variables?
+      "RHmax" -> Seq("maximum relative humidity"), // todo: how to extract two distinct descriptions for the two identifiers?
       "RHmin" -> Seq("minimum relative humidity")
     )
     val mentions = extractMentions(t2)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
   }
 
   val t3 = "while b, c and d are the removal rate of individuals in class I, IP and E respectively"
-  passingTest should s"find definitions from t3: ${t3}" taggedAs (Somebody) in {
+  passingTest should s"find descriptions from t3: ${t3}" taggedAs (Somebody) in {
 
     val desired = Seq(
       "b" -> Seq("removal rate of individuals in class I"),
@@ -40,75 +40,75 @@ class TestConjunctions extends ExtractionTest {
       "d" -> Seq("removal rate of individuals in class E")
     )
     val mentions = extractMentions(t3)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
   }
 
 
   val t4 = "Where S is the stock of susceptible population, I is the stock of infected, and R is the stock of " +
     "recovered population."
-  failingTest should s"find definitions from t4: ${t4}" taggedAs (Somebody) in {
+  failingTest should s"find descriptions from t4: ${t4}" taggedAs (Somebody) in {
 
     val desired = Seq(
       "S" -> Seq("stock of susceptible population"),
-      "I" -> Seq("stock of infected population"), // fix me: "population" needs to be captured as a part of the definition.
+      "I" -> Seq("stock of infected population"), // fix me: "population" needs to be captured as a part of the description.
       "R" -> Seq("stock of recovered population")
     )
     val mentions = extractMentions(t4)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
   }
 
   val t5 = "where S(0) and R(0) are the initial numbers of, respectively, susceptible and removed subjects"
-  failingTest should s"find definitions from t5: ${t5}" taggedAs(Somebody) in {
+  failingTest should s"find descriptions from t5: ${t5}" taggedAs(Somebody) in {
     val desired =  Seq(
       "S(0)" -> Seq("initial number of susceptible subjects"),
-      "R(0)" -> Seq("initial number of removed subjects")      //fixme: the definition is not expanded over 'respectively'
+      "R(0)" -> Seq("initial number of removed subjects")      //fixme: the description is not expanded over 'respectively'
     )
     val mentions = extractMentions(t5)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
   }
 
   val t6 = "where H(x) and H(y) are entropies of x and y,respectively."
-  passingTest should s"find definitions from t5: ${t6}" taggedAs (Somebody) in {
+  passingTest should s"find descriptions from t5: ${t6}" taggedAs (Somebody) in {
 
     val desired = Seq(
       "H(x)" -> Seq("entropies of x"), //fixme: ideally, should be entropy
       "H(y)" -> Seq("entropies of y")
     )
     val mentions = extractMentions(t6)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
   }
 
     val t7 = "where Rns and Rnc are net radiation obtained by soil surface and intercepted by crop canopy (W m−2), respectively; αs and αc are soil " +
       "evaporation coefficient and crop transpiration coefficient, respectively."
-  failingTest should s"find definitions from t7: ${t7}" taggedAs(Somebody) in {
+  failingTest should s"find descriptions from t7: ${t7}" taggedAs(Somebody) in {
     val desired =  Seq(
-      "Rns" -> Seq("net radiation obtained by soil surface"), // fixme: Only "Rns" is captured as variable here. The definition is also incomplete. ("net radiation")
+      "Rns" -> Seq("net radiation obtained by soil surface"), // fixme: Only "Rns" is captured as identifier here. The description is also incomplete. ("net radiation")
       "Rnc" -> Seq("net radiation intercepted by crop canopy"),
-      "αs" -> Seq("soil evaporation coefficient"), // fixme: Only "αs" is captured as variable here.
-      "αc" -> Seq("crop transpiration coefficient") // fixme: The definition for "αc" was not captured.
+      "αs" -> Seq("soil evaporation coefficient"), // fixme: Only "αs" is captured as identifier here.
+      "αc" -> Seq("crop transpiration coefficient") // fixme: The description for "αc" was not captured.
     )
     val mentions = extractMentions(t7)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
 
   }
 
-  // tests moved from definition test
+  // tests moved from description test
 
     val t8 = "K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, respectively."
-  passingTest should s"find definitions from t8: ${t8}" taggedAs(Somebody) in {
+  passingTest should s"find descriptions from t8: ${t8}" taggedAs(Somebody) in {
       val desired = Seq(
         "K" -> Seq("hydraulic conductivity"),
         "Ksat" -> Seq("saturated hydraulic conductivity")
       )
       val mentions = extractMentions(t8)
-      testDefinitionEvent(mentions, desired)
+      testDescriptionEvent(mentions, desired)
 
   }
 
   val t9 = "u, ur, and us are water content, residual water content and saturated water content (m3 m-3), " +
     "respectively; h is pressure head (m); K and Ksat are hydraulic conductivity and saturated hydraulic conductivity, " +
     "respectively (m d21); and a (m21), n, and l are empirical parameters."
-  failingTest should s"find definitions from t9: ${t9}" taggedAs(Somebody) in {
+  failingTest should s"find descriptions from t9: ${t9}" taggedAs(Somebody) in {
     val desired = Seq(
       "u" -> Seq("water content"),
       "ur" -> Seq("residual water content"),
@@ -121,7 +121,7 @@ class TestConjunctions extends ExtractionTest {
       "l" -> Seq("empirical parameters")
     )
     val mentions = extractMentions(t9)
-    testDefinitionEvent(mentions, desired)
+    testDescriptionEvent(mentions, desired)
 
   }
 

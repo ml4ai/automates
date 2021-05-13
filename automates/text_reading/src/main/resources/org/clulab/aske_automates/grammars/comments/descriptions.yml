@@ -1,0 +1,16 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+####DESCRIPTIONS####
+
+  - name: comment_identifier_description
+    label: Description
+    priority: ${priority}
+    type: token
+    example: "EEQ Equilibrium evaporation (mm/d)"
+#    action: looksLikeAnIdentifier #don't use this action here---the illegal "vars" should have been
+    #filtered out in the entity rule
+    pattern: |
+      @variable:Identifier (?<description> [word = /.*\w+.*/ & !tag="-LRB-"]+)
+
