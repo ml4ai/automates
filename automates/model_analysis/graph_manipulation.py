@@ -42,7 +42,12 @@ def unobserved_graph(g):
             new_nodes.append("".join(["u_{", str(i + 1), "}"]))
         g_copy.add_vertices(new_nodes, attributes={"description": ["U"] * e_len})
         edge_list = []
-        for i in range(e_len):
+
+        # We have now inserted new unobserved nodes into the graph
+        # We replace the unobserved bi-directed edges with new edges pointing away from the new unobserved nodes
+        # a is the index of the new unobserved node
+        # b and c are the two nodes that were previously connected by a bi-directed edge
+        for i in range(e_len):  # Loop through unobserved edges
             a = g_copy.vs.select(name=new_nodes[i]).indices[0]
             b = e[i].tuple[0]
             edge_list.append((a, b))
