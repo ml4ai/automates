@@ -41,6 +41,7 @@ from automates.model_assembly.structures import (
     GenericStmt,
     GenericIdentifier,
     GenericDefinition,
+    TypeDefinition,
     VariableDefinition,
 )
 
@@ -132,18 +133,19 @@ class CAST(object):
             # TODO
             raise Exception("Error: Unable to find root container to build GrFN.")
 
+        entrypoint = GenericIdentifier.from_str(container_id_to_start_from)
         air["entrypoint"] = container_id_to_start_from
 
         C, V, T, D = dict(), dict(), dict(), dict()
 
         # Create variable definitions
         for var_data in air["variables"]:
-            new_var = GenericDefinition.from_dict(var_data)
+            new_var = VariableDefinition.from_data(var_data)
             V[new_var.identifier] = new_var
 
         # Create type definitions
         for type_data in air["types"]:
-            new_type = GenericDefinition.from_dict(type_data)
+            new_type = TypeDefinition.from_dict(type_data)
             T[new_type.identifier] = new_type
 
         # Create container definitions
@@ -154,15 +156,8 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        grfn = GroundedFunctionNetwork.from_AIR(
-            GenericIdentifier.from_str(container_id_to_start_from),
-            C,
-            V,
-            T,
-            [],
-            [],
-            [],
-        )
+        air = AutoMATES_IR(entrypoint, C, V, T, [], [], [])
+
         grfn = GroundedFunctionNetwork.from_AIR(air)
         return grfn
 

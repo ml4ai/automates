@@ -127,6 +127,7 @@ class VariableNode(GenericNode):
             m_type,
             create_domain_elements(),
         )
+
         metadata = [dom] + data.metadata
         return cls(GenericNode.create_node_id(), idt, metadata)
 
@@ -967,8 +968,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
             if not found_var:
                 self.remove_node(var_node)
                 del_indices.append(idx)
-        for idx in del_indices:
-            del self.variables[idx]
+
+        for idx, del_idx in enumerate(del_indices):
+            del self.variables[del_idx - idx]
 
         root_subgraphs = [s for s in self.subgraphs if not s.parent]
         if len(root_subgraphs) != 1:
@@ -1216,7 +1218,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 subgraphs.add_edge(parent, con_subgraph)
 
             # If this container identifier is not the root con_id passed into from_AIR
-            if con.identifier != con_id:
+            if con.identifier != air.entrypoint:
                 # Do this only if this is not the starting container
                 returned_vars = [variable_nodes[v_id] for v_id in con.returns]
                 update_vars = [variable_nodes[v_id] for v_id in con.updated]
@@ -1286,9 +1288,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             subgraph: GrFNSubgraph,
             vars_to_add: List,
         ):
-            out_nodes = [add_variable_node(var) for var in vars_to_add]
-            subgraph.nodes.extend(out_nodes)
-            for output_node in out_nodes:
+            for output_node in [variable_nodes[v_id] for v_id in vars_to_add]:
                 var_id = output_node.identifier
                 live_variables[var_id] = output_node
 
@@ -1298,30 +1298,28 @@ class GroundedFunctionNetwork(nx.DiGraph):
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-            # # The var inputs into this decision node defined inside the loop
-            # # may not be defined yet, so guard against that
-            # if subgraph.type == "LoopContainer" and stmt.type == LambdaType.DECISION:
-            #     if stmt not in Occs:
-            #         # We will add the live variables if this is the first pass on
-            #         # a decision node that needs two passes OR if it is the only pass
-            #         add_live_variables(live_variables, subgraph, stmt.outputs)
+            # The var inputs into this decision node defined inside the loop
+            # may not be defined yet, so guard against that
+            if subgraph.type == "LoopContainer" and stmt.type == LambdaType.DECISION:
+                if stmt not in Occs:
+                    # We will add the live variables if this is the first pass on
+                    # a decision node that needs two passes OR if it is the only pass
+                    add_live_variables(live_variables, subgraph, stmt.outputs)
 
-            #     if not all([id in live_variables for id in stmt.inputs]):
-            #         if stmt in Occs:
-            #             # We have already visited this node and all of the inputs
-            #             # are still not found.
-            #             # TODO custom exception
-            #             raise Exception(
-            #                 f"Unable to find inputs required for loop decision node {stmt}"
-            #             )
-            #         Occs[stmt] = stmt
-            #         return True
-            #     elif stmt in Occs:
-            #         del Occs[stmt]
-            # else:
-            #     add_live_variables(live_variables, subgraph, stmt.outputs)
-
-            # out_nodes = [live_variables[id] for id in stmt.outputs]
+                if not all([id in live_variables for id in stmt.inputs]):
+                    if stmt in Occs:
+                        # We have already visited this node and all of the inputs
+                        # are still not found.
+                        # TODO custom exception
+                        raise Exception(
+                            f"Unable to find inputs required for loop decision node {stmt}"
+                        )
+                    Occs[stmt] = stmt
+                    return True
+                elif stmt in Occs:
+                    del Occs[stmt]
+            else:
+                add_live_variables(live_variables, subgraph, stmt.outputs)
 
             inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
             out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
@@ -1662,7 +1660,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "variables": [var.to_dict() for var in self.variables],
             "functions": [func.to_dict() for func in self.lambdas],
             "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
-            "types": [t_def.to_dict() for t_def in self.types],
+            "types": [t_def.to_dict() for t_def in self.types.values()],
             "metadata": [m.to_dict() for m in self.metadata],
         }
 

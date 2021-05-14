@@ -233,7 +233,7 @@ class TypeDefinition(GenericDefinition):
     def from_data(cls, data: dict) -> TypeDefinition:
         metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
         return cls(
-            "",
+            data["name"],
             "",
             data["name"],
             data["metatype"],
@@ -391,9 +391,9 @@ class GenericStmt(ABC):
         if func_type == "lambda":
             return LambdaStmt(stmt_data, container, file_ref)
         elif func_type == "container":
-            return CallStmt(stmt_data, container)
+            return CallStmt(stmt_data, container, file_ref)
         elif func_type == "operator":
-            return OperatorStmt(stmt_data, container)
+            return OperatorStmt(stmt_data, container, file_ref)
         else:
             raise ValueError(f"Undefined statement type: {func_type}")
 

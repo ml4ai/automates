@@ -159,6 +159,7 @@ class C2AVariable(object):
             "source_refs": [self.source_ref.to_AIR()],
             "domain": domain,
             "domain_constraint": "(and (> v -infty) (< v infty))",  # TODO
+            "metadata": [],
         }
 
 
@@ -255,6 +256,7 @@ class C2AExpressionLambda(C2ALambda):
                 self.updated_variables, lambda v: v.build_identifier()
             ),
             "source_ref": self.source_ref.to_AIR(),
+            "metadata": [],
         }
 
 
@@ -283,6 +285,7 @@ class C2AContainerCallLambda(C2ALambda):
                 self.updated_variables, lambda v: v.build_identifier()
             ),
             "source_ref": self.source_ref.to_AIR(),
+            "metadata": [],
         }
 
 
@@ -367,6 +370,7 @@ class C2AFunctionDefContainer(C2AContainerDef):
             ),
             "body": [i.to_AIR() for i in self.body],
             "body_source_ref": self.body_source_ref.to_AIR(),
+            "metadata": [],
         }
 
 
@@ -398,6 +402,7 @@ class C2ALoopContainer(C2AContainerDef):
             "body": [i.to_AIR() for i in self.body],
             "body_source_ref": self.body_source_ref.to_AIR(),
             "condition_source_ref": self.condition_source_ref.to_AIR(),
+            "metadata": [],
         }
 
 
@@ -438,6 +443,7 @@ class C2AIfContainer(C2AContainerDef):
             "body": [i.to_AIR() for i in self.body],
             "body_source_ref": self.body_source_ref.to_AIR(),
             "condition_source_ref": self.condition_source_ref.to_AIR(),
+            "metadata": [],
         }
 
 
@@ -459,7 +465,9 @@ class C2ATypeDef(object):
     source_ref: C2ASourceRef
 
     def to_AIR(self):
-        return self.__dict__
+        air = self.__dict__
+        air.update({"metadata": [], "metatype": "composite"})
+        return air
 
 
 class C2AAttributeAccessState(object):
