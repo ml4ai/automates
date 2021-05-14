@@ -120,11 +120,11 @@ def run_gcc_pipeline():
     cast = GCC2CAST(ast_jsons).to_cast()
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
 
-    print("Transforminf CAST into GrFN...")
+    print("Transforming CAST into GrFN...")
     grfn = cast.to_GrFN()
     grfn.to_json_file(f"{program_name}--GrFN.json")
 
-    print("Transforminf GrFN into AGraph...")
+    print("Transforming GrFN into AGraph...")
     A = grfn.to_AGraph()
     A.draw(program_name + "--GrFN.pdf", prog="dot")
 
