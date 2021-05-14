@@ -1325,7 +1325,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
             func = add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
 
-            func = add_lambda_node(stmt.type, stmt.func_str)
+            subgraph.nodes.extend(out_nodes)
             subgraph.nodes.append(func)
 
             inputs = [live_variables[id] for id in stmt.inputs]
