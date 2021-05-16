@@ -715,21 +715,40 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       for (argType <- f.arguments) {
         val sameInterval = argType._2.groupBy(_.tokenInterval) // group by token intervals
         for (s <- sameInterval) {
-          if (argType._1 == "input") {
+          if (argType._1 == "input" ) {
             if (s._2.toList.length == 1) {newInputs ++= s._2} // if there's only one input, return that
-            if (s._2.toList.length >= 2) {newInputs ++= s._2.filter(_.label.contains("Identifier"))} // if there are more than one, pick one that has "Identifier" label
-          }
-          if (argType._1 == "output") {
+            // if there are more than one, pick one that has "Identifier" label if available; otherwise, choose the longest
+            else if (s._2.toList.length >= 2) {
+              if (s._2.exists(_.label == "Identifier")) {
+                newInputs += s._2.filter(_.label.contains("Identifier")).head
+              } else {
+                newInputs += s._2.maxBy(_.text.length)
+              }
+            }
+            else logger.error(f"Function missing ${argType._1}")
+          } else if (argType._1 == "output") {
             if (s._2.toList.length == 1) {newOutputs ++= s._2} // if there's only one output, return that
-            if (s._2.toList.length >= 2) {newOutputs ++= s._2.filter(_.label.contains("Identifier"))} // if there are more than one, pick one that has "Identifier" label
+            // if there are more than one, pick one that has "Identifier" label if available; otherwise, choose the longest
+            else if (s._2.toList.length >= 2) {
+              if (s._2.exists(_.label == "Identifier")) {
+                newOutputs += s._2.filter(_.label.contains("Identifier")).head
+              } else {
+                newOutputs += s._2.maxBy(_.text.length)
+              }
+
+            }
+            else logger.error(f"Function missing ${argType._1}")
           }
-          if (argType._1 == "trigger") {newTrigger ++= s._2}
+          // not sure arg type trigger is possible
+          else if (argType._1 == "trigger") {newTrigger ++= s._2}
+          else logger.error(f"Arg type ${argType._1} is not expected in functions")
         }
       }
-      val newArgs = Map("input" -> newInputs, "output" -> newOutputs, "trigger" -> newTrigger)
+      val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
       val newFunctions = copyWithArgs(f, newArgs)
       toReturn.append(newFunctions)
     }
+
     toReturn ++ other
   }
 
