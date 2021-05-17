@@ -12,51 +12,63 @@ if __name__ == "__main__":
     print(json.dumps(asdict(__lit)))
 
     __p = Port(uid=UidPort("myPort"), box=UidBox("myBox"), type=UidType("Int"),
-               name="myPort", metadata=None)
+               name="myPort", value=None, metadata=None)
     print(json.dumps(asdict(__p)))
 
     __w = Wire(uid=UidWire("myWire"), type=UidType("Float"), value=None,
-               metadata=None)
+               name=None, metadata=None)
     print(json.dumps(asdict(__w)))
 
     __wd = WireDirected(uid=UidWire("myDirectedWire"), type=UidType("Float"), value=None,
                         input=UidPort("inPort"),
                         output=UidPort("outPort"),
-                        metadata=None)
+                        name=None, metadata=None)
     print(json.dumps(asdict(__wd)))
 
     __wu = WireUndirected(uid=UidWire("myUndirectedWire"), type=UidType("Float"), value=None,
-                          ports=(UidPort("p1"), UidJunction("p2")),
-                          metadata=None)
+                          end_points=(UidPort("p1"), UidJunction("p2")),
+                          name=None, metadata=None)
     print(json.dumps(asdict(__wu)))
 
-    __j = Junction(uid=UidJunction("myJunction"), type=UidType("Float"), value=None, metadata=None)
+    __j = Junction(uid=UidJunction("myJunction"), type=UidType("Float"), value=None,
+                   name=None, metadata=None)
     print(json.dumps(asdict(__j)))
 
-    __b = Box(uid=UidBox("myBox"), name="aBox", wiring=[UidWire("myWire")], type=None, metadata=None)
+    __b = Box(uid=UidBox("myBox"), name="aBox", type=None, metadata=None)
     print(json.dumps(asdict(__b)))
 
-    __bu = BoxUndirected(uid=UidBox("myBoxUndirected"), name="aBox", wiring=[UidWire("myWire")],
+    __bu = BoxUndirected(uid=UidBox("myBoxUndirected"), name="aBox",
                          ports=[UidPort("myPort")], type=None, metadata=None)
     print(json.dumps(asdict(__bu)))
 
     __bd = BoxDirected(uid=UidBox("myBoxDirected"), name="aBox",
                        type=None,
-                       wiring=[UidWire("myWire")],
                        input_ports=[UidPort("in1"), UidPort("in2")],
                        output_ports=[UidPort("out1"), UidPort("out2")],
                        metadata=None)
     print(json.dumps(asdict(__bd)))
 
-    __r = Relation(uid=UidBox("myRelation"), name="aBox", wiring=[UidWire("myWire")],
-                   ports=[UidPort("p1"), UidPort("p2")], type=None, metadata=None)
+    __r = Relation(uid=UidBox("myRelation"), name="aBox",
+                   ports=[UidPort("p1"), UidPort("p2")],
+
+                   # contents:
+                   wires=[UidWire("myWire")],
+                   boxes=[UidBox("someBox")],
+                   junctions=[UidJunction("myJunction")],
+
+                   type=None, metadata=None)
     print(json.dumps(asdict(__r)))
 
     __f = Function(uid=UidBox("myFunction"), name=UidOp("aBox"),
                    type=None,
-                   wiring=[UidWire("myWire")],
                    input_ports=[UidPort("in1"), UidPort("in2")],
                    output_ports=[UidPort("out1"), UidPort("out2")],
+
+                   # contents
+                   wires=[UidWire("myWire")],
+                   boxes=[UidBox("myBox")],
+                   junctions=None,
+
                    metadata=None)
     print(json.dumps(asdict(__f)))
 
@@ -71,7 +83,6 @@ if __name__ == "__main__":
     __e = Expression(uid=UidBox("myExpression"), name=UidOp("aBox"),
                      type=None,
                      tree=__exp,
-                     wiring=None,
                      input_ports=[UidPort("in1"), UidPort("in2")],
                      output_ports=[UidPort("out")],
                      metadata=None)
@@ -80,7 +91,6 @@ if __name__ == "__main__":
     __pred = Predicate(uid=UidBox("myPredicate"), name=UidOp("aBox"),
                        type=None,
                        tree=__exp2,
-                       wiring=None,
                        input_ports=[UidPort("in1"), UidPort("in2")],
                        output_ports=[UidPort("outBooleanPort")],
                        metadata=None)
@@ -100,7 +110,7 @@ if __name__ == "__main__":
     __v = Variable(uid=UidVariable("myVariable"),
                    name="nameOfMyVar",
                    type=UidType("myType"),
-                   wires=[UidWire("wire1"), UidWire("wire2")],
+                   states=[UidWire("wire1"), UidWire("wire2")],
                    metadata=None)
     print(json.dumps(asdict(__v)))
 

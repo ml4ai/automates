@@ -299,20 +299,46 @@ Literal: (type: "SetInt10", [1,2,3,3,4,52....])
 
 
 # --------------------
+# Valued
+
+@dataclass
+class Valued(TypedGrometElm):
+    """
+    Typed Gromet Elements that have a value.
+    These elements may also be named.
+    """
+    value: Union[Literal, None]
+    name: Union[str, None]
+
+
+# --------------------
+# Junction
+
+@dataclass
+class Junction(Valued):
+    """
+    Junction base.
+    Junctions are "0-ary"
+    """
+    uid: UidJunction
+    metadata: Metadata
+
+
+# --------------------
 # Port
 
 @dataclass
-class Port(TypedGrometElm):
+class Port(Valued):
     """
     Port base.
-    Ports are "1-ary" as they always must belong to a single Box.
+    Ports are "1-ary" as they always *must* belong to a single Box
+        -- you cannot have a Port without a host Box.
     Ports define an interface to a Box, whereby values may pass from
         outside of the Box into the internals of the Box.
     A Port may be optionally named (e.g., named argument)
     """
     uid: UidPort
     box: UidBox
-    name: Union[str, None]
     metadata: Metadata
 
 
@@ -320,15 +346,14 @@ class Port(TypedGrometElm):
 # Wire
 
 @dataclass
-class Wire(TypedGrometElm):
+class Wire(Valued):
     """
-    Wire base.
+    Wire base. Not intended to be instantiated.
     Wires are "2-ary" as they connect up to two elements.
     All Wires have a Type (of the value they may carry).
     Optionally declared with a value, otherwise derived (from system dynamics).
     """
     uid: UidWire
-    value: Union[Literal, None]
     metadata: Metadata
 
 
@@ -347,26 +372,11 @@ class WireDirected(Wire):
 class WireUndirected(Wire):
     """
     Undirected Wire base.
-    Undirected Wire connects a 2 Ports OR 1 Port and 1 Junction
+    Undirected Wire connects two value-carrying endpoints: Port or Junction
     """
-    ports: Union[Tuple[UidPort, UidJunction],
-                 Tuple[UidJunction, UidPort],
-                 Tuple[UidPort, UidPort]]
-
-
-# --------------------
-# Junction
-
-@dataclass
-class Junction(TypedGrometElm):
-    """
-    Junction base.
-    Junctions are "0-ary" -- they themselves do not connect things.
-    Like a wire, a Junction can hold a value.
-    """
-    uid: UidJunction
-    value: Union[Literal, None]
-    metadata: Metadata
+    end_points: Union[Tuple[Union[UidPort, UidJunction, None],
+                            Union[UidPort, UidJunction, None]],
+                      None]
 
 
 # --------------------
@@ -382,17 +392,26 @@ class Box(TypedGrometElm):
     uid: UidBox
     name: Union[str, None]
 
-    # Box "body"/"contents"
-    #   NOTE: Somewhat redundant specification of information,
-    #       but supports easier access to info during viz
-    #   Natural to think of boxes "containing" (immediately
-    #       contained) Wires, Boxes and Junctiosn that wire up
-    #       other elements.
-    wires: Union[UidWire, None]
-    boxes: Union[UidBox, None]
-    junctions: Union[UidJunction, None]
-
     metadata: Metadata
+
+
+@dataclass
+class HasContents:
+    """
+    Box "contents" references
+    NOTE:
+        Natural to think of boxes "containing" (immediately
+            contained) Boxes, Junctions and Wires that wire up
+            the elements.
+        This information functions like an index and
+            supports easier identification of the elements
+            that are the "top level contents" of a Box.
+        Other Boxes do also have contents, but have special
+            intended structure that is explicitly represented
+    """
+    wires: Union[List[UidWire], None]
+    boxes: Union[List[UidBox], None]
+    junctions: Union[List[UidJunction], None]
 
 
 @dataclass
@@ -420,16 +439,15 @@ class BoxDirected(Box):
 # Relations
 
 @dataclass
-class Relation(BoxUndirected):
+class Relation(BoxUndirected, HasContents):
     """
     Base Relation
-    TODO: what is its semantics?
     """
     pass
 
 
 @dataclass
-class PetriEvent(Relation):
+class PetriEvent(BoxUndirected):
     enabling_condition: Relation
     rate: Relation
     effect: Relation
@@ -438,10 +456,11 @@ class PetriEvent(Relation):
 # Functions
 
 @dataclass
-class Function(BoxDirected):
+class Function(BoxDirected, HasContents):
     """
     Base Function
-    Representations of general functions with arbitrary wiring.
+    Representations of general functions with contents wiring
+        inputs to outputs.
     """
     pass
 
@@ -466,14 +485,14 @@ class Expr(GrometElm):
 @dataclass
 class Expression(BoxDirected):
     """
-    A BoxDirected who's wiring is an expression tree of Exp's.
+    A BoxDirected who's contents are an expression tree of Exp's.
     Assumptions:
-      (1) Any "variable" references in the tree will refer to the
+      (1) Any "value" references in the tree will refer to the
         input Ports of the Expression. For this reason, there is
         no need for Wires.
       (2) An Expression always has only one output Port, but for
-        parity with Function, the output_ports field name remains
-        plural while it's value is no longer a list.
+        parity with BoxDirected, the "output_ports" field name
+        remains plural and is a List (of always one Port).
     """
     tree: Expr
 
@@ -481,10 +500,10 @@ class Expression(BoxDirected):
 @dataclass
 class Predicate(Expression):
     """
-    Expression that has only one output port
-      (although we will not override the parent BoxDirected parent).
-    The final Expr value MUST be Boolean
-      (although not enforced in this implementation)
+    A Predicate is an Expression that has
+        an assumed Boolean output Port
+      (although we will not override the parent
+       BoxDirected parent).
     """
     pass
 
@@ -566,7 +585,7 @@ class Conditional(BoxDirected):
                 input Ports to outputs and new Ports have undefined
                 values.
     """
-    # List of
+    # branches is a List of
     #   ( <Predicate>1, <Function>, [<UidWire>+] )
     branches: List[Tuple[Union[Predicate, None],
                          Function,
@@ -574,7 +593,7 @@ class Conditional(BoxDirected):
 
 
 @dataclass
-class Loop(BoxDirected):
+class Loop(BoxDirected, HasContents):
     """
     Loop
         ( TODO:
@@ -652,14 +671,15 @@ class Loop(BoxDirected):
 class Variable(TypedGrometElm):
     """
     A Variable is the locus of two representational roles:
-        (a) denotes one or more Wires (that carry a value) or Junction and
+        (a) denotes one or more elements that are Valued,
+            i.e., carry a value (aka: states) and
         (b) denotes a modeled domain (world) state.
-    (b) currently is represented in Metadata.
+    Currently, (b) will be represented in Metadata.
 
     """
     uid: UidVariable
     name: str
-    wires: Union[List[UidWire], Junction]
+    states: List[Union[UidPort, UidWire, UidJunction]]
     metadata: Metadata
 
 
@@ -706,16 +726,22 @@ def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
 
 """
 Changes 2021-05-17:
-() Box now has a "body" consisting to explicit list of
-    { wires, boxes, junctions } contained within the top-level
-    of the Box.
-() Changed Loop based on change to Box body:
+() FOR NOW: commenting out much of the Types, as likely source of
+    confusion until sorted out.
+() Added HasContents as a "mixin" that provides explicit lists
+    of junctions, boxes, and wires.
+    This is mixed-in to: Loop, Function and Relation.
+() Added Valued class, a type of TypedGrometElm, that introduced
+    the attributes of "value" (i.e., for things that can carry
+    a value). This is now the parent to Junction, Port and Wire.
+    This also distinguishes those classes from Box, which does
+        not have a value, but is intended to transform or assert
+        relationships between values.
+() Changes to Loop:
     Removed "port_map" -- the pairing of input and output Ports
         is now based on the order of Ports in the input_ports and
         output_ports lists.
     Cleaned up documentation to reflect this.
-() FOR NOW: commenting out much of the Types, as likely source of
-    confusion until sorted out.
 
 Changes [2021-05-09 to 2021-05-16]:
 () Added parent class TypedGrometElm inherited by any GrometElm that
