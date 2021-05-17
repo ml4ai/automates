@@ -9,6 +9,25 @@ Google\ Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/figs/
     GrometElm-hierarchy.graffle
     gromet_uml_2021-05-16.{svg,png}
 
+/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet-examples
+    gromet-examples.graffle
+        Conditional
+        Loop
+        toy1 examples
+        ...
+
+TODO: Side Effects
+() mutations of globals
+    (can happen in libraries)
+() mutations of mutable variables
+() mutations of referenced variables (C/C++, can't occur in Python)
+
+Event-driven programming
+() No static trace (directed edges from one fn to another), 
+    so a generalization of side-effects
+    Requires undirected, which corresponds to under-specification 
+
+
 GroMEt is the bytecode for the expression of multi-framework model types
 
 The GroMEt bytecode is expressed in a syntax of building-blocks
@@ -156,49 +175,49 @@ class Atomic(Type):
     pass
 
 
-@dataclass
-class Any(Atomic):
-    pass
-
-
-@dataclass
-class Nothing(Atomic):
-    pass
-
-
-@dataclass
-class Number(Atomic):
-    pass
-
-
-@dataclass
-class Integer(Number):
-    pass
-
-
-@dataclass
-class Real(Number):
-    pass
-
-
-@dataclass
-class Float(Real):
-    pass
-
-
-@dataclass
-class Boolean(Atomic):
-    pass
-
-
-@dataclass
-class Character(Atomic):
-    pass
-
-
-@dataclass
-class Symbol(Atomic):
-    pass
+# @dataclass
+# class Any(Atomic):
+#     pass
+#
+#
+# @dataclass
+# class Nothing(Atomic):
+#     pass
+#
+#
+# @dataclass
+# class Number(Atomic):
+#     pass
+#
+#
+# @dataclass
+# class Integer(Number):
+#     pass
+#
+#
+# @dataclass
+# class Real(Number):
+#     pass
+#
+#
+# @dataclass
+# class Float(Real):
+#     pass
+#
+#
+# @dataclass
+# class Boolean(Atomic):
+#     pass
+#
+#
+# @dataclass
+# class Character(Atomic):
+#     pass
+#
+#
+# @dataclass
+# class Symbol(Atomic):
+#     pass
 
 
 # Composites
@@ -210,31 +229,31 @@ class Composite(Type):
 
 # Algebra
 
-@dataclass
-class Prod(Composite):
-    element_type: List[UidType]
-    cardinality: Union[int, None]
-
-
-@dataclass
-class String(Prod):
-    element_type: List[UidType]
-
-
-@dataclass
-class Sum(Composite):
-    element_type: List[UidType]
-
-
-@dataclass
-class NamedAttribute(Composite):
-    name: str
-    element_type: UidType
-
-
-@dataclass
-class Map(Prod):
-    element_type: List[Tuple[UidType, UidType]]
+# @dataclass
+# class Prod(Composite):
+#     element_type: List[UidType]
+#     cardinality: Union[int, None]
+#
+#
+# @dataclass
+# class String(Prod):
+#     element_type: List[UidType]
+#
+#
+# @dataclass
+# class Sum(Composite):
+#     element_type: List[UidType]
+#
+#
+# @dataclass
+# class NamedAttribute(Composite):
+#     name: str
+#     element_type: UidType
+#
+#
+# @dataclass
+# class Map(Prod):
+#     element_type: List[Tuple[UidType, UidType]]
 
 
 # --------------------
@@ -363,11 +382,15 @@ class Box(TypedGrometElm):
     uid: UidBox
     name: Union[str, None]
 
-    # NOTE: Redundant since Wires specify Ports (which are unique),
-    #   which in turn specify the Box they belong to
-    # However, natural to think of boxes "containing" (immediately
-    #   contained) Wires that wire up other elements.
-    wiring: Union[List[Union[UidWire, UidBox, UidJunction]], None]
+    # Box "body"/"contents"
+    #   NOTE: Somewhat redundant specification of information,
+    #       but supports easier access to info during viz
+    #   Natural to think of boxes "containing" (immediately
+    #       contained) Wires, Boxes and Junctiosn that wire up
+    #       other elements.
+    wires: Union[UidWire, None]
+    boxes: Union[UidBox, None]
+    junctions: Union[UidJunction, None]
 
     metadata: Metadata
 
@@ -470,16 +493,12 @@ class Predicate(Expression):
 class Conditional(BoxDirected):
     """
     Conditional
-        ( TODO: Assumes no side effects:
-            That there are NO globals (shared-state) in
-            any operator/fn calls that are shared between
-            branch Predicates and Functions such that there
-            could be side-affects that effect later computation.
-            Need to revisit once we have a general solution for
-                global/shared state
+        ( TODO:
+            Assumes no side effects.
+            Assumes no breaks.
         )
     ( NOTE: the following notes make references to elements as they
-            appear in the graphical viz notation. )
+            appear in Clay's gromet visual notation. )
     Terminology:
         *branch Predicate* (a type of Expression computing a
             boolean) represents the branch conditional test whose
@@ -549,18 +568,28 @@ class Conditional(BoxDirected):
     """
     # List of
     #   ( <Predicate>1, <Function>, [<UidWire>+] )
-    branches: List[Tuple[Union[Predicate, None], Function, List[UidWire]]]
+    branches: List[Tuple[Union[Predicate, None],
+                         Function,
+                         List[UidWire]]]
 
 
 @dataclass
 class Loop(BoxDirected):
     """
     Loop
-        ( TODO: Assumes no side-effects.
+        ( TODO:
+            Assumes no side-effects.
+            Assumes no breaks.
         )
-    Function that loops until an exit Condition is True.
+    A BoxDirected that "loops" until an exit_condition (Predicate)
+        is True.
+        By "loop", you can think of iteratively making a copies of
+            the Loop and wiring the previous Loop instance output_ports
+            to the input_ports of the next Loop instance.
+            (wiring of output-to-input Ports is done is order
+             of the Ports).
     Definition / Terminology:
-        A Loop has a *wiring* that it has as Function, that
+        A Loop has a *body* (because it is a Box), that
             represents the "body" of the loop.
         A Loop has an *exit_condition*, a Predicate that
             determines whether to evaluate the loop.
@@ -571,48 +600,49 @@ class Loop(BoxDirected):
                 of the Loop.
             The remaining of the input_ports represent
                 Ports to store state values that may be
-                introduced within the Loop body wiring
+                introduced within the Loop body
                 but are not themselves initially used in
-                (read) by the loop body wiring.
+                (read by) the loop body wiring.
                 In the initial evaluation of the loop,
                 these Ports have no values; after one
-                iteration of the Loop, these Ports will
+                iteration of the Loop, these Ports
                 may have their values assigned by the
-                Loop body wiring.
+                Loop body.
+        Each input_port is "matched" to an output_port,
+            based on the Port order within the input_ports
+            and output_ports lists.
         A Loop has a *port_map* is a bi-directional map
             that pairs each Loop output Port with each Loop
             input Port, determining what the Loop input Port
             value will be based on the previous Loop iteration.
-            Some input Ports do not have any changes to
-            their values as a result of the Loop body wiring,
-            so these values "pass through" to that input's
-            paired output. Others may be changed during
-            by the Loop body evaluation.
+            Some input Port values will not be changed as a
+            result of the Loop body, so these values "pass
+            through" to that input's paired output.
+            Others may be changed by the Loop body evaluation.
     Interpretation:
         The Loop exit_condition is evaluated at the very
             beginning before evaluating any of the Loop
             body wiring.
-            IF True: the exit_condition evaluates to True, then
-                the port_map is used to map the value of
-                each input Port to the corresponding output
-                Port, and that represents the final value
-                state of the Loop output_ports.
-            IF False: the exit_condition evaluates to False, then
-                the Loop body wiring is evaluated to
+            IF True (the exit_condition evaluates to True),
+                then the values of the Ports in input_ports
+                are passed directly to their corresponding
+                Ports in output_ports; The output_ports then
+                represent the final value/state of the Loop
+                output_ports.
+            IF False (the exit_condition evaluates to False),
+                then the Loop body wiring is evaluated to
                 determine the state of each output Port value.
-                The port_map is then used to set the values
-                of each input_port and the next Loop iteration
-                is begun.
+                The values of each output Port are then assined
+                to the Port's corresponding input Port and
+                the next Loop iteration is begun.
         This basic semantics supports both standard loop
             semantics:
             () while: the exit_condition is tested first.
             () repeat until: an initial input Port set to False
                 make the initial exit_condition evaluation fail
                 and is thereafter set to True in the Loop body.
-
     """
     exit_condition: Union[Predicate, None]
-    port_map: List[Tuple[UidPort, UidPort]]
 
 
 # --------------------
@@ -675,7 +705,19 @@ def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
 # -----------------------------------------------------------------------------
 
 """
-gromet changes [2021-05-09 to 2021-05-16]:
+Changes 2021-05-17:
+() Box now has a "body" consisting to explicit list of
+    { wires, boxes, junctions } contained within the top-level
+    of the Box.
+() Changed Loop based on change to Box body:
+    Removed "port_map" -- the pairing of input and output Ports
+        is now based on the order of Ports in the input_ports and
+        output_ports lists.
+    Cleaned up documentation to reflect this.
+() FOR NOW: commenting out much of the Types, as likely source of
+    confusion until sorted out.
+
+Changes [2021-05-09 to 2021-05-16]:
 () Added parent class TypedGrometElm inherited by any GrometElm that
     has a type. GrometElm's with types play general model structural roles,
     while other non-typed GrometElms add element-specific structure (such
