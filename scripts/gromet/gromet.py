@@ -4,6 +4,11 @@ from dataclasses import dataclass, field, asdict
 
 
 """
+Manual type partial hierarchy:
+Google\ Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/figs/
+    GrometElm-hierarchy.graffle
+    gromet_uml_2021-05-16.{svg,png}
+
 GroMEt is the bytecode for the expression of multi-framework model types
 
 The GroMEt bytecode is expressed in a syntax of building-blocks
@@ -42,7 +47,7 @@ class GrometElm(object):
     syntax: str = field(init=False)
 
     def __post_init__(self):
-        self.syntax = type(self).__name__
+        self.syntax = self.__class__.__name__
 
 
 # --------------------
