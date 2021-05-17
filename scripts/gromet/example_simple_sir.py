@@ -181,99 +181,110 @@ def simple_sir_gromet() -> Gromet:
     ]
 
     # Expression 'infected_exp' (SIR-simple line 46) -- input: (S I R beta dt)
-    # Exp's:
+    # Expr's:
     # e1 : (* beta S I) -> e1
-    e1 = Exp(operator=UidOp("*"),
-             args=[UidPort("P:infected_exp.in.beta"),
-                   UidPort("P:infected_exp.in.S"),
-                   UidPort("P:infected_exp.in.I")])
+    e1 = Expr(call=RefOp(UidOp("*")),
+              args=[UidPort("P:infected_exp.in.beta"),
+                    UidPort("P:infected_exp.in.S"),
+                    UidPort("P:infected_exp.in.I")])
     # e2 : (* e1 Literal(-1)) -> e2
-    e2 = Exp(operator=UidOp("*"),
-             args=[e1, Literal(uid=None, type=UidType("Int"), value=Val("-1"), metadata=None)])
+    e2 = Expr(call=RefOp(UidOp("*")),
+              args=[e1, Literal(uid=None, type=UidType("Int"), value=Val("-1"), metadata=None)])
     # e3 : (+ S I R) -> e3
-    e3 = Exp(operator=UidOp("+"),
-             args=[UidPort("P:infected_exp.in.S"),
-                   UidPort("P:infected_exp.in.I"),
-                   UidPort("P:infected_exp.in.R")])
+    e3 = Expr(call=RefOp(UidOp("+")),
+              args=[UidPort("P:infected_exp.in.S"),
+                    UidPort("P:infected_exp.in.I"),
+                    UidPort("P:infected_exp.in.R")])
     # e4 : (/ e2 e3) -> e4
-    e4 = Exp(operator=UidOp("/"), args=[e2, e3])
+    e4 = Expr(call=RefOp(UidOp("/")), args=[e2, e3])
     # e5 : (* e4 dt) -> e5
-    e5 = Exp(operator=UidOp("*"), args=[e4, UidPort("P:infected_exp.in.dt")])
+    e5 = Expr(call=RefOp(UidOp("*")), args=[e4, UidPort("P:infected_exp.in.dt")])
     # The anonymous Expression
     infected_exp = Expression(uid=UidBox("B:infected_exp"),
+                              type=None,
                               name=None,
                               input_ports=[UidPort("P:infected_exp.in.S"),
                                            UidPort("P:infected_exp.in.I"),
                                            UidPort("P:infected_exp.in.R"),
                                            UidPort("P:infected_exp.in.beta"),
                                            UidPort("P:infected_exp.in.dt")],
-                              output_ports=UidPort("P:infected_exp.out.infected"),
-                              wiring=e5,
+                              output_ports=[UidPort("P:infected_exp.out.infected")],
+                              tree=e5,
+                              wiring=None,
                               metadata=None)
 
     # Expression 'recovered_exp' (SIR-simple line 47) -- input: (gamma I dt)
-    # Exp's:
+    # Expr's:
     # e6 : (* gamma I) -> e6
-    e6 = Exp(operator=UidOp("*"), args=[UidPort("P:sir.in.gamma"), UidPort("P:sir.in.I")])
+    e6 = Expr(call=RefOp(UidOp("*")), args=[UidPort("P:sir.in.gamma"), UidPort("P:sir.in.I")])
     # e7 : (* e6 dt) -> e7
-    e7 = Exp(operator=UidOp("*"), args=[e6, UidPort("P:sir.in.dt")])
+    e7 = Expr(call=RefOp(UidOp("*")), args=[e6, UidPort("P:sir.in.dt")])
     # The anonymous Expression
     recovered_exp = Expression(uid=UidBox("B:recovered_exp"),
+                               type=None,
                                name=None,
                                input_ports=[UidPort("P:recovered_exp.in.I"),
                                             UidPort("P:recovered_exp.in.gamma"),
                                             UidPort("P:recovered_exp.in.dt")],
-                               output_ports=UidPort("P:recovered_exp.out.infected"),
-                               wiring=e7,
+                               output_ports=[UidPort("P:recovered_exp.out.infected")],
+                               tree=e7,
+                               wiring=None,
                                metadata=None)
 
     # Expression 'S_update_exp' (SIR-simple line 49) -- input: (S infected)
-    # Exp's:
+    # Expr's:
     # e8 : (- S infected) -> e8
-    e8 = Exp(operator=UidOp("-"),
-             args=[UidPort("P:S_update_exp.in.S"), UidPort("P:S_update_exp.in.infected")])
+    e8 = Expr(call=RefOp(UidOp("-")),
+              args=[UidPort("P:S_update_exp.in.S"), UidPort("P:S_update_exp.in.infected")])
     # The anonymous Expression
     s_update_exp = Expression(uid=UidBox("B:S_update_exp"),
+                              type=None,
                               name=None,
                               input_ports=[UidPort("P:S_update_exp.in.S"),
                                            UidPort("P:S_update_exp.in.infected")],
-                              output_ports=UidPort("P:S_update_exp.out.S"),
-                              wiring=e8,
+                              output_ports=[UidPort("P:S_update_exp.out.S")],
+                              tree=e8,
+                              wiring=None,
                               metadata=None)
 
     # Expression 'I_update_exp' (SIR-simple line 50) -- input: (I infected recovered)
-    # Exp's
+    # Expr's
     # e9 : (+ I infected) -> e9
-    e9 = Exp(operator=UidOp("+"),
-             args=[UidPort("P:I_update_exp.in.I"), UidPort("P:I_update_exp.in.infected")])
+    e9 = Expr(call=RefOp(UidOp("+")),
+              args=[UidPort("P:I_update_exp.in.I"), UidPort("P:I_update_exp.in.infected")])
     # e10 : (- e9 recovered) -> e10
-    e10 = Exp(operator=UidOp("-"),
-              args=[e9, UidPort("P:I_update_exp.in.recovered")])
+    e10 = Expr(call=RefOp(UidOp("-")),
+               args=[e9, UidPort("P:I_update_exp.in.recovered")])
     # The anonymous Expression
     i_update_exp = Expression(uid=UidBox("B:I_update_exp"),
+                              type=None,
                               name=None,
                               input_ports=[UidPort("P:I_update_exp.in.I"),
                                            UidPort("P:I_update_exp.in.infected"),
                                            UidPort("P:I_update_exp.in.recovered")],
-                              output_ports=UidPort("P:I_update_exp.out.I"),
-                              wiring=e10,
+                              output_ports=[UidPort("P:I_update_exp.out.I")],
+                              tree=e10,
+                              wiring=None,
                               metadata=None)
 
     # Expression 'R_update_exp' (SIR-simple line 50) -- input: (R recovered)
-    # Exp's
+    # Expr's
     # e11 : (+ R recovered) -> e11
-    e11 = Exp(operator=UidOp("+"),
-              args=[UidPort("P:R_update_exp.in.R"), UidPort("P:R_update_exp.in.recovered")])
+    e11 = Expr(call=RefOp(UidOp("+")),
+               args=[UidPort("P:R_update_exp.in.R"), UidPort("P:R_update_exp.in.recovered")])
     # The anonymous Expression
     r_update_exp = Expression(uid=UidBox("B:R_update_exp"),
+                              type=None,
                               name=None,
                               input_ports=[UidPort("P:R_update_exp.in.R"),
                                            UidPort("P:R_update_exp.in.recovered")],
-                              output_ports=UidPort("P:R_update_exp.out.R"),
-                              wiring=e11,
+                              output_ports=[UidPort("P:R_update_exp.out.R")],
+                              tree=e11,
+                              wiring=None,
                               metadata=None)
 
     sir = Function(uid=UidBox("B:sir"),
+                   type=None,
                    name=UidOp("sir"),
                    input_ports=[UidPort("P:sir.in.S"),
                                 UidPort("P:sir.in.I"),
@@ -294,7 +305,7 @@ def simple_sir_gromet() -> Gromet:
     _g = Gromet(
         uid=UidGromet("SimpleSIR"),
         name="SimpleSIR",
-        framework_type="FunctionNetwork",
+        type=UidType("FunctionNetwork"),
         root=sir.uid,
         types=None,
         ports=ports,

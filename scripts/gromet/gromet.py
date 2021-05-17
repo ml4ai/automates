@@ -4,10 +4,11 @@ from dataclasses import dataclass, field, asdict
 
 
 """
-GroMEt is the bytecode for the expression of multi-framework model semantics
+GroMEt is the bytecode for the expression of multi-framework model types
 
-The GroMEt bytecode is expressed in a syntax that makes explicit the semantics
-  of the model, in a structure aimed at enabling algebraic operations
+The GroMEt bytecode is expressed in a syntax of building-blocks
+  The gromet type specifies the semantic interpretation to be used for
+    for the syntactic types.
 
 Directed GroMET is the bytecode for causal/influence paths / data flow semantics
 
@@ -49,7 +50,7 @@ class GrometElm(object):
 
 # The purpose here is to provide a kind of "namespace" for the unique IDs
 # that used to distinguish gromet model component instances.
-# I'm currently making these str so I can give them arbitrary names as I
+# Currently making these str so I can give them arbitrary names as I
 #   hand-construct example GroMEt instances, but these could be
 #   sequential integers (as James uses) or uuids.
 
@@ -59,21 +60,52 @@ UidLiteral = NewType('UidLiteral', str)
 UidPort = NewType('UidPort', str)
 UidJunction = NewType('UidJunction', str)
 UidWire = NewType('UidWire', str)
+
 UidBox = NewType('UidBox', str)
 
-# either a primitive operator or a named fn
-# OR, perhaps just use UidBox for all Op, Functions, etc... ?
-UidOp = NewType('UidFn', str)
+UidOp = NewType('UidOp', str)  # Primitive operator name
+UidFn = NewType('UidFn', str)  # Defined function name
 
 UidVariable = NewType('UidVariable', str)
 UidGromet = NewType('UidGromet', str)
+
+
+# Explicit "reference" objects.
+# Required when there is ambiguity about which type of uid reference
+# is specified.
+
+@dataclass
+class RefFn(GrometElm):
+    """
+    Representation of an explicit reference to a defined box
+    """
+    name: UidFn
+
+
+@dataclass
+class RefOp(GrometElm):
+    """
+    Representation of an explicit reference to a primitive operator
+    """
+    name: UidOp
+
+
+# --------------------
+# TypedGrometElm
+
+@dataclass
+class TypedGrometElm(GrometElm):
+    """
+    Base class for all Gromet Elements that may be typed.
+    """
+    type: Union[UidType, None]
 
 
 # --------------------
 # Metadata
 
 @dataclass
-class Metadatum(GrometElm):
+class Metadatum(TypedGrometElm):
     """
     Metadatum base.
     """
@@ -205,13 +237,12 @@ class Map(Prod):
 
 
 @dataclass
-class Literal(GrometElm):
+class Literal(TypedGrometElm):
     """
     Literal base.
     A literal is an instances of Types
     """
     uid: Union[UidLiteral, None]  # allows anonymous literals
-    type: UidType
     value: 'Val'  # TODO
     metadata: Metadata
 
@@ -229,19 +260,34 @@ class AttributeVal(GrometElm):
     val: Val
 
 
+'''
+Interval Number, Number, Number
+
+Type: Pair = Prod(element_type[Int, String]) --> (<int>, <string>)
+Literal: (type: "Pair", [3, "hello"])
+
+Literal: (type: "Interval", [3, 6.7, 0.001])
+
+SetIntegers = Prod(element_type=[Int])
+SetIntegers10 = Prod(element_type=[Int], 10)
+Literal: (type: "SetInt10", [1,2,3,3,4,52....])
+'''
+
+
 # --------------------
 # Port
 
 @dataclass
-class Port(GrometElm):
+class Port(TypedGrometElm):
     """
     Port base.
-    (Ports are nullary, but always must belong to a single Box)
-    Port may be named (e.g., named argument)
+    Ports are "1-ary" as they always must belong to a single Box.
+    Ports define an interface to a Box, whereby values may pass from
+        outside of the Box into the internals of the Box.
+    A Port may be optionally named (e.g., named argument)
     """
     uid: UidPort
     box: UidBox
-    type: UidType
     name: Union[str, None]
     metadata: Metadata
 
@@ -250,14 +296,14 @@ class Port(GrometElm):
 # Wire
 
 @dataclass
-class Wire(GrometElm):
+class Wire(TypedGrometElm):
     """
     Wire base.
+    Wires are "2-ary" as they connect up to two elements.
     All Wires have a Type (of the value they may carry).
     Optionally declared with a value, otherwise derived (from system dynamics).
     """
     uid: UidWire
-    type: UidType
     value: Union[Literal, None]
     metadata: Metadata
 
@@ -266,33 +312,36 @@ class Wire(GrometElm):
 class WireDirected(Wire):
     """
     Directed Wire base.
-    Has optional single input and single output Port.
+    Has optional single input and single output Port or Junction.
+    Not enforced, but assume one WireDirected is NOT between two Junctions.
     """
-    input: Union[UidPort, None]
-    output: Union[UidPort, None]
+    input: Union[UidPort, UidJunction, None]
+    output: Union[UidPort, UidJunction,  None]
 
 
 @dataclass
 class WireUndirected(Wire):
     """
     Undirected Wire base.
-    Assumption: that Undirected Wire could connect zero or more Ports
-    and possibly one Junction. (This implementation does not enforce this assumption)
+    Undirected Wire connects a 2 Ports OR 1 Port and 1 Junction
     """
-    ports: List[Union[UidPort, UidJunction]]
+    ports: Union[Tuple[UidPort, UidJunction],
+                 Tuple[UidJunction, UidPort],
+                 Tuple[UidPort, UidPort]]
 
 
 # --------------------
 # Junction
 
 @dataclass
-class Junction(GrometElm):
+class Junction(TypedGrometElm):
     """
     Junction base.
-    (Junctions are nullary)
+    Junctions are "0-ary" -- they themselves do not connect things.
+    Like a wire, a Junction can hold a value.
     """
     uid: UidJunction
-    type: UidType
+    value: Union[Literal, None]
     metadata: Metadata
 
 
@@ -300,19 +349,20 @@ class Junction(GrometElm):
 # Box
 
 @dataclass
-class Box(GrometElm):
+class Box(TypedGrometElm):
     """
     Box base.
-    A Box may have a name
+    A Box may have a name.
     A Box may have wiring (set of wiring connecting Ports of Boxes)
     """
     uid: UidBox
-    # type: UidType  # Box semantic type
     name: Union[str, None]
 
-    # NOTE: Redundant since Wiring specified Port, which in turn specifies Box
-    # However, natural to think of boxes "containing" (immediately contained) wires
-    wiring: Union[List[UidWire], None]
+    # NOTE: Redundant since Wires specify Ports (which are unique),
+    #   which in turn specify the Box they belong to
+    # However, natural to think of boxes "containing" (immediately
+    #   contained) Wires that wire up other elements.
+    wiring: Union[List[Union[UidWire, UidBox, UidJunction]], None]
 
     metadata: Metadata
 
@@ -363,33 +413,32 @@ class PetriEvent(Relation):
 class Function(BoxDirected):
     """
     Base Function
-    Representations of general functions, primitive operators, predicates and loops.
+    Representations of general functions with arbitrary wiring.
     """
-    name: Union[UidOp, None]
+    pass
 
 
 @dataclass
-class Exp(GrometElm):
+class Expr(GrometElm):
     """
     Assumption that may need revisiting:
-      Exp's are assumed to always be declared inline as single instances,
-      and may themselves include Exp's in their args.
+      Expr's are assumed to always be declared inline as single instances,
+      and may include Expr's in their args.
       Under this assumption, they do not require a uid or name
-      -- they are always single instance.
-    The operator field of an Expression denotes a fn call reference,
-    which is either
-        (a) primitive operator.
-        (b) a named Function
-    The args field is a list of either UidPort reference, Literal or Exp
+      -- they are always anonymous single instances.
+    The call field of an Expr is a reference, either to
+        (a) RefOp: primitive operator.
+        (b) RefOp: an explicitly defined Box (e.g., a Function)
+    The args field is a list of: UidPort reference, Literal or Expr
     """
-    operator: UidOp
-    args: Union[List[Union[UidPort, Literal, 'Exp']], None]
+    call: Union[RefFn, RefOp]
+    args: Union[List[Union[UidPort, Literal, 'Expr']], None]
 
 
 @dataclass
-class Expression(Function):
+class Expression(BoxDirected):
     """
-    A Function who's wiring is an expression tree of Exp's.
+    A BoxDirected who's wiring is an expression tree of Exp's.
     Assumptions:
       (1) Any "variable" references in the tree will refer to the
         input Ports of the Expression. For this reason, there is
@@ -398,52 +447,174 @@ class Expression(Function):
         parity with Function, the output_ports field name remains
         plural while it's value is no longer a list.
     """
-    wiring: Exp
-    output_ports: UidPort  # forces output to be a single Port
+    tree: Expr
 
 
 @dataclass
-class Predicate(Function):
+class Predicate(Expression):
     """
-    Function that has only one output port.
-    The Port type MUST be Boolean (although not enforced in this
-    implementation)
+    Expression that has only one output port
+      (although we will not override the parent BoxDirected parent).
+    The final Expr value MUST be Boolean
+      (although not enforced in this implementation)
     """
-    output_ports: UidPort  # forces output to be a single Port
+    pass
 
 
 @dataclass
-class Loop(Function):
+class Conditional(BoxDirected):
     """
-    Function that loops until exit Predicate is True.
-    NOTE: Must have one output Port for every input Port,
-      to enable output Port values to set input Port values
-      at next iteration through the loop.
-    In general, there are two cases:
-      (1) input Port values is altered along a path that
-        eventually arrives at the corresponding output Port
-        that is then the updated value that will be used as
-        input in the next trip through the loop
-      (2) input Port value is not updated within the loop;
-        in this case, there will be a directed Wire that
-        connects the input Port directly to it's corresponding
-        output Port.
-    portmap: a list of pairs of:
-         ( <output UidPort>, <input UidPort> )
-        That is, it specifies the map
-          From output ports (previous iteration)
-          To input ports (next iteration).
-      The portmap is essentially a list of anonymous Wires
+    Conditional
+        ( TODO: Assumes no side effects:
+            That there are NO globals (shared-state) in
+            any operator/fn calls that are shared between
+            branch Predicates and Functions such that there
+            could be side-affects that effect later computation.
+            Need to revisit once we have a general solution for
+                global/shared state
+        )
+    ( NOTE: the following notes make references to elements as they
+            appear in the graphical viz notation. )
+    Terminology:
+        *branch Predicate* (a type of Expression computing a
+            boolean) represents the branch conditional test whose
+            outcome determines whether the branch will be executed.
+        *branch Function* represents the computation of anything in
+            the branch
+        A *branch* itself consists of a Tuple of:
+                <Predicate>, <Function>, List[UidWire]
+            The UidWire list denotes the set of wires relevant for
+                completely wiring the branch Cond and Fn to the
+                Conditional input and output Ports.
+    Port conventions:
+        Being a BoxDirected, a Conditional has a set of
+            input and output Ports.
+        *input* Ports capture any values of state/variables
+            from the scope outside of the Conditional Box that
+            are required by any branch Predicate or Function.
+            (think of the input Ports as representing the relevant
+            "variable environment" to the Conditional.)
+        We can then think of each branch Function as a possible
+            modification to the "variable environment" of the
+            input Ports. When a branch Function is evaluated, it
+            may preserve the values from some or all of the original
+            input ports, or it may modify them, and/or it may
+            introduce *new* variables resulting in corresponding
+            new output Ports.
+        From the perspective of the output Ports of the Conditional,
+            we need to consider all of the possible new variable
+            environment changes made by the selection of any branch.
+            Doing so permits us to treat the Conditional as a modular
+            building-block to other model structures.
+            To achieve this, each branch Function must include in its
+            output_ports a set of Ports that represent any of the
+            "new variables" introduced by any branch Function.
+            This allows us to have a single output_ports set for the
+            entire Conditional, and whichever branch Function is
+            evaluated, those Ports will be defined.
+        NOTE: this does NOT mean those Ports are "Wired" and carry
+            values; branch Function B1 may introduce a new variable
+            "x" that branch Function B2 does not; B2 must still have
+            a Port corresponding to "x", but it will not be Wired to
+            anything -- it carries no value.
+        Each branch Predicate has a single Boolean Port devoted to
+            determining whether the branch is selected (when True).
+    Definition: A Conditional is a...
+        Sequence (List) of branches:
+            Tuple[Predicate, Function, List[UidWire]]
+        Each branch Predicate has a single boolean output Port
+            whose state determines whether the branch Function
+            will be evaluated to produce the state of the Conditional
+            output Ports.
+    Interpretation:
+        GrFN provides unambiguous full data flow semantics.
+        Here (for now), a gromet Conditional provides some abstraction
+            away from pure data flow (but it is directly recoverable
+            if desired).
+        The interpretation convention:
+            Branches are visited in order until the current branch
+                Predicate evals to True
+            If a branch Predicates evaluates to True, then branch
+                Function takes the Conitional input_ports and sets
+                determines the output_ports of the Conditional
+                according to its internal components.
+            If all no branch Predicate evaluats to True, then pass
+                input Ports to outputs and new Ports have undefined
+                values.
     """
-    portmap: List[Tuple[UidPort, UidPort]]
-    exit: Predicate
+    # List of
+    #   ( <Predicate>1, <Function>, [<UidWire>+] )
+    branches: List[Tuple[Union[Predicate, None], Function, List[UidWire]]]
+
+
+@dataclass
+class Loop(BoxDirected):
+    """
+    Loop
+        ( TODO: Assumes no side-effects.
+        )
+    Function that loops until an exit Condition is True.
+    Definition / Terminology:
+        A Loop has a *wiring* that it has as Function, that
+            represents the "body" of the loop.
+        A Loop has an *exit_condition*, a Predicate that
+            determines whether to evaluate the loop.
+        A Loop has input_ports and output_ports (being
+            a BoxDirected).
+            A portion of the input_ports represent Ports
+                set by the incoming external "environment"
+                of the Loop.
+            The remaining of the input_ports represent
+                Ports to store state values that may be
+                introduced within the Loop body wiring
+                but are not themselves initially used in
+                (read) by the loop body wiring.
+                In the initial evaluation of the loop,
+                these Ports have no values; after one
+                iteration of the Loop, these Ports will
+                may have their values assigned by the
+                Loop body wiring.
+        A Loop has a *port_map* is a bi-directional map
+            that pairs each Loop output Port with each Loop
+            input Port, determining what the Loop input Port
+            value will be based on the previous Loop iteration.
+            Some input Ports do not have any changes to
+            their values as a result of the Loop body wiring,
+            so these values "pass through" to that input's
+            paired output. Others may be changed during
+            by the Loop body evaluation.
+    Interpretation:
+        The Loop exit_condition is evaluated at the very
+            beginning before evaluating any of the Loop
+            body wiring.
+            IF True: the exit_condition evaluates to True, then
+                the port_map is used to map the value of
+                each input Port to the corresponding output
+                Port, and that represents the final value
+                state of the Loop output_ports.
+            IF False: the exit_condition evaluates to False, then
+                the Loop body wiring is evaluated to
+                determine the state of each output Port value.
+                The port_map is then used to set the values
+                of each input_port and the next Loop iteration
+                is begun.
+        This basic semantics supports both standard loop
+            semantics:
+            () while: the exit_condition is tested first.
+            () repeat until: an initial input Port set to False
+                make the initial exit_condition evaluation fail
+                and is thereafter set to True in the Loop body.
+
+    """
+    exit_condition: Union[Predicate, None]
+    port_map: List[Tuple[UidPort, UidPort]]
 
 
 # --------------------
 # Variable
 
 @dataclass
-class Variable(GrometElm):
+class Variable(TypedGrometElm):
     """
     A Variable is the locus of two representational roles:
         (a) denotes one or more Wires (that carry a value) or Junction and
@@ -453,7 +624,6 @@ class Variable(GrometElm):
     """
     uid: UidVariable
     name: str
-    type: UidType
     wires: Union[List[UidWire], Junction]
     metadata: Metadata
 
@@ -462,10 +632,9 @@ class Variable(GrometElm):
 # Gromet top level
 
 @dataclass
-class Gromet(GrometElm):
+class Gromet(TypedGrometElm):
     uid: UidGromet
     name: Union[str, None]
-    framework_type: str
     root: Union[UidBox, None]
     types: Union[List[TypeDeclaration], None]
     ports: Union[List[Port], None]
@@ -473,6 +642,15 @@ class Gromet(GrometElm):
     boxes: List[Box]
     variables: Union[List[Variable], None]
     metadata: Metadata
+
+
+'''
+@dataclass
+class Measure(GrometElm):
+    wire: Wire
+    interval: ???: Tuple or Array
+    type: Type  # Enum("instance", interval, steady_state)
+'''
 
 
 # -----------------------------------------------------------------------------
@@ -488,112 +666,32 @@ def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
 
 
 # -----------------------------------------------------------------------------
-# Script
+# CHANGE LOG
 # -----------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    t = TypeDeclaration(name=UidType("myType"),
-                        type=Type(),
-                        metadata=None)
-    print(json.dumps(asdict(t)))
+"""
+gromet changes [2021-05-09 to 2021-05-16]:
+() Added parent class TypedGrometElm inherited by any GrometElm that
+    has a type. GrometElm's with types play general model structural roles,
+    while other non-typed GrometElms add element-specific structure (such
+    as Expr, RefFn, RefOp, Type, etc...)
+() UidOp will now be reserved ONLY for primitive operators that are not
+    explicitly defined within the gromet.
+    All other "implementations" of transformations must have associated
+        Box definitions with UidBox uids
+() Introduced RefOp and RefFn to explicitly distinguish between the two
+() Exp renamed to Expr
+() Expr field "operator" -> "call", where type is now either RefOp or RefFn
+() Expression changed from being a child of Function to being child of BoxDirected
+() Changed Predicate to being an Expression
+() Added Conditional, child of BoxDirected
+() Added Loop, child of BoxDirected
+() WireUndirected
+    ports changed from List[Union[UidPort, UidJunction]]
+    to Union[Tuple[UidPort, UidJunction],
+             Tuple[UidJunction, UidPort],
+             Tuple[UidPort, UidPort]]
+    - should only have one pairwise connection per UndirectedWire
 
-    lit = Literal(uid=UidLiteral("myLiteral"), type=UidType("myType"),
-                  value=Val("infty"), metadata=None)
-    print(json.dumps(asdict(lit)))
+"""
 
-    p = Port(uid=UidPort("myPort"), box=UidBox("myBox"), type=UidType("Int"),
-             name="myPort", metadata=None)
-    print(json.dumps(asdict(p)))
-
-    w = Wire(uid=UidWire("myWire"), type=UidType("Float"), value=None,
-             metadata=None)
-    print(json.dumps(asdict(w)))
-
-    wd = WireDirected(uid=UidWire("myDirectedWire"), type=UidType("Float"), value=None,
-                      input=UidPort("inPort"),
-                      output=UidPort("outPort"),
-                      metadata=None)
-    print(json.dumps(asdict(wd)))
-
-    wu = WireUndirected(uid=UidWire("myUndirectedWire"), type=UidType("Float"), value=None,
-                        ports=[UidPort("p1"), UidPort("p2")],
-                        metadata=None)
-    print(json.dumps(asdict(wu)))
-
-    j = Junction(uid=UidJunction("myJunction"), type=UidType("Float"), metadata=None)
-    print(json.dumps(asdict(j)))
-
-    b = Box(uid=UidBox("myBox"), name="aBox", wiring=[UidWire("myWire")], metadata=None)
-    print(json.dumps(asdict(b)))
-
-    bu = BoxUndirected(uid=UidBox("myBoxUndirected"), name="aBox", wiring=[UidWire("myWire")],
-                       ports=[UidPort("myPort")], metadata=None)
-    print(json.dumps(asdict(bu)))
-
-    bd = BoxDirected(uid=UidBox("myBoxDirected"), name="aBox",
-                     wiring=[UidWire("myWire")],
-                     input_ports=[UidPort("in1"), UidPort("in2")],
-                     output_ports=[UidPort("out1"), UidPort("out2")],
-                     metadata=None)
-    print(json.dumps(asdict(bd)))
-
-    r = Relation(uid=UidBox("myRelation"), name="aBox", wiring=[UidWire("myWire")],
-                 ports=[UidPort("p1"), UidPort("p2")], metadata=None)
-    print(json.dumps(asdict(r)))
-
-    f = Function(uid=UidBox("myFunction"), name=UidOp("aBox"),
-                 wiring=[UidWire("myWire")],
-                 input_ports=[UidPort("in1"), UidPort("in2")],
-                 output_ports=[UidPort("out1"), UidPort("out2")],
-                 metadata=None)
-    print(json.dumps(asdict(f)))
-
-    exp = Exp(operator=UidOp("myExp"),
-              args=[UidPort("p1"), UidPort("p2")])
-    print(json.dumps(asdict(exp)))
-
-    e = Expression(uid=UidBox("myExpression"), name=UidOp("aBox"),
-                   wiring=exp,
-                   input_ports=[UidPort("in1"), UidPort("in2")],
-                   output_ports=UidPort("out"),
-                   metadata=None)
-    print(json.dumps(asdict(e)))
-
-    pred = Predicate(uid=UidBox("myPredicate"), name=UidOp("aBox"),
-                     wiring=[UidWire("myWire")],
-                     input_ports=[UidPort("in1"), UidPort("in2")],
-                     output_ports=UidPort("outBooleanPort"),
-                     metadata=None)
-    print(json.dumps(asdict(pred)))
-
-    loop = Loop(uid=UidBox("myLoop"), name=UidOp("myLoop"),
-                input_ports=[UidPort("in1"), UidPort("in2")],
-                output_ports=[UidPort("out1"), UidPort("out2")],
-                wiring=[UidWire("wire_from_in1_to_out_1"),
-                        UidWire("wire_from_in2_to_out_2")],
-                portmap=[(UidPort("out1"), UidPort("in1")),
-                         (UidPort("out2"), UidPort("in2"))],
-                exit=pred,
-                metadata=None)
-    print(json.dumps(asdict(loop), indent=2))
-
-    v = Variable(uid=UidVariable("myVariable"),
-                 name="nameOfMyVar",
-                 type=UidType("myType"),
-                 wires=[UidWire("wire1"), UidWire("wire2")],
-                 metadata=None)
-    print(json.dumps(asdict(v)))
-
-    g = Gromet(
-        uid=UidGromet("myGromet"),
-        name="myGromet",
-        framework_type="FunctionNetwork",
-        root=b.uid,
-        types=[t],
-        ports=[p],
-        wires=[w, wd, wu],
-        boxes=[b, bd, bu],
-        variables=[v],
-        metadata=None
-    )
-    print(json.dumps(asdict(g), indent=2))
