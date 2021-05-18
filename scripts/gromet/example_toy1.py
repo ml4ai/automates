@@ -185,7 +185,7 @@ def toy1_example() -> Gromet:
         uid=UidGromet("toy1"),
         name="toy1",
         type=UidType("FunctionNetwork"),
-        root=toy1.name,
+        root=UidBox(toy1.name),
         types=None,
         ports=ports,
         wires=wires,
