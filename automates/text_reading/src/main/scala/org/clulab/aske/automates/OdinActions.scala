@@ -98,7 +98,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // has to be used for mentions in the same sentence - token intervals are per sentence
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
     // start with longest - the shorter overlapping ones should be subsumed this way
-    for (m <- mentions.sortBy(_.tokenInterval).reverse) {
+    for (m <- mentions.sortBy(_.tokenInterval.length).reverse) {
+      print("men: " + m.text + "\n")
       if (intervalMentionMap.isEmpty) {
         intervalMentionMap += (m.tokenInterval -> Seq(m))
       } else {
@@ -184,11 +185,21 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    println("start keep longest identifier")
     // used to avoid identifiers like R(t) being found as separate R, t, R(t, and so on
+
+    for (m <- mentions) println("m by sent " + m.text + " " + m.sentence)
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
     for (gbs <- groupedBySent) {
+      println("SENT GROUP")
       val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
+      for (group <- groupedByIntervalOverlap) {
+        println("GROUPED")
+        for (item <- group._2) {
+          println(group._1 + " " + item.text)
+        }
+      }
       for (item <- groupedByIntervalOverlap) {
         val longest = item._2.maxBy(_.tokenInterval.length)
         maxInGroup.append(longest)
