@@ -5,7 +5,7 @@ from gromet import *  # never do this :)
 # GroMEt instance
 # -----------------------------------------------------------------------------
 
-def simple_sir_gromet() -> Gromet:
+def simple_sir_FN_gromet() -> Gromet:
 
     variables = [
         Variable(uid=UidVariable("S"), name="S", type=UidType("Float"),
@@ -360,4 +360,4 @@ def simple_sir_gromet() -> Gromet:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    gromet_to_json(simple_sir_gromet())
+    gromet_to_json(simple_sir_FN_gromet())
