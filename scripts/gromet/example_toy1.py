@@ -149,7 +149,7 @@ def toy1_example() -> Gromet:
 
     toy1 = Function(uid=UidBox("B:toy1"),
                     type=None,
-                    name=UidOp("toy1"),
+                    name=UidBox("toy1"),
                     input_ports=[UidPort("P:toy1.in.x"), UidPort("P:toy1.in.y")],
                     output_ports=[UidPort("P:toy1.out.x"), UidPort("P:toy1.out.z")],
 
@@ -185,7 +185,7 @@ def toy1_example() -> Gromet:
         uid=UidGromet("toy1"),
         name="toy1",
         type=UidType("FunctionNetwork"),
-        root=UidBox(toy1.name),
+        root=toy1.uid,
         types=None,
         ports=ports,
         wires=wires,
