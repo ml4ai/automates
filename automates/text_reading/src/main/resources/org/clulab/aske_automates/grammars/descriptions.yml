@@ -221,7 +221,7 @@ rules:
       |
       (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Identifier (?! /.*/) (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
-      @description: Phrase "," @variable:Identifier (?! [lemma = "be"]|[word = ","] [word = "and"]) (?! [chunk = /I-NP|B-NP/])
+      @description: Phrase "," @variable:Identifier (?! ([word= "can"]? [lemma = "be"])|[word = ","] [word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
       @description: Phrase "(" @variable:Identifier ")" (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
