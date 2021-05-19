@@ -217,11 +217,11 @@ rules:
     pattern: |
       (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," ([word = "denoted"] [word = "as"])? @variable:Identifier (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
-      (@definition: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Identifier [word = ","] (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
+      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Identifier [word = ","] (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
-      (@definition: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Identifier (?! /.*/) (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
+      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Identifier (?! /.*/) (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
-      @definition: Phrase "," @variable:Identifier (?! [lemma = "be"]|[word = ","] [word = "and"]) (?! [chunk = /I-NP|B-NP/])
+      @description: Phrase "," @variable:Identifier (?! [lemma = "be"]|[word = ","] [word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
       @description: Phrase "(" @variable:Identifier ")" (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
