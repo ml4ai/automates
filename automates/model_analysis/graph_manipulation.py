@@ -80,10 +80,7 @@ def ancestors(node, g, topo):
     :return: Ancestors of node in topological ordering topo
     """
     an_list = g.neighborhood(node, order=g.vcount(), mode="in")
-    an_set = set()
-    for ans in an_list:
-        an_set = an_set | set(ans)
-    an_ind = list(an_set)
+    an_ind = list(set([a for ans in an_list for a in ans]))
     an_names = to_names(an_ind, g)
     an = ts(an_names, topo)
     return an
@@ -97,10 +94,7 @@ def ancestors_unsort(node, g):
     :return: Ancestors of nodes
     """
     an_list = g.neighborhood(node, order=g.vcount(), mode="in")
-    an_set = set()
-    for ans in an_list:
-        an_set = an_set | set(ans)
-    an_ind = list(an_set)
+    an_ind = list(set([a for ans in an_list for a in ans]))
     an_names = to_names(an_ind, g)
     return an_names
 
@@ -113,10 +107,7 @@ def parents_unsort(node, g_obs):
     :return: parents of node
     """
     pa_list = g_obs.neighborhood(node, order=1, mode="in")
-    pa_set = set()
-    for pas in pa_list:
-        pa_set = pa_set | set(pas)
-    pa_ind = list(pa_set)
+    pa_ind = list(set([p for pas in pa_list for p in pas]))
     pa_names = to_names(pa_ind, g_obs)
     return pa_names
 
@@ -129,10 +120,7 @@ def children_unsort(node, g):
     :return: children of node
     """
     ch_list = g.neighborhood(node, order=1, mode="out")
-    ch_set = set()
-    for chs in ch_list:
-        ch_set = ch_set | set(chs)
-    ch_ind = list(ch_set)
+    ch_ind = list(set([c for chs in ch_list for c in chs]))
     ch_names = to_names(ch_ind, g)
     return ch_names
 
@@ -146,10 +134,7 @@ def descendents(node, g, topo):
     :return: Descendants of node in topological ordering topo
     """
     des_list = g.neighborhood(node, order=g.vcount(), mode="out")
-    des_set = set()
-    for des in des_list:
-        des_set = des_set | set(des)
-    des_ind = list(des_set)
+    des_ind = list(set([d for des in des_list for d in des]))
     des_names = to_names(des_ind, g)
     des = ts(des_names, topo)
     return des
@@ -243,56 +228,56 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
         else:
             p = f"{p}\\sum_{{{sum_string}}}"
     if prob.fraction:
-        p = "".join([p, "\\frac{", get_expression(prob.num, start_sum=False, single_source=single_source, \
-                                                  target_sym=target_sym), "}{",
-                     get_expression(prob.den, start_sum=False, \
-                                    single_source=single_source, target_sym=target_sym), "}"])
-        # p = f"{p}\\frac{{{get_expression(prob.num, start_sum=False, single_source=single_source, target_sym=target_sym)}}}{{{get_expression(prob.den, start_sum=False, single_source=single_source, target_sym=target_sym)}}}"
-    if prob.sum:  # This might be broken
-        p = "".join([p, "\\left("])
+        f_num = get_expression(prob.num, start_sum=False, single_source=single_source, target_sym=target_sym)
+        f_den = get_expression(prob.den, start_sum=False, single_source=single_source, target_sym=target_sym)
+        p = f"{p}\\frac{{{f_num}}}{{{f_den}}}"
+    if prob.sum:
+        p = f"{p}\\left("
         add_strings = []
         i = 1
         for child in prob.children:
             new_sum = False
             if child.product or child.sum:
                 new_sum = True
-            add_strings.append("".join(["w_{", i, "}^{(", child.weight, ")}", get_expression(child, start_sum=new_sum, \
-                                                                                             single_source=single_source,
-                                                                                             target_sym=target_sym)]))
+            child_ge = get_expression(child, start_sum=new_sum, single_source=single_source, target_sym=target_sym)
+            to_append = f"w_{{{i}}}^{{({child.weight})}}{child_ge}"
+            add_strings.append(to_append)
             i = i + 1
-        p = "".join([p, add_strings, "\\right"])
+        con_strings = "".join(add_strings)
+        p = f"{p}{con_strings}\\right)"
 
     if prob.product:
         for child in prob.children:
             new_sum = False
             if child.product or child.sum:
                 new_sum = True
-            p = "".join([p, get_expression(child, start_sum=new_sum, single_source=single_source, \
-                                           target_sym=target_sym)])
+            child_ge = get_expression(child, start_sum=new_sum, single_source=single_source, target_sym=target_sym)
+            p = f"{p}{child_ge}"
 
     if not (prob.sum or prob.product or prob.fraction):
-        p = "".join([p, "P"])
+        p = f"{p}P"
         if len(prob.do) > 0:
             do_string = "".join([prob.do])
-            p = "".join([p, "_{", do_string, "}"])
+            p = f"{p}_{{{do_string}}}"
         var_string = ",".join(prob.var)
         if prob.domain > 0:
             if prob.dom == 1:
-                p = "".join([p, target_sym, var_string])
+                p = f"{p}{target_sym}{var_string}"
             else:
                 if single_source:
-                    p = "".join([p, "(", var_string])
+                    p = f"{p}({var_string}"
                 else:
-                    p = "".join([p, "^{(", str(prob.domain - 1), ")}(", var_string])
+                    p = f"{p}^{{({str(prob.domain - 1)}}}({var_string}"
         else:
-            p = "".join([p, "(", var_string])
+            p = f"{p}({var_string}"
         if len(prob.cond) > 0:
             cond_string = ",".join(prob.cond)  # prob.cond must have elements that are strings
-            cond_string = "".join(["\u007C", cond_string, ")"])
+            cond_string = f"\u007C{cond_string})"
         else:
             cond_string = ")"
-        p = "".join([p, cond_string])
+        p = f"{p}{cond_string}"
     if s_print and start_sum:
+
         p = ",".join([p, "\\right)"])
     return p
 

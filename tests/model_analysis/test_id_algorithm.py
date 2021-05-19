@@ -5,8 +5,13 @@ from automates.model_analysis.identification_algorithms import identifiability
 
 
 def test_identifiability():
+    """
+    Graph 3A from Shpitzer and Pearl 2006.
+    Tests summation notation, product notation
+    :return:
+    """
     g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [0, 2], [0, 4], [0, 3], [1, 3], [2, 0], [4, 0], \
-                             [3, 0], [3, 1]], directed=True)
+                            [3, 0], [3, 1]], directed=True)
     g.vs["name"] = ["W1", "X", "Y1", "W2", "Y2"]
     g.es["description"] = ["O", "O", "O", "U", "U", "U", "U", "U", "U", "U", "U"]
     y = ["Y1", "Y2"]
@@ -16,14 +21,20 @@ def test_identifiability():
 
 
 def test_non_identifiability():
+    """
+    Graph 3B from Shpitzer and Pearl 2006.
+    Not identifiable, tests line 2 code
+    :return:
+    """
     g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [0, 2], [0, 4], [0, 3], [1, 3], [2, 0], [4, 0], \
-                          [3, 0], [3, 1], [0, 3]], directed=True)
+                            [3, 0], [3, 1], [0, 3]], directed=True)
     g.vs["name"] = ["W1", "X", "Y1", "W2", "Y2"]
     g.es["description"] = ["O", "O", "O", "U", "U", "U", "U", "U", "U", "U", "U", "O"]
     y = ["Y1", "Y2"]
     x = ["X"]
     with pytest.raises(gm.IDANotIdentifiable):
         identifiability(y, x, g)
+
 
 def test_conditional_identifiability():
     g = igraph.Graph(edges=[[0, 1], [1, 2], [0, 1], [1, 0]], directed=True)
