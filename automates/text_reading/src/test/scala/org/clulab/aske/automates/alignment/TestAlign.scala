@@ -28,8 +28,8 @@ class TestAlign extends FlatSpec with Matchers {
   val config = ConfigFactory.load("/test.conf")
   val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None) //todo: read this from test conf (after adding this to test conf)
   lazy val proc = TestUtils.newOdinSystem(config).proc
-  val srcDir: File = new File(getClass.getResource("/").getFile)
-  println("-->" + srcDir)
+//  val srcDir: File = new File(getClass.getResource("/").getFile)
+//  println("-->" + srcDir)
   val inputDir = new File(getClass.getResource("/").getFile)
   val files = inputDir.listFiles()
   for (f <- files) println(">>>", f)
@@ -39,16 +39,36 @@ class TestAlign extends FlatSpec with Matchers {
 
 
   // read in all related docs or maybe read in just a sample payload - that should make sense
-  // make it as close as possivle to the actual endpoint while still mainly testing the ExtractAndAlign.groundMentions method
+  // make it as close as possivle to the actual endpoint while still mainly testing the ExtractAndAlign.groundMentions method (to get texts of links, need to run in debug mode)
   // the rest will be tested on paul's end
   // for now just use sample json
 
-  val jsonFile = new File("/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/temporaryAlignmentOutputSample.json")
+
+  val jsonFile = new File("/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/temporaryAlignmentOutputSample.json") //todo: this should be read in from inputDir
   val json = ujson.read(jsonFile.readString())
 //  val distinctUids = json.obj("links").arr.map(_.obj.)
 //  println("<<<>>>" + json.obj("links").arr.map())
   it should "contain links" in {
     json.obj.keys should contain("links")
+  }
+
+  val links = json.obj("links").arr
+
+
+  println(links.map(_.obj("link_type").str).distinct + "<<")
+  val src_comment_links = links.filter(_.obj("link_type").str == "source_to_comment")
+//  for (scl <- src_comment_links) println(scl)
+
+  println(src_comment_links.head.obj("element_1").str)
+
+  // try str.split("::").last == "s_t"
+  it should "have an s_t src to comment element" in {
+    src_comment_links.exists(l => l.obj("element_1").str.contains("s_t") & l.obj("element_2").str.contains("S_t         Current count of individuals that are susceptible to either disease") && l.obj("score").num > 0.8) shouldBe true
+
+    // hard to make negative links since we do make an attempt to get top 3 and there will be false positives there
+    // need to check if the best one is the top out of three
+
+
   }
 
 
