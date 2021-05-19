@@ -2,8 +2,6 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-  # todo: some of the rules have very similar structure, though their trigger words differ. Would it be possible to capture them in a single rule?
-
   - name: trigger1_by # modify, influence, govern, limit, control, dominate is the trigger for this rule
     label: Function
     priority: ${priority}
@@ -92,7 +90,7 @@ rules:
     pattern: |
       trigger = [lemma = "multiply"]
       input:Phrase+ = dobj | nmod_by
-      output:Phrase = <advcl_by nsubjpas
+      output:Phrase? = <advcl_by nsubjpass
 
 
   #covidactnow
@@ -317,6 +315,30 @@ rules:
       trigger = [lemma = "combine"]
       input:Phrase+ = <acl conj_and?
       output:Phrase = advcl_in nmod_to
+
+  # function rules allowing for partial extraction
+
+  - name: compute_output
+    label: PartialFunction
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "It also computes the root water uptake of each soil layer."
+    pattern: |
+      trigger = [lemma = "compute"]
+      input:Phrase* = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of
+      output:Phrase? = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
+
+  - name: required_as_input
+    label: PartialFunction
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The daily weather values as well as all soil properties and current soil water content, by layer, are required as input."
+    pattern: |
+      trigger = [lemma = "require"] (?= [word = "as"] ([word = "input"]|[word = "inputs"]))
+      input:Phrase+ = nsubjpass conj_and? | nmod_as
+      output:Phrase? = nmod_for
 
   # note: how to write a token rule for function extraction? (with multiple inputs)
   #  - name: minus_token_rule # needed due to bad parsing

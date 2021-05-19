@@ -23,11 +23,13 @@ class ExpansionHandler() extends LazyLogging {
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
     val (functions, other) = mentions.partition(_.label == "Function")
+    val (partialFunc, otherOther) = other.partition(_.label == "PartialFunction")
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
-    val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))
+    val partialFunc_res = partialFunc.flatMap(expandArgs(_, state, validArgs, "function"))
+    val other_res = otherOther.flatMap(expandArgs(_, state, validArgs, "standard"))
 
     // Useful for debug
-    function_res ++ other_res
+    function_res ++ partialFunc_res ++ other_res
   }
 
   def expandArgs(mention: Mention, state: State, validArgs: List[String], expansionType: String): Seq[Mention] = {
@@ -748,6 +750,7 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
+    "nmod_by".r,
     "nummod".r,
     "^nsubj".r,
     "^punct".r,
