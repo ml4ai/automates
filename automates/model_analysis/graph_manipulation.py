@@ -294,7 +294,7 @@ def c_components(g, topo):
     v = g.vs["name"]
     bidirected = []
     for i in range(0, n):
-        for j in range(0, n):
+        for j in range(i+1, n):
             if a[i][j] >= 1 and a[j][i] >= 1:
                 bidirected.append(i)
                 bidirected.append(j)
@@ -310,8 +310,7 @@ def c_components(g, topo):
         for node in nodes:
             rank = rank + topo.index(node)
         cc_rank.append(rank)
-    (cc_sorted, rank_sorted) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1]))))
-    cc_sorted.reverse()
+    (cc_sorted, _) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1], reverse=True))))
     return cc_sorted
 
 
@@ -355,8 +354,7 @@ def wrap_d_sep(g, x, y, z):
         return False
     if len(x) == 0 or len(y) == 0:
         return True
-    else:
-        return d_sep(g, x, y, z)
+    return d_sep(g, x, y, z)
 
 
 def d_sep(g, x, y, z):
@@ -414,7 +412,8 @@ def d_sep(g, x, y, z):
                 visited_names[0:visited_size_old] = copy.deepcopy(visited_names_old)
             visited[visited_top - 1] = el
             visited_names[visited_top - 1] = el_name
-            if el and (not (el_name in z)):
+            el_name_in_z = el_name in z
+            if el and (not el_name_in_z):
                 visitable_parents = list((set(parents_unsort([el_name], g)) - set([el_name])) & set(an_xyz))
                 visitable_children = list((set(children_unsort([el_name], g)) - set([el_name])) & set(an_xyz))
                 n_vis_pa = len(visitable_parents)
@@ -435,7 +434,7 @@ def d_sep(g, x, y, z):
                         visitable_children)
                     stack_top = stack_add
             elif not el:
-                if not (el_name in z):
+                if not el_name_in_z:
                     visitable_children = list((set(children_unsort(el_name, g)) - set(el_name)) & set(an_xyz))
                     n_vis_ch = len(visitable_children)
                     if n_vis_ch > 0:
