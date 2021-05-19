@@ -9,7 +9,7 @@ rules:
     action: ${action}
     example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
     pattern: |
-      trigger = ${functionTrigger1}
+      trigger = [lemma = /${functionTrigger1}/]
       input:Phrase+ = nmod_agent | conj_and | nmod_by
       output:Phrase = nsubjpass | <acl_as
 
@@ -20,7 +20,7 @@ rules:
     action: ${action}
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      trigger = ${functionTrigger2} (?= "of")
+      trigger = [word = /${functionTrigger2}/] (?= "of")
       input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos | nmod_in appos
       output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod
 
@@ -31,7 +31,7 @@ rules:
     action: ${action}
     example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
     pattern: |
-      trigger = ${functionTrigger3}
+      trigger = [lemma = /${functionTrigger3}/]
       input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of
       output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
 
@@ -42,7 +42,7 @@ rules:
     action: ${action}
     example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
     pattern: |
-      trigger = ${functionTrigger4} (?= "of")
+      trigger = [word = /${functionTrigger4}/] (?= "of")
       input:Phrase+ = nmod_of | nmod_at? nmod_to
       output:Phrase = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj
 
@@ -53,7 +53,7 @@ rules:
     action: ${action}
     example: "The evaporation from the plant surfaces Ep is predicted by using an empirical relation based on local data..."
     pattern: |
-      trigger = ${functionTrigger5}
+      trigger = [lemma = /${functionTrigger5}/]
       input:Phrase+ = advcl_by (dobj | nmod_by)
       output:Phrase = nsubjpass | <acl
 
