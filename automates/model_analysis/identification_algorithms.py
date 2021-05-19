@@ -86,9 +86,8 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
     description = None
     tree = gm.TreeNode()
     if (len(p.var) == 0) and (not (p.product or p.fraction)):
-        tree.call = gm.Call(y=y, x=x, p=gm.Probability(var=v), g=g, line=0, v=v, id_check=False)
-    else:
-        tree.call = gm.Call(y=y, x=x, p=p, g=g, line=0, v=v, id_check=False)
+        p = gm.Probability(var=v)
+    tree.call = gm.Call(y=y, x=x, p=p, g=g, line=0, v=v, id_check=False)
 
     # Line 1
     if len(x) == 0:
@@ -198,6 +197,8 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
             if set(s_single).issubset(set(component)):
                 s_prime = component
                 break
+        if s_prime is None:
+            raise RuntimeError("s_prime component not identified in cc")
         tree.call.line = 7
         tree.call.s_prime = s_prime
         s_prime_length = len(s_prime)
@@ -218,10 +219,10 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
         product_list.reverse()
         x_new = gm.ts(set(x) & set(s_prime), topo)
         if s_prime_length > 1:
-            nxt = compute_ID(y, x_new, gm.Probability(product=True, children=product_list), g_s_prime, g_s_prime_obs, \
-                             s_prime, topo, gm.TreeNode())
+            p_nxt = gm.Probability(product=True, children=product_list)
         else:
-            nxt = compute_ID(y, x_new, product_list[0], g_s_prime, g_s_prime_obs, s_prime, topo, gm.TreeNode())
+            p_nxt = product_list[0]
+        nxt = compute_ID(y, x_new, p_nxt, g_s_prime, g_s_prime_obs, s_prime, topo, gm.TreeNode())
         tree.children.append(nxt.tree)
         tree.call.id_check = nxt.tree.call.id_check
         return gm.ResultsInternal(p=nxt.p, tree=tree)
@@ -229,9 +230,8 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
 
 def compute_IDC(y, x, z, p, g, g_obs, v, topo, tree):
     if len(p.var) == 0:
-        tree.call = gm.Call(y=y, x=x, z=z, p=gm.Probability(var=v), g=g, v=v, id_check=False)
-    else:
-        tree.call = gm.Call(y=y, x=x, z=z, p=p, g=g, v=v, id_check=False)
+        p = gm.Probability(var=v)
+    tree.call = gm.Call(y=y, x=x, z=z, p=p, g=g, v=v, id_check=False)
     g_xz = gm.unobserved_graph(g)
     elist = gm.eselect2(g_xz, x, z)
     g_xz = g_xz.subgraph_edges(elist, delete_vertices=False)
