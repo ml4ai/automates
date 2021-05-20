@@ -759,10 +759,14 @@ object ExtractAndAlign {
             "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
           ).toString()
         } else {
+          // create a random id for full equation if it is not in the equation 2 uuid map...
           val id = randomUUID
+          //... and add it to the map
           equation2uuid(orig) = id
           ujson.Obj(
-            "uid" -> id.toString(),
+            // create a new id for the equation chunk (corresponds to one identifier)
+            "uid" -> randomUUID().toString(),
+            "equation_uid" -> id.toString(),
             "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
           ).toString()
         }
