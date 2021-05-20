@@ -25,3 +25,12 @@ print()
 f_sat2 = And(0.75 <= x, x <= 2, -x**2 + 0.5*x**4 == 0)
 result2 = CheckSatisfiability(f_sat2, 0.001)
 print(result2)
+print()
+
+
+# dreal example 2 notes
+x = Variable("x")
+y = Variable("y")
+f_sat = And(-3 <= x, x <= 3, -3 <= y, y <= 3, (x*y-y)**2==0)  # different intervals yield different solutions
+result = CheckSatisfiability(f_sat, 0.001)
+print(result)
