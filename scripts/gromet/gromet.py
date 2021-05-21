@@ -48,6 +48,21 @@ Expression Boxes represent a special kind of Box whose internal 'wiring' are
 """
 
 # -----------------------------------------------------------------------------
+# Model Framework Types
+# -----------------------------------------------------------------------------
+
+# Data:
+# Float, Integer, Boolean
+
+# Function Network:
+# Function, Expression, Predicate, Conditional, Loop,
+# Junction, Port, WireDirected, Literal, Variable
+# Types:
+#   Ports: "PortInput", "PortOutput"
+#   Wire: "WireDirected"
+
+
+# -----------------------------------------------------------------------------
 # GroMEt syntactic types
 # -----------------------------------------------------------------------------
 
@@ -61,7 +76,8 @@ Expression Boxes represent a special kind of Box whose internal 'wiring' are
 class GrometElm(object):
     """
     Base class for all Gromet Elements.
-    Implements __post_init__ that saves syntactic type (syntax) as GroMEt element class name.
+    Implements __post_init__ that saves syntactic type (syntax)
+        as GroMEt element class name.
     """
     syntax: str = field(init=False)
 
@@ -115,25 +131,15 @@ class RefOp(GrometElm):
 
 
 # --------------------
-# TypedGrometElm
-
-@dataclass
-class TypedGrometElm(GrometElm):
-    """
-    Base class for all Gromet Elements that may be typed.
-    """
-    type: Union[UidType, None]
-
-
-# --------------------
 # Metadata
 
 @dataclass
-class Metadatum(TypedGrometElm):
+class Metadatum(GrometElm):
     """
     Metadatum base.
     """
     uid: UidMetadatum
+    type: Union[UidType, None]
 
 
 # TODO: add Metadatum subtypes
@@ -257,6 +263,19 @@ class Composite(Type):
 
 
 # --------------------
+# TypedGrometElm
+
+@dataclass
+class TypedGrometElm(GrometElm):
+    """
+    Base class for all Gromet Elements that may be typed.
+    """
+    type: Union[UidType, None]
+    name: Union[str, None]
+    metadata: Metadata
+
+
+# --------------------
 # Literal
 
 
@@ -268,7 +287,6 @@ class Literal(TypedGrometElm):
     """
     uid: Union[UidLiteral, None]  # allows anonymous literals
     value: 'Val'  # TODO
-    metadata: Metadata
 
 
 # TODO: "sublanguage" for specifying instances
@@ -304,11 +322,15 @@ Literal: (type: "SetInt10", [1,2,3,3,4,52....])
 @dataclass
 class Valued(TypedGrometElm):
     """
-    Typed Gromet Elements that have a value.
-    These elements may also be named.
+    This class is never instantiated; it's purpose is to
+        introduce attributes and a class-grouping into
+        the class hierarchy.
+    Typed Gromet Elements that may have a 'value'
+    and the 'value_type' determines what types of values
+    the element can have/carry.
     """
     value: Union[Literal, None]
-    name: Union[str, None]
+    value_type: UidType
 
 
 # --------------------
@@ -321,7 +343,6 @@ class Junction(Valued):
     Junctions are "0-ary"
     """
     uid: UidJunction
-    metadata: Metadata
 
 
 # --------------------
@@ -339,7 +360,6 @@ class Port(Valued):
     """
     uid: UidPort
     box: UidBox
-    metadata: Metadata
 
 
 # --------------------
@@ -348,35 +368,20 @@ class Port(Valued):
 @dataclass
 class Wire(Valued):
     """
-    Wire base. Not intended to be instantiated.
-    Wires are "2-ary" as they connect up to two elements.
-    All Wires have a Type (of the value they may carry).
-    Optionally declared with a value, otherwise derived (from system dynamics).
+    Wire base.
+    Wires are "2-ary" as they connect up to two Valued elements,
+        the 'src' and the 'dst'.
+        Despite the names, 'src' and 'dst' are NOT inherently
+            directed.
+        Whether a Wire is directed depends on its 'type'
+            within a Model Framework interpretation.
+    All Wires have a 'value_type' (of the value they may carry).
+    Optionally declared with a 'value', otherwise derived
+        (from system dynamics).
     """
     uid: UidWire
-    metadata: Metadata
-
-
-@dataclass
-class WireDirected(Wire):
-    """
-    Directed Wire base.
-    Has optional single input and single output Port or Junction.
-    Not enforced, but assume one WireDirected is NOT between two Junctions.
-    """
-    input: Union[UidPort, UidJunction, None]
-    output: Union[UidPort, UidJunction,  None]
-
-
-@dataclass
-class WireUndirected(Wire):
-    """
-    Undirected Wire base.
-    Undirected Wire connects two value-carrying endpoints: Port or Junction
-    """
-    end_points: Union[Tuple[Union[UidPort, UidJunction, None],
-                            Union[UidPort, UidJunction, None]],
-                      None]
+    src: Union[UidPort, UidJunction, None]
+    dst: Union[UidPort, UidJunction, None]
 
 
 # --------------------
@@ -390,16 +395,14 @@ class Box(TypedGrometElm):
     A Box may have wiring (set of wiring connecting Ports of Boxes)
     """
     uid: UidBox
-    name: Union[str, None]
-
-    metadata: Metadata
+    ports: Union[List[UidPort], None]
 
 
 @dataclass
 class HasContents:
     """
-    Box "contents" references
-    NOTE:
+    Mixin class, never instantiated.
+    Bookkeeping for Box "contents" references.
         Natural to think of boxes "containing" (immediately
             contained) Boxes, Junctions and Wires that wire up
             the elements.
@@ -414,49 +417,42 @@ class HasContents:
     junctions: Union[List[UidJunction], None]
 
 
-@dataclass
-class BoxUndirected(Box):
-    """
-    Undirected Box base.
-    Unoriented list of Ports represent interface to Box
-    """
-
-    # NOTE: Redundant since Ports specify the Box they belong to.
-    # However, natural to think of boxes "having" Ports, and DirectedBoxes
-    # must specify the "face" their ports belong to, so for parity we'll
-    # have BoxUndirected also name their Ports
-    ports: Union[List[UidPort], None]
-
-
-@dataclass
-class BoxDirected(Box):
-    # NOTE: This is NOT redundant since Ports are not oriented,
-    # but DirectedBox has ports on a "orientation/face"
-    input_ports: Union[List[UidPort], None]
-    output_ports: Union[List[UidPort], None]
+# @dataclass
+# class BoxUndirected(Box):
+#     """
+#     Undirected Box base.
+#     Unoriented list of Ports represent interface to Box
+#     """
+#
+#     # NOTE: Redundant since Ports specify the Box they belong to.
+#     # However, natural to think of boxes "having" Ports, and DirectedBoxes
+#     # must specify the "face" their ports belong to, so for parity we'll
+#     # have BoxUndirected also name their Ports
+#     ports: Union[List[UidPort], None]
+#
+#
+# @dataclass
+# class BoxDirected(Box):
+#     # NOTE: This is NOT redundant since Ports are not oriented,
+#     # but DirectedBox has ports on a "orientation/face"
+#     input_ports: Union[List[UidPort], None]
+#     output_ports: Union[List[UidPort], None]
 
 
 # Relations
 
 @dataclass
-class Relation(BoxUndirected, HasContents):
+class Relation(Box, HasContents):  # BoxUndirected
     """
     Base Relation
     """
     pass
 
 
-@dataclass
-class PetriEvent(BoxUndirected):
-    enabling_condition: Relation
-    rate: Relation
-    effect: Relation
-
-
 # Functions
 
 @dataclass
-class Function(BoxDirected, HasContents):
+class Function(Box, HasContents):  # BoxDirected
     """
     Base Function
     Representations of general functions with contents wiring
@@ -469,10 +465,10 @@ class Function(BoxDirected, HasContents):
 class Expr(GrometElm):
     """
     Assumption that may need revisiting:
-      Expr's are assumed to always be declared inline as single instances,
-      and may include Expr's in their args.
+      Expr's are assumed to always be declared inline as single
+        instances, and may include Expr's in their args.
       Under this assumption, they do not require a uid or name
-      -- they are always anonymous single instances.
+        -- they are always anonymous single instances.
     The call field of an Expr is a reference, either to
         (a) RefOp: primitive operator.
         (b) RefOp: an explicitly defined Box (e.g., a Function)
@@ -483,7 +479,7 @@ class Expr(GrometElm):
 
 
 @dataclass
-class Expression(BoxDirected):
+class Expression(Box):  # BoxDirected
     """
     A BoxDirected who's contents are an expression tree of Exp's.
     Assumptions:
@@ -509,7 +505,7 @@ class Predicate(Expression):
 
 
 @dataclass
-class Conditional(BoxDirected):
+class Conditional(Box):  # BoxDirected
     """
     Conditional
         ( TODO:
@@ -593,7 +589,7 @@ class Conditional(BoxDirected):
 
 
 @dataclass
-class Loop(BoxDirected, HasContents):
+class Loop(Box, HasContents):  # BoxDirected
     """
     Loop
         ( TODO:
@@ -664,6 +660,12 @@ class Loop(BoxDirected, HasContents):
     exit_condition: Union[Predicate, None]
 
 
+@dataclass
+class Event(Box):
+    enabling_condition: Predicate
+    effect: Relation
+
+
 # --------------------
 # Variable
 
@@ -678,9 +680,7 @@ class Variable(TypedGrometElm):
 
     """
     uid: UidVariable
-    name: str
     states: List[Union[UidPort, UidWire, UidJunction]]
-    metadata: Metadata
 
 
 # --------------------
@@ -689,14 +689,14 @@ class Variable(TypedGrometElm):
 @dataclass
 class Gromet(TypedGrometElm):
     uid: UidGromet
-    name: Union[str, None]
     root: Union[UidBox, None]
     types: Union[List[TypeDeclaration], None]
+    literals: Union[List[Literal], None]
+    junctions: Union[List[Junction], None]
     ports: Union[List[Port], None]
     wires: Union[List[Wire], None]
-    boxes: List[Box]
+    boxes: List[Box]  # has to be one top-level Box
     variables: Union[List[Variable], None]
-    metadata: Metadata
 
 
 '''
@@ -725,6 +725,48 @@ def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
 # -----------------------------------------------------------------------------
 
 """
+Changes 2021-05-21:
+() Convention change: Model Framework typing will now be represented
+    exclusively by the 'type' attribute of any TypedGrometElm.
+    This is a much more clean way of separating syntax (the elements) from
+        their semantics (how to interpret or differentially visualize).
+    A Model Framework will designate what types are the TypedGrometElms may be. 
+    For example, a Function Network will have 
+        Port types: PortInput, PortOutput
+        Wire types: WireDirected, WireUndirected
+    For example, a Bilayer will have
+        Port types: PortInput, PortOutput, PortRate
+        Wire types: W_in, W_pos, W_neg
+        Junction types; JunctionState, JunctionTangent
+    In general, a Model Framework type will only be specified when
+        a distinction between more than one type is needed.
+() Changes to Wire:
+    WireDirected and WireUndirected have been removed. All Wires have
+        input -> src
+        output -> dst
+        Despite the names, these are not necessarily directed, just in-principle
+            distinction between the two.
+        The 'type' determines whether a Wire has the property of being directed.
+() Removed BoxDirected and BoxUndirected.
+    The "facing" that Ports are associated with will now be represented
+        in the Port 'type' Model Framework.
+    Top-level Box now has 'ports' attribute. This is still required
+        as we need to preserve information about ordering of Ports,
+        both for positional arguments and for pairing inputs to outputs in Loop.
+() Valued now includes 'value_type' attribute. 
+    Previously was using Port, Junction and Wire 'type' to capture the 
+        value type, but now the value type will be explicitly represented 
+        by the value_type attribute.
+    The 'type' attribute will instead be reserved for Model Framework type.
+() Added 'name' to TypedGrometElm, so all children can be named
+    The purpose of name: provide model domain-relevant identifier to model component 
+() Metadatum is no longer a TypedGrometElm, just a GrometElm, as it is not
+    itself a component of a model; it is data *about* a model component.
+() Gromet object: added 'literals' and 'junctions' attributes
+TODO:
+() Update docs to capture positional arguments
+() Update Loop docs to capture positional pairing
+
 Changes 2021-05-17:
 () FOR NOW: commenting out much of the Types, as likely source of
     confusion until sorted out.
