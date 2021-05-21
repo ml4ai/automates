@@ -764,8 +764,8 @@ Changes 2021-05-21:
     itself a component of a model; it is data *about* a model component.
 () Gromet object: added 'literals' and 'junctions' attributes
 TODO:
-() Update docs to capture positional arguments
-() Update Loop docs to capture positional pairing
+    () Update docs to make explicit the convention for Port positional arguments
+    () Update Loop docs to make explicit the convention for Port pairing
 
 Changes 2021-05-17:
 () FOR NOW: commenting out much of the Types, as likely source of
