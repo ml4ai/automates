@@ -149,8 +149,7 @@ object ExtractAndAlign {
 
   def getGlobalVars(descrMentions: Seq[Mention]): Seq[GlobalVariable] = {
 
-    // fixme: if there's period at the end - replace with nothing - so can group by text.replace(".", "")?
-    val groupedVars = descrMentions.groupBy(_.arguments("variable").head.text)
+    val groupedVars = descrMentions.groupBy(_.arguments("variable").head.text.replace(".", ""))
     val allGlobalVars = new ArrayBuffer[GlobalVariable]()
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
