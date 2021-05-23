@@ -4,17 +4,31 @@ from dataclasses import dataclass, field, asdict
 
 
 """
-Manual type partial hierarchy:
-Google\ Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/figs/
-    GrometElm-hierarchy.graffle
-    gromet_uml_2021-05-16.{svg,png}
+Shared working examples:
+gromet/
+    docs/
+        <date>-gromet-uml.{png,svg}
+        <date>-TypedGrometElm-hierarchy-by-hand.pdf
+        Conditional.pdf  # schematic of structural pattern for Conditional
+        Loop.pdf         # schematic of structural pattern for Loop
+    examples/
+        <dated previous versions of examples>
+        cond_ex1/        # example Function Network w/ Conditional
+        Simple_SIR/
+            Wiring diagrams and JSON for the following Model Framework types
+              Function Network (FN)
+              Bilayer
+              Petri Net Classic (PetriNetClassic)
+              Predicate/Transition (Pr/T) Petri Net (PrTNet)
+        toy1/            # example Function Network (no Conditionals or Loops)
 
-/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet-examples
-    gromet-examples.graffle
-        Conditional
-        Loop
-        toy1 examples
-        ...
+(UA:
+Google\ Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet/
+    root of shared examples
+Google\ Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet-structure-visual
+    TypedGrometElm-hierarchy-02.graffle
+)
+
 
 TODO: Side Effects
 () mutations of globals
@@ -26,25 +40,6 @@ Event-driven programming
 () No static trace (directed edges from one fn to another), 
     so a generalization of side-effects
     Requires undirected, which corresponds to under-specification 
-
-
-GroMEt is the bytecode for the expression of multi-framework model types
-
-The GroMEt bytecode is expressed in a syntax of building-blocks
-  The gromet type specifies the semantic interpretation to be used for
-    for the syntactic types.
-
-Directed GroMET is the bytecode for causal/influence paths / data flow semantics
-
-Functions are Directed Boxes that represent directed paths in the general
-  case of a (directed) graph
-Expression Boxes represent a special kind of Box whose internal 'wiring' are
-  guaranteed to be (must be) a tree, where any references to variables
-  (value sources) are via the input ports to the Expression.
-  The internal wiring is thus a recursive list of input ports and Exp
-     where Exp is an expression consisting of a single operator (primitive
-     or Box name) and arguments (positionally presented) to the operator
-  An Expression has a single output port that passes the result of the top Exp
 """
 
 # -----------------------------------------------------------------------------
@@ -54,13 +49,33 @@ Expression Boxes represent a special kind of Box whose internal 'wiring' are
 # Data:
 # Float, Integer, Boolean
 
-# Function Network:
-# Function, Expression, Predicate, Conditional, Loop,
-# Junction, Port, WireDirected, Literal, Variable
-# Types:
-#   Ports: "PortInput", "PortOutput"
-#   Wire: "WireDirected"
+# Primitive term constructors (i.e., primitive operators):
+# arithmetic: "+", "*", "-", "/", "exp", "log"
+# boolean fn: "lt", "leq", "gr", "geq", "==", "!=", "and", "or", "not"
 
+# Function Network (FunctionNetwork):
+# Function, Expression, Predicate, Conditional, Loop,
+# Junction, Port, Literal, Variable
+# Types:
+#   Ports: PortInput, PortOutput
+
+# Bilayer
+# Junction, Wire
+# Types:
+#  Junction: State, Flux, Tangent, Literal
+#  Wire: W_in, W_pos, W_neg
+
+# Petri Net Classic (PetriNetClassic)
+# Junction, Wire, Literal
+# Types:
+#  Junction: State, Rate
+
+# Predicate/Transition (Pr/T) Petri Net (PrTNet)
+# Relation, Expression, Port, Literal
+# Types:
+#   Ports: Variable, Parameter
+#   Wire: Undirected  (all wires are undirected, so not strictly required)
+#   Relation: PrTNet, Event, Enable, Rate, Effect
 
 # -----------------------------------------------------------------------------
 # GroMEt syntactic types
@@ -282,8 +297,8 @@ class TypedGrometElm(GrometElm):
 @dataclass
 class Literal(TypedGrometElm):
     """
-    Literal base.
-    A literal is an instances of Types
+    Literal base. (A kind of GAT Nullary Term Constructor)
+    A literal is an instance of a Type
     """
     uid: Union[UidLiteral, None]  # allows anonymous literals
     value: 'Val'  # TODO
@@ -330,7 +345,7 @@ class Valued(TypedGrometElm):
     the element can have/carry.
     """
     value: Union[Literal, None]
-    value_type: UidType
+    value_type: Union[UidType, None]
 
 
 # --------------------
@@ -370,8 +385,8 @@ class Wire(Valued):
     """
     Wire base.
     Wires are "2-ary" as they connect up to two Valued elements,
-        the 'src' and the 'dst'.
-        Despite the names, 'src' and 'dst' are NOT inherently
+        the 'src' and the 'tgt'.
+        Despite the names, 'src' and 'tgt' are NOT inherently
             directed.
         Whether a Wire is directed depends on its 'type'
             within a Model Framework interpretation.
@@ -381,7 +396,7 @@ class Wire(Valued):
     """
     uid: UidWire
     src: Union[UidPort, UidJunction, None]
-    dst: Union[UidPort, UidJunction, None]
+    tgt: Union[UidPort, UidJunction, None]
 
 
 # --------------------
@@ -660,10 +675,27 @@ class Loop(Box, HasContents):  # BoxDirected
     exit_condition: Union[Predicate, None]
 
 
-@dataclass
-class Event(Box):
-    enabling_condition: Predicate
-    effect: Relation
+# Special forms for Pr/T (Predicate/Transition) Petri Nets, used by Galois
+
+# @dataclass
+# class CNFPredicate(Relation):
+#     """
+#     A Conjunctive Normal Form (CNF) Predicate.
+#     Interpreted as a conjunction of Predicates:
+#         All must be True for the CNFPredicate to be True.
+#     """
+#     terms: List[Predicate]
+#
+#
+# @dataclass
+# class PrTEvent(Box):
+#     """
+#     An Event in a Predicate/Transition (Pr/T) Petri Net: 'PTNet'.
+#     All edges in a PrTEvent are undirected.
+#     """
+#     enable: CNFPredicate
+#     rate: Relation
+#     effect: Relation
 
 
 # --------------------
@@ -712,11 +744,11 @@ class Measure(GrometElm):
 # Utils
 # -----------------------------------------------------------------------------
 
-def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
-    if dst_file is None:
-        dst_file = f"{gromet.name}.json"
+def gromet_to_json(gromet: Gromet, tgt_file: Union[str, None] = None):
+    if tgt_file is None:
+        tgt_file = f"{gromet.name}_gromet_{gromet.type}.json"
     json.dump(asdict(gromet),  # gromet.to_dict(),
-              open(dst_file, "w"),
+              open(tgt_file, "w"),
               indent=2)
 
 
@@ -725,6 +757,11 @@ def gromet_to_json(gromet: Gromet, dst_file: Union[str, None] = None):
 # -----------------------------------------------------------------------------
 
 """
+Changes 2021-05-23:
+() Added notes at top on Model Framework element Types
+() Removed Event
+() Wire tgt -> tgt
+
 Changes 2021-05-21:
 () Convention change: Model Framework typing will now be represented
     exclusively by the 'type' attribute of any TypedGrometElm.
@@ -743,7 +780,7 @@ Changes 2021-05-21:
 () Changes to Wire:
     WireDirected and WireUndirected have been removed. All Wires have
         input -> src
-        output -> dst
+        output -> tgt
         Despite the names, these are not necessarily directed, just in-principle
             distinction between the two.
         The 'type' determines whether a Wire has the property of being directed.
