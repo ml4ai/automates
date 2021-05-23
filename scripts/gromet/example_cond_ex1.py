@@ -37,26 +37,26 @@ def cond_ex1_gromet() -> Gromet:
              value_type=UidType("T:Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:conditional.in.y'),
-             dst=UidPort('P:cond1.in.y')),
+             tgt=UidPort('P:cond1.in.y')),
         Wire(uid=UidWire("W:c1.x"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort('P:conditional.in.x'),
-             dst=UidPort('P:c1.in.x')),
+             tgt=UidPort('P:c1.in.x')),
         Wire(uid=UidWire("W:c1.y"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:conditional.in.x'),
-             dst=UidPort('P:c1.in.y')),
+             tgt=UidPort('P:c1.in.y')),
         # output
         Wire(uid=UidWire("W:c1.z"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort('P:c1.out.z'),
-             dst=UidPort('P:conditional.out.z')),
+             tgt=UidPort('P:conditional.out.z')),
 
         # Branch 1 : c1
         Wire(uid=UidWire("W:c1_c1exp.x"),
@@ -64,19 +64,19 @@ def cond_ex1_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort('P:c1.in.x'),
-             dst=UidPort('P:c1_exp.in.x')),
+             tgt=UidPort('P:c1_exp.in.x')),
         Wire(uid=UidWire("W:c1_c1exp.y"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:c1.in.y'),
-             dst=UidPort('P:c1_exp.in.7')),
+             tgt=UidPort('P:c1_exp.in.7')),
         Wire(uid=UidWire("W:c1_c1exp.z"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort('P:c1_exp.out.z'),
-             dst=UidPort('P:c1.out.z')),
+             tgt=UidPort('P:c1.out.z')),
 
         # Branch 2
         # input
@@ -85,14 +85,14 @@ def cond_ex1_gromet() -> Gromet:
              value_type=UidType("T:Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:conditional.in.y'),
-             dst=UidPort('P:c2.in.y')),
+             tgt=UidPort('P:c2.in.y')),
         # output
         Wire(uid=UidWire("W:c2.z"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:c2.out.z'),
-             dst=UidPort('P:conditional.out.z')),
+             tgt=UidPort('P:conditional.out.z')),
 
         # Branch 2 : c2
         Wire(uid=UidWire("W:c2.y_z"),
@@ -100,7 +100,7 @@ def cond_ex1_gromet() -> Gromet:
              value_type=UidType("T:Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:c2.in.y'),
-             dst=UidPort('P:c2.out.z')),
+             tgt=UidPort('P:c2.out.z')),
 
         # cond_ex1
         # input
@@ -109,20 +109,20 @@ def cond_ex1_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort('P:cond_ex1.in.x'),
-             dst=UidPort('P:conditional.in.x')),
+             tgt=UidPort('P:conditional.in.x')),
         Wire(uid=UidWire("W:cond_ex1.y"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:cond_ex1.in.y'),
-             dst=UidPort('P:conditional.in.y')),
+             tgt=UidPort('P:conditional.in.y')),
         # output
         Wire(uid=UidWire("W:cond_ex1.z"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort('P:conditional.out.z'),
-             dst=UidPort('P:cond_ex1.out.z')),
+             tgt=UidPort('P:cond_ex1.out.z')),
     ]
 
     ports = [

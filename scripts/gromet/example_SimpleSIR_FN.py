@@ -44,13 +44,13 @@ def simple_sir_FN_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.S"),
-             dst=UidPort("P:infected_exp.in.S")),
+             tgt=UidPort("P:infected_exp.in.S")),
         Wire(uid=UidWire("W:S1.2"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.S"),
-             dst=UidPort("P:S_update_exp.in.S")),
+             tgt=UidPort("P:S_update_exp.in.S")),
 
         # Var "I"
         Wire(uid=UidWire("W:I1.1"),
@@ -58,59 +58,59 @@ def simple_sir_FN_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.I"),
-             dst=UidPort("P:infected_exp.in.I")),
+             tgt=UidPort("P:infected_exp.in.I")),
         Wire(uid=UidWire("W:I1.2"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.I"),
-             dst=UidPort("P:recovered_exp.in.I")),
+             tgt=UidPort("P:recovered_exp.in.I")),
         Wire(uid=UidWire("W:I1.3"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.I"),
-             dst=UidPort("P:I_update_exp.in.I")),
+             tgt=UidPort("P:I_update_exp.in.I")),
         # Var "R"
         Wire(uid=UidWire("W:R1.1"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.R"),
-             dst=UidPort("P:infected_exp.in.R")),
+             tgt=UidPort("P:infected_exp.in.R")),
         Wire(uid=UidWire("W:R1.2"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.R"),
-             dst=UidPort("P:R_update_exp.in.R")),
+             tgt=UidPort("P:R_update_exp.in.R")),
         # Var "beta"
         Wire(uid=UidWire("W:beta"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.beta"),
-             dst=UidPort("P:infected_exp.in.beta")),
+             tgt=UidPort("P:infected_exp.in.beta")),
         # Var "gamma"
         Wire(uid=UidWire("W:gamma"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.gamma"),
-             dst=UidPort("P:recovered_exp.in.gamma")),
+             tgt=UidPort("P:recovered_exp.in.gamma")),
         # Var "dt"
         Wire(uid=UidWire("W:dt.1"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.dt"),
-             dst=UidPort("P:infected_exp.in.dt")),
+             tgt=UidPort("P:infected_exp.in.dt")),
         Wire(uid=UidWire("W:dt.2"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir.in.dt"),
-             dst=UidPort("P:recovered_exp.in.dt")),
+             tgt=UidPort("P:recovered_exp.in.dt")),
 
         # Wire for Var "infected"
         Wire(uid=UidWire("W:infected.1"),
@@ -118,13 +118,13 @@ def simple_sir_FN_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:infected_exp.out.infected"),
-             dst=UidPort("P:S_update_exp.in.infected")),
+             tgt=UidPort("P:S_update_exp.in.infected")),
         Wire(uid=UidWire("W:infected.2"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:infected_exp.out.infected"),
-             dst=UidPort("P:I_update_exp.in.infected")),
+             tgt=UidPort("P:I_update_exp.in.infected")),
 
         # Wire for Var "recovered"
         Wire(uid=UidWire("W:recovered.1"),
@@ -132,13 +132,13 @@ def simple_sir_FN_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:recovered_exp.out.recovered"),
-             dst=UidPort("P:I_update_exp.in.recovered")),
+             tgt=UidPort("P:I_update_exp.in.recovered")),
         Wire(uid=UidWire("W:recovered.2"),
              type=UidType("T:WireDirected"),
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:recovered_exp.out.recovered"),
-             dst=UidPort("P:R_update_exp.in.recovered")),
+             tgt=UidPort("P:R_update_exp.in.recovered")),
 
         # part of Var "S"
         Wire(uid=UidWire("W:S2"),
@@ -146,7 +146,7 @@ def simple_sir_FN_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:S_update_exp.out.S"),
-             dst=UidPort("P:sir.out.S")),
+             tgt=UidPort("P:sir.out.S")),
 
         # part of Var "I"
         Wire(uid=UidWire("W:I2"),
@@ -154,7 +154,7 @@ def simple_sir_FN_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:I_update_exp.out.I"),
-             dst=UidPort("P:sir.out.I")),
+             tgt=UidPort("P:sir.out.I")),
 
         # part of Var "R"
         Wire(uid=UidWire("W:R2"),
@@ -162,7 +162,7 @@ def simple_sir_FN_gromet() -> Gromet:
              value_type=UidType("T:Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:R_update_exp.out.R"),
-             dst=UidPort("P:sir.out.R")),
+             tgt=UidPort("P:sir.out.R")),
     ]
 
     ports = [
@@ -415,7 +415,7 @@ def simple_sir_FN_gromet() -> Gromet:
              s_update_exp, i_update_exp, r_update_exp]
 
     _g = Gromet(
-        uid=UidGromet("SimpleSIR"),
+        uid=UidGromet("SimpleSIR_FN"),
         name="SimpleSIR",
         type=UidType("FunctionNetwork"),
         root=sir.uid,
