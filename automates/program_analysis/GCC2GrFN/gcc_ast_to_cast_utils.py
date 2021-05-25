@@ -47,6 +47,7 @@ GCC_BUILTIN_FUNC = {
     "__builtin_sqrtf",
     "__builtin_powf",
 }
+GCC_BUILTIN_TYPES = {"__sFILEX", "__sbuf"}
 
 
 def is_casting_operator(op):

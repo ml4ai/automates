@@ -66,15 +66,15 @@ class GCC2CAST:
 
     def to_cast(self):
         modules = []
-        source_language = "unknown"
+        self.source_language = "unknown"
         if "mainInputFilename" in self.gcc_asts[0]:
             file_extension = self.gcc_asts[0]["mainInputFilename"].split(".")[-1]
             if file_extension == "c":
-                source_language = "c"
+                self.source_language = "c"
             elif file_extension == "cpp":
-                source_language = "cpp"
+                self.source_language = "cpp"
             elif file_extension in {"f", "for", "f90"}:
-                source_language = "fortran"
+                self.source_language = "fortran"
 
         for gcc_ast in self.gcc_asts:
             input_file = gcc_ast["mainInputFilename"]
@@ -109,7 +109,7 @@ class GCC2CAST:
                 )
             )
 
-        return CAST(modules, source_language)
+        return CAST(modules, self.source_language)
 
     def get_source_refs(self, obj):
         source_refs = []
@@ -540,6 +540,24 @@ class GCC2CAST:
 
         return result_statements
 
+    def check_fortran_arg_updates(self, arguments, body):
+        arg_names = {n.val.name for n in arguments}
+
+        args_updated_in_body = set()
+        for b in body:
+            if (
+                isinstance(b, Assignment)
+                and isinstance(b.left, Var)
+                and b.left.val.name in arg_names
+            ):
+                args_updated_in_body.add(b.left.val.name)
+            elif isinstance(b, (Loop, ModelIf)):
+                args_updated_in_body.update(
+                    self.check_fortran_arg_updates(arguments, b.body)
+                )
+
+        return args_updated_in_body
+
     def parse_function(self, f):
         name = f["name"]
         self.basic_blocks = f["basicBlocks"]
@@ -579,6 +597,31 @@ class GCC2CAST:
         decl_source_ref = SourceRef(
             source_file_name=file, row_start=decl_line, col_start=decl_col
         )
+
+        if self.source_language == "fortran":
+            args_updated = self.check_fortran_arg_updates(arguments, body)
+            print(f"Found args updated in {name}: {args_updated}")
+            # TODO this will break with multiple returns within a function
+            if len(args_updated) > 0:
+                existing_return = [
+                    (idx, b) for idx, b in enumerate(body) if isinstance(b, ModelReturn)
+                ]
+                new_return = None
+                if len(existing_return) == 0:
+                    new_return = ModelReturn(
+                        value=Tuple(values=[Name(n) for n in args_updated])
+                    )
+                else:
+                    existing_return = existing_return[0][1]
+                    existing_return_idx = existing_return[0][0]
+                    del body[existing_return_idx]
+                    new_return = ModelReturn(
+                        value=Tuple(
+                            values=[existing_return.value]
+                            + [Name(n) for n in args_updated]
+                        )
+                    )
+                body.append(new_return)
 
         return FunctionDef(
             name=name,

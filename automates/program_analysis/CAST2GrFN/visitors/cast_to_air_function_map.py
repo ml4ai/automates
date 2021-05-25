@@ -19,6 +19,7 @@ func_map = {
         "__builtin_expf": {"grfn_implementation": "exp"},
         "__builtin_cosf": {"grfn_implementation": "cos"},
     },
+    "unknown": {"max": {"grfn_implementation": "max"}},
 }
 
 
