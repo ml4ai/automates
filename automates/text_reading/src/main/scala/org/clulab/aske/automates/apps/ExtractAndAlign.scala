@@ -20,8 +20,10 @@ import ujson.{Obj, Value}
 import org.clulab.grounding.{SVOGrounder, sparqlResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import java.util.UUID.randomUUID
+
 import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
-import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
+import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalVariable}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -32,6 +34,7 @@ object ExtractAndAlign {
   val COMMENT = "comment"
   val TEXT_VAR = "text_var" // stores information about each variable, e.g., identifier, associated description, arguments, and when available location in the original document (e.g., in the pdf)
   val GLOBAL_VAR = "gvar" // stores ids of text variables that are likely different instances of the same global variable
+  val GLOBAL_EQ_VAR = "gEqVar"
   val SOURCE = "source" // identifiers found in source code
   val EQUATION = "equation" // an equation extracted from the original document
   val SVO_GROUNDING = "SVOgrounding"
@@ -95,9 +98,68 @@ object ExtractAndAlign {
     ): Value = {
 
 
+
+    def mentionToIDedObjString(mention: Mention, mentionType: String): String = {
+      // creates an id'ed object for each mention
+      val docId = mention.document.id.getOrElse("unk_text_file")
+      val originalSentence = mention.sentenceObj.words.mkString(" ")
+      val offsets = mention.tokenInterval.toString()
+      val args = mentionType match {
+        case INT_PARAM_SETTING_VIA_IDFR | INT_PARAM_SETTING_VIA_CNCPT => getIntParamSetArgObj(mention)
+        case PARAM_SETTING_VIA_IDFR | PARAM_SETTING_VIA_CNCPT | UNIT_VIA_IDFR | UNIT_VIA_CNCPT | TEXT_VAR =>  getArgObj(mention)
+        case _ => ???
+      }
+
+      val jsonObj = ujson.Obj(
+        "uid" -> randomUUID.toString(),
+        "source" -> docId,
+        "original_sentence" -> originalSentence,
+        "content" -> mention.text,
+        "spans" -> makeLocationObj(mention, None, None),
+        "arguments" -> ujson.Arr(args)
+
+      )
+
+      jsonObj.toString()
+    }
+
+
+
+    def getGlobalEqVars(equationLinkElements: Seq[Value]): Seq[GlobalEquationVariable] = {
+
+
+        val groupedVars = equationLinkElements.groupBy(_.obj("content").str)
+        val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
+        for (gr <- groupedVars) {
+          val glVarID = randomUUID().toString()
+          val identifier = gr._1
+          // the commented out part is for debugging
+          val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str)// + "::" + le.obj("content").str)
+          val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
+          allEqGlobalVars.append(glVar)
+
+        }
+
+        allEqGlobalVars
+      }
+
+
+    for (cs <- equationChunksAndSource.get) {
+      println(cs._1 + " " + cs._2)
+    }
     val allGlobalVars = if (descriptionMentions.nonEmpty) {
       getGlobalVars(descriptionMentions.get)
     } else Seq.empty
+
+    // todo: need to do a None option
+    val nonOptionEqChunksAndSource = equationChunksAndSource.get
+    val  (eqLinkElements, fullEquations) = getEquationLinkElements(nonOptionEqChunksAndSource)
+
+    val globalEqVariables = getGlobalEqVars(eqLinkElements)
+
+    for (gev <- globalEqVariables) {
+      println("gev " + gev)
+    }
 
 
     // =============================================
@@ -122,6 +184,26 @@ object ExtractAndAlign {
     var outputJson = ujson.Obj()
 
     val linkElements = getLinkElements(grfn, allGlobalVars, commentDescriptionMentions, equationChunksAndSource, variableNames, parameterSettingMention, intervalParameterSettingMentions,  unitMentions)
+
+
+
+    //todo: if make global eq var, add eq and full eq link elements here
+
+    linkElements(FULL_TEXT_EQUATION) = fullEquations
+    linkElements(EQUATION) = eqLinkElements.map(_.toString())
+
+    // todo: move the method elsewhere
+    def mkGlobalEqVarLinkElement(glv: GlobalEquationVariable): String = {
+      println("gl eq v: " + glv)
+      ujson.Obj(
+        "uid" -> glv.id,
+        "content" -> glv.identifier,
+        "identifier_objects" -> glv.eqVarObjStrings
+      ).toString()
+    }
+
+
+    linkElements(GLOBAL_EQ_VAR) = globalEqVariables.map(glv => mkGlobalEqVarLinkElement(glv))
 
 
     // fixme: rethink svo grounding
@@ -163,6 +245,8 @@ object ExtractAndAlign {
 
     allGlobalVars
   }
+
+
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
     textVarLinkElementString + "::" + update
@@ -251,6 +335,7 @@ object ExtractAndAlign {
 
   def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int, debug: Boolean): ujson.Value = {
 
+    println("-=>" + element)
     val ujsonObj = ujson.read(element).obj
     ujsonObj
   }
@@ -677,12 +762,15 @@ object ExtractAndAlign {
     }
 
     def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
+      println("GLVAR line 764: " + glv)
       ujson.Obj(
         "uid" -> glv.id,
         "content" -> glv.identifier,
         "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)
       ).toString()
     }
+
+
 
 
     if (allGlobalVars.nonEmpty) {
@@ -747,39 +835,73 @@ object ExtractAndAlign {
       }
     }
 
-    // Repeat for Eqn Variables
-    if (equationChunksAndSource.isDefined) {
-      val equation2uuid = mutable.Map[String, UUID]()
-      linkElements(EQUATION) = equationChunksAndSource.get.map { case (chunk, orig) =>
-        if (equation2uuid.contains(orig)) {
-          ujson.Obj(
-            "uid" -> randomUUID.toString(),
-            "equation_uid" -> equation2uuid(orig).toString(),
-            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
-          ).toString()
-        } else {
-          // create a random id for full equation if it is not in the equation 2 uuid map...
-          val id = randomUUID
-          //... and add it to the map
-          equation2uuid(orig) = id
-          ujson.Obj(
-            // create a new id for the equation chunk (corresponds to one identifier)
-            "uid" -> randomUUID().toString(),
-            "equation_uid" -> id.toString(),
-            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
-          ).toString()
-        }
-      }
-
-      linkElements(FULL_TEXT_EQUATION) = equation2uuid.keys.map(key =>
-        ujson.Obj(
-          "uid" -> equation2uuid(key).toString(),
-          "content" -> key
-        ).toString()
-      ).toSeq
-    }
+    // Repeat for Eqn Variables - trying to move this outside to be able to make equation global variables
+//    if (equationChunksAndSource.isDefined) {
+//      val equation2uuid = mutable.Map[String, UUID]()
+//      linkElements(EQUATION) = equationChunksAndSource.get.map { case (chunk, orig) =>
+//        if (equation2uuid.contains(orig)) {
+//          ujson.Obj(
+//            "uid" -> randomUUID.toString(),
+//            "equation_uid" -> equation2uuid(orig).toString(),
+//            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+//          ).toString()
+//        } else {
+//          // create a random id for full equation if it is not in the equation 2 uuid map...
+//          val id = randomUUID
+//          //... and add it to the map
+//          equation2uuid(orig) = id
+//          ujson.Obj(
+//            // create a new id for the equation chunk (corresponds to one identifier)
+//            "uid" -> randomUUID().toString(),
+//            "equation_uid" -> id.toString(),
+//            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+//          ).toString()
+//        }
+//      }
+//
+//      linkElements(FULL_TEXT_EQUATION) = equation2uuid.keys.map(key =>
+//        ujson.Obj(
+//          "uid" -> equation2uuid(key).toString(),
+//          "content" -> key
+//        ).toString()
+//      ).toSeq
+//    }
 
     linkElements
+  }
+
+  def getEquationLinkElements(equationChunksAndSource: Seq[(String, String)]): (Seq[Value], Seq[String]) = {
+    // eq link elements are values here bc they will be further manipulated
+    // full equations are strings for storage
+    val equation2uuid = mutable.Map[String, UUID]()
+    val eqLinkElements = equationChunksAndSource.map { case (chunk, orig) =>
+      if (equation2uuid.contains(orig)) {
+        ujson.Obj(
+          "uid" -> randomUUID.toString(),
+          "equation_uid" -> equation2uuid(orig).toString(),
+          "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+        )
+      } else {
+        // create a random id for full equation if it is not in the equation 2 uuid map...
+        val id = randomUUID
+        //... and add it to the map
+        equation2uuid(orig) = id
+        ujson.Obj(
+          // create a new id for the equation chunk (corresponds to one identifier)
+          "uid" -> randomUUID().toString(),
+          "equation_uid" -> id.toString(),
+          "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+        )
+      }
+    }
+
+    val fullEquations = equation2uuid.keys.map(key =>
+      ujson.Obj(
+        "uid" -> equation2uuid(key).toString(),
+        "content" -> key
+      ).toString()
+    ).toSeq
+    (eqLinkElements, fullEquations)
   }
 
   /* Align description mentions from two sources; not currently used */
