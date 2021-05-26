@@ -39,12 +39,83 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
   }
 
   def alignEqAndTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
+    println("HERE 1")
+//    for (s <- srcTexts) {
+//
+//      for (d <- dstTexts) {
+//
+//        val rendered = AlignmentBaseline.renderForAlign(s)
+//
+//
+//        val inters = rendered.toSeq.intersect(d.toSeq)
+////        if (inters.nonEmpty) {
+////          println(s + "<src")
+////          println(d + "<dst")
+////          println("inters: " + inters)
+////        }
+//
+//
+//        val intersect = rendered.toSeq.intersect(d.toSeq).length
+////        if (intersect >=2) {
+////          println(s + "<s")
+////          println(d + "<d")
+////          println("rendered: " + rendered)
+////          print("HERE->" + intersect + "\n")
+////        }
+//
+//      }
+//    }
+
+    def intersectMultipler(rendered: String, txtStr: String): Double = {
+
+//      println("START INTERSECT MULT")
+//      val rendered = AlignmentBaseline.renderForAlign(eqStr)
+      val intersect = rendered.toSeq.intersect(txtStr.toSeq)
+//      println("intrsct " + intersect)
+      // if intersect contains capital, return len intersect (even with intersect == 1, capital intersect should be informative
+      if (intersect.exists(_.isUpper)) return intersect.length// println("true 75") else println("false 75") //return intersect.length
+      //println("passed 1")
+
+      // if no intersect, return 1
+      // if intersect == 1, return 1 -> not enough info to make us more confident of the edit distance score
+      if (intersect.length <= 1) return 1.0 // println("true 80") else println("false 80")
+      println("passed 2")
+
+      println(rendered + "<eq str")
+      println(txtStr + "<dstn")
+      // if intersect > 1 and in same order in both, return len intersect
+      val onlyIntersectStr1 = rendered.filter(intersect.contains(_))
+      println("++>" + onlyIntersectStr1.mkString(" "))
+      val onlyIntersectStr2 = txtStr.filter(intersect.contains(_))
+      println("+++>" + onlyIntersectStr2.mkString(" "))
+      println("+>" + onlyIntersectStr1 + " " + onlyIntersectStr2 + " " )//+ onlyIntersectStr1==onlyIntersectStr1 + "<<<<")
+      println(onlyIntersectStr1==onlyIntersectStr1)
+      var sameOrder = true
+      if (onlyIntersectStr1.length != onlyIntersectStr2.length) return 1.0
+      else {
+        for ((char, index) <- onlyIntersectStr1.zipWithIndex) {
+          if (char != onlyIntersectStr2(index)) {
+            println("setting same order to false")
+            sameOrder = false
+          }
+        }
+      }
+      println("same order: " + sameOrder)
+      if (sameOrder) return 3.0
+
+      // maybe not len intersect, but just some default weight like 2 or len intersect normalized by len somehow?
+      1.0
+    }
+
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       rendered = AlignmentBaseline.renderForAlign(src)
       (dst, j) <- dstTexts.zipWithIndex
-      score = 1.0 / (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term? next thing to try: only align if rendered starts with the same letter as actual---might need to make this output an option in case if there are no alignments
+      score = 1.0 * intersectMultipler(rendered, dst)/ (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term? next thing to try: only align if rendered starts with the same letter as actual---might need to make this output an option in case if there are no alignments
     } yield Alignment(i, j, score)
+
+
+
     // redundant but good for debugging
     exhaustiveScores
   }
