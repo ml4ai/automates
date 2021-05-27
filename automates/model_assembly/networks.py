@@ -94,7 +94,7 @@ class VariableNode(GenericNode):
         return self.uid == other.uid
 
     def __str__(self):
-        return str(self.identifier) + str(self.uid)
+        return f"{str(self.identifier)}::{str(self.uid)}"
 
     @classmethod
     def from_id(cls, idt: VariableIdentifier, data: VariableDefinition):
@@ -263,7 +263,6 @@ class LambdaNode(GenericNode):
                 res = [self.function(*inputs) for inputs in zip(*values)]
             else:
                 res = self.function()
-
             return self.parse_result(values, res)
         except Exception as e:
             print(f"Exception occured in {self.func_str}")
@@ -279,22 +278,26 @@ class LambdaNode(GenericNode):
             # tuple it is outputting, python collapses this to a single
             # var, so handle this scenario
             if not isinstance(res[0], tuple):
-                return [[r] for r in res]
-            return np.transpose(res)
+                # return [[r] for r in res]
+                return [res]
+            res = [list(v) for v in res]
+            return [np.array(v) for v in list(map(list, zip(*res)))]
         else:
             if isinstance(res, dict):
                 res = {k: self.parse_result(values, v) for k, v in res.items()}
             elif len(values) == 0:
-                # if all([isinstance(v, int) for v in values]):
                 if isinstance(res, int):
                     res = np.full(self.np_shape, res, dtype=np.int64)
-                # elif all([isinstance(v, int) for v in values]):
                 elif isinstance(res, float):
                     res = np.full(self.np_shape, res, dtype=np.float64)
+                elif isinstance(res, bool):
+                    res = np.full(self.np_shape, res, dtype=bool)
                 elif isinstance(res, list):
-                    res = [np.array(res)] * self.np_shape[0]
+                    # res = [np.array(res)] * self.np_shape[0]
+                    res = np.array([res] * self.np_shape[0])
                 else:
                     res = np.full(self.np_shape, res)
+
             return [res]
 
     def get_kwargs(self):
@@ -373,12 +376,14 @@ class HyperEdge:
 
             # For each output value, update output nodes with new value that
             # just exited, otherwise keep existing value
-            for i, out_val in enumerate(result):
+            for res_index, out_val in enumerate(result):
+                if self.outputs[res_index].value is None:
+                    self.outputs[res_index].value = np.full(out_val.shape, np.NaN)
                 # If we have seen an exit before at a given position, keep the
                 # existing value, otherwise update.
-                self.outputs[i].value = np.where(
-                    self.seen_exits, np.copy(self.outputs[i].value), out_val
-                )
+                for j, _ in enumerate(self.outputs[res_index].value):
+                    if self.seen_exits[j]:
+                        self.outputs[res_index].value[j] = out_val[j]
 
             # Update seen_exits with any vectorized positions that may have
             # exited during this execution
@@ -386,7 +391,7 @@ class HyperEdge:
 
         else:
             for i, out_val in enumerate(result):
-                variable = self.outputs[i]
+                variable = self.outputs[i]      
                 if (
                     self.lambda_fn.func_type == LambdaType.LITERAL
                     and variable.input_value is not None
@@ -590,7 +595,6 @@ class GrFNSubgraph:
             executed = True
             executed_visited_variables = set()
             node_to_execute = node_execute_queue.pop(0)
-
             # TODO remove?
             if node_to_execute in all_nodes_visited:
                 continue
@@ -618,14 +622,13 @@ class GrFNSubgraph:
                         # subgraph execution returns the updated output nodes
                         # so we can mark them as visited here in the parent
                         # in order to continue execution
-                        executed_visited_variables.update(
-                            subgraph(
+                        sugraph_execution_result = subgraph(
                                 grfn,
                                 subgraphs_to_hyper_edges,
                                 node_to_subgraph,
                                 all_nodes_visited,
                             )
-                        )
+                        executed_visited_variables.update(sugraph_execution_result)
                     else:
                         node_to_execute = subgraph_input_interface.lambda_fn
                         executed = False
@@ -863,12 +866,26 @@ class GrFNLoopSubgraph(GrFNSubgraph):
         input_interface = self.get_input_interface_hyper_edge(
             subgraphs_to_hyper_edges[self]
         )
-        initial_decision = {
+
+        output_interface = self.get_output_interface_node(
+            subgraphs_to_hyper_edges[self]
+        )
+
+        output_decision = [
+            n
+            for v in output_interface.inputs
+            for n in grfn.predecessors(v)
+            if n.func_type == LambdaType.DECISION
+        ][0]
+        output_decision_edge = [e for e in subgraphs_to_hyper_edges[self] if e.lambda_fn == output_decision][0]
+
+        initial_decision = list({
             n
             for v in input_interface.outputs
             for n in grfn.successors(v)
             if n.func_type == LambdaType.DECISION
-        }
+        })
+
         first_decision_vars = {
             v
             for lm_node in initial_decision
@@ -876,13 +893,27 @@ class GrFNLoopSubgraph(GrFNSubgraph):
             if isinstance(v, VariableNode)
         }
 
+        updated_decision_input_vars_map = {}
+        for v in first_decision_vars:
+            name = v.identifier.var_name
+            ver = v.identifier.index
+            if name not in updated_decision_input_vars_map or updated_decision_input_vars_map[name].identifier.index < ver:
+                updated_decision_input_vars_map[name] = v
+
+
+        updated_decision_input_vars = updated_decision_input_vars_map.values()
+        for v in updated_decision_input_vars:
+            if v.value is None:
+                v.value = [None] * grfn.np_shape[0]
+
         var_results = set()
         initial_visited_nodes = set()
         prev_all_nodes_visited = all_nodes_visited
         # Loop until the exit value becomes true
         while True:
             initial_visited_nodes = all_nodes_visited.copy()
-            initial_visited_nodes.update(first_decision_vars)
+            initial_visited_nodes.update(updated_decision_input_vars)
+
             # Compute JUST the path to the exit variable so we can prevent
             # computing all paths on the n+1 step
             super().__call__(
@@ -890,17 +921,21 @@ class GrFNLoopSubgraph(GrFNSubgraph):
                 subgraphs_to_hyper_edges,
                 node_to_subgraph,
                 initial_visited_nodes,
-                vars_to_compute=input_interface.outputs + [exit_var_node],
+                vars_to_compute=input_interface.outputs + [exit_var_node]
             )
 
             if (isinstance(exit_var_node.value, bool) and exit_var_node.value) or (
                 isinstance(exit_var_node.value, (np.ndarray, list))
                 and all(exit_var_node.value)
-            ):
+            ): 
+                output_decision_edge.seen_exits = np.full(grfn.np_shape, True, dtype=np.bool)
+                output_decision_edge()
+                output_interface()
                 break
 
             initial_visited_nodes = all_nodes_visited.copy()
-            initial_visited_nodes.update(first_decision_vars)
+            initial_visited_nodes.update(updated_decision_input_vars)
+
             var_results = super().__call__(
                 grfn,
                 subgraphs_to_hyper_edges,
@@ -910,7 +945,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
 
             prev_all_nodes_visited = initial_visited_nodes
 
-        all_nodes_visited = all_nodes_visited.union(prev_all_nodes_visited)
+        all_nodes_visited.update(prev_all_nodes_visited - all_nodes_visited)
         return var_results
 
 
@@ -1051,7 +1086,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
         return f"{self.label}\n{size_str}"
 
     def __call__(
-        self, inputs: Dict[str, Any], literals: Dict[str, Any] = None
+        self,
+        inputs: Dict[str, Any],
+        literals: Dict[str, Any] = None,
+        desired_outputs: List[str] = None,
     ) -> Iterable[Any]:
         """Executes the GrFN over a particular set of inputs and returns the
         result.
@@ -1063,6 +1101,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
             literals: Input set where keys are the identifier strings of
             variable nodes in the GrFN that inherit directly from a literal
             node and each key points to a set of input values (or just one)
+            desired_outputs: A list of variable names to customize the
+            desired variable nodes whose values we should output after
+            execution. Will find the max version var node in the root container
+            for each name given and return their values.
 
         Returns:
             A set of outputs from executing the GrFN, one for every set of
@@ -1074,18 +1116,29 @@ class GroundedFunctionNetwork(nx.DiGraph):
             self.input_identifier_map[VariableIdentifier.from_str(n)]: v
             for n, v in inputs.items()
         }
-        # Set input values
+
+        # Check if vectorized input is given and configure the numpy shape
         for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
+            if isinstance(value, np.ndarray):
+                if self.np_shape != value.shape and self.np_shape != (1,):
+                    raise GrFNExecutionException(
+                        f"Error: Given two vectorized inputs with different shapes: '{value.shape}' and '{self.np_shape}'"
+                    )
+                self.np_shape = value.shape
+
+        # Set the values of input var nodes given in the inputs dict
+        for input_node in [n for n in self.inputs if n in full_inputs]:
+            value = full_inputs[input_node]
+
             # TODO: need to find a way to incorporate a 32/64 bit check here
             if isinstance(value, float):
-                value = np.array([value], dtype=np.float64)
+                value = np.full(self.np_shape, value, dtype=np.float64)
             if isinstance(value, int):
-                value = np.array([value], dtype=np.int64)
+                value = np.full(self.np_shape, value, dtype=np.int64)
             elif isinstance(value, list):
-                value = np.array([value])
-            elif isinstance(value, np.ndarray):
-                self.np_shape = value.shape
+                # value = [np.array(value)] * self.np_shape[0]
+                value = np.array([value] * self.np_shape[0])
 
             input_node.input_value = value
 
@@ -1124,6 +1177,24 @@ class GroundedFunctionNetwork(nx.DiGraph):
         node_to_subgraph = {n: s for s in self.subgraphs for n in s.nodes}
         self.root_subgraph(self, subgraph_to_hyper_edges, node_to_subgraph, set())
         # Return the output
+        if desired_outputs != None and len(desired_outputs) > 0:
+            root_var_nodes = [
+                n
+                for n, _ in self.out_degree()
+                if isinstance(n, VariableNode) and n in self.root_subgraph.nodes
+            ]
+
+            desired_output_values = {}
+            for n in root_var_nodes:
+                n_name = n.identifier.var_name
+                if n_name in set(desired_outputs) and (
+                    n_name not in desired_output_values
+                    or desired_output_values[n_name].identifier.index
+                    < n.identifier.index
+                ):
+                    desired_output_values[n_name] = n
+            return {k: np.array(v.value) for k, v in desired_output_values.items()}
+
         return {output.identifier.var_name: output.value for output in self.outputs}
 
     @classmethod
