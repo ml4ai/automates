@@ -231,17 +231,11 @@ class LambdaNode(GenericNode):
                 for lambda:\n{self.func_str}"""
             )
 
-        print("----------------------------------")
-        print(self.func_str)
-        print(values)
-
         try:
             if len(values) != 0:
                 res = [self.function(*inputs) for inputs in zip(*values)]
             else:
                 res = self.function()
-            print(res)
-            print(self.parse_result(values, res))
             return self.parse_result(values, res)
         except Exception as e:
             print(f"Exception occured in {self.func_str}")
@@ -354,14 +348,7 @@ class HyperEdge:
                 # existing value, otherwise update.
                 for j, _ in enumerate(self.outputs[res_index].value):
                     if self.seen_exits[j]:
-                        print(f"Assigning {self.outputs[res_index]} to {out_val[j]}")
                         self.outputs[res_index].value[j] = out_val[j]
-
-                # self.outputs[i].value = np.where(
-                #     self.seen_exits,
-                #     np.copy(self.outputs[i].value),
-                #     out_val,
-                # )
 
             # Update seen_exits with any vectorized positions that may have
             # exited during this execution
@@ -369,7 +356,7 @@ class HyperEdge:
 
         else:
             for i, out_val in enumerate(result):
-                variable = self.outputs[i]
+                variable = self.outputs[i]      
                 if (
                     self.lambda_fn.func_type == LambdaType.LITERAL
                     and variable.input_value is not None
@@ -572,7 +559,6 @@ class GrFNSubgraph:
             executed = True
             executed_visited_variables = set()
             node_to_execute = node_execute_queue.pop(0)
-
             # TODO remove?
             if node_to_execute in all_nodes_visited:
                 continue
@@ -600,14 +586,13 @@ class GrFNSubgraph:
                         # subgraph execution returns the updated output nodes
                         # so we can mark them as visited here in the parent
                         # in order to continue execution
-                        executed_visited_variables.update(
-                            subgraph(
+                        sugraph_execution_result = subgraph(
                                 grfn,
                                 subgraphs_to_hyper_edges,
                                 node_to_subgraph,
                                 all_nodes_visited,
                             )
-                        )
+                        executed_visited_variables.update(sugraph_execution_result)
                     else:
                         node_to_execute = subgraph_input_interface.lambda_fn
                         executed = False
@@ -844,20 +829,22 @@ class GrFNLoopSubgraph(GrFNSubgraph):
         output_interface = self.get_output_interface_node(
             subgraphs_to_hyper_edges[self]
         )
+
         output_decision = [
             n
             for v in output_interface.inputs
             for n in grfn.predecessors(v)
             if n.func_type == LambdaType.DECISION
         ][0]
-        output_decision_outputs = [v for v in grfn.successors(output_decision)]
+        output_decision_edge = [e for e in subgraphs_to_hyper_edges[self] if e.lambda_fn == output_decision][0]
 
-        initial_decision = {
+        initial_decision = list({
             n
             for v in input_interface.outputs
             for n in grfn.successors(v)
             if n.func_type == LambdaType.DECISION
-        }
+        })
+
         first_decision_vars = {
             v
             for l in initial_decision
@@ -865,7 +852,16 @@ class GrFNLoopSubgraph(GrFNSubgraph):
             if isinstance(v, VariableNode)
         }
 
+        updated_decision_input_vars_map = {}
         for v in first_decision_vars:
+            name = v.identifier.var_name
+            ver = v.identifier.index
+            if name not in updated_decision_input_vars_map or updated_decision_input_vars_map[name].identifier.index < ver:
+                updated_decision_input_vars_map[name] = v
+
+
+        updated_decision_input_vars = updated_decision_input_vars_map.values()
+        for v in updated_decision_input_vars:
             if v.value is None:
                 v.value = [None] * grfn.np_shape[0]
 
@@ -875,18 +871,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
         # Loop until the exit value becomes true
         while True:
             initial_visited_nodes = all_nodes_visited.copy()
-            initial_visited_nodes.update(first_decision_vars)
-            print(output_decision)
-            print(
-                f"Out input nodes {[v for v in grfn.predecessors(output_decision) if 'EXIT' not in v.identifier.var_name ]}"
-            )
-            initial_visited_nodes.update(
-                [
-                    v
-                    for v in grfn.predecessors(output_decision)
-                    if "EXIT" not in v.identifier.var_name
-                ]
-            )
+            initial_visited_nodes.update(updated_decision_input_vars)
 
             # Compute JUST the path to the exit variable so we can prevent
             # computing all paths on the n+1 step
@@ -896,17 +881,20 @@ class GrFNLoopSubgraph(GrFNSubgraph):
                 node_to_subgraph,
                 initial_visited_nodes,
                 vars_to_compute=input_interface.outputs + [exit_var_node]
-                # + output_decision_outputs,
             )
 
             if (isinstance(exit_var_node.value, bool) and exit_var_node.value) or (
                 isinstance(exit_var_node.value, (np.ndarray, list))
                 and all(exit_var_node.value)
-            ):
+            ): 
+                output_decision_edge.seen_exits = np.full(grfn.np_shape, True, dtype=np.bool)
+                output_decision_edge()
+                output_interface()
                 break
 
             initial_visited_nodes = all_nodes_visited.copy()
-            initial_visited_nodes.update(first_decision_vars)
+            initial_visited_nodes.update(updated_decision_input_vars)
+
             var_results = super().__call__(
                 grfn,
                 subgraphs_to_hyper_edges,
@@ -916,7 +904,7 @@ class GrFNLoopSubgraph(GrFNSubgraph):
 
             prev_all_nodes_visited = initial_visited_nodes
 
-        all_nodes_visited = all_nodes_visited.union(prev_all_nodes_visited)
+        all_nodes_visited.update(prev_all_nodes_visited - all_nodes_visited)
         return var_results
 
 
