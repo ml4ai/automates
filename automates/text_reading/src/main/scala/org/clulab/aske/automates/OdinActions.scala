@@ -501,6 +501,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
         // out of overlapping descrs, take the longest one
         val headDescr = mostComplete.arguments("description").head
+        println("HEad descr: " + headDescr.text)
         val edgesForOnlyThisMen = headDescr.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDescr.tokenInterval.start && math.max(edge._1, edge._2) <= headDescr.tokenInterval.end)
         val conjEdges = edgesForOnlyThisMen.filter(_._3.startsWith("conj"))
         val conjNodes = new ArrayBuffer[Int]()
@@ -516,11 +517,25 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val descrAttachments = new ArrayBuffer[DiscontinuousCharOffsetAttachment]()
 
         if (allConjNodes.nonEmpty) {
+          val sortedConjNodes = allConjNodes.sorted
+          for (int <- sortedConjNodes) {
+            // fixme: this depends on where the conj is in the mention
+            // ex. 1: Sl and Sh are the sunlit and shaded leaf contributions.
+            // vs
+            // ex. 2: Sl and Sh are the leaf contributions of sunlight and shade
 
-          for (int <- allConjNodes.sorted) {
-            val headDescrStartToken = headDescr.tokenInterval.start
+            // if conjoined elements are closer to the right-hand side of the head description (ex. 2), , then the new description starts with the head descr start token (leaf contributions)
+            val newDescrStartToken = if (math.abs(sortedConjNodes.head - headDescr.tokenInterval.start) > math.abs(sortedConjNodes.last - headDescr.tokenInterval.last)) {
+              headDescr.tokenInterval.start
+              // else the new description starts with the current conj start (ex 1)
+            } else int
             // the new descr token interval is the longest descr available with words like `both` and `either` removed and ...
-            var newDescrTokenInt = headDescr.tokenInterval.filter(item => (item >= headDescrStartToken & item <= int) & !preconj.contains(item))
+            var newDescrTokenInt = if (math.abs(sortedConjNodes.head - headDescr.tokenInterval.start) > math.abs(sortedConjNodes.last - headDescr.tokenInterval.last)) {
+              // if conjoined elements are closer to the right-hand side of the head description (ex. 2)
+              headDescr.tokenInterval.filter(item => (item >= newDescrStartToken & item <= int) & !preconj.contains(item))
+            } else {
+              headDescr.tokenInterval.filter(item => (item >= int & item <= headDescr.tokenInterval.last) & !preconj.contains(item))
+            }
             //...with intervening conj hops removed, e.g., in `a and b are the blah of c and d, respectively`, for the descr of b, we will want to remove `c and ` - which make up the intervening conj hop
             if (previousIndices.nonEmpty) {
               newDescrTokenInt = newDescrTokenInt.filter(ind => ind < previousIndices.head || ind >= int )
@@ -540,6 +555,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           }
         }
 
+        for (d <- newDescriptions) println(d.text)
 
         // get the conjoined vars
         val variables = mostComplete.arguments("variable")
