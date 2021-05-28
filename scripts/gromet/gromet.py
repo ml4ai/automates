@@ -23,9 +23,9 @@ gromet/
         toy1/            # example Function Network (no Conditionals or Loops)
 
 (UA:
-Google\ Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet/
+Google Drive:ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet/
     root of shared examples
-Google\ Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet-structure-visual
+Google Drive:ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet-structure-visual
     TypedGrometElm-hierarchy-02.graffle
 )
 
@@ -377,6 +377,16 @@ class Port(Valued):
     box: UidBox
 
 
+@dataclass
+class PortCall(Port):
+    """
+    "Outer" Port of an instance call to a Box definition.
+    There will be a PortCall Port for every Port associated
+        with the Box definition.
+    """
+    call: UidPort
+
+
 # --------------------
 # Wire
 
@@ -411,6 +421,14 @@ class Box(TypedGrometElm):
     """
     uid: UidBox
     ports: Union[List[UidPort], None]
+
+
+@dataclass
+class BoxCall(Box):
+    """
+    An instance "call" of a Box (the Box definition)
+    """
+    call: UidBox
 
 
 @dataclass
@@ -757,6 +775,32 @@ def gromet_to_json(gromet: Gromet, tgt_file: Union[str, None] = None):
 # -----------------------------------------------------------------------------
 
 """
+Changes 2021-05-27:
+() Added the following mechanism by which a Box can be "called"
+        in an arbitrary number of different contexts within the gromet.
+    This include adding the following two TypedGrometElms:
+    (1) BoxCall: A type of Box --- being a Box, the BoxCall itself has 
+        it's own UidBox uid (to represent the instance) and its own 
+        list of Ports (to wire it within a context). 
+        The BoxCall adds a 'call' field that will consist of the UidBox 
+            of another Box that will serve as the "definition" of the 
+            BoxCall.
+        An arbitrary number of different BoxCalls may "call" this 
+            "definition" Box. There is nothing else about the 
+            "definition" Box that makes it a definition -- just that 
+            it is being called by a BoxCall.
+        The BoxCall itself will have no internal contents, it's
+            internals are defined by the "definition" Box.
+        For each Port in the "definition" Box, BoxCall will have 
+            a corresponding PortCall Port; this PortCall will reference 
+            the "definition" Box Port. 
+    (2) PortCall: A tye of Port -- being a Port, the PortCall has it's 
+        own UidPort uid (to represent the instance), and adds a 'call' 
+        field that will be the UidPort of the  Port on the "definition" 
+        Box referenced by a BoxCall.
+        The 'box' field of the PortCall will be the UidBox of the BoxCall
+            instance.
+
 Changes 2021-05-23:
 () Added notes at top on Model Framework element Types
 () Removed Event
@@ -846,4 +890,3 @@ Changes [2021-05-09 to 2021-05-16]:
     - should only have one pairwise connection per UndirectedWire
 
 """
-
