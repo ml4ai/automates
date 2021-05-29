@@ -30,7 +30,7 @@ transparent_nouns: "level|amount|quantit" # do we need these in general?
 
 # FUNCTION TRIGGERS
 
-functionTrigger1: "[lemma = influence]|[lemma = modify]|[lemma = govern]|[lemma = limit]|[lemma = control]|[lemma = dominate]"
+functionTrigger1: "^influenc|modify|govern|limit|control|dominate"
 
 functionTrigger2: "[word = product]|[word = inverse]|[word = sum]|[word = mean]|[word = composite]|[word = minimum]|[word = maximum]|[word = function]"
 

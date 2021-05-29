@@ -9,9 +9,9 @@ rules:
     action: ${action}
     example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
     pattern: |
-      trigger = ${functionTrigger1}
-      input:Phrase+ = nmod_agent | conj_and | nmod_by
-      output:Phrase = nsubjpass | <acl_as
+      trigger = [lemma = /${functionTrigger1}/]
+      input:Phrase+ = nmod_agent | conj_and | nmod_by | <amod <nsubj
+      output:Phrase = nsubjpass | <acl_as | <amod
 
   - name: trigger2_of # product, inverse, sum, mean, composite, minimum, maximum, function is the trigger for this rule
     label: Function

@@ -150,17 +150,19 @@ class TestFunctions extends ExtractionTest {
   // Tests from 2003-DSSAT
 
   val t1f = "the soil water content of each layer is updated by adding or subtracting daily flows of water to or from the layer due to each process."
-  failingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "the soil water content of each layer" -> Seq("daily flows of water", "layer"),
-      "the soil water content of each layer" -> Seq("daily flows of water", "layer")
+      "soil water content of each layer" -> Seq("daily flows of water", "layer"),
+      "soil water content of each layer" -> Seq("daily flows of water", "layer")
     )
     val mentions = extractMentions(t1f)
     testFunctionEvent(mentions, desired)
+    val functionMentions = mentions.filter(_.label == "Function")
+    functionMentions.head.text shouldEqual functionMentions.last.text
   }
 
   val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
-  passingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
+  failingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
     val desired = Seq(
       "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"), // note: only one rule applies even when multiple rules should apply. needs to find out why.
       "deep soil temperature boundary condition" -> Seq("average annual air temperature", "amplitude of monthly mean temperatures")
@@ -202,7 +204,7 @@ class TestFunctions extends ExtractionTest {
     "by multiplying sunlit and shaded leaf photosynthetic rates by their respective LAIs."
   failingTest should s"find functions from t6f: ${t6f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf contributions"),
+      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit leaf contribution", "shaded leaf contribution"),
       "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf photosynthetic rates", "their respective LAIs")
     )
     val mentions = extractMentions(t6f)
@@ -312,6 +314,17 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  // Tests from 1985-description and performance of CERES-Wheat_A_user-oriented wheat yield model
+
+  val t1i = "The primary variable influencing development rate is temperature."
+  failingTest should s"find functions from t1i: ${t1i}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "development rate" -> Seq("temperature")
+    )
+    val mentions = extractMentions(t1i)
+    testFunctionEvent(mentions, desired)
+  }
+
 }
 
   // note: below are the example sentences that contain functional relations (I think), but I'm not sure what to do about with them for now.
@@ -356,3 +369,5 @@ class TestFunctions extends ExtractionTest {
 // todo: These data demonstrate that the initial fast rate of drying is followed by a decreasing rate.
 // todo: In the Adelanto soil, the evaporation rate began to decline below the approximate Eo of 8 mm/day when the cumulative evaporation reached about 12 mm.
 // todo: A plot of (9) expressing Ep as a fraction of E0 versus Lai is given in Figure 5.
+
+// Tests from 1985-description and performance of CERES-Wheat_A_user-oriented wheat yield model
