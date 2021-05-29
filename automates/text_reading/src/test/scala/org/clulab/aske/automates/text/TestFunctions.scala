@@ -150,13 +150,15 @@ class TestFunctions extends ExtractionTest {
   // Tests from 2003-DSSAT
 
   val t1f = "the soil water content of each layer is updated by adding or subtracting daily flows of water to or from the layer due to each process."
-  failingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t1f: ${t1f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "the soil water content of each layer" -> Seq("daily flows of water", "layer"),
-      "the soil water content of each layer" -> Seq("daily flows of water", "layer")
+      "soil water content of each layer" -> Seq("daily flows of water", "layer"),
+      "soil water content of each layer" -> Seq("daily flows of water", "layer")
     )
     val mentions = extractMentions(t1f)
     testFunctionEvent(mentions, desired)
+    val functionMentions = mentions.filter(_.label == "Function")
+    functionMentions.head.text shouldEqual functionMentions.last.text
   }
 
   val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
