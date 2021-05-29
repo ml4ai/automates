@@ -179,7 +179,7 @@ object ExtractAndAlign {
       parameterSettingMention,
       intervalParameterSettingMentions,
       unitMentions,
-      equationChunksAndSource,
+      globalEqVariables,
       allCommentGlobalVars,
       variableShortNames,
       SVOgroundings,
@@ -198,6 +198,7 @@ object ExtractAndAlign {
 
     linkElements(FULL_TEXT_EQUATION) = fullEquations
     linkElements(EQUATION) = eqLinkElements.map(_.toString())
+
 
     // todo: move the method elsewhere
     def mkGlobalEqVarLinkElement(glv: GlobalEquationVariable): String = {
@@ -421,7 +422,7 @@ object ExtractAndAlign {
     parameterSettingMentions: Option[Seq[Mention]],
     intParameterSettingMentions: Option[Seq[Mention]],
     unitMentions: Option[Seq[Mention]],
-    equationChunksAndSource: Option[Seq[(String, String)]],
+    globalEqVariables: Seq[GlobalEquationVariable],
     allCommentGlobalVars: Seq[GlobalVariable],
     variableShortNames: Option[Seq[String]],
     SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]],
@@ -515,8 +516,8 @@ object ExtractAndAlign {
 
 
     /** Align the equation chunks to the text descriptions */
-      if (allGlobalVars.nonEmpty && equationChunksAndSource.isDefined) {
-        val equationToTextAlignments = alignmentHandler.editDistance.alignEqAndTexts(equationChunksAndSource.get.unzip._1, allGlobalVars.map(_.identifier))
+      if (allGlobalVars.nonEmpty && globalEqVariables.nonEmpty) {
+        val equationToTextAlignments = alignmentHandler.editDistance.alignEqAndTexts(globalEqVariables.map(_.identifier), allGlobalVars.map(_.identifier))
         // group by src idx, and keep only top k (src, dst, score) for each src idx
         alignments(EQN_TO_GLOBAL_VAR) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
       }
@@ -1044,9 +1045,9 @@ object ExtractAndAlign {
       }
 
       // Equation -> Text
-      if (linkElements.contains(EQUATION)) {
+      if (linkElements.contains(GLOBAL_EQ_VAR)) {
         println("has eq and text")
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(EQUATION), linkElements(GLOBAL_VAR), EQN_TO_GLOBAL_VAR, alignments(EQN_TO_GLOBAL_VAR), debug))
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_EQ_VAR), linkElements(GLOBAL_VAR), EQN_TO_GLOBAL_VAR, alignments(EQN_TO_GLOBAL_VAR), debug))
       }
 
       // TextVar to Unit (through identifier)
