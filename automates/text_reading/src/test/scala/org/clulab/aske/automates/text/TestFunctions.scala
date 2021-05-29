@@ -204,7 +204,7 @@ class TestFunctions extends ExtractionTest {
     "by multiplying sunlit and shaded leaf photosynthetic rates by their respective LAIs."
   failingTest should s"find functions from t6f: ${t6f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf contributions"),
+      "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit leaf contribution", "shaded leaf contribution"),
       "Hourly canopy photosynthesis on a land area basis" -> Seq("sunlit and shaded leaf photosynthetic rates", "their respective LAIs")
     )
     val mentions = extractMentions(t6f)
