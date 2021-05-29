@@ -83,7 +83,7 @@ class TestAlign extends FlatSpec with Matchers {
 
   val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, false, serializerName)
 
-  println(argsForGrounding + "<<<<===")
+//  println(argsForGrounding + "<<<<===")
 
   val groundings = ExtractAndAlign.groundMentions(
     payloadJson,

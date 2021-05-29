@@ -32,10 +32,11 @@ case class alignmentArguments(json: Value, identifierNames: Option[Seq[String]],
 object ExtractAndAlign {
   // Link element types
   val COMMENT = "comment"
+  val GL_COMMENT = "global_comment"
   val TEXT_VAR = "text_var" // stores information about each variable, e.g., identifier, associated description, arguments, and when available location in the original document (e.g., in the pdf)
   val GLOBAL_VAR = "gvar" // stores ids of text variables that are likely different instances of the same global variable
   val GLOBAL_EQ_VAR = "gEqVar"
-  val SOURCE = "source" // identifiers found in source code
+  val SOURCE = "src" // identifiers found in source code
   val EQUATION = "equation" // an equation extracted from the original document
   val SVO_GROUNDING = "SVOgrounding"
   // Below, "via concept" means the arg in question is attached to a variable concept,
@@ -144,22 +145,28 @@ object ExtractAndAlign {
       }
 
 
-    for (cs <- equationChunksAndSource.get) {
-      println(cs._1 + " " + cs._2)
-    }
+//    for (cs <- equationChunksAndSource.get) {
+//      println(cs._1 + " " + cs._2)
+//    }
+
+    // get all global variables before aligning
     val allGlobalVars = if (descriptionMentions.nonEmpty) {
       getGlobalVars(descriptionMentions.get)
     } else Seq.empty
 
-    // todo: need to do a None option
-    val nonOptionEqChunksAndSource = equationChunksAndSource.get
-    val  (eqLinkElements, fullEquations) = getEquationLinkElements(nonOptionEqChunksAndSource)
 
+    val allCommentGlobalVars = if (commentDescriptionMentions.nonEmpty) {
+      getGlobalVars(commentDescriptionMentions.get)
+    } else Seq.empty
+
+
+    val  (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else null
     val globalEqVariables = getGlobalEqVars(eqLinkElements)
 
-    for (gev <- globalEqVariables) {
-      println("gev " + gev)
-    }
+//    for (gev <- globalEqVariables) {
+//      println("gev " + gev)
+//    }
+
 
 
     // =============================================
@@ -173,7 +180,7 @@ object ExtractAndAlign {
       intervalParameterSettingMentions,
       unitMentions,
       equationChunksAndSource,
-      commentDescriptionMentions,
+      allCommentGlobalVars,
       variableShortNames,
       SVOgroundings,
       numAlignments,
@@ -183,7 +190,7 @@ object ExtractAndAlign {
 
     var outputJson = ujson.Obj()
 
-    val linkElements = getLinkElements(grfn, allGlobalVars, commentDescriptionMentions, equationChunksAndSource, variableNames, parameterSettingMention, intervalParameterSettingMentions,  unitMentions)
+    val linkElements = getLinkElements(grfn, allGlobalVars, allCommentGlobalVars, equationChunksAndSource, variableNames, parameterSettingMention, intervalParameterSettingMentions,  unitMentions)
 
 
 
@@ -194,7 +201,7 @@ object ExtractAndAlign {
 
     // todo: move the method elsewhere
     def mkGlobalEqVarLinkElement(glv: GlobalEquationVariable): String = {
-      println("gl eq v: " + glv)
+//      println("gl eq v: " + glv)
       ujson.Obj(
         "uid" -> glv.id,
         "content" -> glv.identifier,
@@ -335,7 +342,7 @@ object ExtractAndAlign {
 
   def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int, debug: Boolean): ujson.Value = {
 
-    println("-=>" + element)
+//    println("-=>" + element)
     val ujsonObj = ujson.read(element).obj
     ujsonObj
   }
@@ -415,7 +422,7 @@ object ExtractAndAlign {
     intParameterSettingMentions: Option[Seq[Mention]],
     unitMentions: Option[Seq[Mention]],
     equationChunksAndSource: Option[Seq[(String, String)]],
-    commentDescriptionMentions: Option[Seq[Mention]],
+    allCommentGlobalVars: Seq[GlobalVariable],
     variableShortNames: Option[Seq[String]],
     SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]],
     numAlignments: Option[Int],
@@ -425,8 +432,8 @@ object ExtractAndAlign {
 
     val alignments = scala.collection.mutable.HashMap[String, Seq[Seq[Alignment]]]()
 
-    if (commentDescriptionMentions.isDefined && variableShortNames.isDefined) {
-      val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames.get.map(_.toLowerCase), commentDescriptionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+    if (allCommentGlobalVars.nonEmpty && variableShortNames.isDefined) {
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames.get.map(_.toLowerCase), allCommentGlobalVars.map(_.identifier).map(_.toLowerCase()))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
     }
@@ -515,8 +522,8 @@ object ExtractAndAlign {
       }
 
     /** Align the comment descriptions to the text descriptions */
-    if (allGlobalVars.nonEmpty && commentDescriptionMentions.isDefined) {
-      val commentToTextAlignments = alignmentHandler.w2v.alignMentionsAndGlobalVars(commentDescriptionMentions.get, allGlobalVars)
+    if (allGlobalVars.nonEmpty && allCommentGlobalVars.nonEmpty) {
+      val commentToTextAlignments = alignmentHandler.w2v.alignGlobalCommentVarAndGlobalVars(allCommentGlobalVars, allGlobalVars)
       // group by src idx, and keep only top k (src, dst, score) for each src idx
       alignments(COMMENT_TO_GLOBAL_VAR) = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
     }
@@ -728,7 +735,7 @@ object ExtractAndAlign {
     grfn: Value,
     allGlobalVars:
     Seq[GlobalVariable],
-    commentDescriptionMentions: Option[Seq[Mention]],
+    allCommentGlobalVars: Seq[GlobalVariable],
     equationChunksAndSource: Option[Seq[(String, String)]],
     variableNames: Option[Seq[String]],
     parameterSettingMentions: Option[Seq[Mention]],
@@ -738,16 +745,7 @@ object ExtractAndAlign {
     // Make Comment Spans from the comment variable mentions
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
 
-    if (commentDescriptionMentions.isDefined) {
-      linkElements(COMMENT) = commentDescriptionMentions.get.map { commentMention => {
-        ujson.Obj(
-          "uid" -> randomUUID.toString,
-          "source" -> commentMention.document.id.getOrElse("unk_file").toString,
-          "content" -> commentMention.text
-        ).toString()
-        }
-      }
-    }
+
 
 
     // Repeat for src code variables
@@ -762,7 +760,7 @@ object ExtractAndAlign {
     }
 
     def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
-      println("GLVAR line 764: " + glv)
+//      println("GLVAR line 764: " + glv)
       ujson.Obj(
         "uid" -> glv.id,
         "content" -> glv.identifier,
@@ -772,11 +770,17 @@ object ExtractAndAlign {
 
 
 
-
     if (allGlobalVars.nonEmpty) {
       linkElements(GLOBAL_VAR) = allGlobalVars.map(glv => mkGlobalVarLinkElement(glv))
       linkElements(TEXT_VAR) = allGlobalVars.flatMap(_.textVarObjStrings)
     }
+
+    if (allCommentGlobalVars.nonEmpty) {
+      linkElements(COMMENT) = allCommentGlobalVars.flatMap(_.textVarObjStrings)
+      linkElements(GL_COMMENT) = allCommentGlobalVars.map(glv => mkGlobalVarLinkElement(glv))
+      }
+
+
 
     if (intervalParameterSettingMentions.isDefined) {
       val (throughVar, throughConcept) = intervalParameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m
@@ -1027,16 +1031,16 @@ object ExtractAndAlign {
     val hypotheses = new ArrayBuffer[ujson.Obj]()
 
     // Src Variable -> Comment
-    if (linkElements.contains(SOURCE) && linkElements.contains(COMMENT)) {
+    if (linkElements.contains(SOURCE) && linkElements.contains(GL_COMMENT)) {
       println("has source and comment")
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(GL_COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
     }
 
     if (linkElements.contains(GLOBAL_VAR)) {
 
       // Comment -> Text Var
-      if (linkElements.contains(COMMENT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_GLOBAL_VAR, alignments(COMMENT_TO_GLOBAL_VAR), debug))
+      if (linkElements.contains(GL_COMMENT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GL_COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_GLOBAL_VAR, alignments(COMMENT_TO_GLOBAL_VAR), debug))
       }
 
       // Equation -> Text

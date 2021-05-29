@@ -79,16 +79,16 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
       // if no intersect, return 1
       // if intersect == 1, return 1 -> not enough info to make us more confident of the edit distance score
       if (intersect.length <= 1) return 1.0 // println("true 80") else println("false 80")
-      println("passed 2")
-
-      println(rendered + "<eq str")
-      println(txtStr + "<dstn")
+//      println("passed 2")
+//
+//      println(rendered + "<eq str")
+//      println(txtStr + "<dstn")
       // if intersect > 1 and in same order in both, return len intersect
       val onlyIntersectStr1 = rendered.filter(intersect.contains(_))
-      println("++>" + onlyIntersectStr1.mkString(" "))
+//      println("++>" + onlyIntersectStr1.mkString(" "))
       val onlyIntersectStr2 = txtStr.filter(intersect.contains(_))
-      println("+++>" + onlyIntersectStr2.mkString(" "))
-      println("+>" + onlyIntersectStr1 + " " + onlyIntersectStr2 + " " )//+ onlyIntersectStr1==onlyIntersectStr1 + "<<<<")
+//      println("+++>" + onlyIntersectStr2.mkString(" "))
+//      println("+>" + onlyIntersectStr1 + " " + onlyIntersectStr2 + " " )//+ onlyIntersectStr1==onlyIntersectStr1 + "<<<<")
       println(onlyIntersectStr1==onlyIntersectStr1)
       var sameOrder = true
       if (onlyIntersectStr1.length != onlyIntersectStr2.length) return 1.0
@@ -149,6 +149,11 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
 
   def alignMentionsAndGlobalVars(srcMentions: Seq[Mention], glVars: Seq[GlobalVariable]): Seq[Alignment] = {
     alignTexts(srcMentions.map(Aligner.getRelevantText(_, relevantArgs).toLowerCase()), glVars.map(getRelevantTextFromGlobalVar(_).toLowerCase()))
+  }
+
+  def alignGlobalCommentVarAndGlobalVars(commentGlVar: Seq[GlobalVariable], glVars: Seq[GlobalVariable]): Seq[Alignment] = {
+    for (g <- commentGlVar) println("_> " + g)
+    alignTexts(commentGlVar.map(getRelevantTextFromGlobalVar(_).toLowerCase()), glVars.map(getRelevantTextFromGlobalVar(_).toLowerCase()))
   }
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
