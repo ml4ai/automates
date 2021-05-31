@@ -34,3 +34,19 @@ y = Variable("y")
 f_sat = And(-3 <= x, x <= 3, -3 <= y, y <= 3, (x*y-y)**2 == 0)  # different intervals yield different solutions
 result = CheckSatisfiability(f_sat, 0.001)
 print(result)
+
+
+# # dreal with function
+# x = Variable("x")
+# y = Variable("y")
+#
+#
+# def my_function(x, y):
+#     return (x*y-y)**2
+#
+#
+# print()
+# print()
+# f_sat2= And(-3 <= x, x <= 3, -3 <= y, y <= 3, my_function == 0)
+# result = CheckSatisfiability(f_sat2, 0.001)
+# print(result)
