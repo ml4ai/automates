@@ -31,6 +31,6 @@ print()
 # dreal example 2 notes
 x = Variable("x")
 y = Variable("y")
-f_sat = And(-3 <= x, x <= 3, -3 <= y, y <= 3, (x*y-y)**2==0)  # different intervals yield different solutions
+f_sat = And(-3 <= x, x <= 3, -3 <= y, y <= 3, (x*y-y)**2 == 0)  # different intervals yield different solutions
 result = CheckSatisfiability(f_sat, 0.001)
 print(result)

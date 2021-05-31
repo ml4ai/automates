@@ -125,58 +125,58 @@ def children_unsort(node, g):
     return ch_names
 
 
-def descendents(node, g, topo):
-    """
-    Finds all descendants of a node and orders them
-    :param node: node (indicated by its index)
-    :param g: graph
-    :param topo: topological ordering
-    :return: Descendants of node in topological ordering topo
-    """
-    des_list = g.neighborhood(node, order=g.vcount(), mode="out")
-    des_ind = list(set([d for des in des_list for d in des]))
-    des_names = to_names(des_ind, g)
-    des = ts(des_names, topo)
-    return des
-
-
-def connected(node, g, topo):
-    """
-    Finds all neighbors of a node and orders them (all connected nodes)
-    :param node: node (indicated by its index)
-    :param g: graph
-    :param topo: topological ordering
-    :return: Neighbors of node in topological ordering topo
-    """
-    con_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="all")).flat)
-    con_names = to_names(con_ind, g)
-    con = ts(con_names, topo)
-    return con
-
-
-# Assume "O" and "U" are specified in "description" attribute
-def compare_graphs(g1, g2):
-    """
-    Determines if two graphs are the same (including edge descriptions)
-    :param g1: First graph
-    :param g2: Second graph
-    :return: T/F indicating if G1 is the same as G2
-    """
-    e1 = numpy.array(g1.get_edgelist())
-    n1 = numpy.shape(e1)[0]
-    e2 = numpy.array(g2.get_edgelist())
-    n2 = numpy.shape(e2)[0]
-    if n1 != n2:
-        return False
-    if "description" in g1.es.attributes():
-        e1 = numpy.append(e1, numpy.transpose([g1.es["description"]]), axis=1)
-    else:
-        e1 = numpy.append(e1, numpy.transpose([numpy.repeat("O", n1)]), axis=1)
-    if "description" in g2.es.attributes():
-        e2 = numpy.append(e2, numpy.transpose([g2.es["description"]]), axis=1)
-    else:
-        e2 = numpy.append(e2, numpy.transpose([numpy.repeat("O", n2)]), axis=1)
-    return numpy.array_equal(e1, e2)
+# def descendents(node, g, topo):
+#     """
+#     Finds all descendants of a node and orders them
+#     :param node: node (indicated by its index)
+#     :param g: graph
+#     :param topo: topological ordering
+#     :return: Descendants of node in topological ordering topo
+#     """
+#     des_list = g.neighborhood(node, order=g.vcount(), mode="out")
+#     des_ind = list(set([d for des in des_list for d in des]))
+#     des_names = to_names(des_ind, g)
+#     des = ts(des_names, topo)
+#     return des
+#
+#
+# def connected(node, g, topo):
+#     """
+#     Finds all neighbors of a node and orders them (all connected nodes)
+#     :param node: node (indicated by its index)
+#     :param g: graph
+#     :param topo: topological ordering
+#     :return: Neighbors of node in topological ordering topo
+#     """
+#     con_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="all")).flat)
+#     con_names = to_names(con_ind, g)
+#     con = ts(con_names, topo)
+#     return con
+#
+#
+# # Assume "O" and "U" are specified in "description" attribute
+# def compare_graphs(g1, g2):
+#     """
+#     Determines if two graphs are the same (including edge descriptions)
+#     :param g1: First graph
+#     :param g2: Second graph
+#     :return: T/F indicating if G1 is the same as G2
+#     """
+#     e1 = numpy.array(g1.get_edgelist())
+#     n1 = numpy.shape(e1)[0]
+#     e2 = numpy.array(g2.get_edgelist())
+#     n2 = numpy.shape(e2)[0]
+#     if n1 != n2:
+#         return False
+#     if "description" in g1.es.attributes():
+#         e1 = numpy.append(e1, numpy.transpose([g1.es["description"]]), axis=1)
+#     else:
+#         e1 = numpy.append(e1, numpy.transpose([numpy.repeat("O", n1)]), axis=1)
+#     if "description" in g2.es.attributes():
+#         e2 = numpy.append(e2, numpy.transpose([g2.es["description"]]), axis=1)
+#     else:
+#         e2 = numpy.append(e2, numpy.transpose([numpy.repeat("O", n2)]), axis=1)
+#     return numpy.array_equal(e1, e2)
 
 
 # Edge Selection Function (for line 3 section of ID)
@@ -231,20 +231,20 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
         f_num = get_expression(prob.num, start_sum=False, single_source=single_source, target_sym=target_sym)
         f_den = get_expression(prob.den, start_sum=False, single_source=single_source, target_sym=target_sym)
         p = f"{p}\\frac{{{f_num}}}{{{f_den}}}"
-    if prob.sum:
-        p = f"{p}\\left("
-        add_strings = []
-        i = 1
-        for child in prob.children:
-            new_sum = False
-            if child.product or child.sum:
-                new_sum = True
-            child_ge = get_expression(child, start_sum=new_sum, single_source=single_source, target_sym=target_sym)
-            to_append = f"w_{{{i}}}^{{({child.weight})}}{child_ge}"
-            add_strings.append(to_append)
-            i = i + 1
-        con_strings = "".join(add_strings)
-        p = f"{p}{con_strings}\\right)"
+    # if prob.sum:
+    #     p = f"{p}\\left("
+    #     add_strings = []
+    #     i = 1
+    #     for child in prob.children:
+    #         new_sum = False
+    #         if child.product or child.sum:
+    #             new_sum = True
+    #         child_ge = get_expression(child, start_sum=new_sum, single_source=single_source, target_sym=target_sym)
+    #         to_append = f"w_{{{i}}}^{{({child.weight})}}{child_ge}"
+    #         add_strings.append(to_append)
+    #         i = i + 1
+    #     con_strings = "".join(add_strings)
+    #     p = f"{p}{con_strings}\\right)"
 
     if prob.product:
         for child in prob.children:
