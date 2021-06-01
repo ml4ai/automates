@@ -616,9 +616,7 @@ class Conditional(Box):  # BoxDirected
     """
     # branches is a List of
     #   ( <Predicate>1, <Function>, [<UidWire>+] )
-    branches: List[Tuple[Union[Predicate, None],
-                         Function,
-                         List[UidWire]]]
+    branches: List[Tuple[Union[Predicate, None], Function, List[UidWire]]]
 
 
 @dataclass
