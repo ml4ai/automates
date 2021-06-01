@@ -20,7 +20,7 @@ rules:
     action: ${action}
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
-      trigger = ${functionTrigger2} (?= "of")
+      trigger = [word = /${functionTrigger2}/] (?= "of")
       input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos | nmod_in appos
       output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod
 
@@ -31,7 +31,7 @@ rules:
     action: ${action}
     example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
     pattern: |
-      trigger = ${functionTrigger3}
+      trigger = [lemma = /${functionTrigger3}/]
       input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of
       output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
 
@@ -42,7 +42,7 @@ rules:
     action: ${action}
     example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
     pattern: |
-      trigger = ${functionTrigger4} (?= "of")
+      trigger = [word = /${functionTrigger4}/] (?= "of")
       input:Phrase+ = nmod_of | nmod_at? nmod_to
       output:Phrase = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj
 
@@ -53,7 +53,7 @@ rules:
     action: ${action}
     example: "The evaporation from the plant surfaces Ep is predicted by using an empirical relation based on local data..."
     pattern: |
-      trigger = ${functionTrigger5}
+      trigger = [lemma = /${functionTrigger5}/]
       input:Phrase+ = advcl_by (dobj | nmod_by)
       output:Phrase = nsubjpass | <acl
 
@@ -190,7 +190,7 @@ rules:
     action: ${action}
     example: "Life cycle progress through any given phase depends on a physiological day accumulator as a function of temperature and day length, in many cases."
     pattern: |
-      trigger = [lemma = "depend"]|[lemma = "dependent"] (?="on")
+      trigger = [lemma = /depend|dependent/] (?="on")
       input:Phrase+ = nmod_on (conj_and)? | conj_and
       output:Phrase = <xcomp? nsubj | nsubj:xsubj
 
@@ -349,159 +349,3 @@ rules:
   #    example: "e.g., the equation ΣEs1 = ΣEs1 - P is interpreted to mean that a new value of ΣEs1 is equal to the previously calculated value of ΣEs1 minus P."
   #    pattern: |
   #      @output:Phrase [lemma = "be"] [word = "equal"] [word = "to"] [word = /.*/]+ @input:Phrase [word = "minus"] @input:Phrase
-
-  # rules subsumed under generalized rules (trigger1_by or trigger2_of)
-
-  #  - name: product_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-  #    pattern: |
-  #      trigger = [word = "product"] (?="of")
-  #      input:Phrase+ = nmod_of conj_and?
-  #      output:Phrase = (nsubj | <nmod_as nsubjpass)
-
-  #  - name: inverse_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "γ is the inverse of the mean recovery time, in days."
-  #    pattern: |
-  #      trigger = [word = "inverse"] (?="of")
-  #      input:Phrase = nmod_of
-  #      output:Phrase = (nsubj | <nsubj ccomp nummod)
-
-  #  - name: sum_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "The incubation period (the time from first infection to the appearances of symptoms) plus the onset to admission interval is equal to the sum of the latent period and the infectious period and is therefore equal to 1/b + 1/a."
-  #    pattern: |
-  #      trigger = [word = "sum"] (?="of")
-  #      input:Phrase+ = nmod_of | (nmod_of)? conj_and
-  #      output:Phrase = ((<nmod_to)? nsubj | <nmod_as dobj)
-
-  #  - name: mean_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "the mean air temperature, T, for a daily time step is preferred as the mean of the daily maximum and daily minimum air temperatures..."
-  #    pattern: |
-  #      trigger = [word = "mean"] (?="of")
-  #      input:Phrase+ = nmod_of | nmod_of conj_and
-  #      output:Phrase = <nmod_as nsubjpass
-
-  #  - name: composite_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "two-source E models have been proposed which treat total E as a composite of vegetation transpiration and soil evaporation"
-  #    pattern: |
-  #      trigger = [lemma = "composite"] (?="of")
-  #      input:Phrase+ = nmod_of | nmod_of conj_and
-  #      output:Phrase = <nmod_as dobj
-
-  #  - name: minimum_or_maximum_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "Actual soil evaporation is the minimum of the potential and soil-limiting calculations on a daily basis."
-  #    pattern: |
-  #      trigger = [lemma = "minimum"] (?="of") | [lemma = "maximum"] (?="of")
-  #      input:Phrase+ = nmod_of | conj_and
-  #      output:Phrase = nsubj | <nmod_as nsubjpass
-
-  #  - name: function_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "Daily Rso is a function of the time of year and latitude."
-  #    pattern: |
-  #      trigger = [word = "function"] (?="of")
-  #      input:Phrase+ = nmod_of | nmod_of (nmod_of)? conj_and
-  #      output:Phrase = (csubj)? nsubj | <nmod_as (nsubjpass)?
-
-  #  - name: governed_by
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "Rate of development is governed by thermal time, or growing degree-days (GDD), which is computed based on the daily maximum and minimum temperatures."
-  #    pattern: |
-  #      trigger = [lemma = "govern"] (?= "by")
-  #      input:Phrase+ = nmod_agent
-  #      output:Phrase = nsubjpass
-
-  #  - name: modified_by
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "Daily growth rate is modified by temperature and assimilate availability."
-  #    pattern: |
-  #      trigger = [lemma = "modify"] (?= "by")
-  #      input:Phrase+ = nmod_agent | conj_and
-  #      output:Phrase = nsubjpass
-
-  #  - name: estimated_from
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
-  #    pattern: |
-  #      trigger = [lemma = "estimate"]
-  #      input:Phrase = nmod_from | xcomp dobj
-  #      output:Phrase = nsubjpass
-
-  #  - name: calculate
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "The actual vapor pressure of air for hourly periods can be calculated from relative humidity (RH) and saturation vapor pressure at the corresponding air temperature (from Eq. 37):"
-  #    pattern: |
-  #      trigger = [lemma = "calculate"]
-  #      input:Phrase+ = nmod_from | nmod_from conj_and | advcl_based_on | nsubj:xsubj
-  #      output:Phrase = nsubjpass | dobj
-
-  #  - name: determined_from
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "ETc can be determined from ETo using a crop specific coefficient (Kc)."
-  #    pattern: |
-  #      trigger = [lemma = "determine"]
-  #      input:Phrase+ = nmod_from
-  #      output:Phrase = nsubjpass
-
-  #  - name: fraction_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "where fG is fraction of G to Rns, with a value of 0.35 obtained by the observed G and calculated Rns for this study, which was similar with Choudhury et al. (1987) in a wheat field."
-  #    pattern: |
-  #      trigger = [lemma = "fraction"] (?="of")
-  #      input:Phrase+ = nmod_of | nmod_to
-  #      output:Phrase = nsubj
-
-  #  - name: ratio_of
-  #    label: Function
-  #    priority: ${priority}
-  #    type: dependency
-  #    action: ${action}
-  #    example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
-  #    pattern: |
-  #      trigger = [lemma = "ratio"] (?="of")
-  #      input:Phrase+ = nmod_of | (nmod_at)? nmod_to
-  #      output:Phrase = <nmod_as <acl nsubj | nsubj acl_to dobj
