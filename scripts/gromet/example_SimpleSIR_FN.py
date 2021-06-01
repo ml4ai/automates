@@ -317,9 +317,9 @@ def simple_sir_FN_gromet() -> Gromet:
     # Expression 'recovered_exp' (SIR-simple line 47) -- input: (gamma I dt)
     # Expr's:
     # e6 : (* gamma I) -> e6
-    e6 = Expr(call=RefOp(UidOp("*")), args=[UidPort("P:sir.in.gamma"), UidPort("P:sir.in.I")])
+    e6 = Expr(call=RefOp(UidOp("*")), args=[UidPort("P:recovered_exp.in.gamma"), UidPort("P:recovered_exp.in.I")])
     # e7 : (* e6 dt) -> e7
-    e7 = Expr(call=RefOp(UidOp("*")), args=[e6, UidPort("P:sir.in.dt")])
+    e7 = Expr(call=RefOp(UidOp("*")), args=[e6, UidPort("P:recovered_exp.in.dt")])
     # The anonymous Expression
     recovered_exp = Expression(uid=UidBox("B:recovered_exp"),
                                type=None,
