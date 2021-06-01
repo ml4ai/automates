@@ -327,7 +327,7 @@ def simple_sir_FN_gromet() -> Gromet:
                                ports=[UidPort("P:recovered_exp.in.I"),
                                       UidPort("P:recovered_exp.in.gamma"),
                                       UidPort("P:recovered_exp.in.dt"),
-                                      UidPort("P:recovered_exp.out.infected")],
+                                      UidPort("P:recovered_exp.out.recovered")],
                                tree=e7,
                                metadata=None)
 
