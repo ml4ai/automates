@@ -10,7 +10,7 @@ rules:
     example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
     pattern: |
       trigger = [lemma = /${functionTrigger1}/]
-      input:Phrase+ = nmod_agent | conj_and | nmod_by | <amod <nsubj
+      input:Phrase+ = nmod_agent | nmod_by | <amod <nsubj
       output:Phrase = nsubjpass | <acl_as | <amod
 
   - name: trigger2_of # product, inverse, sum, mean, composite, minimum, maximum, function is the trigger for this rule
@@ -339,6 +339,40 @@ rules:
       trigger = [lemma = "require"] (?= [word = "as"] ([word = "input"]|[word = "inputs"]))
       input:Phrase+ = nsubjpass conj_and? | nmod_as
       output:Phrase? = nmod_for
+
+  - name: effect_of_input_on_output
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "A modified Priestley–Taylor (PT) model was developed, incorporating the effect of leaf area, soil moisture, mulching fraction and leaf senescence on ET."
+    pattern: |
+      trigger = [lemma = "effect"]
+      input:Phrase+ = nmod_of
+      output:Phrase = nmod_on
+
+  - name: lost
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "More than 90% of water used in agriculture is lost by soil evaporation and crop transpiration (Rana and Katerji, 2000)."
+    pattern: |
+      trigger = (?<= [word = "lost"] [word = "by"]) [word = /.*/]{,2} ([word = "and"] [word = /.*/]{,2})?
+      input:Phrase = <nmod_agent nsubjpass nmod_of
+      output:Phrase = <nmod_agent
+
+  - name: factors_controlling_output
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "They suggested that the main factors controlling α included leaf area index (LAI), vapor pressure deficit (VPD) and soil moisture content (θ)."
+    pattern: |
+      trigger = (?<= [word = "factors"]) [word = "controlling"]
+      input:Phrase+ = <acl <nsubj dobj
+      output:Phrase = dobj
+
 
   # note: how to write a token rule for function extraction? (with multiple inputs)
   #  - name: minus_token_rule # needed due to bad parsing

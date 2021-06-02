@@ -103,7 +103,8 @@ class TestFunctions extends ExtractionTest {
   val t1d = "In this model, ET is a product of the equilibrium evaporation (ETeq) and PT coefficient (α), where ETeq can be obtained from meteorological data (net radiation, soil heat flux, and air temperature)."
   passingTest should s"find functions from t1d: ${t1d}" taggedAs(Somebody) in {
     val desired = Seq(
-      "ET" -> Seq("equilibrium evaporation", "PT coefficient")
+      "ET" -> Seq("equilibrium evaporation", "PT coefficient"),
+      "ETeq" -> Seq("meteorological data")
     )
     val mentions = extractMentions(t1d)
     testFunctionEvent(mentions, desired)

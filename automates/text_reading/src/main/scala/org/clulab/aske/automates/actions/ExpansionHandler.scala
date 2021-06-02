@@ -507,7 +507,7 @@ object ExpansionHandler {
     "^case".r,
     "^cc$".r,
     "ccomp".r,
-    "compound".r,
+//    "compound".r,
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
@@ -521,8 +521,8 @@ object ExpansionHandler {
     "^nmod_since".r,
     "^nmod_without$".r,
     "nmod_by".r,
-    "nummod".r,
-    "^nsubj".r,
+//    "nummod".r,
+//    "^nsubj".r,
     "^punct".r,
     "^ref$".r,
     "appos".r
@@ -539,7 +539,7 @@ object ExpansionHandler {
     "acl:relcl".r,
     "^nmod_for".r,
     "nmod_at".r,
-    "^nmod_of".r,
+//    "^nmod_of".r,
     "nmod_under".r,
     "nmod_in".r
   )
