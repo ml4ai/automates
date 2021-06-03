@@ -178,7 +178,7 @@ class ExpansionHandler() extends LazyLogging {
     // Expand on outgoing deps
     val interval2 = traverseOutgoingLocal(incomingExpanded, maxHops, maxHopLength, stateFromAvoid, entity.sentenceObj)
 
-    val outgoingExpanded = incomingExpanded.asInstanceOf[TextBoundMention].copy(tokenInterval = interval2)
+    val outgoingExpanded = incomingExpanded.asInstanceOf[TextBoundMention].copy(tokenInterval = interval2, foundBy = entity.foundBy + "++expanded")
 //    println("\noriginal:  " + entity.text + " " + entity.labels.mkString("") + " " + entity.foundBy)
 //    println("expanded:  " + incomingExpanded.text + " " + incomingExpanded.labels.mkString("") ++ incomingExpanded.foundBy)
 
