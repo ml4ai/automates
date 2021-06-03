@@ -33,8 +33,8 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR/chime"
-  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/TR-20201013T173400Z-001/TR/chime/mentions"
+  val inputDir = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/toy_document_tex/dir"
+  val outputDir = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/toy_document_tex/dir"
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
@@ -95,7 +95,7 @@ object ExtractAndExport extends App {
       }
     }
     val unitMentions = mentions.filter(_ matches "UnitRelation")
-    println("Unit setting mentions: ")
+    println("Unit mentions: ")
     for (m <- unitMentions) {
       println("----------------")
       println(m.text)
@@ -107,7 +107,7 @@ object ExtractAndExport extends App {
 
     // 4. Export to all desired formats
     exportAs.foreach { format =>
-        val exporter = getExporter(format, s"$outputDir/${file.getName}")
+        val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + format, s"_mentions.${format}")}")
         exporter.export(mentions)
         exporter.close() // close the file when you're done
     }
