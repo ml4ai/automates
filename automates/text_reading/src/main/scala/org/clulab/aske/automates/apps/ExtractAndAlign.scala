@@ -22,7 +22,7 @@ import org.clulab.odin.serialization.json.JSONSerializer
 import java.util.UUID.randomUUID
 
 import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
-import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalVariable}
+import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVariable, GlobalVariable}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -35,8 +35,9 @@ object ExtractAndAlign {
   val GL_COMMENT = "global_comment"
   val TEXT_VAR = "text_var" // stores information about each variable, e.g., identifier, associated description, arguments, and when available location in the original document (e.g., in the pdf)
   val GLOBAL_VAR = "gvar" // stores ids of text variables that are likely different instances of the same global variable
-  val GLOBAL_EQ_VAR = "gEqVar"
+  val GLOBAL_EQ_VAR = "g_eq_var"
   val SOURCE = "src" // identifiers found in source code
+  val GLOBAL_SRC_VAR = "gl_src_var"
   val EQUATION = "equation" // an equation extracted from the original document
   val SVO_GROUNDING = "SVOgrounding"
   // Below, "via concept" means the arg in question is attached to a variable concept,
@@ -98,6 +99,13 @@ object ExtractAndAlign {
 
     ): Value = {
 
+    //    for (v <- variableNames.get) {
+    //      println("=> " + v)
+    //    }
+    //
+    //    for (v <- variableShortNames.get) {
+    //      println("-> " + v)
+    //    }
 
 
     def mentionToIDedObjString(mention: Mention, mentionType: String): String = {
@@ -107,7 +115,7 @@ object ExtractAndAlign {
       val offsets = mention.tokenInterval.toString()
       val args = mentionType match {
         case INT_PARAM_SETTING_VIA_IDFR | INT_PARAM_SETTING_VIA_CNCPT => getIntParamSetArgObj(mention)
-        case PARAM_SETTING_VIA_IDFR | PARAM_SETTING_VIA_CNCPT | UNIT_VIA_IDFR | UNIT_VIA_CNCPT | TEXT_VAR =>  getArgObj(mention)
+        case PARAM_SETTING_VIA_IDFR | PARAM_SETTING_VIA_CNCPT | UNIT_VIA_IDFR | UNIT_VIA_CNCPT | TEXT_VAR => getArgObj(mention)
         case _ => ???
       }
 
@@ -125,29 +133,28 @@ object ExtractAndAlign {
     }
 
 
-
     def getGlobalEqVars(equationLinkElements: Seq[Value]): Seq[GlobalEquationVariable] = {
 
 
-        val groupedVars = equationLinkElements.groupBy(_.obj("content").str)
-        val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
-        for (gr <- groupedVars) {
-          val glVarID = randomUUID().toString()
-          val identifier = gr._1
-          // the commented out part is for debugging
-          val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str)// + "::" + le.obj("content").str)
-          val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
-          allEqGlobalVars.append(glVar)
+      val groupedVars = equationLinkElements.groupBy(_.obj("content").str)
+      val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
+      for (gr <- groupedVars) {
+        val glVarID = randomUUID().toString()
+        val identifier = gr._1
+        // the commented out part is for debugging
+        val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str) // + "::" + le.obj("content").str)
+        val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
+        allEqGlobalVars.append(glVar)
 
-        }
-
-        allEqGlobalVars
       }
 
+      allEqGlobalVars
+    }
 
-//    for (cs <- equationChunksAndSource.get) {
-//      println(cs._1 + " " + cs._2)
-//    }
+
+    //    for (cs <- equationChunksAndSource.get) {
+    //      println(cs._1 + " " + cs._2)
+    //    }
 
     // get all global variables before aligning
     val allGlobalVars = if (descriptionMentions.nonEmpty) {
@@ -160,13 +167,48 @@ object ExtractAndAlign {
     } else Seq.empty
 
 
-    val  (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else null
-    val globalEqVariables = getGlobalEqVars(eqLinkElements)
+    val (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else null
+    val globalEqVariables = if (eqLinkElements.nonEmpty) getGlobalEqVars(eqLinkElements) else null
 
-//    for (gev <- globalEqVariables) {
-//      println("gev " + gev)
-//    }
+    //    for (gev <- globalEqVariables) {
+    //      println("gev " + gev)
+    //    }
 
+
+
+    def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
+      val groupedVars = srcVars.groupBy(_.obj("content").str)
+      val allGlobalVars = new ArrayBuffer[GlobalSrcVariable]()
+      for (gr <- groupedVars) {
+        val glVarID = randomUUID().toString()
+        val identifier = gr._1
+        val srcVarObjs = gr._2.map(_.obj("uid").str)
+        val glVar = new GlobalSrcVariable(glVarID, identifier, srcVarObjs)
+        allGlobalVars.append(glVar)
+      }
+      allGlobalVars
+    }
+    def getSrcLinkElements(srcVars: Seq[String]): Seq[Value] = {
+      srcVars.map { varName =>
+        val split = varName.split("::")
+        ujson.Obj(
+          "uid" -> randomUUID.toString,
+          "source" -> split(1),
+          "content" -> split(2),
+          "model" -> split(0)
+        )
+      }
+    }
+
+
+    val srcLinkElements = if (variableNames.nonEmpty) getSrcLinkElements(variableNames.get) else null
+
+
+    val globalSrcVars = if (srcLinkElements.nonEmpty) getGlobalSrcVars(srcLinkElements) else null
+
+
+
+    for (g <- globalSrcVars) println("here: " + g)
 
 
     // =============================================
@@ -181,7 +223,7 @@ object ExtractAndAlign {
       unitMentions,
       globalEqVariables,
       allCommentGlobalVars,
-      variableShortNames,
+      globalSrcVars,
       SVOgroundings,
       numAlignments,
       numAlignmentsSrcToComment,
@@ -191,6 +233,18 @@ object ExtractAndAlign {
     var outputJson = ujson.Obj()
 
     val linkElements = getLinkElements(grfn, allGlobalVars, allCommentGlobalVars, equationChunksAndSource, variableNames, parameterSettingMention, intervalParameterSettingMentions,  unitMentions)
+
+    def mkGlobalSrcVarLinkElement(glv: GlobalSrcVariable): String = {
+      ujson.Obj(
+      "uid" -> glv.id,
+        "content" -> glv.identifier,
+        "identifier_objects" -> glv.srcVarObjStrings
+      ).toString()
+
+    }
+
+    linkElements(SOURCE) = srcLinkElements.map(_.toString())
+    linkElements(GLOBAL_SRC_VAR) = globalSrcVars.map(glv => mkGlobalSrcVarLinkElement(glv))
 
 
 
@@ -424,7 +478,7 @@ object ExtractAndAlign {
     unitMentions: Option[Seq[Mention]],
     globalEqVariables: Seq[GlobalEquationVariable],
     allCommentGlobalVars: Seq[GlobalVariable],
-    variableShortNames: Option[Seq[String]],
+    globalSrcVars: Seq[GlobalSrcVariable],
     SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]],
     numAlignments: Option[Int],
     numAlignmentsSrcToComment: Option[Int],
@@ -433,8 +487,8 @@ object ExtractAndAlign {
 
     val alignments = scala.collection.mutable.HashMap[String, Seq[Seq[Alignment]]]()
 
-    if (allCommentGlobalVars.nonEmpty && variableShortNames.isDefined) {
-      val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames.get.map(_.toLowerCase), allCommentGlobalVars.map(_.identifier).map(_.toLowerCase()))
+    if (allCommentGlobalVars.nonEmpty && globalSrcVars.nonEmpty) {
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(globalSrcVars.map(_.identifier.toLowerCase), allCommentGlobalVars.map(_.identifier).map(_.toLowerCase()))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
     }
@@ -748,17 +802,17 @@ object ExtractAndAlign {
 
 
 
-
-    // Repeat for src code variables
-    if (variableNames.isDefined) {
-      linkElements(SOURCE) = variableNames.get.map { varName =>
-        ujson.Obj(
-          "uid" -> randomUUID.toString,
-          "source" ->  varName.split("::")(1),
-          "content" -> varName.split("::")(2)
-        ).toString()
-      }
-    }
+// moved this out
+//    // Repeat for src code variables
+//    if (variableNames.isDefined) {
+//      linkElements(SOURCE) = variableNames.get.map { varName =>
+//        ujson.Obj(
+//          "uid" -> randomUUID.toString,
+//          "source" ->  varName.split("::")(1),
+//          "content" -> varName.split("::")(2)
+//        ).toString()
+//      }
+//    }
 
     def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
 //      println("GLVAR line 764: " + glv)
@@ -1032,9 +1086,10 @@ object ExtractAndAlign {
     val hypotheses = new ArrayBuffer[ujson.Obj]()
 
     // Src Variable -> Comment
-    if (linkElements.contains(SOURCE) && linkElements.contains(GL_COMMENT)) {
+    if (linkElements.contains(GLOBAL_SRC_VAR) && linkElements.contains(GL_COMMENT)) {
       println("has source and comment")
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(SOURCE), linkElements(GL_COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
+
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_SRC_VAR), linkElements(GL_COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
     }
 
     if (linkElements.contains(GLOBAL_VAR)) {

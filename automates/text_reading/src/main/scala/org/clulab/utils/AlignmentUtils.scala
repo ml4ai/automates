@@ -26,6 +26,8 @@ object AlignmentJsonUtils {
 
   case class GlobalEquationVariable(id: String, identifier: String, eqVarObjStrings: Seq[String])
 
+  case class GlobalSrcVariable(id: String, identifier: String, srcVarObjStrings: Seq[String])
+
   /**get arguments for the aligner depending on what data are provided**/
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): alignmentArguments = {
 
