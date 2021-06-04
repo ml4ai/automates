@@ -93,18 +93,18 @@ def call_ex1_gromet() -> Gromet:
              box=UidBox("B:main"),
              type=UidType("T:PortInput"),
              value_type=UidType("T:Float"),
-             name=None, value=None, metadata=None),
+             name="a", value=None, metadata=None),
         Port(uid=UidPort("P:main.in.b"),
              box=UidBox("B:main"),
              type=UidType("T:PortInput"),
              value_type=UidType("T:Float"),
-             name=None, value=None, metadata=None),
+             name="b", value=None, metadata=None),
         # main output
         Port(uid=UidPort("P:main.out.result"),
              box=UidBox("B:main"),
              type=UidType("T:PortOutput"),
              value_type=UidType("T:Float"),
-             name=None, value=None, metadata=None),
+             name="result", value=None, metadata=None),
 
         # foo_call_1 input
         PortCall(uid=UidPort("P:foo_call_1.in.x_1"),
@@ -115,8 +115,8 @@ def call_ex1_gromet() -> Gromet:
                  name=None, value=None, metadata=None),
         # foo_call_1 output
         PortCall(uid=UidPort("P:foo_call_1.out.fo_1"),
-                 box=UidBox("B:foo_call"),
-                 call=UidPort("P:bar.out.fo"),
+                 box=UidBox("B:foo_call_1"),
+                 call=UidPort("P:foo.out.fo"),
                  type=UidType("T:PortOutput"),
                  value_type=UidType("T:Float"),
                  name=None, value=None, metadata=None),
@@ -130,8 +130,8 @@ def call_ex1_gromet() -> Gromet:
                  name=None, value=None, metadata=None),
         # foo_call_2 output
         PortCall(uid=UidPort("P:foo_call_2.out.fo_2"),
-                 box=UidBox("B:foo_call"),
-                 call=UidPort("P:bar.out.fo"),
+                 box=UidBox("B:foo_call_2"),
+                 call=UidPort("P:foo.out.fo"),
                  type=UidType("T:PortOutput"),
                  value_type=UidType("T:Float"),
                  name=None, value=None, metadata=None),
@@ -141,18 +141,18 @@ def call_ex1_gromet() -> Gromet:
              box=UidBox("B:main_exp"),
              type=UidType("T:PortInput"),
              value_type=UidType("T:Float"),
-             name=None, value=None, metadata=None),
+             name="a", value=None, metadata=None),
         Port(uid=UidPort("P:main_exp.in.b"),
              box=UidBox("B:main_exp"),
              type=UidType("T:PortInput"),
              value_type=UidType("T:Float"),
-             name=None, value=None, metadata=None),
+             name="b", value=None, metadata=None),
         # main_exp output
         Port(uid=UidPort("P:main_exp.out.result"),
              box=UidBox("B:main_exp"),
              type=UidType("T:PortOutput"),
              value_type=UidType("T:Float"),
-             name=None, value=None, metadata=None),
+             name="result", value=None, metadata=None),
 
 
         # foo input
@@ -170,14 +170,14 @@ def call_ex1_gromet() -> Gromet:
 
         # bar_call input
         PortCall(uid=UidPort("P:bar_call.in.y_1"),
-                 box=UidBox("B:foo_call"),
+                 box=UidBox("B:bar_call"),
                  call=UidPort("P:bar.in.y"),
                  type=UidType("T:PortInput"),
                  value_type=UidType("T:Float"),
                  name=None, value=None, metadata=None),
         # bar_call output
         PortCall(uid=UidPort("P:bar_call.out.bo_1"),
-                 box=UidBox("B:foo_call"),
+                 box=UidBox("B:bar_call"),
                  call=UidPort("P:bar.out.bo"),
                  type=UidType("T:PortOutput"),
                  value_type=UidType("T:Float"),
@@ -207,7 +207,7 @@ def call_ex1_gromet() -> Gromet:
              box=UidBox("B:bar_exp"),
              type=UidType("T:PortOutput"),
              value_type=UidType("T:Float"),
-             name=None, value=None, metadata=None),
+             name="result", value=None, metadata=None),
     ]
 
     # -- main --
@@ -272,7 +272,7 @@ def call_ex1_gromet() -> Gromet:
 
     foo = Function(uid=UidBox("B:foo"),
                    type=None,
-                   name="bar",
+                   name="foo",
                    ports=[UidPort("P:foo.in.x"),
                           UidPort("P:foo.out.fo")],
 
