@@ -191,87 +191,69 @@ class TypeDeclaration(GrometElm):
 
 # Atomics
 
-@dataclass
-class Atomic(Type):
-    pass
+# Assumed "built-in" Atomic Types:
+#   Any, Void (Nothing)
+#   Number
+#     Integer
+#     Real
+#       Float
+#   Bool
+#   Character
+#   Symbol
 
-
 # @dataclass
-# class Any(Atomic):
-#     pass
-#
-#
-# @dataclass
-# class Nothing(Atomic):
-#     pass
-#
-#
-# @dataclass
-# class Number(Atomic):
-#     pass
-#
-#
-# @dataclass
-# class Integer(Number):
-#     pass
-#
-#
-# @dataclass
-# class Real(Number):
-#     pass
-#
-#
-# @dataclass
-# class Float(Real):
-#     pass
-#
-#
-# @dataclass
-# class Boolean(Atomic):
-#     pass
-#
-#
-# @dataclass
-# class Character(Atomic):
-#     pass
-#
-#
-# @dataclass
-# class Symbol(Atomic):
+# class Atomic(Type):
 #     pass
 
 
 # Composites
 
-@dataclass
-class Composite(Type):
-    pass
+# @dataclass
+# class Composite(Type):
+#     pass
 
 
 # Algebra
 
-# @dataclass
-# class Prod(Composite):
-#     element_type: List[UidType]
-#     cardinality: Union[int, None]
-#
-#
-# @dataclass
-# class String(Prod):
-#     element_type: List[UidType]
-#
-#
-# @dataclass
-# class Sum(Composite):
-#     element_type: List[UidType]
-#
-#
-# @dataclass
-# class NamedAttribute(Composite):
-#     name: str
-#     element_type: UidType
-#
-#
+@dataclass
+class Prod(Type):
+    """
+    A Product type constructor.
+    The elements of the element_type list are assumed to be
+    present in each instance.
+    """
+    cardinality: Union[int, None]
+    element_type: List[UidType]
+
+
+@dataclass
+class String(Prod):
+    """
+    A type representing a sequence (Product) of Characters.
+    """
+    element_type: List[UidType] = UidType("T:Character")
+
+
+@dataclass
+class Sum(Type):
+    """
+    A Sum type constructor.
+    The elements of the element_type list are assumed to be variants
+    forming a disjoint union; only one variant is actualized in each
+    instance.
+    """
+    element_type: List[UidType]
+
+
+@dataclass
+class NamedAttribute(Type):
+    """
+    A named attribute of a Product composite type.
+    """
+    name: str
+    element_type: UidType
+
+
 # @dataclass
 # class Map(Prod):
 #     element_type: List[Tuple[UidType, UidType]]
