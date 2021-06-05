@@ -64,7 +64,7 @@ class TestAlign extends FlatSpec with Matchers {
 //  val grfnFile = new File("/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/2003-double-epidemic-grfn.json")
 //  val grfn = ujson.read(grfnFile.readString())
 
-  val payloadPath = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/2003-double-epidemic-sample-payload.json"
+  val payloadPath = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/double-epidemic-chime-align_payload.json"
   val payloadFile = new File(payloadPath)
 
   val payloadJson = ujson.read(payloadFile.readString())
@@ -258,6 +258,7 @@ class TestAlign extends FlatSpec with Matchers {
     for (i <- gr._2.sortBy(_.obj("score").num).reverse) {
       println(i)
     }
+    println("----------")
   }
 
   val allIndirectLinksForITLinks = findIndirectLinks(it_links_not_grouped, links, "comment_to_gvar", "source_to_comment", 2)
@@ -362,9 +363,10 @@ class TestAlign extends FlatSpec with Matchers {
       val linksOfGivenType = allIndirectLinksForITLinks(key).map(_.split("::").last)
       println("links of a given type comment: " + linksOfGivenType.mkString("||"))
       val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
-      score += 1/rank
+      val scoreUpdate = if (rank > 0) 1/rank  else 0
+      score += scoreUpdate
 
-    } else {
+    } else if (it_links.contains(key)) {
 //      var rank = 0
       // which element in this link type we want to check
       val whichLink = key match {
@@ -376,9 +378,12 @@ class TestAlign extends FlatSpec with Matchers {
       println("links of a given type: " + linksOfGivenType)
       val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
       println("key/rank: " + key +  rank)
-      score += 1/rank
+      val scoreUpdate = if (rank > 0) 1/rank  else 0
+      score += scoreUpdate
 
 
+    } else {
+      println("missing link")
     }
 
   }

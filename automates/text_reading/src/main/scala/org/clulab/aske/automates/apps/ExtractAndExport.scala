@@ -4,7 +4,7 @@ import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.{DataLoader, TextRouter}
+import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
@@ -33,10 +33,11 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/toy_document_tex/dir"
+  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/toy_article/cosmos_version"
   val outputDir = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/toy_document_tex/dir"
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+//  val dataLoader = new CosmosJsonDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
