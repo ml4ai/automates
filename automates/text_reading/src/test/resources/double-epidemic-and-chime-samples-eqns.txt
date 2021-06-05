@@ -27,3 +27,14 @@ a = 0.52
 a_P = 0.12
 b = 0.105
 1/a + 1/b = 11.44
+S_{t+1} = S_t - \beta S_t I_t
+I_{t+1} = I_t + \beta S_t I_t - \gamma I_t
+R_{t+1} = R_t + \gamma I_t
+\beta = \tau \times c
+R_0 = \beta / \gamma
+g = 2^{1/T_d} - 1
+g = \beta S - \gamma
+\beta = (g + \gamma)
+PPE ~ use ~ of ~ an ~ item ~ on ~ a ~ particular ~ day = \frac{(\# ~ of ~ patients ~ that ~ day) (\# ~ of ~ daily ~ contacts ~ per ~ patient)}{\# ~ of ~ patient ~ contacts ~ before ~ discarding ~ item}
+Average ~ \# ~ new ~ PPE ~ item ~ per ~ day = \frac{(\# ~ of ~ patients ~ that ~ day) (\# ~ of ~ shifts ~ per ~ day)}{(\# ~ of ~ patients ~ per ~ provider) (\# ~ of ~ shifts ~ item ~ is ~ used)}
+
