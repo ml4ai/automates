@@ -20,6 +20,8 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
     vars:
+      paramSetAction: processParamSetting
+      paramIntAction: processParamSettingInt
       priority: 5
 
   - import: "org/clulab/aske_automates/grammars/units.yml"
