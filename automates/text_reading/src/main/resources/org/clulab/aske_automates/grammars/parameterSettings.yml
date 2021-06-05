@@ -17,6 +17,17 @@ rules:
       variable:Identifier = nsubj
       value:Value = dobj
 
+  - name: var-word-equals_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "c was equal to 30 people."
+    action: ${paramSetAction}
+    pattern: |
+      trigger = [lemma='equal']
+      variable:Identifier = nsubj
+      value:Value = nmod_to nummod
+
   - name: var-equals_value2
     label: ParameterSetting
     priority: ${priority}
@@ -61,6 +72,18 @@ rules:
       valueLeastIncl:Value = nmod_between
       valueMostIncl:Value = nmod_between conj_and
 
+  - name: interval_between
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "When the basic reproductive number is between 0.5 and 1..."
+    pattern: |
+      trigger = [lemma='between']
+      variable:Phrase = <case nsubj
+      valueLeastIncl:Value = <case
+      valueMostIncl:Value = <case conj_and
+
   - name: var_ranges
     label: IntervalParameterSetting
     priority: ${priority}
@@ -69,11 +92,11 @@ rules:
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
     pattern: |
       trigger = [lemma='range']
-      variable:Identifier = nsubj
-      valueLeastIncl:Value = nmod_from
-      valueMostIncl:Value = nmod_from nmod
+      variable:Phrase = nsubj
+      valueLeastIncl:Value = nmod_from | nmod_between nummod
+      valueMostIncl:Value = nmod_from nmod | nmod_between nummod conj_and
 
-#
+
   - name: var-vary_between_symbols_interval
     label: IntervalParameterSetting
     priority: ${priority}
@@ -114,9 +137,9 @@ rules:
     action: ${paramSetAction}
     example: "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
     pattern: |
-      trigger = [word=/(?i)^hard-coded/]
-      variable:Phrase = nsubj
-      value:Value = /nmod_to/
+      trigger = [word=/(?i)^hard-code|set/]
+      variable:Phrase = nsubj | nsubjpass
+      value:Value = /nmod_to/ nummod?
 
 
   - name: var_taken_as
@@ -189,4 +212,4 @@ rules:
     action: ${paramSetAction}
     example: "We expect the time T of 5-10 days"
     pattern: |
-      @variable:Identifier [word="of"] @value:Value (?=@unit:Unit)
+      (@variable:Identifier | @variable:Phrase) [word="of"] @value:Value (?=@unit:Unit)
