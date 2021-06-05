@@ -119,6 +119,56 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  val t3d = "Leaf area was calculated by summing rectangular area of each leaf (product of leaf length and maximum width) multiplied by a factor of 0.74, which was obtained by analyzing the ratio of rectangular area to real area, measured by an AM300 (ADC BioScientific Ltd., UK)."
+  failingTest should s"find functions from t3d: ${t3d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Leaf area" -> Seq("rectangular area of each leaf (product of leaf length and maximum width) multiplied by a factor of 0.74"), // NOTE: how can be extract the whole phrase?? (parentheses))
+      "rectangular area of each leaf" -> Seq("leaf length", "maximum width"),
+      "a factor of 0.74" -> Seq("ratio of rectangular area to real area")
+    )
+    val mentions = extractMentions(t3d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t4d = "where τ is the fraction of net radiation transmission reached soil surface;"
+  failingTest should s"find functions from t4d: ${t4d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "τ" -> Seq("net radiation transmission reached soil surface")
+    )
+    val mentions = extractMentions(t4d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t5d = "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
+  failingTest should s"find functions from t5d: ${t5d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "κ" -> Seq("foliage orientation", "solar zenith angle") // note: 0.45 is wrongly captured as one of the inputs here due to bad parsing.
+    )
+    val mentions = extractMentions(t5d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t6d = "fs is fraction of leaf senescence, defined as the difference between unit and the ratio of chlorophyll content at the maturity stage (Cc,m) to that at the filling stage (Cc,f), i.e. (1.0 - Cc,m//Cc,f)."
+  failingTest should s"find functions from t6d: ${t6d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "fs" -> Seq("leaf senescence"),
+      "fs" -> Seq("unit and the ratio of chlorophyll content at the maturity stage (Cc,m) to that at the filling stage (Cc,f)") // note: expansion stops when there's a parentheses, how could that be fixed?
+    )
+    val mentions = extractMentions(t6d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t7d = "Although the difference of total ET between two years was about 10%, the difference of total ET per LAI was less than 3%, suggesting that inter-annual difference of ET was primarily related to LAI."
+  failingTest should s"find functions from t7d: ${t7d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "about 10%" -> Seq("total ET"), // note: should it be just total ET, or total ET between two years?
+      "less than 3%"-> Seq("total ET per LAI"), // fixme: simple-np rule is not working properly here
+      "inter-annual difference of ET"-> Seq("LAI")
+    )
+    val mentions = extractMentions(t7d)
+    testFunctionEvent(mentions, desired)
+  }
+
   // Tests from Global estimation of evapotranspiration using a leaf area index-based surface energy and water balance model
   val t1e = "calculating total E (E0) as the sum of the canopy transpiration and soil evaporation, assuming the absence of soil water stress"
   failingTest should s"find functions from t1e: ${t1e}" taggedAs(Somebody) in {

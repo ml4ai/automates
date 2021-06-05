@@ -202,7 +202,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   /** Keeps the longest mention for each group of overlapping mentions **/ // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val (functions, other) = mentions.partition(_.label == "Function")
+    val (functions, other) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    for (f <- functions) println(f.text ++ f.arguments.keys.mkString("||"))
+    // distinguish between EventMention and RelationMention in functionMentions
+    val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
       (k, v) <- other.groupBy(m => (m.sentence, m.label))
@@ -210,14 +213,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // for overlapping mentions starting at the same token, keep only the longest
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    val fns: Iterable[Mention] = for {
-      // if the label is "Function", find mentions of the same trigger and sentence overlap
-      (k, v) <- functions.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
+    val ems: Iterable[Mention] = for {
+      (k, v) <- functionEm.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
       (a, b) <- v.groupBy(m => m.arguments("output").head.tokenInterval)
       m <- b
       longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    mns.toVector.distinct ++ fns.toVector.distinct
+
+    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm
   }
 
 
@@ -749,7 +752,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       toReturn.append(newFunctions)
     }
 
-    toReturn ++ other
+    toReturn.filter(_.arguments.nonEmpty) ++ other
   }
 
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {

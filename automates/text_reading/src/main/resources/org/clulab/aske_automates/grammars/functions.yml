@@ -1,5 +1,8 @@
 vars: org/clulab/aske_automates/grammars/vars.yml
 
+# todo: write new token rules when dependency rules can't extract arguments correctly due to bad parsing
+# todo: allow rules to extract function fragments (input/output) (and check if they overly extract mentions; if they do, fix them)
+
 rules:
 
   - name: trigger1_by # modify, influence, govern, limit, control, dominate is the trigger for this rule
@@ -22,9 +25,9 @@ rules:
     pattern: |
       trigger = [word = /${functionTrigger2}/] (?= "of")
       input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos | nmod_in appos
-      output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod
+      output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod | <dep
 
-  - name: trigger3_from # estimate, calculate, compute, determine, predict is the trigger for this rule
+  - name: trigger3 # estimate, calculate, compute, determine, predict is the trigger for this rule
     label: Function
     priority: ${priority}
     type: dependency
@@ -32,7 +35,7 @@ rules:
     example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
     pattern: |
       trigger = [lemma = /${functionTrigger3}/]
-      input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of
+      input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of | nmod_according_to
       output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
 
   - name: trigger4_of_to # ratio, fraction is the trigger for this rule
@@ -44,7 +47,7 @@ rules:
     pattern: |
       trigger = [word = /${functionTrigger4}/] (?= "of")
       input:Phrase+ = nmod_of | nmod_at? nmod_to
-      output:Phrase = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj
+      output:Phrase = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj | <nsubj
 
   - name: trigger5_by_Ving # potential pattern
     label: Function
@@ -53,9 +56,9 @@ rules:
     action: ${action}
     example: "The evaporation from the plant surfaces Ep is predicted by using an empirical relation based on local data..."
     pattern: |
-      trigger = [lemma = /${functionTrigger5}/]
-      input:Phrase+ = advcl_by (dobj | nmod_by)
-      output:Phrase = nsubjpass | <acl
+      trigger = (?<= [lemma = /${functionTrigger5}/] [word = "by"]) [word = /.*/]
+      input:Phrase+ = dobj | nmod_by
+      output:Phrase = <advcl_by nsubjpass | <acl
 
   - name: difference_between
     label: Function
@@ -65,8 +68,8 @@ rules:
     example: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
     pattern: |
       trigger = [word = "difference"]
-      input:Phrase+ = nmod_between (conj_and)?
-      output:Phrase = (nsubj | <nmod_from nsubjpass | <nmod_as <acl nsubj)
+      input:Phrase+ = nmod_of | nmod_between (conj_and)?
+      output:Phrase = nsubj | <nmod_from nsubjpass | <nmod_as <acl nsubj | <nsubj
       # note: if the sequence of inputs matter (if it has to be "input1 - input2"), the rule needs to be fixed.
 
   - name: subtract_from
@@ -90,8 +93,7 @@ rules:
     pattern: |
       trigger = [lemma = "multiply"]
       input:Phrase+ = dobj | nmod_by
-      output:Phrase? = <advcl_by nsubjpass
-
+      output:Phrase = <advcl_by nsubjpass
 
   #covidactnow
 
@@ -103,8 +105,8 @@ rules:
     example: "Initial conditions for total cases and total exposed are calculated by dividing hospitalizations by the hospitalization rate."
     pattern: |
       trigger = [lemma = "divide"]
-      input:Phrase+ = (dobj | <acl | nmod_by)
-      output:Phrase = (<advcl_by nsubjpass | <acl <nmod_as (nmod_since | <acl))
+      input:Phrase+ = dobj | <acl | nmod_by
+      output:Phrase = nsubjpass | <acl <nmod_as (nmod_since | <acl)
 
   #double_epidemic
 
@@ -238,14 +240,14 @@ rules:
       input:Phrase+ = <acl <nsubj | nsubj
       output:Phrase = dobj
 
-  - name: related_to
+  - name: related_or_referred_to
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "The only factors affecting ETo are climatic parameters..."
     pattern: |
-      trigger = [word = "related"] (?= "to")
+      trigger = [word = "related"]|[word = "referred"] (?= "to")
       input:Phrase+ = nmod_to nmod_through?
       output:Phrase = nsubj | nsubjpass
 
@@ -316,30 +318,6 @@ rules:
       input:Phrase+ = <acl conj_and?
       output:Phrase = advcl_in nmod_to
 
-  # function rules allowing for partial extraction
-
-  - name: compute_output
-    label: PartialFunction
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "It also computes the root water uptake of each soil layer."
-    pattern: |
-      trigger = [lemma = "compute"]
-      input:Phrase* = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of
-      output:Phrase? = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
-
-  - name: required_as_input
-    label: PartialFunction
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "The daily weather values as well as all soil properties and current soil water content, by layer, are required as input."
-    pattern: |
-      trigger = [lemma = "require"] (?= [word = "as"] ([word = "input"]|[word = "inputs"]))
-      input:Phrase+ = nsubjpass conj_and? | nmod_as
-      output:Phrase? = nmod_for
-
   - name: effect_of_input_on_output
     label: Function
     priority: ${priority}
@@ -350,17 +328,6 @@ rules:
       trigger = [lemma = "effect"]
       input:Phrase+ = nmod_of
       output:Phrase = nmod_on
-
-  - name: lost
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "More than 90% of water used in agriculture is lost by soil evaporation and crop transpiration (Rana and Katerji, 2000)."
-    pattern: |
-      trigger = (?<= [word = "lost"] [word = "by"]) [word = /.*/]{,2} ([word = "and"] [word = /.*/]{,2})?
-      input:Phrase = <nmod_agent nsubjpass nmod_of
-      output:Phrase = <nmod_agent
 
   - name: factors_controlling_output
     label: Function
@@ -373,13 +340,80 @@ rules:
       input:Phrase+ = <acl <nsubj dobj
       output:Phrase = dobj
 
+  # function rules allowing for partial extraction
 
-  # note: how to write a token rule for function extraction? (with multiple inputs)
-  #  - name: minus_token_rule # needed due to bad parsing
-  #    label: Function
-  #    priority: ${priority}
-  #    type: token
-  #    action: ${action}
-  #    example: "e.g., the equation ΣEs1 = ΣEs1 - P is interpreted to mean that a new value of ΣEs1 is equal to the previously calculated value of ΣEs1 minus P."
-  #    pattern: |
-  #      @output:Phrase [lemma = "be"] [word = "equal"] [word = "to"] [word = /.*/]+ @input:Phrase [word = "minus"] @input:Phrase
+  - name: compute_output
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "It also computes the root water uptake of each soil layer."
+    pattern: |
+      trigger = [lemma = "compute"]
+      input:Phrase* = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of
+      output:Phrase? = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
+
+  - name: required_as_input
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The daily weather values as well as all soil properties and current soil water content, by layer, are required as input."
+    pattern: |
+      trigger = [lemma = "require"] (?= [word = "as"] ([word = "input"]|[word = "inputs"]))
+      input:Phrase+ = nsubjpass conj_and? | nmod_as
+      output:Phrase? = nmod_for
+
+  - name: average_fragment
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Each day’s observations were averaged separately;"
+    pattern: |
+      trigger = [lemma = average]
+      input:Phrase+ = nsubjpass
+
+  - name: the_resulting_values
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "the resulting average values of cpT were plotted against those of Lq, and a line was fitted by eye to find the best value of cpΔT/LΔ."
+    pattern: |
+      trigger = [word = "resulting"]
+      output:Phrase+ = <amod
+  # fixme: when trigger and output overlaps, extraction does not happen.
+
+  # rules denoting change in status (lost, reduce, increase, etc.) - are these count as function relations??
+
+  - name: lost_by # needs to see if this rule is a viable one
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "More than 90% of water used in agriculture is lost by soil evaporation and crop transpiration (Rana and Katerji, 2000)."
+    pattern: |
+      trigger = (?<= [word = "lost"] [word = "by"]) [word = /.*/]{,2} ([word = "and"] [word = /.*/]{,2})?
+      input:Phrase = <nmod_agent nsubjpass nmod_of
+      output:Phrase = <nmod_agent
+
+  - name: reduce_when # needs to see if this rule is a viable one
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Previous studies indicated that maize height and LAI would reduce when suffering water deficit during the early growing stage (Allen et al., 1998; Kang et al., 2000)."
+    pattern: |
+      trigger = (?<= [lemma = "reduce"] [word = "when"]) [word = /.*/]+
+      input:Phrase+ = <advcl nsubj
+      output:Phrase = <advcl aux
+
+  - name: minus_token_rule # todo: extraction from the dependency rule needs to be filtered out
+    label: Function
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "e.g., the equation ΣEs1 = ΣEs1 - P is interpreted to mean that a new value of ΣEs1 is equal to the previously calculated value of ΣEs1 minus P."
+    pattern: |
+      (?<output> [tag = /JJ/]? [tag = /^N/] ([tag = /IN/] [tag = /^N/]+)?) [lemma = "be"] ([word = "equal"] [word = "to"])? [word = "the"] (?<input> [tag = /RB/]? [tag = /VBN/]? [tag = /^N/] ([tag = /IN/] [tag = /^N/]+)?) [word = "minus"] (?<input> [tag = /FW|^N/])

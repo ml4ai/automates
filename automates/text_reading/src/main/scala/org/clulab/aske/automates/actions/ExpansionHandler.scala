@@ -23,13 +23,11 @@ class ExpansionHandler() extends LazyLogging {
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (partialFunc, otherOther) = other.partition(_.label == "PartialFunction")
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
-    val partialFunc_res = partialFunc.flatMap(expandArgs(_, state, validArgs, "function"))
-    val other_res = otherOther.flatMap(expandArgs(_, state, validArgs, "standard"))
+    val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))
 
     // Useful for debug
-    function_res ++ partialFunc_res ++ other_res
+    function_res ++ other_res
   }
 
   def expandArgs(mention: Mention, state: State, validArgs: List[String], expansionType: String): Seq[Mention] = {
@@ -180,7 +178,7 @@ class ExpansionHandler() extends LazyLogging {
     // Expand on outgoing deps
     val interval2 = traverseOutgoingLocal(incomingExpanded, maxHops, maxHopLength, stateFromAvoid, entity.sentenceObj, expansionType)
 
-    val outgoingExpanded = incomingExpanded.asInstanceOf[TextBoundMention].copy(tokenInterval = interval2)
+    val outgoingExpanded = incomingExpanded.asInstanceOf[TextBoundMention].copy(tokenInterval = interval2, foundBy = entity.foundBy + "++expanded")
 //    println("\noriginal:  " + entity.text + " " + entity.labels.mkString("") + " " + entity.foundBy)
 //    println("expanded:  " + incomingExpanded.text + " " + incomingExpanded.labels.mkString("") ++ incomingExpanded.foundBy)
 
@@ -464,6 +462,7 @@ object ExpansionHandler {
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
+    "cop".r
     //"^nmod_with$".r,
     //    "^nmod_without$".r,
     //    "^nmod_except$".r
@@ -520,15 +519,18 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
-    "nmod_by".r,
+//    "nmod_by".r,
 //    "nummod".r,
 //    "^nsubj".r,
     "^punct".r,
     "^ref$".r,
-    "appos".r
+    "appos".r,
+    "xcomp".r,
   )
 
-  val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex]()
+  val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](
+    "cop".r
+  )
 
   // regexes describing valid outgoing dependencies
   val VALID_OUTGOING_FUNCTION = Set[scala.util.matching.Regex](
@@ -542,6 +544,7 @@ object ExpansionHandler {
 //    "^nmod_of".r,
     "nmod_under".r,
     "nmod_in".r
+//    "aux".r
   )
 
   def apply() = new ExpansionHandler()

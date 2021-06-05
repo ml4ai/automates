@@ -86,7 +86,6 @@ class OdinEngine(
     val events =  engine.extractFrom(doc, initialState).toVector
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
     val (descriptionMentions, other) = events.partition(_.label.contains("Description"))
-
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     (loadableAttributes.actions.keepLongest(other) ++ untangled).toVector
   }

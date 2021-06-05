@@ -16,5 +16,4 @@
     - ConjDescriptionType2
   - ParameterSetting
   - IntervalParameterSetting
-  - Function:
-    - PartialFunction
+  - Function
