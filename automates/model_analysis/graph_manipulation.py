@@ -524,5 +524,12 @@ class Results:
     tree: TreeNode = TreeNode()
 
 
+@dataclass
+class CF:
+    node: str = ""
+    value_assignment: str = ""
+    sub_model = ""
+
+
 class IDANotIdentifiable(Exception):
     pass
