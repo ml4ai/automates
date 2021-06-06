@@ -62,13 +62,13 @@ def intra_model_SBML_PetriNetClassic_gromet() -> Gromet:
         Junction(uid=UidJunction("kf_vb_bind_1"),
                  type=UidType("Rate"),
                  name="kf_vb_bind_1",
-                 value=Literal(uid=None, type=UidType("T:Integer"), value=Val("0.0000001"), name=None, metadata=None),
+                 value=Literal(uid=None, type=UidType("T:Float"), value=Val("0.0000001"), name=None, metadata=None),
                  value_type=UidType("T:Float"),
                  metadata=None),
         Junction(uid=UidJunction("kr_vb_bind_1"),
                  type=UidType("Rate"),
                  name="kr_vb_bind_1",
-                 value=Literal(uid=None, type=UidType("T:Integer"), value=Val("0.0000001"), name=None, metadata=None),
+                 value=Literal(uid=None, type=UidType("T:Float"), value=Val("0.0000001"), name=None, metadata=None),
                  value_type=UidType("T:Float"),
                  metadata=None)
     ]
