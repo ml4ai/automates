@@ -5,152 +5,35 @@ import java.io.File
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.{OdinEngine, TestUtils}
-import org.clulab.aske.automates.TestUtils.jsonStringToDocument
 import org.clulab.aske.automates.apps.ExtractAndAlign
 import org.clulab.embeddings.word2vec.Word2Vec
-import org.clulab.grounding.sparqlResult
-import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
-import org.clulab.struct.Interval
 import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
 import org.scalatest.{FlatSpec, Matchers}
 import ujson.Value
 import ai.lum.common.FileUtils._
-import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDescriptionMentions, hasRequiredArgs}
-import org.clulab.aske.automates.grfn.GrFNParser
-
 import scala.collection.mutable.ArrayBuffer
 
 class TestAlign extends FlatSpec with Matchers {
 
 
-//  def getListOfFiles(dir: File, extensions: List[String]): List[File] = {
-//    dir.listFiles.filter(_.isFile).toList.filter { file =>
-//      extensions.exists(file.getName.endsWith(_))
-//    }
-//  }
-  println("HERE")
-  val config = ConfigFactory.load("/test.conf")
-  val numAlignments = 3//config[String]("apps.numAlignments")
-  val numAlignmentsSrcToComment = 1//config[String]("apps.numAlignmentsSrcToComment")
-  val scoreThreshold = 0.0 //config[String]("apps.scoreThreshold")
-
-  val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None) //todo: read this from test conf (after adding this to test conf)
-  lazy val proc = TestUtils.newOdinSystem(config).proc
-//  val srcDir: File = new File(getClass.getResource("/").getFile)
-//  println("-->" + srcDir)
-  val inputDir = new File(getClass.getResource("/").getFile)
-  val files = inputDir.listFiles()
-  for (f <- files) println(">>>", f)
-
-  println("++>>", inputDir)
+  // utils (todo: move to TestUtils)
 
 
 
-  // read in all related docs or maybe read in just a sample payload - that should make sense
-  // make it as close as possivle to the actual endpoint while still mainly testing the ExtractAndAlign.groundMentions method (to get texts of links, need to run in debug mode)
-  // the rest will be tested on paul's end
-  // for now just use sample json
+  def getLinksWithIdentifierStr(identifierName: String, allLinks: Seq[Value], inclId: Boolean): Seq[Value] = {
 
-  //lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
-  val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
+    // when searching all links, can't include element uid, but when we search off of intermediate node (e.g., comment identifier when searching for gvar to src code alignment for testing, have to use uid
+    val toReturn = if (inclId) {
+      allLinks.filter(l => l.obj("element_1").str == identifierName || l.obj("element_2").str == identifierName)
+    } else {
+      allLinks.filter(l => l.obj("element_1").str.split("::").last == identifierName || l.obj("element_2").str.split("::").last == identifierName)
 
-  println(alignmentHandler + "<+")
-  val serializerName = "AutomatesJSONSerializer"
-
-
-  val jsonFile = new File("/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/temporaryAlignmentOutputSample.json") //todo: this should be read in from inputDir
-  val json = ujson.read(jsonFile.readString()).obj("grounding")
-
-//  val grfnFile = new File("/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/2003-double-epidemic-grfn.json")
-//  val grfn = ujson.read(grfnFile.readString())
-
-  val payloadPath = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/double-epidemic-chime-align_payload.json"
-  val payloadFile = new File(payloadPath)
-
-  val payloadJson = ujson.read(payloadFile.readString())
-
-  val jsonObj = payloadJson.obj
-//
-//  val source = if (grfn.obj.get("source").isDefined) {
-//    Some(grfn.obj("source").arr.mkString(";"))
-//  } else None
-//  // Get source identifiers
-//  val identifierNames = Some(GrFNParser.getVariables(grfn))
-//  val variableShortNames = Some(GrFNParser.getVariableShortNames(identifierNames.get))
-//  // Get comment descriptions
-//  val commentDescriptionMentions = getCommentDescriptionMentions(localCommentReader, grfn, variableShortNames, source)
-//    .filter(m => hasRequiredArgs(m, "description"))
-
-  val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, false, serializerName)
-
-//  println(argsForGrounding + "<<<<===")
-
-  val groundings = ExtractAndAlign.groundMentions(
-    payloadJson,
-    argsForGrounding.identifierNames,
-    argsForGrounding.identifierShortNames,
-    argsForGrounding.descriptionMentions,
-    argsForGrounding.parameterSettingMentions,
-    argsForGrounding.intervalParameterSettingMentions,
-    argsForGrounding.unitMentions,
-    argsForGrounding.commentDescriptionMentions,
-    argsForGrounding.equationChunksAndSource,
-    argsForGrounding.svoGroundings,
-    false,
-    3,
-    alignmentHandler,
-    Some(numAlignments),
-    Some(2),//Some(numAlignmentsSrcToComment),
-    scoreThreshold,
-    appendToGrFN=false,
-    debug=true
-  )
-
-  val links = groundings.obj("links").arr
-  val gv = findGlobalVars(links)
-
-
-
-  val linkTypes = links.map(_.obj("link_type").str).distinct
-
-  // on the real test document, will have all link types
-  it should "have source code variable to comment links" in {
-    linkTypes.contains("source_to_comment") shouldBe true
+    }
+    toReturn
   }
-
-  it should "have comment to text variable links" in {
-    linkTypes.contains("comment_to_gvar") shouldBe true
-  }
-
-  it should "have equation variable to text variable links" in {
-    linkTypes.contains("equation_to_gvar") shouldBe true
-  }
-
-  it should "have text variable to unit (via identifier) links" in {
-    linkTypes.contains("gvar_to_unit_via_idfr") shouldBe true
-  }
-
-  it should "have text variable to parameter setting (via identifier) links" in {
-    linkTypes.contains("gvar_to_param_setting_via_idfr") shouldBe true
-  }
-
-  it should "have text variable to parameter setting (via concept) links" in {
-    linkTypes.contains("gvar_to_param_setting_via_cpcpt") shouldBe true
-  }
-
-  it should "have text variable to interval parameter setting (via identifier) links" in {
-    linkTypes.contains("gvar_to_interval_param_setting_via_idfr") shouldBe true
-  }
-
-  println(linkTypes + "<<")
-
-  val (withGvarLinkTypes, otherLinksTypes) = linkTypes.partition(_.contains("gvar"))
-
-
-//    // todo: find indirect link for a given gvar
 
   // todo: double-check returning the right number of indirect alignments per intermediate node
-  // return indirect links of a given type as a list of
+  // return indirect links of a given type as a list of strings per each intermediate node
   def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String, indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[String]] = {//Map[String, Map[String, ArrayBuffer[Value]]] = {
 
     val indirectLinkEndNodes = new ArrayBuffer[String]()
@@ -198,83 +81,161 @@ class TestAlign extends FlatSpec with Matchers {
     for (i <- indirectLinkEndNodes) println("END NODE: " + i)
 
 
-//    Map(indirectLinkType -> groupedByElement2)
+    //    Map(indirectLinkType -> groupedByElement2)
     Map(indirectLinkType -> indirectLinkEndNodes)
   }
 
 
-//  // todo: double-check returning the right number of indirect alignments per intermediate node
-  // this version is just for a seq of links
-//  def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String, indirectLinkType: String, nIndirectLinks: Int): Seq[Value] = {
-//
-//    val allIndirectLinks = new ArrayBuffer[Value]()
-//    // we have links for some var, e.g., I(t)
-//    // through one of the existing links, we can get to another type of node
-//    // probably already sorted - double-check
-//    val topNDirectLinkOfTargetTypeSorted = allDirectVarLinks.filter(_.obj("link_type").str==linkTypeToBuildOffOf).sortBy(_.obj("score").num).reverse.slice(0, nIndirectLinks)
-//    for (dl <- topNDirectLinkOfTargetTypeSorted) {
-//      // get intermediate node of indirect link - for comment_to_gvar link, it's element_1
-//      val intermNodeJustName = linkTypeToBuildOffOf match {
-//        case "comment_to_gvar" => dl("element_1").str
-//        case _ => ???
-//      }
-//
-//      val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true)
-//      for (il <- indirectLinksForIntermNode) {
-//        allIndirectLinks.append(il)
-//      }
-//
-//    }
-//    // return only the ones of the given type
-//    allIndirectLinks.filter(_.obj("link_type").str == indirectLinkType)
-//
-//  }
-//  //
 
-  def getLinksWithIdentifierStr(identifierName: String, allLinks: Seq[Value], inclId: Boolean): Seq[Value] = {
-    val toReturn = if (inclId) {
-      allLinks.filter(l => l.obj("element_1").str == identifierName || l.obj("element_2").str == identifierName)
-    } else {
-      allLinks.filter(l => l.obj("element_1").str.split("::").last == identifierName || l.obj("element_2").str.split("::").last == identifierName)
 
-    }
-    toReturn
+  // load files/configs
+
+  val config = ConfigFactory.load("/test.conf")
+  val numAlignments = 3//config[String]("apps.numAlignments")
+  val numAlignmentsSrcToComment = 1//config[String]("apps.numAlignmentsSrcToComment")
+  val scoreThreshold = 0.0 //config[String]("apps.scoreThreshold")
+
+  val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None) //todo: read this from test conf (after adding this to test conf)
+//  lazy val proc = TestUtils.newOdinSystem(config).proc
+  val inputDir = new File(getClass.getResource("/").getFile)
+  val files = inputDir.listFiles()
+  for (f <- files) println(">>>", f)
+
+  println("++>>", inputDir)
+
+
+
+  // read in all related docs or maybe read in just a sample payload - that should make sense
+  // make it as close as possivle to the actual endpoint while still mainly testing the ExtractAndAlign.groundMentions method (to get texts of links, need to run in debug mode)
+  // the rest will be tested on paul's end
+
+  //lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
+  val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
+  val serializerName = "AutomatesJSONSerializer" //todo: read from config
+
+
+//  val payloadPath = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/double-epidemic-chime-align_payload.json"
+  val payloadFile = new File(inputDir, "double-epidemic-chime-align_payload.json")
+  val payloadPath = payloadFile.getAbsolutePath
+
+  val payloadJson = ujson.read(payloadFile.readString())
+
+  val jsonObj = payloadJson.obj
+
+
+  val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, false, serializerName)
+
+
+  val groundings = ExtractAndAlign.groundMentions(
+    payloadJson,
+    argsForGrounding.identifierNames,
+    argsForGrounding.identifierShortNames,
+    argsForGrounding.descriptionMentions,
+    argsForGrounding.parameterSettingMentions,
+    argsForGrounding.intervalParameterSettingMentions,
+    argsForGrounding.unitMentions,
+    argsForGrounding.commentDescriptionMentions,
+    argsForGrounding.equationChunksAndSource,
+    argsForGrounding.svoGroundings,
+    false,
+    3,
+    alignmentHandler,
+    Some(10),
+    Some(2),//Some(numAlignmentsSrcToComment),
+    scoreThreshold,
+    appendToGrFN=false,
+    debug=true
+  )
+
+  val links = groundings.obj("links").arr
+  val gv = findGlobalVars(links)
+
+
+
+  val linkTypes = links.map(_.obj("link_type").str).distinct
+
+  // on the real test document, will have all link types
+  it should "have source code variable to comment links" in {
+    linkTypes.contains("source_to_comment") shouldBe true
   }
 
-  val it_links_not_grouped = getLinksWithIdentifierStr("I(t)", links, false)
-//  val e_links_not_grouped = getLinksWithIdentifierStr("E", links, false)
+  it should "have comment to text variable links" in {
+    linkTypes.contains("comment_to_gvar") shouldBe true
+  }
+
+  it should "have equation variable to text variable links" in {
+    linkTypes.contains("equation_to_gvar") shouldBe true
+  }
+
+  it should "have text variable to unit (via identifier) links" in {
+    linkTypes.contains("gvar_to_unit_via_idfr") shouldBe true
+  }
+
+  it should "have text variable to unit (via concept) links" in {
+    linkTypes.contains("gvar_to_unit_via_cpcpt") shouldBe true
+  }
+
+  it should "have text variable to parameter setting (via identifier) links" in {
+    linkTypes.contains("gvar_to_param_setting_via_idfr") shouldBe true
+  }
+
+  it should "have text variable to parameter setting (via concept) links" in {
+    linkTypes.contains("gvar_to_param_setting_via_cpcpt") shouldBe true
+  }
+
+  it should "have text variable to interval parameter setting (via identifier) links" in {
+    linkTypes.contains("gvar_to_interval_param_setting_via_idfr") shouldBe true
+  }
+
+  it should "have text variable to interval parameter setting (via concept) links" in {
+    linkTypes.contains("gvar_to_interval_param_setting_via_cpcpt") shouldBe true
+  }
+  println(linkTypes + "<<")
+
+  val (withGvarLinkTypes, otherLinksTypes) = linkTypes.partition(_.contains("gvar"))
+
+
+
+  def printGroupedLinksSorted(links: Map[String, Seq[Value]]): Unit = {
+    for (gr <- links) {
+      for (i <- gr._2.sortBy(_.obj("score").num).reverse) {
+        println(i)
+      }
+      println("----------")
+    }
+  }
+
+  def printIndirectLinks(indirectLinks: Map[String, Seq[String]]): Unit = {
+    for (l <- indirectLinks) {
+      println("interm node: " + l._1)
+      println("linked nodes: " + l._2.mkString(" :: "))
+    }
+  }
+
+  // all links that contain the target text global var
+  val itLinks = getLinksWithIdentifierStr("I(t)", links, false)
+  // group those by link type - in testing, will just be checking the rankings of links of each type
+  val itLinksGroupedByLinkType = links.filter(l => l.obj("element_1").str.split("::").last =="I(t)" || l.obj("element_2").str.split("::").last =="I(t)").groupBy(_.obj("link_type").str)
+  // get indirect links; currently, it's only source to comment links aligned through comment (comment var is the intermediate node)
+  val allIndirectLinksForITLinks = findIndirectLinks(itLinks, links, "comment_to_gvar", "source_to_comment", 3)
+
+
 
 
   // link test type 1: for every var, check if the gold test is top
   // get all the links where one of the elements is the E identifier
   // todo: define a method to do this for a given Identifier string
-  val E_links = links.filter(l => l.obj("element_1").str.split("::").last =="E" || l.obj("element_2").str.split("::").last =="E").groupBy(_.obj("link_type").str)
+//  val E_links = links.filter(l => l.obj("element_1").str.split("::").last =="E" || l.obj("element_2").str.split("::").last =="E").groupBy(_.obj("link_type").str)
+  val E_links = getLinksWithIdentifierStr("τ", links, false)
+  val E_links_grouped = E_links.groupBy(_.obj("link_type").str)
+//  val allIndirectLinksForE = findIndirectLinks(E_links, links, "comment_to_gvar", "source_to_comment", 3)
 
 
-
-  val it_links = links.filter(l => l.obj("element_1").str.split("::").last =="I(t)" || l.obj("element_2").str.split("::").last =="I(t)").groupBy(_.obj("link_type").str)
-
-  for (gr <- it_links) {
-    for (i <- gr._2.sortBy(_.obj("score").num).reverse) {
-      println(i)
-    }
-    println("----------")
-  }
-
-  val allIndirectLinksForITLinks = findIndirectLinks(it_links_not_grouped, links, "comment_to_gvar", "source_to_comment", 2)
-  for (aiIT <- allIndirectLinksForITLinks) println("it indirect: " + aiIT)
-
-  println("INDIRECT: " + allIndirectLinksForITLinks)
-
-
-//  ignore should "have a correct comment to src var link for I(t) idenfier" in {
-//    allIndirectLinksForITLinks.head("element_1").str.split("::").last == "i_t" shouldBe true// I made this src code variable - i dont think it's in code base
-//  }
-//  val allIndirectLinksForELinks = findIndirectLinks(e_links_not_grouped, links, "comment_to_gvar", "source_to_comment", 2)
-//  for (aiIT <- allIndirectLinksForELinks) println("E indirect: " + aiIT)
+  printGroupedLinksSorted(E_links_grouped)
+//  printIndirectLinks(allIndirectLinksForE)
 
   it should "have a correct equation to global variable link for global var E" in {
-    val topScoredLink = E_links("equation_to_gvar").sortBy(_.obj("score").num).reverse.head
+    val topScoredLink = E_links_grouped("equation_to_gvar").sortBy(_.obj("score").num).reverse.head
     //
     val desired = "E"
     val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
@@ -285,13 +246,13 @@ class TestAlign extends FlatSpec with Matchers {
 
   // this is for non-existent links (including those we end up filtering out because of threshold)
   it should "have NO gvar_to_unit_via_cpcpt link for global var E" in {
-    E_links.keys.toList.contains("gvar_to_unit_via_cpcpt") shouldBe false
+    E_links_grouped.keys.toList.contains("gvar_to_unit_via_cpcpt") shouldBe false
   }
 
   // if we decide not to filter out links because of threshold (could be beneficial to keep them for debugging purposes, but filter them out somewhere downstream; ask Paul), do this type of test:
 
   it should "have top gvar_to_unit_via_idfr link be below threshold for global var E" in {
-    val topScoredLink = E_links("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
+    val topScoredLink = E_links_grouped("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
     //
     val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
     // element 1 of this link (eq gl var) should be E
@@ -356,17 +317,17 @@ class TestAlign extends FlatSpec with Matchers {
   var score = 0
 
   for (key <- toyGoldIt.keys) {
-    println("key: " + key)
+//    println("key: " + key)
 
     if (allIndirectLinksForITLinks.contains(key)) {
       // if in indirect links, then it's this complicated check
       val linksOfGivenType = allIndirectLinksForITLinks(key).map(_.split("::").last)
-      println("links of a given type comment: " + linksOfGivenType.mkString("||"))
+//      println("links of a given type comment: " + linksOfGivenType.mkString("||"))
       val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
       val scoreUpdate = if (rank > 0) 1/rank  else 0
       score += scoreUpdate
 
-    } else if (it_links.contains(key)) {
+    } else if (itLinksGroupedByLinkType.contains(key)) {
 //      var rank = 0
       // which element in this link type we want to check
       val whichLink = key match {
@@ -374,10 +335,10 @@ class TestAlign extends FlatSpec with Matchers {
         case "gvar_to_interval_param_setting_via_idfr" | "gvar_to_unit_via_idfr"  => "element_2"
         case _ => ???
       }
-      val linksOfGivenType = it_links(key).sortBy(_.obj("score").num).reverse.map(_(whichLink).str.split("::").last)
-      println("links of a given type: " + linksOfGivenType)
+      val linksOfGivenType = itLinksGroupedByLinkType(key).sortBy(_.obj("score").num).reverse.map(_(whichLink).str.split("::").last)
+//      println("links of a given type: " + linksOfGivenType)
       val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
-      println("key/rank: " + key +  rank)
+//      println("key/rank: " + key +  rank)
       val scoreUpdate = if (rank > 0) 1/rank  else 0
       score += scoreUpdate
 
@@ -392,7 +353,7 @@ class TestAlign extends FlatSpec with Matchers {
 
   val finalScore = score.toDouble/toyGoldIt.keys.toList.length
 
-  println("final score: " + finalScore)
+//  println("final score: " + finalScore)
 
 
 

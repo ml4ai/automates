@@ -140,7 +140,7 @@ object ExtractAndAlign {
       val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
       for (gr <- groupedVars) {
         val glVarID = randomUUID().toString()
-        val identifier = gr._1
+        val identifier = AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
         // the commented out part is for debugging
         val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str) // + "::" + le.obj("content").str)
         val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
@@ -166,15 +166,11 @@ object ExtractAndAlign {
       getGlobalVars(commentDescriptionMentions.get)
     } else Seq.empty
 
+    for (g <- allCommentGlobalVars) println("comment gv: " + g.identifier)
 
     val (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else null
     val globalEqVariables = if (eqLinkElements.nonEmpty) getGlobalEqVars(eqLinkElements) else null
-
-    //    for (gev <- globalEqVariables) {
-    //      println("gev " + gev)
-    //    }
-
-
+    for (g <- globalEqVariables) println("eq gv: " + g.identifier)
 
     def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
       val groupedVars = srcVars.groupBy(_.obj("content").str)
@@ -202,13 +198,9 @@ object ExtractAndAlign {
 
 
     val srcLinkElements = if (variableNames.nonEmpty) getSrcLinkElements(variableNames.get) else null
-
-
     val globalSrcVars = if (srcLinkElements.nonEmpty) getGlobalSrcVars(srcLinkElements) else null
+    for (g <- globalSrcVars) println("source gv: " + g.identifier)
 
-
-
-    for (g <- globalSrcVars) println("here: " + g)
 
 
     // =============================================
