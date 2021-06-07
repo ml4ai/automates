@@ -469,6 +469,43 @@ def d_sep(g, x, y, z):
     return True
 
 
+def make_cg(g, gamma):
+    g_obs = observed_graph(g)
+    g_obs_names = g_obs.vs["name"]
+    g_obs_elist = g_obs.es
+    n_nodes = g_obs.vcount
+    cg = copy.deepcopy(g_obs)
+
+    # First Bullet
+    # Replicate graph for each submodel mentioned in gamma
+    k = 1
+    for event in gamma:
+        if event.submodel is not None:
+            subscript = f"_{{{event.submodel}}}"
+            new_names = copy.deepcopy(g_obs_names)
+            for i in range(len(new_names)):
+                if new_names[i] == event.submodel:
+                    new_names[i] = f"\\bar{{{new_names[i]}}}"
+                else:
+                    new_names[i] = f"{new_names[i]}{subscript}"
+            cg.add_vertices(n_nodes, attributes={"name": new_names})
+
+            edges_to_add = []
+            for edge in g_obs_elist:
+                edges_to_add.append(tuple(x + k*n_nodes for x in edge.tuple))
+            cg.add_edges(edges_to_add, attributes={"description": ["O"]*len(edges_to_add)})
+
+            k = k + 1
+
+    # Add Unobserved Edges
+
+
+    return None
+
+
+
+
+
 @dataclass(unsafe_hash=True)
 class Probability:
     var: list = field(default_factory=list)
@@ -526,9 +563,9 @@ class Results:
 
 @dataclass
 class CF:
-    node: str = ""
-    value_assignment: str = ""
-    sub_model = ""
+    node: str = None
+    value_assignment: str = None
+    submodel: str = None
 
 
 class IDANotIdentifiable(Exception):
