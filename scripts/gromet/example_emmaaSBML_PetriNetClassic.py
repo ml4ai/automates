@@ -5,7 +5,7 @@ from gromet import *  # never do this :)
 # GroMEt instance
 # -----------------------------------------------------------------------------
 
-def intra_model_SBML_PetriNetClassic_gromet() -> Gromet:
+def indra_model_SBML_PetriNetClassic_gromet() -> Gromet:
 
     wires = [
         Wire(uid=UidWire("W:__s3-kf_vb_bind_1"),
@@ -56,7 +56,7 @@ def intra_model_SBML_PetriNetClassic_gromet() -> Gromet:
         Junction(uid=UidJunction("__s12"),
                  type=UidType("State"),
                  name="BRAF(vemurafenib=1, V600=&apos;WT&apos;, map3k=None, ras=None) ._br_vemurafenib(map3k=1)",
-                 value=None,
+                 value=None,  # b/c no initial condition assignment
                  value_type=UidType("T:Integer"),
                  metadata=None),
         Junction(uid=UidJunction("kf_vb_bind_1"),
@@ -119,4 +119,4 @@ def intra_model_SBML_PetriNetClassic_gromet() -> Gromet:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    gromet_to_json(intra_model_SBML_PetriNetClassic_gromet())
+    gromet_to_json(indra_model_SBML_PetriNetClassic_gromet())
