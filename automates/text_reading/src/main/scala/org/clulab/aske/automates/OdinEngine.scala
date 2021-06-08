@@ -31,7 +31,7 @@ class OdinEngine(
 
   val documentFilter: DocumentFilter = filterType match {
     case None => PassThroughFilter()
-    case Some("length") => FilterByLength(proc, cutoff = 150)
+    case Some("length") => FilterByLength(proc, cutoff = 200)
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
   }
 
@@ -69,7 +69,7 @@ class OdinEngine(
   def reload() = loadableAttributes = LoadableAttributes()
 
   // MAIN PIPELINE METHOD
-  def cleanAndAnnotate(text: String, keepText: Boolean = false, filename: Option[String]): Document = {
+  def cleanAndAnnotate(text: String, keepText: Boolean = false, filename: Option[String]): Option[Document] = {
     val filteredText = edgeCaseFilter.cleanUp(text)
     val doc = annotate(filteredText, keepText, filename)   // CTM: processors runs (sentence splitting, tokenization, POS, dependency parse, NER, chunking)
     doc
@@ -92,8 +92,11 @@ class OdinEngine(
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
     val doc = cleanAndAnnotate(text, keepText, filename)
-    val odinMentions = extractFrom(doc)  // CTM: runs the Odin grammar
-    odinMentions  // CTM: collection of mentions ; to be converted to some form (json)
+    if (doc.isDefined) {
+      val odinMentions = extractFrom(doc.get)  // CTM: runs the Odin grammar
+      odinMentions  // CTM: collection of mentions ; to be converted to some form (json)
+    } else Seq.empty
+
   }
 
 
@@ -114,13 +117,17 @@ class OdinEngine(
   // ---------- Helper Methods -----------
 
   // Annotate the text using a Processor and then populate lexicon labels
-  def annotate(text: String, keepText: Boolean = false, filename: Option[String]= None): Document = {
+  def annotate(text: String, keepText: Boolean = false, filename: Option[String]= None): Option[Document] = {
     val tokenized = proc.mkDocument(text, keepText = true)  // Formerly keepText, must now be true
     val filtered = documentFilter.filter(tokenized)         // Filter noise from document if enabled (else "pass through")
     //todo: check if filtered is empty; return an option
-    val doc = proc.annotate(filtered)
-    doc.id = filename
-    doc
+//    println("FILTERED: " + filtered.sentences.length)
+    if (filtered.sentences.nonEmpty) {
+      val doc = proc.annotate(filtered)
+      doc.id = filename
+      Some(doc)
+    } else None
+
   }
 
 }

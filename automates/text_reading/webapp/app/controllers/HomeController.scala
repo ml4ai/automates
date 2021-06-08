@@ -406,20 +406,27 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     logger.info(s"Processing sentence : ${text}" )
     val doc = ieSystem.cleanAndAnnotate(text, keepText = true, filename = None)
 
-    logger.info(s"DOC : ${doc}")
-    // extract mentions from annotated document
-    val mentions = if (gazetteer.isDefined) {
-      ieSystem.extractFromDocWithGazetteer(doc, gazetteer = gazetteer.get)
+    if (doc.isDefined) {
+      val document = doc.get
+      logger.info(s"DOC : ${document}")
+      // extract mentions from annotated document
+      val mentions = if (gazetteer.isDefined) {
+        ieSystem.extractFromDocWithGazetteer(document, gazetteer = gazetteer.get)
+      } else {
+        ieSystem.extractFrom(document)
+      }
+      val sorted = mentions.sortBy(m => (m.sentence, m.getClass.getSimpleName)).toVector
+
+      logger.info(s"Done extracting the mentions ... ")
+      logger.info(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
+
+      // return the sentence and all the mentions extracted ... TODO: fix it to process all the sentences in the doc
+      (document, sorted)
     } else {
-      ieSystem.extractFrom(doc)
+      logger.info("Empty document")
+      (null, null)
     }
-    val sorted = mentions.sortBy(m => (m.sentence, m.getClass.getSimpleName)).toVector
 
-    logger.info(s"Done extracting the mentions ... ")
-    logger.info(s"They are : ${mentions.map(m => m.text).mkString(",\t")}")
-
-    // return the sentence and all the mentions extracted ... TODO: fix it to process all the sentences in the doc
-    (doc, sorted)
   }
 
   // Method where aske reader processing for webservice happens

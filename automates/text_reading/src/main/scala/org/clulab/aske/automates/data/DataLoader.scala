@@ -66,6 +66,10 @@ class CosmosJsonDataLoader extends DataLoader {
     * @param f the File being loaded
     * @return string content of each section in the parsed pdf paper (as determined by science parse)
     */
+
+//  def cleanup(text: String): String = {
+//
+//  }
   def loadFile(f: File): Seq[String] = {
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
     cosmosDoc.cosmosOjects.map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)

@@ -4,12 +4,11 @@ import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.{DataLoader, TextRouter}
+import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.discourse.rstparser.{DiscourseTree, TokenOffset}
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
-
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -18,13 +17,21 @@ object DiscourseExperiments extends App {
 //  case class DiscourseTuple(relation:String, nucText:List[String], satText:List[String], start:TokenOffset, end:TokenOffset)
 
   val config = ConfigFactory.load()
+  val inputKind = "science-parse" // or "cosmos"
 
 //  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/txt_with_per"
-  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/askeDiscourseExperiments/toRunDiscourseParser"
-  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/output"
+//  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/askeDiscourseExperiments/toRunDiscourseParser"
+//  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/output"
+
+//  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/Processed_SuperMaaS_model_documents-20210607T204611Z-001/Processed_SuperMaaS_model_documents/JSON_data"
+  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/ak-function-files/jsons"
+
 //  val inputType = "txt"
   val inputType = "json"
-  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+//  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+  val dataLoader = if (inputKind == "cosmos") new CosmosJsonDataLoader else {
+    DataLoader.selectLoader(inputType)
+  }
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
@@ -34,26 +41,36 @@ object DiscourseExperiments extends App {
   val discExplorer = new DiscourseExplorer
 
 
-  val askeDiscourse = new PrintWriter(new File("/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/askeDiscourseExperiments/output/aske_paragraph_discourse_parses.csv" ))
+  val askeDiscourse = new PrintWriter(new File("/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/ak-function-files/jsons/paragraph_discourse_parses.tsv" ))
   askeDiscourse.write("doc" + "\t" + "relation" + "\t" + "nucleus" + "\t" + "satellite" + "\t" + "start"+ "\t" + "end" + "\n")
   files.foreach { file =>
     val fileName = file.getName()
     val texts = dataLoader.loadFile(file)
-    val paragraphDocs = texts.map(t => reader.annotate(t))
-    val trees = paragraphDocs.map(d => d.discourseTree.get)
-    for (t <- trees) {
-//      println("START TREE")
-      for (tuple <- discExplorer.findRootPairs(t) ) {
-        askeDiscourse.write(file.getName() + "\t" + tuple.relation + "\t" + tuple.nucText.mkString(" ") + "\t" + tuple.satText.mkString(" ") + "\t" + tuple.start + "\t" + tuple.end + "\n")
-//        println("->" + tuple.relation + ": " + tuple.nucText.mkString(" ") + "||" + " " + tuple.satText.mkString(" ") + " || " + tuple.start + " " + tuple.end + "\n")
+    println("filename: " + fileName)
+//    println("Texts: " + texts.mkString(" ").slice(0, 1500) + "\n")
+    if (texts.nonEmpty)  {
+      val paragraphDocs = if (inputKind=="cosmos") {
+        texts.map(t => reader.annotate(t.split("::").head)).filter(_.isDefined).map(_.get)
+      } else {
+        texts.map(t => reader.annotate(t)).filter(_.isDefined).map(_.get)
+      }
+
+      val trees = paragraphDocs.map(d => d.discourseTree.get)
+      for (t <- trees) {
+        //      println("START TREE")
+        for (tuple <- discExplorer.findRootPairs(t) ) {
+          askeDiscourse.write(file.getName() + "\t" + tuple.relation + "\t" + tuple.nucText.mkString(" ") + "\t" + tuple.satText.mkString(" ") + "\t" + tuple.start + "\t" + tuple.end + "\n")
+          //        println("->" + tuple.relation + ": " + tuple.nucText.mkString(" ") + "||" + " " + tuple.satText.mkString(" ") + " || " + tuple.start + " " + tuple.end + "\n")
+        }
       }
     }
+
 
   }
   askeDiscourse.close()
 
 // START RUN DISC PARSER ON SHORT TEXT
-//  val text = " Susceptible (S) individuals may become exposed (E) to the virus, then infected (I) at varying levels of disease severity (mild, moderate, or severe, illustrated as I 1 , I 2 , and I 3 respectively)"
+//  val text = "es = saturation vapor pressure at 1.5 to 2.5-m height (kPa), calculated for daily time steps as the average of saturation vapor pressure at maximum and minimum air temperature"
 //
 //  val discExplorer = new DiscourseExplorer
 //  val doc = reader.annotate(text)
