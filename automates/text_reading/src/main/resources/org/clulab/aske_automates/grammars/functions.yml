@@ -385,6 +385,16 @@ rules:
       output:Phrase+ = <amod
   # fixme: when trigger and output overlaps, extraction does not happen.
 
+  - name: additional_parameter
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
+    pattern: |
+      trigger = [word = "additional"] (?= [lemma = "parameter"])
+      input:Phrase+ = <amod <nsubj
+
   # rules denoting change in status (lost, reduce, increase, etc.) - are these count as function relations??
 
   - name: lost_by # needs to see if this rule is a viable one

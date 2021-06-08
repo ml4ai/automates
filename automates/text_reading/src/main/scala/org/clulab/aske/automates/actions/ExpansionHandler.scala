@@ -521,7 +521,7 @@ object ExpansionHandler {
     "^nmod_without$".r,
 //    "nmod_by".r,
 //    "nummod".r,
-//    "^nsubj".r,
+    "^nsubj".r,
     "^punct".r,
     "^ref$".r,
     "appos".r,

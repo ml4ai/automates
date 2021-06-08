@@ -755,6 +755,28 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn.filter(_.arguments.nonEmpty) ++ other
   }
 
+  def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (functions, other) = mentions.partition(_.label == "Function")
+    val (complete, fragment) = functions.partition(m => m.arguments.contains("input") && m.arguments.contains("output"))
+    val toReturn = new ArrayBuffer[Mention]()
+    for (f <- fragment) {
+      val newInputs = new ArrayBuffer[Mention]()
+      val newOutputs = new ArrayBuffer[Mention]()
+      val prevSentences = functions.filter(_.sentence < f.sentence)
+      val menToAttach = prevSentences.maxBy(_.sentence)
+      if (f.arguments.contains("input")){
+       newInputs ++= menToAttach.arguments.getOrElse("input", Seq()) ++ f.arguments.getOrElse("input", Seq())
+      }
+      if (f.arguments.contains("output")){
+       newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
+      }
+      val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
+      val newFunctions = copyWithArgs(f, newArgs)
+      toReturn.append(newFunctions)
+    }
+    toReturn ++ other ++ complete
+  }
+
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
 
