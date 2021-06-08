@@ -5,7 +5,7 @@ import java.io.File
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDescriptionMentions, hasRequiredArgs, hasUnitArg}
-import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
+import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign, alignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
@@ -107,10 +107,32 @@ object AlignmentJsonUtils {
 
     val commentDescriptionMentions = if (jsonObj.contains("source_code")) {
 
-      val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
-      Some(getCommentDescriptionMentions(localCommentReader, json, identifierShortNames, source)
-        .filter(m => hasRequiredArgs(m, "description")))
+      if (jsonObj.contains("comment_mentions")) {
+        val mentionsPath = json("comment_mentions").str
+        val mentionsFile = new File(mentionsPath)
+        val textMentions =  if (serializerName == "AutomatesJSONSerializer") {
+          val ujsonOfMenFile = ujson.read(mentionsFile)
+          AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
+        } else {
+          val ujsonMentions = ujson.read(mentionsFile.readString())
+          //transform the mentions into json4s format, used by mention serializer
+          val jvalueMentions = upickle.default.transform(
+            ujsonMentions
+          ).to(Json4sJson)
+          JSONSerializer.toMentions(jvalueMentions)
+        }
+
+        Some(textMentions)
+      } else {
+        val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
+        Some(getCommentDescriptionMentions(localCommentReader, json, identifierShortNames, source)
+          .filter(m => hasRequiredArgs(m, "description")))
+      }
+
     } else None
+
+//    val exporter = AutomatesExporter("double_epidemic_comment--mentions.json")
+//    exporter.export(commentDescriptionMentions.get)
 
 
     //deserialize svo groundings if a) grounding svo and b) if svo groundings have been provided in the input
