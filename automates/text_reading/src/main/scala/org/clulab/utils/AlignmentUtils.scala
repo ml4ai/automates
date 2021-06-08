@@ -108,6 +108,7 @@ object AlignmentJsonUtils {
     val commentDescriptionMentions = if (jsonObj.contains("source_code")) {
 
       if (jsonObj.contains("comment_mentions")) {
+        println("ATTENTION: using previously extracted comment mentions")
         val mentionsPath = json("comment_mentions").str
         val mentionsFile = new File(mentionsPath)
         val textMentions =  if (serializerName == "AutomatesJSONSerializer") {
