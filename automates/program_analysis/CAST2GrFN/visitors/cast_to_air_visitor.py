@@ -394,6 +394,7 @@ class CASTToAIRVisitor(CASTVisitor):
             "USub": "- ",
             "And": "&&",
             "Or": "||",
+            "Mod": "%"
         }
         return op_map[op] if op in op_map else None
 

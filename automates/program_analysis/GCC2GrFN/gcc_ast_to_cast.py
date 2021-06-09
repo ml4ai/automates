@@ -56,9 +56,9 @@ class GCC2CAST:
     """
 
     def __init__(self, gcc_asts):
+        self.gcc_asts = gcc_asts
         self.variables_ids_to_expression = {}
         self.ssa_ids_to_expression = {}
-        self.gcc_asts = gcc_asts
         self.basic_blocks = []
         self.parsed_basic_blocks = []
         self.current_basic_block = None
@@ -259,7 +259,6 @@ class GCC2CAST:
             return List(values=vals, source_refs=source_refs)
         elif type["type"] == "real_type":
             return default_cast_val("Number", self.type_ids_to_defined_types)
-        print(type)
 
     def parse_mem_ref_operand(self, operand):
         offset = operand["offset"]
@@ -296,6 +295,16 @@ class GCC2CAST:
                 assign_var = Var(val=assign_var, type=cast_type)
         elif code == "array_ref":
             assign_var = self.parse_array_ref_operand(lhs)
+        elif code == "var_decl" or code == "parm_decl":
+            cast_type = cast_type = gcc_type_to_var_type(
+                lhs["type"], self.type_ids_to_defined_types
+            )
+            if "name" in lhs:
+                name = lhs["name"]
+                name = name.replace(".", "_")
+                assign_var =  Var(val=Name(name=name), type=cast_type)
+            elif "id" in lhs:
+                assign_var = self.variables_ids_to_expression[lhs["id"]]
 
         if "id" in lhs:
             self.variables_ids_to_expression[lhs["id"]] = assign_value
@@ -534,7 +543,8 @@ class GCC2CAST:
         statements = bb["statements"]
         cast_statements = []
         for stmt in statements:
-            cast_statements.extend(self.parse_statement(stmt, statements))
+            res = self.parse_statement(stmt, statements)
+            cast_statements.extend(res)
 
         result_statements = cast_statements
 
@@ -600,7 +610,6 @@ class GCC2CAST:
 
         if self.source_language == "fortran":
             args_updated = self.check_fortran_arg_updates(arguments, body)
-            print(f"Found args updated in {name}: {args_updated}")
             # TODO this will break with multiple returns within a function
             if len(args_updated) > 0:
                 existing_return = [

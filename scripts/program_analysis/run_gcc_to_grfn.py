@@ -22,6 +22,7 @@ import json
 import argparse
 
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
+from automates.utils import misc
 
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 GCC_PLUGIN_IMAGE_DIR = "automates/program_analysis/gcc_plugin/plugin/"
@@ -43,7 +44,6 @@ def get_args(args=sys.argv[1:]):
 
 
 def run_gcc_pipeline():
-
     assert len(sys.argv) > 1, "Error: No c file name passed in arguments"
 
     args = get_args()
@@ -121,6 +121,9 @@ def run_gcc_pipeline():
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
 
     print("Transforming CAST into GrFN...")
+    # Set random seed to 0 for UUID generation for consistent results in 
+    # GrFN generation for tests
+    misc.rd.seed(0)
     grfn = cast.to_GrFN()
     grfn.to_json_file(f"{program_name}--GrFN.json")
 
@@ -177,6 +180,7 @@ def run_gcc_pipeline():
     # }
 
     print("Executing GrFN...")
+    inputs = {}
     result = grfn(inputs)
     from pprint import pprint
 

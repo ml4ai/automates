@@ -784,36 +784,40 @@ class C2AState(object):
             if v["name"] not in all_vars_passed_through_lambdas
         ]
 
-        def is_hanging_lambda(l):
-            return len(l["input"]) == 0 and all(
+        def is_hanging_lambda(l, c):
+            hanging_lambda = len(l["input"]) == 0 and all(
                 [
                     v not in {*all_input_vars, *all_return_vars, *all_arg_vars}
                     for v in l["output"]
                 ]
             )
+            return hanging_lambda
 
-        for c in container_air:
+        for con in container_air:
             hanging_lambda_vars = [
-                v for l in c["body"] if is_hanging_lambda(l) for v in l["output"]
+                v for l in con["body"] if is_hanging_lambda(l,con) for v in l["output"]
             ]
             # Trim variables
             var_air = [v for v in var_air if v["name"] not in hanging_lambda_vars]
-            if "return_value" in c:
-                hanging_ret_vars = {v for v in c["return_value"] if v in hanging_vars}
-                c["return_value"] = [
-                    v for v in c["return_value"] if v not in hanging_ret_vars
-                ]
-                all_return_vars.difference_update(hanging_ret_vars)
-                var_air = [v for v in var_air if v["name"] not in hanging_ret_vars]
+            if "return_value" in con:
+                hanging_ret_vars = {v for v in con["return_value"] if v in hanging_vars}
+                lambdas_calling = [l for c in container_air for l in c["body"] if l["function"]["type"] == "container" and l["function"]["name"] == con["name"]]
 
-            if "arguments" in c:
-                hanging_arg_vars = {v for v in c["arguments"] if v in hanging_vars}
-                c["arguments"] = [
-                    v for v in c["arguments"] if v not in hanging_arg_vars
+                if len(lambdas_calling) == 0:
+                    con["return_value"] = [
+                        v for v in con["return_value"] if v not in hanging_ret_vars
+                    ]
+                    all_return_vars.difference_update(hanging_ret_vars)
+                    var_air = [v for v in var_air if v["name"] not in hanging_ret_vars]
+
+            if "arguments" in con:
+                hanging_arg_vars = {v for v in con["arguments"] if v in hanging_vars}
+                con["arguments"] = [
+                    v for v in con["arguments"] if v not in hanging_arg_vars
                 ]
                 all_arg_vars.difference_update(hanging_arg_vars)
                 var_air = [v for v in var_air if v["name"] not in hanging_arg_vars]
 
-            c["body"] = [l for l in c["body"] if not is_hanging_lambda(l)]
+            con["body"] = [l for l in con["body"] if not is_hanging_lambda(l,con)]
 
         return {"containers": container_air, "variables": var_air, "types": types_air}

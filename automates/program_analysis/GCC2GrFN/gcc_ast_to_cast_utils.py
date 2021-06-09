@@ -19,6 +19,7 @@ GCC_OPS_TO_CAST_OPS = {
     "le_expr": BinaryOperator.LTE,
     "lt_expr": BinaryOperator.LT,
     "rdiv_expr": BinaryOperator.DIV,
+    "trunc_div_expr": BinaryOperator.DIV, 
     "eq_expr": BinaryOperator.EQ,
     "ne_expr": BinaryOperator.NOTEQ,
     "negate_expr": UnaryOperator.USUB,
@@ -30,12 +31,13 @@ GCC_OPS_TO_CAST_OPS = {
     "bit_not_expr": UnaryOperator.INVERT,
     "logical_or": BinaryOperator.OR,
     "logical_and": BinaryOperator.AND,
+    "trunc_mod_expr": BinaryOperator.MOD, 
 }
 
 GCC_CONST_OPS = ["integer_cst", "real_cst", "string_cst", "const_decl"]
 
 GCC_CASTING_OPS = ["float_expr", "int_expr"]
-GCC_TRUNC_OPS = ["trunc_div_expr", "trunc_mod_expr", "fix_trunc_expr"]
+GCC_TRUNC_OPS = ["fix_trunc_expr"]
 GCC_PASS_THROUGH_EXPR = {"var_decl", "parm_decl", "ssa_name", "paren_expr"}
 GCC_BUILTIN_FUNC_EXPR = {"max_expr", "min_expr"}
 GCC_BUILTIN_FUNC = {

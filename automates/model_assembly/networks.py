@@ -78,7 +78,6 @@ class GenericNode(ABC):
     def get_label(self):
         return NotImplemented
 
-
 @dataclass(repr=False, frozen=False)
 class VariableNode(GenericNode):
     identifier: VariableIdentifier
@@ -1018,6 +1017,9 @@ class GroundedFunctionNetwork(nx.DiGraph):
         for lambda_node in self.lambdas:
             lambda_node.v_function = np.vectorize(lambda_node.function)
 
+        # TODO update inputs/literal_vars to be required_inputs and 
+        # configurable_inputs 
+
         # TODO decide how we detect configurable inputs for execution
         # Configurable inputs are all variables assigned to a literal in the
         # root level subgraph AND input args to the root level subgraph
@@ -1211,10 +1213,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             network.add_node(node, **(node.get_kwargs()))
             return node
 
-        variable_nodes = {
-            v_id: add_variable_node(v_id, v_data)
-            for v_id, v_data in air.variables.items()
-        }
+        variable_nodes = dict()
 
         def add_lambda_node(
             lambda_type: LambdaType,
@@ -1245,6 +1244,10 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 Occs[con_name] = 0
             else:
                 Occs[con_name] += 1
+
+            for k,v in air.variables.items():
+                if con.identifier.con_name == k.scope:
+                    variable_nodes[k] = add_variable_node(k, v)
 
             con_subgraph = GrFNSubgraph.from_container(con, Occs[con_name], parent)
             live_variables = dict()

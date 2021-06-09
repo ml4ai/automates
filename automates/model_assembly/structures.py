@@ -90,7 +90,7 @@ class VariableIdentifier(GenericIdentifier):
         if len(split) == 4:
             (ns, sc, vn, ix) = split
         else:
-            (ns, sc, vn, ix, _) = split
+            (_, ns, sc, vn, ix) = split
         return cls(ns, sc, vn, int(ix))
 
     def __str__(self):
