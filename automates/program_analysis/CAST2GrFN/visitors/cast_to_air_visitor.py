@@ -1,6 +1,7 @@
 import typing
 from functools import singledispatchmethod
 from collections.abc import Iterable
+from datetime import datetime 
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
@@ -62,6 +63,16 @@ from automates.program_analysis.CAST2GrFN.visitors.cast_to_air_function_map impo
     get_builtin_func_info,
 )
 
+def generate_from_source_metadata(from_source: bool, reason: str):
+    return {
+            "type": "from_source",
+            "provenance": {
+                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                "timestamp": datetime.now()
+            },
+            "from_source": from_source,
+            "creation_reason": reason
+        }
 
 class CASTToAIRVisitor(CASTVisitor):
     cast_nodes: typing.List[AstNode]
@@ -971,6 +982,7 @@ class CASTToAIRVisitor(CASTVisitor):
         )
         cond_assign_result = self.visit(cond_assign)
         cond_assign_lambda = cond_assign_result[-1]
+        cond_assign_lambda.output_variables[-1].add_metadata(generate_from_source_metadata(False, "CONDITION_RESULT"))
         cond_assign_lambda_with_correct_type = C2AExpressionLambda(
             cond_assign_lambda.identifier_information,
             cond_assign_lambda.input_variables,
@@ -1062,6 +1074,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 source_refs=expr.source_refs,
             )
             decision_assign_result = self.visit(decision_assign)[-1]
+            decision_assign_result.output_variables[-1].add_metadata(generate_from_source_metadata(False, "LOOP_EXIT_VAR"))
             # Update type of lambda to decision
             decision_assign_result = C2AExpressionLambda(
                 decision_assign_result.identifier_information,
@@ -1459,12 +1472,16 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         return NotImplemented
 
+
     @visit.register
     def _(self, node: ModelReturn):
         """
         TODO
         """
 
+        # TODO handle literal correctly?
+        # If not a var or literal, store the resulting value in a variable then
+        # return that variable
         if isinstance(node.value, Name):
             val_result = self.visit(node.value)
             self.state.current_function.add_outputs(val_result[-1].input_variables)
@@ -1478,10 +1495,13 @@ class CASTToAIRVisitor(CASTVisitor):
         )
         assign_res = self.visit(return_assign)
 
-        # TODO
-        # If not a var or literal, store the resulting value in a variable then
-        # return that variable
-        self.state.current_function.add_outputs(assign_res[-1].output_variables)
+        # Position -1 should be the added var holding the result of the 
+        # return expression
+        result_air_var = assign_res[-1].output_variables
+
+        result_air_var[-1].add_metadata(generate_from_source_metadata(False, "COMPLEX_RETURN_EXPR"))
+
+        self.state.current_function.add_outputs(result_air_var)
         return assign_res
 
     @visit.register

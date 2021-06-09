@@ -3,6 +3,7 @@ from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from typing import List, Dict, NoReturn, Set
 from enum import Enum
 from dataclasses import dataclass
+from datetime import datetime
 
 from automates.program_analysis.CAST2GrFN.model.cast import AstNode, var
 
@@ -109,6 +110,7 @@ class C2AVariable(object):
     version: int
     type_name: str
     source_ref: C2ASourceRef
+    metadata: list
 
     def __init__(
         self,
@@ -121,6 +123,7 @@ class C2AVariable(object):
         self.version = version
         self.type_name = type_name
         self.source_ref = source_ref
+        self.metadata = list()
 
     def get_name(self):
         return self.identifier_information.name
@@ -134,6 +137,9 @@ class C2AVariable(object):
             str: Unique variable identifier
         """
         return f"{self.identifier_information.build_identifier()}::{str(self.version)}"
+
+    def add_metadata(self, data: dict):
+        self.metadata.append(data)
 
     def to_AIR(self):
         # TODO
@@ -154,12 +160,29 @@ class C2AVariable(object):
         else:
             domain["name"] = self.type_name
 
+        has_from_source_metadata = False
+        for m in self.metadata:
+            has_from_source_metadata = has_from_source_metadata or m["type"] == "from_source"
+        # If from_source does not exist already, then it wasnt handled by a special
+        # case where we added a variable during processing, so add True from_source
+        # metadata
+        if not has_from_source_metadata:
+            self.add_metadata({
+                "type": "from_source",
+                "provenance": {
+                    "method": "PROGRAM_ANALYSIS_PIPELINE",
+                    "timestamp": datetime.now()
+                },
+                "from_source": True,
+                "creation_reason": "UNKNOWN"
+            })
+
         return {
             "name": self.build_identifier(),
             "source_refs": [self.source_ref.to_AIR()],
             "domain": domain,
             "domain_constraint": "(and (> v -infty) (< v infty))",  # TODO
-            "metadata": [],
+            "metadata": self.metadata,
         }
 
 
