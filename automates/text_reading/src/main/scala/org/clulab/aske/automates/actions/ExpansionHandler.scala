@@ -526,6 +526,7 @@ object ExpansionHandler {
     "^ref$".r,
     "appos".r,
     "xcomp".r,
+//    "amod".r
   )
 
   val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](

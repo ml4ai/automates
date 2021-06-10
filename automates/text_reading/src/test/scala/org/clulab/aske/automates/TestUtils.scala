@@ -48,7 +48,7 @@ object TestUtils {
 
   class Test extends FlatSpec with Matchers {
     val passingTest = it
-    val failingTest = ignore
+    val failingTest = it
     val brokenSyntaxTest = ignore
     val toDiscuss = ignore
 
@@ -127,6 +127,29 @@ object TestUtils {
       } yield (a1, a2)
 
       arg2Strings.foreach(arg2String => identifierDescriptionPairs should contain ((arg1String, arg2String)))
+    }
+
+    def testUnaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, desired: Seq[String]): Unit = {
+      val found = mentions.filter(_ matches eventType)
+      found.length should be(desired.size)
+
+
+
+      val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
+      for {
+        desiredFragment <- desired
+        correspondingMentions = grouped.getOrElse(desiredFragment, Seq())
+      } testUnaryEventStrings(correspondingMentions, arg1Role, desired)
+    }
+
+
+    def testUnaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1Strings: Seq[String]) = {
+      val functionFragment = for {
+        m <- ms
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
+      } yield a1
+
+      arg1Strings.foreach(arg1String => functionFragment should contain (arg1String))
     }
 
     //used for parameter setting tests where the setting is an interval

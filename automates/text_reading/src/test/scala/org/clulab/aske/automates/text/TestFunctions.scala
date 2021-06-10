@@ -4,6 +4,7 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestFunctions extends ExtractionTest {
 
+  // todo: how to test fragment (mentions with only input/output) extraction??
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
 
   val t1a = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
@@ -89,7 +90,6 @@ class TestFunctions extends ExtractionTest {
   }
 
   // Tests from CHIME-online-manual
-  // fixme: inverse_of rule contains only one input. how should we test such rules?
   val t1c = "γ is the inverse of the mean recovery time, in days."
   passingTest should s"find functions from t1c: ${t1c}" taggedAs(Somebody) in {
     val desired = Seq(
@@ -180,7 +180,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2e = "Since air Rh, defined as ea divided by es, is also capable of representing the humidity deficit of air, there are arguments about the choice between Rh and D in E or stomatal conductance estimation."
-  failingTest should s"find functions from t2e: ${t2e}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2e: ${t2e}" taggedAs(Somebody) in {
     val desired = Seq(
       "air Rh" -> Seq("ea", "es")
     )
@@ -213,9 +213,9 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
-  failingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"), // note: only one rule applies even when multiple rules should apply. needs to find out why.
+      "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"),
       "deep soil temperature boundary condition" -> Seq("average annual air temperature", "amplitude of monthly mean temperatures")
     )
     val mentions = extractMentions(t2f)
@@ -370,9 +370,59 @@ class TestFunctions extends ExtractionTest {
   val t1i = "The primary variable influencing development rate is temperature."
   failingTest should s"find functions from t1i: ${t1i}" taggedAs(Somebody) in {
     val desired = Seq(
-      "development rate" -> Seq("temperature")
+      "development rate" -> Seq("temperature") //note: overlap between trigger and output??
     )
     val mentions = extractMentions(t1i)
+    testFunctionEvent(mentions, desired)
+  }
+
+  // Tests from paper: PT-1972-On the Assessment of Surface Heat Flux and Evaporation using Large-Scale Parameters-petpt
+
+  val t1j = "The rate of conduction of heat near the interface between two media is governed by the quantity pc√K pertaining to each medium."
+  failingTest should s"find functions from t1j: ${t1j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "The rate of conduction of heat near the interface between two media" -> Seq("quantity pc√K pertaining to each medium") //todo: identifier within Phrase should be filtered out
+    )
+    val mentions = extractMentions(t1j)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t2j = "However, when the thermal balance between the two media is disturbed, as by advection, the heat subsequently passing from one to the other over any not-too-short time is governed by and proportional to the conductive capacity of the lower ranking medium."
+  failingTest should s"find functions from t2j: ${t2j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "heat subsequently passing from one to the other over any not-too-short time" -> Seq("conductive capacity of the lower ranking medium"), //todo: tuning expansion handler needed?
+      "heat subsequently passing from one to the other over any not-too-short time" -> Seq("conductive capacity of the lower ranking medium")
+    )
+    val mentions = extractMentions(t2j)
+    testFunctionEvent(mentions, desired)
+    val functionMentions = mentions.filter(_.label == "Function")
+    functionMentions.head.text shouldEqual functionMentions.last.text
+  }
+
+  val t3j = "T0 is itself strongly governed by R and ground dryness."
+  passingTest should s"find functions from t3j: ${t3j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "T0" -> Seq("R", "ground dryness") //todo: mention with "itself" as an output should be filtered out
+    )
+    val mentions = extractMentions(t3j)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t4j = "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and, if this height is not low enough, on the stability."
+  passingTest should s"find functions from t4j: ${t4j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "heat transfer coefficients" -> Seq("reference height selected for T and u", "stability") //todo: how to attach context (if_condition)?
+    )
+    val mentions = extractMentions(t4j)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t5j = "In subsection 4a, the remaining large-scale parameter is the depth of the mixed layer."
+  failingTest should s"find functions from t5j: ${t5j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "" -> Seq("depth of the mixed layer")
+    )
+    val mentions = extractMentions(t5j)
     testFunctionEvent(mentions, desired)
   }
 

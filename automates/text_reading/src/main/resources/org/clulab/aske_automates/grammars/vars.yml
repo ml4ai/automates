@@ -30,11 +30,11 @@ transparent_nouns: "level|amount|quantit" # do we need these in general?
 
 # FUNCTION TRIGGERS
 
-functionTrigger1: "influence|modify|govern|limit|control|dominate|affect"
+functionTrigger1: "influence|modify|govern|limit|control|dominate|affect|determine"
 
 functionTrigger2: "product|inverse|sum|mean|composite|minimum|maximum|function"
 
-functionTrigger3: "estimate|calculate|compute|determine|predict|obtain"
+functionTrigger3: "estimate|calculate|compute|determine|predict|obtain|deduce"
 
 functionTrigger4: "ratio|fraction"
 

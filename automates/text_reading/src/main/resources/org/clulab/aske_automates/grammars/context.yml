@@ -1,0 +1,29 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  - name: during_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Previous studies indicated that maize height and LAI would reduce when suffering water deficit during the early growing stage."
+    pattern: |
+      (?<= [lemma = "during"]) (?<context> [tag = /DT/]? [tag = /JJ|^NN/]+)
+
+  - name: when_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Under the same mulching fraction (fm = 0.5), αb decreased by 8.5% when fsw decreased from 1.0 to 0.5."
+    pattern: |
+      (?<= [lemma = "when"]) (?<context> [tag = /DT/]? [tag = /JJ|^NN/]+ ([tag = /IN/] [tag = /DT/]? [tag = /CD|JJ/]? [tag = /^NN/])? [tag = /^VB/] [tag = /JJ|^VB/]? ([tag = /IN/] [tag = /CD/] [tag = /TO/] [tag = /CD/])?)
+      |
+      (?<= [lemma = "when"]) (?<context> [tag = /^NN/] [lemma = /<|>|=|≥|≤/] [tag = /CD/] [tag = /NN/]?)
+
+  - name: if_condition
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and, if this height is not low enough, on the stability."
+    pattern: |
+      (?<= [lemma = "if"]) (?<context> [tag = /DT/]? [tag = /JJ|^NN/]+ ([tag = /IN/] [tag = /DT/]? [tag = /CD|JJ/]? [tag = /^NN/])? [tag = /^VB/] [tag = /RB/]? [tag = /JJ|^VB/]? [tag = /RB/]? ([tag = /IN/] [tag = /DT/]? [tag = /JJ|^NN/]+)* ([tag = /IN/] [tag = /CD/] [tag = /TO/] [tag = /CD/])?)

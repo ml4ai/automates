@@ -1,7 +1,6 @@
 vars: org/clulab/aske_automates/grammars/vars.yml
 
 # todo: write new token rules when dependency rules can't extract arguments correctly due to bad parsing
-# todo: allow rules to extract function fragments (input/output) (and check if they overly extract mentions; if they do, fix them)
 
 rules:
 
@@ -13,8 +12,8 @@ rules:
     example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
     pattern: |
       trigger = [lemma = /${functionTrigger1}/]
-      input:Phrase+ = nmod_agent | nmod_by | <amod <nsubj
-      output:Phrase = nsubjpass | <acl_as | <amod
+      input:Phrase+ = nmod_agent | nmod_because_of? nmod_by | <amod <nsubj
+      output:Phrase = nsubjpass | <acl_as | <amod | <dep nsubj
 
   - name: trigger2_of # product, inverse, sum, mean, composite, minimum, maximum, function is the trigger for this rule
     label: Function
@@ -36,7 +35,7 @@ rules:
     pattern: |
       trigger = [lemma = /${functionTrigger3}/]
       input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of | nmod_according_to
-      output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass
+      output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass | <acl
 
   - name: trigger4_of_to # ratio, fraction is the trigger for this rule
     label: Function
@@ -47,7 +46,7 @@ rules:
     pattern: |
       trigger = [word = /${functionTrigger4}/] (?= "of")
       input:Phrase+ = nmod_of | nmod_at? nmod_to
-      output:Phrase = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj | <nsubj
+      output:Phrase = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj | <nsubj | <nsubjpass nmod_as
 
   - name: trigger5_by_Ving # potential pattern
     label: Function
@@ -156,8 +155,8 @@ rules:
     example: "The gain in the exposed class E is at a rate proportional to the number of people in the infective class I and that of the susceptibles S, that is rS(t)I(t), where r > 0 is a constant."
     pattern: |
       trigger = [lemma = "proportional"]
-      input:Phrase+ = nmod_to | <amod? conj_and
-      output:Phrase = <amod? nsubj
+      input:Phrase+ = nmod_to | <amod? conj_and | <conj_and <case
+      output:Phrase = <amod? nsubj | <conj_and <case <nmod_proportional <dep nsubj
       #fixme: inputs and outputs need to be expanded.
       #todo: the number of inputs should not be fixed as two. -> fixed.
 
@@ -192,9 +191,9 @@ rules:
     action: ${action}
     example: "Life cycle progress through any given phase depends on a physiological day accumulator as a function of temperature and day length, in many cases."
     pattern: |
-      trigger = [lemma = /depend|dependent/] (?="on")
-      input:Phrase+ = nmod_on (conj_and)? | conj_and
-      output:Phrase = <xcomp? nsubj | nsubj:xsubj
+      trigger = [lemma = /depend|dependent/]
+      input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and
+      output:Phrase = <xcomp? nsubj | nsubj:xsubj | nmod_of
 
   - name: integrated_to
     label: Function
@@ -336,9 +335,31 @@ rules:
     action: ${action}
     example: "They suggested that the main factors controlling α included leaf area index (LAI), vapor pressure deficit (VPD) and soil moisture content (θ)."
     pattern: |
-      trigger = (?<= [word = "factors"]) [word = "controlling"]
-      input:Phrase+ = <acl <nsubj dobj
-      output:Phrase = dobj
+      trigger = (?<= [lemma = "factor"]|[lemma = "variable"]) [word = "controlling"]|[word = "influencing"]
+      input:Phrase+ = <acl <nsubj dobj | <amod <nsubj
+      output:Phrase = dobj | <amod
+
+  - name: obtained_with
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "For simulations conducted, ET with fm = 0.0 and 1.0 was obtained with the input variables, such as Rn and LAI, parameterized as the same as those of fm = 0.5, which might be imprecise and compromise the results."
+    pattern: |
+      trigger = [word = "obtained"] (?= [word = "with"])
+      input:Identifier+ = nmod_with nmod_such_as
+      output:Phrase = <ccomp nsubj | nsubjpass
+
+  - name: mean_output
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "the mean α obtained from the 26 available days was 1.25 ± 0.03."
+    pattern: |
+      trigger = [word = "mean"] (?= Identifier)
+      input:Identifier+ = <compound
+      output:Phrase = <nsubj
 
   # function rules allowing for partial extraction
 
@@ -385,6 +406,17 @@ rules:
       output:Phrase+ = <amod
   # fixme: when trigger and output overlaps, extraction does not happen.
 
+  - name: parameters_include
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "the large-scale parameters must include sea-surface temperature and wind, temperature and humidity at the lowest layers of the model, and some measure of stability if this lowest level is more than a few meters above the surface."
+    pattern: |
+      trigger = (?<= [lemma = "parameter"] [tag = /MD/]?) [lemma = "include"]|[lemma = "appear"]
+      input:Phrase+ = dobj | <advcl_so_that conj_and | nmod_in nmod_of (nmod_such_as | conj_and)
+      output:Phrase? = <advcl_so_that nsubjpass
+
   - name: additional_parameter
     label: Function
     priority: ${priority}
@@ -392,7 +424,7 @@ rules:
     action: ${action}
     example: "The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
     pattern: |
-      trigger = [word = "additional"] (?= [lemma = "parameter"])
+      trigger = [word = "additional"]|[word = "remaining"] (?= [tag = /JJ/]? [lemma = "parameter"])
       input:Phrase+ = <amod <nsubj
 
   # rules denoting change in status (lost, reduce, increase, etc.) - are these count as function relations??

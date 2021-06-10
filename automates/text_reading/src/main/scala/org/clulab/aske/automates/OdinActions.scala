@@ -329,12 +329,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn
   }
 
-
-  // keep this as a stub for function action flow
-   def functionActionFlow(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-     mentions.distinct
-   }
-
   // this should be the descr text bound mention
   def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
     val charOffsets = new ArrayBuffer[Array[Int]]
@@ -757,24 +751,60 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (complete, fragment) = functions.partition(m => m.arguments.contains("input") && m.arguments.contains("output"))
+    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
     val toReturn = new ArrayBuffer[Mention]()
     for (f <- fragment) {
       val newInputs = new ArrayBuffer[Mention]()
       val newOutputs = new ArrayBuffer[Mention]()
       val prevSentences = functions.filter(_.sentence < f.sentence)
-      val menToAttach = prevSentences.maxBy(_.sentence)
-      if (f.arguments.contains("input")){
-       newInputs ++= menToAttach.arguments.getOrElse("input", Seq()) ++ f.arguments.getOrElse("input", Seq())
-      }
-      if (f.arguments.contains("output")){
-       newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
-      }
-      val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
-      val newFunctions = copyWithArgs(f, newArgs)
-      toReturn.append(newFunctions)
+      if (prevSentences.nonEmpty) {
+        val menToAttach = prevSentences.maxBy(_.sentence)
+        if (f.arguments.contains("input")) {
+          newInputs ++= menToAttach.arguments.getOrElse("input", Seq()) ++ f.arguments.getOrElse("input", Seq())
+        }
+        if (f.arguments.contains("output")) {
+          newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
+        }
+        val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
+        val newFunctions = copyWithArgs(f, newArgs)
+        toReturn.append(newFunctions)
+      } else toReturn.append(f)
     }
     toReturn ++ other ++ complete
+  }
+
+  def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    val (functions, other) = mentions.partition(_.label == "Function")
+    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
+    for (c <- complete) {
+      val newInputs = c.arguments("input").filter(_.label != "Unit" && c.tags.get.head != "PRP")
+      val newOutputs = c.arguments("output").filter(_.label != "Unit" && c.tags.get.head != "PRP")
+      if (newInputs.nonEmpty && newOutputs.nonEmpty) {
+        val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
+        val newFunctions = copyWithArgs(c, newArgs)
+        toReturn.append(newFunctions)
+      } else Seq()
+    }
+    for (f <- fragment) {
+      if (f.arguments.contains("input")) {
+        val inputFilter = f.arguments("input").filter(_.label != "Unit" && f.tags.get.head != "PRP")
+        if (inputFilter.nonEmpty) {
+          val newInputs = Map("input" -> inputFilter, "output" -> Seq())
+          val newInputMens = copyWithArgs(f, newInputs)
+          toReturn.append(newInputMens)
+        } else Seq()
+      }
+      if (f.arguments.contains("output")) {
+        val outputFilter = f.arguments("output").filter(_.label != "Unit" && f.tags.get.head != "PRP")
+        if (outputFilter.nonEmpty) {
+          val newOutputs = Map("input" -> Seq(), "output" -> outputFilter)
+          val newOutputMens = copyWithArgs(f, newOutputs)
+          toReturn.append(newOutputMens)
+        } else Seq()
+      }
+    }
+    toReturn ++ other
   }
 
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -923,6 +953,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def unitActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = processUnits(looksLikeAUnit(mentions, state), state)
     toReturn
+  }
+
+  def functionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val functionMen = filterFunction(mentions, state)
+    val toReturn = if (functionMen.nonEmpty) filterFunctionArgs(functionMen, state) else Seq.empty
+    toReturn.distinct
   }
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
