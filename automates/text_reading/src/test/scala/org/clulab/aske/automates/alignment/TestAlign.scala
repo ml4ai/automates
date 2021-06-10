@@ -36,16 +36,22 @@ class TestAlign extends FlatSpec with Matchers {
   // return indirect links of a given type as a list of strings per each intermediate node
   def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String, indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[String]] = {//Map[String, Map[String, ArrayBuffer[Value]]] = {
 
+
+
     val indirectLinkEndNodes = new ArrayBuffer[String]()
     val allIndirectLinks = new ArrayBuffer[Value]()
     // we have links for some var, e.g., I(t)
     // through one of the existing links, we can get to another type of node
     // probably already sorted - double-check
     val topNDirectLinkOfTargetTypeSorted = allDirectVarLinks.filter(_.obj("link_type").str==linkTypeToBuildOffOf).sortBy(_.obj("score").num).reverse.slice(0, nIndirectLinks)
+    for (tdl <- topNDirectLinkOfTargetTypeSorted) {
+      println("dir link: " + tdl)
+    }
     val sortedIntermNodeNames = new ArrayBuffer[String]()
 
     //
     for (dl <- topNDirectLinkOfTargetTypeSorted) {
+      println("---")
       // get intermediate node of indirect link - for comment_to_gvar link, it's element_1
       val intermNodeJustName = linkTypeToBuildOffOf match {
         case "comment_to_gvar" => dl("element_1").str
@@ -54,18 +60,28 @@ class TestAlign extends FlatSpec with Matchers {
       sortedIntermNodeNames.append(intermNodeJustName)
 
       //
-      val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true)//.sortBy(_.obj("score")).reverse
+      val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true).filter(_.obj("link_type").str == indirectLinkType)//.sortBy(_.obj("score")).reverse
       for (il <- indirectLinksForIntermNode) {
+
         allIndirectLinks.append(il)
+        println("indir links per interm node: " + il)
       }
 
     }
 
 
     // return only the ones of the given type
-    val groupedByElement2 = allIndirectLinks.filter(_.obj("link_type").str == indirectLinkType).groupBy(_.obj("element_2").str)
+    val groupedByElement2 = allIndirectLinks.groupBy(_.obj("element_2").str)
+    for (g <- groupedByElement2) {
+      println("G: " + g._1)
+      for (i <- g._2) {
+        println("=>" + i)
+      }
+    }
+    println("???")
     val maxLinksPerIntermNode = groupedByElement2.maxBy(_._2.length)._2.length
 
+    println("???????")
     for (i <- 0 to maxLinksPerIntermNode - 1) {
       for (j <- 0 to sortedIntermNodeNames.length - 1) {
         val intermNodeName = sortedIntermNodeNames(j)
@@ -140,7 +156,7 @@ class TestAlign extends FlatSpec with Matchers {
     false,
     3,
     alignmentHandler,
-    Some(10),
+    Some(5),
     Some(2),//Some(numAlignmentsSrcToComment),
     scoreThreshold,
     appendToGrFN=false,
@@ -207,35 +223,86 @@ class TestAlign extends FlatSpec with Matchers {
 
   def printIndirectLinks(indirectLinks: Map[String, Seq[String]]): Unit = {
     for (l <- indirectLinks) {
-      println("interm node: " + l._1)
+      println("link type: " + l._1)
       println("linked nodes: " + l._2.mkString(" :: "))
     }
   }
 
-  // all links that contain the target text global var
-  val itLinks = getLinksWithIdentifierStr("I(t)", links, false)
-  // group those by link type - in testing, will just be checking the rankings of links of each type
-  val itLinksGroupedByLinkType = links.filter(l => l.obj("element_1").str.split("::").last =="I(t)" || l.obj("element_2").str.split("::").last =="I(t)").groupBy(_.obj("link_type").str)
-  // get indirect links; currently, it's only source to comment links aligned through comment (comment var is the intermediate node)
-  val allIndirectLinksForITLinks = findIndirectLinks(itLinks, links, "comment_to_gvar", "source_to_comment", 3)
+  def getLinksForGvar(idfr: String, allLinks: Seq[Value]): (Map[String, Seq[Value]], Map[String, Seq[String]]) = {
+
+    println("IDFR: " + idfr)
+    // links are returned as maps from link types to a) full links for direct links and b) sequences of elements linked indirectly to the global var
+    // sorted by score based on the two edges in the indirect link
+    // all links that contain the target text global var
+    val allDirectLinksForIdfr = getLinksWithIdentifierStr(idfr, allLinks, false)
+
+    // group those by link type - in testing, will just be checking the rankings of links of each type
+    val directLinksGroupedByLinkType = allDirectLinksForIdfr.groupBy(_.obj("link_type").str)
+    for (l <- directLinksGroupedByLinkType) {
+      println("---")
+      for (i <- l._2) println("-> " + i)
+    }
+
+    val indirectLinks = if (directLinksGroupedByLinkType.contains("comment_to_gvar")) {
+      findIndirectLinks(allDirectLinksForIdfr, links, "comment_to_gvar", "source_to_comment", 3)
+
+    } else null
+    // get indirect links; currently, it's only source to comment links aligned through comment (comment var is the intermediate node)
+
+    println("dir link len: " + directLinksGroupedByLinkType.keys.toList.length)
+    (directLinksGroupedByLinkType, indirectLinks)
+  }
 
 
 
+//  val (directLinksForE, indir) = getLinksForGvar("r", links)
 
-  // link test type 1: for every var, check if the gold test is top
-  // get all the links where one of the elements is the E identifier
-  // todo: define a method to do this for a given Identifier string
-//  val E_links = links.filter(l => l.obj("element_1").str.split("::").last =="E" || l.obj("element_2").str.split("::").last =="E").groupBy(_.obj("link_type").str)
-  val E_links = getLinksWithIdentifierStr("τ", links, false)
-  val E_links_grouped = E_links.groupBy(_.obj("link_type").str)
-//  val allIndirectLinksForE = findIndirectLinks(E_links, links, "comment_to_gvar", "source_to_comment", 3)
+//  println("FROM METHOD")
+//  printGroupedLinksSorted(directLinksForE)
+//  printIndirectLinks(indir)
 
 
-  printGroupedLinksSorted(E_links_grouped)
-//  printIndirectLinks(allIndirectLinksForE)
+  def topLinkTest(idf: String, desired: String, threshold: Double, directLinks: Map[String, Seq[Value]], linkType: String): Unit = {
+    it should f"have a correct equation to global variable link for global var ${idf}" in {
+      val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
 
-  it should "have a correct equation to global variable link for global var E" in {
-    val topScoredLink = E_links_grouped("equation_to_gvar").sortBy(_.obj("score").num).reverse.head
+      // which element in this link type we want to check
+      val whichLink = linkType match {
+        case "equation_to_gvar" |  "comment_to_gvar"  => "element_1"
+        case "gvar_to_interval_param_setting_via_idfr" | "gvar_to_unit_via_idfr"  => "element_2"
+        case _ => ???
+      }
+      // element 1 of this link (eq gl var) should be E
+      topScoredLink(whichLink).str.split("::").last shouldEqual desired
+      topScoredLink("score").num > threshold shouldBe true
+    }
+  }
+
+//  val idf = "r"
+//  val desired = "r"
+//  val threshold = 0.8
+//  val (directLinksForR, indirR) = getLinksForGvar("r", links)
+//  topLinkTest(idf, desired, threshold, directLinksForR,"equation_to_gvar")
+//
+
+  val idfE = "E"
+  val desiredE = "E"
+  val thresholdE = 0.8 // same for each type of link probably
+  val (directLinksForE, indirE) = getLinksForGvar("E", links)
+
+  println("len of dir links: " + directLinksForE.keys.toList.length)
+  for (l <- directLinksForE) {
+    println("link type: " + l._1)
+    for (link <- l._2) {
+      println(link)
+    }
+  }
+
+  //todo: in a different place - rendered loses greek letters!!!
+  topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
+
+  it should f"have a correct equation to global variable link for global var f" in {
+    val topScoredLink = directLinksForE("equation_to_gvar").sortBy(_.obj("score").num).reverse.head
     //
     val desired = "E"
     val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
@@ -246,13 +313,13 @@ class TestAlign extends FlatSpec with Matchers {
 
   // this is for non-existent links (including those we end up filtering out because of threshold)
   it should "have NO gvar_to_unit_via_cpcpt link for global var E" in {
-    E_links_grouped.keys.toList.contains("gvar_to_unit_via_cpcpt") shouldBe false
+    directLinksForE.keys.toList.contains("gvar_to_unit_via_cpcpt") shouldBe false
   }
 
   // if we decide not to filter out links because of threshold (could be beneficial to keep them for debugging purposes, but filter them out somewhere downstream; ask Paul), do this type of test:
 
   it should "have top gvar_to_unit_via_idfr link be below threshold for global var E" in {
-    val topScoredLink = E_links_grouped("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
+    val topScoredLink = directLinksForE("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
     //
     val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
     // element 1 of this link (eq gl var) should be E
@@ -314,44 +381,44 @@ class TestAlign extends FlatSpec with Matchers {
 //  val allToyItLinks = (it_links ++ allIndirectLinksForITLinks).toSeq
 
 
-  var score = 0
-
-  for (key <- toyGoldIt.keys) {
-//    println("key: " + key)
-
-    if (allIndirectLinksForITLinks.contains(key)) {
-      // if in indirect links, then it's this complicated check
-      val linksOfGivenType = allIndirectLinksForITLinks(key).map(_.split("::").last)
-//      println("links of a given type comment: " + linksOfGivenType.mkString("||"))
-      val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
-      val scoreUpdate = if (rank > 0) 1/rank  else 0
-      score += scoreUpdate
-
-    } else if (itLinksGroupedByLinkType.contains(key)) {
-//      var rank = 0
-      // which element in this link type we want to check
-      val whichLink = key match {
-        case "equation_to_gvar" |  "comment_to_gvar"  => "element_1"
-        case "gvar_to_interval_param_setting_via_idfr" | "gvar_to_unit_via_idfr"  => "element_2"
-        case _ => ???
-      }
-      val linksOfGivenType = itLinksGroupedByLinkType(key).sortBy(_.obj("score").num).reverse.map(_(whichLink).str.split("::").last)
-//      println("links of a given type: " + linksOfGivenType)
-      val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
-//      println("key/rank: " + key +  rank)
-      val scoreUpdate = if (rank > 0) 1/rank  else 0
-      score += scoreUpdate
-
-
-    } else {
-      println("missing link")
-    }
-
-  }
-
-
-
-  val finalScore = score.toDouble/toyGoldIt.keys.toList.length
+//  var score = 0
+//
+//  for (key <- toyGoldIt.keys) {
+////    println("key: " + key)
+//
+//    if (allIndirectLinksForITLinks.contains(key)) {
+//      // if in indirect links, then it's this complicated check
+//      val linksOfGivenType = allIndirectLinksForITLinks(key).map(_.split("::").last)
+////      println("links of a given type comment: " + linksOfGivenType.mkString("||"))
+//      val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
+//      val scoreUpdate = if (rank > 0) 1/rank  else 0
+//      score += scoreUpdate
+//
+//    } else if (itLinksGroupedByLinkType.contains(key)) {
+////      var rank = 0
+//      // which element in this link type we want to check
+//      val whichLink = key match {
+//        case "equation_to_gvar" |  "comment_to_gvar"  => "element_1"
+//        case "gvar_to_interval_param_setting_via_idfr" | "gvar_to_unit_via_idfr"  => "element_2"
+//        case _ => ???
+//      }
+//      val linksOfGivenType = itLinksGroupedByLinkType(key).sortBy(_.obj("score").num).reverse.map(_(whichLink).str.split("::").last)
+////      println("links of a given type: " + linksOfGivenType)
+//      val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
+////      println("key/rank: " + key +  rank)
+//      val scoreUpdate = if (rank > 0) 1/rank  else 0
+//      score += scoreUpdate
+//
+//
+//    } else {
+//      println("missing link")
+//    }
+//
+//  }
+//
+//
+//
+//  val finalScore = score.toDouble/toyGoldIt.keys.toList.length
 
 //  println("final score: " + finalScore)
 
