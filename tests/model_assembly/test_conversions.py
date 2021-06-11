@@ -18,7 +18,7 @@ def test_igraph_conversion():
     gml_filename = "PETPT__@global__petpt--igraph.gml"
     gml_file_location = os.path.join(gml_filepath, gml_filename)
     G = GroundedFunctionNetwork.from_json(
-        "tests/data/model_assembly/GrFN_examples/PETPT--GrFN.json"
+        "tests/data/model_assembly/GrFN/PETPT--GrFN.json"
     )
     C = CausalAnalysisGraph.from_GrFN(G)
     C.to_igraph_gml(gml_filepath)
