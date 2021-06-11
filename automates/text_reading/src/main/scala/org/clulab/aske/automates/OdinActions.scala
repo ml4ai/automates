@@ -23,7 +23,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   val proc = new FastNLPProcessor()
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
-
+//mentions
     if (expansionHandler.nonEmpty) {
       // expand arguments
 

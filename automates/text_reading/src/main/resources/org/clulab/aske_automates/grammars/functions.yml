@@ -188,12 +188,13 @@ rules:
     label: Function
     priority: ${priority}
     type: dependency
-    action: ${action}
+#    action: ${action}
     example: "Life cycle progress through any given phase depends on a physiological day accumulator as a function of temperature and day length, in many cases."
     pattern: |
       trigger = [lemma = /depend|dependent/]
       input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and
       output:Phrase = <xcomp? nsubj | nsubj:xsubj | nmod_of
+#      context:Context = ${context}
 
   - name: integrated_to
     label: Function
