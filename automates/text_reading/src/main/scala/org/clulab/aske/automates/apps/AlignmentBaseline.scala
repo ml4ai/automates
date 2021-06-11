@@ -558,6 +558,8 @@ object AlignmentBaseline {
       val escaped = """\""" + k
       if (identifierName.contains(escaped)) {
         toReturn = toReturn.replace(escaped, word2greekDict(k))
+      } else if (identifierName.contains(k)) {
+        toReturn = toReturn.replace(identifierName, word2greekDict(k))
       }
     }
 
