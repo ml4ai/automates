@@ -1,0 +1,12 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+
+  - name: with_context
+    label: ContextEvent
+    priority: ${priority}
+    type: token
+    example: "where s1 and s2 are parameters of a logistic curve"
+    pattern: |
+      @event:Function "," "if" @context:Context

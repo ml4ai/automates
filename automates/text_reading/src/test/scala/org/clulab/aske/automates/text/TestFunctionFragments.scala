@@ -6,10 +6,11 @@ import org.clulab.aske.automates.OdinEngine.{FUNCTION_INPUT_ARG, MODEL_LABEL}
 class TestFunctionFragments extends ExtractionTest {
 
   val t1 = "In subsection 4a, the remaining large-scale parameter is the depth of the mixed layer."
-  failingTest should s"find function fragments from t1: ${t1}" taggedAs(Somebody) in {
+  passingTest should s"find function fragments from t1: ${t1}" taggedAs(Somebody) in {
     val desired = Seq("depth of the mixed layer")
+    println("HERE")
     val mentions = extractMentions(t1)
-    testUnaryEvent(mentions, "EventMention", FUNCTION_INPUT_ARG, desired)
+    testUnaryEvent(mentions, "Function", FUNCTION_INPUT_ARG, desired)
   }
 
 }

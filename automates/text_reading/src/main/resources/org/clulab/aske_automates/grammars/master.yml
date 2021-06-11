@@ -44,6 +44,9 @@ rules:
       action: functionActionFlow
       priority: 9
 
+  - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"
+    vars:
+      priority: 10
 #  - import: "org/clulab/aske_automates/grammars/template.yml"
 #    vars:
 #      rulepriority: "6"

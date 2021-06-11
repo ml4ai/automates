@@ -88,9 +88,9 @@ class ExpansionHandler() extends LazyLogging {
         val expandedArgs = new ArrayBuffer[Mention]
         // Expand each one, updating the state as we go
         for (argToExpand <- sortedClosestFirst) {
-//          println("arg to expand: " + argToExpand.text + " " + argToExpand.foundBy + " " + argToExpand.labels)
+          println("arg to expand: " + argToExpand.text + " " + argToExpand.foundBy + " " + argToExpand.labels)
           val expanded = expandIfNotAvoid(argToExpand, ExpansionHandler.MAX_HOPS_EXPANDING, stateToAvoid, m, expansionType)
-//          println("expanded arg: " + expanded.text + " " + expanded.foundBy + " " + expanded.labels)
+          println("expanded arg: " + expanded.text + " " + expanded.foundBy + " " + expanded.labels)
           expandedArgs.append(expanded)
           // Add the mention to the ones to avoid so we don't suck it up
           stateToAvoid = stateToAvoid.updated(Seq(expanded))
@@ -123,13 +123,13 @@ class ExpansionHandler() extends LazyLogging {
   // we should perhaps revisit this
   def expandIfNotAvoid(orig: Mention, maxHops: Int, stateToAvoid: State, m: Mention, expansionType: String): Mention = {
 
-//    println("ORIGINAL: " + orig.text + " " + orig.labels + " " + orig.foundBy)
+    println("ORIGINAL: " + orig.text + " " + orig.labels + " " + orig.foundBy)
     val expanded = orig match {
       case tbm: TextBoundMention => expand(orig, maxHops = ExpansionHandler.MAX_HOPS_EXPANDING, maxHopLength = ExpansionHandler.MAX_HOP_LENGTH, stateToAvoid, expansionType)
       case _ => orig
     }
 
-//    println("EXPANDED: " + expanded.text + " " + expanded.labels + " " + expanded.foundBy)
+    println("EXPANDED: " + expanded.text + " " + expanded.labels + " " + expanded.foundBy)
     //println(s"orig: ${orig.text}\texpanded: ${expanded.text}")
 
     // split expanded at trigger (only thing in state to avoid)
@@ -284,13 +284,16 @@ class ExpansionHandler() extends LazyLogging {
       case _ => ???
     }
 //    println("valid outgoing"+expansionType+" "+validOutgoingSet.mkString("|"))
-    (
-      validOutgoingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
+
+
+      val isValid = validOutgoingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
         ! invalidOutgoingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
-      ) // || (
+    println("dep and valid? " + dep + " " + isValid)
+       // || (
 //      // Allow exception to close parens, etc.
 //      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
 //      )
+    isValid
   }
 
   /** Ensure incoming dependency may be safely traversed */
@@ -519,6 +522,7 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
+    "nmod_in".r,
 //    "nmod_by".r,
 //    "nummod".r,
     "^nsubj".r,
