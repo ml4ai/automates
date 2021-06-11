@@ -32,10 +32,10 @@ case class alignmentArguments(json: Value, identifierNames: Option[Seq[String]],
 object ExtractAndAlign {
   // Link element types
   val COMMENT = "comment"
-  val GL_COMMENT = "global_comment"
+  val GLOBAL_COMMENT = "gl_comm"
   val TEXT_VAR = "text_var" // stores information about each variable, e.g., identifier, associated description, arguments, and when available location in the original document (e.g., in the pdf)
   val GLOBAL_VAR = "gvar" // stores ids of text variables that are likely different instances of the same global variable
-  val GLOBAL_EQ_VAR = "g_eq_var"
+  val GLOBAL_EQ_VAR = "gl_eq_var"
   val SOURCE = "src" // identifiers found in source code
   val GLOBAL_SRC_VAR = "gl_src_var"
   val EQUATION = "equation" // an equation extracted from the original document
@@ -177,7 +177,7 @@ object ExtractAndAlign {
       val allGlobalVars = new ArrayBuffer[GlobalSrcVariable]()
       for (gr <- groupedVars) {
         val glVarID = randomUUID().toString()
-        val identifier = gr._1
+        val identifier = AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
         val srcVarObjs = gr._2.map(_.obj("uid").str)
         val glVar = new GlobalSrcVariable(glVarID, identifier, srcVarObjs)
         allGlobalVars.append(glVar)
@@ -289,7 +289,7 @@ object ExtractAndAlign {
     val allGlobalVars = new ArrayBuffer[GlobalVariable]()
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
-      val identifier = gr._1
+      val identifier = AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
       val textFromAllDescrs = gr._2.map(m => m.arguments("description").head.text)
       val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs)
@@ -824,7 +824,7 @@ object ExtractAndAlign {
 
     if (allCommentGlobalVars.nonEmpty) {
       linkElements(COMMENT) = allCommentGlobalVars.flatMap(_.textVarObjStrings)
-      linkElements(GL_COMMENT) = allCommentGlobalVars.map(glv => mkGlobalVarLinkElement(glv))
+      linkElements(GLOBAL_COMMENT) = allCommentGlobalVars.map(glv => mkGlobalVarLinkElement(glv))
       }
 
 
@@ -930,7 +930,7 @@ object ExtractAndAlign {
         ujson.Obj(
           "uid" -> randomUUID.toString(),
           "equation_uid" -> equation2uuid(orig).toString(),
-          "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+          "content" -> chunk//AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
         )
       } else {
         // create a random id for full equation if it is not in the equation 2 uuid map...
@@ -941,7 +941,7 @@ object ExtractAndAlign {
           // create a new id for the equation chunk (corresponds to one identifier)
           "uid" -> randomUUID().toString(),
           "equation_uid" -> id.toString(),
-          "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
+          "content" -> chunk //AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
         )
       }
     }
@@ -1078,17 +1078,17 @@ object ExtractAndAlign {
     val hypotheses = new ArrayBuffer[ujson.Obj]()
 
     // Src Variable -> Comment
-    if (linkElements.contains(GLOBAL_SRC_VAR) && linkElements.contains(GL_COMMENT)) {
+    if (linkElements.contains(GLOBAL_SRC_VAR) && linkElements.contains(GLOBAL_COMMENT)) {
       println("has source and comment")
 
-      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_SRC_VAR), linkElements(GL_COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
+      hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_SRC_VAR), linkElements(GLOBAL_COMMENT), SRC_TO_COMMENT, alignments(SRC_TO_COMMENT), debug))
     }
 
     if (linkElements.contains(GLOBAL_VAR)) {
 
       // Comment -> Text Var
-      if (linkElements.contains(GL_COMMENT)) {
-        hypotheses.appendAll(mkLinkHypothesis(linkElements(GL_COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_GLOBAL_VAR, alignments(COMMENT_TO_GLOBAL_VAR), debug))
+      if (linkElements.contains(GLOBAL_COMMENT)) {
+        hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_COMMENT), linkElements(GLOBAL_VAR), COMMENT_TO_GLOBAL_VAR, alignments(COMMENT_TO_GLOBAL_VAR), debug))
       }
 
       // Equation -> Text
