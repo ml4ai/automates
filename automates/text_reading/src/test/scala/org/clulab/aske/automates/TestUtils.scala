@@ -135,7 +135,7 @@ object TestUtils {
 
 
 
-      val grouped = found.groupBy(_.arguments(arg1Role).head.text) // grouped by text so the keys are the text of the input argument extraction
+      val grouped = found.groupBy(_.arguments(arg1Role)) // grouped by text so the keys are the text of the input argument extraction
       for (g <- grouped) {
         println("g: " + g._1)
         for (i <- g._2) {
@@ -143,7 +143,7 @@ object TestUtils {
         }
       }
 
-      for (d <- desired) {
+      for (d <- desired) { // Seq[String] - the text of the arg, not the type
         println("d" + d)
         println("corr mention: " + grouped.getOrElse(d, "Nothing"))
 

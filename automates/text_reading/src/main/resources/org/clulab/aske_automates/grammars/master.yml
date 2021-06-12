@@ -45,9 +45,9 @@ rules:
       context: "(advcl_if|advcl_because)" #advcl_because here is only to check if patterns can be sent in as variables
       priority: 9
 
-  - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"
-    vars:
-      priority: 10
+#  - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"
+#    vars:
+#      priority: 10
 #  - import: "org/clulab/aske_automates/grammars/template.yml"
 #    vars:
 #      rulepriority: "6"
