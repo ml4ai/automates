@@ -1,0 +1,11 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  - name: function_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and, if this height is not low enough, on the stability."
+    pattern: |
+      @function:Function @context:Context

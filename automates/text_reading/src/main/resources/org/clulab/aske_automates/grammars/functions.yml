@@ -194,6 +194,7 @@ rules:
       trigger = [lemma = /depend|dependent/]
       input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and
       output:Phrase = <xcomp? nsubj | nsubj:xsubj | nmod_of
+#      context:Context = conj_and advcl_if
 
   - name: integrated_to
     label: Function

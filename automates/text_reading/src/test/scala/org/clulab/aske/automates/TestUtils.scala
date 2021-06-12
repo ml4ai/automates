@@ -129,28 +129,40 @@ object TestUtils {
       arg2Strings.foreach(arg2String => identifierDescriptionPairs should contain ((arg1String, arg2String)))
     }
 
-    def testUnaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, desired: Seq[String]): Unit = {
+    def testFragmentEvent(mentions: Seq[Mention], eventType: String, desired: Seq[(String, Seq[String])]): Unit = {
       val found = mentions.filter(_ matches eventType)
-      found.length should be(desired.size)
+      found.length should be(desired.size) // should actually be 1?..
 
-
-
-      val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
       for {
-        desiredFragment <- desired
-        correspondingMentions = grouped.getOrElse(desiredFragment, Seq())
-      } testUnaryEventStrings(correspondingMentions, arg1Role, desired)
+        (desiredType, desiredText) <- desired // this could in theory allow for fragment events with multiple args
+      } mentionHasArguments(found.head, desiredType, desiredText)
     }
 
 
-    def testUnaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1Strings: Seq[String]) = {
-      val functionFragment = for {
-        m <- ms
-        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
-      } yield a1
-
-      arg1Strings.foreach(arg1String => functionFragment should contain (arg1String))
-    }
+    //    def testUnaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, desired: Seq[String]): Unit = {
+//      val found = mentions.filter(_ matches eventType)
+//      found.length should be(desired.size)
+//      println("here" + found.head.arguments.keys.mkString("|"))
+//      println("here2" + found.head.arguments("input").head.text)
+//
+//
+//
+//      val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
+//      for {
+//        desiredFragment <- desired
+//        correspondingMentions = grouped.getOrElse(desiredFragment, Seq())
+//      } testUnaryEventStrings(correspondingMentions, arg1Role, desired)
+//    }
+//
+//
+//    def testUnaryEventStrings(ms: Seq[Mention], arg1Role: String, arg1Strings: Seq[String]) = {
+//      val functionFragment = for {
+//        m <- ms
+//        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
+//      } yield a1
+//
+//      arg1Strings.foreach(arg1String => functionFragment should contain (arg1String))
+//    }
 
     //used for parameter setting tests where the setting is an interval
     def testThreeArgEventString(ms: Seq[Mention], arg1Role: String, arg1String: String, arg2Role: String, arg2String: String, arg3Role: String, arg3String: String): Unit = {
