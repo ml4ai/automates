@@ -5,7 +5,7 @@ from gromet import *  # never do this :)
 # GroMEt instance
 # -----------------------------------------------------------------------------
 
-def simple_sir_PrTNet_gromet() -> Gromet:
+def generate_gromet() -> Gromet:
 
     wires = [
         Wire(uid=UidWire("W:S.beta"),
@@ -45,31 +45,31 @@ def simple_sir_PrTNet_gromet() -> Gromet:
                  type=UidType("State"),
                  name="S",
                  value=None,
-                 value_type=UidType("T:Integer"),
+                 value_type=UidType("Integer"),
                  metadata=None),
         Junction(uid=UidJunction("J:I"),
                  type=UidType("State"),
                  name="I",
                  value=None,
-                 value_type=UidType("T:Integer"),
+                 value_type=UidType("Integer"),
                  metadata=None),
         Junction(uid=UidJunction("J:R"),
                  type=UidType("State"),
                  name="R",
                  value=None,
-                 value_type=UidType("T:Integer"),
+                 value_type=UidType("Integer"),
                  metadata=None),
         Junction(uid=UidJunction("J:beta"),
                  type=UidType("Rate"),
                  name="beta",
                  value=None,
-                 value_type=UidType("T:Real"),
+                 value_type=UidType("Real"),
                  metadata=None),
         Junction(uid=UidJunction("J:gamma"),
                  type=UidType("Rate"),
                  name="gamma",
                  value=None,
-                 value_type=UidType("T:Real"),
+                 value_type=UidType("Real"),
                  metadata=None),
     ]
 
@@ -109,4 +109,4 @@ def simple_sir_PrTNet_gromet() -> Gromet:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    gromet_to_json(simple_sir_PrTNet_gromet())
+    gromet_to_json(generate_gromet())

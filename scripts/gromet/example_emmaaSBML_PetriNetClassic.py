@@ -5,7 +5,7 @@ from gromet import *  # never do this :)
 # GroMEt instance
 # -----------------------------------------------------------------------------
 
-def indra_model_SBML_PetriNetClassic_gromet() -> Gromet:
+def generate_gromet() -> Gromet:
 
     wires = [
         Wire(uid=UidWire("W:__s3-kf_vb_bind_1"),
@@ -44,32 +44,32 @@ def indra_model_SBML_PetriNetClassic_gromet() -> Gromet:
         Junction(uid=UidJunction("__s3"),
                  type=UidType("State"),
                  name="BRAF(vemurafenib=None, V600=&apos;WT&apos;, map3k=None, ras=None)",
-                 value=Literal(uid=None, type=UidType("T:Integer"), value=Val("10000"), name=None, metadata=None),
-                 value_type=UidType("T:Integer"),
+                 value=Literal(uid=None, type=UidType("Integer"), value=Val("10000"), name=None, metadata=None),
+                 value_type=UidType("Integer"),
                  metadata=None),
         Junction(uid=UidJunction("__s4"),
                  type=UidType("State"),
                  name="vemurafenib(map3k=None)",
-                 value=Literal(uid=None, type=UidType("T:Integer"), value=Val("10000"), name=None, metadata=None),
-                 value_type=UidType("T:Integer"),
+                 value=Literal(uid=None, type=UidType("Integer"), value=Val("10000"), name=None, metadata=None),
+                 value_type=UidType("Integer"),
                  metadata=None),
         Junction(uid=UidJunction("__s12"),
                  type=UidType("State"),
                  name="BRAF(vemurafenib=1, V600=&apos;WT&apos;, map3k=None, ras=None) ._br_vemurafenib(map3k=1)",
                  value=None,  # b/c no initial condition assignment
-                 value_type=UidType("T:Integer"),
+                 value_type=UidType("Integer"),
                  metadata=None),
         Junction(uid=UidJunction("kf_vb_bind_1"),
                  type=UidType("Rate"),
                  name="kf_vb_bind_1",
-                 value=Literal(uid=None, type=UidType("T:Float"), value=Val("0.0000001"), name=None, metadata=None),
-                 value_type=UidType("T:Float"),
+                 value=Literal(uid=None, type=UidType("Float"), value=Val("0.0000001"), name=None, metadata=None),
+                 value_type=UidType("Float"),
                  metadata=None),
         Junction(uid=UidJunction("kr_vb_bind_1"),
                  type=UidType("Rate"),
                  name="kr_vb_bind_1",
-                 value=Literal(uid=None, type=UidType("T:Float"), value=Val("0.0000001"), name=None, metadata=None),
-                 value_type=UidType("T:Float"),
+                 value=Literal(uid=None, type=UidType("Float"), value=Val("0.0000001"), name=None, metadata=None),
+                 value_type=UidType("Float"),
                  metadata=None)
     ]
 
@@ -119,4 +119,4 @@ def indra_model_SBML_PetriNetClassic_gromet() -> Gromet:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    gromet_to_json(indra_model_SBML_PetriNetClassic_gromet())
+    gromet_to_json(generate_gromet())
