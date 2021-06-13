@@ -798,7 +798,7 @@ def generate_gromet() -> Gromet:
                UidWire("W:sir.JR.inf_R"), UidWire("W:sir.JR.rec_R"),
                ],
         junctions=[UidJunction("J:S"), UidJunction("J:I"), UidJunction("J:R")],
-        boxes=[UidBox("B:event_infected"), UidBox("B:event_recovered")],
+        boxes=[UidBox("B:event_infection"), UidBox("B:event_recovered")],
         metadata=None
     )
 

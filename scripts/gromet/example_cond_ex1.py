@@ -70,7 +70,7 @@ def generate_gromet() -> Gromet:
              value_type=UidType("Integer"),
              name=None, value=None, metadata=None,
              src=UidPort('P:c1.in.y'),
-             tgt=UidPort('P:c1_exp.in.7')),
+             tgt=UidPort('P:c1_exp.in.y')),
         Wire(uid=UidWire("W:c1_c1exp.z"),
              type=None,
              value_type=UidType("Float"),

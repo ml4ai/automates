@@ -142,7 +142,7 @@ def generate_gromet() -> Gromet:
 
     add1 = Function(uid=UidBox("B:add1"),
                     type=None,
-                    name=UidFn("F:add1"),
+                    name="add1",
                     ports=[UidPort("P:add1.in.x"),
                            UidPort("P:add1.out.result")],
 
@@ -174,7 +174,7 @@ def generate_gromet() -> Gromet:
 
     # Expression reset_x
     # Expr's
-    e2 = Expr(call=RefFn(UidFn("F:add1")),
+    e2 = Expr(call=RefBox(UidBox("B:add1")),
               args=[UidPort("P:toy1_reset_x_exp.in.z")])
     # the anonymous (no name) Expression
     toy1_reset_x_exp = \
@@ -188,7 +188,7 @@ def generate_gromet() -> Gromet:
 
     toy1 = Function(uid=UidBox("B:toy1"),
                     type=None,
-                    name=UidBox("toy1"),
+                    name="toy1",
                     ports=[UidPort("P:toy1.in.x"), UidPort("P:toy1.in.y"),
                            UidPort("P:toy1.out.x"), UidPort("P:toy1.out.z")],
 
@@ -213,7 +213,8 @@ def generate_gromet() -> Gromet:
                  states=[UidWire("W:toy1_y")],
                  metadata=None),
         Variable(uid=UidVariable("var3"), name="z", type=UidType("Float"),
-                 states=[UidWire("W:toy1_set_z")],
+                 states=[UidWire("W:toy1_set_z1"),
+                         UidWire("W:toy1_set_z2")],
                  metadata=None),
         Variable(uid=UidVariable("var4"), name="x", type=UidType("Float"),
                  states=[UidWire("W:toy1_reset_x")],
@@ -221,7 +222,7 @@ def generate_gromet() -> Gromet:
     ]
 
     g = Gromet(
-        uid=UidGromet("toy1"),
+        uid=UidGromet("G:toy1"),
         name="toy1",
         type=UidType("FunctionNetwork"),
         root=toy1.uid,
