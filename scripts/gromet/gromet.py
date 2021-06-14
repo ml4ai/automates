@@ -117,12 +117,8 @@ UidLiteral = NewType('UidLiteral', str)
 UidPort = NewType('UidPort', str)
 UidJunction = NewType('UidJunction', str)
 UidWire = NewType('UidWire', str)
-
 UidBox = NewType('UidBox', str)  # Uids for defined Boxes
-
-UidOp = NewType('UidOp', str)  # Primitive operator name
-# UidFn = NewType('UidFn', str)  # Defined function name
-
+UidOp = NewType('UidOp', str)    # Primitive operator name
 UidVariable = NewType('UidVariable', str)
 UidGromet = NewType('UidGromet', str)
 
