@@ -1,6 +1,6 @@
 from gromet_metadata import *
 import json
-from typing import Any, NewType, List, Tuple, Union
+from typing import NewType, List, Tuple, Union
 from dataclasses import dataclass, field, asdict
 from abc import ABC
 import os
