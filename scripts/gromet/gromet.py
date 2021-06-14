@@ -1,6 +1,9 @@
+from gromet_metadata import *
 import json
-from typing import NewType, List, Tuple, Union
+from typing import Any, NewType, List, Tuple, Union
 from dataclasses import dataclass, field, asdict
+from abc import ABC
+import os
 
 
 """
@@ -62,8 +65,8 @@ Event-driven programming
 # Bilayer
 # Junction, Wire
 # Types:
-#  Junction: State, Flux, Tangent, Literal
-#  Wire: W_in, W_pos, W_neg
+#  Junctions: State, Flux, Tangent
+#  Wires: W_in, W_pos, W_neg
 
 # Petri Net Classic (PetriNetClassic)
 # Junction, Wire, Literal
@@ -88,7 +91,7 @@ Event-driven programming
 
 
 @dataclass
-class GrometElm(object):
+class GrometElm(ABC):
     """
     Base class for all Gromet Elements.
     Implements __post_init__ that saves syntactic type (syntax)
@@ -109,20 +112,21 @@ class GrometElm(object):
 #   hand-construct example GroMEt instances, but these could be
 #   sequential integers (as James uses) or uuids.
 
-UidMetadatum = NewType('UidMetadatum', str)
 UidType = NewType('UidType', str)
 UidLiteral = NewType('UidLiteral', str)
 UidPort = NewType('UidPort', str)
 UidJunction = NewType('UidJunction', str)
 UidWire = NewType('UidWire', str)
 
-UidBox = NewType('UidBox', str)
+UidBox = NewType('UidBox', str)  # Uids for defined Boxes
 
 UidOp = NewType('UidOp', str)  # Primitive operator name
-UidFn = NewType('UidFn', str)  # Defined function name
+# UidFn = NewType('UidFn', str)  # Defined function name
 
 UidVariable = NewType('UidVariable', str)
 UidGromet = NewType('UidGromet', str)
+
+UidMeasure = NewType('UidMeasure', str)
 
 
 # Explicit "reference" objects.
@@ -130,11 +134,11 @@ UidGromet = NewType('UidGromet', str)
 # is specified.
 
 @dataclass
-class RefFn(GrometElm):
+class RefBox(GrometElm):
     """
     Representation of an explicit reference to a defined box
     """
-    name: UidFn
+    name: UidBox
 
 
 @dataclass
@@ -145,31 +149,12 @@ class RefOp(GrometElm):
     name: UidOp
 
 
-# --------------------
-# Metadata
-
-@dataclass
-class Metadatum(GrometElm):
-    """
-    Metadatum base.
-    """
-    uid: UidMetadatum
-    type: Union[UidType, None]
-
-
-# TODO: add Metadatum subtypes
-#       Will be based on: https://ml4ai.github.io/automates-v2/grfn_metadata.html
-
-
-Metadata = NewType('Metadata', Union[List[Metadatum], None])
-
-
-# --------------------
+# -----------------------------------------------------------------------------
 # Type
-
+# -----------------------------------------------------------------------------
 
 @dataclass
-class Type:
+class Type(ABC):
     """
     Type Specification.
     Constructed as an expression of the GroMEt Type Algebra
@@ -259,11 +244,12 @@ class NamedAttribute(Type):
 #     element_type: List[Tuple[UidType, UidType]]
 
 
-# --------------------
+# -----------------------------------------------------------------------------
 # TypedGrometElm
+# -----------------------------------------------------------------------------
 
 @dataclass
-class TypedGrometElm(GrometElm):
+class TypedGrometElm(GrometElm, ABC):
     """
     Base class for all Gromet Elements that may be typed.
     """
@@ -317,7 +303,7 @@ Literal: (type: "SetInt10", [1,2,3,3,4,52....])
 # Valued
 
 @dataclass
-class Valued(TypedGrometElm):
+class Valued(TypedGrometElm, ABC):
     """
     This class is never instantiated; it's purpose is to
         introduce attributes and a class-grouping into
@@ -414,7 +400,7 @@ class BoxCall(Box):
 
 
 @dataclass
-class HasContents:
+class HasContents(ABC):
     """
     Mixin class, never instantiated.
     Bookkeeping for Box "contents" references.
@@ -430,28 +416,6 @@ class HasContents:
     wires: Union[List[UidWire], None]
     boxes: Union[List[UidBox], None]
     junctions: Union[List[UidJunction], None]
-
-
-# @dataclass
-# class BoxUndirected(Box):
-#     """
-#     Undirected Box base.
-#     Unoriented list of Ports represent interface to Box
-#     """
-#
-#     # NOTE: Redundant since Ports specify the Box they belong to.
-#     # However, natural to think of boxes "having" Ports, and DirectedBoxes
-#     # must specify the "face" their ports belong to, so for parity we'll
-#     # have BoxUndirected also name their Ports
-#     ports: Union[List[UidPort], None]
-#
-#
-# @dataclass
-# class BoxDirected(Box):
-#     # NOTE: This is NOT redundant since Ports are not oriented,
-#     # but DirectedBox has ports on a "orientation/face"
-#     input_ports: Union[List[UidPort], None]
-#     output_ports: Union[List[UidPort], None]
 
 
 # Relations
@@ -489,7 +453,7 @@ class Expr(GrometElm):
         (b) RefOp: an explicitly defined Box (e.g., a Function)
     The args field is a list of: UidPort reference, Literal or Expr
     """
-    call: Union[RefFn, RefOp]
+    call: Union[RefBox, RefOp]
     args: Union[List[Union[UidPort, Literal, 'Expr']], None]
 
 
@@ -673,29 +637,6 @@ class Loop(Box, HasContents):  # BoxDirected
     exit_condition: Union[Predicate, None]
 
 
-# Special forms for Pr/T (Predicate/Transition) Petri Nets, used by Galois
-
-# @dataclass
-# class CNFPredicate(Relation):
-#     """
-#     A Conjunctive Normal Form (CNF) Predicate.
-#     Interpreted as a conjunction of Predicates:
-#         All must be True for the CNFPredicate to be True.
-#     """
-#     terms: List[Predicate]
-#
-#
-# @dataclass
-# class PrTEvent(Box):
-#     """
-#     An Event in a Predicate/Transition (Pr/T) Petri Net: 'PTNet'.
-#     All edges in a PrTEvent are undirected.
-#     """
-#     enable: CNFPredicate
-#     rate: Relation
-#     effect: Relation
-
-
 # --------------------
 # Variable
 
@@ -714,37 +655,34 @@ class Variable(TypedGrometElm):
 
 
 # --------------------
-# Gromet top level
+# Gromet top level class
 
 @dataclass
 class Gromet(TypedGrometElm):
     uid: UidGromet
     root: Union[UidBox, None]
+
+    # definitions
     types: Union[List[TypeDeclaration], None]
     literals: Union[List[Literal], None]
     junctions: Union[List[Junction], None]
     ports: Union[List[Port], None]
     wires: Union[List[Wire], None]
-    boxes: List[Box]  # has to be one top-level Box
+    boxes: Union[List[Box], None]
     variables: Union[List[Variable], None]
-
-
-'''
-@dataclass
-class Measure(GrometElm):
-    wire: Wire
-    interval: ???: Tuple or Array
-    type: Type  # Enum("instance", interval, steady_state)
-'''
 
 
 # -----------------------------------------------------------------------------
 # Utils
 # -----------------------------------------------------------------------------
 
-def gromet_to_json(gromet: Gromet, tgt_file: Union[str, None] = None):
+def gromet_to_json(gromet: Gromet,
+                   tgt_file: Union[str, None] = None,
+                   tgt_root: Union[str, None] = None):
     if tgt_file is None:
         tgt_file = f"{gromet.name}_gromet_{gromet.type}.json"
+    if tgt_root is not None:
+        tgt_file = os.path.join(tgt_root, tgt_file)
     json.dump(asdict(gromet),  # gromet.to_dict(),
               open(tgt_file, "w"),
               indent=2)
@@ -755,6 +693,18 @@ def gromet_to_json(gromet: Gromet, tgt_file: Union[str, None] = None):
 # -----------------------------------------------------------------------------
 
 """
+Changes 2021-06-13:
+() Changed RefFn to RefBox (as reference could be to any defined Box)
+() Remove UidFn as not needed; instead use general UidBox (e.g., by RefBox)
+() Moved metadata into separate file to reduce clutter.
+() Started migration of GrFN metadata types to GroMEt metadatum types.
+    () <Gromet>.TextualDocumentReferenceSet
+() First example of Experiment Specification
+    () ExperimentSpecSet : A set of Experiment Specifications
+    () FrontendExperimentSpec : Message from HMI to Proxy
+    () BackendExperimentSpec : Message from Proxy to execution framework
+
+
 Changes 2021-05-27:
 () Added the following mechanism by which a Box can be "called"
         in an arbitrary number of different contexts within the gromet.
