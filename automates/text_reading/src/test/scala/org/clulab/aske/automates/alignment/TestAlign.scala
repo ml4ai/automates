@@ -11,6 +11,8 @@ import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
 import org.scalatest.{FlatSpec, Matchers}
 import ujson.Value
 import ai.lum.common.FileUtils._
+import org.clulab.aske.automates.data.DataLoader
+
 import scala.collection.mutable.ArrayBuffer
 
 class TestAlign extends FlatSpec with Matchers {
@@ -19,7 +21,9 @@ class TestAlign extends FlatSpec with Matchers {
   // utils (todo: move to TestUtils)
 
 
-
+  println("HEREEE: " + org.apache.commons.text.StringEscapeUtils.unescapeJava("(2) Eeq = s s + \\u03b3 \\u03bb where " +
+    "Rnday is daily surface net radiation (in J m\\u22122 day\\u22121) and \\u03bb is the latent heat of vaporization" +
+    " (in J kg\\u22121)"))
   def getLinksWithIdentifierStr(identifierName: String, allLinks: Seq[Value], inclId: Boolean): Seq[Value] = {
 
     // when searching all links, can't include element uid, but when we search off of intermediate node (e.g., comment identifier when searching for gvar to src code alignment for testing, have to use uid
