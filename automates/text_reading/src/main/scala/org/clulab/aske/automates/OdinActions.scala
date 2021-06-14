@@ -23,7 +23,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   val proc = new FastNLPProcessor()
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
-
+//mentions
     if (expansionHandler.nonEmpty) {
       // expand arguments
 
@@ -203,7 +203,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   /** Keeps the longest mention for each group of overlapping mentions **/ // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (functions, other) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
-    for (f <- functions) println(f.text ++ f.arguments.keys.mkString("||"))
+//    for (f <- functions) println(f.text ++ f.arguments.keys.mkString("||"))
     // distinguish between EventMention and RelationMention in functionMentions
     val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
     val mns: Iterable[Mention] = for {
@@ -773,6 +773,25 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn ++ other ++ complete
   }
 
+//  def attachContext(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+//    val (functions, nonFunctions) = mentions.partition(_.label == "Function")
+//    val (context, other) = nonFunctions.partition(_.label == "Context")
+//    val toReturn = new ArrayBuffer[Mention]()
+////    val context = mentions.filter(_.label == "Context")
+////    println("here: " ++ context.head.arguments.mkString("||"))
+//    for (f <- functions) {
+//      val contextToAttach = context.filter(m => m.sentence == f.sentence)
+////      if (contextToAttach.nonEmpty) {
+//        val combinedArgs = f.arguments ++ contextToAttach.head.arguments
+////        val newArgs = Map("context" -> contextToAttach)
+//        val newFunctions = copyWithArgs(f, combinedArgs)
+//        toReturn.append(newFunctions)
+////      } else toReturn.append(f)
+//    }
+//
+//    toReturn ++ nonFunctions
+//  }
+
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
@@ -956,9 +975,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def functionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val functionMen = filterFunction(mentions, state)
-    val toReturn = if (functionMen.nonEmpty) filterFunctionArgs(functionMen, state) else Seq.empty
-    toReturn.distinct
+//    val contextAttached = attachContext(mentions, state)
+    val filteredMen = filterFunction(mentions, state)
+    val toReturn = if (filteredMen.nonEmpty) filterFunctionArgs(filteredMen, state) else Seq.empty
+
+    toReturn
   }
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {

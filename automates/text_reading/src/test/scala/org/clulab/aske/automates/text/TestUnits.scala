@@ -84,6 +84,3 @@ class TestUnits extends ExtractionTest {
     val mentions = extractMentions(t8a)
     testUnitEvent(mentions, desired)
   }
-
-
-}

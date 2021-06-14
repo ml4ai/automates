@@ -14,6 +14,7 @@ rules:
       trigger = [lemma = /${functionTrigger1}/]
       input:Phrase+ = nmod_agent | nmod_because_of? nmod_by | <amod <nsubj
       output:Phrase = nsubjpass | <acl_as | <amod | <dep nsubj
+      context:Context? = ${context}
 
   - name: trigger2_of # product, inverse, sum, mean, composite, minimum, maximum, function is the trigger for this rule
     label: Function
@@ -91,8 +92,8 @@ rules:
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
       trigger = [lemma = "multiply"]
-      input:Phrase+ = dobj | nmod_by
-      output:Phrase = <advcl_by nsubjpass
+      input:Phrase+ = dobj | nmod_by | nsubjpass | nmod_agent
+      output:Phrase = <advcl_by nsubjpass | <ccomp <advcl_while nsubj appos
 
   #covidactnow
 
@@ -122,16 +123,16 @@ rules:
       #todo: how to extract sets of "one output & inputs" multiple times?
       # (i.e. infiltration & the amount applied, the amount of rainfall as one set and runoff & the amount applied, the amount of rainfall as the other)
 
-  - name: partitioned_as
+  - name: partition
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "λET can be partitioned as soil evaporation (λEs) and crop transpiration (λTc)"
     pattern: |
-      trigger = [lemma = "partition"] (?="as")
-      input:Phrase+ = nmod_as | nmod_as conj_and
-      output:Phrase = nsubjpass
+      trigger = [lemma = "partition"]
+      input:Phrase+ = nmod_as | nmod_as conj_and | nmod_into | nmod_to
+      output:Phrase = nsubjpass | dobj
 
     # needs to see if this function works too extensively.
   - name: plus_or_minus
@@ -194,7 +195,7 @@ rules:
       trigger = [lemma = /depend|dependent/]
       input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and
       output:Phrase = <xcomp? nsubj | nsubj:xsubj | nmod_of
-#      context:Context = conj_and advcl_if
+      context:Context? = ${context}
 
   - name: integrated_to
     label: Function

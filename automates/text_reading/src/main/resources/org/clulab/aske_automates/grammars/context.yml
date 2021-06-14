@@ -16,9 +16,11 @@ rules:
     type: token
     example: "Under the same mulching fraction (fm = 0.5), αb decreased by 8.5% when fsw decreased from 1.0 to 0.5."
     pattern: |
-      (?<= [lemma = "when"]) (?<context> [tag = /DT/]? [tag = /JJ|^NN/]+ ([tag = /IN/] [tag = /DT/]? [tag = /CD|JJ/]? [tag = /^NN/])? [tag = /^VB/] [tag = /JJ|^VB/]? ([tag = /IN/] [tag = /CD/] [tag = /TO/] [tag = /CD/])?)
+      (?<= [lemma = "when"]) (?<context> [tag = /DT/]? [tag = /JJ|^NN/]+ ([tag = /IN/] [tag = /DT/]? [tag = /CD|JJ/]? [tag = /^NN/])? [tag = /^VB/] [tag = /JJ|^VB/]? ([tag = /IN/] [tag = /CD/]? [tag = /TO/] [tag = /CD/])? ([tag = /IN/] [tag = /DT/] [tag = /VBG|JJ/] [tag = /NN/]?))
       |
       (?<= [lemma = "when"]) (?<context> [tag = /^NN/] [lemma = /<|>|=|≥|≤/] [tag = /CD/] [tag = /NN/]?)
+      |
+      (?<= [lemma = "when"]) (?<context> [chunk = /I-NP|B-NP/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/]+)? [chunk = /I-VP|B-VP/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/]+ ([tag = /TO/] [chunk = /B-NP/])?)? ([chunk = /B-VP/] [chunk = /B-PP/]? [chunk = /B-NP|I-NP/]+ [chunk = /B-ADJP/]? [chunk = /B-PP/]? [chunk = /I-NP|B-NP/]*)* ([tag = /CC/] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/] [chunk = /B-PP/] [chunk = /I-NP|B-NP/]+)?)
 
   - name: if_condition
     label: Context
@@ -27,3 +29,22 @@ rules:
     example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and, if this height is not low enough, on the stability."
     pattern: |
       (?<= [lemma = "if"]) (?<context> [tag = /DT/]? [tag = /JJ|^NN/]+ ([tag = /IN/] [tag = /DT/]? [tag = /CD|JJ/]? [tag = /^NN/])? [tag = /^VB/] [tag = /RB/]? [tag = /JJ|^VB/]? [tag = /RB/]? ([tag = /IN/] [tag = /DT/]? [tag = /JJ|^NN/]+)* ([tag = /IN/] [tag = /CD/] [tag = /TO/] [tag = /CD/])?)
+
+  - name: preposition_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Rn = calculated net radiation at the crop surface (MJ m-2 d-1 for daily time steps or MJ m-2 h-1 for hourly time steps)"
+    pattern: |
+      (?<= [lemma = "for"]|[lemma = "at"]|[lemma = "on"]|[lemma = "within"]) (?<context> [chunk = /B-NP|I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+)*)
+      |
+      (?<= [lemma = "for"] [chunk = /B-NP|I-NP/]+ [word = "and"]) (?<context> [chunk = /B-NP|I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+)*)
+
+  - name: that_restriction
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Cn = numerator constant that changes with reference type and calculation time step (K mm s3 Mg-1 d-1 or K mm s3 Mg-1 h-1)"
+    pattern: |
+      (?<context> [lemma = "that"] [chunk = /B-VP/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/]+ [word = "step"]?)*)
+    # note: the last [word = "step"] part was added due to the bad parsing.

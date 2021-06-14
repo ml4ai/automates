@@ -1,0 +1,25 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+
+#  - name: with_context
+#    label: ContextEvent
+#    priority: ${priority}
+#    type: token
+#    example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and on the stability, if this height is not low enough."
+#    pattern: |
+#      @event:Function "," "if" @context:Context
+
+
+
+# doesn't work if condition is inside the event span; for this rule to work, disable expansion
+#  - name: with_context_dep
+#    label: ContextEvent
+#    priority: ${priority}
+#    type: dependency
+#    example: "C and C* are heat transfer coefficients  that depend on the reference height selected for T and u, and on the stability if this height is not low enough. "
+#    pattern: |
+#      trigger = [word="if"]
+#      event:Function = <mark <advcl_if
+#      context:Context = <mark
