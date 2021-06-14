@@ -2833,7 +2833,7 @@
             "basename": "PID.PID_init",
             "occurrence_num": 0,
             "parent": "1db53334-fb03-23a1-d576-d4155ec17dbe",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "nodes": [
                 "ba26d851-35e8-579a-7aaf-0e891fb797fa",
@@ -2885,7 +2885,7 @@
             "basename": "PID.main",
             "occurrence_num": 0,
             "parent": "c87a7463-19c1-6a0d-0feb-d845d0dfae43",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "nodes": [
                 "31d0b664-0589-f877-9b02-52440950fd13",
@@ -2922,7 +2922,7 @@
             "basename": "PID.PID_realize",
             "occurrence_num": 0,
             "parent": "878b9f6b-57a1-cb71-2975-d279d86dbf11",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "nodes": [
                 "637e0edc-5b6e-4ae7-a620-81434fbaecc0",
@@ -2978,7 +2978,7 @@
             "basename": "PID.main.LOOP_0",
             "occurrence_num": 0,
             "parent": "1db53334-fb03-23a1-d576-d4155ec17dbe",
-            "type": "LoopContainer",
+            "type": "LoopContainerDef",
             "border_color": "navyblue",
             "nodes": [
                 "ebe21368-98c7-5205-1e01-a934402d0baf",
@@ -3029,7 +3029,7 @@
             "basename": "PID.global",
             "occurrence_num": 0,
             "parent": null,
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "nodes": [
                 "38018b47-b29a-8b06-daf6-6c5f2577bffa",

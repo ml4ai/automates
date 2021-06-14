@@ -22,6 +22,8 @@ def main():
             parquet_data = json.loads(parquet_json)
 
             parquet_data_keys = list(parquet_data.keys())
+            if len(parquet_data_keys) == 0:
+                continue
             num_data_rows = max(
                 [int(k) for k in parquet_data[parquet_data_keys[0]]]
             )

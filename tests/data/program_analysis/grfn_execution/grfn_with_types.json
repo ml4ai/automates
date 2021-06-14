@@ -483,7 +483,7 @@
             "basename": "@global.main",
             "border_color": "forestgreen",
             "namespace": "PID",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "nodes": [
                 "NODE14",
                 "VARIABLE14",
@@ -498,7 +498,7 @@
         {
             "uid": "SUBGRAPH2",
             "basename": "@global.PID_init",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "namespace": "PID",
             "nodes": [
@@ -531,7 +531,7 @@
         {
             "uid": "SUBGRAPH3",
             "basename": "@global.main.LOOP_0",
-            "type": "LoopContainer",
+            "type": "LoopContainerDef",
             "border_color": "navyblue",
             "namespace": "PID",
             "nodes": [
@@ -561,7 +561,7 @@
         {
             "uid": "SUBGRAPH4",
             "basename": "@global.PID_realize",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "namespace": "PID",
             "nodes": [

@@ -1,0 +1,250 @@
+from __future__ import annotations
+from abc import ABC, abstractmethod, abstractclassmethod
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class BaseIdentifier(ABC):
+    namespace: str
+    scope: str
+
+    @abstractclassmethod
+    def from_air_json(cls, data: dict) -> BaseIdentifier:
+        return NotImplemented
+
+    @staticmethod
+    def from_str(data: str):
+        components = data.split("::")
+        type_str = components[0]
+        if type_str == "@container":
+            if len(components) == 3:
+                (_, ns, sc) = components
+                return ContainerIdentifier(ns, sc, "--")
+            (_, ns, sc, n) = components
+            if sc != "@global":
+                n = f"{sc}.{n}"
+            return ContainerIdentifier(ns, sc, n)
+        elif type_str == "@type":
+            (_, ns, sc, n) = components
+            return TypeIdentifier(ns, sc, n)
+        elif type_str == "@variable":
+            (_, ns, sc, n, idx) = components
+            return VariableIdentifier(ns, sc, n, int(idx))
+
+    def is_global_scope(self):
+        return self.scope == "@global"
+
+    @abstractmethod
+    def __hash__(self):
+        return NotImplemented
+
+    @abstractmethod
+    def __str__(self):
+        return NotImplemented
+
+
+@dataclass(frozen=True)
+class NamedIdentifier(BaseIdentifier):
+    name: str
+
+    @classmethod
+    def from_data(cls, data: dict) -> NamedIdentifier:
+        pass
+
+    def __str__(self):
+        return f"{self.namespace}::{self.scope}::{self.name}"
+
+    def __hash__(self):
+        return hash((self.namespace, self.scope, self.name))
+
+
+@dataclass(frozen=True)
+class IndexedIdentifier(NamedIdentifier):
+    index: int
+
+    @classmethod
+    def from_data(cls, data: dict) -> IndexedIdentifier:
+        pass
+
+    def __str__(self):
+        return f"{super().__str__()}::{self.index}"
+
+    def __hash__(self):
+        return hash(super().__hash__(), (self.index,))
+
+
+@dataclass(frozen=True)
+class ContainerIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(Container)\t{super().__str__()}"
+
+    @classmethod
+    def from_air_json(cls, data: dict) -> ContainerIdentifier:
+        (_, ns, sc, name) = data["name"].split("::")
+        return cls(ns, sc, name)
+
+
+@dataclass(frozen=True)
+class FunctionIdentifier(IndexedIdentifier):
+    def __str__(self):
+        return f"(Function)\t{super().__str__()}"
+
+
+@dataclass(frozen=True)
+class TypeIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(Type)\t{super().__str__()}"
+
+    @classmethod
+    def from_air_json(cls, data: dict):
+        ns = data["namespace"] if "namespace" in data else "@global"
+        sc = data["scope"] if "scope" in data else "@global"
+        return cls(ns, sc, data["name"])
+
+
+@dataclass(frozen=True)
+class ObjectIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(Object)\t{super().__str__()}"
+
+    @classmethod
+    def from_air_json(cls, data: dict):
+        ns = data["namespace"] if "namespace" in data else "@global"
+        sc = data["scope"] if "scope" in data else "@global"
+        return cls(ns, sc, data["name"])
+
+
+@dataclass(frozen=True)
+class StmtIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(Stmt)\t{super().__str__()}"
+
+
+@dataclass(frozen=True)
+class CallStmtIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(CallStmt)\t{super().__str__()}"
+
+    @classmethod
+    def from_air_json(cls, data: dict) -> CallStmtIdentifier:
+        (_, ns, sc, con_name) = data["name"].split("::")
+        return cls(ns, sc, con_name)
+
+
+@dataclass(frozen=True)
+class LambdaStmtIdentifier(IndexedIdentifier):
+    def __str__(self):
+        return f"(LambdaStmt)\t{super().__str__()}"
+
+    @classmethod
+    def from_air_json(cls, data: dict) -> LambdaStmtIdentifier:
+        (ns, sc, exp_type, name, idx) = data["name"].split("__")
+        return cls(ns, sc, name, int(idx))
+
+
+@dataclass(frozen=True)
+class VariableIdentifier(IndexedIdentifier):
+    def __hash__(self):
+        return super().__hash__()
+
+    def __str__(self):
+        return f"(Variable)\t{super().__str__()}"
+
+    @classmethod
+    def from_anonymous(cls, namespace: str, scope: str):
+        return cls(namespace, scope, "@anonymous", -1)
+
+    @classmethod
+    def from_str_and_con(cls, data: str, con: ContainerIdentifier):
+        split = data.split("::")
+        name = ""
+        idx = -1
+        if len(split) == 3:
+            # Identifier is depricated <var_id type>::<name>::<version> style
+            (_, name, idx) = split
+            return cls(con.namespace, con.con_name, name, int(idx))
+        elif len(split) == 5:
+            # Identifier is <var_id type>::<module>::<scope>::<name>::<version>
+            (_, ns, sc, name, idx) = split
+            return cls(ns, sc, name, int(idx))
+        else:
+            raise ValueError(f"Unrecognized variable identifier: {data}")
+
+    @classmethod
+    def from_str(cls, var_id: str):
+        elements = var_id.split("::")
+        if len(elements) == 4:
+            (ns, sc, vn, ix) = elements
+        else:
+            (_, ns, sc, vn, ix) = elements
+        return cls(ns, sc, vn, int(ix))
+
+
+@dataclass(frozen=True)
+class AIRVariableIdentifier(NamedIdentifier):
+    container: ContainerIdentifier
+
+    def __hash__(self):
+        return hash(super().__hash__(), self.container.__hash__())
+
+    def __str__(self):
+        return f"(Variable)\t{super().__str__()}\t{ {str(self.container)} }"
+
+    @classmethod
+    def from_air_json(cls, data: dict) -> AIRVariableIdentifier:
+        # Identifier is <var_id type>::<module>::<scope>::<name>::<version>
+        (_, ns, sc, name, idx) = data["name"].split("::")
+        return cls(ns, sc, name, int(idx), data["parent_con"])
+        # if len(split) == 3:
+        #     # Identifier is depricated <var_id type>::<name>::<version> style
+        #     (_, name, idx) = split
+        #     return cls(con.namespace, con.con_name, name, int(idx))
+        # elif len(split) == 5:
+
+        # else:
+        #     raise ValueError(f"Unrecognized variable identifier: {data}")
+
+    @classmethod
+    def from_str(cls, var_id: str):
+        elements = var_id.split("::")
+        if len(elements) == 4:
+            (ns, sc, vn, ix) = elements
+        else:
+            (_, ns, sc, vn, ix) = elements
+        return cls(ns, sc, vn, int(ix))
+
+
+@dataclass(frozen=True)
+class NetworkVariableIdentifier(IndexedIdentifier):
+    function_id: FunctionIdentifier
+
+    def __hash__(self):
+        return hash(super().__hash__(), self.function_id.__hash__())
+
+    def __str__(self):
+        return f"(Variable)\t{super().__str__()}\t{ {str(self.function_id)} }"
+
+    @classmethod
+    def from_str_and_con(cls, data: str, con: ContainerIdentifier):
+        split = data.split("::")
+        name = ""
+        idx = -1
+        if len(split) == 3:
+            # Identifier is depricated <var_id type>::<name>::<version> style
+            (_, name, idx) = split
+            return cls(con.namespace, con.con_name, name, int(idx))
+        elif len(split) == 5:
+            # Identifier is <var_id type>::<module>::<scope>::<name>::<version>
+            (_, ns, sc, name, idx) = split
+            return cls(ns, sc, name, int(idx))
+        else:
+            raise ValueError(f"Unrecognized variable identifier: {data}")
+
+    @classmethod
+    def from_str(cls, var_id: str):
+        elements = var_id.split("::")
+        if len(elements) == 4:
+            (ns, sc, vn, ix) = elements
+        else:
+            (_, ns, sc, vn, ix) = elements
+        return cls(ns, sc, vn, int(ix))

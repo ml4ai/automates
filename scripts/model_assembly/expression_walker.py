@@ -45,22 +45,11 @@ def main(args):
     json.dump(func_node_graphs, open(outfile_name, "w"))
 
 
-def nodes2AGraph(graph_name: str, nodes: list):
-    func_network = nodes2DiGraph(nodes)
-    A = nx.nx_agraph.to_agraph(func_network)
-    A.graph_attr.update(
-        {
-            "dpi": 227,
-            "fontsize": 20,
-            "fontname": "Menlo",
-            "rankdir": "TB",
-        }
-    )
-    A.node_attr.update({"fontname": "Menlo"})
-    A.draw(f"{graph_name}.pdf", prog="dot")
-
-
-def add_grfn_uids(nodes, F2H, func_uid):
+def add_grfn_uids(
+    nodes: list,
+    F2H: dict,
+    func_uid: str,
+):
     input_var_uids = [ivar.uid for ivar in F2H[func_uid].inputs]
     id2node = {n.uid: n for n in nodes}
     variable_nodes = [n for n in nodes if isinstance(n, ExprVariableNode)]
@@ -81,6 +70,21 @@ def add_grfn_uids(nodes, F2H, func_uid):
     for node in variable_nodes:
         if node.identifier in arg_name2input_uid:
             node.grfn_uid = arg_name2input_uid[node.identifier]
+
+
+def nodes2AGraph(graph_name: str, nodes: list):
+    func_network = nodes2DiGraph(nodes)
+    A = nx.nx_agraph.to_agraph(func_network)
+    A.graph_attr.update(
+        {
+            "dpi": 227,
+            "fontsize": 20,
+            "fontname": "Menlo",
+            "rankdir": "TB",
+        }
+    )
+    A.node_attr.update({"fontname": "Menlo"})
+    A.draw(f"{graph_name}.pdf", prog="dot")
 
 
 if __name__ == "__main__":

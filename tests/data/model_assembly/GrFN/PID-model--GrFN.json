@@ -352,7 +352,7 @@
             "basename": "@global.main",
             "border_color": "forestgreen",
             "namespace": "PID",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "nodes": [
                 "VARIABLE14",
                 "VARIABLE38",
@@ -365,7 +365,7 @@
         {
             "uid": "SUBGRAPH2",
             "basename": "@global.PID_init",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "namespace": "PID",
             "nodes": [
@@ -398,7 +398,7 @@
         {
             "uid": "SUBGRAPH4",
             "basename": "@global.PID_realize",
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "namespace": "PID",
             "nodes": [

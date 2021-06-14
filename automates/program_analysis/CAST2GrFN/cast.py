@@ -33,14 +33,13 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 from automates.program_analysis.CAST2GrFN.visitors import (
     CASTToAIRVisitor,
 )
-from automates.model_assembly.air import AutoMATES_IR
 from automates.model_assembly.networks import GroundedFunctionNetwork
-from automates.model_assembly.structures import (
-    GenericContainer,
-    GenericStmt,
-    GenericIdentifier,
-    GenericDefinition,
-    VariableDefinition,
+from automates.model_assembly.identifiers import BaseIdentifier
+from automates.model_assembly.air import (
+    AutoMATES_IR,
+    ContainerDef,
+    BaseDef,
+    VariableDef,
 )
 
 CAST_NODES_TYPES_LIST = [
@@ -109,26 +108,26 @@ class CAST(object):
 
         # Create variable definitions
         for var_data in air["variables"]:
-            new_var = GenericDefinition.from_dict(var_data)
+            new_var = BaseDef.from_dict(var_data)
             V[new_var.identifier] = new_var
 
         # Create type definitions
         for type_data in air["types"]:
-            new_type = GenericDefinition.from_dict(type_data)
+            new_type = BaseDef.from_dict(type_data)
             T[new_type.identifier] = new_type
 
         # Create container definitions
         for con_data in air["containers"]:
-            new_container = GenericContainer.from_dict(con_data)
+            new_container = ContainerDef.from_dict(con_data)
             for in_var in new_container.arguments:
                 if in_var not in V:
-                    V[in_var] = VariableDefinition.from_identifier(in_var)
+                    V[in_var] = VariableDef.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
         # TODO: fix this to send objects and metadata
         #       (and documentation as a form of metadata)
         air = AutoMATES_IR(
-            GenericIdentifier.from_str(
+            BaseIdentifier.from_str(
                 "@container::initial::@global::exampleFunction"
             ),
             C,

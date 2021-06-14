@@ -512,7 +512,7 @@
             "scope": "petpt",
             "basename": "petpt.IF_0",
             "occurrence_num": 0,
-            "type": "CondContainer",
+            "type": "CondContainerDef",
             "nodes": [
                 "ebe5ffff-a420-482f-a8de-ba27225fb784",
                 "c3da18d1-8453-4921-a039-c914f124e9e5",
@@ -535,7 +535,7 @@
             "scope": "@global",
             "basename": "petpt",
             "occurrence_num": 0,
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "nodes": [
                 "66d4c343-6129-4a42-abae-4267616c7f3b",
                 "d8a4d5f9-924f-4d03-bd53-84a01cd611ab",
@@ -563,7 +563,7 @@
             "scope": "petpt",
             "basename": "petpt.IF_1",
             "occurrence_num": 0,
-            "type": "CondContainer",
+            "type": "CondContainerDef",
             "nodes": [
                 "6bd65291-9670-44d5-834a-9249ae14e074",
                 "b0d0825f-75a4-4ab0-b37e-56a7b0dc0b46",

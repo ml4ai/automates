@@ -1,0 +1,411 @@
+{
+    "containers": [
+        {
+            "name": "@container::SIR-simple::SIR-simple::sir",
+            "source_refs": [],
+            "type": "function",
+            "arguments": [
+                "@variable::SIR-simple::SIR-simple.sir::s::-1",
+                "@variable::SIR-simple::SIR-simple.sir::i::-1",
+                "@variable::SIR-simple::SIR-simple.sir::r::-1",
+                "@variable::SIR-simple::SIR-simple.sir::beta::-1",
+                "@variable::SIR-simple::SIR-simple.sir::gamma::-1",
+                "@variable::SIR-simple::SIR-simple.sir::dt::-1"
+            ],
+            "updated": [],
+            "return_value": [
+                "@variable::SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+            ],
+            "body": [
+                {
+                    "function": {
+                        "name": "SIR-simple__SIR-simple.sir__assign__infected__0",
+                        "type": "lambda",
+                        "code": "lambda beta,s,i,r,dt: (- (((beta * s) * i) / ((s + i) + r)) * dt)"
+                    },
+                    "input": [
+                        "@variable::SIR-simple::SIR-simple.sir::beta::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::s::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::i::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::r::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::dt::-1"
+                    ],
+                    "output": [
+                        "@variable::SIR-simple::SIR-simple.sir::infected::0"
+                    ],
+                    "updated": [],
+                    "source_ref": {
+                        "file": "SIR-simple.f",
+                        "line_begin": 19,
+                        "col_start": 0,
+                        "line_end": null,
+                        "col_end": null
+                    },
+                    "metadata": []
+                },
+                {
+                    "function": {
+                        "name": "SIR-simple__SIR-simple.sir__assign__recovered__0",
+                        "type": "lambda",
+                        "code": "lambda gamma,i,dt: ((gamma * i) * dt)"
+                    },
+                    "input": [
+                        "@variable::SIR-simple::SIR-simple.sir::gamma::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::i::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::dt::-1"
+                    ],
+                    "output": [
+                        "@variable::SIR-simple::SIR-simple.sir::recovered::0"
+                    ],
+                    "updated": [],
+                    "source_ref": {
+                        "file": "SIR-simple.f",
+                        "line_begin": 20,
+                        "col_start": 0,
+                        "line_end": null,
+                        "col_end": null
+                    },
+                    "metadata": []
+                },
+                {
+                    "function": {
+                        "name": "SIR-simple__SIR-simple.sir__assign__s__0",
+                        "type": "lambda",
+                        "code": "lambda s,infected: (s - infected)"
+                    },
+                    "input": [
+                        "@variable::SIR-simple::SIR-simple.sir::s::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::infected::0"
+                    ],
+                    "output": [
+                        "@variable::SIR-simple::SIR-simple.sir::s::0"
+                    ],
+                    "updated": [],
+                    "source_ref": {
+                        "file": "SIR-simple.f",
+                        "line_begin": 22,
+                        "col_start": 0,
+                        "line_end": null,
+                        "col_end": null
+                    },
+                    "metadata": []
+                },
+                {
+                    "function": {
+                        "name": "SIR-simple__SIR-simple.sir__assign__i__0",
+                        "type": "lambda",
+                        "code": "lambda infected,i,recovered: ((infected + i) - recovered)"
+                    },
+                    "input": [
+                        "@variable::SIR-simple::SIR-simple.sir::infected::0",
+                        "@variable::SIR-simple::SIR-simple.sir::i::-1",
+                        "@variable::SIR-simple::SIR-simple.sir::recovered::0"
+                    ],
+                    "output": [
+                        "@variable::SIR-simple::SIR-simple.sir::i::0"
+                    ],
+                    "updated": [],
+                    "source_ref": {
+                        "file": "SIR-simple.f",
+                        "line_begin": 23,
+                        "col_start": 0,
+                        "line_end": null,
+                        "col_end": null
+                    },
+                    "metadata": []
+                },
+                {
+                    "function": {
+                        "name": "SIR-simple__SIR-simple.sir__assign__r__0",
+                        "type": "lambda",
+                        "code": "lambda recovered,r: (recovered + r)"
+                    },
+                    "input": [
+                        "@variable::SIR-simple::SIR-simple.sir::recovered::0",
+                        "@variable::SIR-simple::SIR-simple.sir::r::-1"
+                    ],
+                    "output": [
+                        "@variable::SIR-simple::SIR-simple.sir::r::0"
+                    ],
+                    "updated": [],
+                    "source_ref": {
+                        "file": "SIR-simple.f",
+                        "line_begin": 24,
+                        "col_start": 0,
+                        "line_end": null,
+                        "col_end": null
+                    },
+                    "metadata": []
+                },
+                {
+                    "function": {
+                        "name": "SIR-simple__SIR-simple.sir__assign__RETURN_VAL__-1",
+                        "type": "lambda",
+                        "code": "lambda r,s,i: (r,s,i)"
+                    },
+                    "input": [
+                        "@variable::SIR-simple::SIR-simple.sir::r::0",
+                        "@variable::SIR-simple::SIR-simple.sir::s::0",
+                        "@variable::SIR-simple::SIR-simple.sir::i::0"
+                    ],
+                    "output": [
+                        "@variable::SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+                    ],
+                    "updated": [],
+                    "source_ref": {
+                        "file": "",
+                        "line_begin": null,
+                        "col_start": null,
+                        "line_end": null,
+                        "col_end": null
+                    },
+                    "metadata": []
+                }
+            ],
+            "body_source_ref": {
+                "file": "SIR-simple.f",
+                "line_begin": 0,
+                "col_start": null,
+                "line_end": 25,
+                "col_end": null
+            },
+            "metadata": []
+        }
+    ],
+    "variables": [
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::s::-1",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 14,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::i::-1",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 14,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::r::-1",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 14,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::beta::-1",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 14,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::gamma::-1",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 14,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::dt::-1",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 14,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::infected::0",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 19,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::recovered::0",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 20,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::s::0",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 22,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::i::0",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 23,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::r::0",
+            "source_refs": [
+                {
+                    "file": "SIR-simple.f",
+                    "line_begin": 24,
+                    "col_start": 0,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "integer"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        },
+        {
+            "name": "@variable::SIR-simple::SIR-simple.sir::RETURN_VAL::-1",
+            "source_refs": [
+                {
+                    "file": "",
+                    "line_begin": null,
+                    "col_start": null,
+                    "line_end": null,
+                    "col_end": null
+                }
+            ],
+            "domain": {
+                "type": "type",
+                "mutable": false,
+                "name": "Unknown"
+            },
+            "domain_constraint": "(and (> v -infty) (< v infty))",
+            "metadata": []
+        }
+    ],
+    "types": [],
+    "entrypoint": "@container::SIR-simple::SIR-simple::sir",
+    "sources": [
+        "SIR-simple.f"
+    ],
+    "source_comments": {}
+}

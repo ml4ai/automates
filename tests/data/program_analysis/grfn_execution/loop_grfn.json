@@ -161,7 +161,7 @@
         {
             "uid": "fd68f0a0-93b1-430f-a31a-369897c7095b",
             "parent": "6e12d553-8cff-4858-b35d-8343efc6110c",
-            "type": "LoopContainer",
+            "type": "LoopContainerDef",
             "basename": "main.LOOP_0",
             "border_color": "navyblue",
             "namespace": "initial",
@@ -187,7 +187,7 @@
         {
             "uid": "6e12d553-8cff-4858-b35d-8343efc6110c",
             "parent": null,
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "basename": "main",
             "border_color": "forestgreen",
             "namespace": "initial",

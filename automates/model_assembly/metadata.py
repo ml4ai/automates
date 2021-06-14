@@ -404,7 +404,7 @@ class CodeSpanReference(TypedMetadata):
     code_span: CodeSpan
 
     @classmethod
-    def from_air_data(cls, data: dict) -> CodeSpanReference:
+    def from_air_json(cls, data: dict) -> CodeSpanReference:
         return cls(
             MetadataType.CODE_SPAN_REFERENCE,
             ProvenanceData(

@@ -62,7 +62,7 @@
             "basename": "exampleFunction",
             "occurrence_num": 0,
             "parent": null,
-            "type": "FuncContainer",
+            "type": "FuncContainerDef",
             "border_color": "forestgreen",
             "nodes": [
                 "eb1167b3-67a9-c378-7c65-c1e582e2e662",

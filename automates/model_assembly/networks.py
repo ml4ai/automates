@@ -7,6 +7,7 @@ from itertools import product
 from copy import deepcopy
 
 import datetime
+import inspect
 import json
 import ast
 import re
@@ -18,22 +19,32 @@ from networkx.algorithms.simple_paths import all_simple_paths
 from pygraphviz import AGraph
 
 from .sandbox import load_lambda_function
-from .air import AutoMATES_IR
-from .expression_visitor import ExpressionVisitor, ExprOperatorNode
-from .structures import (
-    GenericContainer,
-    LoopContainer,
-    GenericStmt,
-    CallStmt,
-    LambdaStmt,
-    GenericIdentifier,
+from .expression_visitor import (
+    ExpressionVisitor,
+    ExprAbstractNode,
+    ExprOperatorNode,
+    ExprDefinitionNode,
+    ExprVariableNode,
+    ExprValueNode,
+)
+from .air import (
+    AutoMATES_IR,
+    ContainerDef,
+    LoopContainerDef,
+    StmtDef,
+    CallStmtDef,
+    LambdaStmtDef,
+    ObjectDef,
+    VariableDef,
+    TypeDef,
+)
+from .identifiers import (
+    BaseIdentifier,
     ContainerIdentifier,
+    FunctionIdentifier,
+    ObjectIdentifier,
     VariableIdentifier,
     TypeIdentifier,
-    ObjectDefinition,
-    VariableDefinition,
-    TypeDefinition,
-    GrFNExecutionException,
 )
 from .metadata import (
     TypedMetadata,
@@ -58,8 +69,12 @@ dodgerblue3 = "#1874CD"
 forestgreen = "#228b22"
 
 
+class GrFNExecutionException(Exception):
+    pass
+
+
 @dataclass(repr=False, frozen=False)
-class GenericNode(ABC):
+class BaseNode(ABC):
     uid: str
 
     def __repr__(self):
@@ -82,7 +97,7 @@ class GenericNode(ABC):
 
 
 @dataclass(repr=False, frozen=False)
-class VariableNode(GenericNode):
+class VariableNode(BaseNode):
     identifier: VariableIdentifier
     metadata: List[TypedMetadata]
     object_ref: str = None
@@ -99,7 +114,7 @@ class VariableNode(GenericNode):
         return str(self.identifier)
 
     @classmethod
-    def from_id(cls, idt: VariableIdentifier, data: VariableDefinition):
+    def from_id(cls, idt: VariableIdentifier, data: VariableDef):
         # TODO: use domain constraint information in the future
         d_type = DataType.from_str(data.domain_name)
         m_type = MeasurementType.from_name(data.domain_name)
@@ -132,7 +147,13 @@ class VariableNode(GenericNode):
             create_domain_elements(),
         )
         metadata = [dom] + data.metadata
-        return cls(GenericNode.create_node_id(), idt, metadata)
+        return cls(BaseNode.create_node_id(), idt, metadata)
+
+    @classmethod
+    def from_expr_def(cls, expr_namespace, expr_scope):
+        uid = str(uuid.uuid4())
+        var_id = VariableIdentifier.from_anonymous(expr_namespace, expr_scope)
+        return cls(uid, var_id, [])
 
     def get_fullname(self):
         return f"{self.name}\n({self.index})"
@@ -237,17 +258,18 @@ class BaseFuncNode(ABC):
     input_variables: List[str]
     output_variables: List[str]
     hyper_edges: List[HyperEdge]
+    hyper_graph: nx.DiGraph
     metadata: List[TypedMetadata]
 
     def __eq__(self, other: BaseFuncNode) -> bool:
         return self.uid == other.uid
 
-    @classmethod
-    def from_air(
-        cls,
-        container: GenericContainer,
-        air: AutoMATES_IR,
-        VARS: Dict[VariableIdentifier, VariableNode]
+    @staticmethod
+    def from_container(
+        container: ContainerDef,
+        CONS: Dict[ContainerIdentifier, ContainerDef],
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ):
         # NOTE: this method should only be called from FuncNodes that are
         # derived from container definitions in AIR JSON
@@ -262,12 +284,18 @@ class BaseFuncNode(ABC):
 
         edges = list()
         for stmt in container.statements:
-            if isinstance(stmt, CallStmt):
+            if isinstance(stmt, CallStmtDef):
                 # Create a new Container type function node defintion
-                pass
-            elif isinstance(stmt, LambdaStmt):
-                # Create a new Computation type function node definiton
-                pass
+                new_con_id = stmt.container_id
+                con_def = CONS[new_con_id]
+                new_con_func = BaseConFuncNode.from_container(
+                    con_def, CONS, VARS, FUNCS
+                )
+            elif isinstance(stmt, LambdaStmtDef):
+                # Create a new Expression type function node definiton
+                new_expr_func = ExpressionFuncNode.from_lamba_stmt(
+                    stmt, VARS, FUNCS
+                )
             else:
                 raise TypeError(f"Unrecognized statement type: {type(stmt)}")
 
@@ -285,15 +313,45 @@ class BaseFuncNode(ABC):
         )
 
     @abstractclassmethod
-    def from_data(cls, data: Dict[str, Any]):
+    def from_data(
+        cls,
+        data: Dict[str, Any],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ):
+        hyper_edges = [
+            HyperEdge.from_data(h_def, FUNCS) for h_def in data["hyper_edges"]
+        ]
+        hyper_graph = cls.create_hyper_graph(hyper_edges)
+
         return (
             data["uid"],
             FunctionType.from_str(data["type"]),
             data["input_variables"],
             data["output_variables"],
-            [HyperEdge.from_data(h_def) for h_def in data["hyper_edges"]],
+            hyper_edges,
+            hyper_graph,
             [TypedMetadata.from_data(m_def) for m_def in data["metadata"]],
         )
+
+    @staticmethod
+    def create_hyper_graph(hyper_edges: List[HyperEdge]) -> nx.DiGraph:
+        output2func = {
+            out_node: h_edge.func_node
+            for h_edge in hyper_edges
+            for out_node in h_edge
+        }
+
+        network = nx.DiGraph()
+        for h_edge in hyper_edges:
+            func_node = h_edge.func_node
+            network.add_node(func_node)
+            for v_node in h_edge.inputs:
+                # TODO: check to make sure the input is actually in
+                # this function
+                parent_func = output2func[v_node]
+                network.add_edge(parent_func, func_node)
+
+        return network
 
     @abstractmethod
     def to_data(self) -> Dict[str, Any]:
@@ -315,6 +373,28 @@ class OperationFuncNode(BaseFuncNode):
     identifier: str
 
     @classmethod
+    def from_expr_def(cls, expr_def):
+        exp_identifier = None
+        if isinstance(expr_def, ExprDefinitionNode):
+            exp_identifier = expr_def.def_type
+        elif isinstance(expr_def, ExprOperatorNode):
+            exp_identifier = expr_def.operator
+        else:
+            raise TypeError(f"Unrecognized expr node type: {type(expr_def)}")
+
+        metadata = list()
+        return cls(
+            str(uuid.uuid4()),
+            FunctionType.OPERATOR,
+            [],
+            [],
+            [],
+            None,
+            metadata,
+            exp_identifier,
+        )
+
+    @classmethod
     def from_data(cls, data: Dict[str, Any]):
         return cls(*(super().from_data(data)), data["identifier"])
 
@@ -325,9 +405,148 @@ class OperationFuncNode(BaseFuncNode):
 
 
 @dataclass(repr=False, frozen=False)
-class ComputationFuncNode(BaseFuncNode):
+class ExpressionFuncNode(BaseFuncNode):
     expression: str
     executable: callable
+
+    # uid: str
+    # type: FunctionType
+    # input_variables: List[str]
+    # output_variables: List[str]
+    # hyper_edges: List[HyperEdge]
+    # metadata: List[TypedMetadata]
+
+    @classmethod
+    def from_lambda_stmt(
+        cls,
+        statement: LambdaStmtDef,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ):
+        inputs = [VARS[v_id] for v_id in statement.inputs]
+        outputs = [VARS[v_id] for v_id in statement.outputs]
+
+        # add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
+        func_uid = str(uuid.uuid4())
+        expr = statement.expression
+        executable = load_lambda_function(expr)
+        expr_type = FunctionType.get_lambda_type(
+            statement.expr_str, len(inspect.signature(executable).parameters)
+        )
+        mdata = statement.metadata
+
+        visitor = ExpressionVisitor()
+        expr_tree = ast.parse(expr)
+        visitor.visit(expr_tree)
+        nodes = visitor.get_nodes()
+
+        (
+            new_vars,
+            new_funcs,
+            h_edges,
+            h_graph,
+        ) = cls.create_expr_node_hypergraph(nodes, inputs, outputs)
+
+        VARS.update({v.identifier: v for v in new_vars})
+        FUNCS.update({f.identifier: f for f in new_funcs})
+
+        return cls(
+            func_uid,
+            expr_type,
+            inputs,
+            outputs,
+            h_edges,
+            h_graph,
+            mdata,
+            expr,
+            executable,
+        )
+
+    @staticmethod
+    def create_expr_node_hypergraph(
+        nodes: List[ExprAbstractNode],
+        input_vars: List[VariableNode],
+        output_vars: List[VariableNode],
+    ):
+        out_id = output_vars[0].identifier
+        cur_nsp = out_id.namspace
+        cur_scp = out_id.scope
+
+        uid2node = {n.uid: n for n in nodes}
+        lambda_def = None
+        for node in nodes:
+            if node.def_type == "LAMBDA":
+                lambda_def = node
+                break
+
+        (args_def, ret_def) = [uid2node[uid] for uid in lambda_def.children]
+        arg_names = [uid2node[uid].identifier for uid in args_def.children]
+        arg2var = {aname: ivar for aname, ivar in zip(arg_names, input_vars)}
+
+        new_func_nodes = list()
+        new_var_nodes = list()
+        new_hyper_edges = list()
+        hyper_graph = nx.DiGraph()
+
+        def convert_to_hyperedge(expr_node_def):
+            """
+            Args:
+                node_def (BaseExprNode): The current node to convert to a func node and a hyperedge. Should be added to he hypergraph as a node. Needs to have edges added from all child nodes to this node.
+
+            Raises:
+                TypeError: If some children are not defined ExprNodes
+
+            Returns:
+                Tuple:
+                    list of new func nodes,
+                    list of new variable nodes,
+                    list of new hyper edges
+            """
+            child_defs = [
+                uid2node[child_id] for child_id in expr_node_def.children
+            ]
+
+            input_var_nodes = list()
+            for child_def in child_defs:
+                if isinstance(child_def, ExprVariableNode):
+                    if child_def.identifier in arg2var:
+                        external_var = arg2var[child_def.identifier]
+                        input_var_nodes.append(external_var)
+                    else:
+                        new_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
+                        new_var_nodes.append(new_var)
+                        input_var_nodes.append(new_var)
+                elif isinstance(child_def, ExprValueNode):
+                    pass  # No function to create with this node type
+                elif isinstance(child_def, ExprOperatorNode) or isinstance(
+                    child_def, ExprDefinitionNode
+                ):
+                    child_out_var = convert_to_hyperedge(child_def)
+                    input_var_nodes.append(child_out_var)
+                else:
+                    raise TypeError(
+                        f"Unexpected Expr def type: {type(child_def)}"
+                    )
+
+            expr_func_node = OperationFuncNode.from_expr_def(expr_node_def)
+            output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
+            new_hyper_edge = HyperEdge(
+                input_var_nodes, expr_func_node, [output_var]
+            )
+            new_var_nodes.append(output_var)
+            new_func_nodes.append(expr_func_node)
+            new_hyper_edges.append(new_hyper_edge)
+            hyper_graph.add_node(new_hyper_edge)
+
+            return output_var
+
+        convert_to_hyperedge(ret_def)
+        return (
+            new_var_nodes,
+            new_func_nodes,
+            new_hyper_edges,
+            hyper_graph,
+        )
 
     @classmethod
     def from_data(cls, data: Dict[str, Any]):
@@ -342,12 +561,12 @@ class ComputationFuncNode(BaseFuncNode):
 
 
 @dataclass(repr=False, frozen=False)
-class ContainerFuncNode(BaseFuncNode):
+class BaseConFuncNode(BaseFuncNode):
     identifier: ContainerIdentifier
     exit: ContainerIdentifier = None
 
     @classmethod
-    def from_air(cls, container: GenericContainer) -> ContainerFuncNode:
+    def from_air(cls, container: ContainerDef) -> BaseConFuncNode:
         # TODO: implement this for BaseFuncNode
         base_values = super().from_air(container)
         con_id = container.identifier
@@ -370,7 +589,17 @@ class ContainerFuncNode(BaseFuncNode):
 
 
 @dataclass(repr=False, frozen=False)
-class LambdaNode(GenericNode):
+class CondConFuncNode(BaseConFuncNode):
+    pass
+
+
+@dataclass(repr=False, frozen=False)
+class LoopConFuncNode(BaseConFuncNode):
+    pass
+
+
+@dataclass(repr=False, frozen=False)
+class LambdaNode(BaseNode):
     func_type: LambdaType
     func_str: str
     function: callable
@@ -530,7 +759,7 @@ class HyperEdge:
         )
 
     @classmethod
-    def from_dict(cls, data: dict, all_nodes: Dict[str, GenericNode]):
+    def from_dict(cls, data: dict, all_nodes: Dict[str, BaseNode]):
         return cls(
             [all_nodes[n_id] for n_id in data["inputs"]],
             all_nodes[data["function"]],
@@ -555,7 +784,7 @@ class GrFNSubgraph:
     parent: str
     type: str
     border_color: str
-    nodes: Iterable[GenericNode]
+    nodes: Iterable[BaseNode]
     metadata: List[TypedMetadata]
 
     def __hash__(self):
@@ -582,7 +811,7 @@ class GrFNSubgraph:
         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
         node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
         all_nodes_visited: Set[VariableNode],
-    ) -> List[GenericNode]:
+    ) -> List[BaseNode]:
         """
         Handles the execution of the lambda functions within a subgraoh of
         GrFN. We place the logic in this function versus directly in __call__
@@ -603,7 +832,7 @@ class GrFNSubgraph:
             Exception: Raised when we find multiple input interface nodes.
 
         Returns:
-            List[GenericNode]: The final list of nodes that we update/output
+            List[BaseNode]: The final list of nodes that we update/output
             to in the parent container.
         """
         # Grab all hyper edges in this subgraph
@@ -806,12 +1035,12 @@ class GrFNSubgraph:
 
     @classmethod
     def from_container(
-        cls, con: GenericContainer, occ: int, parent_subgraph: GrFNSubgraph
+        cls, con: ContainerDef, occ: int, parent_subgraph: GrFNSubgraph
     ):
         id = con.identifier
 
         class_to_create = cls
-        if isinstance(con, LoopContainer):
+        if isinstance(con, LoopContainerDef):
             class_to_create = GrFNLoopSubgraph
 
         return class_to_create(
@@ -888,22 +1117,22 @@ class GrFNSubgraph:
 
     @staticmethod
     def get_border_color(type_str):
-        if type_str == "CondContainer":
+        if type_str == "CondContainerDef":
             return "orange"
-        elif type_str == "FuncContainer":
+        elif type_str == "FuncContainerDef":
             return "forestgreen"
-        elif type_str == "LoopContainer":
+        elif type_str == "LoopContainerDef":
             return "navyblue"
         else:
             raise TypeError(f"Unrecognized subgraph type: {type_str}")
 
     @classmethod
-    def from_dict(cls, data: dict, all_nodes: Dict[str, GenericNode]):
+    def from_dict(cls, data: dict, all_nodes: Dict[str, BaseNode]):
         subgraph_nodes = [all_nodes[n_id] for n_id in data["nodes"]]
         type_str = data["type"]
 
         class_to_create = cls
-        if type_str == "LoopContainer":
+        if type_str == "LoopContainerDef":
             class_to_create = GrFNLoopSubgraph
 
         return class_to_create(
@@ -1033,19 +1262,59 @@ class GrFNType:
         return d
 
 
-class GroundedFunctionNetwork(nx.DiGraph):
+@dataclass
+class GroundedFunctionNetwork:
+    uid: str
+    identifier: str
+    functions: Dict[FunctionIdentifier, BaseFuncNode]
+    variables: Dict[VariableIdentifier, VariableNode]
+    objects: Dict[ObjectIdentifier, ObjectDef]
+    types: Dict[TypeIdentifier, TypeDef]
+    metadata: List[TypedMetadata]
+    entry_point: FunctionIdentifier = None
+
+    def __post_init__(self):
+        self.namespace = self.identifier.namespace
+        self.scope = self.identifier.scope
+        self.name = self.identifier.con_name
+        self.label = f"{self.name} ({self.namespace}.{self.scope})"
+
+        # NOTE: removing detached variables from GrFN
+        self.__remove_detatched_vars()
+
+        # TODO: call expression function vectorization at some point in time on
+        # load
+
+        # TODO decide how we detect configurable inputs for execution
+        # Configurable inputs are all variables assigned to a literal in the
+        # root level subgraph AND input args to the root level subgraph
+
+    def __remove_detatched_vars(self):
+        del_indices = list()
+        for idx, var_node in enumerate(self.variables):
+            found_var = False
+            for edge in self.hyper_edges:
+                if var_node in edge.inputs or var_node in edge.outputs:
+                    found_var = True
+                    break
+            if not found_var:
+                self.remove_node(var_node)
+                del_indices.append(idx)
+        for idx in del_indices:
+            del self.variables[idx]
+
     def __init__(
         self,
         uid: str,
         id: ContainerIdentifier,
         timestamp: str,
-        G: nx.DiGraph,
+        # G: nx.DiGraph,
         H: List[HyperEdge],
         S: nx.DiGraph,
-        T: List[TypeDefinition],
+        T: List[TypeDef],
         M: List[TypedMetadata],
     ):
-        super().__init__(G)
+        # super().__init__(G)
         self.hyper_edges = H
         self.subgraphs = S
 
@@ -1061,19 +1330,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
         self.types = T
 
-        # NOTE: removing detached variables from GrFN
-        del_indices = list()
-        for idx, var_node in enumerate(self.variables):
-            found_var = False
-            for edge in self.hyper_edges:
-                if var_node in edge.inputs or var_node in edge.outputs:
-                    found_var = True
-                    break
-            if not found_var:
-                self.remove_node(var_node)
-                del_indices.append(idx)
-        for idx in del_indices:
-            del self.variables[idx]
+        self.__remove_detached_vars()
 
         root_subgraphs = [s for s in self.subgraphs if not s.parent]
         if len(root_subgraphs) != 1:
@@ -1215,7 +1472,8 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 if identifier in literal_ids
             ]
             for input_node, value in literal_overrides:
-                # TODO: need to find a way to incorporate a 32/64 bit check here
+                # TODO: need to find a way to incorporate a 32/64 bit
+                # check here
                 if isinstance(value, float):
                     value = np.array([value], dtype=np.float64)
                 if isinstance(value, int):
@@ -1247,16 +1505,19 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
     @classmethod
     def from_AIR(cls, air: AutoMATES_IR):
-        network = nx.DiGraph()
-        hyper_edges = list()
-        Occs = dict()
-        subgraphs = nx.DiGraph()
+        # network = nx.DiGraph()
+        # hyper_edges = list()
+        # Occs = dict()
+        # subgraphs = nx.DiGraph()
+        child_functions = list()
+        FUNCS = dict()
+        VARS = dict()
 
         def add_variable_node(
-            v_id: VariableIdentifier, v_data: VariableDefinition
+            v_id: VariableIdentifier, v_data: VariableDef
         ) -> VariableNode:
             node = VariableNode.from_id(v_id, v_data)
-            network.add_node(node, **(node.get_kwargs()))
+            # network.add_node(node, **(node.get_kwargs()))
             return node
 
         variable_nodes = {
@@ -1269,11 +1530,11 @@ class GroundedFunctionNetwork(nx.DiGraph):
             lambda_str: str,
             metadata: List[TypedMetadata] = None,
         ) -> LambdaNode:
-            lambda_id = GenericNode.create_node_id()
+            lambda_id = BaseNode.create_node_id()
             node = LambdaNode.from_AIR(
                 lambda_id, lambda_type, lambda_str, metadata
             )
-            network.add_node(node, **(node.get_kwargs()))
+            # network.add_node(node, **(node.get_kwargs()))
             return node
 
         def add_hyper_edge(
@@ -1290,7 +1551,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             hyper_edges.append(HyperEdge(inputs, lambda_node, outputs))
 
         def translate_container(
-            con: GenericContainer,
+            con: ContainerDef,
             inputs: Iterable[VariableNode],
             parent: GrFNSubgraph = None,
         ) -> Iterable[VariableNode]:
@@ -1348,7 +1609,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         @singledispatch
         def translate_stmt(
-            stmt: GenericStmt,
+            stmt: StmtDef,
             live_variables: Dict[VariableIdentifier, VariableNode],
             parent: GrFNSubgraph,
         ) -> None:
@@ -1356,7 +1617,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         @translate_stmt.register
         def _(
-            stmt: CallStmt,
+            stmt: CallStmtDef,
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
@@ -1378,13 +1639,18 @@ class GroundedFunctionNetwork(nx.DiGraph):
 
         @translate_stmt.register
         def _(
-            stmt: LambdaStmt,
+            stmt: LambdaStmtDef,
             live_variables: Dict[VariableIdentifier, VariableNode],
             subgraph: GrFNSubgraph,
         ) -> None:
-            inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
-            out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
-            func = add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
+            # inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
+            # out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
+            # func = add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
+            func = ExpressionFuncNode.from_AIR(stmt)
+            child_functions.append(func)
+
+            # TODO: add func to the func_tree here. Requires pointer to
+            # current parent function
 
             subgraph.nodes.append(func)
             subgraph.nodes.extend(out_nodes)
@@ -1759,7 +2025,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
 
         T = (
-            [TypeDefinition.from_data(t) for t in data["types"]]
+            [TypeDef.from_data(t) for t in data["types"]]
             if "types" in data
             else []
         )
@@ -1781,7 +2047,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             entry_point = data["identifier"]
         else:
             entry_point = ""
-        identifier = GenericIdentifier.from_str(entry_point)
+        identifier = BaseIdentifier.from_str(entry_point)
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T, M)
 
 

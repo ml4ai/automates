@@ -9,14 +9,7 @@ from abc import ABC, abstractmethod
 
 from automates.program_analysis.for2py import f2grfn
 from .networks import GroundedFunctionNetwork
-from .structures import (
-    GenericContainer,
-    GenericStmt,
-    CallStmt,
-    GenericIdentifier,
-    GenericDefinition,
-    VariableDefinition,
-)
+from .air import ContainerDef, CallStmtDef, BaseDef, VariableDef
 from .code_types import CodeType, build_code_type_decision_tree
 
 
@@ -103,18 +96,18 @@ class ImperativeInterpreter(SourceInterpreter):
                 json.dump(ir_dict, f, indent=2)
 
             for var_data in ir_dict["variables"]:
-                new_var = GenericDefinition.from_dict(var_data)
+                new_var = BaseDef.from_dict(var_data)
                 V[new_var.identifier] = new_var
 
             for type_data in ir_dict["types"]:
-                new_type = GenericDefinition.from_dict(type_data)
+                new_type = BaseDef.from_dict(type_data)
                 T[new_type.identifier] = new_type
 
             for con_data in ir_dict["containers"]:
-                new_container = GenericContainer.from_dict(con_data)
+                new_container = ContainerDef.from_dict(con_data)
                 for in_var in new_container.arguments:
                     if in_var not in V:
-                        V[in_var] = VariableDefinition.from_identifier(in_var)
+                        V[in_var] = VariableDef.from_identifier(in_var)
                 C[new_container.identifier] = new_container
 
             filename = ir_dict["source"][0]
@@ -247,7 +240,7 @@ class ImperativeInterpreter(SourceInterpreter):
         called_containers = list()
         for con in self.containers.values():
             for stmt in con.statements:
-                if isinstance(stmt, CallStmt):
+                if isinstance(stmt, CallStmtDef):
                     called_containers.append(stmt.call_id)
         possible_root_containers = list(
             set(all_containers) - set(called_containers)
@@ -309,7 +302,10 @@ class ImperativeInterpreter(SourceInterpreter):
         """
         return {
             name: GroundedFunctionNetwork.from_AIR(
-                name, self.containers, self.variables, self.types,
+                name,
+                self.containers,
+                self.variables,
+                self.types,
             )
             for name in self.containers.keys()
             if self.container_code_types[name] is CodeType.MODEL

@@ -2,12 +2,11 @@ import pytest
 import os
 
 import numpy as np
-import networkx as nx
 
 from automates.model_assembly.interpreter import ImperativeInterpreter
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.model_assembly.air import AutoMATES_IR
-from automates.model_assembly.structures import GenericIdentifier
+from automates.model_assembly.identifiers import BaseIdentifier
 
 
 @pytest.mark.skip("Need to handle constants in function call")
@@ -29,7 +28,7 @@ def test_mini_pet():
 def test_pet_files():
     def interpreter_test(filepath, con_name, outfile):
         ITP = ImperativeInterpreter.from_src_file(filepath)
-        con_id = GenericIdentifier.from_str(con_name)
+        con_id = BaseIdentifier.from_str(con_name)
 
         AIR = AutoMATES_IR(
             con_id,
@@ -110,7 +109,7 @@ def test_single_file_analysis():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/PETPNO.for"
     )
-    petpno_con_id = GenericIdentifier.from_str(
+    petpno_con_id = BaseIdentifier.from_str(
         "@container::PETPNO::@global::petpno"
     )
 
@@ -139,7 +138,7 @@ def test_file_with_loops():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/SIR-Gillespie-SD.f"
     )
-    con_id = GenericIdentifier.from_str(
+    con_id = BaseIdentifier.from_str(
         "@container::SIR-Gillespie-SD::@global::main"
     )
 
@@ -166,7 +165,7 @@ def test_petpt():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/PETPT.for"
     )
-    con_id = GenericIdentifier.from_str("@container::PETPT::@global::petpt")
+    con_id = BaseIdentifier.from_str("@container::PETPT::@global::petpt")
     AIR = AutoMATES_IR(
         con_id,
         ITP.containers,
@@ -197,7 +196,7 @@ def test_crop_yield_creation():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/crop_yield.f"
     )
-    con_id = GenericIdentifier.from_str(
+    con_id = BaseIdentifier.from_str(
         "@container::crop_yield::@global::crop_yield"
     )
     AIR = AutoMATES_IR(
