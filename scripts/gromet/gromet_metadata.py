@@ -3,6 +3,18 @@ from abc import ABC
 from dataclasses import dataclass, field
 
 
+"""
+Metadatum types:
+() <Any>.CodeSpanReference
+() <Gromet>.TextualDocumentReferenceSet
+() <Gromet>.CodeCollectionReference
+() <Box>.EquationDefinition
+() <Variable>.TextDefinition
+() <Variable>.TextParameter
+() <Variable>.EquationParameter
+"""
+
+
 # =============================================================================
 # Uid
 # =============================================================================
@@ -137,6 +149,8 @@ class CodeFileReference:
 @dataclass
 class CodeSpanReference(Metadatum):
     """
+    host: <Any>
+    Code span references may be associated with any GroMEt object.
     'code_type': One of 'IDENTIFIER', 'CODE_BLOCK'
     code span coordinates are relative to the source file
         (denoted by the file_id)
@@ -196,7 +210,7 @@ class TextualDocumentReference:
 @dataclass
 class TextualDocumentReferenceSet(Metadatum):
     """
-    host: <gromet>
+    host: <Gromet>
     A collection of references to textual documents
     (e.g., software documentation, scientific publications, etc.).
     """
@@ -210,7 +224,7 @@ class TextualDocumentReferenceSet(Metadatum):
 @dataclass
 class CodeCollectionReference(Metadatum):
     """
-    host: <gromet>
+    host: <Gromet>
     Reference to a code collection (i.e., repository)
     """
     global_reference_id: GlobalReferenceId
@@ -238,13 +252,37 @@ class EquationDefinition(Metadatum):
 # =============================================================================
 
 @dataclass
+class TextDefinition(Metadatum):
+    """
+    host: <Variable>
+    Association of text definition of host derived from text source.
+    'variable_identifier': char/string representation of the variable.
+    'variable_definition': text definition of the variable.
+    """
+    text_extraction: TextExtraction
+    variable_identifier: str
+    variable_definition: str
+
+
+@dataclass
+class TextParameter(Metadatum):
+    """
+    host: <Variable>
+    Association of parameter values extracted from text.
+    """
+    variable_identifier: str
+    value: str  # eventually Literal?
+
+
+@dataclass
 class EquationParameter(Metadatum):
     """
     host: <Variable>
-    Association of parameter values extracted from equations.
+    Association of parameter value extracted from equation.
     """
     equation_extraction: EquationExtraction
     variable_uid: UidVariable
+    value: str  # eventually Literal?
 
 
 # =============================================================================
@@ -254,11 +292,6 @@ class EquationParameter(Metadatum):
 # =============================================================================
 
 """
-Changes 2021-06-13:
+Changes 2021-06-10:
 () Started migration of GrFN metadata types to GroMEt metadatum types.
-    () <Any>.CodeSpanReference
-    () <Gromet>.TextualDocumentReferenceSet
-    () <Gromet>.CodeCollectionReference
-    () <Box>.EquationDefinition
-    () <Variable>.EquationParameter
 """
