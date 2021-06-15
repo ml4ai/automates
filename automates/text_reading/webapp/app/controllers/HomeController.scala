@@ -330,7 +330,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 
   def alignMentionsFromTwoModels: Action[AnyContent] = Action { request =>
-
+    // todo: this can be simplified a lot
+    // linking can be done on global text vars with additional info like units and equivalent param settings/ranges being on the same scale playing the role of weights
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data) //the json that contains the path to another json---the json that contains all the relevant components, e.g., mentions and equations
     val jsonPath = pathJson("pathToJson").str

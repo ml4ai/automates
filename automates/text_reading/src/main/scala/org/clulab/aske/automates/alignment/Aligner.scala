@@ -39,60 +39,44 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
   }
 
   def intersectMultipler(rendered: String, txtStr: String): Double = {
-// need a multiplier for starts with same letter?
-    //      println("START INTERSECT MULT")
-    //      val rendered = AlignmentBaseline.renderForAlign(eqStr)
-    val intersect = rendered.toSeq.intersect(txtStr.toSeq)
-    //      println("intrsct " + intersect)
+    // todo: should probably have a version of this for every 'via identifier' link
+    // this is used for eq to gvar alignment from the same paper
+    // equations come from the same source (scientific publication) as text identifiers, so the non-latex versions of them
+    // should match exactly
+    // we will hope the renderer did a good job and assign high weight for those that start with the same letter
     if (rendered.head == txtStr.head) return 3.0
+    // if not, we will look at how much overlap there is between vars
+    val intersect = rendered.toSeq.intersect(txtStr.toSeq)
+    // if there's no overlap at all, the score for this alignment is probably 0, so just set multiplier to 0
+    if (intersect.length <= 1) return 0
+
     // if intersect contains capital, return len intersect (even with intersect == 1, capital intersect should be informative
     if (intersect.exists(_.isUpper)) return intersect.length// println("true 75") else println("false 75") //return intersect.length// this is inadequate---has to normalized
     //println("passed 1")
 
-    // if no intersect, return 1
+
+    // shelving these for now till see more examples; fine for a first pass
     // if intersect == 1, return 1 -> not enough info to make us more confident of the edit distance score
-    if (intersect.length <= 1) return 0 // println("true 80") else println("false 80")
-    //      println("passed 2")
-    //
-    //      println(rendered + "<eq str")
-    //      println(txtStr + "<dstn")
     // if intersect > 1 and in same order in both, return len intersect
-    val onlyIntersectStr1 = rendered.filter(intersect.contains(_))
-    //      println("++>" + onlyIntersectStr1.mkString(" "))
-    val onlyIntersectStr2 = txtStr.filter(intersect.contains(_))
-    //      println("+++>" + onlyIntersectStr2.mkString(" "))
-    //      println("+>" + onlyIntersectStr1 + " " + onlyIntersectStr2 + " " )//+ onlyIntersectStr1==onlyIntersectStr1 + "<<<<")
+//    val onlyIntersectStr1 = rendered.filter(intersect.contains(_))
+//    val onlyIntersectStr2 = txtStr.filter(intersect.contains(_))
+//    var sameOrder = true
+//    if (onlyIntersectStr1.length != onlyIntersectStr2.length) return 1.0 // what?!
+//    else {
+//      for ((char, index) <- onlyIntersectStr1.zipWithIndex) {
+//        if (char != onlyIntersectStr2(index)) {
+//          sameOrder = false
+//        }
+//      }
+//    }
+//    if (sameOrder) return 2.0
 
-    var sameOrder = true
-    if (onlyIntersectStr1.length != onlyIntersectStr2.length) return 1.0 // what?!
-    else {
-      for ((char, index) <- onlyIntersectStr1.zipWithIndex) {
-        if (char != onlyIntersectStr2(index)) {
-          sameOrder = false
-        }
-      }
-    }
-    if (sameOrder) return 2.0
-
-    // maybe not len intersect, but just some default weight like 2 or len intersect normalized by len somehow?
     1.0
   }
 
   // todo: maybe for equations it should not be judged on distance but just on overlap in some way? like b and E are in no way similar...
   // and intersect could be normalized in some way? like by length or something?..
   def alignEqAndTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
-    println("eqs: " + srcTexts.mkString(" :: "))
-    println("dsts: " + dstTexts.mkString(" :: "))
-    for (i <- srcTexts) println("rendered: " + i + " " + AlignmentBaseline.renderForAlign(i))
-    for ((src, i) <- srcTexts.zipWithIndex) {
-      val rendered = AlignmentBaseline.renderForAlign(src)
-      for ((dst, j) <- dstTexts.zipWithIndex) {
-        val multiplier = intersectMultipler(rendered, dst)
-        println("mult: " + multiplier)
-        val score = 1.0 * multiplier / (editDistance(rendered, dst) + 1.0)
-        println("===>"  + rendered + " " + dst + " " + score)
-      }
-    }
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       rendered = AlignmentBaseline.renderForAlign(src)

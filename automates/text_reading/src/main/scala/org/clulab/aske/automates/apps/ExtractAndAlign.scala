@@ -63,6 +63,18 @@ object ExtractAndAlign {
   val COMMENT_TO_GLOBAL_VAR = "comment_to_gvar"
   val GLOBAL_VAR_TO_SVO = "gvar_to_svo"
 
+  val whereIsGlobalVar = Map[String, String](
+    GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> "element_1",
+    GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> "element_1",
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> "element_1",
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> "element_1",
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER -> "element_1",
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> "element_1",
+    EQN_TO_GLOBAL_VAR -> "element_2",
+    COMMENT_TO_GLOBAL_VAR -> "element_2",
+    GLOBAL_VAR_TO_SVO -> "element_1"
+  )
+
   // labels and argument names
   val DESCRIPTION = "description"
   val VARIABLE = "variable"
@@ -1051,17 +1063,6 @@ object ExtractAndAlign {
 
 
   def mkLinkHypothesis(srcElements: Seq[String], dstElements: Seq[String], linkType: String, alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
-
-    if (linkType == "equation_to_gvar") {
-      for (topK <- alignments) {
-        for (alignment <- topK) {
-          val srcLinkElement = ujson.read(srcElements(alignment.src)).obj("content").str
-          val dstLinkElement = ujson.read(dstElements(alignment.dst)).obj("content").str
-          println("++>" + srcLinkElement + " " + dstLinkElement + " " + alignment.score)
-        }
-      }
-    }
-
     for {
       topK <- alignments
       alignment <- topK

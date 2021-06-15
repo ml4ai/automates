@@ -1,7 +1,6 @@
 package org.clulab.aske.automates.alignment
 
 import java.io.File
-
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.{OdinEngine, TestUtils}
@@ -11,6 +10,7 @@ import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
 import org.scalatest.{FlatSpec, Matchers}
 import ujson.Value
 import ai.lum.common.FileUtils._
+import org.clulab.aske.automates.apps.ExtractAndAlign.whereIsGlobalVar
 import org.clulab.aske.automates.data.DataLoader
 
 import scala.collection.mutable.ArrayBuffer
@@ -86,8 +86,8 @@ class TestAlign extends FlatSpec with Matchers {
     val maxLinksPerIntermNode = groupedByElement2.maxBy(_._2.length)._2.length
 
     println("???????")
-    for (i <- 0 to maxLinksPerIntermNode - 1) {
-      for (j <- 0 to sortedIntermNodeNames.length - 1) {
+    for (i <- 0 until maxLinksPerIntermNode) {
+      for (j <- 0 until sortedIntermNodeNames.length) {
         val intermNodeName = sortedIntermNodeNames(j)
 
         val endNode = groupedByElement2(intermNodeName).map(_.obj("element_1").str)
@@ -240,11 +240,25 @@ class TestAlign extends FlatSpec with Matchers {
     // all links that contain the target text global var
     val allDirectLinksForIdfr = getLinksWithIdentifierStr(idfr, allLinks, false)
 
+    // filtering out the links with no idfr with the correct idf; can't have the link uid in the test itself bc those
+    // are randomly generated on every run
+    val oneLink = allDirectLinksForIdfr.head
+    val linkType = oneLink("link_type").str
+    val whichElement = whereIsGlobalVar(linkType)
+    val fullIdfrUid = oneLink(whichElement).str
+    println("full idfr uid: " + fullIdfrUid)
+    val onlyWithCorrectIdfr = allDirectLinksForIdfr.filter(link => link(whereIsGlobalVar(link("link_type").str)).str ==
+      fullIdfrUid)
     // group those by link type - in testing, will just be checking the rankings of links of each type
-    val directLinksGroupedByLinkType = allDirectLinksForIdfr.groupBy(_.obj("link_type").str)
+    val directLinksGroupedByLinkType = onlyWithCorrectIdfr.groupBy(_.obj("link_type").str)
+    // take the first available link and, depending on the type, get the full name from the correct element
+    // (element_1 or element_2)
+
     for (l <- directLinksGroupedByLinkType) {
+      // todo: here need to filter out the links that do not have the exact identifier we are looking at,
+      //eg for eq to gvar link, filter out the links where the idfr exact match is in element 1 instead of 2
       println("---")
-      for (i <- l._2.sortBy(el => el("score").num).reverse) println("-> " + i)
+      for (i <- l._2.sortBy(el => el("score").num).reverse) println("-+> " + i)
     }
 
     val indirectLinks = if (directLinksGroupedByLinkType.contains("comment_to_gvar")) {
@@ -273,7 +287,8 @@ class TestAlign extends FlatSpec with Matchers {
       // which element in this link type we want to check
       val whichLink = linkType match {
         case "equation_to_gvar" |  "comment_to_gvar"  => "element_1"
-        case "gvar_to_interval_param_setting_via_idfr" | "gvar_to_unit_via_idfr"  => "element_2"
+        case "gvar_to_param_setting_via_idfr"| "gvar_to_interval_param_setting_via_idfr" | "gvar_to_unit_via_idfr"
+        => "element_2"
         case _ => ???
       }
       // element 1 of this link (eq gl var) should be E
@@ -289,14 +304,30 @@ class TestAlign extends FlatSpec with Matchers {
 //  topLinkTest(idf, desired, threshold, directLinksForR,"equation_to_gvar")
 //
   {
+    // desired as map
+    // test for indirect link - will the same one work? or similar but with diff type of input since indirect links
+    // are different a bit
+    //todo: cleanup imports
+    // todo: when aligning, (the --> link element printout) need to filter out all eq to gvars where the second
+    //  element does not match target identifier, e.g., filter out second element here + how did this happen??:
+//    -> {"element_1":"43c35fbd-ea19-425d-bacf-a354d124fdbd::E","element_2":"d759e6f0-9ad6-4331-b750-9b2bc6e7e734::E","link_type":"equation_to_gvar","score":1}
+//    -> {"element_1":"43c35fbd-ea19-425d-bacf-a354d124fdbd::E","element_2":"42833555-bef3-4dec-8826-5390772c05a7::E(0)","link_type":"equation_to_gvar","score":0.25}
+
     val idfE = "E"
     behavior of idfE
 
+    val directDesired = Map(
+    "equation_to_gvar" -> "E",
+    "gvar_to_param_setting_via_idfr" -> "E = 30"
+    )
     val desiredE = "E"
     val thresholdE = 0.8 // same for all elements of link type probably
     val (directLinksForE, indirE) = getLinksForGvar("E", links)
 
-    topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
+    for (dl <- directDesired) {
+      topLinkTest(idfE, dl._2, thresholdE, directLinksForE, dl._1)
+    }
+//    topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
 
     // this is for non-existent links (including those we end up filtering out because of threshold)
     it should s"have NO gvar_to_unit_via_cpcpt link for global var $idfE" in {
