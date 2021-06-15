@@ -244,7 +244,7 @@ class TestAlign extends FlatSpec with Matchers {
     val directLinksGroupedByLinkType = allDirectLinksForIdfr.groupBy(_.obj("link_type").str)
     for (l <- directLinksGroupedByLinkType) {
       println("---")
-      for (i <- l._2) println("-> " + i)
+      for (i <- l._2.sortBy(el => el("score").num).reverse) println("-> " + i)
     }
 
     val indirectLinks = if (directLinksGroupedByLinkType.contains("comment_to_gvar")) {
@@ -267,7 +267,7 @@ class TestAlign extends FlatSpec with Matchers {
 
 
   def topLinkTest(idf: String, desired: String, threshold: Double, directLinks: Map[String, Seq[Value]], linkType: String): Unit = {
-    it should f"have a correct equation to global variable link for global var ${idf}" in {
+    it should f"have a correct $linkType link for global var ${idf}" in {
       val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
 
       // which element in this link type we want to check
@@ -288,47 +288,42 @@ class TestAlign extends FlatSpec with Matchers {
 //  val (directLinksForR, indirR) = getLinksForGvar("r", links)
 //  topLinkTest(idf, desired, threshold, directLinksForR,"equation_to_gvar")
 //
+  {
+    val idfE = "E"
+    behavior of idfE
 
-  val idfE = "E"
-  val desiredE = "E"
-  val thresholdE = 0.8 // same for each type of link probably
-  val (directLinksForE, indirE) = getLinksForGvar("E", links)
+    val desiredE = "E"
+    val thresholdE = 0.8 // same for all elements of link type probably
+    val (directLinksForE, indirE) = getLinksForGvar("E", links)
 
-  println("len of dir links: " + directLinksForE.keys.toList.length)
-  for (l <- directLinksForE) {
-    println("link type: " + l._1)
-    for (link <- l._2) {
-      println(link)
+    topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
+
+    // this is for non-existent links (including those we end up filtering out because of threshold)
+    it should s"have NO gvar_to_unit_via_cpcpt link for global var $idfE" in {
+      directLinksForE.keys.toList.contains("gvar_to_unit_via_cpcpt") shouldBe false
     }
   }
 
-  //todo: in a different place - rendered loses greek letters!!!
-  topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
 
-  it should f"have a correct equation to global variable link for global var f" in {
-    val topScoredLink = directLinksForE("equation_to_gvar").sortBy(_.obj("score").num).reverse.head
-    //
-    val desired = "E"
-    val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
-    // element 1 of this link (eq gl var) should be E
-    topScoredLink("element_1").str.split("::").last shouldEqual desired
-    topScoredLink("score").num > threshold shouldBe true
-  }
+//  println("len of dir links: " + directLinksForE.keys.toList.length)
+//  for (l <- directLinksForE) {
+//    println("link type: " + l._1)
+//    for (link <- l._2) {
+//      println(link)
+//    }
+//  }
 
-  // this is for non-existent links (including those we end up filtering out because of threshold)
-  it should "have NO gvar_to_unit_via_cpcpt link for global var E" in {
-    directLinksForE.keys.toList.contains("gvar_to_unit_via_cpcpt") shouldBe false
-  }
+
 
   // if we decide not to filter out links because of threshold (could be beneficial to keep them for debugging purposes, but filter them out somewhere downstream; ask Paul), do this type of test:
-
-  it should "have top gvar_to_unit_via_idfr link be below threshold for global var E" in {
-    val topScoredLink = directLinksForE("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
-    //
-    val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
-    // element 1 of this link (eq gl var) should be E
-    topScoredLink("score").num < threshold shouldBe true
-  }
+//
+//  it should "have top gvar_to_unit_via_idfr link be below threshold for global var E" in {
+//    val topScoredLink = directLinksForE("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
+//    //
+//    val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
+//    // element 1 of this link (eq gl var) should be E
+//    topScoredLink("score").num < threshold shouldBe true
+//  }
 
 
 

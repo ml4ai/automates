@@ -565,7 +565,8 @@ object ExtractAndAlign {
       if (allGlobalVars.nonEmpty && globalEqVariables.nonEmpty) {
         val equationToTextAlignments = alignmentHandler.editDistance.alignEqAndTexts(globalEqVariables.map(_.identifier), allGlobalVars.map(_.identifier))
         // group by src idx, and keep only top k (src, dst, score) for each src idx
-        alignments(EQN_TO_GLOBAL_VAR) = Aligner.topKBySrc(equationToTextAlignments, numAlignments.get)
+        alignments(EQN_TO_GLOBAL_VAR) = Aligner.topKByDst(equationToTextAlignments, numAlignments.get)
+
       }
 
     /** Align the comment descriptions to the text descriptions */
@@ -1050,6 +1051,16 @@ object ExtractAndAlign {
 
 
   def mkLinkHypothesis(srcElements: Seq[String], dstElements: Seq[String], linkType: String, alignments: Seq[Seq[Alignment]], debug: Boolean): Seq[Obj] = {
+
+    if (linkType == "equation_to_gvar") {
+      for (topK <- alignments) {
+        for (alignment <- topK) {
+          val srcLinkElement = ujson.read(srcElements(alignment.src)).obj("content").str
+          val dstLinkElement = ujson.read(dstElements(alignment.dst)).obj("content").str
+          println("++>" + srcLinkElement + " " + dstLinkElement + " " + alignment.score)
+        }
+      }
+    }
 
     for {
       topK <- alignments

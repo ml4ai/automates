@@ -39,18 +39,19 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
   }
 
   def intersectMultipler(rendered: String, txtStr: String): Double = {
-
+// need a multiplier for starts with same letter?
     //      println("START INTERSECT MULT")
     //      val rendered = AlignmentBaseline.renderForAlign(eqStr)
     val intersect = rendered.toSeq.intersect(txtStr.toSeq)
     //      println("intrsct " + intersect)
+    if (rendered.head == txtStr.head) return 3.0
     // if intersect contains capital, return len intersect (even with intersect == 1, capital intersect should be informative
-    if (intersect.exists(_.isUpper)) return intersect.length// println("true 75") else println("false 75") //return intersect.length
+    if (intersect.exists(_.isUpper)) return intersect.length// println("true 75") else println("false 75") //return intersect.length// this is inadequate---has to normalized
     //println("passed 1")
 
     // if no intersect, return 1
     // if intersect == 1, return 1 -> not enough info to make us more confident of the edit distance score
-    if (intersect.length <= 1) return 1.0 // println("true 80") else println("false 80")
+    if (intersect.length <= 1) return 0 // println("true 80") else println("false 80")
     //      println("passed 2")
     //
     //      println(rendered + "<eq str")
@@ -61,8 +62,9 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
     val onlyIntersectStr2 = txtStr.filter(intersect.contains(_))
     //      println("+++>" + onlyIntersectStr2.mkString(" "))
     //      println("+>" + onlyIntersectStr1 + " " + onlyIntersectStr2 + " " )//+ onlyIntersectStr1==onlyIntersectStr1 + "<<<<")
+
     var sameOrder = true
-    if (onlyIntersectStr1.length != onlyIntersectStr2.length) return 1.0
+    if (onlyIntersectStr1.length != onlyIntersectStr2.length) return 1.0 // what?!
     else {
       for ((char, index) <- onlyIntersectStr1.zipWithIndex) {
         if (char != onlyIntersectStr2(index)) {
@@ -70,21 +72,33 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable")) {
         }
       }
     }
-    if (sameOrder) return 3.0
+    if (sameOrder) return 2.0
 
     // maybe not len intersect, but just some default weight like 2 or len intersect normalized by len somehow?
     1.0
   }
 
+  // todo: maybe for equations it should not be judged on distance but just on overlap in some way? like b and E are in no way similar...
+  // and intersect could be normalized in some way? like by length or something?..
   def alignEqAndTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
     println("eqs: " + srcTexts.mkString(" :: "))
     println("dsts: " + dstTexts.mkString(" :: "))
     for (i <- srcTexts) println("rendered: " + i + " " + AlignmentBaseline.renderForAlign(i))
+    for ((src, i) <- srcTexts.zipWithIndex) {
+      val rendered = AlignmentBaseline.renderForAlign(src)
+      for ((dst, j) <- dstTexts.zipWithIndex) {
+        val multiplier = intersectMultipler(rendered, dst)
+        println("mult: " + multiplier)
+        val score = 1.0 * multiplier / (editDistance(rendered, dst) + 1.0)
+        println("===>"  + rendered + " " + dst + " " + score)
+      }
+    }
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       rendered = AlignmentBaseline.renderForAlign(src)
       (dst, j) <- dstTexts.zipWithIndex
-      score = 1.0 / (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term? next thing to try: only align if rendered starts with the same letter as actual---might need to make this output an option in case if there are no alignments; todo: try to find a way to use intersect multiplier
+      multiplier = intersectMultipler(rendered, dst) // how did I make so many eq to gvar elements to go away? is there a threshold?
+      score = 1.0 * multiplier / (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term? next thing to try: only align if rendered starts with the same letter as actual---might need to make this output an option in case if there are no alignments; todo: try to find a way to use intersect multiplier
     } yield Alignment(i, j, score)
 
     // redundant but good for debugging
@@ -177,15 +191,52 @@ object Aligner {
     }
   }
 
+  def topKByDst(alignments: Seq[Alignment], k: Int, scoreThreshold: Double = 0.0, debug: Boolean = false): Seq[Seq[Alignment]] = {
+    def debugPrint(debug: Boolean, srcIdx: Int, alignments: Seq[Alignment]) {
+      if (debug) println(s"srcIdx: ${srcIdx}, alignments: ${alignments}")
+    }
+
+//    val overallSum = alignments.map(_.score).sum
+    val grouped = alignments.groupBy(_.dst).toSeq
+
+    // score sum doesn't work bc alignment for eq to text bc here we group by source and src is eq and then when we choose top n for dst,
+    // if we normalize by sum, we end up on a different scale
+    //    for ((srcIdx, aa) <- grouped) {
+    //      val scoreSum = aa.map(_.score).sum
+    //      println("score sum: " + scoreSum)
+    //    }
+    for {
+      (srcIdx, aa) <- grouped
+      _ = debugPrint(debug, srcIdx, alignments)
+      // since we added a bunch of multipliers, it might be good to normalize the scores, so we divide them by the sum of all the scores - doesn't work
+      // bc scale ends up being different when we choose highest score for dst var
+      scoreMax = aa.map(_.score).max
+      topK = aa.sortBy(-_.score/scoreMax).slice(0,k).filter(_.score > scoreThreshold).map(a => Alignment(a.src, a.dst, a.score/scoreMax)) //filter out those with the score below the threshold; threshold is 0 by default
+      if topK.nonEmpty
+    } yield topK
+  }
+
   def topKBySrc(alignments: Seq[Alignment], k: Int, scoreThreshold: Double = 0.0, debug: Boolean = false): Seq[Seq[Alignment]] = {
     def debugPrint(debug: Boolean, srcIdx: Int, alignments: Seq[Alignment]) {
       if (debug) println(s"srcIdx: ${srcIdx}, alignments: ${alignments}")
     }
+
+//    val overallSum = alignments.map(_.score).sum
     val grouped = alignments.groupBy(_.src).toSeq
+
+    // score sum doesn't work bc alignment for eq to text bc here we group by source and src is eq and then when we choose top n for dst,
+    // if we normalize by sum, we end up on a different scale
+//    for ((srcIdx, aa) <- grouped) {
+//      val scoreSum = aa.map(_.score).sum
+//      println("score sum: " + scoreSum)
+//    }
     for {
       (srcIdx, aa) <- grouped
       _ = debugPrint(debug, srcIdx, alignments)
-      topK = aa.sortBy(-_.score).slice(0,k).filter(_.score > scoreThreshold) //filter out those with the score below the threshold; threshold is 0 by default
+      // since we added a bunch of multipliers, it might be good to normalize the scores, so we divide them by the sum of all the scores - doesn't work
+      // bc scale ends up being different when we choose highest score for dst var
+      scoreMax = aa.map(_.score).max // if i do weights for some of the links, then when getting top k, divide sort by score by score max and remap alignments to updated scores
+      topK = aa.sortBy(-_.score).slice(0,k).filter(_.score > scoreThreshold)//.map(a => Alignment(a.src, a.dst, a.score/scoreMax)) //filter out those with the score below the threshold; threshold is 0 by default
       if topK.nonEmpty
     } yield topK
   }
