@@ -256,7 +256,6 @@ class LambdaNode(GenericNode):
                 (expected {expected_num_args} found {input_num_args})
                 for lambda:\n{self.func_str}"""
             )
-
         try:
             if len(values) != 0:
                 res = [self.function(*inputs) for inputs in zip(*values)]
@@ -1717,14 +1716,14 @@ class GroundedFunctionNetwork(nx.DiGraph):
         F.add_edges_from(main_edges)
         return F
 
-    def to_json(self) -> str:
-        """Outputs the contents of this GrFN to a JSON object string.
+    def to_dict(self) -> Dict:
+        """Outputs the contents of this GrFN to a dict object.
 
         :return: Description of returned object.
         :rtype: type
         :raises ExceptionName: Why the exception is raised.
         """
-        data = {
+        return {
             "uid": self.uid,
             "entry_point": "::".join(
                 ["@container", self.namespace, self.scope, self.name]
@@ -1736,8 +1735,16 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
             "types": [t_def.to_dict() for t_def in self.types.values()],
             "metadata": [m.to_dict() for m in self.metadata],
-        }
+        }   
 
+    def to_json(self) -> str:
+        """Outputs the contents of this GrFN to a JSON object string.
+
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+        """
+        data = self.to_dict()
         return json.dumps(data)
 
     def to_json_file(self, json_path) -> None:
@@ -1745,18 +1752,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             outfile.write(self.to_json())
 
     @classmethod
-    def from_json(cls, json_path):
-        """Short summary.
-
-        :param type cls: Description of parameter `cls`.
-        :param type json_path: Description of parameter `json_path`.
-        :return: Description of returned object.
-        :rtype: type
-        :raises ExceptionName: Why the exception is raised.
-
-        """
-        data = json.load(open(json_path, "r"))
-
+    def from_dict(cls, data):
         # Re-create variable and function nodes from their JSON descriptions
         V = {v["uid"]: VariableNode.from_dict(v) for v in data["variables"]}
         F = {f["uid"]: LambdaNode.from_dict(f) for f in data["functions"]}
@@ -1808,6 +1804,19 @@ class GroundedFunctionNetwork(nx.DiGraph):
         identifier = GenericIdentifier.from_str(entry_point)
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T, M)
 
+    @classmethod
+    def from_json(cls, json_path):
+        """Short summary.
+
+        :param type cls: Description of parameter `cls`.
+        :param type json_path: Description of parameter `json_path`.
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+
+        """
+        data = json.load(open(json_path, "r"))
+        return cls.from_dict(data)
 
 class CausalAnalysisGraph(nx.DiGraph):
     def __init__(self, G, S, uid, date, ns, sc, nm):
