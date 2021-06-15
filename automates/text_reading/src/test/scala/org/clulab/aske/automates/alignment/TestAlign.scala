@@ -134,8 +134,8 @@ class TestAlign extends FlatSpec with Matchers {
   val serializerName = "AutomatesJSONSerializer" //todo: read from config
 
 
-//  val payloadPath = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/double-epidemic-chime-align_payload.json"
-  val payloadFile = new File(inputDir, "double-epidemic-chime-align_payload.json")
+//  val payloadPath = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/double-epidemic-chime-align_payload-for-testing.json"
+  val payloadFile = new File(inputDir, "double-epidemic-chime-align_payload-for-testing.json")
   val payloadPath = payloadFile.getAbsolutePath
 
   val payloadJson = ujson.read(payloadFile.readString())
