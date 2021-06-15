@@ -440,7 +440,7 @@ def Cleaning_writing_eqn(root, dictionary, Final_EqnNum_LineNum_dict, encoding, 
             eq_dict[e] = line_num
     
     for i, eq in enumerate(eq_dict):
-        if len(eq)!=0:
+        if len(eq)!=0 and '%' not in eq:  # if equation is not commented out
             # removing unnecc stuff - label, text, intertext
             par_clean_eq = Clean_eqn_1(eq)
             cleaned_eq = Clean_eqn_2(par_clean_eq, matrix_cmds)
