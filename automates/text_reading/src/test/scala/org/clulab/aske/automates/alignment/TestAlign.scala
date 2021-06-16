@@ -15,6 +15,7 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlob
 import org.clulab.aske.automates.data.DataLoader
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
 class TestAlign extends FlatSpec with Matchers {
 
@@ -120,8 +121,8 @@ class TestAlign extends FlatSpec with Matchers {
     behavior of idfE
 
     val directDesired = Map(
-    "equation_to_gvar" -> "E",
-    "gvar_to_param_setting_via_idfr" -> "E = 30"
+      "equation_to_gvar" -> "E",
+      "gvar_to_param_setting_via_idfr" -> "E = 30"
     )
 
     val indirectDesired = Map(
@@ -140,44 +141,46 @@ class TestAlign extends FlatSpec with Matchers {
       println(">>>" + dl._1 + " " + dl._2)
       topInLinkTest(idfE, dl._2, thresholdE, indirE, dl._1)
     }
-//    topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
+    //    topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
 
     // this is for non-existent links (including those we end up filtering out because of threshold)
     it should s"have NO gvar_to_unit_via_cpcpt link for global var $idfE" in {
-      directLinksForE.keys.toList.contains("gvar_to_unit_via_cpcpt") shouldBe false
+
+      val condition1 = Try(directLinksForE.keys.toList.contains("gvar_to_unit_via_cpct") should be(false)).isSuccess
+      val condition2 = Try(directLinksForE
+      ("gvar_to_unit_via_cpcpt").sortBy(_.obj("score").num).reverse.head("score").num > 0.8 shouldBe false).isSuccess
+      assert(condition1 || condition2)
     }
-  }
 
 
 
-  // if we decide not to filter out links because of threshold (could be beneficial to keep them for debugging purposes, but filter them out somewhere downstream; ask Paul), do this type of test:
-//
-//  it should "have top gvar_to_unit_via_idfr link be below threshold for global var E" in {
-//    val topScoredLink = directLinksForE("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
-//    //
-//    val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
-//    // element 1 of this link (eq gl var) should be E
-//    topScoredLink("score").num < threshold shouldBe true
-//  }
+    // if we decide not to filter out links because of threshold (could be beneficial to keep them for debugging purposes, but filter them out somewhere downstream; ask Paul), do this type of test:
+    //
+    //  it should "have top gvar_to_unit_via_idfr link be below threshold for global var E" in {
+    //    val topScoredLink = directLinksForE("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
+    //    //
+    //    val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
+    //    // element 1 of this link (eq gl var) should be E
+    //    topScoredLink("score").num < threshold shouldBe true
+    //  }
 
 
+    // link test type 2: check if the links contains certain links with scores over threshold
+    val src_comment_links = links.filter(_.obj("link_type").str == "source_to_comment")
+
+    it should "have an s_t src to comment element" in {
+      src_comment_links.exists(l => l.obj("element_1").str.contains("s_t") & l.obj("element_2").str.contains("S_t") && l.obj("score").num > 0.8) shouldBe true
+
+      // hard to make negative links since we do make an attempt to get top 3 and there will be false positives there - ph already addressed it---need to have something like the score of this shouldn't be more than x (or maybe... it should be something like it shouldn't be higher than the score of the gold one because we may change weights on aligners (like what weighs more: w2v or edit distance) and the scores will change
+      // need to check if the best one is the top out of three - this is basically the most important thing
+
+      // another problem - there could be multiples of the same text but different ids... should we do global source and global equation as well? basically anything that can have exactly the same form?
+
+      // for unit tests, does it need to be exhaustive?
+      // for other eval, probably yes
 
 
-  // link test type 2: check if the links contains certain links with scores over threshold
-  val src_comment_links = links.filter(_.obj("link_type").str == "source_to_comment")
-
-  it should "have an s_t src to comment element" in {
-    src_comment_links.exists(l => l.obj("element_1").str.contains("s_t") & l.obj("element_2").str.contains("S_t") && l.obj("score").num > 0.8) shouldBe true
-
-    // hard to make negative links since we do make an attempt to get top 3 and there will be false positives there - ph already addressed it---need to have something like the score of this shouldn't be more than x (or maybe... it should be something like it shouldn't be higher than the score of the gold one because we may change weights on aligners (like what weighs more: w2v or edit distance) and the scores will change
-    // need to check if the best one is the top out of three - this is basically the most important thing
-
-    // another problem - there could be multiples of the same text but different ids... should we do global source and global equation as well? basically anything that can have exactly the same form?
-
-    // for unit tests, does it need to be exhaustive?
-    // for other eval, probably yes
-
-
+    }
   }
 
 
