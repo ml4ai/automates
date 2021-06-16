@@ -85,34 +85,15 @@ class TestAlign extends FlatSpec with Matchers {
   val linkTypes = links.map(_.obj("link_type").str).distinct
 
   it should "have all the link types" in {
-    val overlap = linkTypes.intersect(allLinkTypes)
+    val allLinksTypesFlat = allLinkTypes.filter(_._1 != "disabled").flatMap(_._2).map(_._1).toSeq
+    val overlap = linkTypes.intersect(allLinksTypesFlat)
     overlap.length == linkTypes.length  shouldBe true
-    overlap.length == allLinkTypes.length shouldBe true
+    overlap.length == allLinksTypesFlat.length shouldBe true
   }
 
 
-  def topInLinkTest(idf: String, desired: String, threshold: Double, inDirectLinks: Map[String, Seq[String]],
-                  linkType: String): Unit = {
-    it should f"have a correct $linkType link for global var ${idf}" in {
-      // these are already sorted
-      val topScoredLink = inDirectLinks(linkType)
-      for (l <- topScoredLink) println(">>" + l)
-      topScoredLink.head.split("::").last shouldEqual desired
-      // can't get scores for these right now...
-    }
-  }
-  def topLinkTest(idf: String, desired: String, threshold: Double, directLinks: Map[String, Seq[Value]],
-                   linkType: String): Unit = {
-    it should f"have a correct $linkType link for global var ${idf}" in {
-      val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
 
-      // which element in this link type we want to check
-      val whichLink = whereIsNotGlobalVar(linkType)
-      // element 1 of this link (eq gl var) should be E
-      topScoredLink(whichLink).str.split("::").last shouldEqual desired
-      topScoredLink("score").num > threshold shouldBe true
-    }
-  }
+
 
 //
   {
@@ -122,7 +103,8 @@ class TestAlign extends FlatSpec with Matchers {
 
     val directDesired = Map(
       "equation_to_gvar" -> "E",
-      "gvar_to_param_setting_via_idfr" -> "E = 30"
+      "gvar_to_param_setting_via_idfr" -> "E = 30",
+      "comment_to_gvar" -> "E"
     )
 
     val indirectDesired = Map(
@@ -132,58 +114,40 @@ class TestAlign extends FlatSpec with Matchers {
     val thresholdE = 0.8 // same for all elements of link type probably
     val (directLinksForE, indirE) = getLinksForGvar("E", links)
 
-    for (dl <- directDesired) {
-      topLinkTest(idfE, dl._2, thresholdE, directLinksForE, dl._1)
-    }
-
-    for (dl <- indirE) println("indir: " + dl._1 + " " + dl._2.mkString("||"))
-    for (dl <- indirectDesired) {
-      println(">>>" + dl._1 + " " + dl._2)
-      topInLinkTest(idfE, dl._2, thresholdE, indirE, dl._1)
-    }
-    //    topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
-
-    // this is for non-existent links (including those we end up filtering out because of threshold)
-    it should s"have NO gvar_to_unit_via_cpcpt link for global var $idfE" in {
-
-      val condition1 = Try(directLinksForE.keys.toList.contains("gvar_to_unit_via_cpct") should be(false)).isSuccess
-      val condition2 = Try(directLinksForE
-      ("gvar_to_unit_via_cpcpt").sortBy(_.obj("score").num).reverse.head("score").num > 0.8 shouldBe false).isSuccess
-      assert(condition1 || condition2)
-    }
+    runAllTests(directLinksForE, indirE, directDesired, indirectDesired)
 
 
-
-    // if we decide not to filter out links because of threshold (could be beneficial to keep them for debugging purposes, but filter them out somewhere downstream; ask Paul), do this type of test:
-    //
-    //  it should "have top gvar_to_unit_via_idfr link be below threshold for global var E" in {
-    //    val topScoredLink = directLinksForE("gvar_to_unit_via_idfr").sortBy(_.obj("score").num).reverse.head
-    //    //
-    //    val threshold = 0.8 // the threshold will be set globally (from config?) as an allowed link
-    //    // element 1 of this link (eq gl var) should be E
-    //    topScoredLink("score").num < threshold shouldBe true
-    //  }
+    def runAllTests(directLinks: Map[String, Seq[Value]], indirectLinks: Map[String, Seq[String]],
+                    directDesired: Map[String, String], indirectDesired: Map[String, String]): Unit = {
 
 
-    // link test type 2: check if the links contains certain links with scores over threshold
-    val src_comment_links = links.filter(_.obj("link_type").str == "source_to_comment")
+      for (dl <- directDesired) {
+        topDirectLinkTest(idfE, dl._2, thresholdE, directLinks, dl._1)
+      }
 
-    it should "have an s_t src to comment element" in {
-      src_comment_links.exists(l => l.obj("element_1").str.contains("s_t") & l.obj("element_2").str.contains("S_t") && l.obj("score").num > 0.8) shouldBe true
+      for (dl <- indirE) println("indir: " + dl._1 + " " + dl._2.mkString("||"))
+      for (dl <- indirectDesired) {
+        println(">>>" + dl._1 + " " + dl._2)
+        topIndirectLinkTest(idfE, dl._2, thresholdE, indirE, dl._1)
+      }
+      for (dlType <- allLinkTypes("direct")) {
+        if (!directDesired.contains(dlType._1)) {
+          negativeDirectLinkTest(idfE, dlType._2, directLinks, dlType._1)
+        }
+      }
 
-      // hard to make negative links since we do make an attempt to get top 3 and there will be false positives there - ph already addressed it---need to have something like the score of this shouldn't be more than x (or maybe... it should be something like it shouldn't be higher than the score of the gold one because we may change weights on aligners (like what weighs more: w2v or edit distance) and the scores will change
-      // need to check if the best one is the top out of three - this is basically the most important thing
-
-      // another problem - there could be multiples of the same text but different ids... should we do global source and global equation as well? basically anything that can have exactly the same form?
-
-      // for unit tests, does it need to be exhaustive?
-      // for other eval, probably yes
-
-
-    }
   }
 
 
+    //    topLinkTest(idfE, desiredE, thresholdE, directLinksForE, "equation_to_gvar")
+
+    // this is for non-existent links (including those we end up filtering out because of threshold)
+
+
+
+
+
+  }
 
 
 
@@ -245,6 +209,58 @@ class TestAlign extends FlatSpec with Matchers {
 //  val finalScore = score.toDouble/toyGoldIt.keys.toList.length
 
 //  println("final score: " + finalScore)
+
+  /*** TEST TYPES*/
+    // DIRECT LINK TEST
+  def topDirectLinkTest(idf: String, desired: String, threshold: Double, directLinks: Map[String, Seq[Value]],
+                        linkType: String): Unit = {
+    it should f"have a correct $linkType link for global var ${idf}" in {
+      val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
+
+      // which element in this link type we want to check
+      val whichLink = whereIsNotGlobalVar(linkType)
+      // element 1 of this link (eq gl var) should be E
+      topScoredLink(whichLink).str.split("::").last shouldEqual desired
+      topScoredLink("score").num > threshold shouldBe true
+    }
+  }
+
+  def negativeDirectLinkTest(idf: String, threshold: Double, directLinks: Map[String, Seq[Value]],
+                             linkType: String): Unit = {
+    it should s"have NO ${linkType} link for global var $idf" in {
+
+      val condition1 = Try(directLinks.keys.toList.contains(linkType) should be(false)).isSuccess
+      val condition2 = Try(directLinks
+      (linkType).sortBy(_.obj("score").num).reverse.head("score").num > threshold shouldBe false).isSuccess
+      assert(condition1 || condition2)
+    }
+  }
+
+  // INDIRECT LINK TESTS
+
+  def topIndirectLinkTest(idf: String, desired: String, threshold: Double, inDirectLinks: Map[String, Seq[String]],
+                          linkType: String): Unit = {
+    it should f"have a correct $linkType link for global var ${idf}" in {
+      // these are already sorted
+      val topScoredLink = inDirectLinks(linkType)
+      for (l <- topScoredLink) println(">>" + l)
+      topScoredLink.head.split("::").last shouldEqual desired
+      // can't get scores for these right now...
+    }
+  }
+
+  def negativeIndirectLinkTest(idf: String, threshold: Double, indirectLinks: Map[String, Seq[String]],
+                             linkType: String): Unit = {
+    it should s"have NO ${linkType} link for global var $idf" in {
+
+      // todo: when we get indirect links, need to save idf/score tuples instead of just idf
+//      val condition1 = Try(indirectLinks.keys.toList.contains(linkType) should be(false)).isSuccess
+//      val condition2 = Try(indirectLinks
+//      (linkType).sortBy(_.obj("score").num).reverse.head("score").num > threshold shouldBe false).isSuccess
+//      assert(condition1 || condition2)
+    }
+  }
+
 
 
 

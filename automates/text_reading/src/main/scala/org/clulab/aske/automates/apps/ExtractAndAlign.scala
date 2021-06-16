@@ -63,17 +63,21 @@ object ExtractAndAlign {
   val COMMENT_TO_GLOBAL_VAR = "comment_to_gvar"
   val GLOBAL_VAR_TO_SVO = "gvar_to_svo"
 
-  val allLinkTypes = Seq(
-    SRC_TO_COMMENT,
-    GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER,
-    GLOBAL_VAR_TO_UNIT_VIA_CONCEPT,
-    GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER,
-    GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT,
-    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER,
-    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT,
-    EQN_TO_GLOBAL_VAR,
-    COMMENT_TO_GLOBAL_VAR
-//    GLOBAL_VAR_TO_SVO,
+  // These are temporary thresholds - to be set
+  val allLinkTypes = Map("direct" -> Map(
+    GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> 0.5,
+    GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> 0.5,
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> 0.5,
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> 0.5,
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER -> 0.5,
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> 0.5,
+    EQN_TO_GLOBAL_VAR -> 0.5,
+    COMMENT_TO_GLOBAL_VAR -> 0.5),
+    "indirect" -> Map(
+      SRC_TO_COMMENT -> 0.5
+    ),
+    "disabled" -> Seq(
+      GLOBAL_VAR_TO_SVO -> 0.5)
   )
 
   val whereIsGlobalVar = Map[String, String](
