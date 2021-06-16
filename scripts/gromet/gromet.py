@@ -50,7 +50,7 @@ Event-driven programming
 # -----------------------------------------------------------------------------
 
 # Data:
-# Float, Integer, Boolean
+# Real, Float, Integer, Boolean
 
 # Primitive term constructors (i.e., primitive operators):
 # arithmetic: "+", "*", "-", "/", "exp", "log"
