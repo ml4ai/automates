@@ -11,11 +11,14 @@ PLUGINDIR=$(shell $(CXX) -print-file-name=plugin)
 CXXFLAGS += -g -I$(PLUGINDIR)/include -I/usr/local/include
 
 # top level goal: build our plugin as a shared library
-all: ast_dump.so
+#all: mac linux
 
 # IMPORTANT: For Linux machines, use -shared instead of -dynamiclib -undefined dynamic_lookup. For windows machines, there are many more steps.
-ast_dump.so: ast_dump.o
-	$(CXX) $(LDFLAGS) -w -dynamiclib -undefined dynamic_lookup -o $@ $<
+mac: ast_dump.o
+	$(CXX) $(LDFLAGS) -w -dynamiclib -undefined dynamic_lookup -o ast_dump.so $<
+
+linux: 
+	$(CXX) $(CXXFLAGS) -w -fPIC -shared -o ast_dump.so ast_dump.cpp
 
 ast_dump.o : ast_dump.cpp
 	$(CXX) $(CXXFLAGS) -w -fPIC -c -o $@ $<

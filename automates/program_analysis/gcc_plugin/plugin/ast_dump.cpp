@@ -410,12 +410,14 @@ static void dump_record_type_decl(tree type)
     json_int_field("size", TREE_INT_CST_LOW(TYPE_SIZE(type)));
   }
 
+  /*
   if (DECL_SOURCE_LOCATION(type))
   {
     json_int_field("line_start", DECL_SOURCE_LINE(type));
     json_int_field("col_start", DECL_SOURCE_COLUMN(type));
     json_string_field("file", DECL_SOURCE_FILE(type));
   }
+  */
 
   TRACE("dump_record_type_decl: writing fields\n");
   tree field = TYPE_FIELDS(type);
