@@ -99,7 +99,7 @@ def run_gcc_pipeline():
     # Assert return code is 0 which is success
     assert (
         results.returncode == 0
-    ), "Error: Received bad return code when executing GCC plugin: {results.returncode}"
+    ), f"Error: Received bad return code when executing GCC plugin: {results.returncode}"
 
     ast_file_names = [
         f"./{i.split('/')[-1].rsplit('.')[0]}_gcc_ast.json" for i in input_files
