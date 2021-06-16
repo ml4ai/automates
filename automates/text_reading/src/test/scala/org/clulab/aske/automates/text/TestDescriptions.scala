@@ -676,4 +676,26 @@ class TestDescriptions extends ExtractionTest {
     testDescriptionEvent(mentions, desired)
   }
 
+  // Tests from LPJmL_LPJmL4 \u2013 a dynamic global vegetation model with managed land \u2013 Part 1 Model description.pdf
+  val t1m = "where α = λ/c is thermal diffusivity, λ thermal conductivity, and c heat capacity"
+  failingTest should s"find descriptions from t1m: ${t1m}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "α" -> Seq("thermal diffusivity"),
+      "λ" -> Seq("thermal conductivity"),
+      "c" -> Seq("heat capacity")
+    )
+    val mentions = extractMentions(t1m)
+    testDescriptionEvent(mentions, desired)
+  }
+
+  val t2m = "where α = λ/c is thermal diffusivity"
+  // alpha is not reached with any rule because of lambda/c
+  failingTest should s"find descriptions from t2m: ${t2m}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "α" -> Seq("thermal diffusivity")
+    )
+    val mentions = extractMentions(t2m)
+    testDescriptionEvent(mentions, desired)
+  }
+
 }
