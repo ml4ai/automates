@@ -132,7 +132,8 @@ object AlignmentJsonUtils {
 
     } else None
 
-//    val exporter = AutomatesExporter("double_epidemic_comment--mentions.json")
+//    val exporter = AutomatesExporter("/Users/alexeeva/Repos/automates/automates/text_reading/src/test/resources" +
+//      "/double_epidemic_comment--mentions.json")
 //    exporter.export(commentDescriptionMentions.get)
 
 
