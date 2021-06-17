@@ -30,7 +30,10 @@ def validate(gromet):
     print('-' * 50)
     print(f"Validating GroMEt '{gromet['uid']}' ({gromet['type']})...")
 
+    # ---------------------------------------------------------------------
     # Extract gromet components
+    # ---------------------------------------------------------------------
+
     objects = {}
     for k in ('variables', 'boxes', 'wires', 'junctions', 'ports'):
         objects[k] = {}
@@ -84,8 +87,74 @@ def validate(gromet):
     # print(f">>>> objects['expression_boxes']:  {objects['expression_boxes']}")
     # print(f">>>> objects['conditional_boxes']:  {objects['conditional_boxes']}")
 
-    # -------------------
+    # -- Extract metadata per Metadatum type --
+
+    for k in ('variables', 'boxes', 'wires', 'junctions', 'ports'):
+        for elm in objects[k]:
+            for datum in elm['metadata']:
+                metadata_type = f"metadata_{k}_{datum['metadata_type']}"
+                if metadata_type not in objects:
+                    objects[metadata_type] = [datum]
+                else:
+                    objects[metadata_type].append(datum)
+    # Gromet - get gromet metadata and place in f"metadata_gormet_{datum['metadata_type']}"
+
+
+
+    # TODO types: TypeDeclaration
+    # TODO literals: Literal
+
+    # tests: (ensure only in <...>)
+    # CodeSpanReference
+    #   <Any>
+    #   file_id exists in gromet.CodeCollectionReference CodeFileReference
+    # ModelInterface
+    #   <Gromet>
+    #   variables, parameters and initial_conditions exist
+    #   BL:
+    #     variables: All State, Flux, Tangent Junctions
+    #     parameters: All Flux Junctions
+    #     initial_conditions: All State Junctions
+    #   PNC:
+    #     variables: All State and Rate Junctions
+    #     parameters: All Rate Junctions
+    #     initial_conditions: All State Junctions
+    #   FN: Inferred or user-defined
+    # TextualDocumentReferenceSet
+    #   <Gromet>
+    # CodeCollectionReference
+    #   <Gromet>
+    # EquationDefinition
+    #   <Box>
+    #   has EquationExtraction (see below)
+    # TextDefinition
+    #   <Variable>
+    #   has TextExtraction (see below)
+    # TexParameter
+    #   <Variable>
+    #   has TextExtraction (see below)
+    # EquationParameter
+    #   <Variable>
+    #   has EquationExtraction (see below)
+
+    # TextExtraction
+    #   document_reference_uid exists in gromet.TextualDocumentReferenceSet TextualDocumentReference
+    # EquationExtraction
+    #   document_reference_uid exists in gromet.CodeCollectionReference CodeFileReference
+
+    # -- Extract object uids --
+
+    # Literal
+    # Junction
+    # Port
+    # Wire
+    # Box
+    # Variable
+    # Gromet
+
+    # ---------------------------------------------------------------------
     # General Tests:
+    # ---------------------------------------------------------------------
 
     # Test: Wire src and tgt have corresponding Port/Junction definitions
     for w_id, wire in objects['wires'].items():
@@ -143,8 +212,9 @@ def validate(gromet):
             print(f"Error: PortCall '{p_id}'"
                   f" calls undefined Port '{port['call']}'.")
 
-    # -------------------
+    # ---------------------------------------------------------------------
     # Petri Net Classic (PNC) tests:
+    # ---------------------------------------------------------------------
 
     if gromet['type'] == 'PetriNetClassic':
         junction_types = ('State', 'Rate')
@@ -175,8 +245,9 @@ def validate(gromet):
                 print(f"Error [PNC]: Wire '{w_id}'"
                       f" connects src and tgt Junctions of the same type: '{src_junction['type']}'.")
 
-    # -------------------
+    # ---------------------------------------------------------------------
     # Bilayer (BL) Tests:
+    # ---------------------------------------------------------------------
 
     if gromet['type'] == 'Bilayer':
         junction_types = ('State', 'Flux', 'Tangent')
@@ -238,8 +309,9 @@ def validate(gromet):
                           f" tgt Junction '{tgt_junction['uid']}' of type '{tgt_junction['type']}'"
                           f" (must be type Flux).")
 
-    # -------------------
+    # ---------------------------------------------------------------------
     # Function Network (FN) Tests:
+    # ---------------------------------------------------------------------
 
     if gromet['type'] == 'FunctionNetwork':
         port_types = ('PortInput', 'PortOutput')
@@ -439,8 +511,9 @@ def validate(gromet):
                               f" has an Expr tree that makes the following Port reference"
                               f" without matching input Ports: {references_not_in_inputs}.")
 
-    # -------------------
+    # ---------------------------------------------------------------------
     # Predicate/Transition Network (PrTNet) tests:
+    # ---------------------------------------------------------------------
     # TODO
 
     # debug(objects)
@@ -546,3 +619,14 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# -----------------------------------------------------------------------------
+# CHANGE LOG
+# -----------------------------------------------------------------------------
+
+"""
+Changes 2021-06-16:
+() Added test that all object Uids are unique
+() Start support for metadata
+"""
