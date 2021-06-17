@@ -10,6 +10,7 @@ import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
 import org.clulab.utils.TextUtils
 import org.json4s.jackson.JsonMethods._
+import play.libs.F.Tuple
 import ujson.Value
 
 import scala.collection.mutable.ArrayBuffer
@@ -250,8 +251,10 @@ object TestUtils {
 
   // todo: double-check returning the right number of indirect alignments per intermediate node
   // return indirect links of a given type as a list of strings per each intermediate node
-  def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String, indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[String]] = {//Map[String, Map[String, ArrayBuffer[Value]]] = {
-    val indirectLinkEndNodes = new ArrayBuffer[String]()
+  def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String,
+                        indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[Tuple[String, Double]]] =
+  {//Map[String, Map[String, ArrayBuffer[Value]]] = {
+    val indirectLinkEndNodes = new ArrayBuffer[Tuple[String,Double]]()
     val allIndirectLinks = new ArrayBuffer[Value]()
     // we have links for some var, e.g., I(t)
     // through one of the existing links, we can get to another type of node
@@ -299,7 +302,7 @@ object TestUtils {
       for (j <- 0 until sortedIntermNodeNames.length) {
         val intermNodeName = sortedIntermNodeNames(j)
 
-        val endNode = groupedByElement2(intermNodeName).map(_.obj("element_1").str)
+        val endNode = groupedByElement2(intermNodeName).map(l => Tuple(l.obj("element_1").str, l.obj("score").num))
         if (endNode.length > i) {
           indirectLinkEndNodes.append(endNode(i))
         }
@@ -330,7 +333,9 @@ object TestUtils {
     }
   }
 
-  def getLinksForGvar(idfr: String, allLinks: Seq[Value]): (Map[String, Seq[Value]], Map[String, Seq[String]]) = {
+  def getLinksForGvar(idfr: String, allLinks: Seq[Value]): (Map[String, Seq[Value]], Map[String, Seq[Tuple[String,
+    Double]]])
+  = {
 
     println("IDFR: " + idfr)
     // links are returned as maps from link types to a) full links for direct links and b) sequences of elements linked indirectly to the global var
