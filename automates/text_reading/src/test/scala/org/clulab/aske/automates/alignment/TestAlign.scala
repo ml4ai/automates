@@ -3,20 +3,13 @@ package org.clulab.aske.automates.alignment
 import java.io.File
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.{OdinEngine, TestUtils}
 import org.clulab.aske.automates.apps.ExtractAndAlign
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
-import org.scalatest.{FlatSpec, Matchers}
-import ujson.Value
 import ai.lum.common.FileUtils._
-import org.clulab.aske.automates.TestUtils.{TestAlignment}
-import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
-import org.clulab.aske.automates.data.DataLoader
-import play.libs.F.Tuple
+import org.clulab.aske.automates.TestUtils.TestAlignment
+import org.clulab.aske.automates.apps.ExtractAndAlign.allLinkTypes
 
-import scala.collection.mutable.ArrayBuffer
-import scala.util.Try
 
 class TestAlign extends TestAlignment {
 
@@ -27,7 +20,7 @@ class TestAlign extends TestAlignment {
 
   // load files/configs
 
-  val config = ConfigFactory.load("/test.conf")
+  val config: Config = ConfigFactory.load("/test.conf")
   val numAlignments = 3//config[String]("apps.numAlignments")
   val numAlignmentsSrcToComment = 1//config[String]("apps.numAlignmentsSrcToComment")
   val scoreThreshold = 0.0 //config[String]("apps.scoreThreshold")
@@ -77,15 +70,12 @@ class TestAlign extends TestAlignment {
   )
 
   val links = groundings.obj("links").arr
-  val linkTypes = links.map(_.obj("link_type").str).distinct
+  val extractedLinkTypes = links.map(_.obj("link_type").str).distinct
 
   it should "have all the link types" in {
     val allLinksTypesFlat = allLinkTypes.obj.filter(_._1 != "disabled").obj.flatMap(obj => obj._2.obj.keySet).toSeq//
-      // .flatMap(_
-    // ._2.obj.)
-    println(allLinksTypesFlat.mkString("||") + "<<<")
-    val overlap = linkTypes.intersect(allLinksTypesFlat)
-    overlap.length == linkTypes.length  shouldBe true
+    val overlap = extractedLinkTypes.intersect(allLinksTypesFlat)
+    overlap.length == extractedLinkTypes.length  shouldBe true
     overlap.length == allLinksTypesFlat.length shouldBe true
   }
 
@@ -104,45 +94,10 @@ class TestAlign extends TestAlignment {
       "source_to_comment" -> ("E","failing")
     )
 
-    val thresholdE = 0.8 // same for all elements of link type probably
     val (directLinksForE, indirE) = getLinksForGvar("E", links)
-
-    runAllTests(directLinksForE, indirE, directDesired, indirectDesired)
-
-
-    def runAllTests(directLinks: Map[String, Seq[Value]], indirectLinks: Map[String, Seq[Tuple[String, Double]]],
-                    directDesired: Map[String, Tuple2[String, String]], indirectDesired: Map[String, Tuple2[String, String]])
-    : Unit
-    = {
-      for (dl <- directDesired) {
-        val desired = dl._2._1
-        val linkType = dl._1
-        val status = dl._2._2
-        topDirectLinkTest(idfE, desired, thresholdE, directLinks, linkType, status)
-      }
-
-      for (dl <- indirectLinks) println("indir: " + dl._1 + " " + dl._2)
-      for (dl <- indirectDesired) {
-        val desired = dl._2._1
-        val linkType = dl._1
-        val status = dl._2._2
-        println(">>>" + dl._1 + " " + dl._2)
-        topIndirectLinkTest(idfE, desired, thresholdE, indirectLinks, linkType, status)
-      }
-      for (dlType <- allLinkTypes("direct").obj.keys) {
-        if (!directDesired.contains(dlType)) {
-          negativeDirectLinkTest(idfE, allLinkTypes("direct").obj(dlType).num, directLinks, dlType)
-        }
-      }
+    runAllTests(idfE, directLinksForE, indirE, directDesired, indirectDesired)
 
   }
-
-  }
-
-
-
-
-
 
 
 }

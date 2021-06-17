@@ -248,9 +248,9 @@ object TestUtils {
         1 shouldEqual 1
       }
     }
-    def topDirectLinkTest(idf: String, desired: String, threshold: Double, directLinks: Map[String, Seq[Value]],
+    def topDirectLinkTest(idf: String, desired: String, directLinks: Map[String, Seq[Value]],
                           linkType: String, status: String): Unit = {
-      val newthreshold = allLinkTypes("direct").obj(linkType).num
+      val threshold = allLinkTypes("direct").obj(linkType).num
       println("THRESHOLD " + threshold)
       if (status == "passing") {
         it should f"have a correct $linkType link for global var ${idf}" in {
@@ -259,7 +259,7 @@ object TestUtils {
           val whichLink = whereIsNotGlobalVar(linkType)
           // element 1 of this link (eq gl var) should be E
           topScoredLink(whichLink).str.split("::").last shouldEqual desired
-          topScoredLink("score").num > newthreshold shouldBe true
+          topScoredLink("score").num > threshold shouldBe true
         }
       } else {
         val failingMessage = if (status=="failingNegative") {
@@ -272,10 +272,10 @@ object TestUtils {
 
     }
 
-    def negativeDirectLinkTest(idf: String, threshold: Double, directLinks: Map[String, Seq[Value]],
+    def negativeDirectLinkTest(idf: String, directLinks: Map[String, Seq[Value]],
                                linkType: String): Unit = {
       it should s"have NO ${linkType} link for global var $idf" in {
-
+        val threshold = allLinkTypes("direct").obj(linkType).num
         val condition1 = Try(directLinks.keys.toList.contains(linkType) should be(false)).isSuccess
         val condition2 = Try(directLinks
         (linkType).sortBy(_.obj("score").num).reverse.head("score").num > threshold shouldBe false).isSuccess
@@ -286,9 +286,11 @@ object TestUtils {
 
     // INDIRECT LINK TESTS
 
-    def topIndirectLinkTest(idf: String, desired: String, threshold: Double, inDirectLinks: Map[String,
+    def topIndirectLinkTest(idf: String, desired: String, inDirectLinks: Map[String,
       Seq[Tuple[String, Double]]],
                             linkType: String, status: String): Unit = {
+      // todo: use threshold here now that we are saving it
+      val threshold = allLinkTypes("indirect").obj(linkType).num
       if (status == "passing") {
         it should f"have a correct $linkType link for global var ${idf}" in {
           // these are already sorted
@@ -303,10 +305,11 @@ object TestUtils {
     }
 
 
-    def negativeIndirectLinkTest(idf: String, threshold: Double, indirectLinks: Map[String, Seq[Tuple[String, Double]]],
+    def negativeIndirectLinkTest(idf: String, indirectLinks: Map[String, Seq[Tuple[String, Double]]],
                                  linkType: String): Unit = {
       it should s"have NO ${linkType} link for global var $idf" in {
 
+        val threshold = allLinkTypes("indirect").obj(linkType).num
         val condition1 = Try(indirectLinks.keys.toList.contains(linkType) should be(false)).isSuccess
         val condition2 = Try(indirectLinks
         (linkType).head._2 > threshold shouldBe false).isSuccess
@@ -456,7 +459,34 @@ object TestUtils {
     }
 
 
+    def runAllTests(variable: String, directLinks: Map[String, Seq[Value]], indirectLinks: Map[String,
+      Seq[Tuple[String,
+      Double]]],
+                    directDesired: Map[String, Tuple2[String, String]], indirectDesired: Map[String, Tuple2[String, String]])
+    : Unit
+    = {
+      for (dl <- directDesired) {
+        val desired = dl._2._1
+        val linkType = dl._1
+        val status = dl._2._2
+        topDirectLinkTest(variable, desired, directLinks, linkType, status)
+      }
 
+      for (dl <- indirectLinks) println("indir: " + dl._1 + " " + dl._2)
+      for (dl <- indirectDesired) {
+        val desired = dl._2._1
+        val linkType = dl._1
+        val status = dl._2._2
+        println(">>>" + dl._1 + " " + dl._2)
+        topIndirectLinkTest(variable, desired, indirectLinks, linkType, status)
+      }
+      for (dlType <- allLinkTypes("direct").obj.keys) {
+        if (!directDesired.contains(dlType)) {
+          negativeDirectLinkTest(variable, directLinks, dlType)
+        }
+      }
+
+    }
 
 
 
