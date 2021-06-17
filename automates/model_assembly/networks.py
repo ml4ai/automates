@@ -256,8 +256,16 @@ class LambdaNode(GenericNode):
                 (expected {expected_num_args} found {input_num_args})
                 for lambda:\n{self.func_str}"""
             )
+
         try:
             if len(values) != 0:
+                # In vectorized execution, we would have a values list that looks like:
+                # [ [x_1, x_2, ... x_N] [y_1, y_2, ... y_N] [z_1, z_2, ... z_N]]
+                # where the root lists length is the # of inputs to the lambda function 
+                # (in this case 3). We want to turn this into a list of length N where
+                # each sub list is length of inputs (3 in this case) with the corresponding
+                # x/y/z variables. I.e. it should look like:
+                # [ [x_1, y_1, z_1] [x_2, y_2, z_2] ... [x_N, y_N, z_N]]
                 res = [self.function(*inputs) for inputs in zip(*values)]
             else:
                 res = self.function()
@@ -270,6 +278,7 @@ class LambdaNode(GenericNode):
         if (
             self.func_type == LambdaType.INTERFACE
             or self.func_type == LambdaType.DECISION
+            or self.func_type == LambdaType.EXTRACT
         ):
             # Interfaces and decision nodes should output a tuple of the
             # correct variables. However, if there is only one var in the
@@ -1137,8 +1146,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
                 value = np.full(self.np_shape, value, dtype=np.float64)
             if isinstance(value, int):
                 value = np.full(self.np_shape, value, dtype=np.int64)
-            elif isinstance(value, list):
-                # value = [np.array(value)] * self.np_shape[0]
+            elif isinstance(value, (dict, list)):
                 value = np.array([value] * self.np_shape[0])
 
             input_node.input_value = value
