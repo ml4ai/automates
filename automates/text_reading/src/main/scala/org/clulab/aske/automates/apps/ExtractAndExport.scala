@@ -4,7 +4,7 @@ import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.{DataLoader, TextRouter}
+import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
@@ -36,7 +36,8 @@ object ExtractAndExport extends App {
   val inputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/input_files"
   val outputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/output_files"
   val inputType = config[String]("apps.inputType")
-  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+//  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+  val dataLoader = new CosmosJsonDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
@@ -105,9 +106,20 @@ object ExtractAndExport extends App {
       }
     }
 
+    val contextMentions = mentions.filter(_ matches "Context")
+    println("Context setting mentions: ")
+    for (m <- contextMentions) {
+      println("----------------")
+      println(m.text)
+      //      println(m.foundBy)
+      for (arg <- m.arguments) {
+        println(arg._1 + ": " + m.arguments(arg._1).head.text)
+      }
+    }
+
     // 4. Export to all desired formats
     exportAs.foreach { format =>
-        val exporter = getExporter(format, s"$outputDir/${file.getName}")
+        val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + format, s"_mentions.${format}")}")
         exporter.export(mentions)
         exporter.close() // close the file when you're done
     }
@@ -159,9 +171,12 @@ case class AutomatesExporter(filename: String) extends Exporter {
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString().replace(".json", "_mentions.tsv") ))
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting"))
+    pw.write("filename\tsentence\tmention type\tmention text\targs in all next columns\n")
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "Context"))
+
     for (m <- contentMentions) {
-      pw.write(m.label + "\t" + m.text.trim())
+      pw.write(new File(filename).getName() + "\t")
+      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())
       for (arg <- m.arguments) pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
       pw.write("\n")
     }
