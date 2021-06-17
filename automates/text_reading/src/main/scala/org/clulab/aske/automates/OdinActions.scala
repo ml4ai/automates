@@ -30,13 +30,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (identifiers, non_identifiers) = mentions.partition(m => m.label == "Identifier")
       val expandedIdentifiers = keepLongestIdentifier(identifiers)
 
-      val (expandable, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
+      val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
+      val (functions, nonExpandable) = other.partition(m => m.label.contains("Function"))
 
-      val expanded = expansionHandler.get.expandArguments(expandable, state, validArgs)
-      val (conjDescrType2, otherDescrs) = expanded.partition(_.label.contains("Type2"))
-      // only keep type 2 conj descriptions that do not have description arg overlap AFTER expansion
+      val expandedDescriptions = expansionHandler.get.expandArguments(descriptions, state, validArgs)
+      val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
+      val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
+      // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
-      keepOneWithSameSpanAfterExpansion(allDescrs) ++ other
+      keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ nonExpandable
 //      allDescrs ++ other
 
     } else {
@@ -198,16 +200,24 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
 
-  /** Keeps the longest mention for each group of overlapping mentions **/
+  /** Keeps the longest mention for each group of overlapping mentions **/ // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (functions, other) = mentions.partition(_.label == "Function")
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
-      (k, v) <- mentions.groupBy(m => (m.sentence, m.label))
+      (k, v) <- other.groupBy(m => (m.sentence, m.label))
       m <- v
       // for overlapping mentions starting at the same token, keep only the longest
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    mns.toVector.distinct
+    val fns: Iterable[Mention] = for {
+      // if the label is "Function", find mentions of the same trigger and sentence overlap
+      (k, v) <- functions.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
+      (a, b) <- v.groupBy(m => m.arguments("output").head.tokenInterval)
+      m <- b
+      longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
+    } yield longest
+    mns.toVector.distinct ++ fns.toVector.distinct
   }
 
 
@@ -693,6 +703,54 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield copyWithLabel(arg, "Function")
 
     mentionsDisplayOnlyArgs
+  }
+
+  def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    val (functions, other) = mentions.partition(_.label == "Function")
+    for (f <- functions) {
+      val newInputs = new ArrayBuffer[Mention]()
+      val newOutputs = new ArrayBuffer[Mention]()
+      val newTrigger = new ArrayBuffer[Mention]()
+      for (argType <- f.arguments) {
+        val sameInterval = argType._2.groupBy(_.tokenInterval) // group by token intervals
+        for (s <- sameInterval) {
+          val numOfArgs = s._2.toList.length
+          if (argType._1 == "input" ) {
+            if (numOfArgs == 1) {newInputs ++= s._2} // if there's only one input, return that
+            // if there are more than one, pick one that has "Identifier" label if available; otherwise, choose the longest
+            else if (numOfArgs >= 2) {
+              if (s._2.exists(_.label == "Identifier")) {
+                newInputs += s._2.filter(_.label.contains("Identifier")).head
+              } else {
+                newInputs += s._2.maxBy(_.text.length)
+              }
+            }
+            else logger.error(f"Function missing ${argType._1}")
+          } else if (argType._1 == "output") {
+            if (numOfArgs == 1) {newOutputs ++= s._2} // if there's only one output, return that
+            // if there are more than one, pick one that has "Identifier" label if available; otherwise, choose the longest
+            else if (numOfArgs >= 2) {
+              if (s._2.exists(_.label == "Identifier")) {
+                newOutputs += s._2.filter(_.label.contains("Identifier")).head
+              } else {
+                newOutputs += s._2.maxBy(_.text.length)
+              }
+
+            }
+            else logger.error(f"Function missing ${argType._1}")
+          }
+          // not sure arg type trigger is possible
+          else if (argType._1 == "trigger") {newTrigger ++= s._2}
+          else logger.error(f"Arg type ${argType._1} is not expected in functions")
+        }
+      }
+      val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
+      val newFunctions = copyWithArgs(f, newArgs)
+      toReturn.append(newFunctions)
+    }
+
+    toReturn ++ other
   }
 
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
