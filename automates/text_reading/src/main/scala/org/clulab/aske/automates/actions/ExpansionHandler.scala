@@ -82,10 +82,18 @@ class ExpansionHandler() extends LazyLogging {
     // Make the new arguments
     val newArgs = scala.collection.mutable.HashMap[String, Seq[Mention]]()
     for ((argType, argMentions) <- m.arguments) {
+      val argsToExpand = new ArrayBuffer[Mention]
+      val expandedArgs = new ArrayBuffer[Mention]
       if (validArgs.contains(argType)) {
+        // filter out function args that are identifiers from expanding
+        if (m.label == "Function") {
+          val (expandable, nonExpandable) = argMentions.partition(_.label != "Identifier")
+          argsToExpand ++= expandable
+          // append filtered args to expandedArgs so that we don't lose them
+          expandedArgs ++= nonExpandable
+        } else argsToExpand ++= argMentions
         // Sort, because we want to expand the closest first so they don't get subsumed
-        val sortedClosestFirst = argMentions.sortBy(distToTrigger(trigger, _))
-        val expandedArgs = new ArrayBuffer[Mention]
+        val sortedClosestFirst = argsToExpand.sortBy(distToTrigger(trigger, _))
         // Expand each one, updating the state as we go
         for (argToExpand <- sortedClosestFirst) {
           println("arg to expand: " + argToExpand.text + " " + argToExpand.foundBy + " " + argToExpand.labels)

@@ -36,9 +36,7 @@ rules:
     type: token
     example: "Rn = calculated net radiation at the crop surface (MJ m-2 d-1 for daily time steps or MJ m-2 h-1 for hourly time steps)"
     pattern: |
-      (?<= [lemma = "for"]|[lemma = "at"]|[lemma = "on"]|[lemma = "within"]) (?<context> [chunk = /B-NP|I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+)*)
-      |
-      (?<= [lemma = "for"] [chunk = /B-NP|I-NP/]+ [word = "and"]) (?<context> [chunk = /B-NP|I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+)*)
+      (?<= [lemma = /(for|at|on|within)/]) (?<context> [chunk = /B-NP|I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+)*)
 
   - name: that_restriction
     label: Context
@@ -48,3 +46,12 @@ rules:
     pattern: |
       (?<context> [lemma = "that"] [chunk = /B-VP/]+ ([chunk = /B-PP/] [chunk = /I-NP|B-NP/]+ [word = "step"]?)*)
     # note: the last [word = "step"] part was added due to the bad parsing.
+
+  - name: for_context
+    label: Context
+    priority: ${priority}
+    type: dependency
+    example: "Simulations of crop development and growth for over 28 crops are possible, including the CERES family of models for maize and sorghum and the CROPGRO family of models for soybean and cotton."
+    pattern: |
+      trigger = [word = "for"]
+      context:Phrase = <case conj_and?

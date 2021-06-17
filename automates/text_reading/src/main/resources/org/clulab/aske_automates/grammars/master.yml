@@ -37,7 +37,7 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/context.yml"
     vars:
-      priority: 8
+      priority: 2
 
   - import: "org/clulab/aske_automates/grammars/functions.yml"
     vars:

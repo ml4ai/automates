@@ -202,7 +202,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   /** Keeps the longest mention for each group of overlapping mentions **/ // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val (functions, other) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    val (contexts, other) = nonFunctions.partition(m => m.label == "Context")
 //    for (f <- functions) println(f.text ++ f.arguments.keys.mkString("||"))
     // distinguish between EventMention and RelationMention in functionMentions
     val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
@@ -220,7 +221,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
 
-    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm
+    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm ++ contexts
   }
 
 
@@ -980,6 +981,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val toReturn = if (filteredMen.nonEmpty) filterFunctionArgs(filteredMen, state) else Seq.empty
 
     toReturn
+//    mentions
   }
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
