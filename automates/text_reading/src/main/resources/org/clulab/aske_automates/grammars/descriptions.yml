@@ -204,9 +204,9 @@ rules:
     example: "LAI is the actual leaf area index"
     action: ${action}
     pattern: |
-      trigger = (?<!"that") [lemma="be"]
+      trigger = (?<!"that") [lemma="be"] (?![word="100"])
       description:Phrase = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = "," & !word = "which"]
-      variable:Identifier =  <cop  [!entity = /NUMBER|B-unit/ ]
+      variable:Identifier =  <cop [!entity = /NUMBER|B-unit/]
 
   - name: comma_appos_identifier
     label: Description
