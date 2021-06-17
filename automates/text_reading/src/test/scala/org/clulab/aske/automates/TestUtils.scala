@@ -5,7 +5,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
 import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.apps.ExtractAndAlign.whereIsGlobalVar
+import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
 import org.clulab.utils.TextUtils
@@ -14,6 +14,7 @@ import play.libs.F.Tuple
 import ujson.Value
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
 object TestUtils {
 
@@ -236,145 +237,229 @@ object TestUtils {
 
   }
 
-  // Alignment testing utils
-  def getLinksWithIdentifierStr(identifierName: String, allLinks: Seq[Value], inclId: Boolean): Seq[Value] = {
+  class TestAlignment extends FlatSpec with Matchers {
 
-    // when searching all links, can't include element uid, but when we search off of intermediate node (e.g., comment identifier when searching for gvar to src code alignment for testing, have to use uid
-    val toReturn = if (inclId) {
-      allLinks.filter(l => l.obj("element_1").str == identifierName || l.obj("element_2").str == identifierName)
-    } else {
-      allLinks.filter(l => l.obj("element_1").str.split("::").last == identifierName || l.obj("element_2").str.split("::").last == identifierName)
 
-    }
-    toReturn
-  }
+    /*** TEST TYPES*/
+    // DIRECT LINK TEST
 
-  // todo: double-check returning the right number of indirect alignments per intermediate node
-  // return indirect links of a given type as a list of strings per each intermediate node
-  def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String,
-                        indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[Tuple[String, Double]]] =
-  {//Map[String, Map[String, ArrayBuffer[Value]]] = {
-    val indirectLinkEndNodes = new ArrayBuffer[Tuple[String,Double]]()
-    val allIndirectLinks = new ArrayBuffer[Value]()
-    // we have links for some var, e.g., I(t)
-    // through one of the existing links, we can get to another type of node
-    // probably already sorted - double-check
-    val topNDirectLinkOfTargetTypeSorted = allDirectVarLinks.filter(_.obj("link_type").str==linkTypeToBuildOffOf).sortBy(_.obj("score").num).reverse.slice(0, nIndirectLinks)
-    for (tdl <- topNDirectLinkOfTargetTypeSorted) {
-      println("dir link: " + tdl)
-    }
-    val sortedIntermNodeNames = new ArrayBuffer[String]()
-
-    //
-    for (dl <- topNDirectLinkOfTargetTypeSorted) {
-      println("---")
-      // get intermediate node of indirect link - for comment_to_gvar link, it's element_1
-      val intermNodeJustName = linkTypeToBuildOffOf match {
-        case "comment_to_gvar" => dl("element_1").str
-        case _ => ???
+    def runFailingTest(whichTest: String): Unit = {
+      ignore should whichTest in {
+        1 shouldEqual 1
       }
-      sortedIntermNodeNames.append(intermNodeJustName)
+    }
+    def topDirectLinkTest(idf: String, desired: String, threshold: Double, directLinks: Map[String, Seq[Value]],
+                          linkType: String, status: String): Unit = {
+      val newthreshold = allLinkTypes("direct").obj(linkType).num
+      println("THRESHOLD " + threshold)
+      if (status == "passing") {
+        it should f"have a correct $linkType link for global var ${idf}" in {
+          val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
+          // which element in this link type we want to check
+          val whichLink = whereIsNotGlobalVar(linkType)
+          // element 1 of this link (eq gl var) should be E
+          topScoredLink(whichLink).str.split("::").last shouldEqual desired
+          topScoredLink("score").num > newthreshold shouldBe true
+        }
+      } else {
+        val failingMessage = if (status=="failingNegative") {
+          f"have NO $linkType link for global var ${idf}"
+        } else {
+          f"have a correct $linkType link for global var ${idf}"
+        }
+        runFailingTest(failingMessage)
+      }
+
+    }
+
+    def negativeDirectLinkTest(idf: String, threshold: Double, directLinks: Map[String, Seq[Value]],
+                               linkType: String): Unit = {
+      it should s"have NO ${linkType} link for global var $idf" in {
+
+        val condition1 = Try(directLinks.keys.toList.contains(linkType) should be(false)).isSuccess
+        val condition2 = Try(directLinks
+        (linkType).sortBy(_.obj("score").num).reverse.head("score").num > threshold shouldBe false).isSuccess
+        assert(condition1 || condition2)
+      }
+    }
+
+
+    // INDIRECT LINK TESTS
+
+    def topIndirectLinkTest(idf: String, desired: String, threshold: Double, inDirectLinks: Map[String,
+      Seq[Tuple[String, Double]]],
+                            linkType: String, status: String): Unit = {
+      if (status == "passing") {
+        it should f"have a correct $linkType link for global var ${idf}" in {
+          // these are already sorted
+          val topScoredLink = inDirectLinks(linkType)
+          for (l <- topScoredLink) println(">>" + l)
+          topScoredLink.head._1.split("::").last shouldEqual desired
+          // can't get scores for these right now...
+        }
+      } else {
+        runFailingTest(f"have a correct $linkType link for global var ${idf}")
+      }
+    }
+
+
+    def negativeIndirectLinkTest(idf: String, threshold: Double, indirectLinks: Map[String, Seq[Tuple[String, Double]]],
+                                 linkType: String): Unit = {
+      it should s"have NO ${linkType} link for global var $idf" in {
+
+        val condition1 = Try(indirectLinks.keys.toList.contains(linkType) should be(false)).isSuccess
+        val condition2 = Try(indirectLinks
+        (linkType).head._2 > threshold shouldBe false).isSuccess
+        assert(condition1 || condition2)
+      }
+    }
+
+
+    // Alignment testing utils
+    def getLinksWithIdentifierStr(identifierName: String, allLinks: Seq[Value], inclId: Boolean): Seq[Value] = {
+
+      // when searching all links, can't include element uid, but when we search off of intermediate node (e.g., comment identifier when searching for gvar to src code alignment for testing, have to use uid
+      val toReturn = if (inclId) {
+        allLinks.filter(l => l.obj("element_1").str == identifierName || l.obj("element_2").str == identifierName)
+      } else {
+        allLinks.filter(l => l.obj("element_1").str.split("::").last == identifierName || l.obj("element_2").str.split("::").last == identifierName)
+
+      }
+      toReturn
+    }
+
+    // todo: double-check returning the right number of indirect alignments per intermediate node
+    // return indirect links of a given type as a list of strings per each intermediate node
+    def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String,
+                          indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[Tuple[String, Double]]] =
+    {//Map[String, Map[String, ArrayBuffer[Value]]] = {
+      val indirectLinkEndNodes = new ArrayBuffer[Tuple[String,Double]]()
+      val allIndirectLinks = new ArrayBuffer[Value]()
+      // we have links for some var, e.g., I(t)
+      // through one of the existing links, we can get to another type of node
+      // probably already sorted - double-check
+      val topNDirectLinkOfTargetTypeSorted = allDirectVarLinks.filter(_.obj("link_type").str==linkTypeToBuildOffOf).sortBy(_.obj("score").num).reverse.slice(0, nIndirectLinks)
+      for (tdl <- topNDirectLinkOfTargetTypeSorted) {
+        println("dir link: " + tdl)
+      }
+      val sortedIntermNodeNames = new ArrayBuffer[String]()
 
       //
-      val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true).filter(_.obj("link_type").str == indirectLinkType)//.sortBy(_.obj("score")).reverse
-      for (il <- indirectLinksForIntermNode) {
+      for (dl <- topNDirectLinkOfTargetTypeSorted) {
+        println("---")
+        // get intermediate node of indirect link - for comment_to_gvar link, it's element_1
+        val intermNodeJustName = linkTypeToBuildOffOf match {
+          case "comment_to_gvar" => dl("element_1").str
+          case _ => ???
+        }
+        sortedIntermNodeNames.append(intermNodeJustName)
 
-        allIndirectLinks.append(il)
-        println("indir links per interm node: " + il)
-      }
+        //
+        val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true).filter(_.obj("link_type").str == indirectLinkType)//.sortBy(_.obj("score")).reverse
+        for (il <- indirectLinksForIntermNode) {
 
-    }
-
-
-    // return only the ones of the given type
-    val groupedByElement2 = allIndirectLinks.groupBy(_.obj("element_2").str)
-    for (g <- groupedByElement2) {
-      println("G: " + g._1)
-      for (i <- g._2) {
-        println("=>" + i)
-      }
-    }
-    println("???")
-    val maxLinksPerIntermNode = groupedByElement2.maxBy(_._2.length)._2.length
-
-    println("???????")
-    for (i <- 0 until maxLinksPerIntermNode) {
-      for (j <- 0 until sortedIntermNodeNames.length) {
-        val intermNodeName = sortedIntermNodeNames(j)
-
-        val endNode = groupedByElement2(intermNodeName).map(l => Tuple(l.obj("element_1").str, l.obj("score").num))
-        if (endNode.length > i) {
-          indirectLinkEndNodes.append(endNode(i))
+          allIndirectLinks.append(il)
+          println("indir links per interm node: " + il)
         }
 
       }
-    }
-
-    for (i <- indirectLinkEndNodes) println("END NODE: " + i)
 
 
-    //    Map(indirectLinkType -> groupedByElement2)
-    Map(indirectLinkType -> indirectLinkEndNodes)
-  }
-
-  def printGroupedLinksSorted(links: Map[String, Seq[Value]]): Unit = {
-    for (gr <- links) {
-      for (i <- gr._2.sortBy(_.obj("score").num).reverse) {
-        println(i)
+      // return only the ones of the given type
+      val groupedByElement2 = allIndirectLinks.groupBy(_.obj("element_2").str)
+      for (g <- groupedByElement2) {
+        println("G: " + g._1)
+        for (i <- g._2) {
+          println("=>" + i)
+        }
       }
-      println("----------")
-    }
-  }
+      println("???")
+      val maxLinksPerIntermNode = groupedByElement2.maxBy(_._2.length)._2.length
 
-  def printIndirectLinks(indirectLinks: Map[String, Seq[String]]): Unit = {
-    for (l <- indirectLinks) {
-      println("link type: " + l._1)
-      println("linked nodes: " + l._2.mkString(" :: "))
-    }
-  }
+      println("???????")
+      for (i <- 0 until maxLinksPerIntermNode) {
+        for (j <- 0 until sortedIntermNodeNames.length) {
+          val intermNodeName = sortedIntermNodeNames(j)
 
-  def getLinksForGvar(idfr: String, allLinks: Seq[Value]): (Map[String, Seq[Value]], Map[String, Seq[Tuple[String,
-    Double]]])
-  = {
+          val endNode = groupedByElement2(intermNodeName).map(l => Tuple(l.obj("element_1").str, l.obj("score").num))
+          if (endNode.length > i) {
+            indirectLinkEndNodes.append(endNode(i))
+          }
 
-    println("IDFR: " + idfr)
-    // links are returned as maps from link types to a) full links for direct links and b) sequences of elements linked indirectly to the global var
-    // sorted by score based on the two edges in the indirect link
-    // all links that contain the target text global var string
-    // and only the links that contain global vars
-    val allDirectLinksForIdfr = getLinksWithIdentifierStr(idfr, allLinks, false).filter(link => whereIsGlobalVar.contains(link.obj("link_type").str))
+        }
+      }
 
-    // filtering out the links with no idfr with the correct idf; can't have the link uid in the test itself bc those
-    // are randomly generated on every run
-    // this has to be one of the links with global variable
-    val oneLink = allDirectLinksForIdfr.head
-    val linkType = oneLink("link_type").str
-    val whichElement = whereIsGlobalVar(linkType)
-    val fullIdfrUid = oneLink(whichElement).str
-    println("full idfr uid: " + fullIdfrUid)
-    val onlyWithCorrectIdfr = allDirectLinksForIdfr.filter(link => link(whereIsGlobalVar(link("link_type").str)).str ==
-      fullIdfrUid)
-    // group those by link type - in testing, will just be checking the rankings of links of each type
-    val directLinksGroupedByLinkType = onlyWithCorrectIdfr.groupBy(_.obj("link_type").str)
-    // take the first available link and, depending on the type, get the full name from the correct element
-    // (element_1 or element_2)
+      for (i <- indirectLinkEndNodes) println("END NODE: " + i)
 
-    for (l <- directLinksGroupedByLinkType) {
-      // todo: here need to filter out the links that do not have the exact identifier we are looking at,
-      //eg for eq to gvar link, filter out the links where the idfr exact match is in element 1 instead of 2
-      println("---")
-      for (i <- l._2.sortBy(el => el("score").num).reverse) println("-+> " + i)
+
+      //    Map(indirectLinkType -> groupedByElement2)
+      Map(indirectLinkType -> indirectLinkEndNodes)
     }
 
-    val indirectLinks = if (directLinksGroupedByLinkType.contains("comment_to_gvar")) {
-      findIndirectLinks(onlyWithCorrectIdfr, allLinks, "comment_to_gvar", "source_to_comment", 3)
+    def printGroupedLinksSorted(links: Map[String, Seq[Value]]): Unit = {
+      for (gr <- links) {
+        for (i <- gr._2.sortBy(_.obj("score").num).reverse) {
+          println(i)
+        }
+        println("----------")
+      }
+    }
 
-    } else null
-    // get indirect links; currently, it's only source to comment links aligned through comment (comment var is the intermediate node)
+    def printIndirectLinks(indirectLinks: Map[String, Seq[String]]): Unit = {
+      for (l <- indirectLinks) {
+        println("link type: " + l._1)
+        println("linked nodes: " + l._2.mkString(" :: "))
+      }
+    }
 
-    println("dir link len: " + directLinksGroupedByLinkType.keys.toList.length)
-    (directLinksGroupedByLinkType, indirectLinks)
+    def getLinksForGvar(idfr: String, allLinks: Seq[Value]): (Map[String, Seq[Value]], Map[String, Seq[Tuple[String,
+      Double]]])
+    = {
+
+      println("IDFR: " + idfr)
+      // links are returned as maps from link types to a) full links for direct links and b) sequences of elements linked indirectly to the global var
+      // sorted by score based on the two edges in the indirect link
+      // all links that contain the target text global var string
+      // and only the links that contain global vars
+      val allDirectLinksForIdfr = getLinksWithIdentifierStr(idfr, allLinks, false).filter(link => whereIsGlobalVar.contains(link.obj("link_type").str))
+
+      // filtering out the links with no idfr with the correct idf; can't have the link uid in the test itself bc those
+      // are randomly generated on every run
+      // this has to be one of the links with global variable
+      val oneLink = allDirectLinksForIdfr.head
+      val linkType = oneLink("link_type").str
+      val whichElement = whereIsGlobalVar(linkType)
+      val fullIdfrUid = oneLink(whichElement).str
+      println("full idfr uid: " + fullIdfrUid)
+      val onlyWithCorrectIdfr = allDirectLinksForIdfr.filter(link => link(whereIsGlobalVar(link("link_type").str)).str ==
+        fullIdfrUid)
+      // group those by link type - in testing, will just be checking the rankings of links of each type
+      val directLinksGroupedByLinkType = onlyWithCorrectIdfr.groupBy(_.obj("link_type").str)
+      // take the first available link and, depending on the type, get the full name from the correct element
+      // (element_1 or element_2)
+
+      for (l <- directLinksGroupedByLinkType) {
+        // todo: here need to filter out the links that do not have the exact identifier we are looking at,
+        //eg for eq to gvar link, filter out the links where the idfr exact match is in element 1 instead of 2
+        println("---")
+        for (i <- l._2.sortBy(el => el("score").num).reverse) println("-+> " + i)
+      }
+
+      val indirectLinks = if (directLinksGroupedByLinkType.contains("comment_to_gvar")) {
+        findIndirectLinks(onlyWithCorrectIdfr, allLinks, "comment_to_gvar", "source_to_comment", 3)
+
+      } else null
+      // get indirect links; currently, it's only source to comment links aligned through comment (comment var is the intermediate node)
+
+      println("dir link len: " + directLinksGroupedByLinkType.keys.toList.length)
+      (directLinksGroupedByLinkType, indirectLinks)
+    }
+
+
+
+
+
+
   }
-
 
 }

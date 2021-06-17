@@ -10,7 +10,7 @@ import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
 import org.scalatest.{FlatSpec, Matchers}
 import ujson.Value
 import ai.lum.common.FileUtils._
-import org.clulab.aske.automates.TestUtils.{findIndirectLinks, getLinksForGvar, getLinksWithIdentifierStr}
+import org.clulab.aske.automates.TestUtils.{TestAlignment}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
 import org.clulab.aske.automates.data.DataLoader
 import play.libs.F.Tuple
@@ -18,7 +18,7 @@ import play.libs.F.Tuple
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 
-class TestAlign extends FlatSpec with Matchers {
+class TestAlign extends TestAlignment {
 
   // utils (todo: move to TestUtils)
   // todo: cleanup imports
@@ -141,138 +141,6 @@ class TestAlign extends FlatSpec with Matchers {
 
 
 
-  val comment_gvar_links = links.filter(_.obj("link_type").str == "comment_to_gvar")
-
-  val toyGoldIt = Map(
-//    "equation_to_gvar" -> "frac{dIp}{dt}",
-//    "gvar_to_interval_param_setting_via_idfr" -> "R0>1",
-//    "comment_to_gvar" -> "inc_exp_a",
-//    "source_to_comment" -> "inc_exp_a",
-//    "gvar_to_unit_via_idfr" -> "details of the dS dt rS t I t r S t I t dE dt rS t I t bE t bE t aI t dR dt aI t dt r S t I t"
-
-    "equation_to_gvar" -> "frac{dI}{dt}",
-    "gvar_to_interval_param_setting_via_idfr" -> "R0>1",
-    "comment_to_gvar" -> "inc_exp_a",
-    "source_to_comment" -> "inc_exp_a",
-    "gvar_to_unit_via_idfr" -> "details of the dS dt rS t I t r S t I t dE dt rS t I t bE t bE t aI t dR dt aI t dt r S t I t"
-  )
-//  val allToyItLinks = (it_links ++ allIndirectLinksForITLinks).toSeq
-
-
-//  var score = 0
-//
-//  for (key <- toyGoldIt.keys) {
-////    println("key: " + key)
-//
-//    if (allIndirectLinksForITLinks.contains(key)) {
-//      // if in indirect links, then it's this complicated check
-//      val linksOfGivenType = allIndirectLinksForITLinks(key).map(_.split("::").last)
-////      println("links of a given type comment: " + linksOfGivenType.mkString("||"))
-//      val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
-//      val scoreUpdate = if (rank > 0) 1/rank  else 0
-//      score += scoreUpdate
-//
-//    } else if (itLinksGroupedByLinkType.contains(key)) {
-////      var rank = 0
-//      // which element in this link type we want to check
-//      val whichLink = key match {
-//        case "equation_to_gvar" |  "comment_to_gvar"  => "element_1"
-//        case "gvar_to_interval_param_setting_via_idfr" | "gvar_to_unit_via_idfr"  => "element_2"
-//        case _ => ???
-//      }
-//      val linksOfGivenType = itLinksGroupedByLinkType(key).sortBy(_.obj("score").num).reverse.map(_(whichLink).str.split("::").last)
-////      println("links of a given type: " + linksOfGivenType)
-//      val rank = linksOfGivenType.indexOf(toyGoldIt(key)) + 1
-////      println("key/rank: " + key +  rank)
-//      val scoreUpdate = if (rank > 0) 1/rank  else 0
-//      score += scoreUpdate
-//
-//
-//    } else {
-//      println("missing link")
-//    }
-//
-//  }
-//
-//
-//
-//  val finalScore = score.toDouble/toyGoldIt.keys.toList.length
-
-//  println("final score: " + finalScore)
-
-  /*** TEST TYPES*/
-    // DIRECT LINK TEST
-
-    def runFailingTest(whichTest: String): Unit = {
-      ignore should whichTest in {
-        1 shouldEqual 1
-      }
-    }
-  def topDirectLinkTest(idf: String, desired: String, threshold: Double, directLinks: Map[String, Seq[Value]],
-                        linkType: String, status: String): Unit = {
-      val newthreshold = allLinkTypes("direct").obj(linkType).num
-    println("THRESHOLD " + threshold)
-      if (status == "passing") {
-        it should f"have a correct $linkType link for global var ${idf}" in {
-          val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
-          // which element in this link type we want to check
-          val whichLink = whereIsNotGlobalVar(linkType)
-          // element 1 of this link (eq gl var) should be E
-          topScoredLink(whichLink).str.split("::").last shouldEqual desired
-          topScoredLink("score").num > newthreshold shouldBe true
-        }
-      } else {
-      val failingMessage = if (status=="failingNegative") {
-        f"have NO $linkType link for global var ${idf}"
-      } else {
-        f"have a correct $linkType link for global var ${idf}"
-      }
-      runFailingTest(failingMessage)
-    }
-
-  }
-
-  def negativeDirectLinkTest(idf: String, threshold: Double, directLinks: Map[String, Seq[Value]],
-                             linkType: String): Unit = {
-      it should s"have NO ${linkType} link for global var $idf" in {
-
-        val condition1 = Try(directLinks.keys.toList.contains(linkType) should be(false)).isSuccess
-        val condition2 = Try(directLinks
-        (linkType).sortBy(_.obj("score").num).reverse.head("score").num > threshold shouldBe false).isSuccess
-        assert(condition1 || condition2)
-      }
-    }
-
-
-  // INDIRECT LINK TESTS
-
-  def topIndirectLinkTest(idf: String, desired: String, threshold: Double, inDirectLinks: Map[String,
-    Seq[Tuple[String, Double]]],
-                          linkType: String, status: String): Unit = {
-    if (status == "passing") {
-      it should f"have a correct $linkType link for global var ${idf}" in {
-        // these are already sorted
-        val topScoredLink = inDirectLinks(linkType)
-        for (l <- topScoredLink) println(">>" + l)
-        topScoredLink.head._1.split("::").last shouldEqual desired
-        // can't get scores for these right now...
-      }
-    } else {
-      runFailingTest(f"have a correct $linkType link for global var ${idf}")
-    }
-  }
-
-
-  def negativeIndirectLinkTest(idf: String, threshold: Double, indirectLinks: Map[String, Seq[Tuple[String, Double]]],
-                             linkType: String): Unit = {
-    it should s"have NO ${linkType} link for global var $idf" in {
-
-      val condition1 = Try(indirectLinks.keys.toList.contains(linkType) should be(false)).isSuccess
-      val condition2 = Try(indirectLinks
-      (linkType).head._2 > threshold shouldBe false).isSuccess
-      assert(condition1 || condition2)
-    }
-  }
 
 
 
