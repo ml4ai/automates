@@ -15,8 +15,7 @@ class TestAlign extends TestAlignment {
 
   // utils (todo: move to TestUtils)
   // todo: cleanup imports
-// todo: get thresholds
-  // separate file for eval of links
+// todo: make sure use pairwise aligner for texts
 
   // load files/configs
 
@@ -25,19 +24,14 @@ class TestAlign extends TestAlignment {
   val numAlignmentsSrcToComment = 1//config[String]("apps.numAlignmentsSrcToComment")
   val scoreThreshold = 0.0 //config[String]("apps.scoreThreshold")
 
-  val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None) //todo: read this from test conf (after adding this to test conf)
-//  lazy val proc = TestUtils.newOdinSystem(config).proc
+//  val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None) //todo: read this from test conf (after adding this to test conf)
   val inputDir = new File(getClass.getResource("/").getFile)
   val files = inputDir.listFiles()
   for (f <- files) println(">>>", f)
 
   println("++>>", inputDir)
 
-  // read in all related docs or maybe read in just a sample payload - that should make sense
-  // make it as close as possivle to the actual endpoint while still mainly testing the ExtractAndAlign.groundMentions method (to get texts of links, need to run in debug mode)
-  // the rest will be tested on paul's end
 
-  //lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
   val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
   val serializerName = "AutomatesJSONSerializer" //todo: read from config
   val payloadFile = new File(inputDir, "double-epidemic-chime-align_payload-for-testing.json")
@@ -87,7 +81,9 @@ class TestAlign extends TestAlignment {
       "equation_to_gvar" -> ("E", "passing"),
       "gvar_to_param_setting_via_idfr" -> ("E = 30", "failing"),
       "comment_to_gvar" -> ("E", "passing"),
-      "gvar_to_interval_param_setting_via_idfr" -> ("", "failingNegative")
+      "gvar_to_unit_via_cpcpt" -> ("", "failingNegative"),
+      "gvar_to_param_setting_via_cpcpt" -> ("", "failingNegative"),
+      "gvar_to_interval_param_setting_via_cpcpt" -> ("", "failingNegative")
     )
 
     val indirectDesired = Map(

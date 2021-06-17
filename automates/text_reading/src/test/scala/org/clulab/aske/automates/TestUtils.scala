@@ -239,7 +239,6 @@ object TestUtils {
 
   class TestAlignment extends FlatSpec with Matchers {
 
-
     /*** TEST TYPES*/
     // DIRECT LINK TEST
 
@@ -251,7 +250,6 @@ object TestUtils {
     def topDirectLinkTest(idf: String, desired: String, directLinks: Map[String, Seq[Value]],
                           linkType: String, status: String): Unit = {
       val threshold = allLinkTypes("direct").obj(linkType).num
-      println("THRESHOLD " + threshold)
       if (status == "passing") {
         it should f"have a correct $linkType link for global var ${idf}" in {
           val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
@@ -362,7 +360,7 @@ object TestUtils {
         for (il <- indirectLinksForIntermNode) {
 
           allIndirectLinks.append(il)
-          println("indir links per interm node: " + il)
+//          println("indir links per interm node: " + il)
         }
 
       }
@@ -370,16 +368,15 @@ object TestUtils {
 
       // return only the ones of the given type
       val groupedByElement2 = allIndirectLinks.groupBy(_.obj("element_2").str)
-      for (g <- groupedByElement2) {
-        println("G: " + g._1)
-        for (i <- g._2) {
-          println("=>" + i)
-        }
-      }
-      println("???")
+//      for (g <- groupedByElement2) {
+//        println("G: " + g._1)
+//        for (i <- g._2) {
+//          println("=>" + i)
+//        }
+//      }
+
       val maxLinksPerIntermNode = groupedByElement2.maxBy(_._2.length)._2.length
 
-      println("???????")
       for (i <- 0 until maxLinksPerIntermNode) {
         for (j <- 0 until sortedIntermNodeNames.length) {
           val intermNodeName = sortedIntermNodeNames(j)
@@ -392,7 +389,7 @@ object TestUtils {
         }
       }
 
-      for (i <- indirectLinkEndNodes) println("END NODE: " + i)
+//      for (i <- indirectLinkEndNodes) println("END NODE: " + i)
 
 
       //    Map(indirectLinkType -> groupedByElement2)
@@ -472,7 +469,7 @@ object TestUtils {
         topDirectLinkTest(variable, desired, directLinks, linkType, status)
       }
 
-      for (dl <- indirectLinks) println("indir: " + dl._1 + " " + dl._2)
+//      for (dl <- indirectLinks) println("indir: " + dl._1 + " " + dl._2)
       for (dl <- indirectDesired) {
         val desired = dl._2._1
         val linkType = dl._1
