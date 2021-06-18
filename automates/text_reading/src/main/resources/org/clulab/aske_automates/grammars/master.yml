@@ -39,7 +39,7 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/functions.yml"
     vars:
-      action: functionActionFlow
+      action: filterFunction
       priority: 8
 
 

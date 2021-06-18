@@ -682,12 +682,7 @@
                     "type": "float"
                 }
             ],
-            "metadata": {
-                "line": [
-                    7,
-                    15
-                ]
-            }
+            "metadata": []
         }
     ]
 }
