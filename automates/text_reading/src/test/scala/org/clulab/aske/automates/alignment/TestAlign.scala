@@ -3,9 +3,8 @@ package org.clulab.aske.automates.alignment
 import java.io.File
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.apps.ExtractAndAlign
-import org.clulab.embeddings.word2vec.Word2Vec
-import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
+import org.clulab.aske.automates.apps.{AlignmentArguments, ExtractAndAlign}
+import org.clulab.utils.AlignmentJsonUtils
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.TestUtils.TestAlignment
 import org.clulab.aske.automates.apps.ExtractAndAlign.allLinkTypes
@@ -13,36 +12,28 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.allLinkTypes
 
 class TestAlign extends TestAlignment {
 
-  // utils (todo: move to TestUtils)
-  // todo: cleanup imports
 // todo: make sure use pairwise aligner for texts
 
-  // load files/configs
-
-  val config: Config = ConfigFactory.load("/test.conf")
-  val numAlignments = 3//config[String]("apps.numAlignments")
-  val numAlignmentsSrcToComment = 1//config[String]("apps.numAlignmentsSrcToComment")
-  val scoreThreshold = 0.0 //config[String]("apps.scoreThreshold")
-
-//  val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None) //todo: read this from test conf (after adding this to test conf)
-  val inputDir = new File(getClass.getResource("/").getFile)
-  val files = inputDir.listFiles()
-  for (f <- files) println(">>>", f)
-
-  println("++>>", inputDir)
-
-
+  val config: Config = ConfigFactory.load("test.conf")
   val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
-  val serializerName = "AutomatesJSONSerializer" //todo: read from config
-  val payloadFile = new File(inputDir, "double-epidemic-chime-align_payload-for-testing.json")
-  val payloadPath = payloadFile.getAbsolutePath
-  val payloadJson = ujson.read(payloadFile.readString())
-  val jsonObj = payloadJson.obj
+  val serializerName: String = config[String]("apps.serializerName")
+  val numAlignments: Int = config[Int]("apps.numAlignments")
+  println("num of al" + numAlignments)
+  val numAlignmentsSrcToComment: Int = config[Int]("apps.numAlignmentsSrcToComment")
+  val scoreThreshold: Int = config[Int]("apps.scoreThreshold")
+  val inputDir = new File(getClass.getResource("/").getFile)
+  val payLoadFileName: String = config[String]("alignment.unitTestPayload")
+  val debug: Boolean = config[Boolean]("alignment.debug")
+  val payloadFile = new File(inputDir, payLoadFileName)
+  val payloadPath: String = payloadFile.getAbsolutePath
+  val payloadJson: ujson.Value = ujson.read(payloadFile.readString())
+  val jsonObj: ujson.Value = payloadJson.obj
 
-  val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, false, serializerName)
+  val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO = false,
+    serializerName)
 
 
-  val groundings = ExtractAndAlign.groundMentions(
+  val groundings: ujson.Value = ExtractAndAlign.groundMentions(
     payloadJson,
     argsForGrounding.identifierNames,
     argsForGrounding.identifierShortNames,
@@ -53,14 +44,14 @@ class TestAlign extends TestAlignment {
     argsForGrounding.commentDescriptionMentions,
     argsForGrounding.equationChunksAndSource,
     argsForGrounding.svoGroundings,
-    false,
-    3,
+    groundToSVO = false,
+    5,
     alignmentHandler,
-    Some(5),
-    Some(2),//Some(numAlignmentsSrcToComment),
+    Some(numAlignments),
+    Some(numAlignmentsSrcToComment),
     scoreThreshold,
     appendToGrFN=false,
-    debug=true
+    debug
   )
 
   val links = groundings.obj("links").arr

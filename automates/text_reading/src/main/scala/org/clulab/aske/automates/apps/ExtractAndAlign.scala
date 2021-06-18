@@ -27,7 +27,7 @@ import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVar
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-case class alignmentArguments(json: Value, identifierNames: Option[Seq[String]], identifierShortNames: Option[Seq[String]], commentDescriptionMentions: Option[Seq[Mention]], descriptionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], intervalParameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]])
+case class AlignmentArguments(json: Value, identifierNames: Option[Seq[String]], identifierShortNames: Option[Seq[String]], commentDescriptionMentions: Option[Seq[Mention]], descriptionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], intervalParameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]])
 
 object ExtractAndAlign {
   // Link element types
@@ -116,7 +116,7 @@ object ExtractAndAlign {
 
 
   val config = ConfigFactory.load()
-  val pdfAlignDir = config[String]("apps.pdfalignDir")
+  val pdfAlignDir: String = config[String]("apps.pdfalignDir")
 
   def groundMentions(
                       grfn: Value,
@@ -139,15 +139,6 @@ object ExtractAndAlign {
                       debug: Boolean
 
     ): Value = {
-
-    //    for (v <- variableNames.get) {
-    //      println("=> " + v)
-    //    }
-    //
-    //    for (v <- variableShortNames.get) {
-    //      println("-> " + v)
-    //    }
-
 
     def mentionToIDedObjString(mention: Mention, mentionType: String): String = {
       // creates an id'ed object for each mention
@@ -357,7 +348,7 @@ object ExtractAndAlign {
   def updateTextVarsWithUnits(textVarLinkElements: Seq[String], unitMentions: Option[Seq[Mention]], textToUnitThroughDescrAlignments: Seq[Seq[Alignment]], textToUnitAlignments: Seq[Seq[Alignment]]): Seq[String] = {
 
 
-    val updatedTextVars = if (textToUnitThroughDescrAlignments.length > 0) {
+    val updatedTextVars = if (textToUnitThroughDescrAlignments.nonEmpty) {
 
       for {
         topK <- textToUnitThroughDescrAlignments

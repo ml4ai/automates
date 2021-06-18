@@ -5,7 +5,7 @@ import java.io.File
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDescriptionMentions, hasRequiredArgs, hasUnitArg}
-import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign, alignmentArguments}
+import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign, AlignmentArguments}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
@@ -29,7 +29,7 @@ object AlignmentJsonUtils {
   case class GlobalSrcVariable(id: String, identifier: String, srcVarObjStrings: Seq[String])
 
   /**get arguments for the aligner depending on what data are provided**/
-  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): alignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): AlignmentArguments = {
 
     val jsonObj = json.obj
     // load text mentions
@@ -147,7 +147,7 @@ object AlignmentJsonUtils {
 
 
 
-    alignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    AlignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")

@@ -1,18 +1,16 @@
 package controllers
 
 import java.io.File
-
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
+
 import javax.inject._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.alignment.{Aligner, AlignmentHandler}
-
 import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign}
 import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.aske.automates.data.CosmosJsonDataLoader
-
 import org.clulab.aske.automates.apps.ExtractAndAlign.hasRequiredArgs
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
@@ -20,10 +18,11 @@ import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.grounding.SVOGrounder
 import org.clulab.odin.serialization.json.JSONSerializer
 import upickle.default._
+
 import scala.collection.mutable.ArrayBuffer
 import ujson.json4s.Json4sJson
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
-import org.clulab.processors.{Document, Sentence}
+import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
@@ -40,22 +39,23 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   // -------------------------------------------------
   logger.info("Initializing the OdinEngine ...")
-  val ieSystem = OdinEngine.fromConfig()
-  var proc = ieSystem.proc
+  val ieSystem: OdinEngine = OdinEngine.fromConfig()
+  var proc: Processor = ieSystem.proc
   val serializer = JSONSerializer
   lazy val scienceParse = new ScienceParseClient(domain = "localhost", port = "8080")
-  lazy val commentReader = OdinEngine.fromConfigSection("CommentEngine")
-  lazy val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
+  lazy val commentReader: OdinEngine = OdinEngine.fromConfigSection("CommentEngine")
+  val config: Config = ConfigFactory.load()
+  lazy val alignmentHandler = new AlignmentHandler(config("alignment"))
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   // fixme: these should come from config if possible
-  private val numAlignments: Int = 3
-  private val numAlignmentsSrcToComment: Int = 3
-  private val scoreThreshold: Double = 0.0
-  private val maxSVOgroundingsPerVarDefault: Int = 5
-  private val groundToSVODefault = true
-  private val appendToGrFNDefault = true
-  private val defaultSerializerName = "AutomatesJSONSerializer" // other - "JSONSerializer"
-  private val debugDefault = true
+  private val numAlignments: Int = config[Int]("apps.numAlignments")
+  private val numAlignmentsSrcToComment: Int = config[Int]("apps.numAlignmentsSrcToComment")
+  private val scoreThreshold: Double = config[Int]("apps.scoreThreshold")
+  private val maxSVOgroundingsPerVarDefault: Int = config[Int]("apps.maxSVOgroundingsPerVarDefault")
+  private val groundToSVODefault: Boolean = config[Boolean]("apps.groundToSVODefault")
+  private val appendToGrFNDefault: Boolean = config[Boolean]("apps.appendToGrFNDefault")
+  private val defaultSerializerName: String = config[String]("apps.serializerName")
+  private val debugDefault: Boolean = config[Boolean]("apps.debug")
 
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
