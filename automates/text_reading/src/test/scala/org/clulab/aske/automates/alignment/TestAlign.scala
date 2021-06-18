@@ -12,25 +12,27 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.allLinkTypes
 
 class TestAlign extends TestAlignment {
 
-// todo: make sure use pairwise aligner for texts
-
   val config: Config = ConfigFactory.load("test.conf")
   val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
+  // get general configs
   val serializerName: String = config[String]("apps.serializerName")
   val numAlignments: Int = config[Int]("apps.numAlignments")
-  println("num of al" + numAlignments)
   val numAlignmentsSrcToComment: Int = config[Int]("apps.numAlignmentsSrcToComment")
   val scoreThreshold: Int = config[Int]("apps.scoreThreshold")
+  val groundToSVO: Boolean = config[Boolean]("apps.groundToSVO")
+  val maxSVOgroundingsPerVar: Int = config[Int]("apps.maxSVOgroundingsPerVar")
+  val appendToGrFN: Boolean = config[Boolean]("apps.appendToGrFN")
+
+  // alignment-specific configs
+  val debug: Boolean = config[Boolean]("alignment.debug")
   val inputDir = new File(getClass.getResource("/").getFile)
   val payLoadFileName: String = config[String]("alignment.unitTestPayload")
-  val debug: Boolean = config[Boolean]("alignment.debug")
   val payloadFile = new File(inputDir, payLoadFileName)
   val payloadPath: String = payloadFile.getAbsolutePath
   val payloadJson: ujson.Value = ujson.read(payloadFile.readString())
   val jsonObj: ujson.Value = payloadJson.obj
 
-  val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO = false,
-    serializerName)
+  val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO, serializerName)
 
 
   val groundings: ujson.Value = ExtractAndAlign.groundMentions(
@@ -44,15 +46,17 @@ class TestAlign extends TestAlignment {
     argsForGrounding.commentDescriptionMentions,
     argsForGrounding.equationChunksAndSource,
     argsForGrounding.svoGroundings,
-    groundToSVO = false,
-    5,
+    groundToSVO,
+    maxSVOgroundingsPerVar,
     alignmentHandler,
     Some(numAlignments),
     Some(numAlignmentsSrcToComment),
     scoreThreshold,
-    appendToGrFN=false,
+    appendToGrFN,
     debug
   )
+
+  println("grounding keys: " + groundings.obj.keySet.mkString("||"))
 
   val links = groundings.obj("links").arr
   val extractedLinkTypes = links.map(_.obj("link_type").str).distinct

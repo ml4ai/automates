@@ -51,9 +51,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val numAlignments: Int = config[Int]("apps.numAlignments")
   private val numAlignmentsSrcToComment: Int = config[Int]("apps.numAlignmentsSrcToComment")
   private val scoreThreshold: Double = config[Int]("apps.scoreThreshold")
-  private val maxSVOgroundingsPerVarDefault: Int = config[Int]("apps.maxSVOgroundingsPerVarDefault")
-  private val groundToSVODefault: Boolean = config[Boolean]("apps.groundToSVODefault")
-  private val appendToGrFNDefault: Boolean = config[Boolean]("apps.appendToGrFNDefault")
+  private val maxSVOgroundingsPerVarDefault: Int = config[Int]("apps.maxSVOgroundingsPerVar")
+  private val groundToSVODefault: Boolean = config[Boolean]("apps.groundToSVO")
+  private val appendToGrFNDefault: Boolean = config[Boolean]("apps.appendToGrFN")
   private val defaultSerializerName: String = config[String]("apps.serializerName")
   private val debugDefault: Boolean = config[Boolean]("apps.debug")
 
