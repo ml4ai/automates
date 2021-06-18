@@ -16,7 +16,7 @@ Metadatum types:
 (*) <Variable>.TextParameter
 () <Variable>.EquationParameter
 
-EMMAA Metadatum types:
+INDRA Metadatum types:
 () <Junction>.ReactionReference
 () <Junction>.IndraAgentReference
 () <Junction>.IndraAgentReferenceSet
@@ -385,6 +385,10 @@ class EquationParameter(Metadatum):
 # metadata associated with a Junction
 # =============================================================================
 
+# -----------------------------------------------------------------------------
+# INDRA Metadatums
+# -----------------------------------------------------------------------------
+
 @dataclass
 class ReactionReference(Metadatum):
     """
@@ -415,12 +419,6 @@ class IndraAgentReferenceSet(Metadatum):
     """
     indra_agent_references: List[IndraAgentReference]
 
-
-"""
-() <Junction>.ReactionReference
-() <Junction>.IndraAgentReference
-() <Junction>.IndraAgentReferenceSet
-"""
 
 # =============================================================================
 # =============================================================================
