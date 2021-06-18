@@ -15,6 +15,11 @@ Metadatum types:
 (*) <Variable>.TextDefinition
 (*) <Variable>.TextParameter
 () <Variable>.EquationParameter
+
+EMMAA Metadatum types:
+() <Junction>.ReactionReference
+() <Junction>.IndraAgentReference
+() <Junction>.IndraAgentReferenceSet
 """
 
 
@@ -374,6 +379,48 @@ class EquationParameter(Metadatum):
     variable_uid: UidVariable
     value: str  # eventually Literal?
 
+
+# =============================================================================
+# Metadata host: <Junction>
+# metadata associated with a Junction
+# =============================================================================
+
+@dataclass
+class ReactionReference(Metadatum):
+    """
+    host: <Junction> : PNC State
+    """
+    indra_stmt_hash: str
+    reaction_rule: str
+    is_reverse: bool
+
+
+@dataclass
+class IndraAgent:
+    pass
+
+
+@dataclass
+class IndraAgentReference(Metadatum):
+    """
+    host: <Junction> : PNC State
+    """
+    agent_json: IndraAgent
+
+
+@dataclass
+class IndraAgentReferenceSet(Metadatum):
+    """
+    host: <Junction> : PNC State
+    """
+    indra_agent_references: List[IndraAgentReference]
+
+
+"""
+() <Junction>.ReactionReference
+() <Junction>.IndraAgentReference
+() <Junction>.IndraAgentReferenceSet
+"""
 
 # =============================================================================
 # =============================================================================
