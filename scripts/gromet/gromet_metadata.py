@@ -18,7 +18,6 @@ Metadatum types:
 
 INDRA Metadatum types:
 () <Junction>.ReactionReference
-() <Junction>.IndraAgentReference
 () <Junction>.IndraAgentReferenceSet
 """
 
@@ -392,39 +391,7 @@ class EquationParameter(Metadatum):
 @dataclass
 class ReactionReference(Metadatum):
     """
-    host: <Junction> : PNC State
-    """
-    indra_stmt_hash: str
-    reaction_rule: str
-    is_reverse: bool
-
-
-@dataclass
-class IndraAgent:
-    pass
-
-
-@dataclass
-class IndraAgentReference(Metadatum):
-    """
-    host: <Junction> : PNC State
-    """
-    agent_json: IndraAgent
-
-
-@dataclass
-class IndraAgentReferenceSet(Metadatum):
-    """
-    host: <Junction> : PNC State
-    """
-    indra_agent_references: List[IndraAgentReference]
-
-
-'''
-@dataclass
-class ReactionReference(Metadatum):
-    """
-    host: <Junction> : PNC State
+    host: <Junction> : PNC Rate
     """
     indra_stmt_hash: str
     reaction_rule: str
@@ -442,7 +409,6 @@ class IndraAgentReferenceSet(Metadatum):
     host: <Junction> : PNC State
     """
     indra_agent_references: List[IndraAgent]
-'''
 
 
 # =============================================================================
