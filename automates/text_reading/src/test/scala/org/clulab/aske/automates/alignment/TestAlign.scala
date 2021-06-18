@@ -13,7 +13,7 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.allLinkTypes
 class TestAlign extends TestAlignment {
 
   val config: Config = ConfigFactory.load("test.conf")
-  val alignmentHandler = new AlignmentHandler(ConfigFactory.load()[Config]("alignment"))
+  val alignmentHandler = new AlignmentHandler(config("alignment"))
   // get general configs
   val serializerName: String = config[String]("apps.serializerName")
   val numAlignments: Int = config[Int]("apps.numAlignments")
