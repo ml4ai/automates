@@ -193,6 +193,9 @@ object ExtractAndAlign {
       getGlobalVars(descriptionMentions.get)
     } else Seq.empty
 
+    for (g <- allGlobalVars) println("gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +
+      "\n=========\n")
+
 
     val allCommentGlobalVars = if (commentDescriptionMentions.nonEmpty) {
       getGlobalVars(commentDescriptionMentions.get)

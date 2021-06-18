@@ -360,7 +360,7 @@ object TestUtils {
         for (il <- indirectLinksForIntermNode) {
 
           allIndirectLinks.append(il)
-//          println("indir links per interm node: " + il)
+          println("indir links per interm node: " + il)
         }
 
       }

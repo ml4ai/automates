@@ -12,6 +12,8 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.allLinkTypes
 
 class TestAlign extends TestAlignment {
 
+  // todo: pass arg type somewhere to only get text of that arg in tests
+  // todo: fix order of indir links
   val config: Config = ConfigFactory.load("test.conf")
   val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
   // get general configs
@@ -69,8 +71,8 @@ class TestAlign extends TestAlignment {
   }
 
   {
-    val idfE = "E"
-    behavior of idfE
+    val idfr = "E"
+    behavior of idfr
 
     val directDesired = Map(
       "equation_to_gvar" -> ("E", "passing"),
@@ -85,10 +87,32 @@ class TestAlign extends TestAlignment {
       "source_to_comment" -> ("E","failing")
     )
 
-    val (directLinksForE, indirE) = getLinksForGvar("E", links)
-    runAllTests(idfE, directLinksForE, indirE, directDesired, indirectDesired)
+    val (directLinksForE, indirE) = getLinksForGvar(idfr, links)
+    runAllTests(idfr, directLinksForE, indirE, directDesired, indirectDesired)
 
   }
 
+  {
+    val idfr = "r"
+    behavior of idfr
+
+    val directDesired = Map(
+      "equation_to_gvar" -> ("r", "passing"),
+      "gvar_to_param_setting_via_cpcpt" -> ("Infection rate of 0.5", "passing"),
+      "gvar_to_param_setting_via_idfr" -> ("r = 1.62 × 10-8", "passing"),
+      "gvar_to_interval_param_setting_via_cpcpt" -> ("infection rate is measured at germs per second and ranges between 0.2 and 5.6", "passing"),
+      "gvar_to_unit_via_cpcpt" -> ("Infection rate of 0.5 germs per second", "passing"),
+      "comment_to_gvar" -> ("r_b", "passing"),
+      "gvar_to_interval_param_setting_via_idfr" -> ("", "failingNegative")
+    )
+//
+    val indirectDesired = Map(
+      "source_to_comment" -> ("r_b","failing") // fails bc of wrong indir link ordering
+    )
+//
+    val (directLinksForE, indirE) = getLinksForGvar(idfr, links)
+    runAllTests(idfr, directLinksForE, indirE, directDesired, indirectDesired)
+//
+  }
 
 }
