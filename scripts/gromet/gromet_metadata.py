@@ -420,6 +420,31 @@ class IndraAgentReferenceSet(Metadatum):
     indra_agent_references: List[IndraAgentReference]
 
 
+'''
+@dataclass
+class ReactionReference(Metadatum):
+    """
+    host: <Junction> : PNC State
+    """
+    indra_stmt_hash: str
+    reaction_rule: str
+    is_reverse: bool
+
+
+@dataclass
+class IndraAgent:
+    pass
+
+
+@dataclass
+class IndraAgentReferenceSet(Metadatum):
+    """
+    host: <Junction> : PNC State
+    """
+    indra_agent_references: List[IndraAgent]
+'''
+
+
 # =============================================================================
 # =============================================================================
 # CHANGE LOG
