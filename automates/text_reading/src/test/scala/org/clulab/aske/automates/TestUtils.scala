@@ -356,7 +356,8 @@ object TestUtils {
         sortedIntermNodeNames.append(intermNodeJustName)
 
         //
-        val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true).filter(_.obj("link_type").str == indirectLinkType)//.sortBy(_.obj("score")).reverse
+        val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true).filter(_.obj
+        ("link_type").str == indirectLinkType).sortBy(_.obj("score").num).reverse
         for (il <- indirectLinksForIntermNode) {
 
           allIndirectLinks.append(il)
@@ -367,13 +368,13 @@ object TestUtils {
 
 
       // return only the ones of the given type
-      val groupedByElement2 = allIndirectLinks.groupBy(_.obj("element_2").str)
-//      for (g <- groupedByElement2) {
-//        println("G: " + g._1)
-//        for (i <- g._2) {
-//          println("=>" + i)
-//        }
-//      }
+      val groupedByElement2 = allIndirectLinks.groupBy(_.obj("element_2").str)//.map(gr => (gr._1,gr._2.sortBy(_.obj("score").num)))
+      for (g <- groupedByElement2) {
+        println("G: " + g._1)
+        for (i <- g._2) {
+          println("=>" + i)
+        }
+      }
 
       val maxLinksPerIntermNode = groupedByElement2.maxBy(_._2.length)._2.length
 

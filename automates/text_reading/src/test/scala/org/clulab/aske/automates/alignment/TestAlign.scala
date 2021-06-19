@@ -107,7 +107,7 @@ class TestAlign extends TestAlignment {
     )
 //
     val indirectDesired = Map(
-      "source_to_comment" -> ("r_b","failing") // fails bc of wrong indir link ordering
+      "source_to_comment" -> ("r_b","passing")
     )
 //
     val (directLinksForE, indirE) = getLinksForGvar(idfr, links)
