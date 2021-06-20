@@ -145,6 +145,14 @@ class RefOp(GrometElm):
     name: UidOp
 
 
+@dataclass
+class RefLiteral(GrometElm):
+    """
+    Representation of an explicit reference to a declared Literal
+    """
+    name: UidLiteral
+
+
 # -----------------------------------------------------------------------------
 # Type
 # -----------------------------------------------------------------------------
@@ -262,7 +270,14 @@ class TypedGrometElm(GrometElm, ABC):
 class Literal(TypedGrometElm):
     """
     Literal base. (A kind of GAT Nullary Term Constructor)
-    A literal is an instance of a Type
+    A literal is an instance of a Type.
+
+    If a Literal is to be "referred to" in multiple places in the model,
+        then assign it a 'uid' and place its declaration in the
+        'literals' field of the top-level Gromet.
+        This is referred to as a 'named Literal'
+            (where in this case, by "name" I mean the uid)
+    Example of a simple "inline" Literal
     """
     uid: Union[UidLiteral, None]  # allows anonymous literals
     value: 'Val'  # TODO
@@ -480,12 +495,12 @@ class Predicate(Expression):
 
 
 @dataclass
-class Conditional(Box):  # BoxDirected
+class Conditional(Box):
     """
     Conditional
         ( TODO:
             Assumes no side effects.
-            Assumes no breaks.
+            Assumes no breaks/continues.
         )
     ( NOTE: the following notes make references to elements as they
             appear in Clay's gromet visual notation. )
@@ -493,54 +508,77 @@ class Conditional(Box):  # BoxDirected
         *branch Predicate* (a type of Expression computing a
             boolean) represents the branch conditional test whose
             outcome determines whether the branch will be executed.
-        *branch Function* represents the computation of anything in
-            the branch
+        *branch body* represents the computation of anything in the branch.
+            In the limit case of a single Expression, the branch body
+                just evaluates the Expression, usually assigning a
+                value to a single variables.
+            In the more general case (more than one Expression), the
+                branch body is represented as a Function.
         A *branch* itself consists of a Tuple of:
-                <Predicate>, <Function>, List[UidWire]
+                Predicate, body: Union[Expression, Function], List[UidWire]
             The UidWire list denotes the set of wires relevant for
                 completely wiring the branch Cond and Fn to the
                 Conditional input and output Ports.
     Port conventions:
-        Being a BoxDirected, a Conditional has a set of
-            input and output Ports.
+        A Conditional has a set of input and output Ports.
         *input* Ports capture any values of state/variables
             from the scope outside of the Conditional Box that
-            are required by any branch Predicate or Function.
+            are required by any branch Predicate or body.
             (think of the input Ports as representing the relevant
             "variable environment" to the Conditional.)
-        We can then think of each branch Function as a possible
+        We can then think of each branch body as a possible
             modification to the "variable environment" of the
-            input Ports. When a branch Function is evaluated, it
-            may preserve the values from some or all of the original
-            input ports, or it may modify them, and/or it may
-            introduce *new* variables resulting in corresponding
-            new output Ports.
+            input Ports. When a branch body Expression/Function is
+            evaluated, it may preserve the values from some or all
+            of the original input ports, or it may modify them,
+            and/or it may introduce *new* variables resulting in
+            corresponding new output Ports.
         From the perspective of the output Ports of the Conditional,
             we need to consider all of the possible new variable
             environment changes made by the selection of any branch.
             Doing so permits us to treat the Conditional as a modular
             building-block to other model structures.
-            To achieve this, each branch Function must include in its
-            output_ports a set of Ports that represent any of the
-            "new variables" introduced by any branch Function.
+            To achieve this, each branch body Expression/Function must
+            include in its output_ports a set of Ports that represent
+            *any* of the "new variables" introduced by any branch body
+            Expression or Function.
             This allows us to have a single output_ports set for the
             entire Conditional, and whichever branch Function is
             evaluated, those Ports will be defined.
-        NOTE: this does NOT mean those Ports are "Wired" and carry
-            values; branch Function B1 may introduce a new variable
-            "x" that branch Function B2 does not; B2 must still have
+        If all of the branches are themselves Expressions that set
+            the *same* variable, then each of the branch bodies may
+            themselves be Expressions. If, however, any of the bodies
+            have different variable outputs, then all of the bodies
+            must be Functions with multiple outputs, one for each of
+            the variables that is introduces across any of the branch
+            bodies.
+            E.g., branch body B0 may introduce a new variable
+            "x" that branch Function B1 does not; B1 must still have
             a Port corresponding to "x", but it will not be Wired to
             anything -- it carries no value.
-        Each branch Predicate has a single Boolean Port devoted to
-            determining whether the branch is selected (when True).
+        Because the input Ports to each branch Predicate and branch
+            body Expression/Function have the same corresponding set
+            of Ports (per input variable), there is no need for explicit
+            Wires from the Conditional Input to the branch Predicate
+            and body input Ports.
+            Instead, the PortInput Ports to the the branch Predicate
+                and the branch body Expression/Function will be PortCalls
+                to the corresponding Conditional PortInput Ports.
+            The same is true for branch body Expression/Function to
+                the Condition output Ports: the PortOutput Ports of the
+                branch body Expression/Function will be PortCalls to
+                the PortOutput Ports of the Conditional PortOutput Ports.
+        Finally, Each branch Predicate has a single Boolean Port
+            devoted to determining whether the branch is selected
+            (when True).
     Definition: A Conditional is a...
         Sequence (List) of branches:
-            Tuple[Predicate, Function, List[UidWire]]
+            Tuple[Predicate, Union[Expression, Function], List[UidWire]]
         Each branch Predicate has a single boolean output Port
             whose state determines whether the branch Function
             will be evaluated to produce the state of the Conditional
             output Ports.
-    Interpretation:
+    Interpretation and evaluaton semantics:
         GrFN provides unambiguous full data flow semantics.
         Here (for now), a gromet Conditional provides some abstraction
             away from pure data flow (but it is directly recoverable
@@ -549,16 +587,25 @@ class Conditional(Box):  # BoxDirected
             Branches are visited in order until the current branch
                 Predicate evals to True
             If a branch Predicates evaluates to True, then branch
-                Function takes the Conitional input_ports and sets
-                determines the output_ports of the Conditional
-                according to its internal components.
-            If all no branch Predicate evaluats to True, then pass
-                input Ports to outputs and new Ports have undefined
-                values.
+                body Expression/Function takes the Conditional
+                input_ports and determines the output_ports of the
+                Conditional according to its internal components.
+            In the case that a branch body is None, then treat as
+                a 'pass': input Port values that correspond to output
+                Ports will assign their values to the output Ports,
+                and any "new" Ports introduced by any branch body
+                have no values.
+            An "else" branch has no branch Predicate, instead the
+                branch body is just evaluated.
+            If no branch Predicate evaluates to True and there is no
+                else, then 'pass': input Port values that correspond
+                to output Ports will assign their values to the output
+                Ports, and any "new" Ports introduced by any branch body
+                have no values.
     """
-    # branches is a List of
-    #   ( <Predicate>1, <Function>, [<UidWire>+] )
-    branches: List[Tuple[Union[Predicate, None], Function, List[UidWire]]]
+    # branches is a List of UidBox references to
+    #   ( <Predicate>1, <Expression,Function> )
+    branches: List[Tuple[Union[UidBox, None], Union[UidBox, None]]]
 
 
 @dataclass
@@ -689,6 +736,25 @@ def gromet_to_json(gromet: Gromet,
 # -----------------------------------------------------------------------------
 
 """
+Changes 2021-06-18:
+() Changes to Conditional:
+    () The conditional branch body may now be either an Expression (in the
+        limit case that all branches are simply setting the same variable)
+        or more generally are Functions with the same input and output Ports
+        (as previously defined).
+    () Explicitly documented that there is no need for any Wires between
+        the Conditional input Ports and the branch Predicate and body Ports, 
+        since these will always have the same corresponding Ports 
+        (similar to how Wires are not needed in Expressions/Expr); 
+        In this case, this is implemented by having the PortInput Ports to the
+        branch Predicate and the branch body Expression/Function be PortCalls
+        to the corresponding Conditional PortInput Ports; 
+        and similarly for branch body output Ports to the corresponding 
+        conditional output Ports: the branch body Expression/Function
+        output Ports will be PortCalls to the Conditional PortOutput Ports.
+    - the Conditional documentation has been updated to reflect this, as well
+        as the 'wiring diagram' schema figure. 
+
 Changes 2021-06-13:
 () Changed RefFn to RefBox (as reference could be to any defined Box)
 () Remove UidFn as not needed; instead use general UidBox (e.g., by RefBox)
