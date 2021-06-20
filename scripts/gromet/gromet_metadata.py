@@ -399,7 +399,7 @@ class ReactionReference(Metadatum):
 
 
 @dataclass
-class IndraAgent:
+class IndraAgent(dict):
     pass
 
 
