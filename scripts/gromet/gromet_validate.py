@@ -16,11 +16,15 @@ def debug(objs):
     :param objs:
     :return:
     """
+    print("=" * 50)
+    print('DEBUG:')
     for k in objs:
         print(k)
         if type(objs[k]) is dict:
             for uid in objs[k]:
                 print(f'  {uid}: {objs[k][uid]}')
+        elif type(objs[k]) is list or type(objs[k]) is set:
+            print(f'  {len(objs[k])}: {objs[k]}')
         else:
             print(f'  {objs[k]}')
 
@@ -55,6 +59,7 @@ def validate(gromet):
     called_by_boxcall = set()
     expression_boxes = set()
     conditional_boxes = set()
+    conditional_branch_boxes = set()
     for b_id, box in objects['boxes'].items():
         if box['syntax'] == 'BoxCall':
             called_by_boxcall.add(box['call'])
@@ -62,13 +67,22 @@ def validate(gromet):
             expression_boxes.add(b_id)
         if box['syntax'] == 'Conditional':
             conditional_boxes.add(b_id)
-            for cond, fn, wires in box['branches']:
-                if cond is not None:
-                    conditional_boxes.add(cond['uid'])
-                conditional_boxes.add(fn['uid'])
+            # NOW that branches no longer have in-lined Boxes, this is not necessary...
+            # for cond, body in box['branches']:
+            #     if cond is not None:
+            #         print(f'>>> cond: {cond}')
+            #         conditional_boxes.add(cond['uid'])
+            #     if body is not None:
+            #         conditional_boxes.add(body['uid'])
+            for cond_id, body_id in box['branches']:
+                if cond_id is not None:
+                    conditional_branch_boxes.add(cond_id)
+                if body_id is not None:
+                    conditional_branch_boxes.add(body_id)
     objects['called_by_boxcall'] = called_by_boxcall
     objects['expression_boxes'] = expression_boxes
     objects['conditional_boxes'] = conditional_boxes
+    objects['conditional_branch_boxes'] = conditional_branch_boxes
 
     # Collect box_ids called by Expression Expr tree calls
     called_by_expr = set()
@@ -91,14 +105,25 @@ def validate(gromet):
 
     for k in ('variables', 'boxes', 'wires', 'junctions', 'ports'):
         for elm in objects[k]:
-            for datum in elm['metadata']:
-                metadata_type = f"metadata_{k}_{datum['metadata_type']}"
-                if metadata_type not in objects:
-                    objects[metadata_type] = [datum]
-                else:
-                    objects[metadata_type].append(datum)
-    # Gromet - get gromet metadata and place in f"metadata_gormet_{datum['metadata_type']}"
-
+            box = objects[k][elm]
+            if box['metadata'] is not None:
+                # print('>'*50)
+                # print('> FOUND METADATA')
+                # print('>'*50)
+                for datum in box['metadata']:
+                    metadata_type = f"metadata_{k}_{datum['metadata_type']}"
+                    if metadata_type not in objects:
+                        objects[metadata_type] = [datum]
+                    else:
+                        objects[metadata_type].append(datum)
+    # gromet metadata:
+    if gromet['metadata'] is not None:
+        for datum in gromet['metadata']:
+            metadata_type = f"metadata_gromet_{datum['metadata_type']}"
+            if metadata_type not in objects:
+                objects[metadata_type] = [datum]
+            else:
+                objects[metadata_type].append(datum)
 
 
     # TODO types: TypeDeclaration
@@ -141,6 +166,11 @@ def validate(gromet):
     #   document_reference_uid exists in gromet.TextualDocumentReferenceSet TextualDocumentReference
     # EquationExtraction
     #   document_reference_uid exists in gromet.CodeCollectionReference CodeFileReference
+
+    # ReactionReference
+    #   should only be associated with PNC Rate Junction
+    # IndraAgentReferenceSet
+    #   should only be associated with PNC State Junction
 
     # -- Extract object uids --
 
@@ -211,6 +241,163 @@ def validate(gromet):
         if port['syntax'] == 'PortCall' and port['call'] not in port_names:
             print(f"Error: PortCall '{p_id}'"
                   f" calls undefined Port '{port['call']}'.")
+
+    # ---------------------------------------------------------------------
+    # Test: Conditional
+    # ---------------------------------------------------------------------
+    # For each branch
+    #    first box (branch condition):
+    #    (1) is Predicate or None -- None is only possible in the Last branch
+    #    (2) all PortInput ports are
+    #           (a) syntax PortCalls
+    #           (b) that reference outer condition PortInput port
+    #    (3) PortOutput port:
+    #           (a) must be exactly 1
+    #           (b) syntax Port
+    #           (c) value_type Boolean
+    #    second box (branch body):
+    #    (4) is Expression or Function or None (None is a 'pass')
+    #    (5) All ports must be PortCalls
+    #    (6) all PortInput ports reference outer condition PortInput ports
+    #    (7) all PortOutput ports reference outer condition PortOutput port
+    # (8) Every branch body Box PortOutput has a PortCall
+    #           that calls the same PortOutput Port as every other Port output
+    for c_id in objects['conditional_boxes']:
+        conditional_box = objects['boxes'][c_id]
+        num_branches = len(conditional_box['branches'])
+
+        body_ids = set()
+        called_ports_called_by_branch_body = defaultdict(lambda: set())
+
+        for i, (cond_id, body_id) in enumerate(conditional_box['branches']):
+            if cond_id is None:
+                if i < num_branches - 1:
+                    # (1a) Condition cannot be None unless in the last branch
+                    print(f"Error [Cond 1a]: condition of branch {i} in Conditional '{c_id}'"
+                          f" is None but is not the last branch.")
+            else:
+                cond_box = objects['boxes'][cond_id]
+                if cond_box['syntax'] != 'Predicate':
+                    # (1b) Condition must be a Predicate
+                    print(f"Error [Cond 1b]: condition '{cond_id}' in branch {i} of Conditional '{c_id}'"
+                          f" is syntax '{cond_box['syntax']}', but should be a Predicate.")
+                output_ports = list()  # collect output_ports
+                for p_id in cond_box['ports']:
+                    if p_id in objects['ports']:
+                        cond_port = objects['ports'][p_id]
+                        if cond_port['type'] == 'PortInput':
+                            if cond_port['syntax'] != 'PortCall':
+                                # (2a) Condition's ports must be PortCalls
+                                print(f"Error [Cond 2a]: condition '{cond_id}' in branch {i} of Conditional '{c_id}'"
+                                      f" is a '{cond_port['syntax']}' but must be a PortCall.")
+                            else:
+                                if cond_port['call'] not in conditional_box['ports']:
+                                    # (2b.1) Condition's PortCall calls a Port not found in Conditional
+                                    print(f"Error [Cond 2b.1]: condition '{cond_id}' in branch {i} of Conditional '{c_id}'"
+                                          f" calls '{cond_port['call']}' but not found in '{c_id}'s ports")
+                                else:
+                                    called_port = objects['ports'][cond_port['call']]
+                                    if called_port['type'] != 'PortInput':
+                                        # (2b.2) Condition's PortCall calls a Port that is not type PortInput
+                                        print(f"Error [Cond 2b.2]: condition '{cond_id}' in branch {i} of Conditional '{c_id}'"
+                                              f" calls '{cond_port['call']}' that is type '{called_port['type']}'"
+                                              f" but should be type PortInput.")
+                        elif cond_port['type'] == 'PortOutput':
+                            output_ports.append(p_id)
+                if len(output_ports) != 1:
+                    # (3a) There is just one output port
+                    print(f"Error [Cond 3a]: condition '{cond_id}' in branch {i} of Conditional '{c_id}'"
+                          f" must have exactly 1 output_port, but has: {output_ports}.")
+                else:
+                    output_port_id = output_ports[0]
+                    if output_port_id in objects['ports'][output_port_id]:
+                        output_port = objects['ports'][output_port_id]
+                        if output_port['syntax'] != 'Port':
+                            # (3b) output port must be syntax Port
+                            print(f"Error [Cond 3b]: condition '{cond_id}' in branch {i} of Conditional '{c_id}'"
+                                  f" is syntax '{output_port['syntax']}' but must be syntax Port.")
+                        if output_port['value_type'] != 'Boolean':
+                            # (3c) output port must have value_type Boolean
+                            print(f"Error [Cond 3c]: condition '{cond_id}' in branch {i} of Conditional '{c_id}'"
+                                  f" is value_type '{output_port['value_type']}' but must be value_type Boolean.")
+
+            if body_id is not None:
+                body_ids.add(body_id)
+                if body_id in objects['boxes']:
+                    body_box = objects['boxes'][body_id]
+                    if body_box['syntax'] != 'Expression' and body_box['syntax'] != 'Function':
+                        # (4) branch body must be Expression or Function
+                        print(f"Error [Cond 4]: condition '{body_id}' in branch {i} of Conditional '{c_id}'"
+                              f" is syntax '{body_box['syntax']}' but must be either Expression or Function.")
+                    for p_id in body_box['ports']:
+                        body_port = objects['ports'][p_id]
+                        if body_port['syntax'] != 'PortCall':
+                            # (5) branch body ports must be PortCalls
+                            print(f"Error [Cond 5]: condition '{body_id}' in branch {i} of Conditional '{c_id}'"
+                                  f" has port '{p_id}' that is type '{body_box['syntax']}' but must be PortCall.")
+                        else:
+                            if body_port['type'] == 'PortInput':
+                                if body_port['call'] not in conditional_box['ports']:
+                                    # (6a) branch body PortInput PortCall calls an existing Conditional port
+                                    print(f"Error [Cond 6a]: condition '{body_id}' in branch {i}"
+                                          f" of Conditional '{c_id}'"
+                                          f" has PortInput port '{p_id}' that calls port '{body_port['call']}'"
+                                          f" but not found in '{c_id}'s ports.")
+                                else:
+                                    called_port = objects['ports'][body_port['call']]
+                                    if called_port['type'] != 'PortInput':
+                                        # (6b) the called port must be a PortInput
+                                        print(f"Error [Cond 6b]: condition '{body_id}' in branch {i}"
+                                              f" of Conditional '{c_id}'"
+                                              f" has port '{p_id}' that cals port '{body_port['call']}'"
+                                              f" that is type '{called_port['type']}', but it must be type PortInput.")
+                            elif body_port['type'] == 'PortOutput':
+                                if body_port['call'] not in conditional_box['ports']:
+                                    # (7a) branch body PortOutput PortCall calls an existing Conditional port
+                                    print(f"Error [Cond 7a]: condition '{body_id}' in branch {i}"
+                                          f" of Conditional '{c_id}'"
+                                          f" has PortOutput port '{p_id}' that calls port '{body_port['call']}'"
+                                          f" but not found in '{c_id}'s ports.")
+                                else:
+                                    called_port = objects['ports'][body_port['call']]
+                                    if called_port['type'] != 'PortOutput':
+                                        # (7b) the called port must be a PortOutput
+                                        print(f"Error [Cond 7b]: condition '{body_id}' in branch {i}"
+                                              f" of Conditional '{c_id}'"
+                                              f" has port '{p_id}' that cals port '{body_port['call']}'"
+                                              f" that is type '{called_port['type']}', but it must be type PortOutput.")
+                                    called_ports_called_by_branch_body[called_port['uid']].add(body_id)
+                            else:
+                                print(f"Error [Cond x]: condition '{body_id}' in branch {i}"
+                                      f" of Conditional '{c_id}'"
+                                      f" has port '{p_id}' that cals port '{body_port['call']}'"
+                                      f" that is type '{called_port['type']}', but it must be either "
+                                      f" type PortInput or PortOutput.")
+
+        # collect all Conditional PortOutputs
+        cond_output_ports = set()
+        for p_id in conditional_box['ports']:
+            if p_id in objects['ports']:
+                if objects['ports'][p_id]['type'] == 'PortOutput':
+                    cond_output_ports.add(p_id)
+
+        for called_port_id, called_by_branch_body_set in called_ports_called_by_branch_body.items():
+            if body_ids != called_by_branch_body_set:
+                # (8a) Every Conditional PortOutput is called by a corresponding
+                #      PortOutput of *each* (non-None -- i.e., non-pass) branch body
+                cond_ports_not_called_by_branch_bodies = body_ids - called_by_branch_body_set
+                print(f"Error [Cond 8a]: Conditional '{c_id}'"
+                      f" has PortOutput Port '{called_port_id}'...\n"
+                      f"    not called by branches: {cond_ports_not_called_by_branch_bodies}\n"
+                      f"    (that should be empty)")
+
+        output_ports_not_called_by_any = cond_output_ports - set(called_ports_called_by_branch_body.keys())
+        if output_ports_not_called_by_any:
+            # (8b) Every Conditional PortOutput must be called
+            print(f"Error [Cond 8b]: Conditional '{c_id}'"
+                  " has the following PortOutputs that are not"
+                  " called by any of the branch PortOutput PortCalls:\n"
+                  f"     {output_ports_not_called_by_any}")
 
     # ---------------------------------------------------------------------
     # Petri Net Classic (PNC) tests:
@@ -374,45 +561,50 @@ def validate(gromet):
 
         # For non-root, non-Expression, non-Conditional and non-called Box (`non_recc_boxes`):
         non_recc_boxes = [box_id for box_id in objects['boxes']
-                         if box_id not in objects['called_boxes']
-                         and box_id not in objects['expression_boxes']
-                         and box_id not in objects['conditional_boxes']
-                         and box_id != gromet['root']]
+                          if box_id not in objects['called_boxes']
+                          and box_id not in objects['expression_boxes']
+                          and box_id not in objects['conditional_boxes']
+                          and box_id not in objects['conditional_branch_boxes']
+                          and box_id != gromet['root']]
         for b_id in non_recc_boxes:
             box = objects['boxes'][b_id]
             for p_id in box['ports']:
-                port_syntax = objects['ports'][p_id]['syntax']
-                port_type = objects['ports'][p_id]['type']
-                # (1) every Port or PortInput PortCall must have only one incoming Wire
-                if port_syntax == 'Port' or \
-                        (port_syntax == 'PortCall' and port_type == 'PortInput'):
-                    if p_id not in objects['wires_by_tgt_id']:
-                        print(f"Error [FN 1a]: Box '{b_id}' has {port_syntax} '{p_id}'"
-                              f" of type '{port_type}' with no incoming Wire.")
-                    elif len(objects['wires_by_tgt_id'][p_id]) != 1:
-                        print(f"Error [FN 1b]: Box '{b_id}' has {port_syntax} '{p_id}'"
-                              f" of type '{port_type}' with too many incoming Wires:"
-                              f" {objects['wires_by_tgt_id'][p_id]}.")
-                # (2) every Port or PortOutput PortCall must have at least one outgoing Wire
-                if port_syntax == 'Port' or \
-                        (port_syntax == 'PortCall' and port_type == 'PortOutput'):
-                    if p_id not in objects['wires_by_src_id']:
-                        print(f"Error [FN 2]: Box '{b_id}' has {port_syntax} '{p_id}'"
-                              f" of type '{port_type}' with no outgoing Wire.")
-                # (3) every PortInput PortCall must have no outgoing Wires
-                if port_syntax == 'PortCall' and port_type == 'PortInput':
-                    outgoing_wires = objects['wires_by_src_id']
-                    if p_id in outgoing_wires:
-                        print(f"Error [FN 3]: Box '{b_id}' has {port_syntax} '{p_id}'"
-                              f" of type '{port_type}' with some outgoing Wire:"
-                              f" {outgoing_wires[p_id]}.")
-                # (4) every PortOutput PortCall must have no incoming Wires
-                if port_syntax == 'PortCall' and port_type == 'PortOutput':
-                    incoming_wire_ids = objects['wires_by_tgt_id']
-                    if p_id in incoming_wire_ids:
-                        print(f"Error [FN 4]: Box '{b_id}' has {port_syntax} '{p_id}'"
-                              f" of type '{port_type}' with some outgoing Wire:"
-                              f" {incoming_wire_ids[p_id]}.")
+                # don't worry about flagging error if p_id is not found in
+                #     objects['ports'] as if missing, this will already have
+                #     been flagged in test of defined Ports above...
+                if p_id in objects['ports']:
+                    port_syntax = objects['ports'][p_id]['syntax']
+                    port_type = objects['ports'][p_id]['type']
+                    # (1) every Port or PortInput PortCall must have only one incoming Wire
+                    if port_syntax == 'Port' or \
+                            (port_syntax == 'PortCall' and port_type == 'PortInput'):
+                        if p_id not in objects['wires_by_tgt_id']:
+                            print(f"Error [FN 1a]: Box '{b_id}' has {port_syntax} '{p_id}'"
+                                  f" of type '{port_type}' with no incoming Wire.")
+                        elif len(objects['wires_by_tgt_id'][p_id]) != 1:
+                            print(f"Error [FN 1b]: Box '{b_id}' has {port_syntax} '{p_id}'"
+                                  f" of type '{port_type}' with too many incoming Wires:"
+                                  f" {objects['wires_by_tgt_id'][p_id]}.")
+                    # (2) every Port or PortOutput PortCall must have at least one outgoing Wire
+                    if port_syntax == 'Port' or \
+                            (port_syntax == 'PortCall' and port_type == 'PortOutput'):
+                        if p_id not in objects['wires_by_src_id']:
+                            print(f"Error [FN 2]: Box '{b_id}' has {port_syntax} '{p_id}'"
+                                  f" of type '{port_type}' with no outgoing Wire.")
+                    # (3) every PortInput PortCall must have no outgoing Wires
+                    if port_syntax == 'PortCall' and port_type == 'PortInput':
+                        outgoing_wires = objects['wires_by_src_id']
+                        if p_id in outgoing_wires:
+                            print(f"Error [FN 3]: Box '{b_id}' has {port_syntax} '{p_id}'"
+                                  f" of type '{port_type}' with some outgoing Wire:"
+                                  f" {outgoing_wires[p_id]}.")
+                    # (4) every PortOutput PortCall must have no incoming Wires
+                    if port_syntax == 'PortCall' and port_type == 'PortOutput':
+                        incoming_wire_ids = objects['wires_by_tgt_id']
+                        if p_id in incoming_wire_ids:
+                            print(f"Error [FN 4]: Box '{b_id}' has {port_syntax} '{p_id}'"
+                                  f" of type '{port_type}' with some outgoing Wire:"
+                                  f" {incoming_wire_ids[p_id]}.")
 
         # For non-Expression called Box (`non_exp_called_boxes`)
         non_exp_called_boxes = objects['called_boxes'] - objects['expression_boxes']
@@ -590,8 +782,10 @@ test_collect_expr_port_references()
 # '/Users/claytonm/Google Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet/examples/Simple_SIR/SimpleSIR_gromet_FunctionNetwork.json'
 # '/Users/claytonm/Google Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet/examples/call_ex1/call_ex1_gromet_FunctionNetwork.json'
 DEFAULT_ROOT = 'examples'
-DEFAULT_PATH = 'examples/call_ex1_gromet_FunctionNetwork.json'
-DEBUG = True
+# DEFAULT_PATH = 'examples/call_ex1_gromet_FunctionNetwork.json'
+# DEFAULT_PATH = 'examples/SimpleSIR_metadata_gromet_FunctionNetwork.json'
+DEFAULT_PATH = 'examples/cond_ex1_gromet_FunctionNetwork.json'
+FORCE_BATCH = True  # True
 
 
 def main():
@@ -602,7 +796,7 @@ def main():
                         help="Process batch, interpret path as root dir")
     args = parser.parse_args()
     path = args.path
-    if args.batch or DEBUG:
+    if args.batch or FORCE_BATCH:
         print("Processing batch")
         if path == '':
             path = DEFAULT_ROOT
