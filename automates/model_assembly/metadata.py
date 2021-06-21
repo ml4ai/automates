@@ -436,7 +436,7 @@ class VariableFromSource(TypedMetadata):
     creation_reason: VariableCreationReason
 
     @classmethod
-    def from_air_data(cls, data: dict) -> CodeSpanReference:
+    def from_air_data(cls, data: dict) -> VariableFromSource:
         return cls(
             MetadataType.FROM_SOURCE,
             ProvenanceData(
@@ -449,7 +449,7 @@ class VariableFromSource(TypedMetadata):
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> CodeSpanReference:
+    def from_data(cls, data: dict) -> VariableFromSource:
         return cls(
             data["type"],
             data["provenance"],
