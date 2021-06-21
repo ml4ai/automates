@@ -609,75 +609,78 @@ class Conditional(Box):
 
 
 @dataclass
-class Loop(Box, HasContents):  # BoxDirected
+class Loop(Box, HasContents):
     """
     Loop
         ( TODO:
             Assumes no side-effects.
             Assumes no breaks.
         )
-    A BoxDirected that "loops" until an exit_condition (Predicate)
+    A Box that "loops" until an exit_condition (Predicate)
         is True.
-        By "loop", you can think of iteratively making a copies of
-            the Loop and wiring the previous Loop instance output_ports
-            to the input_ports of the next Loop instance.
-            (wiring of output-to-input Ports is done is order
-             of the Ports).
+        By "loop", you can think of iteratively making copies of the
+            Loop and wiring the previous Loop instance PortOutputs
+            to the PortInput Ports of the next Loop instance.
+        "Wiring"/Correspondence of output-to-input Ports is
+            accomplished by the PortOutputs ports being
+            PortCalls that directly denote (call) their
+            corresponding PortInput Port.
     Definition / Terminology:
         A Loop has a *body* (because it is a Box), that
             represents the "body" of the loop.
         A Loop has an *exit_condition*, a Predicate that
             determines whether to evaluate the loop.
-        A Loop has input_ports and output_ports (being
-            a BoxDirected).
-            A portion of the input_ports represent Ports
-                set by the incoming external "environment"
+        A Loop has PortInput and PortOutput ports.
+            A portion of the PortInput Ports acquire values
+                by the incoming external "environment"
                 of the Loop.
-            The remaining of the input_ports represent
-                Ports to store state values that may be
-                introduced within the Loop body
-                but are not themselves initially used in
-                (read by) the loop body wiring.
+            The remaining of the PortInput Ports represent
+                Ports to capture the state values that may be
+                introduced within the Loop body but not
+                introduced from the incoming external
+                "environment".
                 In the initial evaluation of the loop,
-                these Ports have no values; after one
-                iteration of the Loop, these Ports
-                may have their values assigned by the
-                Loop body.
-        Each input_port is "matched" to an output_port,
-            based on the Port order within the input_ports
-            and output_ports lists.
-        A Loop has a *port_map* is a bi-directional map
-            that pairs each Loop output Port with each Loop
-            input Port, determining what the Loop input Port
-            value will be based on the previous Loop iteration.
-            Some input Port values will not be changed as a
+                these Ports have no values OR the Port
+                has an initial 'value' Literal
+                (e.g., initializing a loop index).
+                After iteration through the loop, these
+                Ports may have their values assigned/changed
+                by the Loop body, that then cycles around
+                from the PortOutput PortCalls of the previous
+                loop iteration..
+        Each PortInput Port is "paired" with (called by) an
+            PortOutput PortCall.
+        Some PortInput Port values will not be changed as a
             result of the Loop body, so these values "pass
-            through" to that input's paired output.
+            through" to that input's paired output PortCall.
             Others may be changed by the Loop body evaluation.
     Interpretation:
-        The Loop exit_condition is evaluated at the very
-            beginning before evaluating any of the Loop
-            body wiring.
+        The Loop exit_condition Predicate is evaluated at
+            the very beginning before evaluating any of the
+            Loop body wiring.
             IF True (the exit_condition evaluates to True),
-                then the values of the Ports in input_ports
+                then the values of the PortInput Ports
                 are passed directly to their corresponding
-                Ports in output_ports; The output_ports then
-                represent the final value/state of the Loop
-                output_ports.
+                PortOutput PortCalls; The PortOutput
+                PortCalls then represent the final value/state
+                of the Loop PortOutput interface.
             IF False (the exit_condition evaluates to False),
                 then the Loop body wiring is evaluated to
-                determine the state of each output Port value.
-                The values of each output Port are then assined
-                to the Port's corresponding input Port and
-                the next Loop iteration is begun.
+                determine the state of each PortOutput
+                PortCall value.
+                The values of each PortOutput PortCall are
+                then assigned to the PortCall's 'call'ed
+                PortInput Port and the next Loop iteration
+                is begun.
         This basic semantics supports both standard loop
             semantics:
             () while: the exit_condition is tested first.
-            () repeat until: an initial input Port set to False
+            () repeat until: an initial PortInput Port for flagging
+                the first Loop iteration is set to False to
                 make the initial exit_condition evaluation fail
                 and is thereafter set to True in the Loop body.
     """
-    exit_condition: Union[Predicate, None]
+    exit_condition: Union[UidBox, None]
 
 
 # --------------------
@@ -736,7 +739,7 @@ def gromet_to_json(gromet: Gromet,
 # -----------------------------------------------------------------------------
 
 """
-Changes 2021-06-18:
+Changes 2021-06-20:
 () Changes to Conditional:
     () The conditional branch body may now be either an Expression (in the
         limit case that all branches are simply setting the same variable)
@@ -753,7 +756,14 @@ Changes 2021-06-18:
         conditional output Ports: the branch body Expression/Function
         output Ports will be PortCalls to the Conditional PortOutput Ports.
     - the Conditional documentation has been updated to reflect this, as well
-        as the 'wiring diagram' schema figure. 
+        as the 'wiring diagram' schema figure.
+() Changes to Loop:
+    () The PortOutput ports will be PortCalls that call their
+        corresponding PortInput Ports to unambiguously determine
+        the output-to-input correspondence.
+        This removes the requirement that the correspondence is
+        derived from the order in which the Ports are referenced
+        in the Loop's 'ports' list.
 
 Changes 2021-06-13:
 () Changed RefFn to RefBox (as reference could be to any defined Box)
