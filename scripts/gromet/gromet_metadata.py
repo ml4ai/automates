@@ -398,9 +398,7 @@ class ReactionReference(Metadatum):
     is_reverse: bool
 
 
-@dataclass
-class IndraAgent(dict):
-    pass
+IndraAgent = NewType('IndraAgent', dict)
 
 
 @dataclass
