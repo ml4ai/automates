@@ -505,107 +505,95 @@ class Conditional(Box):
     ( NOTE: the following notes make references to elements as they
             appear in Clay's gromet visual notation. )
     Terminology:
-        *branch Predicate* (a type of Expression computing a
-            boolean) represents the branch conditional test whose
-            outcome determines whether the branch will be executed.
-        *branch body* represents the computation of anything in the branch.
-            In the limit case of a single Expression, the branch body
-                just evaluates the Expression, usually assigning a
-                value to a single variables.
-            In the more general case (more than one Expression), the
-                branch body is represented as a Function.
+        *branch Predicate* (a Predicate is a type of Expression
+            with a single Boolean PortOutput): represents the branch
+            conditional test whose outcome determines whether the
+            branch will be evaluated.
+        *branch body*: represents the computation of anything in the
+            branch.
+            If the branch body only involves computing a single variable,
+                then it is an Expression.
+            If the branch body computes more than one variable, then it
+                is a Function.
         A *branch* itself consists of a Tuple of:
-                Predicate, body: Union[Expression, Function], List[UidWire]
-            The UidWire list denotes the set of wires relevant for
-                completely wiring the branch Cond and Fn to the
-                Conditional input and output Ports.
+            (1) branch predicate (Predicate)
+            (2) branch body (Union[Expression, Function])
     Port conventions:
-        A Conditional has a set of input and output Ports.
-        *input* Ports capture any values of state/variables
-            from the scope outside of the Conditional Box that
-            are required by any branch Predicate or body.
-            (think of the input Ports as representing the relevant
-            "variable environment" to the Conditional.)
+        A Conditional has a set of PortInput and PortOutput type
+            Ports/PortCalls that define the Conditional's "input"
+            and "output" *interface*.
+        The ports on the Predicates, Expressions and Functions
+            of the branch predicate and body will (mostly) be
+            PortCalls that reference the corresponding Ports
+            in the Conditional Port interface.
+            (The one exception is the Predicate PortOutput, which
+            is just a regular Port of value_type Boolean that
+            itself is determined by the Predicate but does not get
+            "read" by another model element; it is instead
+            used in evaluation to determine branch choice.)
+        *input* Ports (type PortInput) of the Conditional interface
+            capture any values of variables from the scope
+            outside of the Conditional Box that are required by any
+            branch Predicate or body.
+            (Think of the PortInput Ports as representing the
+            relevant "variable environment" to the Conditional.)
         We can then think of each branch body as a possible
             modification to the "variable environment" of the
             input Ports. When a branch body Expression/Function is
-            evaluated, it may preserve the values from some or all
-            of the original input ports, or it may modify them,
-            and/or it may introduce *new* variables resulting in
+            evaluated, it may: (a) preserve the values from some
+            or all of the original input ports, or (b) modify the
+            variable values introduced by those input ports,
+            and/or (c) introduce *new* variables resulting in
             corresponding new output Ports.
-        From the perspective of the output Ports of the Conditional,
-            we need to consider all of the possible new variable
-            environment changes made by the selection of any branch.
-            Doing so permits us to treat the Conditional as a modular
+        From the perspective of the PortOutput type ports of the
+            Conditional output interface, we need to consider all
+            of the possible new variable environment changes made
+            by the selection of any branch.
+            Representing all possible branch environment variabels
+            permits us to treat the Conditional as a modular
             building-block to other model structures.
-            To achieve this, each branch body Expression/Function must
-            include in its output_ports a set of Ports that represent
-            *any* of the "new variables" introduced by any branch body
-            Expression or Function.
-            This allows us to have a single output_ports set for the
-            entire Conditional, and whichever branch Function is
-            evaluated, those Ports will be defined.
-        If all of the branches are themselves Expressions that set
-            the *same* variable, then each of the branch bodies may
-            themselves be Expressions. If, however, any of the bodies
-            have different variable outputs, then all of the bodies
-            must be Functions with multiple outputs, one for each of
-            the variables that is introduces across any of the branch
-            bodies.
-            E.g., branch body B0 may introduce a new variable
-            "x" that branch Function B1 does not; B1 must still have
-            a Port corresponding to "x", but it will not be Wired to
-            anything -- it carries no value.
-        Because the input Ports to each branch Predicate and branch
-            body Expression/Function have the same corresponding set
-            of Ports (per input variable), there is no need for explicit
-            Wires from the Conditional Input to the branch Predicate
-            and body input Ports.
-            Instead, the PortInput Ports to the the branch Predicate
-                and the branch body Expression/Function will be PortCalls
-                to the corresponding Conditional PortInput Ports.
-            The same is true for branch body Expression/Function to
-                the Condition output Ports: the PortOutput Ports of the
-                branch body Expression/Function will be PortCalls to
-                the PortOutput Ports of the Conditional PortOutput Ports.
-        Finally, Each branch Predicate has a single Boolean Port
-            devoted to determining whether the branch is selected
-            (when True).
-    Definition: A Conditional is a...
-        Sequence (List) of branches:
-            Tuple[Predicate, Union[Expression, Function], List[UidWire]]
-        Each branch Predicate has a single boolean output Port
-            whose state determines whether the branch Function
-            will be evaluated to produce the state of the Conditional
-            output Ports.
-    Interpretation and evaluaton semantics:
-        GrFN provides unambiguous full data flow semantics.
-        Here (for now), a gromet Conditional provides some abstraction
-            away from pure data flow (but it is directly recoverable
-            if desired).
-        The interpretation convention:
-            Branches are visited in order until the current branch
-                Predicate evals to True
-            If a branch Predicates evaluates to True, then branch
-                body Expression/Function takes the Conditional
-                input_ports and determines the output_ports of the
-                Conditional according to its internal components.
-            In the case that a branch body is None, then treat as
-                a 'pass': input Port values that correspond to output
-                Ports will assign their values to the output Ports,
-                and any "new" Ports introduced by any branch body
-                have no values.
-            An "else" branch has no branch Predicate, instead the
-                branch body is just evaluated.
-            If no branch Predicate evaluates to True and there is no
-                else, then 'pass': input Port values that correspond
-                to output Ports will assign their values to the output
-                Ports, and any "new" Ports introduced by any branch body
-                have no values.
+            The Conditional PortOutput interface will therefore have a
+            corresponding PortOutput port for each possible variable
+            introduced in any branch body.
+        In cases where a PortOutput port of the Conditional represents
+            a variable that may not be set by a branch (or none of the
+            branches conditions evaluate to True and there is no *else*
+            branch body), but the variable represented by that port
+            *is* represented by a Port in the PortInput interface,
+            then the PortOutput will be a PortCall that 'call's the
+            PortInput Port.
+    Evaluation semantics:
+        Branches are visited in order until the current branch
+            Predicate evals to True.
+        If a branch Predicate evaluates to True, then the branch
+            body Expression/Function uses the values of the
+            Conditional PortInput Ports referred to ('call'ed by) the
+            body PortCalls and computes the resulting values of
+            variables (represented by the PortOutput PortCalls of the
+            body Expression or Function) in that branch;
+            The PortOutput PortCalls of the branch then 'call'
+            the corresponding PortOutput Ports in the Conditional
+            output interface, setting their values.
+        Any PortOutput ports NOT called by a branch body will then
+            either:
+            (1) themselves be PortCalls that call the corresponding
+                PortInput interface Ports to retrieve the variable's
+                original value, or
+            (2) have undefined (None) values.
+        An "else" branch has no branch Predicate -- the branch
+            body is directly evaluated. Only the last branch
+            may have no branch Predicate.
+        Finally, if none of the branch Predicates evaluate to True
+            and there is no "else" branch, then evaluation 'passes':
+            any PortOutput PortCalls in the Conditional output interface
+            will get their values from their 'call'ed PortInput,
+            or have undefined values.
+
+        TODO Updating that branch body MUST have Expression/Function
     """
     # branches is a List of UidBox references to
     #   ( <Predicate>1, <Expression,Function> )
-    branches: List[Tuple[Union[UidBox, None], Union[UidBox, None]]]
+    branches: List[Tuple[Union[UidBox, None], UidBox]]
 
 
 @dataclass
@@ -621,13 +609,14 @@ class Loop(Box, HasContents):
         By "loop", you can think of iteratively making copies of the
             Loop and wiring the previous Loop instance PortOutputs
             to the PortInput Ports of the next Loop instance.
-        "Wiring"/Correspondence of output-to-input Ports is
-            accomplished by the PortOutputs ports being
+        "Wiring"/correspondence of output-to-input Ports is
+            accomplished by the PortOutput ports being
             PortCalls that directly denote (call) their
             corresponding PortInput Port.
-    Definition / Terminology:
-        A Loop has a *body* (because it is a Box), that
-            represents the "body" of the loop.
+    Terminology:
+        A Loop has a contents (because it is a HasContents)
+            -- wires, junctions, boxes -- that represent the
+            *body* of the loop.
         A Loop has an *exit_condition*, a Predicate that
             determines whether to evaluate the loop.
         A Loop has PortInput and PortOutput ports.
@@ -635,9 +624,9 @@ class Loop(Box, HasContents):
                 by the incoming external "environment"
                 of the Loop.
             The remaining of the PortInput Ports represent
-                Ports to capture the state values that may be
-                introduced within the Loop body but not
-                introduced from the incoming external
+                Ports to capture the state variables that may
+                be introduced within the Loop body but not
+                originating from the incoming external
                 "environment".
                 In the initial evaluation of the loop,
                 these Ports have no values OR the Port
@@ -645,25 +634,24 @@ class Loop(Box, HasContents):
                 (e.g., initializing a loop index).
                 After iteration through the loop, these
                 Ports may have their values assigned/changed
-                by the Loop body, that then cycles around
-                from the PortOutput PortCalls of the previous
-                loop iteration..
-        Each PortInput Port is "paired" with (called by) an
+                by the Loop body; these values are then used
+                to set the PortInput values for the start of
+                the next iteration through the loop.
+        Each PortInput Port is "paired" with (called by) a
             PortOutput PortCall.
         Some PortInput Port values will not be changed as a
             result of the Loop body, so these values "pass
             through" to that input's paired output PortCall.
             Others may be changed by the Loop body evaluation.
-    Interpretation:
+    Evaluation semantics:
         The Loop exit_condition Predicate is evaluated at
             the very beginning before evaluating any of the
             Loop body wiring.
             IF True (the exit_condition evaluates to True),
-                then the values of the PortInput Ports
-                are passed directly to their corresponding
-                PortOutput PortCalls; The PortOutput
-                PortCalls then represent the final value/state
-                of the Loop PortOutput interface.
+                then the PortOutput PortCalls have their
+                values set by the PortInput Ports they call,
+                skipping over any intervening computation in
+                Loop body.
             IF False (the exit_condition evaluates to False),
                 then the Loop body wiring is evaluated to
                 determine the state of each PortOutput
@@ -686,6 +674,8 @@ class Loop(Box, HasContents):
 # --------------------
 # Variable
 
+VariableState = NewType('VariableState', Union[UidPort, UidWire, UidJunction])
+
 @dataclass
 class Variable(TypedGrometElm):
     """
@@ -695,9 +685,12 @@ class Variable(TypedGrometElm):
         (b) denotes a modeled domain (world) state.
     Currently, (b) will be represented in Metadata.
 
+    TODO document
+
     """
     uid: UidVariable
-    states: List[Union[UidPort, UidWire, UidJunction]]
+    main_state: VariableState
+    states: List[VariableState]
 
 
 # --------------------
@@ -741,22 +734,22 @@ def gromet_to_json(gromet: Gromet,
 """
 Changes 2021-06-20:
 () Changes to Conditional:
-    () The conditional branch body may now be either an Expression (in the
-        limit case that all branches are simply setting the same variable)
-        or more generally are Functions with the same input and output Ports
-        (as previously defined).
+    () The conditional branch body may now be either an Expression or Function.
     () Explicitly documented that there is no need for any Wires between
-        the Conditional input Ports and the branch Predicate and body Ports, 
+        the Conditional input Ports and the branch Predicate and body ports, 
         since these will always have the same corresponding Ports 
         (similar to how Wires are not needed in Expressions/Expr); 
         In this case, this is implemented by having the PortInput Ports to the
         branch Predicate and the branch body Expression/Function be PortCalls
-        to the corresponding Conditional PortInput Ports; 
+        that 'call' the corresponding Conditional PortInput Ports; 
         and similarly for branch body output Ports to the corresponding 
         conditional output Ports: the branch body Expression/Function
         output Ports will be PortCalls to the Conditional PortOutput Ports.
-    - the Conditional documentation has been updated to reflect this, as well
-        as the 'wiring diagram' schema figure.
+        And in the case that a branch body does not 'call' one of the defined
+        Conditional PortOutputs BUT that output port corresponds to an input
+        port, then that PortOutput will be a PortCall that 'call's the
+        corresponding PortInput to get its value. 
+    - the 'wiring diagram' schema figure (in the gromet/docs/) has been updated.
 () Changes to Loop:
     () The PortOutput ports will be PortCalls that call their
         corresponding PortInput Ports to unambiguously determine
