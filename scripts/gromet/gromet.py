@@ -732,7 +732,7 @@ def gromet_to_json(gromet: Gromet,
 # -----------------------------------------------------------------------------
 
 """
-Changes 2021-06-20:
+Changes 2021-06-21:
 () Changes to Conditional:
     () The conditional branch body may now be either an Expression or Function.
     () Explicitly documented that there is no need for any Wires between
