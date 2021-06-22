@@ -45,7 +45,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   lazy val scienceParse = new ScienceParseClient(domain = "localhost", port = "8080")
   lazy val commentReader: OdinEngine = OdinEngine.fromConfigSection("CommentEngine")
   val config: Config = ConfigFactory.load()
-  lazy val alignmentHandler = new AlignmentHandler(config("alignment"))
+  lazy val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   // fixme: these should come from config if possible
   private val numAlignments: Int = config[Int]("apps.numAlignments")
