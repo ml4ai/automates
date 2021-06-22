@@ -1,0 +1,1738 @@
+{
+    "uid": "4c9a0ae1-5419-eefc-d5e7-3e3f673617d9",
+    "entry_point": "@container::stemp_epic_soilt::stemp_epic_soilt::stemp_epic_soilt.soilt_epic",
+    "timestamp": "2021-05-10",
+    "hyper_edges": [
+        {
+            "inputs": [],
+            "function": "b5d32b16-6619-4cb1-d710-37d1b83e90ec",
+            "outputs": [
+                "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"
+            ]
+        },
+        {
+            "inputs": [],
+            "function": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
+            "outputs": [
+                "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c"
+            ]
+        },
+        {
+            "inputs": [
+                "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c"
+            ],
+            "function": "101fbccc-ded7-33e8-b421-eaeb534097ca",
+            "outputs": [
+                "baf3897a-3e70-f16a-5548-5822de1b372a"
+            ]
+        },
+        {
+            "inputs": [
+                "baf3897a-3e70-f16a-5548-5822de1b372a",
+                "8d723104-f773-83c1-3458-a748e9bb17bc",
+                "f7c1bd87-4da5-e709-d471-3d60c8a70639"
+            ],
+            "function": "247a8333-f7b0-b7d2-cda8-056c3d15eef7",
+            "outputs": [
+                "38c1962e-9148-624f-eac1-c14f30e9c5cc"
+            ]
+        },
+        {
+            "inputs": [
+                "38c1962e-9148-624f-eac1-c14f30e9c5cc",
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455"
+            ],
+            "function": "e005b860-51ef-1922-fe43-c49e149818d1",
+            "outputs": [
+                "1759edc3-72ae-2244-8b01-63c1cd9d2b7d"
+            ]
+        },
+        {
+            "inputs": [
+                "e443df78-9558-867f-5ba9-1faf7a024204",
+                "1759edc3-72ae-2244-8b01-63c1cd9d2b7d"
+            ],
+            "function": "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
+            "outputs": [
+                "7d41e602-eece-328b-ff7b-118e820865d6"
+            ]
+        },
+        {
+            "inputs": [
+                "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                "5487ce1e-af19-922a-d9b8-a714e61a441c",
+                "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9"
+            ],
+            "function": "3405095c-8a50-06c1-ec18-8efbd080e66e",
+            "outputs": [
+                "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
+                "1775336d-71ea-cd05-49a3-e80e966e1277",
+                "5129fb7c-6288-e1a5-cc45-782198a6416d",
+                "2f120554-4a53-08cc-3dfa-bc08935ddd72",
+                "0870e15c-2fcd-81b5-d24b-ace4307bf326"
+            ]
+        },
+        {
+            "inputs": [
+                "1775336d-71ea-cd05-49a3-e80e966e1277",
+                "0870e15c-2fcd-81b5-d24b-ace4307bf326",
+                "5129fb7c-6288-e1a5-cc45-782198a6416d"
+            ],
+            "function": "adc0da7a-16fe-baa0-11af-923d79fdef7c",
+            "outputs": [
+                "42930b33-a81a-d477-fb36-75b89cdeb3e6"
+            ]
+        },
+        {
+            "inputs": [
+                "1775336d-71ea-cd05-49a3-e80e966e1277",
+                "5129fb7c-6288-e1a5-cc45-782198a6416d",
+                "2f120554-4a53-08cc-3dfa-bc08935ddd72"
+            ],
+            "function": "148b2758-d7ab-7928-09e4-69e6ec62b2c8",
+            "outputs": [
+                "2648ee38-e074-05eb-2156-63abc1f254b8"
+            ]
+        },
+        {
+            "inputs": [
+                "8c1745a7-9a6a-5f92-cca7-4147f6be1f72"
+            ],
+            "function": "d67e55fd-642b-fa42-aef9-c00b8a64c1b9",
+            "outputs": [
+                "d450fe4a-ec4f-217b-b306-d1a8e5eeac76"
+            ]
+        },
+        {
+            "inputs": [
+                "d450fe4a-ec4f-217b-b306-d1a8e5eeac76",
+                "42930b33-a81a-d477-fb36-75b89cdeb3e6",
+                "2648ee38-e074-05eb-2156-63abc1f254b8"
+            ],
+            "function": "37176e84-d977-e993-3c49-d76fcfc6e625",
+            "outputs": [
+                "85940927-468f-f53d-864a-7a50b48d73f1"
+            ]
+        },
+        {
+            "inputs": [
+                "85940927-468f-f53d-864a-7a50b48d73f1"
+            ],
+            "function": "d3447490-96fd-35d0-adf2-0806e5214606",
+            "outputs": [
+                "46743741-9466-e472-6b5f-5241f323ca74"
+            ]
+        },
+        {
+            "inputs": [
+                "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                "46743741-9466-e472-6b5f-5241f323ca74"
+            ],
+            "function": "fb82860d-eabc-a8d0-b341-facdff0ac0f1",
+            "outputs": [
+                "a425799a-a905-d750-7e1e-a9c573581a81"
+            ]
+        },
+        {
+            "inputs": [],
+            "function": "964a870c-7c87-9b74-1d87-8f9f9cdf5a86",
+            "outputs": [
+                "5306f3f5-1516-6570-5b7c-709acb175a5a"
+            ]
+        },
+        {
+            "inputs": [
+                "5306f3f5-1516-6570-5b7c-709acb175a5a",
+                "a425799a-a905-d750-7e1e-a9c573581a81"
+            ],
+            "function": "4562be7f-bb42-e0b2-0426-465e3e37952d",
+            "outputs": [
+                "5f3f5638-3870-1a14-b490-b6081dfc8352",
+                "6d16ee18-5521-16dd-2ba4-b180cb69ca38"
+            ]
+        },
+        {
+            "inputs": [
+                "38018b47-b29a-8b06-daf6-6c5f2577bffa",
+                "c87a7463-19c1-6a0d-0feb-d845d0dfae43"
+            ],
+            "function": "9a27d858-88c1-32ad-efbf-c19ee8f6cf32",
+            "outputs": [
+                "a25b59fd-92e8-e269-d12e-cbc40b9475b1"
+            ]
+        },
+        {
+            "inputs": [
+                "c87a7463-19c1-6a0d-0feb-d845d0dfae43"
+            ],
+            "function": "d480865f-9b38-fe80-3042-e325a28f5ab0",
+            "outputs": [
+                "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec"
+            ]
+        },
+        {
+            "inputs": [
+                "c87a7463-19c1-6a0d-0feb-d845d0dfae43"
+            ],
+            "function": "1db53334-fb03-23a1-d576-d4155ec17dbe",
+            "outputs": [
+                "176ea1b1-6426-4cd5-1ea4-5cd69371a71f"
+            ]
+        },
+        {
+            "inputs": [
+                "176ea1b1-6426-4cd5-1ea4-5cd69371a71f"
+            ],
+            "function": "b7d6467b-2f5a-522a-f87f-43fdf6062541",
+            "outputs": [
+                "31d0b664-0589-f877-9b02-52440950fd13"
+            ]
+        },
+        {
+            "inputs": [
+                "31d0b664-0589-f877-9b02-52440950fd13",
+                "c87a7463-19c1-6a0d-0feb-d845d0dfae43",
+                "38018b47-b29a-8b06-daf6-6c5f2577bffa",
+                "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec",
+                "a25b59fd-92e8-e269-d12e-cbc40b9475b1"
+            ],
+            "function": "9edfa3da-6cf5-5b15-8b53-031d05d51433",
+            "outputs": [
+                "ba26d851-35e8-579a-7aaf-0e891fb797fa",
+                "ade9b2b4-efdd-35f8-0fa3-4266ccfdba9b"
+            ]
+        },
+        {
+            "inputs": [
+                "5f3f5638-3870-1a14-b490-b6081dfc8352",
+                "6d16ee18-5521-16dd-2ba4-b180cb69ca38",
+                "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec",
+                "a25b59fd-92e8-e269-d12e-cbc40b9475b1"
+            ],
+            "function": "11ebcd49-428a-1c22-d5fd-b76a19fbeb1d",
+            "outputs": [
+                "c87a7463-19c1-6a0d-0feb-d845d0dfae43",
+                "38018b47-b29a-8b06-daf6-6c5f2577bffa"
+            ]
+        },
+        {
+            "inputs": [
+                "ba26d851-35e8-579a-7aaf-0e891fb797fa",
+                "ade9b2b4-efdd-35f8-0fa3-4266ccfdba9b"
+            ],
+            "function": "4d125e7f-a59c-ec98-126c-bc8f38884479",
+            "outputs": [
+                "0fa07a3f-2e29-5065-6fa2-31e959acdd98",
+                "98b33c6e-0a14-b90a-7795-e98680ee526e"
+            ]
+        },
+        {
+            "inputs": [],
+            "function": "e786ab37-5bca-47be-4298-17c53308fb2e",
+            "outputs": [
+                "642aad48-fcfc-fa81-b306-d70019d5f970"
+            ]
+        },
+        {
+            "inputs": [],
+            "function": "b29c467d-2b5f-6932-91dc-59efeb21a3f6",
+            "outputs": [
+                "e6fd68e8-d69c-91c2-7860-1602bb4a06cb"
+            ]
+        },
+        {
+            "inputs": [
+                "e6fd68e8-d69c-91c2-7860-1602bb4a06cb",
+                "642aad48-fcfc-fa81-b306-d70019d5f970",
+                "98b33c6e-0a14-b90a-7795-e98680ee526e"
+            ],
+            "function": "28805c5d-ad1b-8f60-c9e4-dab20edc6d2b",
+            "outputs": [
+                "878b9f6b-57a1-cb71-2975-d279d86dbf11",
+                "ebe21368-98c7-5205-1e01-a934402d0baf",
+                "0361524c-2cc0-f859-aa65-24ab713b7e05"
+            ]
+        },
+        {
+            "inputs": [
+                "eae2025e-8233-9e23-dff3-334b91b15f5d",
+                "0361524c-2cc0-f859-aa65-24ab713b7e05",
+                "e66cd36e-68ef-8f5f-ae68-690a78bc7175"
+            ],
+            "function": "27460f22-403d-1f83-a859-890cd670f668",
+            "outputs": [
+                "637e0edc-5b6e-4ae7-a620-81434fbaecc0"
+            ]
+        },
+        {
+            "inputs": [
+                "e66cd36e-68ef-8f5f-ae68-690a78bc7175"
+            ],
+            "function": "bd30291a-55fe-a08e-143e-2e04bdd7d19b",
+            "outputs": [
+                "753c7c99-032f-06ca-b0d9-c2aa8f837ef7"
+            ]
+        },
+        {
+            "inputs": [
+                "e66cd36e-68ef-8f5f-ae68-690a78bc7175"
+            ],
+            "function": "7b59051b-f400-48d7-c31d-5a973d792fa1",
+            "outputs": [
+                "2284b7a4-47e7-f593-8b58-85ca0bb2c3f0"
+            ]
+        },
+        {
+            "inputs": [
+                "2284b7a4-47e7-f593-8b58-85ca0bb2c3f0"
+            ],
+            "function": "e456697c-f268-6baa-971c-702d5bf49c04",
+            "outputs": [
+                "ac642b4c-49b2-5ded-9c31-d9b25a2b745b"
+            ]
+        },
+        {
+            "inputs": [
+                "ac642b4c-49b2-5ded-9c31-d9b25a2b745b",
+                "e66cd36e-68ef-8f5f-ae68-690a78bc7175",
+                "eae2025e-8233-9e23-dff3-334b91b15f5d",
+                "753c7c99-032f-06ca-b0d9-c2aa8f837ef7",
+                "637e0edc-5b6e-4ae7-a620-81434fbaecc0"
+            ],
+            "function": "14aa451c-a69c-fb85-d432-f8db6a174c1c",
+            "outputs": [
+                "21e15094-9efe-e464-da90-f534a23d4c9d",
+                "bf9cc545-6355-18f7-4f6f-a985b732d46f"
+            ]
+        },
+        {
+            "inputs": [
+                "878b9f6b-57a1-cb71-2975-d279d86dbf11",
+                "ebe21368-98c7-5205-1e01-a934402d0baf",
+                "753c7c99-032f-06ca-b0d9-c2aa8f837ef7",
+                "637e0edc-5b6e-4ae7-a620-81434fbaecc0"
+            ],
+            "function": "b2d650af-313b-32b7-9836-31890063e42f",
+            "outputs": [
+                "e66cd36e-68ef-8f5f-ae68-690a78bc7175",
+                "eae2025e-8233-9e23-dff3-334b91b15f5d"
+            ]
+        },
+        {
+            "inputs": [
+                "21e15094-9efe-e464-da90-f534a23d4c9d",
+                "bf9cc545-6355-18f7-4f6f-a985b732d46f"
+            ],
+            "function": "391cf046-3d4a-5d51-28fa-fd04559b5975",
+            "outputs": [
+                "b5d97ef7-60ef-1471-72b8-ff39a32c9b6f",
+                "dfe1b307-9172-5f0a-ac7c-8803e01bbf50"
+            ]
+        },
+        {
+            "inputs": [
+                "dfe1b307-9172-5f0a-ac7c-8803e01bbf50"
+            ],
+            "function": "c5adf681-6b10-e53a-9145-de05b3ab1b2c",
+            "outputs": [
+                "df26f517-66fa-f989-0813-5d586a1689ad"
+            ]
+        },
+        {
+            "inputs": [
+                "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "df26f517-66fa-f989-0813-5d586a1689ad",
+                "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6"
+            ],
+            "function": "b3969057-425c-b200-105a-da6b720299e3",
+            "outputs": [
+                "2a69acc7-0bf9-c0ef-b581-6b74a985ab61"
+            ]
+        },
+        {
+            "inputs": [
+                "df26f517-66fa-f989-0813-5d586a1689ad"
+            ],
+            "function": "9a9e4310-8fb8-3bab-e875-4cd37cbd7025",
+            "outputs": [
+                "e28bc9ff-870f-084c-7244-f536285e25b4"
+            ]
+        },
+        {
+            "inputs": [
+                "e28bc9ff-870f-084c-7244-f536285e25b4",
+                "2a69acc7-0bf9-c0ef-b581-6b74a985ab61"
+            ],
+            "function": "d675ebf7-4fe3-0c9a-5371-0f577e9cf84f",
+            "outputs": [
+                "09f6048f-e245-a460-0004-884cc167733f"
+            ]
+        },
+        {
+            "inputs": [
+                "09f6048f-e245-a460-0004-884cc167733f"
+            ],
+            "function": "6a46721a-cffa-6cdd-f963-a7efe00111e5",
+            "outputs": [
+                "d29dc5df-cf1d-a110-0cc3-6d8c77863fe5"
+            ]
+        },
+        {
+            "inputs": [
+                "b4862b21-fb97-d435-8856-1712e8e5216a",
+                "2a69acc7-0bf9-c0ef-b581-6b74a985ab61"
+            ],
+            "function": "d663049d-155e-18b1-fa83-ada4a2121ac5",
+            "outputs": [
+                "f689a4a5-ffda-0336-8c6e-90373020da5c"
+            ]
+        },
+        {
+            "inputs": [],
+            "function": "6ae04d52-adb3-28cb-f315-8c0c66dd7794",
+            "outputs": [
+                "03c54c71-fca0-5536-2169-df82b9bdee2d"
+            ]
+        },
+        {
+            "inputs": [
+                "1846d424-c17c-6279-23c6-612f48268673",
+                "03c54c71-fca0-5536-2169-df82b9bdee2d",
+                "23a7711a-8133-2876-37eb-dcd9e87a1613",
+                "7d41e602-eece-328b-ff7b-118e820865d6",
+                "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+                "f689a4a5-ffda-0336-8c6e-90373020da5c",
+                "2a69acc7-0bf9-c0ef-b581-6b74a985ab61"
+            ],
+            "function": "faf1501b-009a-815b-c137-8be5b7a28e0a",
+            "outputs": [
+                "9cb017c1-8741-ae91-acfe-bb4bd29e8693",
+                "9bbd750d-1e70-7c52-30c1-fb6a19086515",
+                "4d6b234f-dfa7-c6ed-32d1-f81ba636425c",
+                "2ea60b99-fa7f-f8bf-b044-284a47acf2f6",
+                "ec3aa314-da9b-b017-79c1-47c719a5711b",
+                "0597aab6-14d3-0dbc-a0ac-f4c9658de17e",
+                "ccc14d51-73f6-60d8-e9f4-1cc04653a560"
+            ]
+        },
+        {
+            "inputs": [
+                "4d6b234f-dfa7-c6ed-32d1-f81ba636425c",
+                "41a93f90-dc82-1527-1da3-b7e2cad6e514",
+                "2ea60b99-fa7f-f8bf-b044-284a47acf2f6"
+            ],
+            "function": "d9ead926-4745-dd9e-2789-6389df3277fd",
+            "outputs": [
+                "1d77ce40-58d8-7776-a51a-d4f3a699bae0"
+            ]
+        },
+        {
+            "inputs": [
+                "1d77ce40-58d8-7776-a51a-d4f3a699bae0"
+            ],
+            "function": "50910bdc-8ef0-66d4-4279-b14dae55cdff",
+            "outputs": [
+                "34ab18fd-0a68-e88e-0ad4-041504c14982"
+            ]
+        },
+        {
+            "inputs": [
+                "d138d150-8557-716a-a750-2a812227d96d",
+                "41a93f90-dc82-1527-1da3-b7e2cad6e514",
+                "34ab18fd-0a68-e88e-0ad4-041504c14982",
+                "0597aab6-14d3-0dbc-a0ac-f4c9658de17e",
+                "ccc14d51-73f6-60d8-e9f4-1cc04653a560"
+            ],
+            "function": "d8ab0b30-0ac0-cf0d-d974-c146e8ec01b3",
+            "outputs": [
+                "914591ae-f03d-866a-5dec-c06af24dfdd8"
+            ]
+        },
+        {
+            "inputs": [
+                "41a93f90-dc82-1527-1da3-b7e2cad6e514"
+            ],
+            "function": "a4e695c9-b65d-1226-7e96-9cf3a7c5cb87",
+            "outputs": [
+                "9b8b71a1-b38a-05fb-f611-64cebfc74ca9"
+            ]
+        },
+        {
+            "inputs": [
+                "9cb017c1-8741-ae91-acfe-bb4bd29e8693",
+                "41a93f90-dc82-1527-1da3-b7e2cad6e514"
+            ],
+            "function": "2da44da1-89b5-b368-df14-c6125f58d5b5",
+            "outputs": [
+                "6f790959-a3e0-4b3b-756b-0715e7180322"
+            ]
+        },
+        {
+            "inputs": [
+                "6f790959-a3e0-4b3b-756b-0715e7180322"
+            ],
+            "function": "4578bab3-26a9-7465-2371-ea2c0247145f",
+            "outputs": [
+                "4a814d53-964d-db77-6025-f0ae35354579"
+            ]
+        },
+        {
+            "inputs": [
+                "4a814d53-964d-db77-6025-f0ae35354579",
+                "41a93f90-dc82-1527-1da3-b7e2cad6e514",
+                "d138d150-8557-716a-a750-2a812227d96d",
+                "9b8b71a1-b38a-05fb-f611-64cebfc74ca9",
+                "914591ae-f03d-866a-5dec-c06af24dfdd8"
+            ],
+            "function": "4505f4f6-0a8c-46c7-0921-5f4f9edb95f2",
+            "outputs": [
+                "5e00ea6d-ca24-be4d-5667-2017555a4085",
+                "c787ddfb-5697-f17c-17fd-3736b7ef941c"
+            ]
+        },
+        {
+            "inputs": [
+                "9bbd750d-1e70-7c52-30c1-fb6a19086515",
+                "ec3aa314-da9b-b017-79c1-47c719a5711b",
+                "9b8b71a1-b38a-05fb-f611-64cebfc74ca9",
+                "914591ae-f03d-866a-5dec-c06af24dfdd8"
+            ],
+            "function": "955d0e77-fb5e-b866-2640-211e29f2c3c7",
+            "outputs": [
+                "41a93f90-dc82-1527-1da3-b7e2cad6e514",
+                "d138d150-8557-716a-a750-2a812227d96d"
+            ]
+        },
+        {
+            "inputs": [
+                "5e00ea6d-ca24-be4d-5667-2017555a4085",
+                "c787ddfb-5697-f17c-17fd-3736b7ef941c"
+            ],
+            "function": "fd42f697-6511-1656-5c64-60364a1eb1b7",
+            "outputs": [
+                "1d69d9fc-4b1c-b8bd-2130-260c8c69778f",
+                "ef0a81ed-3d5d-60bc-bb03-78eb7a62722e"
+            ]
+        },
+        {
+            "inputs": [
+                "df26f517-66fa-f989-0813-5d586a1689ad"
+            ],
+            "function": "4d7bd307-1224-11e6-ba89-82dd85e69ea9",
+            "outputs": [
+                "db66bfda-2df9-6747-4ed1-35530c5a876f"
+            ]
+        }
+    ],
+    "variables": [
+        {
+            "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::b::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::bcv::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::cumdpt::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "e443df78-9558-867f-5ba9-1faf7a024204",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dp::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "23a7711a-8133-2876-37eb-dcd9e87a1613",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dsmid::-1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "1846d424-c17c-6279-23c6-612f48268673",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::nlayr::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::pesw::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "b4862b21-fb97-d435-8856-1712e8e5216a",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tav::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "259f4329-e6f4-590b-9a16-4106cf6a659e",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tavg::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmax::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "5487ce1e-af19-922a-d9b8-a714e61a441c",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmin::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "5a921187-19c7-8df4-8f4f-f31e78de5857",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wetday::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wft::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "8d723104-f773-83c1-3458-a748e9bb17bc",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::ww::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "85776e9a-dd84-f39e-7154-5a137a1d5006",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::-1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::st::-1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::x2_prev::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::M_0::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "baf3897a-3e70-f16a-5548-5822de1b372a",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::M_0::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "38c1962e-9148-624f-eac1-c14f30e9c5cc",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wc::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "1759edc3-72ae-2244-8b01-63c1cd9d2b7d",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::fx::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "7d41e602-eece-328b-ff7b-118e820865d6",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dd::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::wetday::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "1775336d-71ea-cd05-49a3-e80e966e1277",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::wft::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "5129fb7c-6288-e1a5-cc45-782198a6416d",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::tavg::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "2f120554-4a53-08cc-3dfa-bc08935ddd72",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::tmin::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "0870e15c-2fcd-81b5-d24b-ace4307bf326",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::tmax::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "42930b33-a81a-d477-fb36-75b89cdeb3e6",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::x2::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "2648ee38-e074-05eb-2156-63abc1f254b8",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::x2::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "d450fe4a-ec4f-217b-b306-d1a8e5eeac76",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::COND_0_0::-1",
+            "data_type": "boolean",
+            "kind": "binary",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "85940927-468f-f53d-864a-7a50b48d73f1",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.IF_0::x2::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "46743741-9466-e472-6b5f-5241f323ca74",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::x2::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "a425799a-a905-d750-7e1e-a9c573581a81",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::0",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "5306f3f5-1516-6570-5b7c-709acb175a5a",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::k::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "5f3f5638-3870-1a14-b490-b6081dfc8352",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::k::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "6d16ee18-5521-16dd-2ba4-b180cb69ca38",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::tma::-1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "c87a7463-19c1-6a0d-0feb-d845d0dfae43",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::k::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "38018b47-b29a-8b06-daf6-6c5f2577bffa",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::tma::0",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "a25b59fd-92e8-e269-d12e-cbc40b9475b1",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::tma::1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::k::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "176ea1b1-6426-4cd5-1ea4-5cd69371a71f",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::COND_1_0::-1",
+            "data_type": "boolean",
+            "kind": "binary",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "31d0b664-0589-f877-9b02-52440950fd13",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::EXIT::-1",
+            "data_type": "boolean",
+            "kind": "binary",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "ba26d851-35e8-579a-7aaf-0e891fb797fa",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::k::2",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "ade9b2b4-efdd-35f8-0fa3-4266ccfdba9b",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_1::tma::2",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "0fa07a3f-2e29-5065-6fa2-31e959acdd98",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::k::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "98b33c6e-0a14-b90a-7795-e98680ee526e",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "642aad48-fcfc-fa81-b306-d70019d5f970",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::val_1::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "e6fd68e8-d69c-91c2-7860-1602bb4a06cb",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::S_2::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "878b9f6b-57a1-cb71-2975-d279d86dbf11",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::S_2::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "ebe21368-98c7-5205-1e01-a934402d0baf",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::val_1::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "0361524c-2cc0-f859-aa65-24ab713b7e05",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::tma::-1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "e66cd36e-68ef-8f5f-ae68-690a78bc7175",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::S_2::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "eae2025e-8233-9e23-dff3-334b91b15f5d",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::val_1::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "637e0edc-5b6e-4ae7-a620-81434fbaecc0",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::val_1::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "753c7c99-032f-06ca-b0d9-c2aa8f837ef7",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::S_2::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "2284b7a4-47e7-f593-8b58-85ca0bb2c3f0",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::COND_2_0::-1",
+            "data_type": "boolean",
+            "kind": "binary",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "ac642b4c-49b2-5ded-9c31-d9b25a2b745b",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::EXIT::-1",
+            "data_type": "boolean",
+            "kind": "binary",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "21e15094-9efe-e464-da90-f534a23d4c9d",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::S_2::2",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "bf9cc545-6355-18f7-4f6f-a985b732d46f",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_2::val_1::2",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "b5d97ef7-60ef-1471-72b8-ff39a32c9b6f",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::S_2::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "dfe1b307-9172-5f0a-ac7c-8803e01bbf50",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::val_1::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "df26f517-66fa-f989-0813-5d586a1689ad",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::x2_avg::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "2a69acc7-0bf9-c0ef-b581-6b74a985ab61",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::x3::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "e28bc9ff-870f-084c-7244-f536285e25b4",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::M_3::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "09f6048f-e245-a460-0004-884cc167733f",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::M_3::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "d29dc5df-cf1d-a110-0cc3-6d8c77863fe5",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::srftemp::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "f689a4a5-ffda-0336-8c6e-90373020da5c",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::x1::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "03c54c71-fca0-5536-2169-df82b9bdee2d",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::l::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "9cb017c1-8741-ae91-acfe-bb4bd29e8693",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::nlayr::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "9bbd750d-1e70-7c52-30c1-fb6a19086515",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::l::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "4d6b234f-dfa7-c6ed-32d1-f81ba636425c",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::dsmid::-1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "2ea60b99-fa7f-f8bf-b044-284a47acf2f6",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::dd::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "ec3aa314-da9b-b017-79c1-47c719a5711b",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::st::-1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "0597aab6-14d3-0dbc-a0ac-f4c9658de17e",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::x1::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "ccc14d51-73f6-60d8-e9f4-1cc04653a560",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::x3::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "41a93f90-dc82-1527-1da3-b7e2cad6e514",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::l::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "d138d150-8557-716a-a750-2a812227d96d",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::st::0",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "1d77ce40-58d8-7776-a51a-d4f3a699bae0",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::zd::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "34ab18fd-0a68-e88e-0ad4-041504c14982",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::f::-1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "914591ae-f03d-866a-5dec-c06af24dfdd8",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::st::1",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "9b8b71a1-b38a-05fb-f611-64cebfc74ca9",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::l::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "6f790959-a3e0-4b3b-756b-0715e7180322",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::COND_3_0::-1",
+            "data_type": "boolean",
+            "kind": "binary",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "4a814d53-964d-db77-6025-f0ae35354579",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::EXIT::-1",
+            "data_type": "boolean",
+            "kind": "binary",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "5e00ea6d-ca24-be4d-5667-2017555a4085",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::l::2",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "c787ddfb-5697-f17c-17fd-3736b7ef941c",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic.LOOP_3::st::2",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "1d69d9fc-4b1c-b8bd-2130-260c8c69778f",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::l::1",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "ef0a81ed-3d5d-60bc-bb03-78eb7a62722e",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::st::0",
+            "data_type": "array",
+            "kind": "none",
+            "domain": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "uid": "db66bfda-2df9-6747-4ed1-35530c5a876f",
+            "reference": "",
+            "identifier": "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::x2_prev::0",
+            "data_type": "integer",
+            "kind": "discrete",
+            "domain": "(and (> v -infty) (< v infty))"
+        }
+    ],
+    "functions": [
+        {
+            "uid": "b5d32b16-6619-4cb1-d710-37d1b83e90ec",
+            "reference": "",
+            "type": "LITERAL",
+            "lambda": "lambda : -1"
+        },
+        {
+            "uid": "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
+            "reference": "",
+            "type": "LITERAL",
+            "lambda": "lambda : 0.01"
+        },
+        {
+            "uid": "101fbccc-ded7-33e8-b421-eaeb534097ca",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda pesw,M_0: max(pesw,M_0)"
+        },
+        {
+            "uid": "247a8333-f7b0-b7d2-cda8-056c3d15eef7",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda M_0,ww,cumdpt: ((M_0 / (ww * cumdpt)) * 10.0)"
+        },
+        {
+            "uid": "e005b860-51ef-1922-fe43-c49e149818d1",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda wc,b: exp(((((1.0 - wc) / (wc + 1.0)) * ((1.0 - wc) / (wc + 1.0))) * b))"
+        },
+        {
+            "uid": "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda dp,fx: (dp * fx)"
+        },
+        {
+            "uid": "3405095c-8a50-06c1-ec18-8efbd080e66e",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda wetday_0,wft_0,tavg_0,tmin_0,tmax_0:(wetday_0,wft_0,tavg_0,tmin_0,tmax_0)"
+        },
+        {
+            "uid": "adc0da7a-16fe-baa0-11af-923d79fdef7c",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda wft,tmax,tavg: (((wft * (tmax - tavg)) + tavg) + 2.0)"
+        },
+        {
+            "uid": "148b2758-d7ab-7928-09e4-69e6ec62b2c8",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda wft,tavg,tmin: ((wft * (tavg - tmin)) + tmin)"
+        },
+        {
+            "uid": "d67e55fd-642b-fa42-aef9-c00b8a64c1b9",
+            "reference": "",
+            "type": "CONDITION",
+            "lambda": "lambda wetday: (wetday > 0)"
+        },
+        {
+            "uid": "37176e84-d977-e993-3c49-d76fcfc6e625",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda COND_0_0,x2_2,x2_1: (x2_1) if COND_0_0 else (x2_2)"
+        },
+        {
+            "uid": "d3447490-96fd-35d0-adf2-0806e5214606",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda x2:(x2)"
+        },
+        {
+            "uid": "fb82860d-eabc-a8d0-b341-facdff0ac0f1",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda tma,x2: ((tma).__setitem__(0, x2), tma)[1]"
+        },
+        {
+            "uid": "964a870c-7c87-9b74-1d87-8f9f9cdf5a86",
+            "reference": "",
+            "type": "LITERAL",
+            "lambda": "lambda : 5"
+        },
+        {
+            "uid": "4562be7f-bb42-e0b2-0426-465e3e37952d",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda k_0,tma_0:(k_0,tma_0)"
+        },
+        {
+            "uid": "9a27d858-88c1-32ad-efbf-c19ee8f6cf32",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda tma,k: ((tma).__setitem__((k + -1), tma[int(((k + -1) + -1))]), tma)[1]"
+        },
+        {
+            "uid": "d480865f-9b38-fe80-3042-e325a28f5ab0",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda k: (k + -1)"
+        },
+        {
+            "uid": "1db53334-fb03-23a1-d576-d4155ec17dbe",
+            "reference": "",
+            "type": "CONDITION",
+            "lambda": "lambda k: not ((k <= 1) != 0)"
+        },
+        {
+            "uid": "b7d6467b-2f5a-522a-f87f-43fdf6062541",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda COND_1_0: not COND_1_0"
+        },
+        {
+            "uid": "9edfa3da-6cf5-5b15-8b53-031d05d51433",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda EXIT,k_initial,tma_initial,k_updated,tma_updated: (k_initial,tma_initial) if EXIT else (k_updated,tma_updated)"
+        },
+        {
+            "uid": "11ebcd49-428a-1c22-d5fd-b76a19fbeb1d",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda k_initial,tma_initial,k_updated,tma_updated: (k_initial,tma_initial) if k_updated is None and tma_updated is None else (k_updated,tma_updated)"
+        },
+        {
+            "uid": "4d125e7f-a59c-ec98-126c-bc8f38884479",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda k,tma:(k,tma)"
+        },
+        {
+            "uid": "e786ab37-5bca-47be-4298-17c53308fb2e",
+            "reference": "",
+            "type": "LITERAL",
+            "lambda": "lambda : 0.0"
+        },
+        {
+            "uid": "b29c467d-2b5f-6932-91dc-59efeb21a3f6",
+            "reference": "",
+            "type": "LITERAL",
+            "lambda": "lambda : 1"
+        },
+        {
+            "uid": "28805c5d-ad1b-8f60-c9e4-dab20edc6d2b",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda S_2_0,val_1_0,tma_0:(S_2_0,val_1_0,tma_0)"
+        },
+        {
+            "uid": "27460f22-403d-1f83-a859-890cd670f668",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda val_1,tma,S_2: (val_1 + tma[int((S_2 + -1))])"
+        },
+        {
+            "uid": "bd30291a-55fe-a08e-143e-2e04bdd7d19b",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda S_2: (S_2 + 1)"
+        },
+        {
+            "uid": "7b59051b-f400-48d7-c31d-5a973d792fa1",
+            "reference": "",
+            "type": "CONDITION",
+            "lambda": "lambda S_2: not (S_2 > 5)"
+        },
+        {
+            "uid": "e456697c-f268-6baa-971c-702d5bf49c04",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda COND_2_0: not COND_2_0"
+        },
+        {
+            "uid": "14aa451c-a69c-fb85-d432-f8db6a174c1c",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda EXIT,S_2_initial,val_1_initial,S_2_updated,val_1_updated: (S_2_initial,val_1_initial) if EXIT else (S_2_updated,val_1_updated)"
+        },
+        {
+            "uid": "b2d650af-313b-32b7-9836-31890063e42f",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda S_2_initial,val_1_initial,S_2_updated,val_1_updated: (S_2_initial,val_1_initial) if S_2_updated is None and val_1_updated is None else (S_2_updated,val_1_updated)"
+        },
+        {
+            "uid": "391cf046-3d4a-5d51-28fa-fd04559b5975",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda S_2,val_1:(S_2,val_1)"
+        },
+        {
+            "uid": "c5adf681-6b10-e53a-9145-de05b3ab1b2c",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda val_1: (val_1 / 5.0)"
+        },
+        {
+            "uid": "b3969057-425c-b200-105a-da6b720299e3",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda bcv,x2_avg,x2_prev: (((1.0 - bcv) * x2_avg) + (bcv * x2_prev))"
+        },
+        {
+            "uid": "9a9e4310-8fb8-3bab-e875-4cd37cbd7025",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda x2_avg: x2_avg"
+        },
+        {
+            "uid": "d675ebf7-4fe3-0c9a-5371-0f577e9cf84f",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda M_3,x3: min(M_3,x3)"
+        },
+        {
+            "uid": "6a46721a-cffa-6cdd-f963-a7efe00111e5",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda M_3: M_3"
+        },
+        {
+            "uid": "d663049d-155e-18b1-fa83-ada4a2121ac5",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda tav,x3: (tav - x3)"
+        },
+        {
+            "uid": "6ae04d52-adb3-28cb-f315-8c0c66dd7794",
+            "reference": "",
+            "type": "LITERAL",
+            "lambda": "lambda : 1"
+        },
+        {
+            "uid": "faf1501b-009a-815b-c137-8be5b7a28e0a",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda nlayr_0,l_0,dsmid_0,dd_0,st_0,x1_0,x3_0:(nlayr_0,l_0,dsmid_0,dd_0,st_0,x1_0,x3_0)"
+        },
+        {
+            "uid": "d9ead926-4745-dd9e-2789-6389df3277fd",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda dsmid,l,dd: (dsmid[int((l + -1))] / dd)"
+        },
+        {
+            "uid": "50910bdc-8ef0-66d4-4279-b14dae55cdff",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda zd: (zd / (exp((-0.8669 - (zd * 2.0775))) + zd))"
+        },
+        {
+            "uid": "d8ab0b30-0ac0-cf0d-d974-c146e8ec01b3",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda st,l,f,x1,x3: ((st).__setitem__((l + -1), ((st[int((l + -1))] * 0.5) + (((f * x1) + x3) * 0.5))), st)[1]"
+        },
+        {
+            "uid": "a4e695c9-b65d-1226-7e96-9cf3a7c5cb87",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda l: (l + 1)"
+        },
+        {
+            "uid": "2da44da1-89b5-b368-df14-c6125f58d5b5",
+            "reference": "",
+            "type": "CONDITION",
+            "lambda": "lambda nlayr,l: not ((nlayr < l) != 0)"
+        },
+        {
+            "uid": "4578bab3-26a9-7465-2371-ea2c0247145f",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda COND_3_0: not COND_3_0"
+        },
+        {
+            "uid": "4505f4f6-0a8c-46c7-0921-5f4f9edb95f2",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda EXIT,l_initial,st_initial,l_updated,st_updated: (l_initial,st_initial) if EXIT else (l_updated,st_updated)"
+        },
+        {
+            "uid": "955d0e77-fb5e-b866-2640-211e29f2c3c7",
+            "reference": "",
+            "type": "DECISION",
+            "lambda": "lambda l_initial,st_initial,l_updated,st_updated: (l_initial,st_initial) if l_updated is None and st_updated is None else (l_updated,st_updated)"
+        },
+        {
+            "uid": "fd42f697-6511-1656-5c64-60364a1eb1b7",
+            "reference": "",
+            "type": "INTERFACE",
+            "lambda": "lambda l,st:(l,st)"
+        },
+        {
+            "uid": "4d7bd307-1224-11e6-ba89-82dd85e69ea9",
+            "reference": "",
+            "type": "ASSIGN",
+            "lambda": "lambda x2_avg: x2_avg"
+        }
+    ],
+    "subgraphs": [
+        {
+            "uid": "552f233a-8c25-166a-1ff3-9849b4e1357d",
+            "namespace": "stemp_epic_soilt",
+            "scope": "stemp_epic_soilt.soilt_epic",
+            "basename": "stemp_epic_soilt.soilt_epic.IF_0",
+            "occurrence_num": 1,
+            "parent": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "type": "CondContainer",
+            "border_color": "orange",
+            "nodes": [
+                "3405095c-8a50-06c1-ec18-8efbd080e66e",
+                "8c1745a7-9a6a-5f92-cca7-4147f6be1f72",
+                "1775336d-71ea-cd05-49a3-e80e966e1277",
+                "5129fb7c-6288-e1a5-cc45-782198a6416d",
+                "2f120554-4a53-08cc-3dfa-bc08935ddd72",
+                "0870e15c-2fcd-81b5-d24b-ace4307bf326",
+                "42930b33-a81a-d477-fb36-75b89cdeb3e6",
+                "adc0da7a-16fe-baa0-11af-923d79fdef7c",
+                "2648ee38-e074-05eb-2156-63abc1f254b8",
+                "148b2758-d7ab-7928-09e4-69e6ec62b2c8",
+                "d450fe4a-ec4f-217b-b306-d1a8e5eeac76",
+                "d67e55fd-642b-fa42-aef9-c00b8a64c1b9",
+                "85940927-468f-f53d-864a-7a50b48d73f1",
+                "37176e84-d977-e993-3c49-d76fcfc6e625",
+                "d3447490-96fd-35d0-adf2-0806e5214606"
+            ]
+        },
+        {
+            "uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "namespace": "stemp_epic_soilt",
+            "scope": "stemp_epic_soilt",
+            "basename": "stemp_epic_soilt.soilt_epic",
+            "occurrence_num": 1,
+            "parent": null,
+            "type": "FuncContainer",
+            "border_color": "forestgreen",
+            "nodes": [
+                "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+                "eb1167b3-67a9-c378-7c65-c1e582e2e662",
+                "f7c1bd87-4da5-e709-d471-3d60c8a70639",
+                "e443df78-9558-867f-5ba9-1faf7a024204",
+                "23a7711a-8133-2876-37eb-dcd9e87a1613",
+                "1846d424-c17c-6279-23c6-612f48268673",
+                "fcbd04c3-4021-2ef7-cca5-a5a19e4d6e3c",
+                "b4862b21-fb97-d435-8856-1712e8e5216a",
+                "259f4329-e6f4-590b-9a16-4106cf6a659e",
+                "12e0c8b2-bad6-40fb-1948-8dec4f65d4d9",
+                "5487ce1e-af19-922a-d9b8-a714e61a441c",
+                "5a921187-19c7-8df4-8f4f-f31e78de5857",
+                "a3f2c9bf-9c63-16b9-50f2-44556f25e2a2",
+                "8d723104-f773-83c1-3458-a748e9bb17bc",
+                "85776e9a-dd84-f39e-7154-5a137a1d5006",
+                "eb2083e6-ce16-4dba-0ff1-8e0242af9fc3",
+                "17e0aa3c-0398-3ca8-ea7e-9d498c778ea6",
+                "b5d32b16-6619-4cb1-d710-37d1b83e90ec",
+                "a0116be5-ab0c-1681-c8f8-e3d0d3290a4c",
+                "d3fbf47a-7e5b-1e7f-9ca5-499d004ae545",
+                "baf3897a-3e70-f16a-5548-5822de1b372a",
+                "101fbccc-ded7-33e8-b421-eaeb534097ca",
+                "38c1962e-9148-624f-eac1-c14f30e9c5cc",
+                "247a8333-f7b0-b7d2-cda8-056c3d15eef7",
+                "1759edc3-72ae-2244-8b01-63c1cd9d2b7d",
+                "e005b860-51ef-1922-fe43-c49e149818d1",
+                "7d41e602-eece-328b-ff7b-118e820865d6",
+                "4a84eb03-8d1f-d9b7-4d2b-9deb1beb3711",
+                "46743741-9466-e472-6b5f-5241f323ca74",
+                "a425799a-a905-d750-7e1e-a9c573581a81",
+                "fb82860d-eabc-a8d0-b341-facdff0ac0f1",
+                "5306f3f5-1516-6570-5b7c-709acb175a5a",
+                "964a870c-7c87-9b74-1d87-8f9f9cdf5a86",
+                "0fa07a3f-2e29-5065-6fa2-31e959acdd98",
+                "98b33c6e-0a14-b90a-7795-e98680ee526e",
+                "642aad48-fcfc-fa81-b306-d70019d5f970",
+                "e786ab37-5bca-47be-4298-17c53308fb2e",
+                "e6fd68e8-d69c-91c2-7860-1602bb4a06cb",
+                "b29c467d-2b5f-6932-91dc-59efeb21a3f6",
+                "b5d97ef7-60ef-1471-72b8-ff39a32c9b6f",
+                "dfe1b307-9172-5f0a-ac7c-8803e01bbf50",
+                "df26f517-66fa-f989-0813-5d586a1689ad",
+                "c5adf681-6b10-e53a-9145-de05b3ab1b2c",
+                "2a69acc7-0bf9-c0ef-b581-6b74a985ab61",
+                "b3969057-425c-b200-105a-da6b720299e3",
+                "e28bc9ff-870f-084c-7244-f536285e25b4",
+                "9a9e4310-8fb8-3bab-e875-4cd37cbd7025",
+                "09f6048f-e245-a460-0004-884cc167733f",
+                "d675ebf7-4fe3-0c9a-5371-0f577e9cf84f",
+                "d29dc5df-cf1d-a110-0cc3-6d8c77863fe5",
+                "6a46721a-cffa-6cdd-f963-a7efe00111e5",
+                "f689a4a5-ffda-0336-8c6e-90373020da5c",
+                "d663049d-155e-18b1-fa83-ada4a2121ac5",
+                "03c54c71-fca0-5536-2169-df82b9bdee2d",
+                "6ae04d52-adb3-28cb-f315-8c0c66dd7794",
+                "1d69d9fc-4b1c-b8bd-2130-260c8c69778f",
+                "ef0a81ed-3d5d-60bc-bb03-78eb7a62722e",
+                "db66bfda-2df9-6747-4ed1-35530c5a876f",
+                "4d7bd307-1224-11e6-ba89-82dd85e69ea9"
+            ]
+        },
+        {
+            "uid": "30bcab0e-d857-0102-55d4-4936a1515607",
+            "namespace": "stemp_epic_soilt",
+            "scope": "stemp_epic_soilt.soilt_epic",
+            "basename": "stemp_epic_soilt.soilt_epic.LOOP_1",
+            "occurrence_num": 1,
+            "parent": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "type": "LoopContainer",
+            "border_color": "navyblue",
+            "nodes": [
+                "4562be7f-bb42-e0b2-0426-465e3e37952d",
+                "5f3f5638-3870-1a14-b490-b6081dfc8352",
+                "6d16ee18-5521-16dd-2ba4-b180cb69ca38",
+                "c87a7463-19c1-6a0d-0feb-d845d0dfae43",
+                "38018b47-b29a-8b06-daf6-6c5f2577bffa",
+                "a25b59fd-92e8-e269-d12e-cbc40b9475b1",
+                "9a27d858-88c1-32ad-efbf-c19ee8f6cf32",
+                "1fdb8b32-06d5-99e8-12f1-75ffae3b16ec",
+                "d480865f-9b38-fe80-3042-e325a28f5ab0",
+                "176ea1b1-6426-4cd5-1ea4-5cd69371a71f",
+                "1db53334-fb03-23a1-d576-d4155ec17dbe",
+                "31d0b664-0589-f877-9b02-52440950fd13",
+                "b7d6467b-2f5a-522a-f87f-43fdf6062541",
+                "ba26d851-35e8-579a-7aaf-0e891fb797fa",
+                "ade9b2b4-efdd-35f8-0fa3-4266ccfdba9b",
+                "9edfa3da-6cf5-5b15-8b53-031d05d51433",
+                "11ebcd49-428a-1c22-d5fd-b76a19fbeb1d",
+                "4d125e7f-a59c-ec98-126c-bc8f38884479"
+            ]
+        },
+        {
+            "uid": "c470f0e7-f76f-bfb8-3412-fc12ac322c12",
+            "namespace": "stemp_epic_soilt",
+            "scope": "stemp_epic_soilt.soilt_epic",
+            "basename": "stemp_epic_soilt.soilt_epic.LOOP_2",
+            "occurrence_num": 1,
+            "parent": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "type": "LoopContainer",
+            "border_color": "navyblue",
+            "nodes": [
+                "28805c5d-ad1b-8f60-c9e4-dab20edc6d2b",
+                "878b9f6b-57a1-cb71-2975-d279d86dbf11",
+                "ebe21368-98c7-5205-1e01-a934402d0baf",
+                "0361524c-2cc0-f859-aa65-24ab713b7e05",
+                "e66cd36e-68ef-8f5f-ae68-690a78bc7175",
+                "eae2025e-8233-9e23-dff3-334b91b15f5d",
+                "637e0edc-5b6e-4ae7-a620-81434fbaecc0",
+                "27460f22-403d-1f83-a859-890cd670f668",
+                "753c7c99-032f-06ca-b0d9-c2aa8f837ef7",
+                "bd30291a-55fe-a08e-143e-2e04bdd7d19b",
+                "2284b7a4-47e7-f593-8b58-85ca0bb2c3f0",
+                "7b59051b-f400-48d7-c31d-5a973d792fa1",
+                "ac642b4c-49b2-5ded-9c31-d9b25a2b745b",
+                "e456697c-f268-6baa-971c-702d5bf49c04",
+                "21e15094-9efe-e464-da90-f534a23d4c9d",
+                "bf9cc545-6355-18f7-4f6f-a985b732d46f",
+                "14aa451c-a69c-fb85-d432-f8db6a174c1c",
+                "b2d650af-313b-32b7-9836-31890063e42f",
+                "391cf046-3d4a-5d51-28fa-fd04559b5975"
+            ]
+        },
+        {
+            "uid": "03a89879-36a9-8d74-00de-59f550f0fc2b",
+            "namespace": "stemp_epic_soilt",
+            "scope": "stemp_epic_soilt.soilt_epic",
+            "basename": "stemp_epic_soilt.soilt_epic.LOOP_3",
+            "occurrence_num": 1,
+            "parent": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+            "type": "LoopContainer",
+            "border_color": "navyblue",
+            "nodes": [
+                "faf1501b-009a-815b-c137-8be5b7a28e0a",
+                "9cb017c1-8741-ae91-acfe-bb4bd29e8693",
+                "9bbd750d-1e70-7c52-30c1-fb6a19086515",
+                "4d6b234f-dfa7-c6ed-32d1-f81ba636425c",
+                "2ea60b99-fa7f-f8bf-b044-284a47acf2f6",
+                "ec3aa314-da9b-b017-79c1-47c719a5711b",
+                "0597aab6-14d3-0dbc-a0ac-f4c9658de17e",
+                "ccc14d51-73f6-60d8-e9f4-1cc04653a560",
+                "41a93f90-dc82-1527-1da3-b7e2cad6e514",
+                "d138d150-8557-716a-a750-2a812227d96d",
+                "1d77ce40-58d8-7776-a51a-d4f3a699bae0",
+                "d9ead926-4745-dd9e-2789-6389df3277fd",
+                "34ab18fd-0a68-e88e-0ad4-041504c14982",
+                "50910bdc-8ef0-66d4-4279-b14dae55cdff",
+                "914591ae-f03d-866a-5dec-c06af24dfdd8",
+                "d8ab0b30-0ac0-cf0d-d974-c146e8ec01b3",
+                "9b8b71a1-b38a-05fb-f611-64cebfc74ca9",
+                "a4e695c9-b65d-1226-7e96-9cf3a7c5cb87",
+                "6f790959-a3e0-4b3b-756b-0715e7180322",
+                "2da44da1-89b5-b368-df14-c6125f58d5b5",
+                "4a814d53-964d-db77-6025-f0ae35354579",
+                "4578bab3-26a9-7465-2371-ea2c0247145f",
+                "5e00ea6d-ca24-be4d-5667-2017555a4085",
+                "c787ddfb-5697-f17c-17fd-3736b7ef941c",
+                "4505f4f6-0a8c-46c7-0921-5f4f9edb95f2",
+                "955d0e77-fb5e-b866-2640-211e29f2c3c7",
+                "fd42f697-6511-1656-5c64-60364a1eb1b7"
+            ]
+        }
+    ]
+}
