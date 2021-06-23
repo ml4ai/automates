@@ -40,8 +40,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   // -------------------------------------------------
   logger.info("Initializing the OdinEngine ...")
   val defaultConfig: Config = ConfigFactory.load()[Config]("TextEngine")
-  val config: Config = defaultConfig.withValue("preprocessorType", ConfigValueFactory.fromAnyRef("EdgeCase"))
-  println(config)
+  val config: Config = defaultConfig.withValue("preprocessorType", ConfigValueFactory.fromAnyRef("PassThrough"))
   val ieSystem = OdinEngine.fromConfig(config)
   var proc = ieSystem.proc
   val serializer = JSONSerializer
@@ -394,7 +393,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def processPlayText(ieSystem: OdinEngine, text: String, gazetteer: Option[Seq[String]] = None): (Document, Vector[Mention]) = {
     // preprocessing
-    logger.info(s"Processing sentence : ${text}" )
+    logger.info(s"Processing sentence : ${text}")
     val doc = ieSystem.cleanAndAnnotate(text, keepText = true, filename = None)
 
     logger.info(s"DOC : ${doc}")

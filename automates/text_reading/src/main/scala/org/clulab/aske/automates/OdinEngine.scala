@@ -169,11 +169,11 @@ object OdinEngine {
 //    // The config with the main settings
 //    val odinConfig: Config = config[Config]("TextEngine")
 
+
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
     val filterType = odinConfig.get[String]("documentFilter")
     val preprocessorType = odinConfig.get[String](path = "preprocessorType").getOrElse("PassThrough")
-    println("processorType" + preprocessorType)
 
     // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
