@@ -8,6 +8,7 @@ class EdgeCaseParagraphPreprocessor() extends Preprocessor {
   //processes the text based on whether it is composed of sentences or phrases (i.e., prose vs. table of contents/figures, etc):
   //if a paragraph has too many numbers per token (#numbers/tokens in text > threshold), assume it's not prose and the numbers are page numbers; in that case, replace numbers with periods to create "sentences" instead of one long block of text to make it processable by the text engine; only do this for texts over 10 tokens long (heuristic).
     def cleanUp(text: String): String = {
+    println("edge casing through!")
 
     //follow up on combining the heading and the body of each section in the paper with "\n" in the DataLoader:
     //the heading and the body should be connected with a period if the body starts with a capital letter and space otherwise:
@@ -42,7 +43,7 @@ object EdgeCaseParagraphPreprocessor {
 
 
 
-class PassThroughPreprocessor() extends Preprocessor {
+class LightPreprocessor() extends Preprocessor {
 
   def looksLikeLanguage(string: String): Boolean = {
 
@@ -51,10 +52,23 @@ class PassThroughPreprocessor() extends Preprocessor {
     return (stringNoSpaces.count(_.isLetter).toDouble / stringNoSpaces.length) > .6
   }
   def cleanUp(text: String): String = {
+    println("lightly treadding through!")
     val loseVerticalText = text.split("\n").filter(t => t.length > 6).filter(t => looksLikeLanguage(t)).mkString("\n")
     val loseExtraLongFalseWords = loseVerticalText.split(" ").filter(w => w.length < 23).mkString(" ")
     val cleanerText = loseExtraLongFalseWords.replaceAll("\n", " ")
     cleanerText
+  }
+}
+
+object LightPreprocessor {
+  def apply(): PassThroughPreprocessor = new PassThroughPreprocessor
+
+}
+
+class PassThroughPreprocessor() extends Preprocessor {
+  def cleanUp(text: String): String = {
+    println("passing through!")
+    text
   }
 }
 

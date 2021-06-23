@@ -12,21 +12,21 @@ import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughF
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.actions.ExpansionHandler
-import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, PassThroughPreprocessor, Preprocessor}
+import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, LightPreprocessor, PassThroughPreprocessor, Preprocessor}
 
 import scala.io.Source
 
 
 class OdinEngine(
-  val proc: Processor,
-  masterRulesPath: String,
-  taxonomyPath: String,
-  var entityFinders: Seq[EntityFinder],
-  enableExpansion: Boolean,
-  validArgs: List[String],
-  freqWords: Array[String],
-  filterType: Option[String],
-  enablePreprocessor: Boolean) {
+                  val proc: Processor,
+                  masterRulesPath: String,
+                  taxonomyPath: String,
+                  var entityFinders: Seq[EntityFinder],
+                  enableExpansion: Boolean,
+                  validArgs: List[String],
+                  freqWords: Array[String],
+                  filterType: Option[String],
+                  preprocessorType: String) {
 
   val documentFilter: DocumentFilter = filterType match {
     case None => PassThroughFilter()
@@ -34,9 +34,10 @@ class OdinEngine(
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
   }
 
-  val edgeCaseFilter: Preprocessor = enablePreprocessor match {
-    case false => PassThroughPreprocessor()
-    case true => EdgeCaseParagraphPreprocessor()
+  val edgeCaseFilter: Preprocessor = preprocessorType match {
+    case "Light" => LightPreprocessor()
+    case "EdgeCase" => EdgeCaseParagraphPreprocessor()
+    case "PassThrough" => PassThroughPreprocessor()
   }
 
   class LoadableAttributes(
@@ -171,7 +172,8 @@ object OdinEngine {
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
     val filterType = odinConfig.get[String]("documentFilter")
-    val enablePreprocessor = odinConfig.get[Boolean](path = "EdgeCaseParagraphPreprocessor").getOrElse(false)
+    val preprocessorType = odinConfig.get[String](path = "preprocessorType").getOrElse("PassThrough")
+    println("processorType" + preprocessorType)
 
     // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
@@ -198,7 +200,7 @@ object OdinEngine {
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
     val freqWords = FileUtils.loadFromOneColumnTSV(odinConfig[String]("freqWordsPath"))
 
-    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, validArgs, freqWords, filterType, enablePreprocessor)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, validArgs, freqWords, filterType, preprocessorType)
   }
 
 }
