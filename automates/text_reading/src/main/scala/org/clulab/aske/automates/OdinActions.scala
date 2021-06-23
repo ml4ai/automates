@@ -44,12 +44,51 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
   }
 
-  def findOverlappingInterval(tokenInt: Interval, intervals: List[Interval]): Interval = {
+  def findOverlappingInterval(tokenInt: Interval, intervals: Seq[Interval]): Option[Interval] = {
     val overlapping = new ArrayBuffer[Interval]()
     for (int <- intervals) {
       if (tokenInt.intersect(int).nonEmpty) overlapping.append(int)
     }
-    overlapping.maxBy(_.length)
+    if (overlapping.nonEmpty) {
+      Some(overlapping.maxBy(_.length))
+    } else None
+
+  }
+
+  def findMentionWithOverlappingInterval(tokenInt: Interval, mentions: Seq[Mention]): Option[Mention] = {
+    val overlapping = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      if (tokenInt.intersect(m.tokenInterval).nonEmpty) overlapping.append(m)
+    }
+    if (overlapping.nonEmpty) {
+      Some(overlapping.maxBy(_.text.length))
+    } else None
+
+  }
+
+  def replaceWithLongerIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    val allIdentifierMentions = mentions.filter(_.label == "Identifier")
+    val (mentionsWithIdentifier, other) = mentions.partition(m => m.arguments.contains("variable") && m.arguments
+    ("variable")
+      .head.label == "Identifier")// for now, if there are two vars, then both would be either identifiers or not
+    // identifiers, so can just check the first one
+    for (m <- mentionsWithIdentifier) {
+      val newIdentifiers = new ArrayBuffer[Mention]()
+      for (varArg <- m.arguments("variable")) {
+        val overlappingMention = findMentionWithOverlappingInterval(varArg.tokenInterval, allIdentifierMentions)
+        if (overlappingMention.nonEmpty) {
+          newIdentifiers.append(overlappingMention.get)
+        }
+      }
+      if (newIdentifiers.nonEmpty) {
+        // construct a new mention with the new identifiers
+        val newArgs = m.arguments.filter(_._1 != "variable") ++ Map("variable" -> newIdentifiers)
+        val newMen = copyWithArgs(m, newArgs)
+        toReturn.append(newMen)
+      }
+    }
+    toReturn ++ other
   }
 
   def keepWithGivenArgs(mentions: Seq[Mention], argTypes: Seq[String]): Seq[Mention] = {
@@ -76,7 +115,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         intervalMentionMap += (descrTextBoundMention.tokenInterval -> Seq(m))
       } else {
         if (intervalMentionMap.keys.exists(k => k.intersect(descrTextBoundMention.tokenInterval).nonEmpty)) {
-          val interval = findOverlappingInterval(descrTextBoundMention.tokenInterval, intervalMentionMap.keys.toList)
+          val interval = findOverlappingInterval(descrTextBoundMention.tokenInterval, intervalMentionMap.keys.toSeq).get
           val currMen = intervalMentionMap(interval)
           val updMen = currMen :+ m
           if (interval.length >= descrTextBoundMention.tokenInterval.length) {
@@ -95,16 +134,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def groupByTokenOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    // returns a map of intervals to mentions that overlap with that (max) interval
     // has to be used for mentions in the same sentence - token intervals are per sentence
     val intervalMentionMap = mutable.Map[Interval, Seq[Mention]]()
     // start with longest - the shorter overlapping ones should be subsumed this way
+//    println("OVERLAPPING")
     for (m <- mentions.sortBy(_.tokenInterval.length).reverse) {
-      print("men: " + m.text + "\n")
+//      print("men: " + m.text + " " + m.label + "\n")
       if (intervalMentionMap.isEmpty) {
         intervalMentionMap += (m.tokenInterval -> Seq(m))
       } else {
         if (intervalMentionMap.keys.exists(k => k.intersect(m.tokenInterval).nonEmpty)) {
-          val interval = findOverlappingInterval(m.tokenInterval, intervalMentionMap.keys.toList)
+          val interval = findOverlappingInterval(m.tokenInterval, intervalMentionMap.keys.toSeq).get
           val currMen = intervalMentionMap(interval)
           val updMen = currMen :+ m
           if (interval.length >= m.tokenInterval.length) {
@@ -119,6 +160,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
       }
     }
+
+//    for (g <- intervalMentionMap.toMap) {
+//      println(g._1)
+//      for (m <- g._2) {
+//        println(m.text + " " + m.label)
+//      }
+//    }
     intervalMentionMap.toMap
   }
 
@@ -185,21 +233,21 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    println("start keep longest identifier")
+//    println("start keep longest identifier")
     // used to avoid identifiers like R(t) being found as separate R, t, R(t, and so on
 
-    for (m <- mentions) println("m by sent " + m.text + " " + m.sentence)
+//    for (m <- mentions) println("m by sent " + m.text + " " + m.sentence)
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
     for (gbs <- groupedBySent) {
-      println("SENT GROUP")
+//      println("SENT GROUP")
       val groupedByIntervalOverlap = groupByTokenOverlap(gbs._2)
-      for (group <- groupedByIntervalOverlap) {
-        println("GROUPED")
-        for (item <- group._2) {
-          println(group._1 + " " + item.text)
-        }
-      }
+//      for (group <- groupedByIntervalOverlap) {
+//        println("GROUPED")
+//        for (item <- group._2) {
+//          println(group._1 + " " + item.text)
+//        }
+//      }
       for (item <- groupedByIntervalOverlap) {
         val longest = item._2.maxBy(_.tokenInterval.length)
         maxInGroup.append(longest)
@@ -274,6 +322,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def noOverlapInGivenArg(mention: Mention, argType: String): Boolean = {
+//    println("USED FOR no overlap in given arg")
     // check if mention contains overlapping args of a given type
     val argsOfGivenType = mention.arguments(argType)
     val groupedByTokenInt = groupByTokenOverlap(argsOfGivenType)
@@ -295,7 +344,22 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     m.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= m.tokenInterval.start && math.max(edge._1, edge._2) <= m.tokenInterval.end)
   }
 
+  def groupByVarOverlap(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+    val allVarArgs = mentions.flatMap(_.arguments("variable")).map(_.tokenInterval).distinct
+    val grouped = mutable.Map[Interval, Seq[Mention]]()
+      for (varMenInt <- allVarArgs) {
+        val mentionsWithVar = new ArrayBuffer[Mention]()
+        for (m <- mentions) {
+          if (m.arguments("variable").map(_.tokenInterval).contains(varMenInt))
+          mentionsWithVar.append(m)
+        }
+        grouped += (varMenInt -> mentionsWithVar.distinct)
+      }
+    grouped.toMap
+  }
+
   def filterOutOverlappingDescrMen(mentions: Seq[Mention]): Seq[Mention] = {
+//    println("USED IN filter out overlapping descr mentions")
     // input is only mentions with the label ConjDescription (types 1 and 2) or Description with conjunctions
     // this is to get rid of conj descriptions that are redundant in the presence of a more complete ConjDescription
     val toReturn = new ArrayBuffer[Mention]()
@@ -304,27 +368,36 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (gr <- groupedBySent) {
 
       val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
-      for (gr1 <- groupedByTokenOverlap.values) {
-        // if there are ConjDescrs among overlapping decsrs (at this point, all of them are withConj), then pick the longest conjDescr
-        if (gr1.exists(_.label.contains("ConjDescription"))) {
-          // type 2 has same num of vars and descriptions (a minimum of two pairs)
-          val (type2, type1) = gr1.partition(_.label.contains("Type2"))
+      for (gr0 <- groupedByTokenOverlap.values) {
 
-          if (type2.isEmpty) {
-            // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
-            val longestConjDescr = gr1.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
-            toReturn.append(longestConjDescr)
+        for (gr1 <- groupByVarOverlap(gr0).values) {
+          println("START VAR OVERLAP GROUP")
+          for (g <- gr1) println(g.text)
+          // if there are ConjDescrs among overlapping decsrs (at this point, all of them are withConj - fixme: is this true?), then pick the longest conjDescr
+          if (gr1.exists(_.label.contains("ConjDescription"))) {
+            // type 2 has same num of vars and descriptions (a minimum of two pairs)
+            val (type2, type1) = gr1.partition(_.label.contains("Type2"))
+
+            if (type2.isEmpty) {
+              // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
+              val longestConjDescr = gr1.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
+              toReturn.append(longestConjDescr)
+            } else {
+              val longestConjDescr = gr1.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
+              toReturn.append(longestConjDescr)
+            }
+
           } else {
-            val longestConjDescr = gr1.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
-            toReturn.append(longestConjDescr)
+            for (men <- gr1) toReturn.append(men)
           }
-
-        } else {
-          for (men <- gr1) toReturn.append(men)
+//          println("END VAR OVERLAP GROUP")
         }
+
+
+
       }
     }
-    toReturn
+    toReturn.distinct
   }
 
 
@@ -503,6 +576,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
    */
   def untangleConjunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
+//    println("USED IN untangle conjunctions")
     val toReturn = new ArrayBuffer[Mention]()
 
     val groupedBySent = mentions.groupBy(_.sentence)
@@ -745,18 +819,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAnIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
+    val compoundIdentifierComponents = Seq("(", ")")
     //returns mentions that look like an identifier
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable/identifier was found with a Gazetteer passed through the webservice, keep it
       if (v == null) return false
       if ((v matches OdinEngine.VARIABLE_GAZETTEER_LABEL) && isArg) return true
+      // to allow vars like R(t) and e°(Tmax)---to pass, there have to be at least four chars and the paren can't be the first char
+      if (v.words.length > 3 && v.words.tail.intersect(compoundIdentifierComponents).nonEmpty) return true
       if (v.words.length < 3 && v.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
       if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for identifiers that include a greek letter---those are found as separate words even if there is not space
-      if (v.words.length==4) {
-        // to account for identifiers like R(t)
-        if (v.words(1) == "(" & v.words(3) == ")" ) return true
-      }
       if (v.words.length != 1) return false
       if (v.words.head.contains("-") & v.words.head.last.isDigit) return false
       // Else, the identifier candidate has length 1
