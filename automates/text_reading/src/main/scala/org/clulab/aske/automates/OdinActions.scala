@@ -371,8 +371,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       for (gr0 <- groupedByTokenOverlap.values) {
 
         for (gr1 <- groupByVarOverlap(gr0).values) {
-          println("START VAR OVERLAP GROUP")
-          for (g <- gr1) println(g.text)
           // if there are ConjDescrs among overlapping decsrs (at this point, all of them are withConj - fixme: is this true?), then pick the longest conjDescr
           if (gr1.exists(_.label.contains("ConjDescription"))) {
             // type 2 has same num of vars and descriptions (a minimum of two pairs)
@@ -390,7 +388,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           } else {
             for (men <- gr1) toReturn.append(men)
           }
-//          println("END VAR OVERLAP GROUP")
         }
 
 

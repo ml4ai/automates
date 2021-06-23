@@ -391,8 +391,6 @@ class TestDescriptions extends ExtractionTest {
       "c." -> Seq("average number of people exposed") //fixme: period(.) should be deleted after c & needs to check if it is average number or just number
     )
     val mentions = extractMentions(t3f)
-
-    for (m <- mentions.filter(_.label == "Description")) println("MEN: " + m.text)
     testDescriptionEvent(mentions, desired)
   }
 
