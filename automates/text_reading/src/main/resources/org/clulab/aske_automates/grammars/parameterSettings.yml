@@ -189,3 +189,25 @@ rules:
     example: "We expect the time T of 5-10 days"
     pattern: |
       @variable:Identifier [word="of"] @value:Value (?=@unit:Unit)
+
+  - name: set_to_setting
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: processParamSetting
+    example: "The initial population S(0) was set to be 13.82 millions"
+    pattern: |
+      trigger = [word=/^set$/]
+      variable:Identifier = nsubjpass
+      value:Phrase = xcomp [entity = "NUMBER"]
+
+  - name: var-is_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    action: processParamSetting
+    pattern: |
+      trigger = [lemma= /^be$|become/]
+      variable:Identifier = <cop? nsubj
+      value:Value = <cop | xcomp

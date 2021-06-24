@@ -14,7 +14,7 @@ rules:
       trigger = [lemma = /${functionTrigger1}/]
       input:Phrase+ = nmod_agent | nmod_because_of? nmod_by | <amod <nsubj
       output:Phrase = nsubjpass | <acl_as | <amod | <dep nsubj
-      context:Context? = ${context}
+#      context:Context? = ${context}
 
   - name: trigger2_of # product, inverse, sum, mean, composite, minimum, maximum, function is the trigger for this rule
     label: Function
@@ -36,7 +36,7 @@ rules:
     pattern: |
       trigger = [lemma = /${functionTrigger3}/]
       input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of | nmod_according_to
-      output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass | <acl
+      output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass | <acl | ccomp nsubj
 
   - name: trigger4_of_to # ratio, fraction is the trigger for this rule
     label: Function
@@ -45,9 +45,9 @@ rules:
     action: ${action}
     example: "β is the soil water retention function, defined as the ratio of available soil water content (W−Wp) to Mawc (i.e., Wc−Wp)"
     pattern: |
-      trigger = [word = /${functionTrigger4}/] (?= "of")
-      input:Phrase+ = nmod_of | nmod_at? nmod_to
-      output:Phrase = nsubj | <nmod_as <acl nsubj | nsubj acl_to dobj | <nsubj | <nsubjpass nmod_as
+      trigger = [lemma = /${functionTrigger4}/] (?= "of")
+      input:Phrase+ = nmod_of conj_versus? | nmod_at? nmod_to
+      output:Phrase = nsubj | <nmod_as (dobj |<acl nsubj) | nsubj acl_to dobj | <nsubj | <nsubjpass nmod_as
 
   - name: trigger5_by_Ving # potential pattern
     label: Function
@@ -92,12 +92,12 @@ rules:
     example: "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
     pattern: |
       trigger = [lemma = "multiply"]
-      input:Phrase+ = dobj | nmod_by | nsubjpass | nmod_agent
-      output:Phrase = <advcl_by nsubjpass | <ccomp <advcl_while nsubj appos
+      input:Phrase+ = dobj | nmod_by | nsubjpass | nmod_agent | <acl
+      output:Phrase? = <advcl_by nsubjpass | <ccomp <advcl_while nsubj appos
 
   #covidactnow
 
-  - name: divide_by
+  - name: division
     label: Function
     priority: ${priority}
     type: dependency
@@ -156,8 +156,8 @@ rules:
     example: "The gain in the exposed class E is at a rate proportional to the number of people in the infective class I and that of the susceptibles S, that is rS(t)I(t), where r > 0 is a constant."
     pattern: |
       trigger = [lemma = "proportional"]
-      input:Phrase+ = nmod_to | <amod? conj_and | <conj_and <case
-      output:Phrase = <amod? nsubj | <conj_and <case <nmod_proportional <dep nsubj
+      input:Phrase+ = nmod_to | <amod? conj_and | <conj_and <case | <nmod_to nmod_to?
+      output:Phrase = <amod? nsubj | <conj_and <case <nmod_proportional <dep nsubj | <nmod_to <nsubj
       #fixme: inputs and outputs need to be expanded.
       #todo: the number of inputs should not be fixed as two. -> fixed.
 
@@ -193,9 +193,9 @@ rules:
     example: "Life cycle progress through any given phase depends on a physiological day accumulator as a function of temperature and day length, in many cases."
     pattern: |
       trigger = [lemma = /depend|dependent/]
-      input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and
+      input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and nmod_on
       output:Phrase = <xcomp? nsubj | nsubj:xsubj | nmod_of
-      context:Context? = ${context}
+#      context:Context? = ${context}
 
   - name: integrated_to
     label: Function
@@ -252,16 +252,17 @@ rules:
       input:Phrase+ = nmod_to nmod_through?
       output:Phrase = nsubj | nsubjpass
 
-  - name: equation
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "The model was used to obtain the total evaporation rate E = Es + Ep of a developing grain sorghum (Sorghum bicolor L.) canopy in central Texas"
-    pattern: |
-      trigger = [word = "="]
-      input:Phrase+ = dobj | parataxis nsubjpass
-      output:Phrase = nsubj
+# note: this rule produces too many false positives
+#  - name: equation
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "The model was used to obtain the total evaporation rate E = Es + Ep of a developing grain sorghum (Sorghum bicolor L.) canopy in central Texas"
+#    pattern: |
+#      trigger = [word = "="]
+#      input:Phrase+ = dobj | parataxis nsubjpass
+#      output:Phrase = nsubj
 
   - name: convert_to
     label: Function
@@ -281,20 +282,20 @@ rules:
     action: ${action}
     example: "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
     pattern: |
-      trigger = [lemma = "proportion"] (?="to")
-      input:Phrase+ = nmod_to
-      output:Phrase = <nmod_in (nsubjpass | nsubj)
+      trigger = [lemma = ${functionTrigger6}] (?= [word = "in"] [tag = /JJ/]? [word = "proportion"] [word = "to"])
+      input:Phrase+ = nmod_in nmod_to
+      output:Phrase = nsubjpass | nsubj
 
-  - name: decline_or_drop
+  - name: decrease
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "In the Adelanto soil, the evaporation rate began to decline below the approximate Eo of 8 mm/day when the cumulative evaporation reached about 12 mm."
     pattern: |
-      trigger = [lemma = "decline"]|[lemma = "drop"]
-      input:Phrase+ = nmod_below case
-      output:Phrase = nsubj:xsubj
+      trigger = [lemma = /decline|drop|decrease/]
+      input:Phrase+ = nsubj:xsubj | nsubj
+
     # note: this rule doesn't capture the pattern correctly. "below" is not captured as an input because it is not labeled as a concept.
 
   - name: equal_or_equated
@@ -352,16 +353,16 @@ rules:
       input:Identifier+ = nmod_with nmod_such_as
       output:Phrase = <ccomp nsubj | nsubjpass
 
-  - name: mean_output
+  - name: mean_or_average_output
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "the mean α obtained from the 26 available days was 1.25 ± 0.03."
     pattern: |
-      trigger = [word = "mean"] (?= Identifier)
-      input:Identifier+ = <compound
-      output:Phrase = <nsubj
+      trigger = [word = /mean|average/]
+      input:Phrase+ = <compound | <amod
+      output:Phrase = <nsubj | <amod nsubj
 
   # function rules allowing for partial extraction
 
@@ -428,6 +429,16 @@ rules:
     pattern: |
       trigger = [word = "additional"]|[word = "remaining"] (?= [tag = /JJ/]? [lemma = "parameter"])
       input:Phrase+ = <amod <nsubj
+
+#  - name: output_is_calculated
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
+#    pattern: |
+#      trigger = [word = "calculated"]
+#      output:Phrase = nsubjpass
 
   # rules denoting change in status (lost, reduce, increase, etc.) - are these count as function relations??
 

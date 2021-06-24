@@ -301,7 +301,7 @@ rules:
     example: "where r is the infection rate and a the removal rate of infectives. where Rn is the net radiation, H the sensible heat, G the soil heat flux and λET the latent heat flux."
     action: ${action}
     pattern: |
-      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/]+) ([word = "and"])? @variable:Identifier [word = "the"] (?<description> [word = /.*/ & tag = /NN|JJ/ & !entity = "B-GreekLetter"]{1,5})
+      (?<= [word = /.*/]+ [tag = /VBZ/] [word = /.*/ & !word = ";"]+) ([word = "and"])? @variable:Identifier [word = "the"] (?<description> [word = /.*/ & tag = /NN|JJ/ & !entity = "B-GreekLetter"]{1,5})
 
 
   - name: identifier_comma_descr_comma

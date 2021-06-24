@@ -1,25 +1,42 @@
 vars: org/clulab/aske_automates/grammars/vars.yml
 
+# note: doesn't work if context is inside the event span
 rules:
 
+  - name: contextFunction_token
+    label: ContextEvent
+    priority: ${priority}
+    type: token
+    example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and on the stability, if this height is not low enough."
+    pattern: |
+      @event:Function [word = ","]? ([chunk = /B-SBAR|B-PP/]|[word = "so"] [word = "long"] [word = "as"]|[word = "when"])? @context:Context
+      |
+      @context:Context [word = ","]? [word = "then"]? [tag = /DT/]? @event:Function
 
-#  - name: with_context
-#    label: ContextEvent
-#    priority: ${priority}
-#    type: token
-#    example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and on the stability, if this height is not low enough."
-#    pattern: |
-#      @event:Function "," "if" @context:Context
+  - name: contextFunction_dep
+    label: ContextEvent
+    priority: ${priority}
+    type: dependency
+    example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and on the stability if this height is not low enough."
+    pattern: |
+      trigger = [word=/if|where/]
+      event:Function = <mark <advcl_if | <advmod <acl:relcl
+      context:Context = <mark | <advmod
 
+  - name: contextDescr_token
+    label: ContextEvent
+    priority: ${priority}
+    type: token
+    example: "If this happens at time t, then the effective reproduction rate is Rt, which will be lower than R0."
+    pattern: |
+      @event:Description [word = ","]? ([chunk = /B-SBAR|B-PP/]|[word = "so"] [word = "long"] [word = "as"]|[word = "when"])? @context:Context
+      |
+      @context:Context [word = ","]? [word = "then"]? [tag = /DT/]? @event:Description
 
-
-# doesn't work if condition is inside the event span; for this rule to work, disable expansion
-#  - name: with_context_dep
-#    label: ContextEvent
-#    priority: ${priority}
-#    type: dependency
-#    example: "C and C* are heat transfer coefficients  that depend on the reference height selected for T and u, and on the stability if this height is not low enough. "
-#    pattern: |
-#      trigger = [word="if"]
-#      event:Function = <mark <advcl_if
-#      context:Context = <mark
+  - name: contextParamSetting_token
+    label: ContextEvent
+    priority: ${priority}
+    type: token
+    example: "Suppose we increase the r parameter by 1 % to have r = 9.88588 x 10 - 8 , then R infinity will become 116464."
+    pattern: |
+      @context:Context [word = ","] [word = "then"] @event:ParameterSetting

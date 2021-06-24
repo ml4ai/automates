@@ -172,12 +172,16 @@ case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString().replace(".json", "_mentions.tsv") ))
     pw.write("filename\tsentence\tmention type\tmention text\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "Context"))
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "Context") || (m.label matches "Function"))
 
     for (m <- contentMentions) {
       pw.write(new File(filename).getName() + "\t")
       pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())
-      for (arg <- m.arguments) pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+      for (arg <- m.arguments) {
+        if (arg._2.nonEmpty) {
+          pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+        }
+      }
       pw.write("\n")
     }
     pw.close()

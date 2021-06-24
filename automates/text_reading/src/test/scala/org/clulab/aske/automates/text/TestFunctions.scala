@@ -441,6 +441,7 @@ class TestFunctions extends ExtractionTest {
 }
 
   // note: below are the example sentences that contain functional relations (I think), but I'm not sure what to do about with them for now.
+  // todo: where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998).
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
   // todo: "The values for Cn consider the time step and aerodynamic roughness of the surface (i.e., reference type)."
   // todo: "The constant in the denominator, Cd, considers the time step, bulk surface resistance, and aerodynamic roughness of the surface (the latter two terms vary with reference type, time step and daytime/nighttime)."

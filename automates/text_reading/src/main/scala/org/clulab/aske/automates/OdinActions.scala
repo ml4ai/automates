@@ -186,7 +186,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    // used to avoid identifiers like R(t) being found as separate R, t, R(t, and so on
+    // used to avoid identifiers like R ( t ) being found as separate R, t, R(t, and so on
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
     for (gbs <- groupedBySent) {
@@ -202,8 +202,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   /** Keeps the longest mention for each group of overlapping mentions **/ // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
-    val (contexts, other) = nonFunctions.partition(m => m.label == "Context")
+    val (functions, nonFunction) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    val (contextEvents, other) = nonFunction.partition(m => m.label == "ContextEvent")
 //    for (f <- functions) println(f.text ++ f.arguments.keys.mkString("||"))
     // distinguish between EventMention and RelationMention in functionMentions
     val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
@@ -221,7 +221,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
 
-    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm ++ contexts
+    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm ++ contextEvents
   }
 
 
@@ -798,8 +798,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val (functions, other) = mentions.partition(_.label == "Function")
     val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
     for (c <- complete) {
-      val newInputs = c.arguments("input").filter(_.label != "Unit" && c.tags.get.head != "PRP")
-      val newOutputs = c.arguments("output").filter(_.label != "Unit" && c.tags.get.head != "PRP")
+      val newInputs = c.arguments("input").filter(!_.label.contains("Unit") && c.tags.get.head != "PRP" && !c.tags.get.head.contains("VB"))
+      val newOutputs = c.arguments("output").filter(!_.label.contains("Unit") && c.tags.get.head != "PRP" && !c.tags.get.head.contains("VB"))
       if (newInputs.nonEmpty && newOutputs.nonEmpty) {
         val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
         val newFunctions = copyWithArgs(c, newArgs)
@@ -808,7 +808,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     for (f <- fragment) {
       if (f.arguments.contains("input")) {
-        val inputFilter = f.arguments("input").filter(_.label != "Unit" && f.tags.get.head != "PRP")
+        val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (inputFilter.nonEmpty) {
           val newInputs = Map("input" -> inputFilter, "output" -> Seq())
           val newInputMens = copyWithArgs(f, newInputs)
@@ -816,7 +816,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         } else Seq()
       }
       if (f.arguments.contains("output")) {
-        val outputFilter = f.arguments("output").filter(_.label != "Unit" && f.tags.get.head != "PRP")
+        val outputFilter = f.arguments("output").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (outputFilter.nonEmpty) {
           val newOutputs = Map("input" -> Seq(), "output" -> outputFilter)
           val newOutputMens = copyWithArgs(f, newOutputs)
@@ -826,6 +826,38 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     toReturn ++ other
   }
+
+//  def filterInputOverlaps(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
+//    // has to be used for mentions in the same sentence - token intervals are per sentence
+//    for (m <- mentions) {
+//      val inputArgs = m.arguments.getOrElse("input", Seq())
+//      for (i <- inputArgs) {
+//        if (i.tokenInterval.intersect(inputArgs)){}
+//      }
+//    }
+    // start with longest - the shorter overlapping ones should be subsumed this way
+//    for (m <- mentions.sortBy(_.tokenInterval).reverse) {
+//      if (intervalMentionMap.isEmpty) {
+//        intervalMentionMap += (m.tokenInterval -> Seq(m))
+//      } else {
+//        if (intervalMentionMap.keys.exists(k => k.intersect(m.tokenInterval).nonEmpty)) {
+//          val interval = findOverlappingInterval(m.tokenInterval, intervalMentionMap.keys.toList)
+//          val currMen = intervalMentionMap(interval)
+//          val updMen = currMen :+ m
+//          if (interval.length >= m.tokenInterval.length) {
+//            intervalMentionMap += (interval -> updMen)
+//          } else {
+//            intervalMentionMap += (m.tokenInterval -> updMen)
+//            intervalMentionMap.remove(interval)
+//          }
+//
+//        } else {
+//          intervalMentionMap += (m.tokenInterval -> Seq(m))
+//        }
+//      }
+//    }
+//    intervalMentionMap.toMap
+//  }
 
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
@@ -886,6 +918,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (word.length > 6) return false
       // an identifier/variable cannot be a unit
       if (v.entities.get.exists(_ == "B-unit")) return false
+      if (v.entities.get.exists(_ == "ORGANIZATION")) return false // filter out organizations
       val tag = v.tags.get.head
       if (tag == "POS") return false
       return (
