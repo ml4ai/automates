@@ -174,7 +174,7 @@ rules:
 #    action: ${action}
     pattern: |
       trigger = [lemma=/define/]
-      variable:Identifier = nsubjpass # | advcl nsubj
+      variable:Identifier= nsubjpass (appos?) | advcl nsubj
       description:Phrase = nmod_as [!entity = "NUMBER"] # todo: needs to expand the description to include "at LAI = 6.0"
 
   - name: identifier_is_defined_token
@@ -225,11 +225,11 @@ rules:
     action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Identifier [word = ","] (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Identifier [word = ","] (?! [lemma = /be|and/]) (?! [chunk = /I-NP|B-NP/])
       |
-      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Identifier (?! /.*/) (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Identifier (?! /.*/) (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
-      @description: Phrase "," @variable:Identifier (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
+      @description: Phrase "," @variable:Identifier (?! ([word= "can"]? [lemma = "be"])|[word = ","] [word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |
       @description: Phrase "(" @variable:Identifier ")" (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
       |
@@ -319,8 +319,7 @@ rules:
     example: "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
     action: ${action}
     pattern: |
-      @variable:Identifier [word = ","] (@description: Phrase ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","]
-
+      @variable:Identifier [word = ","] (@description: Phrase ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","] (?! [word = "and"])
 
   - name: descr_is_identifier_equal
     label: Description

@@ -99,14 +99,14 @@ class TestDescriptions extends ExtractionTest {
 
   val t10a = "Recommended values for Kcdmin and Kcdmax can be found in FAO-56, and DeJonge et al. (2012a) " +
     "recommended 0.5 < SKc < 1.0 as a typical shape to match past literature on the subject."
-  passingTest should s"find NO descriptions from t11a: ${t10a}" taggedAs(Somebody) in {
+  passingTest should s"find NO descriptions from t10a: ${t10a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t10a)
     testDescriptionEvent(mentions, desired)
   }
 
   val t11a = "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
-  passingTest should s"find NO descriptions from t12a: ${t11a}" taggedAs(Somebody) in {
+  passingTest should s"find NO descriptions from t11a: ${t11a}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t11a)
     testDescriptionEvent(mentions, desired)
@@ -356,7 +356,7 @@ class TestDescriptions extends ExtractionTest {
   val t1e = "Since eS is not a linear function of temperature"
   passingTest should s"find NO descriptions from t1e: ${t1e}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
-    val mentions = extractMentions(t1e)  // issue: changed from t5a to t1e. needs to check if this is right. (needs to be reviewed)
+    val mentions = extractMentions(t1e)
     testDescriptionEvent(mentions, desired)
   }
 
@@ -368,6 +368,24 @@ class TestDescriptions extends ExtractionTest {
       "Rld" -> Seq("downward long-wave radiation from the sky"), //fixme: needs to expand to include the "downward long-wave radiation from the" part (issue occurred due to bad parsing)
     )
     val mentions = extractMentions(t2e)
+    testDescriptionEvent(mentions, desired)
+  }
+
+  val t3e = "Extraterrestrial radiation, Ra, defined as the short-wave solar radiation in the absence of an atmosphere, is a well-behaved function of the day of the year, time of day, and latitude."
+  failingTest should s"find definitions from t3e: ${t3e}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Ra" -> Seq("Extraterrestrial radiation"), // fixme: only a part of it ("extraterrestrial") is captured. (why is "radiation" not a concept?)
+      "Ra" -> Seq("short-wave solar radiation in the absence of an atmosphere"), // fixme: this definition is not captured at all.
+      "Ra" -> Seq("well-behaved function of the day of the year, time of day, and latitude.") // fixme: function definition not captured.
+    )
+    val mentions = extractMentions(t3e)
+    testDescriptionEvent(mentions, desired)
+  }
+
+  val t4e = "For daily (24-hour) periods, Ra can be estimated from the solar constant, the solar declination, and the day of the year."
+  passingTest should s"find NO definitions from t4e: ${t4e}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])] // fixme: comma_appos_var rule wrongly captured a definition for Ra.
+    val mentions = extractMentions(t4e)
     testDescriptionEvent(mentions, desired)
   }
 
@@ -598,6 +616,16 @@ class TestDescriptions extends ExtractionTest {
     testDescriptionEvent(mentions, desired)
   }
 
+    val t6h = "Wilting point Wp and field capacity Wc were calculated from soil depth and soil texture information, i.e., the relative proportion of sand, silt and clay, according to a set of prediction equations developed by Saxton et al. (1986)."
+  failingTest should s"find descriptions from t6h: ${t6h}" taggedAs(Somebody) in {
+    val desired =  Seq(
+      "Wp" -> Seq("Wilting point"), // fixme: description for Wp is not captured.
+      "Wc" -> Seq("field capacity")
+    )
+    val mentions = extractMentions(t6h)
+    testDescriptionEvent(mentions, desired)
+  }
+
 // Tests from paper: Covid_Act_Now_Model_Reference
 
     val t1i = "Susceptible (S) individuals may become exposed (E) to the virus, then infected (I) at varying " +
@@ -704,8 +732,42 @@ class TestDescriptions extends ExtractionTest {
     val t5l = "The inverse of λ = 2.45 MJ kg-1 is approximately 0.408 kg MJ-1."
   passingTest should s"find NO descriptions from t5l: ${t5l}" taggedAs(Somebody) in {
     val desired =  Seq.empty[(String, Seq[String])]
-    val mentions = extractMentions(t11f)
+    val mentions = extractMentions(t5l)
     testDescriptionEvent(mentions, desired)
   }
 
+  // Tests from paper: PEN-2018-Step by Step Calculation of the Penman-Monteith ET-petpen_PM
+
+    val t1m = "Reference evapotranspiration (ETo) is defined as the rate at which readily available soil water is vaporized from specified vegetated surfaces (Jensen et al., 1990)."
+  passingTest should s"find definitions from t1m: ${t1m}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "ETo" -> Seq("Reference evapotranspiration"),
+      "ETo" -> Seq("rate at which readily available soil water is vaporized from specified vegetated surfaces")
+    )
+    val mentions = extractMentions(t1m)
+    testDescriptionEvent(mentions, desired)
+  }
+
+  // Tests from paper: model for predicting evaporation from a row crop with incomplete cover
+
+  val t1n = "Wind speed, Rno, and the vapor pressure deficit are all lowered in approximate proportion to the canopy density."
+  passingTest should s"find NO definitions from t1n: ${t1n}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])] // fixme: Wind speed is captured as a definition for Rno. -> fixed by changing comma_appos_var rule
+    val mentions = extractMentions(t1n)
+    testDescriptionEvent(mentions, desired)
+  }
+
+  val t2n = "Since the soil was relatively dry before the rainfall was received, Es would be expected to be lower than the value predicted by the model."
+  failingTest should s"find NO definitions from t2n: ${t2n}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])] // fixme: "was" and "rainfall was received" is captured as definitions for Es. (needs to be fixed by finding a cause from comma_appos_var rule.
+    val mentions = extractMentions(t2n)
+    testDescriptionEvent(mentions, desired)
+  }
+
+  val t3n = "For example, consider a case in which the average air temperature is 32°C, Lai = 2.7, Rn0 = 5.0, E0 = 5.0, and ΣEs1 < U."
+  failingTest should s"find NO definitions from t3n: ${t3n}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])] // fixme: "average air temperature" is captured as a definition for C in 32°C.
+    val mentions = extractMentions(t3n)
+    testDescriptionEvent(mentions, desired)
+  }
 }
