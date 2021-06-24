@@ -1,13 +1,15 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 from pathlib import Path
 
 from .identifiers import (
     BaseIdentifier,
+    AIRIdentifier,
     VariableIdentifier,
     TypeIdentifier,
+    ObjectIdentifier,
     ContainerIdentifier,
     LambdaStmtIdentifier,
     CallStmtIdentifier,
@@ -22,12 +24,13 @@ from .metadata import (
 
 @dataclass
 class AutoMATES_IR:
+    identifier: AIRIdentifier
     entrypoint: ContainerIdentifier
-    containers: List[ContainerDef]
-    variables: List[VariableDef]
-    type_definitions: List[TypeDef]
-    objects: List[ObjectDef]
-    documentation: List[dict]
+    containers: Dict[ContainerIdentifier, ContainerDef]
+    variables: Dict[VariableIdentifier, VariableDef]
+    type_definitions: Dict[TypeIdentifier, TypeDef]
+    objects: Dict[ObjectIdentifier, ObjectDef]
+    documentation: Dict[str, dict]
     metadata: List[TypedMetadata]
 
     @classmethod
@@ -43,16 +46,16 @@ class AutoMATES_IR:
             code_refs,
         ]
 
-        for var_data in data["variables"]:
-            # new_var = BaseDef.from_dict(var_data)
-            var_data.update({"file_uid": code_file_uid})
-            new_var = VariableDef.from_data(var_data)
-            V[new_var.identifier] = new_var
-
-        T = list()
+        T = dict()
         for type_data in data["types"]:
             type_data.update({"file_uid": code_file_uid})
-            T.append(TypeDef.from_air_json(type_data))
+            tdef = TypeDef.from_air_json(type_data)
+            T[tdef.identifier] = tdef
+
+        for var_dict in data["variables"]:
+            var_def = VariableDef.from_air_json(var_dict)
+            var_id = var_def.identifier
+            V[var_id] = var_def
 
         for con_data in data["containers"]:
             con_data.update({"file_uid": code_file_uid})
@@ -60,17 +63,18 @@ class AutoMATES_IR:
             C[new_container.identifier] = new_container
 
         filename = data["sources"][0]
+        idt = AIRIdentifier.from_filename(filename)
         container_name = Path(filename).stem.lower()
         D.update(
             {
-                n if not n.startswith("$") else container_name + n: data
+                (n if not n.startswith("$") else container_name + n): data
                 for n, data in data["source_comments"].items()
             }
         )
 
-        e = BaseIdentifier.from_str(data["entrypoint"])
+        e = ContainerIdentifier.from_name_str(data["entrypoint"])
 
-        return cls(e, C, V, T, O, D, M)
+        return cls(idt, e, C, V, T, O, D, M)
 
 
 # @dataclass(frozen=True)
@@ -104,11 +108,11 @@ class BaseDef(ABC):
     metadata: List[TypedMetadata]
 
     def __hash__(self):
-        return hash(self.identifier, self.source_ref)
+        return hash(self.identifier)
 
     @abstractmethod
     def __str__(self):
-        return f"{self.identifier}\n{self.source_ref}"
+        return f"{self.identifier}"
 
     @staticmethod
     def from_dict(data: dict):
@@ -144,17 +148,14 @@ class VariableDef(BaseDef):
     def from_identifier(cls, var_id: VariableIdentifier):
         return cls(
             var_id,
-            "type",
-            False,
+            [],
             "None",
             "(and (> v -infty) (< v infty))",
-            [],
         )
 
     @classmethod
     def from_air_json(cls, data: dict) -> VariableDef:
-        var_id = VariableIdentifier.from_str(data["name"])
-        type_str = "type"
+        var_id = VariableIdentifier.from_name_str(data["name"])
         file_ref = data["file_uid"] if "file_uid" in data else ""
         src_ref = data["source_refs"][0] if "source_refs" in data else ""
         code_span_data = {
@@ -165,11 +166,9 @@ class VariableDef(BaseDef):
         metadata = [CodeSpanReference.from_air_json(code_span_data)]
         return cls(
             var_id,
-            type_str,
-            data["domain"]["mutable"],
+            metadata,
             data["domain"]["name"],
             data["domain_constraint"],
-            metadata,
         )
 
 
@@ -290,33 +289,29 @@ class ContainerDef(BaseDef):
     arguments: List[VariableIdentifier]
     updated: List[VariableIdentifier]
     return_value: List[VariableIdentifier]
-    variables: List[VariableIdentifier]
-    body: List[StmtDef]
+    variables: List[VariableDef]
+    statements: List[StmtDef]
 
     @staticmethod
     def from_air_json(data: dict) -> ContainerDef:
-        identifier = ContainerIdentifier.from_air_json(data)
+        identifier = ContainerIdentifier.from_name_str(data["name"])
         file_reference = data["file_uid"] if "file_uid" in data else ""
         arguments = [
-            VariableIdentifier.from_air_json(
-                {"name": var_str, "parent_con": identifier}
-            )
+            VariableIdentifier.from_name_str(var_str)
             for var_str in data["arguments"]
         ]
         updated = [
-            VariableIdentifier.from_air_json(
-                {"name": var_str, "parent_con": identifier}
-            )
+            VariableIdentifier.from_name_str(var_str)
             for var_str in data["updated"]
         ]
         returns = [
-            VariableIdentifier.from_air_json(
-                {"name": var_str, "parent_con": identifier}
-            )
+            VariableIdentifier.from_name_str(var_str)
             for var_str in data["return_value"]
         ]
         statements = [
-            StmtDef.from_air_json({"file_uid": file_reference, **stmt})
+            StmtDef.from_air_json(
+                {"file_uid": file_reference, "p_con_id": identifier, **stmt}
+            )
             for stmt in data["body"]
         ]
 
@@ -407,6 +402,7 @@ class ContainerDef(BaseDef):
             raise ValueError(f"Unrecognized container type value: {con_type}")
 
 
+@dataclass(frozen=True)
 class CondContainerDef(ContainerDef):
     repeat: bool = False
 
@@ -415,6 +411,7 @@ class CondContainerDef(ContainerDef):
         return f"(COND Con Def)\n{base_str}\n"
 
 
+@dataclass(frozen=True)
 class FuncContainerDef(ContainerDef):
     repeat: bool = False
 
@@ -423,6 +420,7 @@ class FuncContainerDef(ContainerDef):
         return f"(FUNC Con Def)\n{base_str}\n"
 
 
+@dataclass(frozen=True)
 class LoopContainerDef(ContainerDef):
     repeat: bool = True
 
@@ -431,10 +429,11 @@ class LoopContainerDef(ContainerDef):
         return f"(Loop Con Def)\t{self.identifier.con_name}\n{base_str}\n"
 
 
+@dataclass(frozen=True)
 class StmtDef(BaseDef):
     container_id: ContainerIdentifier
-    inputs: List[VariableDef]
-    outputs: List[VariableDef]
+    inputs: List[VariableIdentifier]
+    outputs: List[VariableIdentifier]
 
     @staticmethod
     def from_air_json(data: dict) -> StmtDef:
@@ -442,31 +441,30 @@ class StmtDef(BaseDef):
             CodeSpanReference.from_air_json(
                 {
                     "source_ref": data.get("source_ref", ""),
-                    "file_uid": data["file_ref"],
+                    "file_uid": data["file_uid"],
                     "code_type": "block",
                 }
             )
         ]
-        container = data["parent_con"].identifier
+        con_id = data["p_con_id"]
         inputs = [
-            VariableIdentifier.from_str_and_con(i, container.identifier)
-            for i in data["input"]
+            VariableIdentifier.from_name_str(iname) for iname in data["input"]
         ]
         outputs = [
-            VariableIdentifier.from_str_and_con(o, container.identifier)
-            for o in (data["output"] + data["updated"])
+            VariableIdentifier.from_name_str(oname)
+            for oname in (data["output"] + data["updated"])
         ]
         func_data = data["function"]
         func_type = func_data["type"]
 
         if func_type == "lambda":
             identifier = LambdaStmtIdentifier.from_air_json(func_data)
-            expression = data["code"]
+            expression = func_data["code"]
             expr_type = LambdaStmtDef.get_type_str(func_data["name"])
             return LambdaStmtDef(
                 identifier,
                 metadata,
-                container,
+                con_id,
                 inputs,
                 outputs,
                 expression,
@@ -474,9 +472,7 @@ class StmtDef(BaseDef):
             )
         elif func_type == "container":
             identifier = CallStmtIdentifier.from_air_json(func_data)
-            return CallStmtDef(
-                identifier, metadata, container, inputs, outputs
-            )
+            return CallStmtDef(identifier, metadata, con_id, inputs, outputs)
         else:
             raise ValueError(f"Unrecognized statement type: {func_type}")
 
@@ -488,6 +484,7 @@ class StmtDef(BaseDef):
         return f"{con_id=}, {num_inputs=}, {num_outputs=}\n{base_str}"
 
 
+@dataclass(frozen=True)
 class CallStmtDef(StmtDef):
     # def __init__(self, stmt: dict, con: ContainerDef, file_ref: str):
     #     super().__init__(stmt, con)
@@ -505,6 +502,7 @@ class CallStmtDef(StmtDef):
         return f"(Call Stmt Def)\n{base_str}\n"
 
 
+@dataclass(frozen=True)
 class LambdaStmtDef(StmtDef):
     expression: str
     expr_type: str

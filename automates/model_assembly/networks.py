@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from itertools import product
 from copy import deepcopy
 
-import datetime
 import inspect
 import json
 import ast
@@ -40,6 +39,7 @@ from .air import (
 )
 from .identifiers import (
     BaseIdentifier,
+    GrFNIdentifier,
     ContainerIdentifier,
     FunctionIdentifier,
     ObjectIdentifier,
@@ -114,10 +114,10 @@ class VariableNode(BaseNode):
         return str(self.identifier)
 
     @classmethod
-    def from_id(cls, idt: VariableIdentifier, data: VariableDef):
+    def from_definition(cls, var_def: VariableDef):
         # TODO: use domain constraint information in the future
-        d_type = DataType.from_str(data.domain_name)
-        m_type = MeasurementType.from_name(data.domain_name)
+        d_type = DataType.from_str(var_def.domain_name)
+        m_type = MeasurementType.from_name(var_def.domain_name)
 
         def create_domain_elements():
             if MeasurementType.isa_categorical(m_type):
@@ -146,8 +146,12 @@ class VariableNode(BaseNode):
             m_type,
             create_domain_elements(),
         )
-        metadata = [dom] + data.metadata
-        return cls(BaseNode.create_node_id(), idt, metadata)
+        metadata = [dom] + var_def.metadata
+        return cls(BaseNode.create_node_id(), var_def.identifier, metadata)
+
+    @classmethod
+    def from_identifier(cls, idt: VariableIdentifier):
+        return cls(BaseNode.create_node_id(), idt, [])
 
     @classmethod
     def from_expr_def(cls, expr_namespace, expr_scope):
@@ -251,66 +255,46 @@ class VariableNode(BaseNode):
         }
 
 
-@dataclass(repr=False, frozen=False)
+@dataclass(repr=False)
 class BaseFuncNode(ABC):
-    uid: str
+    identifier: FunctionIdentifier
     type: FunctionType
-    input_variables: List[str]
-    output_variables: List[str]
+    input_variables: List[VariableIdentifier]
+    output_variables: List[VariableIdentifier]
     hyper_edges: List[HyperEdge]
     hyper_graph: nx.DiGraph
     metadata: List[TypedMetadata]
 
     def __eq__(self, other: BaseFuncNode) -> bool:
-        return self.uid == other.uid
+        return self.identifier == other.identifier
 
-    @staticmethod
-    def from_container(
-        container: ContainerDef,
-        CONS: Dict[ContainerIdentifier, ContainerDef],
-        VARS: Dict[VariableIdentifier, VariableNode],
-        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
-    ):
-        # NOTE: this method should only be called from FuncNodes that are
-        # derived from container definitions in AIR JSON
-        inputs = [
-            VariableNode.from_identifier(var_id)
-            for var_id in container.arguments
-        ]
-        all_output_ids = container.updated + container.returns
-        outputs = [
-            VariableNode.from_identifier(var_id) for var_id in all_output_ids
-        ]
+    def __hash__(self):
+        return hash(self.identifier)
 
-        edges = list()
-        for stmt in container.statements:
-            if isinstance(stmt, CallStmtDef):
-                # Create a new Container type function node defintion
-                new_con_id = stmt.container_id
-                con_def = CONS[new_con_id]
-                new_con_func = BaseConFuncNode.from_container(
-                    con_def, CONS, VARS, FUNCS
-                )
-            elif isinstance(stmt, LambdaStmtDef):
-                # Create a new Expression type function node definiton
-                new_expr_func = ExpressionFuncNode.from_lamba_stmt(
-                    stmt, VARS, FUNCS
-                )
-            else:
-                raise TypeError(f"Unrecognized statement type: {type(stmt)}")
-
-        # TODO: figure out how to use pre-created VariableNode's and IDs here
-        edges = [
-            HyperEdge.from_statement(stmt) for stmt in container.statements
-        ]
-        return (
-            str(uuid.uuid4()),
-            FunctionType.from_con(container.__class__.__name__),
-            inputs,
-            outputs,
-            edges,
-            container.metadata,
-        )
+    # @staticmethod
+    # def from_container(
+    #     container: ContainerDef,
+    #     # CONS: Dict[ContainerIdentifier, ContainerDef],
+    #     VARS: Dict[VariableIdentifier, VariableNode],
+    #     # FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    # ):
+    #     # NOTE: this method should only be called from FuncNodes that are
+    #     # derived from container definitions in AIR JSON
+    #     func_uid = str(uuid.uuid4())
+    #     func_type = FunctionType.from_con(container.__class__.__name__)
+    #     inputs = [
+    #         VARS[var_id]
+    #         if var_id in VARS
+    #         else VariableNode.from_identifier(var_id)
+    #         for var_id in container.arguments
+    #     ]
+    #     outputs = [
+    #         VARS[var_id]
+    #         if var_id in VARS
+    #         else VariableNode.from_identifier(var_id)
+    #         for var_id in container.updated + container.returns
+    #     ]
+    #     return (func_uid, func_type, inputs, outputs)
 
     @abstractclassmethod
     def from_data(
@@ -319,12 +303,12 @@ class BaseFuncNode(ABC):
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ):
         hyper_edges = [
-            HyperEdge.from_data(h_def, FUNCS) for h_def in data["hyper_edges"]
+            HyperEdge.from_dict(h_def, FUNCS) for h_def in data["hyper_edges"]
         ]
         hyper_graph = cls.create_hyper_graph(hyper_edges)
 
         return (
-            data["uid"],
+            data["identifier"],
             FunctionType.from_str(data["type"]),
             data["input_variables"],
             data["output_variables"],
@@ -338,26 +322,43 @@ class BaseFuncNode(ABC):
         output2func = {
             out_node: h_edge.func_node
             for h_edge in hyper_edges
-            for out_node in h_edge
+            for out_node in h_edge.outputs
         }
 
         network = nx.DiGraph()
         for h_edge in hyper_edges:
             func_node = h_edge.func_node
             network.add_node(func_node)
+            potential_parents = list()
             for v_node in h_edge.inputs:
-                # TODO: check to make sure the input is actually in
-                # this function
-                parent_func = output2func[v_node]
-                network.add_edge(parent_func, func_node)
+                if v_node in output2func:
+                    potential_parents.append(output2func[v_node])
+            network.add_edges_from(
+                [
+                    (parent_func, func_node)
+                    for parent_func in set(potential_parents)
+                ]
+            )
 
         return network
+
+    @staticmethod
+    def get_or_create_vars(
+        ids: List[VariableIdentifier],
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+    ) -> List[VariableNode]:
+        def get_or_create_var(v: VariableIdentifier) -> VariableNode:
+            if v not in VARS:
+                VARS[v] = VariableNode.from_definition(AIR.variables[v])
+            return VARS[v]
+
+        return [get_or_create_var(v_id) for v_id in ids]
 
     @abstractmethod
     def to_data(self) -> Dict[str, Any]:
         return {
-            "uid": self.uid,
-            "identifier": None,
+            "identifier": self.identifier,
             "type": str(self.type),
             "input_variables": self.input_variables,
             "output_variables": self.output_variables,
@@ -368,30 +369,32 @@ class BaseFuncNode(ABC):
         }
 
 
-@dataclass(repr=False, frozen=False)
+@dataclass(repr=False)
 class OperationFuncNode(BaseFuncNode):
-    identifier: str
+    def __hash__(self):
+        return super().__hash__()
 
     @classmethod
     def from_expr_def(cls, expr_def):
-        exp_identifier = None
+        operation = None
         if isinstance(expr_def, ExprDefinitionNode):
-            exp_identifier = expr_def.def_type
+            operation = expr_def.def_type
         elif isinstance(expr_def, ExprOperatorNode):
-            exp_identifier = expr_def.operator
+            operation = expr_def.operator
         else:
             raise TypeError(f"Unrecognized expr node type: {type(expr_def)}")
 
         metadata = list()
         return cls(
-            str(uuid.uuid4()),
+            FunctionIdentifier.from_operator_func(
+                operation, int(uuid.uuid4())
+            ),
             FunctionType.OPERATOR,
             [],
             [],
             [],
             None,
             metadata,
-            exp_identifier,
         )
 
     @classmethod
@@ -404,34 +407,31 @@ class OperationFuncNode(BaseFuncNode):
         return data
 
 
-@dataclass(repr=False, frozen=False)
+@dataclass(repr=False)
 class ExpressionFuncNode(BaseFuncNode):
     expression: str
     executable: callable
 
-    # uid: str
-    # type: FunctionType
-    # input_variables: List[str]
-    # output_variables: List[str]
-    # hyper_edges: List[HyperEdge]
-    # metadata: List[TypedMetadata]
+    def __hash__(self):
+        return super().__hash__()
 
     @classmethod
     def from_lambda_stmt(
         cls,
         statement: LambdaStmtDef,
+        AIR: AutoMATES_IR,
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ):
-        inputs = [VARS[v_id] for v_id in statement.inputs]
-        outputs = [VARS[v_id] for v_id in statement.outputs]
+        inputs = BaseFuncNode.get_or_create_vars(statement.inputs, AIR, VARS)
+        outputs = BaseFuncNode.get_or_create_vars(statement.outputs, AIR, VARS)
 
         # add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
-        func_uid = str(uuid.uuid4())
+        func_id = FunctionIdentifier.from_lambda_stmt_id(statement.identifier)
         expr = statement.expression
         executable = load_lambda_function(expr)
         expr_type = FunctionType.get_lambda_type(
-            statement.expr_str, len(inspect.signature(executable).parameters)
+            statement.expr_type, len(inspect.signature(executable).parameters)
         )
         mdata = statement.metadata
 
@@ -451,10 +451,10 @@ class ExpressionFuncNode(BaseFuncNode):
         FUNCS.update({f.identifier: f for f in new_funcs})
 
         return cls(
-            func_uid,
+            func_id,
             expr_type,
-            inputs,
-            outputs,
+            [i.identifier for i in inputs],
+            [o.identifier for o in outputs],
             h_edges,
             h_graph,
             mdata,
@@ -469,13 +469,16 @@ class ExpressionFuncNode(BaseFuncNode):
         output_vars: List[VariableNode],
     ):
         out_id = output_vars[0].identifier
-        cur_nsp = out_id.namspace
+        cur_nsp = out_id.namespace
         cur_scp = out_id.scope
 
         uid2node = {n.uid: n for n in nodes}
         lambda_def = None
         for node in nodes:
-            if node.def_type == "LAMBDA":
+            if (
+                isinstance(node, ExprDefinitionNode)
+                and node.def_type == "LAMBDA"
+            ):
                 lambda_def = node
                 break
 
@@ -531,7 +534,7 @@ class ExpressionFuncNode(BaseFuncNode):
             expr_func_node = OperationFuncNode.from_expr_def(expr_node_def)
             output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
             new_hyper_edge = HyperEdge(
-                input_var_nodes, expr_func_node, [output_var]
+                expr_func_node, input_var_nodes, [output_var]
             )
             new_var_nodes.append(output_var)
             new_func_nodes.append(expr_func_node)
@@ -562,21 +565,80 @@ class ExpressionFuncNode(BaseFuncNode):
 
 @dataclass(repr=False, frozen=False)
 class BaseConFuncNode(BaseFuncNode):
-    identifier: ContainerIdentifier
-    exit: ContainerIdentifier = None
+    exit: FunctionIdentifier = None
+
+    def __hash__(self):
+        return super().__hash__()
 
     @classmethod
-    def from_air(cls, container: ContainerDef) -> BaseConFuncNode:
-        # TODO: implement this for BaseFuncNode
-        base_values = super().from_air(container)
-        con_id = container.identifier
-        hyper_edges = base_values[4]
+    def from_container(
+        cls,
+        container: ContainerDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> BaseConFuncNode:
+        func_id = FunctionIdentifier.from_container_id(container.identifier)
+        print(container.__class__.__name__)
+        print(type(container))
+        func_type = FunctionType.from_con(container.__class__.__name__)
+        inputs = BaseFuncNode.get_or_create_vars(
+            container.arguments, AIR, VARS
+        )
+        outputs = BaseFuncNode.get_or_create_vars(
+            container.updated + container.return_value, AIR, VARS
+        )
+
+        hyper_edges = list()
+        for stmt in container.statements:
+            if isinstance(stmt, CallStmtDef):
+                # Create a new Container type function node defintion
+                new_con_id = stmt.container_id
+                con_def = AIR.containers[new_con_id]
+                con_type = con_def["type"]
+                if con_type == "loop":
+                    new_func = LoopConFuncNode.from_container(
+                        con_def, AIR, VARS, FUNCS
+                    )
+                elif con_type == "function":
+                    new_func = BaseConFuncNode.from_container(
+                        con_def, AIR, VARS, FUNCS
+                    )
+                else:
+                    raise TypeError(f"Unrecognized container type: {con_type}")
+            elif isinstance(stmt, LambdaStmtDef):
+                # Create a new Expression type function node definiton
+                new_func = ExpressionFuncNode.from_lambda_stmt(
+                    stmt, AIR, VARS, FUNCS
+                )
+            else:
+                raise TypeError(f"Unrecognized statement type: {type(stmt)}")
+            FUNCS[new_func.identifier] = new_func
+            hyper_edges.append(
+                HyperEdge(
+                    new_func,
+                    new_func.input_variables,
+                    new_func.output_variables,
+                )
+            )
+
+        hyper_graph = BaseFuncNode.create_hyper_graph(hyper_edges)
+        metadata = container.metadata
         exit_id = None
         for edge in hyper_edges:
             first_output = edge.outputs[0]
-            if first_output.identifier.var_name == "EXIT":
-                exit_id = first_output.identifier
-        return cls(*base_values, con_id, exit=exit_id)
+            if first_output.name == "EXIT":
+                exit_id = first_output
+        return cls(
+            func_id,
+            func_type,
+            [i.identifier for i in inputs],
+            [o.identifier for o in outputs],
+            hyper_edges,
+            hyper_graph,
+            metadata,
+            exit=exit_id,
+        )
 
     @classmethod
     def from_data(cls, data: Dict[str, Any]):
@@ -690,8 +752,8 @@ class LambdaNode(BaseNode):
 
 @dataclass
 class HyperEdge:
-    inputs: Iterable[VariableNode]
     func_node: BaseFuncNode
+    inputs: Iterable[VariableNode]
     outputs: Iterable[VariableNode]
 
     def __call__(self):
@@ -752,7 +814,7 @@ class HyperEdge:
     def __hash__(self):
         return hash(
             (
-                self.func_node.uid,
+                self.func_node.identifier,
                 tuple([inp.uid for inp in self.inputs]),
                 tuple([out.uid for out in self.outputs]),
             )
@@ -761,8 +823,8 @@ class HyperEdge:
     @classmethod
     def from_dict(cls, data: dict, all_nodes: Dict[str, BaseNode]):
         return cls(
-            [all_nodes[n_id] for n_id in data["inputs"]],
             all_nodes[data["function"]],
+            [all_nodes[n_id] for n_id in data["inputs"]],
             [all_nodes[n_id] for n_id in data["outputs"]],
         )
 
@@ -1264,23 +1326,22 @@ class GrFNType:
 
 @dataclass
 class GroundedFunctionNetwork:
-    uid: str
-    identifier: str
+    identifier: GrFNIdentifier
+    entry_point: FunctionIdentifier
     functions: Dict[FunctionIdentifier, BaseFuncNode]
     variables: Dict[VariableIdentifier, VariableNode]
     objects: Dict[ObjectIdentifier, ObjectDef]
     types: Dict[TypeIdentifier, TypeDef]
     metadata: List[TypedMetadata]
-    entry_point: FunctionIdentifier = None
 
     def __post_init__(self):
         self.namespace = self.identifier.namespace
         self.scope = self.identifier.scope
-        self.name = self.identifier.con_name
+        self.name = self.identifier.name
         self.label = f"{self.name} ({self.namespace}.{self.scope})"
 
         # NOTE: removing detached variables from GrFN
-        self.__remove_detatched_vars()
+        # self.__remove_detatched_vars()
 
         # TODO: call expression function vectorization at some point in time on
         # load
@@ -1303,99 +1364,99 @@ class GroundedFunctionNetwork:
         for idx in del_indices:
             del self.variables[idx]
 
-    def __init__(
-        self,
-        uid: str,
-        id: ContainerIdentifier,
-        timestamp: str,
-        # G: nx.DiGraph,
-        H: List[HyperEdge],
-        S: nx.DiGraph,
-        T: List[TypeDef],
-        M: List[TypedMetadata],
-    ):
-        # super().__init__(G)
-        self.hyper_edges = H
-        self.subgraphs = S
+    # def __init__(
+    #     self,
+    #     uid: str,
+    #     id: ContainerIdentifier,
+    #     timestamp: str,
+    #     # G: nx.DiGraph,
+    #     H: List[HyperEdge],
+    #     S: nx.DiGraph,
+    #     T: List[TypeDef],
+    #     M: List[TypedMetadata],
+    # ):
+    #     # super().__init__(G)
+    #     self.hyper_edges = H
+    #     self.subgraphs = S
 
-        self.uid = uid
-        self.timestamp = timestamp
-        self.namespace = id.namespace
-        self.scope = id.scope
-        self.name = id.con_name
-        self.label = f"{self.name} ({self.namespace}.{self.scope})"
-        self.metadata = M
+    #     self.uid = uid
+    #     self.timestamp = timestamp
+    #     self.namespace = id.namespace
+    #     self.scope = id.scope
+    #     self.name = id.name
+    #     self.label = f"{self.name} ({self.namespace}.{self.scope})"
+    #     self.metadata = M
 
-        self.variables = [n for n in self.nodes if isinstance(n, VariableNode)]
-        self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
-        self.types = T
+    #     self.variables = [n for n in self.nodes if isinstance(n, VariableNode)]
+    #     self.lambdas = [n for n in self.nodes if isinstance(n, LambdaNode)]
+    #     self.types = T
 
-        self.__remove_detached_vars()
+    #     self.__remove_detached_vars()
 
-        root_subgraphs = [s for s in self.subgraphs if not s.parent]
-        if len(root_subgraphs) != 1:
-            raise Exception(
-                "Error: Incorrect number of root subgraphs found in GrFN."
-                + f"Should be 1 and found {len(root_subgraphs)}."
-            )
-        self.root_subgraph = root_subgraphs[0]
+    #     root_subgraphs = [s for s in self.subgraphs if not s.parent]
+    #     if len(root_subgraphs) != 1:
+    #         raise Exception(
+    #             "Error: Incorrect number of root subgraphs found in GrFN."
+    #             + f"Should be 1 and found {len(root_subgraphs)}."
+    #         )
+    #     self.root_subgraph = root_subgraphs[0]
 
-        for lambda_node in self.lambdas:
-            lambda_node.v_function = np.vectorize(lambda_node.function)
+    #     for lambda_node in self.lambdas:
+    #         lambda_node.v_function = np.vectorize(lambda_node.function)
 
-        # TODO decide how we detect configurable inputs for execution
-        # Configurable inputs are all variables assigned to a literal in the
-        # root level subgraph AND input args to the root level subgraph
-        self.inputs = [
-            n
-            for e in self.hyper_edges
-            for n in e.outputs
-            if (
-                n in self.root_subgraph.nodes
-                and e.lambda_fn.func_type == LambdaType.LITERAL
-            )
-        ]
-        self.inputs.extend(
-            [
-                n
-                for n, d in self.in_degree()
-                if d == 0 and isinstance(n, VariableNode)
-            ]
-        )
-        self.literal_vars = list()
-        for var_node in self.variables:
-            preds = list(self.predecessors(var_node))
-            if len(preds) > 0 and preds[0].func_type == LambdaType.LITERAL:
-                self.literal_vars.append(var_node)
-        self.outputs = [
-            n
-            for n, d in self.out_degree()
-            if d == 0
-            and isinstance(n, VariableNode)
-            and n in self.root_subgraph.nodes
-        ]
+    #     # TODO decide how we detect configurable inputs for execution
+    #     # Configurable inputs are all variables assigned to a literal in the
+    #     # root level subgraph AND input args to the root level subgraph
+    #     self.inputs = [
+    #         n
+    #         for e in self.hyper_edges
+    #         for n in e.outputs
+    #         if (
+    #             n in self.root_subgraph.nodes
+    #             and e.lambda_fn.func_type == LambdaType.LITERAL
+    #         )
+    #     ]
+    #     self.inputs.extend(
+    #         [
+    #             n
+    #             for n, d in self.in_degree()
+    #             if d == 0 and isinstance(n, VariableNode)
+    #         ]
+    #     )
+    #     self.literal_vars = list()
+    #     for var_node in self.variables:
+    #         preds = list(self.predecessors(var_node))
+    #         if len(preds) > 0 and preds[0].func_type == LambdaType.LITERAL:
+    #             self.literal_vars.append(var_node)
+    #     self.outputs = [
+    #         n
+    #         for n, d in self.out_degree()
+    #         if d == 0
+    #         and isinstance(n, VariableNode)
+    #         and n in self.root_subgraph.nodes
+    #     ]
 
-        self.uid2varnode = {v.uid: v for v in self.variables}
+    #     self.uid2varnode = {v.uid: v for v in self.variables}
 
-        self.input_names = [var_node.identifier for var_node in self.inputs]
+    #     self.input_names = [var_node.identifier for var_node in self.inputs]
 
-        self.output_names = [var_node.identifier for var_node in self.outputs]
+    #     self.output_names = [var_node.identifier for var_node in self.outputs]
 
-        self.input_name_map = {
-            var_node.identifier.var_name: var_node for var_node in self.inputs
-        }
-        self.input_identifier_map = {
-            var_node.identifier: var_node for var_node in self.inputs
-        }
-        self.literal_identifier_map = {
-            var_node.identifier: var_node for var_node in self.literal_vars
-        }
+    #     self.input_name_map = {
+    #         var_node.identifier.var_name: var_node for var_node in self.inputs
+    #     }
+    #     self.input_identifier_map = {
+    #         var_node.identifier: var_node for var_node in self.inputs
+    #     }
+    #     self.literal_identifier_map = {
+    #         var_node.identifier: var_node for var_node in self.literal_vars
+    #     }
 
-        self.output_name_map = {
-            var_node.identifier.var_name: var_node for var_node in self.outputs
-        }
-        self.FCG = self.to_FCG()
-        self.function_sets = self.build_function_sets()
+    #     self.output_name_map = {
+    #         var_node.identifier.var_name: var_node for var_node in self.outputs
+    #     }
+    #     self.FCG = self.to_FCG()
+    #     self.function_sets = self.build_function_sets()
 
     def __repr__(self):
         return self.__str__()
@@ -1504,177 +1565,173 @@ class GroundedFunctionNetwork:
         }
 
     @classmethod
-    def from_AIR(cls, air: AutoMATES_IR):
-        # network = nx.DiGraph()
-        # hyper_edges = list()
-        # Occs = dict()
-        # subgraphs = nx.DiGraph()
-        child_functions = list()
+    def from_AIR(cls, AIR: AutoMATES_IR):
         FUNCS = dict()
         VARS = dict()
+        OBJECTS = dict()
+        TYPES = dict()
+        METADATA = AIR.metadata
 
-        def add_variable_node(
-            v_id: VariableIdentifier, v_data: VariableDef
-        ) -> VariableNode:
-            node = VariableNode.from_id(v_id, v_data)
-            # network.add_node(node, **(node.get_kwargs()))
-            return node
-
-        variable_nodes = {
-            v_id: add_variable_node(v_id, v_data)
-            for v_id, v_data in air.variables.items()
-        }
-
-        def add_lambda_node(
-            lambda_type: LambdaType,
-            lambda_str: str,
-            metadata: List[TypedMetadata] = None,
-        ) -> LambdaNode:
-            lambda_id = BaseNode.create_node_id()
-            node = LambdaNode.from_AIR(
-                lambda_id, lambda_type, lambda_str, metadata
-            )
-            # network.add_node(node, **(node.get_kwargs()))
-            return node
-
-        def add_hyper_edge(
-            inputs: Iterable[VariableNode],
-            lambda_node: LambdaNode,
-            outputs: Iterable[VariableNode],
-        ) -> None:
-            network.add_edges_from(
-                [(in_node, lambda_node) for in_node in inputs]
-            )
-            network.add_edges_from(
-                [(lambda_node, out_node) for out_node in outputs]
-            )
-            hyper_edges.append(HyperEdge(inputs, lambda_node, outputs))
-
-        def translate_container(
-            con: ContainerDef,
-            inputs: Iterable[VariableNode],
-            parent: GrFNSubgraph = None,
-        ) -> Iterable[VariableNode]:
-            con_name = con.identifier
-            if con_name not in Occs:
-                Occs[con_name] = 0
-
-            con_subgraph = GrFNSubgraph.from_container(
-                con, Occs[con_name], parent
-            )
-            live_variables = dict()
-            if len(inputs) > 0:
-                in_var_names = [n.identifier.var_name for n in inputs]
-                in_var_str = ",".join(in_var_names)
-                interface_func_str = f"lambda {in_var_str}:({in_var_str})"
-                func = add_lambda_node(
-                    LambdaType.INTERFACE, interface_func_str
-                )
-                out_nodes = [variable_nodes[v_id] for v_id in con.arguments]
-                add_hyper_edge(inputs, func, out_nodes)
-                con_subgraph.nodes.append(func)
-
-                live_variables.update(
-                    {id: node for id, node in zip(con.arguments, out_nodes)}
-                )
-            else:
-                live_variables.update(
-                    {v_id: variable_nodes[v_id] for v_id in con.arguments}
-                )
-
-            con_subgraph.nodes.extend(list(live_variables.values()))
-
-            for stmt in con.statements:
-                translate_stmt(stmt, live_variables, con_subgraph)
-
-            subgraphs.add_node(con_subgraph)
-
-            if parent is not None:
-                subgraphs.add_edge(parent, con_subgraph)
-
-            if len(inputs) > 0:
-                # Do this only if this is not the starting container
-                returned_vars = [variable_nodes[v_id] for v_id in con.returns]
-                update_vars = [variable_nodes[v_id] for v_id in con.updated]
-                output_vars = returned_vars + update_vars
-
-                out_var_names = [n.identifier.var_name for n in output_vars]
-                out_var_str = ",".join(out_var_names)
-                interface_func_str = f"lambda {out_var_str}:({out_var_str})"
-                func = add_lambda_node(
-                    LambdaType.INTERFACE, interface_func_str
-                )
-                con_subgraph.nodes.append(func)
-                return (output_vars, func)
-
-        @singledispatch
-        def translate_stmt(
-            stmt: StmtDef,
-            live_variables: Dict[VariableIdentifier, VariableNode],
-            parent: GrFNSubgraph,
-        ) -> None:
-            raise ValueError(f"Unsupported statement type: {type(stmt)}")
-
-        @translate_stmt.register
-        def _(
-            stmt: CallStmtDef,
-            live_variables: Dict[VariableIdentifier, VariableNode],
-            subgraph: GrFNSubgraph,
-        ) -> None:
-            new_con = air.containers[stmt.call_id]
-            if stmt.call_id not in Occs:
-                Occs[stmt.call_id] = 0
-
-            inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
-            (con_outputs, interface_func) = translate_container(
-                new_con, inputs, subgraph
-            )
-            Occs[stmt.call_id] += 1
-            out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
-            subgraph.nodes.extend(out_nodes)
-            add_hyper_edge(con_outputs, interface_func, out_nodes)
-            for output_node in out_nodes:
-                var_id = output_node.identifier
-                live_variables[var_id] = output_node
-
-        @translate_stmt.register
-        def _(
-            stmt: LambdaStmtDef,
-            live_variables: Dict[VariableIdentifier, VariableNode],
-            subgraph: GrFNSubgraph,
-        ) -> None:
-            # inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
-            # out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
-            # func = add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
-            func = ExpressionFuncNode.from_AIR(stmt)
-            child_functions.append(func)
-
-            # TODO: add func to the func_tree here. Requires pointer to
-            # current parent function
-
-            subgraph.nodes.append(func)
-            subgraph.nodes.extend(out_nodes)
-
-            add_hyper_edge(inputs, func, out_nodes)
-            for output_node in out_nodes:
-                var_id = output_node.identifier
-                live_variables[var_id] = output_node
-
-        start_container = air.containers[air.entrypoint]
-        Occs[air.entrypoint] = 0
-        translate_container(start_container, [])
-        grfn_uid = str(uuid.uuid4())
-        date_created = datetime.datetime.now().strftime("%Y-%m-%d")
+        root_con = AIR.containers[AIR.entrypoint]
+        root_func = BaseConFuncNode.from_container(root_con, AIR, VARS, FUNCS)
+        root_func_id = root_func.identifier
+        FUNCS[root_func_id] = root_func
         return cls(
-            grfn_uid,
-            air.entrypoint,
-            date_created,
-            network,
-            hyper_edges,
-            subgraphs,
-            air.type_definitions,
-            air.metadata,
+            GrFNIdentifier.from_air_id(AIR.identifier),
+            root_func_id,
+            FUNCS,
+            VARS,
+            OBJECTS,
+            TYPES,
+            METADATA,
         )
+
+        # def add_variable_node(
+        #     v_id: VariableIdentifier, v_data: VariableDef
+        # ) -> VariableNode:
+        #     node = VariableNode.from_id(v_id, v_data)
+        #     # network.add_node(node, **(node.get_kwargs()))
+        #     return node
+
+        # variable_nodes = {
+        #     v_id: add_variable_node(v_id, v_data)
+        #     for v_id, v_data in air.variables.items()
+        # }
+
+        # def add_lambda_node(
+        #     lambda_type: LambdaType,
+        #     lambda_str: str,
+        #     metadata: List[TypedMetadata] = None,
+        # ) -> LambdaNode:
+        #     lambda_id = BaseNode.create_node_id()
+        #     node = LambdaNode.from_AIR(
+        #         lambda_id, lambda_type, lambda_str, metadata
+        #     )
+        #     # network.add_node(node, **(node.get_kwargs()))
+        #     return node
+
+        # def add_hyper_edge(
+        #     inputs: Iterable[VariableNode],
+        #     lambda_node: LambdaNode,
+        #     outputs: Iterable[VariableNode],
+        # ) -> None:
+        #     network.add_edges_from(
+        #         [(in_node, lambda_node) for in_node in inputs]
+        #     )
+        #     network.add_edges_from(
+        #         [(lambda_node, out_node) for out_node in outputs]
+        #     )
+        #     hyper_edges.append(HyperEdge(lambda_node, inputs, outputs))
+
+        # def translate_container(
+        #     con: ContainerDef,
+        #     inputs: Iterable[VariableNode],
+        #     parent: GrFNSubgraph = None,
+        # ) -> Iterable[VariableNode]:
+        #     con_name = con.identifier
+        #     if con_name not in Occs:
+        #         Occs[con_name] = 0
+
+        #     con_subgraph = GrFNSubgraph.from_container(
+        #         con, Occs[con_name], parent
+        #     )
+        #     live_variables = dict()
+        #     if len(inputs) > 0:
+        #         in_var_names = [n.identifier.var_name for n in inputs]
+        #         in_var_str = ",".join(in_var_names)
+        #         interface_func_str = f"lambda {in_var_str}:({in_var_str})"
+        #         func = add_lambda_node(
+        #             LambdaType.INTERFACE, interface_func_str
+        #         )
+        #         out_nodes = [variable_nodes[v_id] for v_id in con.arguments]
+        #         add_hyper_edge(inputs, func, out_nodes)
+        #         con_subgraph.nodes.append(func)
+
+        #         live_variables.update(
+        #             {id: node for id, node in zip(con.arguments, out_nodes)}
+        #         )
+        #     else:
+        #         live_variables.update(
+        #             {v_id: variable_nodes[v_id] for v_id in con.arguments}
+        #         )
+
+        #     con_subgraph.nodes.extend(list(live_variables.values()))
+
+        #     for stmt in con.statements:
+        #         translate_stmt(stmt, live_variables, con_subgraph)
+
+        #     subgraphs.add_node(con_subgraph)
+
+        #     if parent is not None:
+        #         subgraphs.add_edge(parent, con_subgraph)
+
+        #     if len(inputs) > 0:
+        #         # Do this only if this is not the starting container
+        #         returned_vars = [variable_nodes[v_id] for v_id in con.returns]
+        #         update_vars = [variable_nodes[v_id] for v_id in con.updated]
+        #         output_vars = returned_vars + update_vars
+
+        #         out_var_names = [n.identifier.var_name for n in output_vars]
+        #         out_var_str = ",".join(out_var_names)
+        #         interface_func_str = f"lambda {out_var_str}:({out_var_str})"
+        #         func = add_lambda_node(
+        #             LambdaType.INTERFACE, interface_func_str
+        #         )
+        #         con_subgraph.nodes.append(func)
+        #         return (output_vars, func)
+
+        # @singledispatch
+        # def translate_stmt(
+        #     stmt: StmtDef,
+        #     live_variables: Dict[VariableIdentifier, VariableNode],
+        #     parent: GrFNSubgraph,
+        # ) -> None:
+        #     raise ValueError(f"Unsupported statement type: {type(stmt)}")
+
+        # @translate_stmt.register
+        # def _(
+        #     stmt: CallStmtDef,
+        #     live_variables: Dict[VariableIdentifier, VariableNode],
+        #     subgraph: GrFNSubgraph,
+        # ) -> None:
+        #     new_con = air.containers[stmt.call_id]
+        #     if stmt.call_id not in Occs:
+        #         Occs[stmt.call_id] = 0
+
+        #     inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
+        #     (con_outputs, interface_func) = translate_container(
+        #         new_con, inputs, subgraph
+        #     )
+        #     Occs[stmt.call_id] += 1
+        #     out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
+        #     subgraph.nodes.extend(out_nodes)
+        #     add_hyper_edge(con_outputs, interface_func, out_nodes)
+        #     for output_node in out_nodes:
+        #         var_id = output_node.identifier
+        #         live_variables[var_id] = output_node
+
+        # @translate_stmt.register
+        # def _(
+        #     stmt: LambdaStmtDef,
+        #     live_variables: Dict[VariableIdentifier, VariableNode],
+        #     subgraph: GrFNSubgraph,
+        # ) -> None:
+        #     # inputs = [variable_nodes[v_id] for v_id in stmt.inputs]
+        #     # out_nodes = [variable_nodes[v_id] for v_id in stmt.outputs]
+        #     # func = add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
+        #     func = ExpressionFuncNode.from_AIR(stmt)
+        #     child_functions.append(func)
+
+        #     # TODO: add func to the func_tree here. Requires pointer to
+        #     # current parent function
+
+        #     subgraph.nodes.append(func)
+        #     subgraph.nodes.extend(out_nodes)
+
+        #     add_hyper_edge(inputs, func, out_nodes)
+        #     for output_node in out_nodes:
+        #         var_id = output_node.identifier
+        #         live_variables[var_id] = output_node
 
     def to_FCG(self):
         G = nx.DiGraph()

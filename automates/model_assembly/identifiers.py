@@ -8,10 +8,6 @@ class BaseIdentifier(ABC):
     namespace: str
     scope: str
 
-    @abstractclassmethod
-    def from_air_json(cls, data: dict) -> BaseIdentifier:
-        return NotImplemented
-
     @staticmethod
     def from_str(data: str):
         components = data.split("::")
@@ -70,7 +66,37 @@ class IndexedIdentifier(NamedIdentifier):
         return f"{super().__str__()}::{self.index}"
 
     def __hash__(self):
-        return hash(super().__hash__(), (self.index,))
+        return hash((super().__hash__(), (self.index,)))
+
+
+@dataclass(frozen=True)
+class AIRIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(AIR)\t{super().__str__()}"
+
+    @classmethod
+    def from_filename(cls, filename: str):
+        return cls("", "", filename)
+
+
+@dataclass(frozen=True)
+class GrFNIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(GrFN)\t{super().__str__()}"
+
+    @classmethod
+    def from_air_id(cls, air_id: AIRIdentifier):
+        return cls(air_id.namespace, air_id.scope, air_id.name)
+
+
+@dataclass(frozen=True)
+class GroMEtIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"(GroMEt)\t{super().__str__()}"
+
+    @classmethod
+    def from_grfn_id(cls, grfn_id: GrFNIdentifier):
+        return cls(grfn_id.namespace, grfn_id.scope, grfn_id.name)
 
 
 @dataclass(frozen=True)
@@ -79,8 +105,8 @@ class ContainerIdentifier(NamedIdentifier):
         return f"(Container)\t{super().__str__()}"
 
     @classmethod
-    def from_air_json(cls, data: dict) -> ContainerIdentifier:
-        (_, ns, sc, name) = data["name"].split("::")
+    def from_name_str(cls, name: str) -> ContainerIdentifier:
+        (_, ns, sc, name) = name.split("::")
         return cls(ns, sc, name)
 
 
@@ -88,6 +114,21 @@ class ContainerIdentifier(NamedIdentifier):
 class FunctionIdentifier(IndexedIdentifier):
     def __str__(self):
         return f"(Function)\t{super().__str__()}"
+
+    @classmethod
+    def from_container_id(cls, con_id: ContainerIdentifier):
+        # FIXME: remove the hardcoded index
+        return cls(con_id.namespace, con_id.scope, con_id.name, 0)
+
+    @classmethod
+    def from_lambda_stmt_id(cls, stmt_id: LambdaStmtIdentifier):
+        return cls(
+            stmt_id.namespace, stmt_id.scope, stmt_id.name, stmt_id.index
+        )
+
+    @classmethod
+    def from_operator_func(cls, operation: str, uid: int):
+        return cls("@builtin", "@global", operation, uid)
 
 
 @dataclass(frozen=True)
@@ -171,21 +212,29 @@ class VariableIdentifier(IndexedIdentifier):
             raise ValueError(f"Unrecognized variable identifier: {data}")
 
     @classmethod
-    def from_str(cls, var_id: str):
-        elements = var_id.split("::")
+    def from_name_str(cls, name: str):
+        elements = name.split("::")
         if len(elements) == 4:
             (ns, sc, vn, ix) = elements
-        else:
+        elif len(elements) == 5:
             (_, ns, sc, vn, ix) = elements
+        else:
+            raise ValueError(
+                f"Unrecognized variable identifier formation for: {name}"
+            )
         return cls(ns, sc, vn, int(ix))
+
+    @classmethod
+    def from_air_json(cls, data: dict):
+        return cls.from_name_str(data["name"])
 
 
 @dataclass(frozen=True)
-class AIRVariableIdentifier(NamedIdentifier):
+class AIRVariableIdentifier(IndexedIdentifier):
     container: ContainerIdentifier
 
     def __hash__(self):
-        return hash(super().__hash__(), self.container.__hash__())
+        return hash((super().__hash__(), self.container.__hash__()))
 
     def __str__(self):
         return f"(Variable)\t{super().__str__()}\t{ {str(self.container)} }"

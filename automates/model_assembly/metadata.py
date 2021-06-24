@@ -188,16 +188,15 @@ class FunctionType(AutoMATESBaseEnum):
             return expected_val
 
     @classmethod
-    def from_con(cls, con_type_name: str) -> FunctionType:
-        con_type = con_type_name.replace("Container", "").lower()
-        if con_type == "func":
+    def from_con(cls, con_cls_name: str) -> FunctionType:
+        if con_cls_name == "FuncContainerDef":
             return cls.CONTAINER
-        elif con_type == "cond":
+        elif con_cls_name == "CondContainerDef":
             return cls.CONDITIONAL
-        elif con_type == "loop":
+        elif con_cls_name == "LoopContainerDef":
             return cls.ITERABLE
         else:
-            raise ValueError(f"Unexpected Container type: {type(con_type)}")
+            raise ValueError(f"Unexpected Container type: {con_cls_name}")
 
     @classmethod
     def from_str(cls, data: str):

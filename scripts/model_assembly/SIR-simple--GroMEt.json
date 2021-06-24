@@ -1,0 +1,1515 @@
+{
+  "syntax": "Gromet",
+  "type": "",
+  "name": "",
+  "metadata": [
+    {
+      "type": "grfn_creation",
+      "provenance": {
+        "method": "model_assembly_pipeline",
+        "timestamp": "2021-06-24 17:46:38.662714"
+      },
+      "name": "SIR-simple"
+    },
+    {
+      "type": "code_collection_reference",
+      "provenance": {
+        "method": "program_analysis_pipeline",
+        "timestamp": "2021-06-24 17:46:38.662656"
+      },
+      "global_reference_uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
+      "files": [
+        {
+          "uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "name": "SIR-simple.f",
+          "path": ""
+        }
+      ]
+    }
+  ],
+  "uid": "d9ead926-4745-dd9e-2789-6389df3277fd",
+  "root": "SIR-simple::SIR-simple::sir::0",
+  "types": [],
+  "literals": [],
+  "junctions": [],
+  "ports": [
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "beta",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663517"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662783"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::beta::-1",
+      "box": "SIR-simple::SIR-simple.sir::infected::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "s",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663388"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662731"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::s::-1",
+      "box": "SIR-simple::SIR-simple.sir::infected::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "i",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663445"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662757"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::i::-1",
+      "box": "SIR-simple::SIR-simple.sir::infected::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "r",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663483"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662771"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::r::-1",
+      "box": "SIR-simple::SIR-simple.sir::infected::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "dt",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663589"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662805"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::dt::-1",
+      "box": "SIR-simple::SIR-simple.sir::infected::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "output",
+      "name": "infected",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663690"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662817"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 19,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::infected::0",
+      "box": "SIR-simple::SIR-simple.sir::infected::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "gamma",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663552"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662794"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::gamma::-1",
+      "box": "SIR-simple::SIR-simple.sir::recovered::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "i",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663445"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662757"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::i::-1",
+      "box": "SIR-simple::SIR-simple.sir::recovered::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "dt",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663589"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662805"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::dt::-1",
+      "box": "SIR-simple::SIR-simple.sir::recovered::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "output",
+      "name": "recovered",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.664806"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662828"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 20,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::recovered::0",
+      "box": "SIR-simple::SIR-simple.sir::recovered::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "s",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663388"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662731"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::s::-1",
+      "box": "SIR-simple::SIR-simple.sir::s::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "infected",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663690"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662817"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 19,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::infected::0",
+      "box": "SIR-simple::SIR-simple.sir::s::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "output",
+      "name": "s",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.665251"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662841"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 22,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::s::0",
+      "box": "SIR-simple::SIR-simple.sir::s::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "infected",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663690"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662817"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 19,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::infected::0",
+      "box": "SIR-simple::SIR-simple.sir::i::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "i",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663445"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662757"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::i::-1",
+      "box": "SIR-simple::SIR-simple.sir::i::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "recovered",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.664806"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662828"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 20,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::recovered::0",
+      "box": "SIR-simple::SIR-simple.sir::i::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "output",
+      "name": "i",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.665630"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662861"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 23,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::i::0",
+      "box": "SIR-simple::SIR-simple.sir::i::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "recovered",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.664806"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662828"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 20,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::recovered::0",
+      "box": "SIR-simple::SIR-simple.sir::r::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "r",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663483"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662771"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::r::-1",
+      "box": "SIR-simple::SIR-simple.sir::r::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "output",
+      "name": "r",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.666118"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662877"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 24,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::r::0",
+      "box": "SIR-simple::SIR-simple.sir::r::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "r",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.666118"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662877"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 24,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::r::0",
+      "box": "SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "s",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.665251"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662841"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 22,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::s::0",
+      "box": "SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "i",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.665630"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662861"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 23,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::i::0",
+      "box": "SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+    },
+    {
+      "syntax": "Port",
+      "type": "output",
+      "name": "RETURN_VAL",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663633"
+          },
+          "data_type": "unknown",
+          "measurement_scale": "unknown",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662913"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": null,
+            "line_end": null,
+            "col_begin": null,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::RETURN_VAL::-1",
+      "box": "SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "s",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663388"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662731"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::s::-1",
+      "box": "SIR-simple::SIR-simple::sir::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "i",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663445"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662757"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::i::-1",
+      "box": "SIR-simple::SIR-simple::sir::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "r",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663483"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662771"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::r::-1",
+      "box": "SIR-simple::SIR-simple::sir::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "beta",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663517"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662783"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::beta::-1",
+      "box": "SIR-simple::SIR-simple::sir::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "gamma",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663552"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662794"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::gamma::-1",
+      "box": "SIR-simple::SIR-simple::sir::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "input",
+      "name": "dt",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663589"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662805"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::dt::-1",
+      "box": "SIR-simple::SIR-simple::sir::0"
+    },
+    {
+      "syntax": "Port",
+      "type": "output",
+      "name": "RETURN_VAL",
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663633"
+          },
+          "data_type": "unknown",
+          "measurement_scale": "unknown",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662913"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": null,
+            "line_end": null,
+            "col_begin": null,
+            "col_end": null
+          }
+        }
+      ],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::RETURN_VAL::-1",
+      "box": "SIR-simple::SIR-simple::sir::0"
+    }
+  ],
+  "wires": [],
+  "boxes": [
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Mult",
+      "metadata": [],
+      "uid": "@builtin::@global::Mult::31180785709516803133600914036994478711",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Mult",
+      "metadata": [],
+      "uid": "@builtin::@global::Mult::62567285235560615496690250387604495730",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Add",
+      "metadata": [],
+      "uid": "@builtin::@global::Add::88492542559176912745155779857959793638",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Add",
+      "metadata": [],
+      "uid": "@builtin::@global::Add::50889340933368986200238749799804982456",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Div",
+      "metadata": [],
+      "uid": "@builtin::@global::Div::282216876523142430423268877404258348150",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "USub",
+      "metadata": [],
+      "uid": "@builtin::@global::USub::177555969027879721700987253725967774705",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Mult",
+      "metadata": [],
+      "uid": "@builtin::@global::Mult::280822547512095906949721865272351081990",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "RETURN",
+      "metadata": [],
+      "uid": "@builtin::@global::RETURN::218187972717501088909835893667767261825",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "infected",
+      "metadata": [
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.662964"
+          },
+          "code_type": "block",
+          "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "code_span": {
+            "line_begin": 19,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "uid": "SIR-simple::SIR-simple.sir::infected::0",
+      "ports": [
+        "SIR-simple::SIR-simple.sir::beta::-1",
+        "SIR-simple::SIR-simple.sir::s::-1",
+        "SIR-simple::SIR-simple.sir::i::-1",
+        "SIR-simple::SIR-simple.sir::r::-1",
+        "SIR-simple::SIR-simple.sir::dt::-1",
+        "SIR-simple::SIR-simple.sir::infected::0"
+      ]
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Mult",
+      "metadata": [],
+      "uid": "@builtin::@global::Mult::31146676079817652054148966915670910751",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Mult",
+      "metadata": [],
+      "uid": "@builtin::@global::Mult::66215868863114459189085613406351850771",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "RETURN",
+      "metadata": [],
+      "uid": "@builtin::@global::RETURN::247438101931257818232419969952998987770",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "recovered",
+      "metadata": [
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663014"
+          },
+          "code_type": "block",
+          "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "code_span": {
+            "line_begin": 20,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "uid": "SIR-simple::SIR-simple.sir::recovered::0",
+      "ports": [
+        "SIR-simple::SIR-simple.sir::gamma::-1",
+        "SIR-simple::SIR-simple.sir::i::-1",
+        "SIR-simple::SIR-simple.sir::dt::-1",
+        "SIR-simple::SIR-simple.sir::recovered::0"
+      ]
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Sub",
+      "metadata": [],
+      "uid": "@builtin::@global::Sub::261115110578587722541306262927669603346",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "RETURN",
+      "metadata": [],
+      "uid": "@builtin::@global::RETURN::180170742101961147163541826741700771601",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "s",
+      "metadata": [
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663049"
+          },
+          "code_type": "block",
+          "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "code_span": {
+            "line_begin": 22,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "uid": "SIR-simple::SIR-simple.sir::s::0",
+      "ports": [
+        "SIR-simple::SIR-simple.sir::s::-1",
+        "SIR-simple::SIR-simple.sir::infected::0",
+        "SIR-simple::SIR-simple.sir::s::0"
+      ]
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Add",
+      "metadata": [],
+      "uid": "@builtin::@global::Add::254696546637027390263836477908468290671",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Sub",
+      "metadata": [],
+      "uid": "@builtin::@global::Sub::237715371250374542228925666461573440559",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "RETURN",
+      "metadata": [],
+      "uid": "@builtin::@global::RETURN::241719570838337622478560397004672637807",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "i",
+      "metadata": [
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663079"
+          },
+          "code_type": "block",
+          "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "code_span": {
+            "line_begin": 23,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "uid": "SIR-simple::SIR-simple.sir::i::0",
+      "ports": [
+        "SIR-simple::SIR-simple.sir::infected::0",
+        "SIR-simple::SIR-simple.sir::i::-1",
+        "SIR-simple::SIR-simple.sir::recovered::0",
+        "SIR-simple::SIR-simple.sir::i::0"
+      ]
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "Add",
+      "metadata": [],
+      "uid": "@builtin::@global::Add::141263942652291704721304858869587055077",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "RETURN",
+      "metadata": [],
+      "uid": "@builtin::@global::RETURN::284968922062039814936034702169746840261",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "r",
+      "metadata": [
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663112"
+          },
+          "code_type": "block",
+          "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "code_span": {
+            "line_begin": 24,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
+      "uid": "SIR-simple::SIR-simple.sir::r::0",
+      "ports": [
+        "SIR-simple::SIR-simple.sir::recovered::0",
+        "SIR-simple::SIR-simple.sir::r::-1",
+        "SIR-simple::SIR-simple.sir::r::0"
+      ]
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "RETURN",
+      "metadata": [],
+      "uid": "@builtin::@global::RETURN::278103665146252750571727981750363085165",
+      "ports": []
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "RETURN_VAL",
+      "metadata": [
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663143"
+          },
+          "code_type": "block",
+          "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "code_span": {
+            "line_begin": null,
+            "line_end": null,
+            "col_begin": null,
+            "col_end": null
+          }
+        }
+      ],
+      "uid": "SIR-simple::SIR-simple.sir::RETURN_VAL::-1",
+      "ports": [
+        "SIR-simple::SIR-simple.sir::r::0",
+        "SIR-simple::SIR-simple.sir::s::0",
+        "SIR-simple::SIR-simple.sir::i::0",
+        "SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+      ]
+    },
+    {
+      "syntax": "Box",
+      "type": "",
+      "name": "sir",
+      "metadata": [
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-24 17:46:38.663178"
+          },
+          "code_type": "block",
+          "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
+          "code_span": {
+            "line_begin": 0,
+            "line_end": 25,
+            "col_begin": null,
+            "col_end": null
+          }
+        }
+      ],
+      "uid": "SIR-simple::SIR-simple::sir::0",
+      "ports": [
+        "SIR-simple::SIR-simple.sir::s::-1",
+        "SIR-simple::SIR-simple.sir::i::-1",
+        "SIR-simple::SIR-simple.sir::r::-1",
+        "SIR-simple::SIR-simple.sir::beta::-1",
+        "SIR-simple::SIR-simple.sir::gamma::-1",
+        "SIR-simple::SIR-simple.sir::dt::-1",
+        "SIR-simple::SIR-simple.sir::RETURN_VAL::-1"
+      ]
+    }
+  ],
+  "variables": []
+}

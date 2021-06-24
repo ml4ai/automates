@@ -1,9 +1,11 @@
+from __future__ import annotations
 import json
-from typing import NewType, List, Tuple, Union
+from typing import NewType, List, Tuple, Union, Dict
 from dataclasses import dataclass, field, asdict
 
 
-from .networks import GroundedFunctionNetwork
+from .networks import GroundedFunctionNetwork, BaseFuncNode, VariableNode
+from .identifiers import FunctionIdentifier, VariableIdentifier
 from ..utils.misc import uuid
 
 """
@@ -377,8 +379,44 @@ class Port(Valued):
     A Port may be optionally named (e.g., named argument)
     """
 
+    # type: Union[UidType, None]
+    # name: Union[str, None]
+    # metadata: Metadata
+    # value: Union[Literal, None]
+    # value_type: Union[UidType, None]
     uid: UidPort
     box: UidBox
+
+    @staticmethod
+    def uid_from_var_id(var_id: VariableIdentifier) -> UidPort:
+        return UidPort(
+            "::".join(
+                [
+                    var_id.namespace,
+                    var_id.scope,
+                    var_id.name,
+                    str(var_id.index),
+                ]
+            )
+        )
+
+    @classmethod
+    def from_var_and_box(cls, var_node: VariableNode, box: Box, port_dir: str):
+        port_uid = Port.uid_from_var_id(var_node.identifier)
+        port_type = UidType(port_dir)
+        port_name = var_node.identifier.name
+        port_metadata = var_node.metadata
+        port_value = None
+        port_val_type = None
+        return cls(
+            port_type,
+            port_name,
+            port_metadata,
+            port_value,
+            port_val_type,
+            port_uid,
+            box.uid,
+        )
 
 
 @dataclass
@@ -429,7 +467,59 @@ class Box(TypedGrometElm):
     """
 
     uid: UidBox
-    ports: Union[List[UidPort], None]
+    ports: List[UidPort]
+
+    @staticmethod
+    def data_from_func_node(
+        func: BaseFuncNode,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ):
+        (L, J, P, W, B, V) = [list() for _ in range(6)]
+        func_box = Box.from_func_node(func)
+
+        B.append(func_box)
+        box_ports = [
+            Port.from_var_and_box(VARS[var_id], func_box, "input")
+            for var_id in func.input_variables
+        ]
+        box_ports.extend(
+            [
+                Port.from_var_and_box(VARS[var_id], func_box, "output")
+                for var_id in func.output_variables
+            ]
+        )
+        P.extend(box_ports)
+
+        return (L, J, P, W, B, V)
+
+    @staticmethod
+    def uid_from_func_id(func_id: FunctionIdentifier) -> UidBox:
+        return UidBox(
+            "::".join(
+                [
+                    func_id.namespace,
+                    func_id.scope,
+                    func_id.name,
+                    str(func_id.index),
+                ]
+            )
+        )
+
+    @classmethod
+    def from_func_node(cls, func: BaseFuncNode):
+        # Needs type, name, metadata, and the fields above
+        box_type = UidType("")
+        f_id = func.identifier
+        box_name = f_id.name
+        box_metadata = func.metadata
+        box_uid = cls.uid_from_func_id(f_id)
+        box_ports = [
+            Port.uid_from_var_id(var_id)
+            for var_id in func.input_variables + func.output_variables
+        ]
+
+        return cls(box_type, box_name, box_metadata, box_uid, box_ports)
 
 
 @dataclass
@@ -751,6 +841,10 @@ class Variable(TypedGrometElm):
     uid: UidVariable
     states: List[Union[UidPort, UidWire, UidJunction]]
 
+    @classmethod
+    def from_var_node(cls, var_node: VariableNode):
+        pass
+
 
 # --------------------
 # Gromet top level
@@ -759,36 +853,55 @@ class Variable(TypedGrometElm):
 @dataclass
 class Gromet(TypedGrometElm):
     uid: UidGromet
-    root: Union[UidBox, None]
-    types: Union[List[TypeDeclaration], None]
-    literals: Union[List[Literal], None]
-    junctions: Union[List[Junction], None]
-    ports: Union[List[Port], None]
-    wires: Union[List[Wire], None]
-    boxes: List[Box]  # has to be one top-level Box
-    variables: Union[List[Variable], None]
+    root: UidBox
+    types: List[TypeDeclaration]
+    literals: List[Literal]
+    junctions: List[Junction]
+    ports: List[Port]
+    wires: List[Wire]
+    boxes: List[Box]  # has to be one top-level Box with same uid as root
+    variables: List[Variable]
 
     @classmethod
     def from_GrFN(cls, G: GroundedFunctionNetwork):
-        id_boxes = {
-            f_node.identifier: Box.from_func_node(f_node)
-            for f_node in G.functions
-        }
-        id_vars = {
-            v_node.identifier: Box.from_func_node(v_node)
-            for v_node in G.variables
-        }
-        root_box = id_boxes[G.entry_point]
+        (literals, junctions, ports, wires, boxes, variables) = [
+            list() for _ in range(6)
+        ]
+        for func_node in G.functions.values():
+            (
+                nlits,
+                njuncs,
+                nports,
+                nwires,
+                nboxes,
+                nvars,
+            ) = Box.data_from_func_node(func_node, G.variables, G.functions)
+            literals.extend(nlits)
+            junctions.extend(njuncs)
+            ports.extend(nports)
+            wires.extend(nwires)
+            boxes.extend(nboxes)
+            variables.extend(nvars)
+
+        gromet_type = UidType("")
+        gromet_name = ""
+        gromet_metdata = G.metadata
+        gromet_id = UidGromet(str(uuid.uuid4()))
+        root_uid = Box.uid_from_func_id(G.entry_point)
+        gromet_types = []
         return cls(
-            str(uuid.uuid4()),
-            root_box,
-            [],
-            [],
-            [],
-            [],
-            [],
-            list(id_boxes.values()),
-            list(id_vars.values()),
+            gromet_type,
+            gromet_name,
+            gromet_metdata,
+            gromet_id,
+            root_uid,
+            gromet_types,
+            literals,
+            junctions,
+            ports,
+            wires,
+            boxes,
+            variables,
         )
 
 
@@ -806,11 +919,14 @@ class Measure(GrometElm):
 # -----------------------------------------------------------------------------
 
 
-def gromet_to_json(gromet: Gromet, tgt_file: Union[str, None] = None):
-    if tgt_file is None:
+def gromet_to_json(gromet: Gromet, tgt_file: str = ""):
+    if tgt_file == "":
         tgt_file = f"{gromet.name}_gromet_{gromet.type}.json"
     json.dump(
-        asdict(gromet), open(tgt_file, "w"), indent=2  # gromet.to_dict(),
+        asdict(gromet),
+        open(tgt_file, "w"),
+        indent=2,
+        default=str,  # gromet.to_dict(),
     )
 
 
