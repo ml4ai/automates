@@ -359,7 +359,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 
     // get alignments
-    val alignments = modelCompAlignmentHandler.w2v.alignTexts(paper1texts, paper2texts)
+    val alignments = modelCompAlignmentHandler.w2v.alignTexts(paper1texts, paper2texts, useBigrams = true)
 
     // group by src idx, and keep only top k (src, dst, score) for each src idx
     val topKAlignments = Aligner.topKBySrc(alignments, 3, scoreThreshold, debug)

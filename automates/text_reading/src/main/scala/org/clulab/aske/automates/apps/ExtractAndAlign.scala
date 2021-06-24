@@ -342,7 +342,7 @@ object ExtractAndAlign {
     val alignments = scala.collection.mutable.HashMap[String, Seq[Seq[Alignment]]]()
 
     if (commentDescriptionMentions.isDefined && variableShortNames.isDefined) {
-      val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames.get.map(_.toLowerCase), commentDescriptionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(variableShortNames.get.map(_.toLowerCase), commentDescriptionMentions.get.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(SRC_TO_COMMENT) = Aligner.topKBySrc(varNameAlignments, numAlignmentsSrcToComment.get)
     }
@@ -356,13 +356,13 @@ object ExtractAndAlign {
 
       // link the units attached to a var ('t' in 't is measured in days') to the variable of the description mention ('t' in 't is time')
       if (throughVar.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
       // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
@@ -371,7 +371,7 @@ object ExtractAndAlign {
     /** Align text variable to SVO groundings
       */
     if (allGlobalVars.nonEmpty && SVOgroundings.isDefined) {
-      val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), SVOgroundings.get.map(_._1.toLowerCase), useBigrams = false)
+      val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), SVOgroundings.get.map(_._1.toLowerCase))
 
       // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
       alignments(GLOBAL_VAR_TO_SVO) = Aligner.topKBySrc(varNameAlignments, 1)
@@ -385,14 +385,14 @@ object ExtractAndAlign {
 
       // link the params attached to a var ('t' in 't = 5 (days)') to the variable of the description mention ('t' in 't is time')
       if (throughVar.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
@@ -407,14 +407,14 @@ object ExtractAndAlign {
 
       // link the params attached to a var ('t' in 't = 5 (days)') to the variable of the description mention ('t' in 't is time')
       if (throughVar.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
+        val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
