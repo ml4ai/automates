@@ -4,10 +4,8 @@ import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Paths}
 
 import ai.lum.common.ConfigUtils._
-import ai.lum.common.Serializer
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.{DataLoader, TextRouter}
-import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.data.DataLoader
 import org.clulab.odin.Mention
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.FileUtils._

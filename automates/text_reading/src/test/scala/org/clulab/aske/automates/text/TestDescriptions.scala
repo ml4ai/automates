@@ -248,7 +248,7 @@ class TestDescriptions extends ExtractionTest {
     passingTest should s"find descriptions from t12b: ${t12b}" taggedAs(Somebody) in {
       val desired = Seq(
         "Ux" -> Seq("maximum potential water uptake for the profile") //for the profile? - not part of the concept
-      ) // fixme: "rl times pr for each layer and summing over the soil profile" is captured as a description for Ta by identifier_appos_descr rule. (Ta,rl is one identifier)
+      )
       val mentions = extractMentions(t12b)
       testDescriptionEvent(mentions, desired)
 
@@ -271,7 +271,7 @@ class TestDescriptions extends ExtractionTest {
     "Mh0 (m2 d-1)"
     passingTest should s"find descriptions from t1c: ${t1c}" taggedAs(Somebody) in {
       val desired = Seq(
-        "Mh0" -> Seq("matric flux potential"), //fixme: sort_of_appos rule didn't apply due to bad parsing. "potential" is parsed as JJ. (needs to be reviewed - keep the longest)
+        "Mh0" -> Seq("matric flux potential"),
         "Mh0" -> Seq("convenient soil hydraulic property")
       )
       val mentions = extractMentions(t1c)
@@ -648,7 +648,7 @@ class TestDescriptions extends ExtractionTest {
   passingTest should s"find descriptions from t1iToy: ${t1iToy}" taggedAs(Somebody) in {
     val desired =  Seq(
       "S" -> Seq("Susceptible"),
-      "E" -> Seq("exposed"), // fixme: Descriptions of I1, I2, I3 are not extracted (needs to be reviewed - needs a new conj_rule?) // todo: check if I1, I2, I3 are actually identifiers (covid act now p.2)
+      "E" -> Seq("exposed"), 
       "I" -> Seq("infected")
     )
     val mentions = extractMentions(t1iToy)

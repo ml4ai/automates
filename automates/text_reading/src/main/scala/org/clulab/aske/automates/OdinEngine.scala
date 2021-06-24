@@ -4,17 +4,13 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigValueFactory
 import org.clulab.odin.{ExtractorEngine, Mention, State}
-import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.processors.{Document, Processor}
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.aske.automates.entities.{EntityFinder, GazetteerEntityFinder, GrobidEntityFinder, RuleBasedEntityFinder, StringMatchEntityFinder}
-import org.clulab.sequences.LexiconNER
+import org.clulab.aske.automates.entities.{EntityFinder,StringMatchEntityFinder}
 import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughFilter}
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
-import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, LightPreprocessor, PassThroughPreprocessor, Preprocessor}
-
-import scala.io.Source
 
 
 class OdinEngine(

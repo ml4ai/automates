@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.odin.{Mention, _}
 import org.clulab.odin.impl.Taxonomy
-import org.clulab.utils.{DisplayUtils, FileUtils}
+import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
@@ -71,10 +71,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def replaceWithLongerIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val allIdentifierMentions = mentions.filter(_.label == "Identifier")
-    val (mentionsWithIdentifier, other) = mentions.partition(m => m.arguments.contains("variable") && m.arguments
-    ("variable")
-      .head.label == "Identifier")// for now, if there are two vars, then both would be either identifiers or not
-    // identifiers, so can just check the first one
+    val (mentionsWithIdentifier, other) = mentions.partition(m => m.arguments.contains("variable") && m.arguments("variable").head.label == "Identifier")// for now, if there are two vars, then both would be either identifiers or not identifiers, so can just check the first one
     for (m <- mentionsWithIdentifier) {
       val newIdentifiers = new ArrayBuffer[Mention]()
       for (varArg <- m.arguments("variable")) {
@@ -356,12 +353,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val groupedBySent = mentions.groupBy(_.sentence)
 
     for (gr <- groupedBySent) {
-
       val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
       for (gr0 <- groupedByTokenOverlap.values) {
-
+        // we will only be picking the longest one out of the ones that have a variable (identifier) overlap
         for (gr1 <- groupByVarOverlap(gr0).values) {
-          // if there are ConjDescrs among overlapping decsrs (at this point, all of them are withConj - fixme: is this true?), then pick the longest conjDescr
+          // if there are ConjDescrs among overlapping decsrs, then pick the longest conjDescr
           if (gr1.exists(_.label.contains("ConjDescription"))) {
             // type 2 has same num of vars and descriptions (a minimum of two pairs)
             val (type2, type1) = gr1.partition(_.label.contains("Type2"))
@@ -374,14 +370,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
               val longestConjDescr = gr1.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
               toReturn.append(longestConjDescr)
             }
-
           } else {
             for (men <- gr1) toReturn.append(men)
           }
         }
-
-
-
       }
     }
     toReturn.distinct

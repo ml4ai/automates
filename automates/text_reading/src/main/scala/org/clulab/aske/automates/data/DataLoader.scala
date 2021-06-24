@@ -3,11 +3,9 @@ package org.clulab.aske.automates.data
 import java.io.File
 
 import ai.lum.common.StringUtils._
-import org.clulab.aske.automates.apps.AlignmentBaseline
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.utils.FileUtils.getTextFromFile
 import org.clulab.aske.automates.cosmosjson._
-import scala.collection.mutable
 import scala.util.matching.Regex
 
 

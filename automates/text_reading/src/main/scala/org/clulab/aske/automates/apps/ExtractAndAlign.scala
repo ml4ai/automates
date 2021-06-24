@@ -9,18 +9,18 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement, mkTextVarLinkElement, mkTextVarLinkElementForModelComparison}
+import org.clulab.aske.automates.grfn.GrFNParser.mkHypothesis
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.{Attachment, Mention}
-import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
+import org.clulab.utils.{AlignmentJsonUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding.{SVOGrounder, sparqlResult}
+import org.clulab.grounding.sparqlResult
 import org.clulab.odin.serialization.json.JSONSerializer
 import java.util.UUID.randomUUID
-import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
+import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer

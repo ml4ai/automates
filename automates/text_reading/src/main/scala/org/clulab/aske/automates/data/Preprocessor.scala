@@ -35,11 +35,7 @@ class EdgeCaseParagraphPreprocessor() extends Preprocessor {
 
 object EdgeCaseParagraphPreprocessor {
   def apply(): EdgeCaseParagraphPreprocessor = new EdgeCaseParagraphPreprocessor()
-
 }
-
-
-
 
 class LightPreprocessor() extends Preprocessor {
 
@@ -59,7 +55,6 @@ class LightPreprocessor() extends Preprocessor {
 
 object LightPreprocessor {
   def apply(): LightPreprocessor = new LightPreprocessor
-
 }
 
 class PassThroughPreprocessor() extends Preprocessor {
