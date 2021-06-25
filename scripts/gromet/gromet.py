@@ -676,6 +676,7 @@ class Loop(Box, HasContents):
 
 VariableState = NewType('VariableState', Union[UidPort, UidWire, UidJunction])
 
+
 @dataclass
 class Variable(TypedGrometElm):
     """
@@ -685,11 +686,15 @@ class Variable(TypedGrometElm):
         (b) denotes a modeled domain (world) state.
     Currently, (b) will be represented in Metadata.
 
-    TODO document
+    'states' represents the set of model Valued components
+        that constitute the Variables
+    'proxy_state' denotes the single model element that can
+        be used as a representative proxy for the variable
+        (e.g., visualization).
 
     """
     uid: UidVariable
-    main_state: VariableState
+    proxy_state: VariableState
     states: List[VariableState]
 
 
@@ -732,6 +737,10 @@ def gromet_to_json(gromet: Gromet,
 # -----------------------------------------------------------------------------
 
 """
+Changes 2021-06-22:
+() Added 'proxy_state' field to store single Valued model component from the
+    Variable state set that can be used as a proxy for the variable.
+
 Changes 2021-06-21:
 () Changes to Conditional:
     () The conditional branch body may now be either an Expression or Function.

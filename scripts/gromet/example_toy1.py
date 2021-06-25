@@ -206,23 +206,31 @@ def generate_gromet() -> Gromet:
              add1, add1_exp]
 
     variables = [
-        Variable(uid=UidVariable("var1"), name="x", type=UidType("Float"),
-                 states=[UidWire("W:toy1_x")],
+        Variable(uid=UidVariable("var1"), name="x_in", type=UidType("Float"),
+                 proxy_state=UidPort("P:toy1.in.x"),
+                 states=[UidPort("P:toy1.in.x"),
+                         UidWire("W:toy1_x")],
                  metadata=None),
-        Variable(uid=UidVariable("var2"), name="y", type=UidType("Float"),
-                 states=[UidWire("W:toy1_y")],
+        Variable(uid=UidVariable("var2"), name="y_in", type=UidType("Float"),
+                 proxy_state=UidPort("P:toy1.in.y"),
+                 states=[UidPort("P:toy1.in.y"),
+                         UidWire("W:toy1_y")],
                  metadata=None),
-        Variable(uid=UidVariable("var3"), name="z", type=UidType("Float"),
-                 states=[UidWire("W:toy1_set_z1"),
+        Variable(uid=UidVariable("var3"), name="z_out", type=UidType("Float"),
+                 proxy_state=UidPort("P:toy1.out.z"),
+                 states=[UidPort("P:toy1.out.z"),
+                         UidWire("W:toy1_set_z1"),
                          UidWire("W:toy1_set_z2")],
                  metadata=None),
-        Variable(uid=UidVariable("var4"), name="x", type=UidType("Float"),
-                 states=[UidWire("W:toy1_reset_x")],
+        Variable(uid=UidVariable("var4"), name="x_out", type=UidType("Float"),
+                 proxy_state=UidPort("P:toy1.out.x"),
+                 states=[UidPort("P:toy1.out.x"),
+                         UidWire("W:toy1_reset_x")],
                  metadata=None)
     ]
 
     g = Gromet(
-        uid=UidGromet("G:toy1"),
+        uid=UidGromet("toy1"),
         name="toy1",
         type=UidType("FunctionNetwork"),
         root=toy1.uid,

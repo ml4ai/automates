@@ -403,86 +403,97 @@ def generate_gromet() -> Gromet:
     variables = [
         # state input
         Variable(uid=UidVariable("S"), name="S", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.in.S"),
                  states=[UidPort("P:sir.in.S"),
-                         # UidWire("W:S1.1"), UidWire("W:S1.2"),
-                         # UidPort("P:infected_exp.in.S"),
-                         # UidPort("P:S_update_exp.in.S")
+                         UidWire("W:S1.1"), UidWire("W:S1.2"),
+                         UidPort("P:infected_exp.in.S"),
+                         UidPort("P:S_update_exp.in.S")
                          ],
                  metadata=[variable_S_text_definition]),
         Variable(uid=UidVariable("I"), name="I", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.in.I"),
                  states=[UidPort("P:sir.in.I"),
-                         # UidWire("W:I1.1"), UidWire("W:I1.2"), UidWire("W:I1.3"),
-                         # UidPort("P:infected_exp.in.I"),
-                         # UidPort("P:recovered_exp.in.I"),
-                         # UidPort("P:I_update_exp.in.I")
+                         UidWire("W:I1.1"), UidWire("W:I1.2"), UidWire("W:I1.3"),
+                         UidPort("P:infected_exp.in.I"),
+                         UidPort("P:recovered_exp.in.I"),
+                         UidPort("P:I_update_exp.in.I")
                          ],
                  metadata=[variable_I_text_definition]),
         Variable(uid=UidVariable("R"), name="R", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.in.R"),
                  states=[UidPort("P:sir.in.R"),
-                         # UidWire("W:R1.1"), UidWire("W:R1.2"),
-                         # UidPort("P:infected_exp.in.R"),
-                         # UidPort("P:R_update_exp.in.R")
+                         UidWire("W:R1.1"), UidWire("W:R1.2"),
+                         UidPort("P:infected_exp.in.R"),
+                         UidPort("P:R_update_exp.in.R")
                          ],
                  metadata=[variable_R_text_definition]),
 
         # state output
         Variable(uid=UidVariable("S_2"), name="S", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.out.S"),
                  states=[UidPort("P:sir.out.S"),  # out
-                         # UidWire("W:S1.1"), UidWire("W:S1.2"),
-                         # UidWire("W:S2"),
-                         # UidPort("P:S_update_exp.out.S")
+                         UidWire("W:S1.1"), UidWire("W:S1.2"),
+                         UidWire("W:S2"),
+                         UidPort("P:S_update_exp.out.S")
                          ],
                  metadata=[variable_S_text_definition]),
         Variable(uid=UidVariable("I_2"), name="I", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.out.I"),
                  states=[UidPort("P:sir.out.I"),
-                         # UidWire("W:I1.1"), UidWire("W:I1.2"), UidWire("W:I1.3"),
-                         # UidWire("W:I2"),
-                         # UidPort("P:I_update_exp.out.I")
+                         UidWire("W:I1.1"), UidWire("W:I1.2"), UidWire("W:I1.3"),
+                         UidWire("W:I2"),
+                         UidPort("P:I_update_exp.out.I")
                          ],
                  metadata=[variable_I_text_definition]),
         Variable(uid=UidVariable("R_2"), name="R", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.out.R"),
                  states=[UidPort("P:sir.out.R"),
-                         # UidWire("W:R1.1"), UidWire("W:R1.2"),
-                         # UidWire("W:R2"),
-                         # UidPort("P:R_update_exp.out.R")
+                         UidWire("W:R1.1"), UidWire("W:R1.2"),
+                         UidWire("W:R2"),
+                         UidPort("P:R_update_exp.out.R")
                          ],
                  metadata=[variable_R_text_definition]),
 
         # parameters
         Variable(uid=UidVariable("beta"), name="beta", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.in.beta"),
                  states=[UidPort("P:sir.in.beta"),
-                         # UidWire("W:beta"),
-                         # UidPort("P:infected_exp.in.beta")
+                         UidWire("W:beta"),
+                         UidPort("P:infected_exp.in.beta")
                          ],
                  metadata=[variable_beta_text_definition,
                            beta_text_parameter]),
         Variable(uid=UidVariable("gamma"), name="gamma", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.in.gamma"),
                  states=[UidPort("P:sir.in.gamma"),
-                         # UidWire("W:gamma"),
-                         # UidPort("P:recovered_exp.in.gamma")
+                         UidWire("W:gamma"),
+                         UidPort("P:recovered_exp.in.gamma")
                          ],
                  metadata=[variable_gamma_text_definition]),
         Variable(uid=UidVariable("dt"), name="dt", type=UidType("Float"),
+                 proxy_state=UidPort("P:sir.in.dt"),
                  states=[UidPort("P:sir.in.dt"),
-                         # UidWire("W:dt.1"), UidWire("W:dt.2"),
-                         # UidPort("P:infected_exp.in.dt"),
-                         # UidPort("P:recovered_exp.in.dt")
+                         UidWire("W:dt.1"), UidWire("W:dt.2"),
+                         UidPort("P:infected_exp.in.dt"),
+                         UidPort("P:recovered_exp.in.dt")
                          ],
                  metadata=[variable_dt_text_definition]),
 
         # internal
         Variable(uid=UidVariable("infected"), name="infected", type=UidType("Float"),
+                 proxy_state=UidPort("P:infected_exp.out.infected"),
                  states=[UidPort("P:infected_exp.out.infected"),
-                         # UidWire("W:infected.1"), UidWire("W:infected.2"),
-                         # UidPort("P:S_update_exp.in.infected"),
-                         # UidPort("P:I_update_exp.in.infected")
+                         UidWire("W:infected.1"), UidWire("W:infected.2"),
+                         UidPort("P:S_update_exp.in.infected"),
+                         UidPort("P:I_update_exp.in.infected")
                          ],
                  metadata=None),
         Variable(uid=UidVariable("recovered"), name="recovered", type=UidType("Float"),
+                 proxy_state=UidPort("P:recovered_exp.out.recovered"),
                  states=[UidPort("P:recovered_exp.out.recovered"),
-                         # UidWire("W:recovered.1"), UidWire("W:recovered.2"),
-                         # UidPort("P:I_update_exp.in.recovered"),
-                         # UidPort("P:R_update_exp.in.recovered")
+                         UidWire("W:recovered.1"), UidWire("W:recovered.2"),
+                         UidPort("P:I_update_exp.in.recovered"),
+                         UidPort("P:R_update_exp.in.recovered")
                          ],
                  metadata=None),
     ]
