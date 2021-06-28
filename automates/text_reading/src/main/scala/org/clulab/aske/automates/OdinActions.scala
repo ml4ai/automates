@@ -829,7 +829,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def filterInputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val phraseInputInterval = new ArrayBuffer[Interval]()
     val identifierInputs = new ArrayBuffer[Mention]()
     val phraseInputs = new ArrayBuffer[Mention]()
     val newInputs = new ArrayBuffer[Mention]()
@@ -841,32 +840,30 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           if (arg._2.exists(_.label == "Identifier")) {
             identifierInputs ++= arg._2.filter(_.label.contains("Identifier"))
             phraseInputs ++= arg._2.filterNot(_.label.contains("Identifier"))
-          } else {
-            phraseInputs ++= arg._2
-          }
+          } else phraseInputs ++= arg._2
           if (identifierInputs.nonEmpty) {
-            println(identifierInputs.head.text)
             for (i <- identifierInputs) {
               val inputNumCheck = new ArrayBuffer[Mention]
               if (phraseInputs.nonEmpty) {
                 for (p <- phraseInputs) {
+                  newInputs.append(p)
                   val overlappingInterval = i.tokenInterval.overlaps(p.tokenInterval)
-                  if (overlappingInterval == false) {inputNumCheck.append(i)}
-                  else Seq()
+                  if (overlappingInterval == false) {
+                    inputNumCheck.append(i)
+                  }
                 }
-                if (inputNumCheck.length == phraseInputs.length) newInputs.append(i) else Seq()
-              }
+                if (inputNumCheck.length == phraseInputs.length) newInputs.append(i)
+              } else newInputs.append(i)
             }
-          } else println("identifier not found")
-          newInputs ++= phraseInputs
+          } else newInputs ++= phraseInputs
         }
+      }
         val newArgs = Map("input" -> newInputs.distinct, "output" -> outputArgs)
         val newFunctions = copyWithArgs(m, newArgs)
         toReturn.append(newFunctions)
-      }
     }
-//    toReturn
-    mentions
+    toReturn
+//    mentions
   }
 
   def filterOutputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -892,8 +889,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         newMentions ++= phraseOutputMen
       } else newMentions ++= group._2
     }
-//    newMentions
-    mentions
+    newMentions
+//    mentions
   }
 
 

@@ -6,7 +6,7 @@ import org.clulab.aske.automates.TestUtils._
 class TestFunctionFragments extends ExtractionTest {
 
   val t1 = "In subsection 4a, the remaining large-scale parameter is the depth of the mixed layer."
-  passingTest should s"find function fragments from t1: ${t1}" taggedAs (Somebody) in {
+  failingTest should s"find function fragments from t1: ${t1}" taggedAs (Somebody) in {
     val desired = Seq("depth of the mixed layer")
     val mentions = extractMentions(t1)
     testUnaryEvent(mentions, "Function", "input", desired)

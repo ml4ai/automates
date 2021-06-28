@@ -531,7 +531,7 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
-//    "nmod_in".r,
+    "nmod_in".r,
 //    "nmod_by".r,
 //    "nummod".r,
     "^nsubj".r,
