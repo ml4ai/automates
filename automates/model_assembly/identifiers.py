@@ -180,7 +180,7 @@ class LambdaStmtIdentifier(IndexedIdentifier):
     @classmethod
     def from_air_json(cls, data: dict) -> LambdaStmtIdentifier:
         (ns, sc, exp_type, name, idx) = data["name"].split("__")
-        return cls(ns, sc, name, int(idx))
+        return cls(ns, sc, f"{exp_type}::{name}", int(idx))
 
 
 @dataclass(frozen=True)

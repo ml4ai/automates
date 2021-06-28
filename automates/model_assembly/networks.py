@@ -340,6 +340,7 @@ class BaseFuncNode(ABC):
                 ]
             )
 
+        # print(network.nodes)
         return network
 
     @staticmethod
@@ -444,8 +445,9 @@ class ExpressionFuncNode(BaseFuncNode):
             new_vars,
             new_funcs,
             h_edges,
-            h_graph,
+            # h_graph,
         ) = cls.create_expr_node_hypergraph(nodes, inputs, outputs)
+        h_graph = BaseFuncNode.create_hyper_graph(h_edges)
 
         VARS.update({v.identifier: v for v in new_vars})
         FUNCS.update({f.identifier: f for f in new_funcs})
@@ -489,7 +491,7 @@ class ExpressionFuncNode(BaseFuncNode):
         new_func_nodes = list()
         new_var_nodes = list()
         new_hyper_edges = list()
-        hyper_graph = nx.DiGraph()
+        # hyper_graph = nx.DiGraph()
 
         def convert_to_hyperedge(expr_node_def):
             """
@@ -539,7 +541,7 @@ class ExpressionFuncNode(BaseFuncNode):
             new_var_nodes.append(output_var)
             new_func_nodes.append(expr_func_node)
             new_hyper_edges.append(new_hyper_edge)
-            hyper_graph.add_node(new_hyper_edge)
+            # hyper_graph.add_node(new_hyper_edge)
 
             return output_var
 
@@ -548,7 +550,6 @@ class ExpressionFuncNode(BaseFuncNode):
             new_var_nodes,
             new_func_nodes,
             new_hyper_edges,
-            hyper_graph,
         )
 
     @classmethod
@@ -579,8 +580,6 @@ class BaseConFuncNode(BaseFuncNode):
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ) -> BaseConFuncNode:
         func_id = FunctionIdentifier.from_container_id(container.identifier)
-        print(container.__class__.__name__)
-        print(type(container))
         func_type = FunctionType.from_con(container.__class__.__name__)
         inputs = BaseFuncNode.get_or_create_vars(
             container.arguments, AIR, VARS
