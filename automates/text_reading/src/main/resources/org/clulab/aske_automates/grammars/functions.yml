@@ -406,7 +406,7 @@ rules:
     example: "the resulting average values of cpT were plotted against those of Lq, and a line was fitted by eye to find the best value of cpΔT/LΔ."
     pattern: |
       trigger = [word = "resulting"]
-      output:Phrase+ = <amod
+      output:Phrase = <amod
   # fixme: when trigger and output overlaps, extraction does not happen.
 
   - name: parameters_include

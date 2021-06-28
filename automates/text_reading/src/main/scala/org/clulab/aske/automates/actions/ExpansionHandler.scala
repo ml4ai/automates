@@ -23,7 +23,7 @@ class ExpansionHandler() extends LazyLogging {
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
     val (functions, other) = mentions.partition(_.label == "Function")
-    val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
+    val function_res = functions.flatMap(expandArgs(_, state, List("input", "output"), "function"))
     val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))
 
     // Useful for debug
@@ -446,7 +446,7 @@ object ExpansionHandler {
     "advcl_to".r,
     "^advcl_because".r,
     "advmod".r,
-    "amod".r,
+//    "amod".r,
     "^case".r,
     "^cc$".r,
     "ccomp".r,
@@ -539,7 +539,7 @@ object ExpansionHandler {
     "^ref$".r,
     "appos".r,
     "xcomp".r,
-    "amod".r
+//    "amod".r
   )
 
   val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](

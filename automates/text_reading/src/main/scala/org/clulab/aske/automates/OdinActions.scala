@@ -827,37 +827,74 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn ++ other
   }
 
-//  def filterInputOverlaps(mentions: Seq[Mention]): Map[Interval, Seq[Mention]] = {
-//    // has to be used for mentions in the same sentence - token intervals are per sentence
-//    for (m <- mentions) {
-//      val inputArgs = m.arguments.getOrElse("input", Seq())
-//      for (i <- inputArgs) {
-//        if (i.tokenInterval.intersect(inputArgs)){}
-//      }
-//    }
-    // start with longest - the shorter overlapping ones should be subsumed this way
-//    for (m <- mentions.sortBy(_.tokenInterval).reverse) {
-//      if (intervalMentionMap.isEmpty) {
-//        intervalMentionMap += (m.tokenInterval -> Seq(m))
-//      } else {
-//        if (intervalMentionMap.keys.exists(k => k.intersect(m.tokenInterval).nonEmpty)) {
-//          val interval = findOverlappingInterval(m.tokenInterval, intervalMentionMap.keys.toList)
-//          val currMen = intervalMentionMap(interval)
-//          val updMen = currMen :+ m
-//          if (interval.length >= m.tokenInterval.length) {
-//            intervalMentionMap += (interval -> updMen)
-//          } else {
-//            intervalMentionMap += (m.tokenInterval -> updMen)
-//            intervalMentionMap.remove(interval)
-//          }
-//
-//        } else {
-//          intervalMentionMap += (m.tokenInterval -> Seq(m))
-//        }
-//      }
-//    }
-//    intervalMentionMap.toMap
-//  }
+  def filterInputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val phraseInputInterval = new ArrayBuffer[Interval]()
+    val identifierInputs = new ArrayBuffer[Mention]()
+    val phraseInputs = new ArrayBuffer[Mention]()
+    val newInputs = new ArrayBuffer[Mention]()
+    val toReturn = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val outputArgs = m.arguments.getOrElse("output", Seq())
+      for (arg <- m.arguments) {
+        if (arg._1 == "input") {
+          if (arg._2.exists(_.label == "Identifier")) {
+            identifierInputs ++= arg._2.filter(_.label.contains("Identifier"))
+            phraseInputs ++= arg._2.filterNot(_.label.contains("Identifier"))
+          } else {
+            phraseInputs ++= arg._2
+          }
+          if (identifierInputs.nonEmpty) {
+            println(identifierInputs.head.text)
+            for (i <- identifierInputs) {
+              val inputNumCheck = new ArrayBuffer[Mention]
+              if (phraseInputs.nonEmpty) {
+                for (p <- phraseInputs) {
+                  val overlappingInterval = i.tokenInterval.overlaps(p.tokenInterval)
+                  if (overlappingInterval == false) {inputNumCheck.append(i)}
+                  else Seq()
+                }
+                if (inputNumCheck.length == phraseInputs.length) newInputs.append(i) else Seq()
+              }
+            }
+          } else println("identifier not found")
+          newInputs ++= phraseInputs
+        }
+        val newArgs = Map("input" -> newInputs.distinct, "output" -> outputArgs)
+        val newFunctions = copyWithArgs(m, newArgs)
+        toReturn.append(newFunctions)
+      }
+    }
+//    toReturn
+    mentions
+  }
+
+  def filterOutputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val phraseTokInt = new ArrayBuffer[Interval]
+    val newMentions = new ArrayBuffer[Mention]
+    val groupMens = mentions.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval, m.foundBy))
+    for (group <- groupMens) {
+      if (group._2.head.arguments("output").nonEmpty) {
+        val (identOutputMen, phraseOutputMen) = group._2.partition(_.arguments("output").head.label.contains("Identifier"))
+        if (identOutputMen.nonEmpty) {
+          for (i <- identOutputMen) {
+            val outputNumCheck = new ArrayBuffer[Mention]
+            if (phraseOutputMen.nonEmpty) {
+              for (p <- phraseOutputMen) {
+              val overlappingInterval = i.arguments("output").head.tokenInterval.overlaps(p.arguments("output").head.tokenInterval)
+              if (overlappingInterval == false) {outputNumCheck.append(i)}
+              else Seq()
+            }
+              if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq()
+            }
+          }
+        } else println("identifierMention not found")
+        newMentions ++= phraseOutputMen
+      } else newMentions ++= group._2
+    }
+//    newMentions
+    mentions
+  }
+
 
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
@@ -918,7 +955,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (word.length > 6) return false
       // an identifier/variable cannot be a unit
       if (v.entities.get.exists(_ == "B-unit")) return false
-      if (v.entities.get.exists(_ == "ORGANIZATION")) return false // filter out organizations
+//      if (v.entities.get.exists(_ == "ORGANIZATION")) return false // filter out organizations
       val tag = v.tags.get.head
       if (tag == "POS") return false
       return (
@@ -1011,7 +1048,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def functionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
 //    val contextAttached = attachContext(mentions, state)
     val filteredMen = filterFunction(mentions, state)
-    val toReturn = if (filteredMen.nonEmpty) filterFunctionArgs(filteredMen, state) else Seq.empty
+    val filteredOutputs = if (filteredMen.nonEmpty) filterOutputOverlaps(filteredMen, state) else Seq.empty
+    val filteredInputs = if (filteredOutputs.nonEmpty) filterInputOverlaps(filteredOutputs, state) else Seq.empty
+    val toReturn = if (filteredInputs.nonEmpty) filterFunctionArgs(filteredInputs, state) else Seq.empty
 
     toReturn
 //    mentions
