@@ -8,7 +8,7 @@ import org.clulab.utils.{DisplayUtils, FileUtils}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
@@ -180,6 +180,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
 
       val att = new UnitAttachment(attachedTo, "ParamSetAtt")
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
+  }
+
+  def processContexts(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
+      val att = new ContextAttachment(attachedTo, "ContextAtt")
       newMentions.append(m.withAttachment(att))
     }
     newMentions
@@ -834,13 +845,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val newInputs = new ArrayBuffer[Mention]()
     val toReturn = new ArrayBuffer[Mention]()
     for (m <- mentions) {
+      // attach all the output arguments to outputArgs
       val outputArgs = m.arguments.getOrElse("output", Seq())
       for (arg <- m.arguments) {
         if (arg._1 == "input") {
+          // if the argument is an input, distinguish between identifier inputs and phrase inputs
           if (arg._2.exists(_.label == "Identifier")) {
             identifierInputs ++= arg._2.filter(_.label.contains("Identifier"))
             phraseInputs ++= arg._2.filterNot(_.label.contains("Identifier"))
           } else phraseInputs ++= arg._2
+          // if there is an identifier input, check if there's an overlap between the identifier input and other phrase inputs
           if (identifierInputs.nonEmpty) {
             for (i <- identifierInputs) {
               val inputNumCheck = new ArrayBuffer[Mention]
@@ -848,16 +862,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                 for (p <- phraseInputs) {
                   newInputs.append(p)
                   val overlappingInterval = i.tokenInterval.overlaps(p.tokenInterval)
+                  // if there's no overlap, append the identifier input to the inputNumCheck
                   if (overlappingInterval == false) {
                     inputNumCheck.append(i)
                   }
                 }
+                // if the number of identifier inputs appended to the inputNumCheck is the same as the number of phrase inputs,
+                // it means that there is no overlap, so attach the identifier input to newInputs.
+                // if the number is not the same, it means there is an overlap, so don't attach.
                 if (inputNumCheck.length == phraseInputs.length) newInputs.append(i)
+                // if there's no phrase inputs, just append the identifier inputs to the newInputs.
               } else newInputs.append(i)
             }
+            // if there's no identifier inputs, just append the phrase inputs to the newInputs.
           } else newInputs ++= phraseInputs
         }
       }
+      // make new arguments with newInputs and outputArgs
         val newArgs = Map("input" -> newInputs.distinct, "output" -> outputArgs)
         val newFunctions = copyWithArgs(m, newArgs)
         toReturn.append(newFunctions)
@@ -1043,6 +1064,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn
   }
 
+  def contextActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = processContexts(looksLikeAContext(mentions, state), state)
+    toReturn
+  }
+
   def functionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
 //    val contextAttached = attachContext(mentions, state)
     val filteredMen = filterFunction(mentions, state)
@@ -1079,6 +1105,32 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       negPattern = "[<>=]".r
       //the length constraints: the unit should consist of no more than 5 words and the first word of the unit should be no longer than 3 characters long (heuristics)
       if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || pattern.findFirstIn(unitTextSplit.mkString(" ")).nonEmpty ) && negPattern.findFirstIn(unitTextSplit.mkString(" ")).isEmpty
+    } yield m
+  }
+
+  def looksLikeAContext(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    for {
+      m <- mentions
+      //get the split text of the suspected unit
+      contextTextSplit = m match {
+        //for tbs, the text of the context is the text of the whole mention
+        case tb: TextBoundMention => m.text.split(" ")
+        //for relation and event mentions, the context is the value of the arg with the argName "context"
+        case _ => {
+          val contextArgs = m.arguments.getOrElse("context", Seq())
+          if (contextArgs.nonEmpty) {
+            contextArgs.head.text.split(" ")
+          }
+          contextArgs.head.text.split(" ")
+        }
+      }
+      //the pattern to check if the suspected unit contains dashes (e.g., m-1), slashes (e.g., MJ/kg, or square brackets
+      //didn't add digits bc that resulted in more false positives (e.g., for years)
+//      pattern = "[-/\\[\\]]".r
+//      //negative pattern checks if the suspected unit contains char-s that should not be present in a unit
+//      negPattern = "[<>=]".r
+//      //the length constraints: the unit should consist of no more than 5 words and the first word of the unit should be no longer than 3 characters long (heuristics)
+//      if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || pattern.findFirstIn(unitTextSplit.mkString(" ")).nonEmpty) && negPattern.findFirstIn(unitTextSplit.mkString(" ")).isEmpty
     } yield m
   }
 

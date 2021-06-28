@@ -1,7 +1,7 @@
 package org.clulab.aske.automates.serializer
 
 
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment, ContextAttachment}
 import org.clulab.odin
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
@@ -165,6 +165,7 @@ object AutomatesJSONSerializer {
       }
 
       case "UnitAtt" => new UnitAttachment(json("attachedTo").str, attType)
+      case "ContextAtt" => new ContextAttachment(json("attachedTo").str, attType)
       case _ => ???
     }
     toReturn
@@ -273,6 +274,7 @@ object AutomatesJSONSerializer {
       case a: ParamSetAttachment => a.toUJson
       case a: ParamSettingIntAttachment => a.toUJson
       case a: UnitAttachment => a.toUJson
+      case a: ContextAttachment => a.toUJson
       case _ => ???
     }
   }
