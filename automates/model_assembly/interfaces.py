@@ -1,11 +1,37 @@
 import os
 import json
 from typing import List, Dict, NoReturn
+from abc import ABC, abstractmethod
 
 import requests
 
 
-class TextReadingInterface:
+class TextReadingInterface(ABC):
+    # TODO I dislike how these methods take file paths to read from and then
+    # pass that information to TR app. However, sometimes the TR app requires
+    # the path to files in its payload (this is really bad and needs to be 
+    # changed). Eventually should move away from this model.
+
+    @abstractmethod
+    def extract_mentions(self, doc_path: str, out_path: str) -> dict:
+        pass
+    
+    @abstractmethod
+    def get_link_hypotheses(
+        self,
+        mentions_path: str,
+        eqns_path: str,
+        grfn_path: str,
+        comments_path: str,
+    ) -> dict:
+        pass
+
+    @abstractmethod
+    def ground_to_SVO(self, mentions_path: str) -> dict:
+        pass
+
+class TextReadingAppInterface(TextReadingInterface):
+
     def __init__(self, addr):
         self.webservice = addr
 
@@ -114,6 +140,7 @@ class TextReadingInterface:
         return json_dict
 
     def ground_to_SVO(self, mentions_path: str) -> dict:
+
         if not os.path.isfile(mentions_path):
             raise RuntimeError(f"Mentions file not found: {mentions_path}")
 
@@ -132,6 +159,28 @@ class TextReadingInterface:
         json_dict = res.json()
         return json_dict
 
+class LocalTextReadingInterface(TextReadingInterface):
+
+    def __init__(self):
+        self.index = {
+
+        }
+
+    def extract_mentions(self, doc_path: str, out_path: str) -> dict:
+        pass
+    
+    def get_link_hypotheses(
+        self,
+        mentions_path: str,
+        eqns_path: str,
+        grfn_path: str,
+        comments_path: str,
+    ) -> dict:
+        pass
+
+    def ground_to_SVO(self, mentions_path: str) -> dict:
+        pass
+    
 
 class EquationReadingInterface:
     # TODO: define this for interface to EqDec and Cosmos equation-detection

@@ -4,7 +4,7 @@ from functools import singledispatch
 import re
 
 from networkx import DiGraph
-
+from automates.model_assembly.networks import GroundedFunctionNetwork
 
 @dataclass(repr=False, frozen=True)
 class LinkNode(ABC):
