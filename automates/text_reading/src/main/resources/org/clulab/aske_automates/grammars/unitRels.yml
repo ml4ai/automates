@@ -46,7 +46,7 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma = /take|measure/]
-      variable: Identifier = nsubjpass nmod_of? appos
+      variable: Identifier = nsubjpass nmod_of? appos | <acl conj_or
       unit: Unit+ = nmod_as | nmod_in
 
   # fixme: this rule overpowers the identifier one above
@@ -92,17 +92,17 @@ rules:
     example: "We expect the time T of 5-10 days"
     pattern: |
       @variable:Identifier [word="of"] [entity="NUMBER"] @unit: Unit
-
-  - name: unit_hard-coded
-    label: UnitRelation
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "...transmissibility is set to 32 mm"
-    pattern: |
-      trigger = [word=/(?i)^hard-code|set/]
-      variable:Phrase = nsubj | nsubjpass
-      unit:Unit = /nmod_to/
+#
+#  - name: unit_hard-coded
+#    label: UnitRelation
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "...transmissibility is set to 32 mm"
+#    pattern: |
+#      trigger = [word=/(?i)^hard-code|set/]
+#      variable:Phrase = nsubj | nsubjpass
+#      unit:Unit = /nmod_to/
 
   - name: var-word-equals_unit
     label: UnitRelation
@@ -114,3 +114,14 @@ rules:
       trigger = [lemma='equal']
       variable:Identifier = nsubj
       unit:Unit = nmod_to
+
+  - name: var-be-value-unit
+    label: UnitRelation
+    priority: ${priority}
+    type: dependency
+    example: "the basic reproduction number was 100 m2/year"
+    action: ${action}
+    pattern: |
+      trigger = [lemma='be']
+      variable:Phrase = <cop nsubj
+      unit:Unit = <cop

@@ -97,7 +97,7 @@ rules:
     type: token
     example: "a per-capita rate γ"
     pattern: |
-      [word=/[A-Za-z]\./ & !word=/al.|i.e/] (?![word=/^[a-z]/])
+      [word=/[A-Za-z]\./ & !word=/al.|i.e/ & !entity=/PERSON/] (?![word=/^[a-z]/])
       # exclude "al." as in "et al." and i.e as in i.e., <example>
 
   - name: compound_identifier

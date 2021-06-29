@@ -201,10 +201,13 @@ object ExtractAndAlign {
       getGlobalVars(commentDescriptionMentions.get)
     } else Seq.empty
 
+    println("all comm gl vr: " + allCommentGlobalVars)
+
 //    for (g <- allCommentGlobalVars) println("comment gv: " + g.identifier)
 
-    val (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else null
-    val globalEqVariables = if (eqLinkElements.nonEmpty) getGlobalEqVars(eqLinkElements) else null
+    println(equationChunksAndSource + "<<")
+    val (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else (Seq.empty, Seq.empty)
+    val globalEqVariables = if (eqLinkElements.nonEmpty) getGlobalEqVars(eqLinkElements) else Seq.empty
 //    for (g <- globalEqVariables) println("eq gv: " + g.identifier)
 
     def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
@@ -232,8 +235,8 @@ object ExtractAndAlign {
     }
 
 
-    val srcLinkElements = if (variableNames.nonEmpty) getSrcLinkElements(variableNames.get) else null
-    val globalSrcVars = if (srcLinkElements.nonEmpty) getGlobalSrcVars(srcLinkElements) else null
+    val srcLinkElements = if (variableNames.nonEmpty) getSrcLinkElements(variableNames.get) else Seq.empty
+    val globalSrcVars = if (srcLinkElements.nonEmpty) getGlobalSrcVars(srcLinkElements) else Seq.empty
 //    for (g <- globalSrcVars) println("source gv: " + g.identifier)
 
 
@@ -1127,7 +1130,7 @@ object ExtractAndAlign {
       }
 
       // Equation -> Text
-      if (linkElements.contains(GLOBAL_EQ_VAR)) {
+      if (alignments.contains(EQN_TO_GLOBAL_VAR)) {
         println("has eq and text")
         hypotheses.appendAll(mkLinkHypothesis(linkElements(GLOBAL_EQ_VAR), linkElements(GLOBAL_VAR), EQN_TO_GLOBAL_VAR, alignments(EQN_TO_GLOBAL_VAR), debug))
       }

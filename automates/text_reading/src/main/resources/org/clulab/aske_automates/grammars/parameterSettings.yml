@@ -6,6 +6,17 @@ rules:
   ####VALUES####
   ###Possible improvement: many of these rules can potentially take both variables and concepts as their "variable" argument; to avoid writing a separate rule for each of the two cases, we can have one rule that has concept as a variable arg, but then apply an action which reassigns the label of the argument to "Identifier" if it passes the looksLikeAnIdentifier heuristic. This could increase the number of false positives, though, so for now we will just add concepts to rules strictly based on when they appear in literature (instead of using this action flow to all rules)
 
+  - name: var-be_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "basic reproduction number was 100 m2/year"
+    action: ${paramSetAction}
+    pattern: |
+      trigger = [lemma='be']
+      variable:Phrase = <cop nsubj
+      value:Value = <cop nummod
+
   - name: var-equals_value
     label: ParameterSetting
     priority: ${priority}
@@ -129,6 +140,28 @@ rules:
       trigger = [lemma='<']
       variable:Phrase = </dep|advmod/ <nummod? <dep | <advmod <nummod
       valueMostExcl:Value = </dep|advmod/ [tag = "CD"]
+
+  - name: var-greater_than
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "When R0 is greater than 1"
+    pattern: |
+      trigger = [lemma=/more|greater/]
+      variable:Phrase = nsubj
+      valueLeastExcl:Value = nmod_than [tag = "CD"]
+
+  - name: var-more_than
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "When R0 is more than 1..."
+    pattern: |
+      trigger = [lemma=/more|over/]
+      variable:Phrase = <advmod nsubj
+      valueLeastExcl:Value = <advmod [tag = "CD"]
 
   - name: var_hard-coded
     label: ParameterSetting

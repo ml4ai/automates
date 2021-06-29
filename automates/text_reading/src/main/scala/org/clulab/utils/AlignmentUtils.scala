@@ -48,6 +48,15 @@ object AlignmentJsonUtils {
         JSONSerializer.toMentions(jvalueMentions)
       }
 
+
+
+      val groupedByType = textMentions.groupBy(_.label)
+      for (lg <- groupedByType) {
+        println(lg._1)
+        for (m <- lg._2) {
+          println(m.label + ": " + m.text)
+        }
+      }
       Some(textMentions)
 
     } else None
