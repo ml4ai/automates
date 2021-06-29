@@ -476,9 +476,20 @@ def make_cg(g, gamma):
     n_nodes = g_obs.vcount
     cg = copy.deepcopy(g_obs)
 
+    # Create table keeping track of node properties
+    cg_node_info = []
+    for i in range(n_nodes):
+        node = CgNode(index=i, original_name=g_obs.vs[i]["name"])
+        cg_node_info.append(node)
+
     # First Bullet
     # Replicate graph for each submodel mentioned in gamma
     k = 1
+    for event in gamma:
+        if event.submodel is not None:
+            subscript = event.submodel
+            for i in range(n_nodes):
+
     for event in gamma:
         if event.submodel is not None:
             subscript = f"_{{{event.submodel}}}"
@@ -564,6 +575,14 @@ class Results:
 @dataclass
 class CF:
     node: str = None
+    value_assignment: str = None
+    submodel: str = None
+
+
+@dataclass
+class CgNode:
+    index: int = None
+    original_name: str = None
     value_assignment: str = None
     submodel: str = None
 
