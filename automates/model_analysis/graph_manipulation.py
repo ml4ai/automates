@@ -504,7 +504,31 @@ def make_cg(g, gamma):
             cg.add_edges(obs_edges_to_add, attributes={"description": ["O"]*len(obs_edges_to_add)})
 
             k = k + 1
+
     # Add Unobserved Edges
+    n_verts = cg.vcount
+    g_unobs_elist = g.es.select(description="U")
+
+    # To avoid adding unnecessary nodes, I trim the unobserved list down to include a pair of nodes only once
+    edge_sets = []
+    new_unobs_elist = []
+    for edge in g_unobs_elist:
+        if set(edge.tuple) not in edge_sets:
+            edge_sets.append(set(edge.tuple))
+            new_unobs_elist.append(edge.tuple)
+
+    unobs_edges_to_add = []
+    for edge in new_unobs_elist:
+        cg.add_vertices(1, attributes={"name": "U"})
+        new_vert_indx = n_verts - 1  # Index of the newly-added unobserved node
+        n_verts = n_verts + 1
+
+        # Need to extend the following section to point to nodes in multiple worlds, not just original graph
+
+        # old_vert_indx0 = edge[0]
+        # old_vert_indx1 = edge[1]
+        # unobs_edges_to_add.append((new_vert_indx, old_vert_indx0))
+        # unobs_edges_to_add.append((new_vert_indx, old_vert_indx1))
 
 
     return None
