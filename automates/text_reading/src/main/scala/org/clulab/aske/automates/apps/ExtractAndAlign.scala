@@ -9,21 +9,19 @@ import ai.lum.common.FileUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
 import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
-import org.clulab.aske.automates.grfn.GrFNParser.{mkHypothesis, mkLinkElement, mkTextLinkElement, mkTextVarLinkElement, mkTextVarLinkElementForModelComparison}
+import org.clulab.aske.automates.grfn.GrFNParser.mkHypothesis
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.odin.{Attachment, Mention}
-import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils, FileUtils}
+import org.clulab.utils.{AlignmentJsonUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding.{SVOGrounder, sparqlResult}
+import org.clulab.grounding.sparqlResult
 import org.clulab.odin.serialization.json.JSONSerializer
 import java.util.UUID.randomUUID
-
-import org.clulab.aske.automates.attachments.{AutomatesAttachment, MentionLocationAttachment}
 import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVariable, GlobalVariable}
-
+import org.clulab.aske.automates.attachments.AutomatesAttachment
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -538,7 +536,7 @@ object ExtractAndAlign {
       }
       // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
@@ -568,7 +566,7 @@ object ExtractAndAlign {
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }
@@ -590,7 +588,7 @@ object ExtractAndAlign {
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
       if (throughConcept.nonEmpty) {
-        val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
+        val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
       }

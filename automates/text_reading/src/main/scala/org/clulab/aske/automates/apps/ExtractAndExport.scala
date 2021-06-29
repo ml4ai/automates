@@ -8,10 +8,9 @@ import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRou
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
+import org.clulab.utils.{FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
-import org.json4s
 import org.json4s.jackson.JsonMethods._
 
 /**

@@ -28,8 +28,7 @@ class TestPairwiseW2VAligner extends FlatSpec with Matchers {
   )
 
   val aligner = new PairwiseW2VAligner(w2v, Set("variable", "description"))
-  val mapping = aligner.alignTexts(srcTexts, dstTexts)
-  println(mapping)
+  val mapping = aligner.alignTexts(srcTexts, dstTexts, useBigrams = true)
 
   it should "generate exhaustive alignemnts" in {
     mapping.length should be (4)

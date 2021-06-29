@@ -5,7 +5,7 @@ rules:
 ####IDENTIFIERS####
   - name: identifier-duck-rule
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: ""
     action: looksLikeAnIdentifier
@@ -14,7 +14,7 @@ rules:
 
 #  - name: var-noun_of
 #    label: Identifier
-#    priority: ${priority}
+#    priority: ${priority1}
 #    type: token
 #    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
 #    pattern: |
@@ -22,7 +22,7 @@ rules:
 
   - name: identifier-calculation
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     action: looksLikeAnIdentifier
     example: "The ESo calculation in equation 4 is implemented for the CSM-CERESMaize model and several other crop models."
@@ -31,7 +31,7 @@ rules:
 
   - name: identifier_versus
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
     pattern: |
@@ -39,7 +39,7 @@ rules:
 
   - name: identifier_in_equation
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "Note that Kcdmax in equation 5 is different from Kcmax in equation A6."
     pattern: |
@@ -48,7 +48,7 @@ rules:
 
   - name: identifier_a_comma
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     action: identifierArguments
     example: "while a, aP and b are..."
@@ -58,7 +58,7 @@ rules:
 
   - name: identifier_where-dep
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: dependency
     action: identifierArguments
     example: "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
@@ -68,7 +68,7 @@ rules:
 
   - name: identifier_and
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     action: identifierArguments
     example: "E0 is calculated as the product of Kcd and ETpm."
@@ -77,7 +77,7 @@ rules:
 
   - name: model
     label: Model
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
@@ -85,7 +85,7 @@ rules:
 
   - name: identifier_greek
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "a per-capita rate γ"
     pattern: |
@@ -93,7 +93,7 @@ rules:
 
   - name: end_of_sent_identifier
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "a per-capita rate γ"
     pattern: |
@@ -102,7 +102,7 @@ rules:
 
   - name: compound_identifier
     label: Identifier
-    priority: ${priority}
+    priority: ${priority1}
     type: token
     example: "The density of water (ρw); R(t)"
     pattern: |
@@ -110,10 +110,26 @@ rules:
       |
       [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
 
+  - name: compound_identifier_special_chars_expanded
+    label: Identifier
+    priority: ${priority2}
+    type: token
+    example: "e°"
+    pattern: |
+      @Identifier [word=/infinity|degrees/]
+
+  - name: compound_identifier2
+    label: Identifier
+    priority: ${priority3}
+    type: token
+    example: " the limiting value R∞"
+    pattern: |
+      @Identifier "("? @Identifier ")"?
+
 
 #  - name: var_greek_and_latin
 #    label: Identifier
-#    priority: ${priority}
+#    priority: ${priority1}
 #    type: token
 #    action: looksLikeAIdentifier
 #    example: "The density of water (ρw) is taken as 1.0 Mg m-3."
