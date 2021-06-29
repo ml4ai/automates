@@ -479,16 +479,36 @@ def make_cg(g, gamma):
     # Create table keeping track of node properties
     cg_node_info = []
     for i in range(n_nodes):
-        node = CgNode(index=i, original_name=g_obs.vs[i]["name"])
+        node = CgNode(index=i, orig_name=g_obs.vs[i]["name"])
         cg_node_info.append(node)
 
     # First Bullet
     # Replicate graph for each submodel mentioned in gamma
     k = 1
+    submodels_checked = []
     for event in gamma:
-        if event.submodel is not None:
-            subscript = event.submodel
+        if event.submodel is not None and event.submodel not in submodels_checked:
+            submodels_checked.append(event.submodel)
             for i in range(n_nodes):
+                if cg_node_info[i].orig_name == event.submodel:
+                    va = event.submodel
+                else:
+                    va = None
+                node = CgNode(index=i+k*n_nodes, orig_name=g_obs.vs[i]["name"], val_assign=va, submodel=event.submodel)
+                cg_node_info.append(node)
+                cg.add_vertices(1)
+
+            obs_edges_to_add = []
+            for edge in g_obs_elist:
+                obs_edges_to_add.append(tuple(x + k*n_nodes for x in edge.tuple))
+            cg.add_edges(obs_edges_to_add, attributes={"description": ["O"]*len(obs_edges_to_add)})
+
+            k = k + 1
+            
+
+
+
+
 
     for event in gamma:
         if event.submodel is not None:
@@ -575,15 +595,15 @@ class Results:
 @dataclass
 class CF:
     node: str = None
-    value_assignment: str = None
+    val_assign: str = None
     submodel: str = None
 
 
 @dataclass
 class CgNode:
     index: int = None
-    original_name: str = None
-    value_assignment: str = None
+    orig_name: str = None
+    val_assign: str = None
     submodel: str = None
 
 
