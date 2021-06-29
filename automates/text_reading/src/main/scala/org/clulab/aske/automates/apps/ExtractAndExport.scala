@@ -32,11 +32,11 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/toy_article/cosmos_version"
-  val outputDir = "/home/alexeeva/Repos/automates/automates/text_reading/src/test/resources/toy_document_tex/dir"
+  val inputDir = "/Users/alexeeva/Desktop/automates-related/TWIST/cosmos"
+  val outputDir = "/Users/alexeeva/Desktop/automates-related/TWIST/cosmos"
   val inputType = config[String]("apps.inputType")
-  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
-//  val dataLoader = new CosmosJsonDataLoader
+//  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+  val dataLoader = new CosmosJsonDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
@@ -75,7 +75,7 @@ object ExtractAndExport extends App {
       println(dm.text)
 //      println(dm.foundBy)
       for (arg <- dm.arguments) {
-        println(arg._1 + ": " + dm.arguments(arg._1).head.text)
+        println(arg._1 + ": " + dm.arguments(arg._1).map(_.text).mkString("||"))
       }
       if (dm.attachments.nonEmpty) {
         for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
@@ -159,9 +159,11 @@ case class AutomatesExporter(filename: String) extends Exporter {
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString().replace(".json", "_mentions.tsv") ))
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting"))
+    pw.write("filename\tsentence\tmention type\tmention text\targs in all next columns\n")
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation")) //|| (m.label matches "Context"))
     for (m <- contentMentions) {
-      pw.write(m.label + "\t" + m.text.trim())
+      pw.write(new File(filename).getName() + "\t")
+      pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())
       for (arg <- m.arguments) pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
       pw.write("\n")
     }

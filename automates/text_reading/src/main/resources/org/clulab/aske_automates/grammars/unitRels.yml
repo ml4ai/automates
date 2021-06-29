@@ -93,16 +93,16 @@ rules:
     pattern: |
       @variable:Identifier [word="of"] [entity="NUMBER"] @unit: Unit
 #
-#  - name: unit_hard-coded
-#    label: UnitRelation
-#    priority: ${priority}
-#    type: dependency
-#    action: ${action}
-#    example: "...transmissibility is set to 32 mm"
-#    pattern: |
-#      trigger = [word=/(?i)^hard-code|set/]
-#      variable:Phrase = nsubj | nsubjpass
-#      unit:Unit = /nmod_to/
+  - name: unit_hard-coded
+    label: UnitRelation
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "...transmissibility is set to 32 mm"
+    pattern: |
+      trigger = [word=/(?i)^hard-code|set/]
+      variable:Phrase = nsubj | nsubjpass
+      unit:Unit = /nmod_to/
 
   - name: var-word-equals_unit
     label: UnitRelation
