@@ -504,30 +504,6 @@ def make_cg(g, gamma):
             cg.add_edges(obs_edges_to_add, attributes={"description": ["O"]*len(obs_edges_to_add)})
 
             k = k + 1
-            
-
-
-
-
-
-    for event in gamma:
-        if event.submodel is not None:
-            subscript = f"_{{{event.submodel}}}"
-            new_names = copy.deepcopy(g_obs_names)
-            for i in range(len(new_names)):
-                if new_names[i] == event.submodel:
-                    new_names[i] = f"\\bar{{{new_names[i]}}}"
-                else:
-                    new_names[i] = f"{new_names[i]}{subscript}"
-            cg.add_vertices(n_nodes, attributes={"name": new_names})
-
-            edges_to_add = []
-            for edge in g_obs_elist:
-                edges_to_add.append(tuple(x + k*n_nodes for x in edge.tuple))
-            cg.add_edges(edges_to_add, attributes={"description": ["O"]*len(edges_to_add)})
-
-            k = k + 1
-
     # Add Unobserved Edges
 
 
