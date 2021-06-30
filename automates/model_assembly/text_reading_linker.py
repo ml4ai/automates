@@ -67,5 +67,15 @@ class TextReadingLinker:
             os.remove(i)
 
         # TODO Perform linking between the GrFN vars and TR hypothesis
-        # L = build_link_graph(grfn_with_hypotheses["grounding"])
-        # tables = extract_link_tables(L)
+        L = build_link_graph(hypothesis_data)
+        tables = extract_link_tables(L)
+        grfn_var_to_groundings = {}
+        for var_name, var_data in tables.items():
+            short_varname = var_name
+            for link_data in var_data:
+                score = link_data["link_score"]
+                if (
+                    short_varname not in grfn_var_to_groundings
+                    or grfn_var_to_groundings[short_varname]["link_score"] < score
+                ):
+                    grfn_var_to_groundings = link_data
