@@ -257,6 +257,8 @@ class VariableNode(BaseNode):
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
+    def add_metadata(self, metadata):
+        self.metadata.append(metadata)
 
 @dataclass(repr=False)
 class BaseFuncNode(ABC):

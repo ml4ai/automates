@@ -22,7 +22,8 @@ def main(args):
         and args.tr_doc_file != None
         and args.tr_eqn_file != None):
     
-        tr_interface = LocalTextReadingInterface()
+        name = air_filepath.split("/")[-1].rsplit("--AIR", 1)[0]
+        tr_interface = LocalTextReadingInterface(name)
         if args.tr_address != None:
             tr_interface = TextReadingAppInterface(
                 f"http://{args.tr_address}:{args.tr_port}"
