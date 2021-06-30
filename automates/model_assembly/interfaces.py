@@ -70,21 +70,38 @@ class TextReadingAppInterface(TextReadingInterface):
 
         return json.load(open(out_path, "r"))
 
+    def get_grfn_link_hypothesis(self,
+        mentions_path: str,
+        eqns_path: str,
+        grfn_path: str,
+        comments_path: str
+    ) -> dict:
+        if not grfn_path.endswith(".json"):
+            raise ValueError("/align expects GrFN to be a JSON file")
+
+        grfn_data = json.load(open(grfn_path, "r"))
+        unique_var_names = list(
+            {
+                "::".join(var_def["identifier"].split("::")[:-1]) + "::0"
+                for var_def in grfn_data["variables"]
+            }
+        )
+        variable_names = [{"name": var_name} for var_name in unique_var_names]
+
+        return self.get_link_hypotheses(mentions_path, eqns_path, comments_path, variable_names)
+
     def get_link_hypotheses(
         self,
         mentions_path: str,
         eqns_path: str,
-        grfn_path: str,
         comments_path: str,
+        variable_names: list
     ) -> dict:
         if not os.path.isfile(mentions_path):
             raise RuntimeError(f"Mentions not found: {mentions_path}")
 
         if not os.path.isfile(eqns_path):
             raise RuntimeError(f"Equations not found: {eqns_path}")
-
-        if not os.path.isfile(grfn_path):
-            raise RuntimeError(f"GrFN not found: {grfn_path}")
 
         if not os.path.isfile(comments_path):
             raise RuntimeError(f"Comments not found: {comments_path}")
@@ -95,21 +112,8 @@ class TextReadingAppInterface(TextReadingInterface):
         if not eqns_path.endswith(".txt"):
             raise ValueError("/align expects equations to be a text file")
 
-        if not grfn_path.endswith(".json"):
-            raise ValueError("/align expects GrFN to be a JSON file")
-
         if not comments_path.endswith(".json"):
             raise ValueError("/align expects comments to be a JSON file")
-
-        grfn_data = json.load(open(grfn_path, "r"))
-
-        unique_var_names = list(
-            {
-                "::".join(var_def["identifier"].split("::")[:-1]) + "::0"
-                for var_def in grfn_data["variables"]
-            }
-        )
-        variables = [{"name": var_name} for var_name in unique_var_names]
 
         equations = list()
         with open(eqns_path, "r") as infile:
@@ -121,7 +125,7 @@ class TextReadingAppInterface(TextReadingInterface):
             "documents": mentions_path,
             "equations": equations,
             "source_code": {
-                "variables": variables,
+                "variables": variable_names,
                 "comments": json.load(open(comments_path, "r")),
             },
             "toggles": {"groundToSVO": False, "appendToGrFN": False},
@@ -135,7 +139,7 @@ class TextReadingAppInterface(TextReadingInterface):
             headers={"Content-type": "application/json"},
             json={"pathToJson": payload_path},
         )
-        print(f"HTTP {res} for /align on:\n\t{mentions_path}\n\t{grfn_path}\n")
+        print(f"HTTP {res} for /align on:\n\t{mentions_path}\n\t{variable_names}\n")
         json_dict = res.json()
         return json_dict
 
