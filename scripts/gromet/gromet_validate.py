@@ -10,7 +10,29 @@ import argparse
 import os
 
 
+# ----- ALL -----
+
 SYNTAX_TYPES = ('types', 'literals', 'ports', 'wires', 'junctions', 'boxes', 'variables')
+
+# Literal.type, Junction.value_type, Port.value_type, Wire.value_type
+DATA_TYPES = ('Integer', 'Float', 'Real')
+
+# ----- PNC -----
+
+# Junction.type
+PNC_JUNCTION_TYPES = ('State', 'Rate')
+
+# ----- BL -----
+
+# Junction.Type
+BL_JUNCTION_TYPES = ('State', 'Flux', 'Tangent')
+# Wire.type
+BL_WIRE_TYPES = ('W_in', 'W_pos', 'W_neg')
+
+# ----- FN -----
+
+# Port.type
+FN_PORT_TYPES = ('PortInput', 'PortOutput')
 
 
 def debug(objs):
@@ -206,6 +228,12 @@ def validate(gromet):
         for uid, c in uid_counts.items():
             if c > 1:
                 print(f"  {uid} : {c} times")
+
+    # Test: DATA_TYPES
+    # value_type in: Junctions, Ports, Wires
+    # Literals
+    #   value in: Junctions, Ports, Wires
+    #   args in: Expr
 
     # Test: Wire src and tgt have corresponding Port/Junction definitions
     for w_id, wire in objects['wires'].items():
@@ -917,6 +945,17 @@ def test_collect_expr_port_references():
 
 
 test_collect_expr_port_references()
+
+
+def collect_expr_literals(expr) -> list:
+    literals = list()
+    for arg in expr['args']:
+        if isinstance(arg, str):
+            literals.append(arg)
+        else:
+            if isinstance(arg, dict) and 'syntax' in arg and arg['syntax'] == 'Expr':
+                literals += collect_expr_port_references(arg)
+    return literals
 
 
 # '/Users/claytonm/Google Drive/ASKE-AutoMATES/ASKE-E/GroMEt-model-representation-WG/gromet/examples/Simple_SIR/SimpleSIR_gromet_FunctionNetwork.json'
