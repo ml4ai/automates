@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 
-from automates.model_assembly.interfaces import TextReadingInterface
+from automates.model_assembly.interfaces import TextReadingAppInterface
 
 
 def main(args):
@@ -12,9 +12,9 @@ def main(args):
     MENTIONS_PATH = f"{CUR_DIR}/{MODEL_NAME}--mentions.json"
     ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}--alignment.json"
 
-    caller = TextReadingInterface(f"http://{args.address}:{args.port}")
+    caller = TextReadingAppInterface(f"http://{args.address}:{args.port}")
     if not os.path.isfile(MENTIONS_PATH):
-        caller.extract_mentions(args.doc_file, MENTIONS_PATH)
+        caller.get_grfn_link_hypothesis(args.doc_file, MENTIONS_PATH)
     else:
         print(f"Mentions have been previously extracted and are stored in {MENTIONS_PATH}")
 
