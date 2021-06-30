@@ -257,7 +257,7 @@ def generate_gromet() -> Gromet:
 
     # -- Variable text definition metadata
 
-    # NOTE: The TextExtracton coordinates are made up here,
+    # NOTE: The TextExtraction coordinates are made up here,
     #       just to show examples of the kinds of values that will appear.
 
     variable_S_text_definition_extraction = \
@@ -344,6 +344,63 @@ def generate_gromet() -> Gromet:
                        variable_identifier="dt",
                        variable_definition="Next inter-event time")
 
+    # -- Variable TextUnit metadata
+
+    # NOTE: The TextUnit metadatum is made up
+    #       -- the simple_sir_wiki document does not itself include any units
+
+    variable_S_text_unit_extraction = \
+        TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
+                       page=0,
+                       block=1,
+                       char_begin=10,
+                       char_end=20)
+    variable_S_text_unit = \
+        TextUnit(uid=UidMetadatum("S_text_unit"),
+                 provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                       timestamp=get_current_datetime()),
+                 text_extraction=variable_S_text_unit_extraction,
+                 unit="individual")
+
+    variable_I_text_unit_extraction = \
+        TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
+                       page=0,
+                       block=2,
+                       char_begin=32,
+                       char_end=42)
+    variable_I_text_unit = \
+        TextUnit(uid=UidMetadatum("I_text_unit"),
+                 provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                       timestamp=get_current_datetime()),
+                 text_extraction=variable_I_text_unit_extraction,
+                 unit="individual")
+
+    variable_R_text_unit_extraction = \
+        TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
+                       page=0,
+                       block=2,
+                       char_begin=82,
+                       char_end=92)
+    variable_R_text_unit = \
+        TextUnit(uid=UidMetadatum("R_text_unit"),
+                 provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                       timestamp=get_current_datetime()),
+                 text_extraction=variable_R_text_unit_extraction,
+                 unit="individual")
+
+    variable_dt_text_unit_extraction = \
+        TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
+                       page=0,
+                       block=3,
+                       char_begin=12,
+                       char_end=16)
+    variable_dt_text_unit = \
+        TextUnit(uid=UidMetadatum("dt_text_unit"),
+                 provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                       timestamp=get_current_datetime()),
+                 text_extraction=variable_dt_text_unit_extraction,
+                 unit="days")
+
     # -- Variable text parameter metadata
 
     # NOTE: This is made up (the text_doc_simple_sir_wiki does not include parameter mentions)
@@ -409,7 +466,8 @@ def generate_gromet() -> Gromet:
                          UidPort("P:infected_exp.in.S"),
                          UidPort("P:S_update_exp.in.S")
                          ],
-                 metadata=[variable_S_text_definition]),
+                 metadata=[variable_S_text_definition,
+                           variable_S_text_unit]),
         Variable(uid=UidVariable("I"), name="I", type=UidType("Float"),
                  proxy_state=UidPort("P:sir.in.I"),
                  states=[UidPort("P:sir.in.I"),
@@ -418,7 +476,8 @@ def generate_gromet() -> Gromet:
                          UidPort("P:recovered_exp.in.I"),
                          UidPort("P:I_update_exp.in.I")
                          ],
-                 metadata=[variable_I_text_definition]),
+                 metadata=[variable_I_text_definition,
+                           variable_I_text_unit]),
         Variable(uid=UidVariable("R"), name="R", type=UidType("Float"),
                  proxy_state=UidPort("P:sir.in.R"),
                  states=[UidPort("P:sir.in.R"),
@@ -426,7 +485,8 @@ def generate_gromet() -> Gromet:
                          UidPort("P:infected_exp.in.R"),
                          UidPort("P:R_update_exp.in.R")
                          ],
-                 metadata=[variable_R_text_definition]),
+                 metadata=[variable_R_text_definition,
+                           variable_R_text_unit]),
 
         # state output
         Variable(uid=UidVariable("S_2"), name="S", type=UidType("Float"),
@@ -436,7 +496,8 @@ def generate_gromet() -> Gromet:
                          UidWire("W:S2"),
                          UidPort("P:S_update_exp.out.S")
                          ],
-                 metadata=[variable_S_text_definition]),
+                 metadata=[variable_S_text_definition,
+                           variable_S_text_unit]),
         Variable(uid=UidVariable("I_2"), name="I", type=UidType("Float"),
                  proxy_state=UidPort("P:sir.out.I"),
                  states=[UidPort("P:sir.out.I"),
@@ -444,7 +505,8 @@ def generate_gromet() -> Gromet:
                          UidWire("W:I2"),
                          UidPort("P:I_update_exp.out.I")
                          ],
-                 metadata=[variable_I_text_definition]),
+                 metadata=[variable_I_text_definition,
+                           variable_I_text_unit]),
         Variable(uid=UidVariable("R_2"), name="R", type=UidType("Float"),
                  proxy_state=UidPort("P:sir.out.R"),
                  states=[UidPort("P:sir.out.R"),
@@ -452,7 +514,8 @@ def generate_gromet() -> Gromet:
                          UidWire("W:R2"),
                          UidPort("P:R_update_exp.out.R")
                          ],
-                 metadata=[variable_R_text_definition]),
+                 metadata=[variable_R_text_definition,
+                           variable_R_text_unit]),
 
         # parameters
         Variable(uid=UidVariable("beta"), name="beta", type=UidType("Float"),
@@ -477,7 +540,8 @@ def generate_gromet() -> Gromet:
                          UidPort("P:infected_exp.in.dt"),
                          UidPort("P:recovered_exp.in.dt")
                          ],
-                 metadata=[variable_dt_text_definition]),
+                 metadata=[variable_dt_text_definition,
+                           variable_dt_text_unit]),
 
         # internal
         Variable(uid=UidVariable("infected"), name="infected", type=UidType("Float"),
