@@ -490,7 +490,7 @@ def make_cg(g, gamma):
         if event.submodel is not None and event.submodel not in submodels_checked:
             submodels_checked.append(event.submodel)
             for i in range(n_nodes):
-                if cg_node_info[i].orig_name == event.submodel:
+                if cg_node_info[i].orig_name == event.submodel:  # Case sensitive
                     va = event.submodel
                 else:
                     va = None
@@ -506,32 +506,37 @@ def make_cg(g, gamma):
             k = k + 1
 
     # Add Unobserved Edges
-    n_verts = cg.vcount
+    n_verts_total = cg.vcount
     g_unobs_elist = g.es.select(description="U")
-
-    # To avoid adding unnecessary nodes, I trim the unobserved list down to include a pair of nodes only once
     edge_sets = []
     new_unobs_elist = []
     for edge in g_unobs_elist:
-        if set(edge.tuple) not in edge_sets:
+        if set(edge.tuple) not in edge_sets:  # Trim the unobserved list down to include a pair of nodes only once
             edge_sets.append(set(edge.tuple))
             new_unobs_elist.append(edge.tuple)
 
     unobs_edges_to_add = []
     for edge in new_unobs_elist:
+        n_verts_total = n_verts_total + 1
         cg.add_vertices(1, attributes={"name": "U"})
-        new_vert_indx = n_verts - 1  # Index of the newly-added unobserved node
-        n_verts = n_verts + 1
+        new_vert_indx = n_verts_total - 1  # Index of the newly-added unobserved node
+        old_vert_indx0 = edge[0]
+        old_vert_indx1 = edge[1]
+        for i in range(k):  # Connects new unobserved node to the old nodes, and the old nodes in all other sub-models
+            unobs_edges_to_add.append((new_vert_indx, old_vert_indx0+i*n_nodes))
+            unobs_edges_to_add.append((new_vert_indx, old_vert_indx1+i*n_nodes))
 
-        # Need to extend the following section to point to nodes in multiple worlds, not just original graph
+    # Adding unobserved nodes/edges connecting node in original graph to corresponding submodels
+    for i in range(n_nodes):
+        n_verts_total = n_verts_total + 1
+        cg.add_vertices(1, attributes={"name": f"U_{cg_node_info[i].submodel}"})
+        new_vert_indx = n_verts_total - 1
 
-        # old_vert_indx0 = edge[0]
-        # old_vert_indx1 = edge[1]
-        # unobs_edges_to_add.append((new_vert_indx, old_vert_indx0))
-        # unobs_edges_to_add.append((new_vert_indx, old_vert_indx1))
-
-
-    return None
+        for j in range(k):  # For each submodel
+            if cg_node_info[i+j*n_nodes].val_assign is not None:
+                    unobs_edges_to_add.append((new_vert_indx, cg_node_info[i+j*n_nodes].index))
+    cg.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
+    return cg
 
 
 
