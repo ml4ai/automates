@@ -400,7 +400,7 @@ def extract_link_tables(L: DiGraph) -> dict:
         if var_name not in tables:
             table_rows = var_node.get_table_rows(L)
             table_rows.sort(
-                key=lambda r: (r["vc_score"], r["ct_score"], r["te_score"]),
+                key=lambda r: [r[f"{key}_score"] for key in ["vc", "ct", "te"] if r[f"{key}_score"] is not None],
                 reverse=True,
             )
             tables[var_name] = table_rows

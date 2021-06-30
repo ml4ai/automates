@@ -164,14 +164,34 @@ class TextReadingAppInterface(TextReadingInterface):
         return json_dict
 
 class LocalTextReadingInterface(TextReadingInterface):
+    name: str
 
-    def __init__(self):
+    def __init__(self, name):
+        # key into the index of the files we will be dealing with
+        self.name = name
+        # build an index of local tr mentions and alignment files. These are
+        # all stored in the scripts/model_assembly/example-tr-data folder.
         self.index = {
+            "SIR-simple": {
+                "mentions": "scripts/model_assembly/example-tr-data/sir-simple-documents/SIR-simple--mentions.json",
+                "alignment": "scripts/model_assembly/example-tr-data/sir-simple-documents/SIR-simple--alignment.json"
+            },
+            "CHIME-SIR": {
 
+            }
         }
 
     def extract_mentions(self, doc_path: str, out_path: str) -> dict:
-        pass
+        if self.name in self.index:
+            # NOTE: This is a silly bit of code, but the user expects the
+            # given out path file to hold the mentions data after running.
+            # So fill that in then return the object,
+            mentions_obj = json.load(open(self.index[self.name]["mentions"], "r"))
+            json.dump(mentions_obj, open(out_path, "w"))
+            return mentions_obj
+        else:
+            # TODO
+            raise Exception(f"Error: Unable to find local TR data for {self.name}")
     
     def get_link_hypotheses(
         self,
@@ -180,7 +200,11 @@ class LocalTextReadingInterface(TextReadingInterface):
         grfn_path: str,
         comments_path: str,
     ) -> dict:
-        pass
+        if self.name in self.index:
+            return json.load(open(self.index[self.name]["alignment"], "r"))["grounding"]
+        else:
+            # TODO
+            raise Exception(f"Error: Unable to find local TR data for {self.name}")
 
     def ground_to_SVO(self, mentions_path: str) -> dict:
         pass

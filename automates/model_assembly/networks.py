@@ -254,6 +254,8 @@ class VariableNode(BaseNode):
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
+    def add_metadata(self, metadata):
+        self.metadata.append(metadata)
 
 @dataclass(repr=False)
 class BaseFuncNode(ABC):
@@ -579,8 +581,6 @@ class BaseConFuncNode(BaseFuncNode):
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ) -> BaseConFuncNode:
         func_id = FunctionIdentifier.from_container_id(container.identifier)
-        print(container.__class__.__name__)
-        print(type(container))
         func_type = FunctionType.from_con(container.__class__.__name__)
         inputs = BaseFuncNode.get_or_create_vars(
             container.arguments, AIR, VARS

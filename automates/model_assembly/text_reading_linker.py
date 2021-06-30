@@ -24,12 +24,17 @@ class TextReadingLinker:
         process. Eventually we need to attempt to automatically generate this 
         data for all GrFNs passed in.
 
-
         Args:
             grfn (GroundedFunctionNetwork): GrFN to generate TR data for
         """
         pass
 
+    def groundings_to_metadata(self, groundings):
+        vars_to_metadata = {}
+        for var,grounding in groundings.items():
+            # TODO
+            vars_to_metadata[var] = {"some info": "yay"}
+        return vars_to_metadata
 
     def perform_tr_grfn_linking(self, grfn: GroundedFunctionNetwork, tr_sources: dict):
         """
@@ -48,25 +53,28 @@ class TextReadingLinker:
                     + "into TR-GrFN linking.")
                 return grfn
 
-        # Generate temporary output file names for TR mentions and GrFN json
+        # Generate temporary output file names for TR mentions
         cur_dir = os.getcwd()
         mentions_path = f"{cur_dir}/mentions.json"
-        grfn_json_path = f"{cur_dir}/grfn.json"
 
-        grfn.to_json_file(grfn_json_path)
+        # Generate variables list for linking
+        variable_ids = [v.identifier for k,v in grfn.variables.items()]
 
         # Build the hypothesis data by first getting mentions then generating 
         # the hypothesis
-        self.text_reading_interface.extract_mentions(tr_sources["doc_file"], mentions_path)
+        self.text_reading_interface.extract_mentions(tr_sources["doc_file"], 
+            mentions_path)
         hypothesis_data = self.text_reading_interface.get_link_hypotheses(
-            mentions_path, tr_sources["eqn_file"], grfn, tr_sources["comm_file"]
+            mentions_path, 
+            tr_sources["eqn_file"], 
+            tr_sources["comm_file"], 
+            variable_ids
         )
 
         # Cleanup temp files
-        for i in [mentions_path, grfn_json_path]:
-            os.remove(i)
+        if os.path.isfile(mentions_path):
+            os.remove(mentions_path)
 
-        # TODO Perform linking between the GrFN vars and TR hypothesis
         L = build_link_graph(hypothesis_data)
         tables = extract_link_tables(L)
         grfn_var_to_groundings = {}
@@ -78,4 +86,13 @@ class TextReadingLinker:
                     short_varname not in grfn_var_to_groundings
                     or grfn_var_to_groundings[short_varname]["link_score"] < score
                 ):
-                    grfn_var_to_groundings = link_data
+                    grfn_var_to_groundings[short_varname] = link_data
+
+        vars_to_metadata = self.groundings_to_metadata(grfn_var_to_groundings)
+        
+        for var_id,var in grfn.variables.items():
+            var_name = var_id.name
+            if var_name in vars_to_metadata:
+                var.add_metadata(vars_to_metadata[var_name])
+        
+        return grfn
