@@ -1,0 +1,580 @@
+{
+  "uid": "fb73b7e3-31c1-4c68-9c01-8f838f0112ca",
+  "identifier": "@container::SIR-simple::@global::sir",
+  "date_created": "2020-10-28",
+  "version": "0.0.1",
+  "hyper_edges": [
+    {
+      "inputs": [
+        "bd28ec2f-1ab8-4834-a76b-f541fda34a0c",
+        "907cd4b5-75e5-42e1-b78a-499332c24d15",
+        "bcc74690-7f59-48e2-a83d-3be3f56f5158",
+        "5acb1aca-d962-464c-abc0-0a8fcca094e8",
+        "df770854-9a02-4fbf-8470-a402ac13a170"
+      ],
+      "function": "72627a69-07af-4b19-9f11-7293af19e90a",
+      "outputs": [
+        "a9ba7521-8987-4ad4-97ed-4e3d119d3edd"
+      ]
+    },
+    {
+      "inputs": [
+        "92e83653-750f-45c6-a76a-5a474da822a1",
+        "bcc74690-7f59-48e2-a83d-3be3f56f5158",
+        "df770854-9a02-4fbf-8470-a402ac13a170"
+      ],
+      "function": "d40b4005-bf39-496e-8239-0655ffaa0da5",
+      "outputs": [
+        "95a09847-de14-4909-8777-6869ef627d9c"
+      ]
+    },
+    {
+      "inputs": [
+        "907cd4b5-75e5-42e1-b78a-499332c24d15",
+        "a9ba7521-8987-4ad4-97ed-4e3d119d3edd"
+      ],
+      "function": "0509c188-d20f-4913-80ca-584afeb487db",
+      "outputs": [
+        "d629a6f5-5315-48b3-a7aa-87848543c929"
+      ]
+    },
+    {
+      "inputs": [
+        "bcc74690-7f59-48e2-a83d-3be3f56f5158",
+        "a9ba7521-8987-4ad4-97ed-4e3d119d3edd",
+        "95a09847-de14-4909-8777-6869ef627d9c"
+      ],
+      "function": "bb6982cf-8f3b-43c3-9bc0-c85bb04374a9",
+      "outputs": [
+        "2f5d06d5-75f2-45d2-9cf4-d7040dcc10aa"
+      ]
+    },
+    {
+      "inputs": [
+        "5acb1aca-d962-464c-abc0-0a8fcca094e8",
+        "95a09847-de14-4909-8777-6869ef627d9c"
+      ],
+      "function": "423f0681-20a7-4745-a4e3-eb5a360759dd",
+      "outputs": [
+        "5d2077e4-c910-4f95-9e6b-6fb3176313ec"
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "uid": "907cd4b5-75e5-42e1-b78a-499332c24d15",
+      "reference": "",
+      "identifier": "SIR-simple::sir::s::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(1, 7)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "S",
+              "text_definition": "the stock of susceptible population"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "bcc74690-7f59-48e2-a83d-3be3f56f5158",
+      "reference": "",
+      "identifier": "SIR-simple::sir::i::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(8, 13)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "I",
+              "text_definition": "stock of infected"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "5acb1aca-d962-464c-abc0-0a8fcca094e8",
+      "reference": "",
+      "identifier": "SIR-simple::sir::r::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(15, 21)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "R",
+              "text_definition": "the stock of recovered population"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "bd28ec2f-1ab8-4834-a76b-f541fda34a0c",
+      "reference": "",
+      "identifier": "SIR-simple::sir::beta::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(8, 13)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "β",
+              "text_definition": "Rate of transmission via contact",
+              "parameter_estimates": [
+                "10.19 × 10 -8",
+                "7.079 × 10 -8",
+                "10.08 × 10 -8",
+                "7.94 × 10 -8",
+                "7.69 × 10 -8",
+                "10.79 × 10 -8",
+                "1.62 × 10 -8",
+                "3.87 × 10 -8"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "92e83653-750f-45c6-a76a-5a474da822a1",
+      "reference": "",
+      "identifier": "SIR-simple::sir::gamma::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(8, 13)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "γ",
+              "text_definition": "Rate of recovery from infection"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "df770854-9a02-4fbf-8470-a402ac13a170",
+      "reference": "",
+      "identifier": "SIR-simple::sir::dt::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(8, 13)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "dt",
+              "text_definition": "Next inter-event time"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "a9ba7521-8987-4ad4-97ed-4e3d119d3edd",
+      "reference": "",
+      "identifier": "SIR-simple::sir::infected::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "95a09847-de14-4909-8777-6869ef627d9c",
+      "reference": "",
+      "identifier": "SIR-simple::sir::recovered::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "d629a6f5-5315-48b3-a7aa-87848543c929",
+      "reference": "",
+      "identifier": "SIR-simple::sir::s::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(1, 7)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "S",
+              "text_definition": "the stock of susceptible population"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "2f5d06d5-75f2-45d2-9cf4-d7040dcc10aa",
+      "reference": "",
+      "identifier": "SIR-simple::sir::i::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(8, 13)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "I",
+              "text_definition": "stock of infected"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "5d2077e4-c910-4f95-9e6b-6fb3176313ec",
+      "reference": "",
+      "identifier": "SIR-simple::sir::r::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [
+        {
+          "type": "text-variable-definition",
+          "provenance": {
+            "method": "AutoMATES-link-assembly",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "text_location": "pg0_par1_sent0_Interval(15, 21)"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "text_identifier": "R",
+              "text_definition": "the stock of recovered population"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "uid": "72627a69-07af-4b19-9f11-7293af19e90a",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda beta,s,i,r,dt:(-((((beta*s)*i)/((s+i)+r)))*dt)",
+      "metadata": [
+        {
+          "type": "equation-definition",
+          "provenance": {
+            "method": "AutoMATES-MESA-grounding",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "eqn_number": 1
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "eqn_latex_source": "\\frac { d S } { d t } = - \\frac { \\beta I S } { N }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "d40b4005-bf39-496e-8239-0655ffaa0da5",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda gamma,i,dt:((gamma*i)*dt)",
+      "metadata": [
+        {
+          "type": "equation-definition",
+          "provenance": {
+            "method": "AutoMATES-MESA-grounding",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "document_source": "ideal_sir_model.pdf",
+                "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+                "eqn_number": 3
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "eqn_latex_source": "\\frac { d R } { d t } = \\gamma I"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "0509c188-d20f-4913-80ca-584afeb487db",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda s,infected:(s-infected)"
+    },
+    {
+      "uid": "bb6982cf-8f3b-43c3-9bc0-c85bb04374a9",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda i,infected,recovered:((i+infected)-recovered)"
+    },
+    {
+      "uid": "423f0681-20a7-4745-a4e3-eb5a360759dd",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda r,recovered:(r+recovered)"
+    }
+  ],
+  "subgraphs": [
+    {
+      "uid": "e17e5674-69ac-4a76-a393-8cadd1c5579f",
+      "namespace": "SIR-simple",
+      "scope": "@global",
+      "basename": "sir",
+      "occurrence_num": 0,
+      "type": "FuncContainer",
+      "parent": null,
+      "nodes": [
+        "907cd4b5-75e5-42e1-b78a-499332c24d15",
+        "bcc74690-7f59-48e2-a83d-3be3f56f5158",
+        "5acb1aca-d962-464c-abc0-0a8fcca094e8",
+        "bd28ec2f-1ab8-4834-a76b-f541fda34a0c",
+        "92e83653-750f-45c6-a76a-5a474da822a1",
+        "df770854-9a02-4fbf-8470-a402ac13a170",
+        "72627a69-07af-4b19-9f11-7293af19e90a",
+        "a9ba7521-8987-4ad4-97ed-4e3d119d3edd",
+        "d40b4005-bf39-496e-8239-0655ffaa0da5",
+        "95a09847-de14-4909-8777-6869ef627d9c",
+        "0509c188-d20f-4913-80ca-584afeb487db",
+        "d629a6f5-5315-48b3-a7aa-87848543c929",
+        "bb6982cf-8f3b-43c3-9bc0-c85bb04374a9",
+        "2f5d06d5-75f2-45d2-9cf4-d7040dcc10aa",
+        "423f0681-20a7-4745-a4e3-eb5a360759dd",
+        "5d2077e4-c910-4f95-9e6b-6fb3176313ec"
+      ],
+      "metadata": [
+        {
+          "type": "container-code-role",
+          "provenance": {
+            "method": "AutoMATES-code-role-decision-tree",
+            "timestamp": "2020-10-28::11:14:53",
+            "sources": [
+              {
+                "source_file": "SIR-simple.for",
+                "source_location": "ASKE-E/integration-wg/ASKE-E/integration-wg/Simple-SIR-model/",
+                "lineno": [
+                  14,
+                  25
+                ]
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "code_role": "model"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": [
+    {
+      "type": "model-identifiers",
+      "provenance": {
+        "method": "AutoMATES-network-analysis",
+        "timestamp": "2020-10-28::11:14:53"
+      },
+      "attributes": [
+        {
+          "inputs": [
+            "907cd4b5-75e5-42e1-b78a-499332c24d15",
+            "bcc74690-7f59-48e2-a83d-3be3f56f5158",
+            "5acb1aca-d962-464c-abc0-0a8fcca094e8",
+            "bd28ec2f-1ab8-4834-a76b-f541fda34a0c",
+            "92e83653-750f-45c6-a76a-5a474da822a1",
+            "df770854-9a02-4fbf-8470-a402ac13a170"
+          ],
+          "outputs": [
+            "d629a6f5-5315-48b3-a7aa-87848543c929",
+            "2f5d06d5-75f2-45d2-9cf4-d7040dcc10aa",
+            "5d2077e4-c910-4f95-9e6b-6fb3176313ec"
+          ],
+          "parameters": [
+            "bd28ec2f-1ab8-4834-a76b-f541fda34a0c",
+            "92e83653-750f-45c6-a76a-5a474da822a1"
+          ],
+          "model_variables": [
+            "907cd4b5-75e5-42e1-b78a-499332c24d15",
+            "bcc74690-7f59-48e2-a83d-3be3f56f5158",
+            "5acb1aca-d962-464c-abc0-0a8fcca094e8",
+            "d629a6f5-5315-48b3-a7aa-87848543c929",
+            "2f5d06d5-75f2-45d2-9cf4-d7040dcc10aa",
+            "5d2077e4-c910-4f95-9e6b-6fb3176313ec"
+          ],
+          "initial_conditions": [
+            "df770854-9a02-4fbf-8470-a402ac13a170"
+          ],
+          "internal_variables": []
+        }
+      ]
+    },
+    {
+      "type": "GrFN-identifier",
+      "provenance": {
+        "method": "AutoMATES-model-identification",
+        "timestamp": "2020-10-28::11:14:53",
+        "sources": [
+          {
+            "document_source": "ideal_sir_model.pdf",
+            "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+            "text_location": "sent0_Interval(0, 4)"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "model_name": "The SIR model without vital dynamics",
+          "model_description": "The dynamics of an epidemic"
+        }
+      ]
+    },
+    {
+      "type": "GrFN-model-authors",
+      "provenance": {
+        "method": "AutoMATES-author-identification",
+        "timestamp": "2020-10-28::11:14:53",
+        "sources": [
+          {
+            "document_source": "ideal_sir_model.pdf",
+            "document_location": "ASKE-E/integration-wg/Simple-SIR-model/",
+            "text_location": "sent4_Interval(9, 14)"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "authors": [
+            {
+              "name": "O. Kermack",
+              "title": "",
+              "institution": ""
+            },
+            {
+              "name": "Anderson Gray McKendrick",
+              "title": "",
+              "institution": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
