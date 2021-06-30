@@ -87,12 +87,12 @@ rules:
     pattern: |
       [word="i.e"] | [word="i.e."]
 
-  - name: "proper_noun" #eliminating a stand-alone 'person' doesn't work bc Kcbmin is found as PERSON, well, have to anyway
+  - name: "proper_noun" #eliminating a stand-alone 'person' doesn't work bc Kcbmin is found as PERSON
     label: Avoid
     priority: 2
     type: token
     pattern: |
-      [entity=/PERSON|ORGANIZATION|LOCATION/]{1,3}
+      [entity=/PERSON|ORGANIZATION|LOCATION/]{2,3}
 
   - name: "person_2authors"
     label: Avoid

@@ -271,18 +271,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val argsForGrounding = AlignmentJsonUtils.getArgsForAlignment(jsonPath, json, groundToSVO, serializerName)
 
       // ground!
-      // ground!
       val groundings = ExtractAndAlign.groundMentions(
         json,
-        Some(Seq.empty),//argsForGrounding.identifierNames,
-        Some(Seq.empty), //argsForGrounding.identifierShortNames,
+        argsForGrounding.identifierNames,
+        argsForGrounding.identifierShortNames,
         argsForGrounding.descriptionMentions,
         argsForGrounding.parameterSettingMentions,
         argsForGrounding.intervalParameterSettingMentions,
         argsForGrounding.unitMentions,
-        Some(Seq.empty), //argsForGrounding.commentDescriptionMentions,
-        Some(Seq.empty), //argsForGrounding.equationChunksAndSource,
-        argsForGrounding.svoGroundings,
+        argsForGrounding.commentDescriptionMentions,
+        argsForGrounding.equationChunksAndSource,
+        argsForGrounding.svoGroundings, //Some(Seq.empty)
         groundToSVO,
         maxSVOgroundingsPerVar,
         alignmentHandler,

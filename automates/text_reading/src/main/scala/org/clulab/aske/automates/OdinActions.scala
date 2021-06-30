@@ -70,12 +70,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def replaceWithLongerIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
-    val allIdentifierMentions = mentions.filter(_.label == "Identifier")
+    // group identifiers by sentence to avoid replacing an identifier from one sent with a longer identifier from a different one
+    val allIdentifierMentionsBySent = mentions.filter(_.label == "Identifier").groupBy(_.sentence)
     val (mentionsWithIdentifier, other) = mentions.partition(m => m.arguments.contains("variable") && m.arguments("variable").head.label == "Identifier")// for now, if there are two vars, then both would be either identifiers or not identifiers, so can just check the first one
     for (m <- mentionsWithIdentifier) {
       val newIdentifiers = new ArrayBuffer[Mention]()
       for (varArg <- m.arguments("variable")) {
-        val overlappingMention = findMentionWithOverlappingInterval(varArg.tokenInterval, allIdentifierMentions)
+        val overlappingMention = findMentionWithOverlappingInterval(varArg.tokenInterval, allIdentifierMentionsBySent(m.sentence))
         if (overlappingMention.nonEmpty) {
           newIdentifiers.append(overlappingMention.get)
         }
