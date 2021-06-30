@@ -365,6 +365,20 @@ class TextParameter(Metadatum):
 
 
 # -----------------------------------------------------------------------------
+# TextParameter
+# -----------------------------------------------------------------------------
+
+@dataclass
+class TextUnit(Metadatum):
+    """
+    host: <Variable>
+    Association of variable unit type extracted from text.
+    """
+    text_extraction: TextExtraction
+    unit: str
+
+
+# -----------------------------------------------------------------------------
 # EquationParameter
 # -----------------------------------------------------------------------------
 
