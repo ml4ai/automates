@@ -471,9 +471,8 @@ def d_sep(g, x, y, z):
 
 def make_cg(g, gamma):
     g_obs = observed_graph(g)
-    g_obs_names = g_obs.vs["name"]
     g_obs_elist = g_obs.es
-    n_nodes = g_obs.vcount
+    n_nodes = g_obs.vcount()
     cg = copy.deepcopy(g_obs)
 
     # Create table keeping track of node properties
@@ -496,7 +495,7 @@ def make_cg(g, gamma):
                     va = None
                 node = CgNode(index=i+k*n_nodes, orig_name=g_obs.vs[i]["name"], val_assign=va, submodel=event.submodel)
                 cg_node_info.append(node)
-                cg.add_vertices(1)
+                cg.add_vertices(1, attributes={"name": f"{node.orig_name}_{node.submodel}"})
 
             obs_edges_to_add = []
             for edge in g_obs_elist:
@@ -506,7 +505,7 @@ def make_cg(g, gamma):
             k = k + 1
 
     # Add Unobserved Edges
-    n_verts_total = cg.vcount
+    n_verts_total = cg.vcount()
     g_unobs_elist = g.es.select(description="U")
     edge_sets = []
     new_unobs_elist = []
@@ -523,17 +522,21 @@ def make_cg(g, gamma):
         old_vert_indx0 = edge[0]
         old_vert_indx1 = edge[1]
         for i in range(k):  # Connects new unobserved node to the old nodes, and the old nodes in all other sub-models
-            unobs_edges_to_add.append((new_vert_indx, old_vert_indx0+i*n_nodes))
-            unobs_edges_to_add.append((new_vert_indx, old_vert_indx1+i*n_nodes))
+            if cg_node_info[old_vert_indx0+i*n_nodes].orig_name != cg_node_info[old_vert_indx0+i*n_nodes].submodel:
+                unobs_edges_to_add.append((new_vert_indx, old_vert_indx0+i*n_nodes))
+            if cg_node_info[old_vert_indx1+i*n_nodes].orig_name != cg_node_info[old_vert_indx1+i*n_nodes].submodel:
+                unobs_edges_to_add.append((new_vert_indx, old_vert_indx1+i*n_nodes))
 
     # Adding unobserved nodes/edges connecting node in original graph to corresponding submodels
     for i in range(n_nodes):
-        n_verts_total = n_verts_total + 1
-        cg.add_vertices(1, attributes={"name": f"U_{cg_node_info[i].submodel}"})
-        new_vert_indx = n_verts_total - 1
+        # if "U" not in parents_unsort(cg_node_info[i].orig_name, cg):
+        if not any(i in edge for edge in unobs_edges_to_add):
+            n_verts_total = n_verts_total + 1
+            cg.add_vertices(1, attributes={"name": f"U_{cg_node_info[i].orig_name}"})
+            new_vert_indx = n_verts_total - 1
 
-        for j in range(k):  # For each submodel
-            if cg_node_info[i+j*n_nodes].val_assign is not None:
+            for j in range(k):  # For each submodel
+                if cg_node_info[i+j*n_nodes].val_assign is None:
                     unobs_edges_to_add.append((new_vert_indx, cg_node_info[i+j*n_nodes].index))
     cg.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
     return cg
@@ -614,3 +617,11 @@ class CgNode:
 
 class IDANotIdentifiable(Exception):
     pass
+
+
+gamma = [CF("Y", "y", "X"), CF("X", "x_prime"), CF("Z", "z", "D"), CF("D", "d")]
+graph_9a = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
+graph_9a.vs["name"] = ["X", "W", "Y", "D", "Z"]
+graph_9a.es["description"] = ["O", "O", "O", "O", "U", "U"]
+cg = make_cg(graph_9a, gamma)
+print(cg)
