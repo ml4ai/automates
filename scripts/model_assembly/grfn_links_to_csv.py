@@ -37,10 +37,10 @@ def main():
                 [
                     "Link Score",
                     "Var-Comm Score",
-                    "Comm-Text Score",
-                    "Text-Eqn Score",
+                    "Comm-GVar Score",
+                    "GVar-Eqn Score",
                     "Comment Span",
-                    "Text Mention",
+                    "Text Mention(s) List",
                     "Equation Symbol",
                 ]
             )
