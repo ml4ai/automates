@@ -225,7 +225,7 @@ object ExtractAndAlign {
         val split = varName.split("::")
         ujson.Obj(
           "uid" -> randomUUID.toString,
-          "source" -> split(1),
+          "source" -> varName,
           "content" -> split(2),
           "model" -> split(0)
         )
