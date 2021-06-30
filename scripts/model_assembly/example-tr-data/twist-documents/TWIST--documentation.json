@@ -1,0 +1,26 @@
+{
+  "TWIST_coreSimple$file_head": [
+    "********************************************************************************\n",
+    "!     State Variables:\n",
+    "!     qx                        quantity sold in global trade\n",
+    "!     b                         price elasticity of global demand\n",
+    "!     p_max_prod_const          expected future production price constant\n",
+    "!     q_storage_max_cons        maximum surplus storage capacity\n",
+    "********************************************************************************\n"
+  ],
+  "TWIST_coreSimple$file_foot": [],
+  "@container::TWIST_coreSimple::@global::main": {
+    "head": [
+      "********************************************************************************\n",
+      "!     State Variables:\n",
+      "!     qx                        quantity sold in global trade\n",
+      "!     b                         price elasticity of global demand\n",
+      "!     p_max_prod_const          expected future production price constant\n",
+      "!     q_storage_max_cons        maximum surplus storage capacity\n",
+      "********************************************************************************\n"
+    ],
+    "neck": [],
+    "foot": [],
+    "internal": {}
+  }
+}
