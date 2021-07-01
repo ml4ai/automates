@@ -36,7 +36,9 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable"))  
   }
 
 
+
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
+
 
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
@@ -151,10 +153,22 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String], useBigrams: Boolean): Seq[Alignment] = {
 
+//    for ((src, i) <- srcTexts.zipWithIndex) {
+//      for ((dst, j) <- dstTexts.zipWithIndex) {
+//        println("++++")
+//        println(src.mkString(""))
+//        println(dst.mkString(""))
+//        println("-> score: " + 1 * compare(src, dst, useBigrams))// + (1.0 / (editDistance(src, dst) + 1.0)))
+//      }
+//    }
+
+
+
+
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
-      score = compare(src, dst, useBigrams) + 2 * (1.0 / (editDistance(src, dst) + 1.0))
+      score = compare(src, dst, useBigrams)// + (1.0 / (editDistance(src, dst) + 1.0))
 //      score =  (1.0 / (editDistance(src, dst) + 1.0)) // score without using word embeddings
     } yield Alignment(i, j, score)
     // redundant but good for debugging
