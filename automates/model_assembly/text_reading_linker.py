@@ -6,6 +6,7 @@ from automates.model_assembly.interfaces import TextReadingInterface
 from automates.model_assembly.linking import (
     CodeVarNode,
     CommSpanNode,
+    EqnVarNode,
     GVarNode,
     ParameterSettingNode,
     build_link_graph,
@@ -37,37 +38,40 @@ class TextReadingLinker:
 
     def groundings_to_metadata(self, groundings):
         vars_to_metadata = {}
-        for var,grounding in groundings.items():            
+        for var,grounding in groundings.items():   
+            vars_to_metadata[var] = list()
+
             provenance = {
                 "method": "TEXT_READING_PIPELINE",
                 "timestamp": ProvenanceData.get_dt_timestamp(),
             }
 
             for text_definition in grounding["text_definition"]:
-                vars_to_metadata[var] = TypedMetadata.from_data({
+                vars_to_metadata[var].append(TypedMetadata.from_data({
                     "type": "TEXT_DEFINITION",
                     "provenance": provenance,
                     "text_extraction": text_definition["text_extraction"],
                     "variable_identifier": grounding["gvar"],
                     "variable_definition": text_definition["variable_def"]
-                })
+                }))
 
             for param_setting in grounding["parameter_setting"]:
-                vars_to_metadata[var] = TypedMetadata.from_data({
+                vars_to_metadata[var].append(TypedMetadata.from_data({
                         "type": "PARAMETER_SETTING",
                         "provenance": provenance,
                         "text_extraction": param_setting["text_extraction"],
                         "variable_identifier": grounding["gvar"],
                         "value": param_setting["value"]
-                })
+                }))
 
-            # vars_to_metadata[var] = TypedMetadata.from_data({
-            #     "type": "equation_parameter",
-            #     "provenance": "",
-            #     "equation_extraction": "",
-            #     "variable_identifier": "",
-            #     "value": ""
-            # })
+            for equation_parameter in grounding["equation_parameter"]:
+                vars_to_metadata[var].append(TypedMetadata.from_data({
+                    "type": "EQUATION_PARAMETER",
+                    "provenance": provenance,
+                    "equation_extraction": equation_parameter["equation_extraction"],
+                    "variable_identifier": grounding["gvar"],
+                    "value": equation_parameter["value"]
+                }))
 
         return vars_to_metadata
 
@@ -93,7 +97,6 @@ class TextReadingLinker:
         ]
 
     def build_parameter_setting(self, gvar: GVarNode, L):
-
         parameter_settings = [
             param 
             for param in L.successors(gvar) 
@@ -102,11 +105,30 @@ class TextReadingLinker:
 
         return [
             {
+                "value": param.content,
                 "text_extraction": self.build_text_extraction(param.text_extraction),
-                "value": param.content
             } 
             for param in parameter_settings
         ]
+
+
+    def build_equation_groundings(self, gvar: GVarNode, L):
+        equation_vars = [
+            param 
+            for param in L.predecessors(gvar) 
+            if isinstance(param, EqnVarNode)
+        ] 
+        selected_eqn_var = max(equation_vars, key=lambda eq: L.edges[eq, gvar]["weight"])
+
+        return [
+            {
+                "value": selected_eqn_var.content,
+                "equation_extraction": {
+                    "equation_number": selected_eqn_var.equation_number
+                }
+            }
+        ]
+        
 
     def get_links_from_graph(self, L):
         grfn_var_to_groundings = {}
@@ -133,8 +155,7 @@ class TextReadingLinker:
                         grfn_var_to_groundings[code_var_name] = {
                             "score": score,
                             "gvar": gvar.content, 
-                            # TODO
-                            # "equation_grounding":  
+                            "equation_parameter": self.build_equation_groundings(gvar, L),
                             "parameter_setting": self.build_parameter_setting(gvar, L),
                             "text_definition": self.build_text_definition(gvar)
                         }
@@ -187,6 +208,7 @@ class TextReadingLinker:
         for var_id,var in grfn.variables.items():
             var_name = var_id.name
             if var_name in vars_to_metadata:
-                var.add_metadata(vars_to_metadata[var_name])
+                for metadata in vars_to_metadata[var_name]:
+                    var.add_metadata(metadata)
         
         return grfn
