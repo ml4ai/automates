@@ -7,6 +7,7 @@ from automates.model_assembly.linking import (
     CodeVarNode,
     CommSpanNode,
     GVarNode,
+    ParameterSettingNode,
     build_link_graph,
     extract_link_tables
 )
@@ -51,13 +52,14 @@ class TextReadingLinker:
                     "variable_definition": text_definition["variable_def"]
                 })
 
-            # vars_to_metadata[var] = TypedMetadata.from_data({
-            #     "type": "text_parameter",
-            #     "provenance": "",
-            #     "text_extraction": "",
-            #     "variable_identifier": "",
-            #     "value": ""
-            # })
+            for param_setting in grounding["parameter_setting"]:
+                vars_to_metadata[var] = TypedMetadata.from_data({
+                        "type": "PARAMETER_SETTING",
+                        "provenance": provenance,
+                        "text_extraction": param_setting["text_extraction"],
+                        "variable_identifier": grounding["gvar"],
+                        "value": param_setting["value"]
+                })
 
             # vars_to_metadata[var] = TypedMetadata.from_data({
             #     "type": "equation_parameter",
@@ -90,6 +92,21 @@ class TextReadingLinker:
             for text_var in gvar.text_vars
         ]
 
+    def build_parameter_setting(self, gvar: GVarNode, L):
+
+        parameter_settings = [
+            param 
+            for param in L.successors(gvar) 
+            if isinstance(param, ParameterSettingNode)
+        ] 
+
+        return [
+            {
+                "text_extraction": self.build_text_extraction(param.text_extraction),
+                "value": param.content
+            } 
+            for param in parameter_settings
+        ]
 
     def get_links_from_graph(self, L):
         grfn_var_to_groundings = {}
@@ -118,9 +135,7 @@ class TextReadingLinker:
                             "gvar": gvar.content, 
                             # TODO
                             # "equation_grounding":  
-                            "parameter_setting": {
-
-                            },
+                            "parameter_setting": self.build_parameter_setting(gvar, L),
                             "text_definition": self.build_text_definition(gvar)
                         }
 

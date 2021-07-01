@@ -59,15 +59,31 @@ class LinkNode(ABC):
                 )
 
             return GVarNode(data["uid"], data["content"], tuple(text_vars))
-        elif element_type == "text_span":
-            return TextSpanNode(data["source"], data["content"])
+        # elif element_type == "text_span":
+        #     return TextSpanNode(data["source"], data["content"])
         elif (
             element_type == "parameter_setting_via_idfr" 
             or element_type == "int_param_setting_via_idfr"
-            or element_type == "unit_via_idfr"
+        ):
+            return ParameterSettingNode(
+                data["uid"], 
+                data["content"], 
+                data["original_sentence"], 
+                data["source"], 
+                TextExtraction(
+                    data["spans"]["page"],
+                    data["spans"]["block"],
+                    tuple(
+                        Span(s["char_begin"], s["char_end"]) 
+                        for s in data["spans"]["spans"]
+                    )
+                )
+            )
+        elif (
+            element_type == "unit_via_idfr"
             or element_type == "unit_via_cncpt"
         ):
-            return TextSpanNode(data["uid"], data["content"])
+            return UnitNode(data["uid"], data["content"])
         else:
             raise ValueError(f"Unrecognized link element type: {element_type}")
 
@@ -76,16 +92,30 @@ class LinkNode(ABC):
         return NotImplemented
 
 @dataclass(repr=False, frozen=True)
+class Span:
+    char_begin: int
+    char_end: int
+
+@dataclass(frozen=True)
+class TextExtraction:
+    page: int
+    block: int
+    spans: Tuple[Span]
+
+@dataclass(repr=False, frozen=True)
 class ParameterSettingNode(LinkNode):
 
     original_sentence: str
     source: str
-    # TODO should we support these?
-    # spans: dict
-    # arguments: dict
+    text_extraction: TextExtraction
 
     def get_table_rows(self, link_graph: DiGraph) -> list:
-        # TODO
+        return None
+
+@dataclass(repr=False, frozen=True)
+class UnitNode(LinkNode):
+
+    def get_table_rows(self, link_graph: DiGraph) -> list:
         return None
 
 @dataclass(repr=False, frozen=True)
@@ -129,17 +159,6 @@ class CodeVarNode(LinkNode):
         return rows
 
 @dataclass(repr=False, frozen=True)
-class Span:
-    char_begin: int
-    char_end: int
-
-@dataclass(frozen=True)
-class TextExtraction:
-    page: int
-    block: int
-    spans: Tuple[Span]
-
-@dataclass(repr=False, frozen=True)
 class TextVarNode(LinkNode):
     # TODO Do we need svo query information?
     # svo_query_str: str
@@ -167,11 +186,7 @@ class GVarNode(LinkNode):
 
     def get_table_rows(self, L: DiGraph) -> list:
         text_vars = [t_var.content for t_var in self.text_vars]
-
-        text_span_nodes = [
-            n for n in L.successors(self) if isinstance(n, TextSpanNode)
-        ]
-        txt = [str(n) for n in text_span_nodes]
+        txt = [n.content for n in text_vars]
 
         eqn_span_nodes = [
             n for n in L.predecessors(self) if isinstance(n, EqnSpanNode)
@@ -226,41 +241,40 @@ class CommSpanNode(LinkNode):
 
         return rows
 
+# @dataclass(repr=False, frozen=True)
+# class TextSpanNode(LinkNode):
+#     def __repr__(self):
+#         return self.__str__()
 
-@dataclass(repr=False, frozen=True)
-class TextSpanNode(LinkNode):
-    def __repr__(self):
-        return self.__str__()
+#     def __str__(self):
+#         tokens = self.content.strip().split()
+#         if len(tokens) <= 4:
+#             return " ".join(tokens)
 
-    def __str__(self):
-        tokens = self.content.strip().split()
-        if len(tokens) <= 4:
-            return " ".join(tokens)
+#         new_content = ""
+#         while len(tokens) > 4:
+#             new_content += "\n" + " ".join(tokens[:4])
+#             tokens = tokens[4:]
+#         new_content += "\n" + " ".join(tokens)
+#         return new_content
 
-        new_content = ""
-        while len(tokens) > 4:
-            new_content += "\n" + " ".join(tokens[:4])
-            tokens = tokens[4:]
-        new_content += "\n" + " ".join(tokens)
-        return new_content
+#     def __data_from_source(self) -> tuple:
+#         path_pieces = self.source.split("/")
+#         doc_data = path_pieces[-1]
+#         return tuple(doc_data.split(".pdf_"))
 
-    def __data_from_source(self) -> tuple:
-        path_pieces = self.source.split("/")
-        doc_data = path_pieces[-1]
-        return tuple(doc_data.split(".pdf_"))
+#     def get_docname(self) -> str:
+#         (docname, _) = self.__data_from_source()
+#         return docname
 
-    def get_docname(self) -> str:
-        (docname, _) = self.__data_from_source()
-        return docname
+#     def get_sentence_id(self) -> str:
+#         (_, data) = self.__data_from_source()
+#         (sent_num, span_start, span_stop) = re.findall(r"[0-9]+", data)
+#         return
 
-    def get_sentence_id(self) -> str:
-        (_, data) = self.__data_from_source()
-        (sent_num, span_start, span_stop) = re.findall(r"[0-9]+", data)
-        return
-
-    def get_table_rows(self, L: DiGraph) -> list:
-        # NOTE I dont believe text spans have any direct links besides gvars
-        return None
+#     def get_table_rows(self, L: DiGraph) -> list:
+#         # NOTE I dont believe text spans have any direct links besides gvars
+#         return None
 
 @dataclass(repr=False, frozen=True)
 class FullTextEquationNode(LinkNode):
@@ -295,16 +309,16 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         G.add_node(node, color="lightskyblue")
 
     @add_link_node.register
-    def _(node: TextSpanNode):
-        G.add_node(node, color="crimson")
-
-    @add_link_node.register
     def _(node: EqnSpanNode):
         G.add_node(node, color="orange")
 
     @add_link_node.register
     def _(node: ParameterSettingNode):
         G.add_node(node, color="green")
+
+    @add_link_node.register
+    def _(node: UnitNode):
+        G.add_node(node, color="crimson")
 
     @add_link_node.register
     def _(node: GVarNode):
@@ -341,15 +355,21 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
             report_bad_link(n1, n2)
 
     @add_link.register
-    def _(n1: TextSpanNode, n2, score):
+    def _(n1: ParameterSettingNode, n2, score):
         add_link_node(n1)
         add_link_node(n2)
 
-        if isinstance(n2, EqnSpanNode):
+        if isinstance(n2, GVarNode):
             G.add_edge(n2, n1, weight=score)
-        elif isinstance(n2, CommSpanNode):
-            G.add_edge(n1, n2, weight=score)
-        elif isinstance(n2, GVarNode):
+        else:
+            report_bad_link(n1, n2)
+
+    @add_link.register
+    def _(n1: UnitNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, GVarNode):
             G.add_edge(n2, n1, weight=score)
         else:
             report_bad_link(n1, n2)
@@ -369,7 +389,7 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         add_link_node(n1)
         add_link_node(n2)
 
-        if isinstance(n2, TextSpanNode):
+        if isinstance(n2, (ParameterSettingNode, UnitNode)):
             G.add_edge(n1, n2, weight=score)
         else:
             report_bad_link(n1, n2)
