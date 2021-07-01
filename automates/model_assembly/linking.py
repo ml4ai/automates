@@ -184,7 +184,7 @@ class GVarNode(LinkNode):
         return self.text_vars
 
     def get_table_rows(self, L: DiGraph) -> list:
-        text_vars = [t_var.content for t_var in self.text_vars]
+        text_vars = [t_var for t_var in self.text_vars]
         txt = [n.content for n in text_vars]
 
         eqn_span_nodes = [
@@ -195,10 +195,10 @@ class GVarNode(LinkNode):
         for eqn_span in eqn_span_nodes:
             te_ct = L.edges[eqn_span, self]["weight"]
             for r in eqn_span.get_table_rows(L):
-                r.update({"text_vars": text_vars, "txt": txt, "te_score": te_ct})
+                r.update({"txt": txt, "te_score": te_ct})
                 rows.append(r)
         else: 
-            rows.append({"text_vars": text_vars, "txt": txt, "te_score": None})
+            rows.append({"txt": txt, "te_score": None})
 
         return rows
 
