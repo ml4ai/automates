@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import singledispatch
+from typing import Tuple
 import re
 
 from networkx import DiGraph
@@ -43,7 +44,19 @@ class LinkNode(ABC):
                 ][0]
                 # TODO I dont think TR produces this data anymore, do we need it?
                 # query_string = ";".join(text_var_data["svo_query_terms"])
-                text_vars.append(TextVarNode(text_var_data["source"], text_var_data["content"]))
+                text_vars.append(TextVarNode(
+                        text_var_data["source"], 
+                        text_var_data["content"], 
+                        TextExtraction(
+                            text_var_data["spans"]["page"],
+                            text_var_data["spans"]["block"],
+                            tuple(
+                                Span(s["char_begin"], s["char_end"]) 
+                                for s in text_var_data["spans"]["spans"]
+                            )
+                        )
+                    )
+                )
 
             return GVarNode(data["uid"], data["content"], tuple(text_vars))
         elif element_type == "text_span":
@@ -55,7 +68,6 @@ class LinkNode(ABC):
             or element_type == "unit_via_cncpt"
         ):
             return TextSpanNode(data["uid"], data["content"])
-            # return ParameterSettingIdfrNode(data["uid"], data["content"], data["original_sentence"], data["source"])
         else:
             raise ValueError(f"Unrecognized link element type: {element_type}")
 
@@ -64,7 +76,7 @@ class LinkNode(ABC):
         return NotImplemented
 
 @dataclass(repr=False, frozen=True)
-class ParameterSettingIdfrNode(LinkNode):
+class ParameterSettingNode(LinkNode):
 
     original_sentence: str
     source: str
@@ -116,11 +128,22 @@ class CodeVarNode(LinkNode):
 
         return rows
 
+@dataclass(repr=False, frozen=True)
+class Span:
+    char_begin: int
+    char_end: int
+
+@dataclass(frozen=True)
+class TextExtraction:
+    page: int
+    block: int
+    spans: Tuple[Span]
 
 @dataclass(repr=False, frozen=True)
 class TextVarNode(LinkNode):
     # TODO Do we need svo query information?
     # svo_query_str: str
+    text_extraction: TextExtraction
 
     def get_docname(self) -> str:
         path_pieces = self.source.split("/")
@@ -280,7 +303,7 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         G.add_node(node, color="orange")
 
     @add_link_node.register
-    def _(node: ParameterSettingIdfrNode):
+    def _(node: ParameterSettingNode):
         G.add_node(node, color="green")
 
     @add_link_node.register
