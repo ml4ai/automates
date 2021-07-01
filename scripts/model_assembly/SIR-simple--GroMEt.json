@@ -7,7 +7,7 @@
       "type": "grfn_creation",
       "provenance": {
         "method": "model_assembly_pipeline",
-        "timestamp": "2021-06-30 16:53:58.225620"
+        "timestamp": "2021-06-30 23:06:24.964949"
       },
       "name": "SIR-simple"
     },
@@ -15,7 +15,7 @@
       "type": "code_collection_reference",
       "provenance": {
         "method": "program_analysis_pipeline",
-        "timestamp": "2021-06-30 16:53:58.225566"
+        "timestamp": "2021-06-30 23:06:24.964896"
       },
       "global_reference_uid": "e3e70682-c209-4cac-629f-6fbed82c07cd",
       "files": [
@@ -42,7 +42,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226140"
+            "timestamp": "2021-06-30 23:06:24.965479"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -52,7 +52,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225689"
+            "timestamp": "2021-06-30 23:06:24.965020"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -78,7 +78,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226052"
+            "timestamp": "2021-06-30 23:06:24.965386"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -88,7 +88,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225637"
+            "timestamp": "2021-06-30 23:06:24.964966"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -114,7 +114,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226093"
+            "timestamp": "2021-06-30 23:06:24.965432"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -124,7 +124,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225662"
+            "timestamp": "2021-06-30 23:06:24.964993"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -150,7 +150,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226118"
+            "timestamp": "2021-06-30 23:06:24.965457"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -160,7 +160,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225676"
+            "timestamp": "2021-06-30 23:06:24.965008"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -186,7 +186,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226181"
+            "timestamp": "2021-06-30 23:06:24.965521"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -196,7 +196,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225711"
+            "timestamp": "2021-06-30 23:06:24.965043"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -222,7 +222,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226357"
+            "timestamp": "2021-06-30 23:06:24.965632"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -232,7 +232,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225723"
+            "timestamp": "2021-06-30 23:06:24.965055"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -258,7 +258,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226161"
+            "timestamp": "2021-06-30 23:06:24.965500"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -268,7 +268,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225700"
+            "timestamp": "2021-06-30 23:06:24.965032"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -294,7 +294,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226093"
+            "timestamp": "2021-06-30 23:06:24.965432"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -304,7 +304,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225662"
+            "timestamp": "2021-06-30 23:06:24.964993"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -330,7 +330,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226181"
+            "timestamp": "2021-06-30 23:06:24.965521"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -340,7 +340,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225711"
+            "timestamp": "2021-06-30 23:06:24.965043"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -366,7 +366,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.227352"
+            "timestamp": "2021-06-30 23:06:24.966738"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -376,7 +376,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225734"
+            "timestamp": "2021-06-30 23:06:24.965066"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -402,7 +402,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226052"
+            "timestamp": "2021-06-30 23:06:24.965386"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -412,7 +412,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225637"
+            "timestamp": "2021-06-30 23:06:24.964966"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -438,7 +438,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226357"
+            "timestamp": "2021-06-30 23:06:24.965632"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -448,7 +448,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225723"
+            "timestamp": "2021-06-30 23:06:24.965055"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -474,7 +474,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226265"
+            "timestamp": "2021-06-30 23:06:24.965544"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -484,7 +484,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225745"
+            "timestamp": "2021-06-30 23:06:24.965077"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -510,7 +510,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226357"
+            "timestamp": "2021-06-30 23:06:24.965632"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -520,7 +520,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225723"
+            "timestamp": "2021-06-30 23:06:24.965055"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -546,7 +546,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226093"
+            "timestamp": "2021-06-30 23:06:24.965432"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -556,7 +556,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225662"
+            "timestamp": "2021-06-30 23:06:24.964993"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -582,7 +582,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.227352"
+            "timestamp": "2021-06-30 23:06:24.966738"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -592,7 +592,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225734"
+            "timestamp": "2021-06-30 23:06:24.965066"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -618,7 +618,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226287"
+            "timestamp": "2021-06-30 23:06:24.965564"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -628,7 +628,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225756"
+            "timestamp": "2021-06-30 23:06:24.965089"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -654,7 +654,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.227352"
+            "timestamp": "2021-06-30 23:06:24.966738"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -664,7 +664,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225734"
+            "timestamp": "2021-06-30 23:06:24.965066"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -690,7 +690,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226118"
+            "timestamp": "2021-06-30 23:06:24.965457"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -700,7 +700,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225676"
+            "timestamp": "2021-06-30 23:06:24.965008"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -726,7 +726,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226308"
+            "timestamp": "2021-06-30 23:06:24.965584"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -736,7 +736,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225767"
+            "timestamp": "2021-06-30 23:06:24.965100"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -762,7 +762,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226052"
+            "timestamp": "2021-06-30 23:06:24.965386"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -772,7 +772,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225637"
+            "timestamp": "2021-06-30 23:06:24.964966"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -798,7 +798,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226093"
+            "timestamp": "2021-06-30 23:06:24.965432"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -808,7 +808,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225662"
+            "timestamp": "2021-06-30 23:06:24.964993"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -834,7 +834,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226118"
+            "timestamp": "2021-06-30 23:06:24.965457"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -844,7 +844,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225676"
+            "timestamp": "2021-06-30 23:06:24.965008"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -870,7 +870,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226140"
+            "timestamp": "2021-06-30 23:06:24.965479"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -880,7 +880,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225689"
+            "timestamp": "2021-06-30 23:06:24.965020"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -906,7 +906,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226161"
+            "timestamp": "2021-06-30 23:06:24.965500"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -916,7 +916,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225700"
+            "timestamp": "2021-06-30 23:06:24.965032"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -942,7 +942,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226181"
+            "timestamp": "2021-06-30 23:06:24.965521"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -952,7 +952,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225711"
+            "timestamp": "2021-06-30 23:06:24.965043"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -978,7 +978,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226265"
+            "timestamp": "2021-06-30 23:06:24.965544"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -988,7 +988,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225745"
+            "timestamp": "2021-06-30 23:06:24.965077"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -1014,7 +1014,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226287"
+            "timestamp": "2021-06-30 23:06:24.965564"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -1024,7 +1024,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225756"
+            "timestamp": "2021-06-30 23:06:24.965089"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -1050,7 +1050,7 @@
           "type": "domain",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.226308"
+            "timestamp": "2021-06-30 23:06:24.965584"
           },
           "data_type": "integer",
           "measurement_scale": "discrete",
@@ -1060,7 +1060,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225767"
+            "timestamp": "2021-06-30 23:06:24.965100"
           },
           "code_type": "identifier",
           "code_file_reference_uid": "",
@@ -1083,7 +1083,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::beta::-1 <--> SIR-simple::SIR-simple.sir::assign::infected::0::--::beta::-1",
@@ -1094,7 +1094,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::s::-1 <--> SIR-simple::SIR-simple.sir::assign::infected::0::--::s::-1",
@@ -1105,7 +1105,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::i::-1 <--> SIR-simple::SIR-simple.sir::assign::infected::0::--::i::-1",
@@ -1116,7 +1116,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::r::-1 <--> SIR-simple::SIR-simple.sir::assign::infected::0::--::r::-1",
@@ -1127,7 +1127,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::dt::-1 <--> SIR-simple::SIR-simple.sir::assign::infected::0::--::dt::-1",
@@ -1138,7 +1138,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::gamma::-1 <--> SIR-simple::SIR-simple.sir::assign::recovered::0::--::gamma::-1",
@@ -1149,7 +1149,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::i::-1 <--> SIR-simple::SIR-simple.sir::assign::recovered::0::--::i::-1",
@@ -1160,7 +1160,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::dt::-1 <--> SIR-simple::SIR-simple.sir::assign::recovered::0::--::dt::-1",
@@ -1171,7 +1171,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple.sir::assign::recovered::0::--::recovered::0 <--> SIR-simple::SIR-simple.sir::assign::r::0::--::recovered::0",
@@ -1182,7 +1182,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::r::-1 <--> SIR-simple::SIR-simple.sir::assign::r::0::--::r::-1",
@@ -1193,29 +1193,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
-      "value": null,
-      "value_type": null,
-      "uid": "SIR-simple::SIR-simple::sir::0::--::s::-1 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::s::-1",
-      "src": "SIR-simple::SIR-simple::sir::0::--::s::-1",
-      "tgt": "SIR-simple::SIR-simple.sir::assign::s::0::--::s::-1"
-    },
-    {
-      "syntax": "Wire",
-      "type": null,
-      "name": null,
-      "metadata": null,
-      "value": null,
-      "value_type": null,
-      "uid": "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0",
-      "src": "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0",
-      "tgt": "SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0"
-    },
-    {
-      "syntax": "Wire",
-      "type": null,
-      "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::infected::0",
@@ -1226,7 +1204,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple::sir::0::--::i::-1 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::i::-1",
@@ -1237,7 +1215,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple.sir::assign::recovered::0::--::recovered::0 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::recovered::0",
@@ -1248,7 +1226,29 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple::sir::0::--::s::-1 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::s::-1",
+      "src": "SIR-simple::SIR-simple::sir::0::--::s::-1",
+      "tgt": "SIR-simple::SIR-simple.sir::assign::s::0::--::s::-1"
+    },
+    {
+      "syntax": "Wire",
+      "type": null,
+      "name": null,
+      "metadata": [],
+      "value": null,
+      "value_type": null,
+      "uid": "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0",
+      "src": "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0",
+      "tgt": "SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0"
+    },
+    {
+      "syntax": "Wire",
+      "type": null,
+      "name": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple.sir::assign::s::0::--::s::0 <--> SIR-simple::SIR-simple::sir::0::--::s::0",
@@ -1259,7 +1259,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple.sir::assign::i::0::--::i::0 <--> SIR-simple::SIR-simple::sir::0::--::i::0",
@@ -1270,7 +1270,7 @@
       "syntax": "Wire",
       "type": null,
       "name": null,
-      "metadata": null,
+      "metadata": [],
       "value": null,
       "value_type": null,
       "uid": "SIR-simple::SIR-simple.sir::assign::r::0::--::r::0 <--> SIR-simple::SIR-simple::sir::0::--::r::0",
@@ -1288,7 +1288,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225816"
+            "timestamp": "2021-06-30 23:06:24.965150"
           },
           "code_type": "block",
           "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
@@ -1377,7 +1377,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225849"
+            "timestamp": "2021-06-30 23:06:24.965183"
           },
           "code_type": "block",
           "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
@@ -1426,7 +1426,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225871"
+            "timestamp": "2021-06-30 23:06:24.965205"
           },
           "code_type": "block",
           "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
@@ -1465,7 +1465,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225890"
+            "timestamp": "2021-06-30 23:06:24.965223"
           },
           "code_type": "block",
           "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
@@ -1514,7 +1514,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225910"
+            "timestamp": "2021-06-30 23:06:24.965244"
           },
           "code_type": "block",
           "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
@@ -1556,11 +1556,11 @@
         "SIR-simple::SIR-simple::sir::0::--::dt::-1 <--> SIR-simple::SIR-simple.sir::assign::recovered::0::--::dt::-1",
         "SIR-simple::SIR-simple.sir::assign::recovered::0::--::recovered::0 <--> SIR-simple::SIR-simple.sir::assign::r::0::--::recovered::0",
         "SIR-simple::SIR-simple::sir::0::--::r::-1 <--> SIR-simple::SIR-simple.sir::assign::r::0::--::r::-1",
-        "SIR-simple::SIR-simple::sir::0::--::s::-1 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::s::-1",
-        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0",
         "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::infected::0",
         "SIR-simple::SIR-simple::sir::0::--::i::-1 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::i::-1",
         "SIR-simple::SIR-simple.sir::assign::recovered::0::--::recovered::0 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::recovered::0",
+        "SIR-simple::SIR-simple::sir::0::--::s::-1 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::s::-1",
+        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0",
         "SIR-simple::SIR-simple.sir::assign::s::0::--::s::0 <--> SIR-simple::SIR-simple::sir::0::--::s::0",
         "SIR-simple::SIR-simple.sir::assign::i::0::--::i::0 <--> SIR-simple::SIR-simple::sir::0::--::i::0",
         "SIR-simple::SIR-simple.sir::assign::r::0::--::r::0 <--> SIR-simple::SIR-simple::sir::0::--::r::0"
@@ -1581,7 +1581,7 @@
           "type": "code_span_reference",
           "provenance": {
             "method": "program_analysis_pipeline",
-            "timestamp": "2021-06-30 16:53:58.225928"
+            "timestamp": "2021-06-30 23:06:24.965262"
           },
           "code_type": "block",
           "code_file_reference_uid": "f728b4fa-4248-5e3a-0a5d-2f346baa9455",
@@ -1612,7 +1612,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "beta",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965479"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965020"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::beta::-1",
       "states": [
         "SIR-simple::SIR-simple::sir::0::--::beta::-1",
@@ -1624,7 +1650,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "s",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965386"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.964966"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::s::-1",
       "states": [
         "SIR-simple::SIR-simple::sir::0::--::s::-1",
@@ -1639,7 +1691,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "i",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965432"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.964993"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::i::-1",
       "states": [
         "SIR-simple::SIR-simple::sir::0::--::i::-1",
@@ -1657,7 +1735,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "r",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965457"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965008"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::r::-1",
       "states": [
         "SIR-simple::SIR-simple::sir::0::--::r::-1",
@@ -1672,7 +1776,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "dt",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965521"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965043"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::dt::-1",
       "states": [
         "SIR-simple::SIR-simple::sir::0::--::dt::-1",
@@ -1687,7 +1817,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "gamma",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965500"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965032"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 14,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::gamma::-1",
       "states": [
         "SIR-simple::SIR-simple::sir::0::--::gamma::-1",
@@ -1699,7 +1855,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "recovered",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.966738"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965066"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 20,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::recovered::0",
       "states": [
         "SIR-simple::SIR-simple.sir::assign::recovered::0::--::recovered::0",
@@ -1714,22 +1896,74 @@
       "syntax": "Variable",
       "type": "",
       "name": "infected",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965632"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965055"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 19,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::infected::0",
       "states": [
         "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0",
-        "SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0",
-        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0",
-        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0",
         "SIR-simple::SIR-simple.sir::assign::i::0::--::infected::0",
-        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::infected::0"
+        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::i::0::--::infected::0",
+        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0",
+        "SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0",
+        "SIR-simple::SIR-simple.sir::assign::infected::0::--::infected::0 <--> SIR-simple::SIR-simple.sir::assign::s::0::--::infected::0"
       ]
     },
     {
       "syntax": "Variable",
       "type": "",
       "name": "s",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965544"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965077"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 22,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::s::0",
       "states": [
         "SIR-simple::SIR-simple.sir::assign::s::0::--::s::0",
@@ -1741,7 +1975,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "i",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965564"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965089"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 23,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::i::0",
       "states": [
         "SIR-simple::SIR-simple.sir::assign::i::0::--::i::0",
@@ -1753,7 +2013,33 @@
       "syntax": "Variable",
       "type": "",
       "name": "r",
-      "metadata": [],
+      "metadata": [
+        {
+          "type": "domain",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965584"
+          },
+          "data_type": "integer",
+          "measurement_scale": "discrete",
+          "elements": []
+        },
+        {
+          "type": "code_span_reference",
+          "provenance": {
+            "method": "program_analysis_pipeline",
+            "timestamp": "2021-06-30 23:06:24.965100"
+          },
+          "code_type": "identifier",
+          "code_file_reference_uid": "",
+          "code_span": {
+            "line_begin": 24,
+            "line_end": null,
+            "col_begin": 0,
+            "col_end": null
+          }
+        }
+      ],
       "uid": "SIR-simple::SIR-simple.sir::r::0",
       "states": [
         "SIR-simple::SIR-simple.sir::assign::r::0::--::r::0",
