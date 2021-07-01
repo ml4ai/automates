@@ -40,6 +40,7 @@ class MetadataType(AutoMATESBaseEnum):
     CODE_COLLECTION_REFERENCE = auto()
     DOMAIN = auto()
     PARAMETER_SETTING = auto()
+    EQUATION_PARAMETER = auto()
 
     @classmethod
     def from_str(cls, data: str):
@@ -59,6 +60,8 @@ class MetadataType(AutoMATESBaseEnum):
             return VariableTextDefinition
         elif mtype == cls.PARAMETER_SETTING:
             return VariableTextParameter
+        elif mtype == cls.EQUATION_PARAMETER:
+            return VariableEquationParameter
         else:
             raise MissingEnumError(
                 "Unhandled MetadataType to TypedMetadata conversion "
@@ -473,13 +476,24 @@ class EquationExtraction(BaseMetadata):
     document_reference_uid: str
     equation_number: int
 
+    @classmethod
+    def from_data(cls, data: dict) -> EquationExtraction:
+        return cls(
+            "equation_document_source",
+            "",
+            data["equation_number"]
+        )
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
 @dataclass
 class TextSpan(BaseMetadata):
     char_begin: int
     char_end: int
 
     @classmethod
-    def from_data(cls, data: dict) -> TextSpanRef:
+    def from_data(cls, data: dict) -> TextSpan:
         return cls(
             data["char_begin"],
             data["char_end"]
@@ -530,11 +544,18 @@ class VariableEquationParameter(TypedMetadata):
 
     @classmethod
     def from_data(cls, data: dict) -> VariableEquationParameter:
-        return cls(**data)
+        return cls(
+            data["type"],
+            data["provenance"],
+            EquationExtraction.from_data(data["equation_extraction"]),
+            data["variable_identifier"],
+            data["value"] 
+        )
 
     def to_dict(self):
         data = super().to_dict()
-        data.update({"name": self.name})
+        # TODO
+        # data.update({"name": self.name})
         return data
 
 @dataclass

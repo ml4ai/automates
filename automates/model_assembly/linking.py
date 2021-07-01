@@ -26,14 +26,13 @@ class LinkNode(ABC):
             return CommSpanNode(data["uid"], data["content"], data["source"])
         elif element_type == "equation":                    
             equation = None
+            equation_index = -1
             if "equation_uid" in data:
-                full_equation_data = [
-                    eq 
-                    for eq in grounding_information["full_text_equation"]
-                    if eq["uid"] == data["equation_uid"]][0]
-                equation = FullTextEquationNode(full_equation_data["uid"], full_equation_data["content"])
-
-            return EqnSpanNode(data["uid"], data["content"], equation)
+                equation_index += 1
+                for eq in grounding_information["full_text_equation"]:
+                    if eq["uid"] == data["equation_uid"]:
+                        equation = FullTextEquationNode(eq["uid"], eq["content"])
+            return EqnVarNode(data["uid"], data["content"], equation, equation_index)
         elif element_type == "gvar":
             text_vars = list()
             for text_var_uid in data["identifier_objects"]:
@@ -189,7 +188,7 @@ class GVarNode(LinkNode):
         txt = [n.content for n in text_vars]
 
         eqn_span_nodes = [
-            n for n in L.predecessors(self) if isinstance(n, EqnSpanNode)
+            n for n in L.predecessors(self) if isinstance(n, EqnVarNode)
         ]
 
         rows = list()
@@ -283,8 +282,9 @@ class FullTextEquationNode(LinkNode):
         return None
 
 @dataclass(repr=False, frozen=True)
-class EqnSpanNode(LinkNode):
+class EqnVarNode(LinkNode):
     full_text_equations: FullTextEquationNode
+    equation_number: int
 
     def get_table_rows(self, L: DiGraph) -> list:
         return [{"eqn": str(self)}]
@@ -309,7 +309,7 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         G.add_node(node, color="lightskyblue")
 
     @add_link_node.register
-    def _(node: EqnSpanNode):
+    def _(node: EqnVarNode):
         G.add_node(node, color="orange")
 
     @add_link_node.register
@@ -375,7 +375,7 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
             report_bad_link(n1, n2)
 
     @add_link.register
-    def _(n1: EqnSpanNode, n2, score):
+    def _(n1: EqnVarNode, n2, score):
         add_link_node(n1)
         add_link_node(n2)
 
