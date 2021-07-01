@@ -1,11 +1,16 @@
+from automates.model_assembly.metadata import MetadataMethod, ProvenanceData, TypedMetadata, VariableTextDefinition
 import os
 
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.model_assembly.interfaces import TextReadingInterface
 from automates.model_assembly.linking import (
+    CodeVarNode,
+    CommSpanNode,
+    GVarNode,
     build_link_graph,
     extract_link_tables
 )
+from automates.model_assembly.metadata import TypedMetadata, ProvenanceData, MetadataMethod
 
 class TextReadingLinker:
     text_reading_interface: TextReadingInterface
@@ -31,10 +36,95 @@ class TextReadingLinker:
 
     def groundings_to_metadata(self, groundings):
         vars_to_metadata = {}
-        for var,grounding in groundings.items():
-            # TODO
-            vars_to_metadata[var] = {"some info": "yay"}
+        for var,grounding in groundings.items():            
+            provenance = {
+                "method": "TEXT_READING_PIPELINE",
+                "timestamp": ProvenanceData.get_dt_timestamp(),
+            }
+
+            for text_definition in grounding["text_definition"]:
+                vars_to_metadata[var] = TypedMetadata.from_data({
+                    "type": "TEXT_DEFINITION",
+                    "provenance": provenance,
+                    "text_extraction": text_definition["text_extraction"],
+                    "variable_identifier": grounding["gvar"],
+                    "variable_definition": text_definition["variable_def"]
+                })
+
+            # vars_to_metadata[var] = TypedMetadata.from_data({
+            #     "type": "text_parameter",
+            #     "provenance": "",
+            #     "text_extraction": "",
+            #     "variable_identifier": "",
+            #     "value": ""
+            # })
+
+            # vars_to_metadata[var] = TypedMetadata.from_data({
+            #     "type": "equation_parameter",
+            #     "provenance": "",
+            #     "equation_extraction": "",
+            #     "variable_identifier": "",
+            #     "value": ""
+            # })
+
         return vars_to_metadata
+
+    def build_text_extraction(self, text_extraction):
+        return {
+            "text_spans": [
+                {
+                    "span": {
+                        "char_begin": span.char_begin,
+                        "char_end": span.char_end
+                    }
+                } for span in text_extraction.spans
+            ]
+        }
+
+    def build_text_definition(self, gvar: GVarNode):
+        return [
+            {
+                "variable_def": text_var.content,
+                "text_extraction": self.build_text_extraction(text_var.text_extraction)
+            }
+            for text_var in gvar.text_vars
+        ]
+
+
+    def get_links_from_graph(self, L):
+        grfn_var_to_groundings = {}
+        for code_var in [n for n in L.nodes if isinstance(n, CodeVarNode)]:
+            code_var_name = code_var.content
+
+            comm_nodes_to_gvars = {
+                comm: [
+                    gvar 
+                    for gvar in L.predecessors(comm) 
+                    if isinstance(gvar, GVarNode)
+                ] 
+                for comm in L.predecessors(code_var) 
+                if isinstance(comm, CommSpanNode)
+            }
+
+            for comm, gvars in comm_nodes_to_gvars.items():
+                for gvar in gvars:
+                    score = min(L.edges[comm, code_var]["weight"], L.edges[gvar, comm]["weight"])
+                    if (
+                        code_var_name not in grfn_var_to_groundings 
+                        or grfn_var_to_groundings[code_var_name]["score"] < score
+                    ):
+                        grfn_var_to_groundings[code_var_name] = {
+                            "score": score,
+                            "gvar": gvar.content, 
+                            # TODO
+                            # "equation_grounding":  
+                            "parameter_setting": {
+
+                            },
+                            "text_definition": self.build_text_definition(gvar)
+                        }
+
+        return grfn_var_to_groundings
 
     def perform_tr_grfn_linking(self, grfn: GroundedFunctionNetwork, tr_sources: dict):
         """
@@ -76,20 +166,9 @@ class TextReadingLinker:
             os.remove(mentions_path)
 
         L = build_link_graph(hypothesis_data)
-        tables = extract_link_tables(L)
-        grfn_var_to_groundings = {}
-        for var_name, var_data in tables.items():
-            short_varname = var_name
-            for link_data in var_data:
-                score = link_data["link_score"]
-                if (
-                    short_varname not in grfn_var_to_groundings
-                    or grfn_var_to_groundings[short_varname]["link_score"] < score
-                ):
-                    grfn_var_to_groundings[short_varname] = link_data
-
+        grfn_var_to_groundings = self.get_links_from_graph(L)
         vars_to_metadata = self.groundings_to_metadata(grfn_var_to_groundings)
-        
+
         for var_id,var in grfn.variables.items():
             var_name = var_id.name
             if var_name in vars_to_metadata:
