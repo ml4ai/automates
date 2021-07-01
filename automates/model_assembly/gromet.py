@@ -1,10 +1,7 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
 import json
 from typing import NewType, List, Tuple, Union, Dict
 from dataclasses import dataclass, field, asdict
-
-from networkx import DiGraph
 
 from ..utils.misc import uuid
 from .identifiers import FunctionIdentifier, VariableIdentifier
@@ -161,6 +158,10 @@ class RefOp(GrometElm):
     """
 
     name: UidOp
+
+    @classmethod
+    def from_operation_node(cls, operation: OperationFuncNode):
+        return cls(UidOp(operation.identifier.name))
 
 
 # --------------------
@@ -408,8 +409,9 @@ class Port(Valued):
                     func_id.namespace,
                     func_id.scope,
                     func_id.name,
-                    var_id.name,
                     str(func_id.index),
+                    "--",
+                    var_id.name,
                     str(var_id.index),
                 ]
             )
@@ -484,15 +486,17 @@ class Wire(Valued):
         callee_func_id: FunctionIdentifier,
         callee_var_id: VariableIdentifier,
     ):
+        caller_port = Port.uid_from_var_and_func(caller_var_id, caller_func_id)
+        callee_port = Port.uid_from_var_and_func(callee_var_id, callee_func_id)
         return cls(
             None,
             None,
             None,
             None,
             None,
-            UidWire(str(uuid.uuid4())),
-            Port.uid_from_var_and_func(caller_var_id, caller_func_id),
-            Port.uid_from_var_and_func(callee_var_id, callee_func_id),
+            UidWire(f"{caller_port} <--> {callee_port}"),
+            caller_port,
+            callee_port,
         )
 
 
@@ -519,7 +523,11 @@ class Box(TypedGrometElm):
     ):
         (L, J, P, W, B, V) = [list() for _ in range(6)]
         if isinstance(func, BaseConFuncNode):
-            func_box = Function.from_func_node(func)
+            (func_box, box_vars) = Function.from_func_node(func)
+            print(func_box.wires)
+            W.extend(func_box.wires)
+            func_box.wires = [w.uid for w in func_box.wires]
+            V.extend(box_vars)
         elif isinstance(func, ExpressionFuncNode):
             func_box = Expression.from_func_node(func)
         elif isinstance(func, OperationFuncNode):
@@ -540,27 +548,6 @@ class Box(TypedGrometElm):
             ]
         )
         P.extend(box_ports)
-
-        ivar_ids = set(func.input_variables)
-        for h_edge in func.hyper_edges:
-            for ivar in h_edge.inputs:
-                if ivar.identifier in ivar_ids:
-                    new_wire = Wire.from_caller_callee(
-                        func.identifier,
-                        ivar.identifer,
-                        h_edge.func_node.identifier,
-                        ivar.identifer,
-                    )
-                else:
-                    new_wire = Wire.from_caller_callee(
-                        func.identifier,
-                        ivar.identifer,
-                        h_edge.func_node.identifier,
-                        ivar.identifer,
-                    )
-                W.append(new_wire)
-            for ovar in h_edge.outputs:
-                pass
         return (L, J, P, W, B, V)
 
     @staticmethod
@@ -587,7 +574,7 @@ class BoxCall(Box):
 
 
 @dataclass
-class HasContents(ABC):
+class HasContents:
     """
     Mixin class, never instantiated.
     Bookkeeping for Box "contents" references.
@@ -604,20 +591,75 @@ class HasContents(ABC):
     wires: List[UidWire]
     boxes: List[UidBox]
     junctions: List[UidJunction]
-
-    @abstractmethod
-    def __str__(self):
-        return f"{len(self.wires)}, {len(self.boxes)}, {len(self.junctions)}"
+    # variables: List[Variable]
 
     @staticmethod
     def wires_from_hyper_graph(func: BaseFuncNode) -> List[Wire]:
         hyper_graph = func.hyper_graph
         wires = list()
-        initial_funcs = [
-            n for n in hyper_graph if len(hyper_graph.predecessors(n)) == 0
+        variables = dict()
+        initial_edges = [
+            h_edge
+            for h_edge in hyper_graph
+            if len(list(hyper_graph.predecessors(h_edge))) == 0
         ]
-        initial_vars = func.input_variables
-        out_vars = func.output_variables
+
+        live_vars = {
+            ivar_id: (func.identifier, ivar_id)
+            for ivar_id in func.input_variables
+        }
+
+        def wire_across_funcs(edges: List[HyperEdge]):
+            next_funcs = list()
+            new_live_vars = dict()
+            for child_edge in edges:
+                child_func = child_edge.func_node
+                next_funcs.extend(list(hyper_graph.successors(child_edge)))
+                for ivar_id in child_func.input_variables:
+                    origin_func, origin_var = live_vars[ivar_id]
+                    new_wire = Wire.from_caller_callee(
+                        origin_func,
+                        origin_var,
+                        child_func.identifier,
+                        ivar_id,
+                    )
+                    new_var_vals = [
+                        Port.uid_from_var_and_func(origin_var, origin_func),
+                        Port.uid_from_var_and_func(
+                            ivar_id, child_func.identifier
+                        ),
+                        new_wire.uid,
+                    ]
+                    if origin_var in variables:
+                        variables[origin_var].extend(new_var_vals)
+                    else:
+                        variables[origin_var] = new_var_vals
+                    wires.append(new_wire)
+                for ovar_id in child_func.output_variables:
+                    new_live_vars[ovar_id] = (child_func.identifier, ovar_id)
+            live_vars.update(new_live_vars)
+            unique_next_funcs = list(set(next_funcs))
+            if len(unique_next_funcs) == 0:
+                return
+            wire_across_funcs(unique_next_funcs)
+
+        wire_across_funcs(initial_edges)
+        for ovar_id in func.output_variables:
+            (origin_func, origin_var) = live_vars[ovar_id]
+            new_wire = Wire.from_caller_callee(
+                origin_func, origin_var, func.identifier, ovar_id
+            )
+            new_var_vals = [
+                Port.uid_from_var_and_func(origin_var, origin_func),
+                Port.uid_from_var_and_func(ovar_id, func.identifier),
+                new_wire.uid,
+            ]
+            if origin_var in variables:
+                variables[origin_var].extend(new_var_vals)
+            else:
+                variables[origin_var] = new_var_vals
+            wires.append(new_wire)
+        return wires, variables
 
     @staticmethod
     def box_ids_from_hyper_edges(h_edges: List[HyperEdge]) -> List[UidBox]:
@@ -688,29 +730,27 @@ class Function(Box, HasContents):  # BoxDirected
             for var_id in func.input_variables + func.output_variables
         ]
 
-        wires = list()
-        ivar_ids = set(func.input_variables)
-        for h_edge in func.hyper_edges:
-            for ivar in h_edge.inputs:
-                if ivar.identifier in ivar_ids:
-                    new_wire = Wire.from_caller_callee(
-                        func.identifier,
-                        ivar.identifer,
-                        h_edge.func_node.identifier,
-                        ivar.identifer,
-                    )
-                else:
-                    new_wire = Wire.from_caller_callee(
-                        func.identifier,
-                        ivar.identifer,
-                        h_edge.func_node.identifier,
-                        ivar.identifer,
-                    )
-                wires.append(new_wire)
-            for ovar in h_edge.outputs:
-                pass
+        wires, var_dict = HasContents.wires_from_hyper_graph(func)
+        box_vars = [
+            Variable.from_id_and_elements(v_id, els)
+            for v_id, els in var_dict.items()
+        ]
+        boxes = HasContents.box_ids_from_hyper_edges(func.hyper_edges)
+        junctions = list()
 
-        return cls(box_type, box_name, box_metadata, box_uid, box_ports)
+        return (
+            cls(
+                uid=box_uid,
+                type=box_type,
+                name=box_name,
+                ports=box_ports,
+                wires=wires,
+                boxes=boxes,
+                junctions=junctions,
+                metadata=box_metadata,
+            ),
+            box_vars,
+        )
 
 
 @dataclass
@@ -723,16 +763,42 @@ class Expr(GrometElm):
         -- they are always anonymous single instances.
     The call field of an Expr is a reference, either to
         (a) RefOp: primitive operator.
-        (b) RefOp: an explicitly defined Box (e.g., a Function)
+        (b) RefFn: an explicitly defined Box (e.g., a Function)
     The args field is a list of: UidPort reference, Literal or Expr
     """
 
     call: Union[RefFn, RefOp]
-    args: List[Union[UidPort, Literal, "Expr"]]
+    args: List[Union[UidPort, Literal, Expr]]
 
     @classmethod
     def from_func_node(cls, func: OperationFuncNode):
         pass
+
+    @classmethod
+    def from_hyper_graph(cls, func: ExpressionFuncNode):
+        h_graph = func.hyper_graph
+        output_h_edge = [
+            e for e in h_graph.nodes if len(list(h_graph.successors(e))) == 0
+        ][0]
+        # output_h_edge = list(h_graph.predecessors(return_edge))[0]
+
+        def build_expr_tree(cur_edge: HyperEdge):
+            func_node = cur_edge.func_node
+            preds = list(h_graph.predecessors(cur_edge))
+            if len(preds) == 0:
+                call = RefOp.from_operation_node(func_node)
+                args = [
+                    Port.uid_from_var_and_func(
+                        var_node.identifier, func_node.identifier
+                    )
+                    for var_node in cur_edge.inputs
+                ]
+                return cls(call, args)
+            call = RefOp.from_operation_node(func_node)
+            args = [build_expr_tree(pred_edge) for pred_edge in preds]
+            return cls(call, args)
+
+        return build_expr_tree(output_h_edge)
 
 
 @dataclass
@@ -764,7 +830,11 @@ class Expression(Box):  # BoxDirected
             for var_id in func.input_variables + func.output_variables
         ]
 
-        return cls(box_type, box_name, box_metadata, box_uid, box_ports)
+        expr_tree = Expr.from_hyper_graph(func)
+
+        return cls(
+            box_type, box_name, box_metadata, box_uid, box_ports, expr_tree
+        )
 
 
 @dataclass
@@ -976,8 +1046,27 @@ class Variable(TypedGrometElm):
     states: List[Union[UidPort, UidWire, UidJunction]]
 
     @classmethod
-    def from_var_node(cls, var_node: VariableNode):
-        pass
+    def from_id_and_elements(
+        cls,
+        var_id: VariableIdentifier,
+        elements: List[Union[UidPort, UidWire, UidJunction]],
+    ):
+        return cls(
+            type=UidType(""),
+            name=var_id.name,
+            uid=UidVariable(
+                "::".join(
+                    [
+                        var_id.namespace,
+                        var_id.scope,
+                        var_id.name,
+                        str(var_id.index),
+                    ]
+                )
+            ),
+            states=elements,
+            metadata=[],
+        )
 
 
 # --------------------

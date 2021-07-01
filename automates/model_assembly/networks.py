@@ -319,23 +319,22 @@ class BaseFuncNode(ABC):
 
     @staticmethod
     def create_hyper_graph(hyper_edges: List[HyperEdge]) -> nx.DiGraph:
-        output2func = {
-            out_node: h_edge.func_node
+        output2edge = {
+            out_node: h_edge
             for h_edge in hyper_edges
             for out_node in h_edge.outputs
         }
 
         network = nx.DiGraph()
         for h_edge in hyper_edges:
-            func_node = h_edge.func_node
-            network.add_node(func_node)
+            network.add_node(h_edge)
             potential_parents = list()
             for v_node in h_edge.inputs:
-                if v_node in output2func:
-                    potential_parents.append(output2func[v_node])
+                if v_node in output2edge:
+                    potential_parents.append(output2edge[v_node])
             network.add_edges_from(
                 [
-                    (parent_func, func_node)
+                    (parent_func, h_edge)
                     for parent_func in set(potential_parents)
                 ]
             )
@@ -545,7 +544,8 @@ class ExpressionFuncNode(BaseFuncNode):
 
             return output_var
 
-        convert_to_hyperedge(ret_def)
+        ret_child = [uid2node[uid] for uid in ret_def.children][0]
+        convert_to_hyperedge(ret_child)
         return (
             new_var_nodes,
             new_func_nodes,
@@ -616,8 +616,8 @@ class BaseConFuncNode(BaseFuncNode):
             hyper_edges.append(
                 HyperEdge(
                     new_func,
-                    new_func.input_variables,
-                    new_func.output_variables,
+                    [VARS[v_id] for v_id in new_func.input_variables],
+                    [VARS[v_id] for v_id in new_func.output_variables],
                 )
             )
 
@@ -626,7 +626,7 @@ class BaseConFuncNode(BaseFuncNode):
         exit_id = None
         for edge in hyper_edges:
             first_output = edge.outputs[0]
-            if first_output.name == "EXIT":
+            if first_output.identifier.name == "EXIT":
                 exit_id = first_output
         return cls(
             func_id,

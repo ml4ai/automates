@@ -3,6 +3,9 @@ from abc import ABC, abstractmethod, abstractclassmethod
 from dataclasses import dataclass
 
 
+OPERATION_NUM = -1
+
+
 @dataclass(frozen=True)
 class BaseIdentifier(ABC):
     namespace: str
@@ -128,7 +131,9 @@ class FunctionIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_operator_func(cls, operation: str, uid: int):
-        return cls("@builtin", "@global", operation, uid)
+        global OPERATION_NUM
+        OPERATION_NUM += 1
+        return cls("@builtin", "@global", operation, OPERATION_NUM)
 
 
 @dataclass(frozen=True)
