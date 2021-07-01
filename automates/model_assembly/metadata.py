@@ -39,6 +39,7 @@ class MetadataType(AutoMATESBaseEnum):
     CODE_SPAN_REFERENCE = auto()
     CODE_COLLECTION_REFERENCE = auto()
     DOMAIN = auto()
+    PARAMETER_SETTING = auto()
 
     @classmethod
     def from_str(cls, data: str):
@@ -56,6 +57,8 @@ class MetadataType(AutoMATESBaseEnum):
             return Domain
         elif mtype == cls.TEXT_DEFINITION:
             return VariableTextDefinition
+        elif mtype == cls.PARAMETER_SETTING:
+            return VariableTextParameter
         else:
             raise MissingEnumError(
                 "Unhandled MetadataType to TypedMetadata conversion "
@@ -552,7 +555,8 @@ class VariableTextDefinition(TypedMetadata):
 
     def to_dict(self):
         data = super().to_dict()
-        data.update({"name": self.name})
+        # TODO
+        # data.update({"name": self.name})
         return data
 
 @dataclass
@@ -563,11 +567,20 @@ class VariableTextParameter(TypedMetadata):
 
     @classmethod
     def from_data(cls, data: dict) -> VariableTextParameter:
-        return cls(**data)
-
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_data(data["text_extraction"]),
+            data["variable_identifier"],
+            data["value"] 
+        )
+    
     def to_dict(self):
         data = super().to_dict()
-        data.update({"name": self.name})
+        # TODO
+        # data.update({
+        #     "text_extraction": self.name
+        # })
         return data
 
 @dataclass
