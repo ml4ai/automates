@@ -491,12 +491,12 @@ class Wire(Valued):
         return cls(
             None,
             None,
-            None,
-            None,
-            None,
-            UidWire(f"{caller_port} <--> {callee_port}"),
-            caller_port,
-            callee_port,
+            value_type=None,
+            value=None,
+            metadata=[],
+            uid=UidWire(f"{caller_port} <--> {callee_port}"),
+            src=caller_port,
+            tgt=callee_port,
         )
 
 
@@ -527,6 +527,12 @@ class Box(TypedGrometElm):
             print(func_box.wires)
             W.extend(func_box.wires)
             func_box.wires = [w.uid for w in func_box.wires]
+            print(VARS)
+            for var in box_vars:
+                var.metadata = VARS[
+                    VariableIdentifier.from_str(var.uid)
+                ].metadata
+
             V.extend(box_vars)
         elif isinstance(func, ExpressionFuncNode):
             func_box = Expression.from_func_node(func)
