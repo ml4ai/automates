@@ -230,6 +230,11 @@ class VariableIdentifier(IndexedIdentifier):
         return cls(ns, sc, vn, int(ix))
 
     @classmethod
+    def from_str(cls, var_str: str):
+        (ns, sc, nm, idx) = var_str.split("::")
+        return cls(ns, sc, nm, int(idx))
+
+    @classmethod
     def from_air_json(cls, data: dict):
         return cls.from_name_str(data["name"])
 
