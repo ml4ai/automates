@@ -478,7 +478,7 @@ def make_cg(g, gamma):
     # Create table keeping track of node properties
     cg_node_info = []
     for i in range(n_nodes):
-        node = CgNode(index=i, orig_name=g_obs.vs[i]["name"])
+        node = CGNode(index=i, orig_name=g_obs.vs[i]["name"])
         cg_node_info.append(node)
 
     # First Bullet
@@ -486,16 +486,16 @@ def make_cg(g, gamma):
     k = 1
     submodels_checked = []
     for event in gamma:
-        if event.submodel is not None and event.submodel not in submodels_checked:
-            submodels_checked.append(event.submodel)
+        if event.int_var is not None and event.int_var not in submodels_checked:
+            submodels_checked.append(event.int_var)
             for i in range(n_nodes):
-                if cg_node_info[i].orig_name == event.submodel:  # Case sensitive
-                    va = event.submodel
+                if cg_node_info[i].orig_name == event.int_var:  # Case sensitive
+                    va = event.int_var
                 else:
                     va = None
-                node = CgNode(index=i+k*n_nodes, orig_name=g_obs.vs[i]["name"], val_assign=va, submodel=event.submodel)
+                node = CGNode(index=i + k * n_nodes, orig_name=g_obs.vs[i]["name"], val_assign=va, int_var=event.int_var)
                 cg_node_info.append(node)
-                cg.add_vertices(1, attributes={"name": f"{node.orig_name}_{node.submodel}"})
+                cg.add_vertices(1, attributes={"name": f"{node.orig_name}_{node.int_var}"})
 
             obs_edges_to_add = []
             for edge in g_obs_elist:
@@ -522,9 +522,9 @@ def make_cg(g, gamma):
         old_vert_indx0 = edge[0]
         old_vert_indx1 = edge[1]
         for i in range(k):  # Connects new unobserved node to the old nodes, and the old nodes in all other sub-models
-            if cg_node_info[old_vert_indx0+i*n_nodes].orig_name != cg_node_info[old_vert_indx0+i*n_nodes].submodel:
+            if cg_node_info[old_vert_indx0+i*n_nodes].orig_name != cg_node_info[old_vert_indx0+i*n_nodes].int_var:
                 unobs_edges_to_add.append((new_vert_indx, old_vert_indx0+i*n_nodes))
-            if cg_node_info[old_vert_indx1+i*n_nodes].orig_name != cg_node_info[old_vert_indx1+i*n_nodes].submodel:
+            if cg_node_info[old_vert_indx1+i*n_nodes].orig_name != cg_node_info[old_vert_indx1+i*n_nodes].int_var:
                 unobs_edges_to_add.append((new_vert_indx, old_vert_indx1+i*n_nodes))
 
     # Adding unobserved nodes/edges connecting node in original graph to corresponding submodels
@@ -604,15 +604,15 @@ class Results:
 class CF:
     node: str = None
     val_assign: str = None
-    submodel: str = None
+    int_var: str = None
 
 
 @dataclass
-class CgNode:
+class CGNode:
     index: int = None
     orig_name: str = None
     val_assign: str = None
-    submodel: str = None
+    int_var: str = None
 
 
 class IDANotIdentifiable(Exception):
