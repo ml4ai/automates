@@ -171,3 +171,10 @@ rules:
     type: token
     pattern: |
       (?<= [word="'"]) [word="s"]
+
+  - name: "in addition"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      (?<= [lemma="in"]) [word="addition"]

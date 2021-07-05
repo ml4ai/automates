@@ -14,6 +14,7 @@ import org.clulab.struct.Interval
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 
 
@@ -46,12 +47,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
   }
 
+
+  // note: made a small adjustment to the end of this method
   def findOverlappingInterval(tokenInt: Interval, intervals: List[Interval]): Interval = {
     val overlapping = new ArrayBuffer[Interval]()
     for (int <- intervals) {
       if (tokenInt.intersect(int).nonEmpty) overlapping.append(int)
     }
-    overlapping.maxBy(_.length)
+    if (overlapping.nonEmpty) overlapping.maxBy(_.length) else Interval(0,0)
   }
 
   def keepWithGivenArgs(mentions: Seq[Mention], argTypes: Seq[String]): Seq[Mention] = {
@@ -189,11 +192,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
       val newArgs = mutable.Map[String, Seq[Mention]]()
-      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
+      val attachedTo = contextAttachedTo(m, state)
       val att = new ContextAttachment(attachedTo, "ContextAtt")
       newMentions.append(m.withAttachment(att))
     }
     newMentions
+  }
+
+  def contextAttachedTo(mention: Mention, state: State = new State()): String = {
+    val eventLabel = mention.arguments.filter(m => m._1.contains("event"))
+    val attachedTo = eventLabel.values.head.head.label match {
+      case "Function" => "Function"
+      case "Description" => "Description"
+      case "ConjDescription" => "Description"
+      case "ParameterSetting" => "ParamSetting"
+      case _ => ???
+    }
+    attachedTo
   }
 
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -786,25 +801,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn ++ other ++ complete
   }
 
-//  def attachContext(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-//    val (functions, nonFunctions) = mentions.partition(_.label == "Function")
-//    val (context, other) = nonFunctions.partition(_.label == "Context")
-//    val toReturn = new ArrayBuffer[Mention]()
-////    val context = mentions.filter(_.label == "Context")
-////    println("here: " ++ context.head.arguments.mkString("||"))
-//    for (f <- functions) {
-//      val contextToAttach = context.filter(m => m.sentence == f.sentence)
-////      if (contextToAttach.nonEmpty) {
-//        val combinedArgs = f.arguments ++ contextToAttach.head.arguments
-////        val newArgs = Map("context" -> contextToAttach)
-//        val newFunctions = copyWithArgs(f, combinedArgs)
-//        toReturn.append(newFunctions)
-////      } else toReturn.append(f)
-//    }
-//
-//    toReturn ++ nonFunctions
-//  }
-
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
@@ -883,8 +879,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val newFunctions = copyWithArgs(m, newArgs)
         toReturn.append(newFunctions)
     }
-    toReturn
-//    mentions
+//    toReturn
+    mentions
   }
 
   def filterOutputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -914,6 +910,74 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 //    mentions
   }
 
+  def makeNewContextEvents(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val contextTokInt = new ArrayBuffer[Interval]
+    val mensSelected = new ArrayBuffer[Mention]
+    val contextSelected = new ArrayBuffer[Mention]
+    val toReturn = new ArrayBuffer[Mention]
+    val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label == "ParamSetting")
+// note: attachment to description creates too many false positives - needs to be revised to be applied to description mentions.
+//    val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label.contains("Description") || m.label == "ParamSetting")
+    val contextMens = mentions.filter(_.label == "Context")
+    if (mensToAttach.nonEmpty) {
+      for (m <- mensToAttach) {
+        val contextSameSntnce = contextMens.filter(c => c.sentence == m.sentence)
+        if (contextSameSntnce.nonEmpty) {
+          for (c <- contextSameSntnce) contextTokInt += c.tokenInterval
+          if (findOverlappingInterval(m.tokenInterval, contextTokInt.toList) != Interval(0,0)) {
+            mensSelected.append(m)
+          }
+          if (mensSelected.nonEmpty) {
+            for (m <- mensSelected) {
+              for (c <- contextSameSntnce) {
+                if (m.sentence == c.sentence && m.tokenInterval.overlaps(c.tokenInterval)) {
+                  contextSelected.append(c)
+                }
+              }
+              val filteredContext = filterContextSelected(contextSelected, m)
+              if (filteredContext.nonEmpty) {
+              val newArgs = Map("event" -> Seq(m), "context" -> keepLongest(filteredContext))
+              toReturn.append(new RelationMention(
+                List("ContextEvent", "Event"),
+                m.tokenInterval,
+                newArgs,
+                m.paths, // the paths are off
+                m.sentence,
+                m.document,
+                m.keep,
+                m.foundBy ++ "++contextAttachment",
+                Set.empty))
+              }
+            }
+          }
+        }
+      }
+    }
+    toReturn.distinct
+  }
+
+  def filterContextSelected(contexts: Seq[Mention], mention: Mention): Seq[Mention] = {
+    val filteredContext = new ArrayBuffer[Mention]
+    val trigger = new ArrayBuffer[Mention]
+    if (mention.isInstanceOf[EventMention]) trigger.append(mention.asInstanceOf[EventMention].trigger)
+    for (c <- contexts) {
+    for (argType <- mention.arguments) {
+      for {
+        arg <- argType._2
+        newMention = mention match {
+          case rm: RelationMention => if (c.startOffset <= arg.startOffset && c.endOffset >= arg.startOffset) filteredContext.append(c)
+          case em: EventMention => if (c.startOffset <= arg.startOffset && c.endOffset >= arg.startOffset || c.startOffset <= trigger.head.startOffset && c.endOffset >= trigger.head.endOffset) filteredContext.append(c)
+          case _ => ???
+      }
+//        val overlap = findOverlappingInterval(c.tokenInterval, Seq(arg.tokenInterval).toList)
+//        println("HERE:" + c.text + arg.text + overlap)
+//        if (overlap.end - overlap.start != 0 && arg.tokenInterval.end - arg.tokenInterval.start != 0) {
+//          if ((overlap.end - overlap.start / arg.tokenInterval.end - arg.tokenInterval.start).toFloat > 0.7 || (c.tokenInterval.end - c.tokenInterval.start / overlap.end - overlap.start).toFloat > 0.7) filteredContext.append(c)
+        } yield filteredContext
+      }
+    }
+    filteredContext.distinct
+  }
 
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
     def foundBy(base: String) = s"$base++selectShorter"
@@ -1065,7 +1129,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   }
 
   def contextActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val toReturn = processContexts(looksLikeAContext(mentions, state), state)
+    val toReturn = processContexts(mentions, state)
     toReturn
   }
 
@@ -1108,34 +1172,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } yield m
   }
 
-  def looksLikeAContext(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    for {
-      m <- mentions
-      //get the split text of the suspected unit
-      contextTextSplit = m match {
-        //for tbs, the text of the context is the text of the whole mention
-        case tb: TextBoundMention => m.text.split(" ")
-        //for relation and event mentions, the context is the value of the arg with the argName "context"
-        case _ => {
-          val contextArgs = m.arguments.getOrElse("context", Seq())
-          if (contextArgs.nonEmpty) {
-            contextArgs.head.text.split(" ")
-          }
-          contextArgs.head.text.split(" ")
-        }
-      }
-      //the pattern to check if the suspected unit contains dashes (e.g., m-1), slashes (e.g., MJ/kg, or square brackets
-      //didn't add digits bc that resulted in more false positives (e.g., for years)
-//      pattern = "[-/\\[\\]]".r
-//      //negative pattern checks if the suspected unit contains char-s that should not be present in a unit
-//      negPattern = "[<>=]".r
-//      //the length constraints: the unit should consist of no more than 5 words and the first word of the unit should be no longer than 3 characters long (heuristics)
-//      if ((unitTextSplit.length <=5 && unitTextSplit.head.length <=3) || pattern.findFirstIn(unitTextSplit.mkString(" ")).nonEmpty) && negPattern.findFirstIn(unitTextSplit.mkString(" ")).isEmpty
-    } yield m
-  }
-
   def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
+    val singleCapitalWord = """^[A-Z]+$""".r
     for {
       m <- mentions
       descrText = m match {
@@ -1146,6 +1185,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
+      if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
 //      if m.tags.get.exists(_.contains("N"))
 

@@ -437,6 +437,15 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  // Tests from APSIM_Cropping Systems
+  val t1l = "empirical soil parameters are influenced by the number and thickness of specified layers"
+  failingTest should s"find functions from t1l: ${t1l}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "empirical soil parameters" -> Seq("number of specified layers", "thickness of specified layers")
+    )
+    val mentions = extractMentions(t1l)
+    testFunctionEvent(mentions, desired)
+  }
 
 }
 

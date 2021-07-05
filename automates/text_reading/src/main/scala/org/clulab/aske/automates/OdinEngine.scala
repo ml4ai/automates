@@ -89,7 +89,8 @@ class OdinEngine(
     val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
-    (loadableAttributes.actions.keepLongest(other) ++ untangled ++ loadableAttributes.actions.keepLongest(combining)).toVector
+    val contextAttachment = loadableAttributes.actions.makeNewContextEvents(events)
+    (loadableAttributes.actions.keepLongest(other) ++ untangled ++ loadableAttributes.actions.keepLongest(combining) ++ loadableAttributes.actions.keepLongest(contextAttachment)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -142,6 +143,7 @@ object OdinEngine {
   val MODEL_LABEL: String = "Model"
   val FUNCTION_LABEL: String = "Function"
   val CONTEXT_LABEL: String = "Context"
+  val CONTEXT_EVENT_LABEL: String = "ContextEvent"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"
@@ -152,7 +154,7 @@ object OdinEngine {
   val FUNCTION_INPUT_ARG: String = "input"
   val FUNCTION_OUTPUT_ARG: String = "output"
   val CONTEXT_ARG: String = "context"
-
+  val CONTEXT_EVENT_ARG: String = "event"
 
   val logger = LoggerFactory.getLogger(this.getClass())
   // Used by LexiconNER

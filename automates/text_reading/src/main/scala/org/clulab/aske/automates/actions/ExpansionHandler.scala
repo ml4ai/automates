@@ -353,12 +353,11 @@ class ExpansionHandler() extends LazyLogging {
       getNewTokenInterval(allIntervals)
     }
     else orig.tokenInterval
-
+  for ((argName, argPathsMap) <- orig.paths) {println("HERE: " + argName)}
     val paths = for {
       (argName, argPathsMap) <- orig.paths
       origPath = argPathsMap(orig.arguments(argName).head)
     } yield (argName, Map(expandedArgs(argName).head -> origPath))
-
     // Make the copy based on the type of the Mention
     val copyFoundBy = if (foundByAffix.nonEmpty) s"${orig.foundBy}_$foundByAffix" else orig.foundBy
 

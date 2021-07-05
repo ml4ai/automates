@@ -37,7 +37,6 @@ rules:
       unit: Unit+ = <acl appos | nmod_in nmod_per? appos compound  #todo: add an action to split these up and merge if
       #overlap and keep the longer unit?
 
-
   - name: identifier_taken_as_unit
     label: UnitRelation
     priority: ${priority}

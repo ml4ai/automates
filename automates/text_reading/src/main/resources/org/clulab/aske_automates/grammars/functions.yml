@@ -193,7 +193,7 @@ rules:
     example: "Life cycle progress through any given phase depends on a physiological day accumulator as a function of temperature and day length, in many cases."
     pattern: |
       trigger = [lemma = /depend|dependent/]
-      input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and nmod_on
+      input:Phrase+ = advcl_if? nmod_on conj_and? | conj_and nmod_on?
       output:Phrase = <xcomp? nsubj | nsubj:xsubj | nmod_of
 #      context:Context? = ${context}
 
@@ -463,7 +463,7 @@ rules:
     pattern: |
       trigger = (?<= [lemma = "reduce"] [word = "when"]) [word = /.*/]+
       input:Phrase+ = <advcl nsubj
-      output:Phrase = <advcl aux
+#      output:Phrase = <advcl aux
 
   - name: minus_token_rule # todo: extraction from the dependency rule needs to be filtered out
     label: Function

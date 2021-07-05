@@ -7,6 +7,7 @@ rules:
     label: ContextEvent
     priority: ${priority}
     type: token
+    action: ${action}
     example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and on the stability, if this height is not low enough."
     pattern: |
       @event:Function [word = ","]? ([chunk = /B-SBAR|B-PP/]|[word = "so"] [word = "long"] [word = "as"]|[word = "when"])? @context:Context
@@ -17,16 +18,29 @@ rules:
     label: ContextEvent
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and on the stability if this height is not low enough."
     pattern: |
-      trigger = [word=/if|where/]
-      event:Function = <mark <advcl_if | <advmod <acl:relcl
+      trigger = [word=/if|where|when/]
+      event:Function = <mark <advcl_if | <advmod (<acl:relcl | <advcl)
       context:Context = <mark | <advmod
+
+  - name: contextFunction_frontedAdvs
+    label: ContextEvent
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Under the same mulching fraction (fm = 0.5), αb decreased by 8.5% when fsw decreased from 1.0 to 0.5."
+    pattern: |
+      trigger = [word = /(^[A-Z].*$)/ & chunk = /B-PP/]|[word = /(^[A-Z].*$)/ & chunk = /B-SBAR/]
+      event:Function = <case <nmod_under
+      context:Context = <case
 
   - name: contextDescr_token
     label: ContextEvent
     priority: ${priority}
     type: token
+    action: ${action}
     example: "If this happens at time t, then the effective reproduction rate is Rt, which will be lower than R0."
     pattern: |
       @event:Description [word = ","]? ([chunk = /B-SBAR|B-PP/]|[word = "so"] [word = "long"] [word = "as"]|[word = "when"])? @context:Context
@@ -37,6 +51,7 @@ rules:
     label: ContextEvent
     priority: ${priority}
     type: token
+    action: ${action}
     example: "Suppose we increase the r parameter by 1 % to have r = 9.88588 x 10 - 8 , then R infinity will become 116464."
     pattern: |
       @context:Context [word = ","] [word = "then"] @event:ParameterSetting
