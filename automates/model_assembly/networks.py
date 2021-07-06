@@ -1414,7 +1414,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             network,
             hyper_edges,
             subgraphs,
-            air.type_definitions,
+            air.type_definitions.values(),
             air.metadata,
         )
 
