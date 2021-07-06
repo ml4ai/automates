@@ -201,25 +201,15 @@ class VariableNode(GenericNode):
         node_label = self.get_node_label(self.identifier.var_name)
         return node_label
 
-    # def get_label(self):
-    #     return self.identifier.var_name
-
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
             data["uid"],
-            # data["reference"] if "reference" in data else None,
-            # identifier,
-            # None,
-            # VarType.from_name(data["data_type"]) if "data_type" in data else None,
-            # DataType.from_type_str(data["kind"]) if "kind" in data else None,
-            # data["domain"] if "domain" in data else None,
-            # None,
             VariableIdentifier.from_str(data["identifier"]),
-            data["object_ref"] if "object_ref" in data else "",
             [TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
             if "metadata" in data
             else [],
+            data["object_ref"] if "object_ref" in data else "",
         )
 
     def to_dict(self) -> dict:
@@ -1741,7 +1731,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "variables": [var.to_dict() for var in self.variables],
             "functions": [func.to_dict() for func in self.lambdas],
             "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
-            "types": [t_def.to_dict() for t_def in self.types.values()],
+            "types": [t_def.to_dict() for t_def in self.types],
             "metadata": [m.to_dict() for m in self.metadata],
         }   
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod
+from copy import deepcopy
 from enum import Enum, auto, unique
 from dataclasses import dataclass
 from datetime import datetime
@@ -270,6 +271,7 @@ class TypedMetadata(BaseMetadata):
 
     @abstractclassmethod
     def from_data(cls, data):
+        data = deepcopy(data)
         mtype = MetadataType.from_str(data["type"])
         provenance = ProvenanceData.from_data(data["provenance"])
         ChildMetadataClass = MetadataType.get_metadata_class(mtype)
