@@ -5,7 +5,8 @@ from automates.apps.automates.translation_driver import translate_c, translate_f
 from automates.apps.automates.extract_driver import (
     extract_io_from_grfn, 
     extract_io_from_grfn_json, 
-    extract_expr_trees_from_grfn_json
+    extract_expr_trees_from_grfn_json,
+    extract_model_dynamics_from_grfn_json
 )
 from automates.apps.automates.execute_driver import execute_grfn_json
 
@@ -45,9 +46,17 @@ def translate():
 def extract_variable_io():
     # TODO validate body using marshmellow
     body = request.json
-    grfn_json = body["grfn"]
-    io = extract_io_from_grfn_json(grfn_json)
-    return jsonify(io)
+    res = {}
+    if "grfn" in body:
+        grfn_json = body["grfn"]
+        res = extract_io_from_grfn_json(grfn_json)
+    else:
+        res = {
+            "code": 400,
+            "type": "Bad request.",
+            "message": "No \"grfn\" field was provided in input."
+        }
+    return jsonify(res)
 
 @bp_api_v1.route("/extract/expr_trees", methods=["POST"])
 def extract_expr_trees():
@@ -57,6 +66,22 @@ def extract_expr_trees():
     if "grfn" in body:
         grfn_json = body["grfn"]
         res = extract_expr_trees_from_grfn_json(grfn_json)
+    else:
+        res = {
+            "code": 400,
+            "type": "Bad request.",
+            "message": "No \"grfn\" field was provided in input."
+        }
+    return jsonify(res)
+
+@bp_api_v1.route("/extract/dynamics", methods=["POST"])
+def extract_dynamics():
+    # TODO validate body using marshmellow
+    body = request.json
+    res = {}
+    if "grfn" in body:
+        grfn_json = body["grfn"]
+        res = extract_model_dynamics_from_grfn_json(grfn_json)
     else:
         res = {
             "code": 400,
