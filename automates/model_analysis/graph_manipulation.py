@@ -471,57 +471,59 @@ def d_sep(g, x, y, z):
 
 def make_cg(g, gamma):
     cg = observed_graph(g)
-    # Create iGraph attribute keeping track of node properties
+    # Create iGraph attributes keeping track of node/edge properties
     for node in cg.vs():
         node["orig_name"] = node["name"]
         node["val_assign"] = None
         node["int_var"] = None
-    initial_verts = cg.vs()
-    obs_elist = cg.es() #todo: double-check this
-    n_initial_verts = cg.vcount()
-    # cg = copy.deepcopy(g_obs)
+    for edge in cg.es():
+        edge["initial_edge"] = True
+    initial_verts = cg.vs.select(int_var=None)
+    obs_elist = cg.es.select(initial_edge=True)
 
     # First Bullet
     # Replicate graph for each intervention mentioned in gamma
     num_int_vars = 0
     int_vars_checked = []
+    obs_edges_to_add = []
     for event in gamma:
         if event.int_var is not None and event.int_var not in int_vars_checked:
             num_int_vars = num_int_vars + 1
             int_vars_checked.append(event.int_var)
             for node in initial_verts:
                 if node["orig_name"] == event.int_var:  # Case sensitive
-                    va = event.val_assign #todo: Check this, was event.int_var
+                    va = event.val_assign
                 else:
                     va = None
-                cg.add_vertices(1, attributes={"name": f"{node.orig_name}_{node.int_var}", "orig_name": node["name"],
+                cg.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_var}", "orig_name": node["name"],
                                                "val_assign": va, "int_var": event.int_var})
 
-            obs_edges_to_add = []
             for edge in obs_elist:
-                obs_edges_to_add.append(tuple(x + num_int_vars*n_initial_verts for x in edge.tuple))
-            cg.add_edges(obs_edges_to_add, attributes={"description": ["O"]*len(obs_edges_to_add)})
+                vlist0 = cg.vs.select(orig_name=cg.vs(edge.tuple[0])["orig_name"][0])
+                vlist1 = cg.vs.select(orig_name=cg.vs(edge.tuple[1])["orig_name"][0])
+                for node0 in vlist0:
+                    for node1 in vlist1:
+                        if (node0["int_var"] == node1["int_var"]) and (node0["int_var"] is not None):
+                            obs_edges_to_add.append((node0.index, node1.index))
+                            break
+    cg.add_edges(set(obs_edges_to_add), attributes={"description": ["O"]*len(obs_edges_to_add)})
 
     # Add Unobserved Edges
-    n_verts_total = cg.vcount()
     g_unobs_elist = g.es.select(description="U")
     edge_sets = []
     new_unobs_elist = []
     for edge in g_unobs_elist:
-        if set(edge.tuple) not in edge_sets:  # Trim the unobserved list down to include a pair of nodes only once
+        if set(edge.tuple) not in edge_sets:  # Trims the unobserved list down to include a pair of nodes only once
             edge_sets.append(set(edge.tuple))
             new_unobs_elist.append(edge)
-
     unobs_edges_to_add = []
     num_unobs_verts = 0
     for edge in new_unobs_elist:
-        n_verts_total = n_verts_total + 1
         num_unobs_verts = num_unobs_verts + 1
         cg.add_vertices(1, attributes={"name": f"U_{num_unobs_verts}"})
-        new_vert_indx = cg.vs.select(name=f"U_{num_unobs_verts}")
-        old_vert_name0 = g.vs(edge.tuple[0])["name"]
-        old_vert_name1 = g.vs(edge.tuple[1])["name"]
-
+        new_vert_indx = cg.vs.select(name=f"U_{num_unobs_verts}").indices[0]
+        old_vert_name0 = g.vs(edge.tuple[0])["name"][0]
+        old_vert_name1 = g.vs(edge.tuple[1])["name"][0]
         # For old vertex, find all vertices with the same original name, connect unobserved vertex to each instance
         verts_0 = cg.vs.select(orig_name=old_vert_name0)
         for vert in verts_0:
@@ -531,42 +533,19 @@ def make_cg(g, gamma):
         for vert in verts_1:
             if vert["val_assign"] is None:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
-
-
-    # unobs_edges_to_add = []
-    # for edge in new_unobs_elist:
-    #     n_verts_total = n_verts_total + 1
-    #     cg.add_vertices(1, attributes={"name": "U"})
-    #     new_vert_indx = n_verts_total - 1  # Index of the newly-added unobserved node
-    #     old_vert_indx0 = edge[0]
-    #     old_vert_indx1 = edge[1]
-    #     for i in range(num_int_vars):  # Connects new unobserved node to the old nodes, and the old nodes in all other sub-models
-    #         if cg_node_info[old_vert_indx0+i*n_nodes].orig_name != cg_node_info[old_vert_indx0+i*n_nodes].int_var:
-    #             unobs_edges_to_add.append((new_vert_indx, old_vert_indx0+i*n_nodes))
-    #         if cg_node_info[old_vert_indx1+i*n_nodes].orig_name != cg_node_info[old_vert_indx1+i*n_nodes].int_var:
-    #             unobs_edges_to_add.append((new_vert_indx, old_vert_indx1+i*n_nodes))
-
-    # Adding unobserved nodes/edges connecting node in original graph to corresponding submodels
-
-
     for node in initial_verts:
         # if "U" not in parents_unsort(cg_node_info[i].orig_name, cg):
         i = node.index
         if not any(i in edge for edge in unobs_edges_to_add):
-            n_verts_total = n_verts_total + 1
             cg.add_vertices(1, attributes={"name": f"U_{node['name']}"})
-            new_vert_indx = cg.vs.select(name=f"U_{node['name']}").index
-
+            new_vert_indx = cg.vs.select(name=f"U_{node['name']}").indices[0]
             # Find all nodes across parallel worlds
             verts_to_connect = cg.vs.select(orig_name=node["name"])
             for vert in verts_to_connect:
-                if vert.val_assign is None:
+                if vert["val_assign"] is None:
                     unobs_edges_to_add.append((new_vert_indx, vert.index))
     cg.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
     return cg
-
-
-
 
 
 @dataclass(unsafe_hash=True)
@@ -645,9 +624,11 @@ class IDANotIdentifiable(Exception):
 gamma = [CF("Y", "y", "X"), CF("X", "x_prime"), CF("Z", "z", "D"), CF("D", "d")]
 graph_9a = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
 graph_9a.vs["name"] = ["X", "W", "Y", "D", "Z"]
-graph_9a.vs["orig_name"] = ["X", "W", "Y", "D", "Z"]
-graph_9a.vs["val_assign"] = ["x_prime", None, None, "d", None]
-graph_9a.vs["int_var"] = [None, "X", "X", None, "X"]
+# graph_9a.vs["orig_name"] = ["X", "W", "Y", "D", "Z"]
+# graph_9a.vs["val_assign"] = ["x_prime", None, None, "d", None]
+# graph_9a.vs["int_var"] = [None, "X", "X", None, "X"]
 graph_9a.es["description"] = ["O", "O", "O", "O", "U", "U"]
 cg = make_cg(graph_9a, gamma)
 print(cg)
+
+
