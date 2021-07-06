@@ -2,7 +2,11 @@ from flask import Flask, Blueprint, json, request, jsonify
 
 from automates.apps.automates.model.result.api_response import ApiResponse
 from automates.apps.automates.translation_driver import translate_c, translate_fortran
-from automates.apps.automates.extract_driver import extract_io_from_grfn, extract_io_from_grfn_json
+from automates.apps.automates.extract_driver import (
+    extract_io_from_grfn, 
+    extract_io_from_grfn_json, 
+    extract_expr_trees_from_grfn_json
+)
 from automates.apps.automates.execute_driver import execute_grfn_json
 
 # Create app and blueprint objects
@@ -45,6 +49,21 @@ def extract_variable_io():
     io = extract_io_from_grfn_json(grfn_json)
     return jsonify(io)
 
+@bp_api_v1.route("/extract/expr_trees", methods=["POST"])
+def extract_expr_trees():
+    # TODO validate body using marshmellow
+    body = request.json
+    res = {}
+    if "grfn" in body:
+        grfn_json = body["grfn"]
+        res = extract_expr_trees_from_grfn_json(grfn_json)
+    else:
+        res = {
+            "code": 400,
+            "type": "Bad request.",
+            "message": "No \"grfn\" field was provided in input."
+        }
+    return jsonify(res)
 
 @bp_api_v1.route("/execute/grfn", methods=["POST"])
 def execute_grfn():

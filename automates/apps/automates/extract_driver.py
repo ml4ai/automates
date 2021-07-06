@@ -1,4 +1,7 @@
 from automates.model_assembly.networks import GroundedFunctionNetwork
+from automates.model_assembly.expression_trees.expression_walker import (
+    expr_trees_from_grfn
+)
 
 def extract_io_from_grfn(GrFN):
     GrFN.inputs
@@ -30,6 +33,13 @@ def extract_io_from_grfn(GrFN):
         "execution_outputs": outputs
     }
 
+def extract_expr_trees(GrFN):
+    return expr_trees_from_grfn(GrFN)
+
 def extract_io_from_grfn_json(grfn_json):
     GrFN = GroundedFunctionNetwork.from_dict(grfn_json)
     return extract_io_from_grfn(GrFN)
+
+def extract_expr_trees_from_grfn_json(grfn_json):
+    GrFN = GroundedFunctionNetwork.from_dict(grfn_json)
+    return extract_expr_trees(GrFN)
