@@ -89,6 +89,7 @@ class OdinEngine(
 
     loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other) ++
       untangled)).toVector
+
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {

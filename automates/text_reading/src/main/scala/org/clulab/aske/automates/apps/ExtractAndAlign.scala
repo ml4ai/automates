@@ -2,7 +2,6 @@ package org.clulab.aske.automates.apps
 
 import java.io.{File, PrintWriter}
 import java.util.UUID
-
 import org.clulab.utils.TextUtils._
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
@@ -19,9 +18,11 @@ import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
 import org.clulab.grounding.sparqlResult
 import org.clulab.odin.serialization.json.JSONSerializer
+
 import java.util.UUID.randomUUID
 import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVariable, GlobalVariable}
 import org.clulab.aske.automates.attachments.AutomatesAttachment
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -106,9 +107,12 @@ object ExtractAndAlign {
   val DESCRIPTION = "description"
   val VARIABLE = "variable"
   val DESCR_LABEL = "Description"
+  val CONJUNCTION_DESCR_LABEL = "ConjDescription"
+  val CONJUNCTION_DESCR_TYPE_2_LABEL = "ConjDescriptionType2"
   val PARAMETER_SETTING_LABEL = "ParameterSetting"
   val INTERVAL_PARAMETER_SETTING_LABEL = "IntervalParameterSetting"
   val UNIT_LABEL = "Unit"
+  val UNIT_RELATION_LABEL = "UnitRelation"
 
   val logger = LoggerFactory.getLogger(this.getClass())
 
@@ -149,6 +153,7 @@ object ExtractAndAlign {
         case _ => ???
       }
 
+
       val jsonObj = ujson.Obj(
         "uid" -> randomUUID.toString(),
         "source" -> docId,
@@ -170,7 +175,8 @@ object ExtractAndAlign {
       val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
       for (gr <- groupedVars) {
         val glVarID = randomUUID().toString()
-        val identifier = AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
+
+        val identifier = AlignmentBaseline.replaceGreekWithWord(gr._1, AlignmentBaseline.greek2wordDict.toMap).replace("\\\\", "")
         // the commented out part is for debugging
         val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str) // + "::" + le.obj("content").str)
         val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
@@ -199,11 +205,13 @@ object ExtractAndAlign {
       getGlobalVars(commentDescriptionMentions.get)
     } else Seq.empty
 
-    println("all comm gl vr: " + allCommentGlobalVars)
+    for (g <- allCommentGlobalVars) println("comment gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +
+      "\n=========\n")
+//    println("all comm gl vr: " + allCommentGlobalVars)
 
 //    for (g <- allCommentGlobalVars) println("comment gv: " + g.identifier)
 
-    println(equationChunksAndSource + "<<")
+//    println(equationChunksAndSource + "<<")
     val (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else (Seq.empty, Seq.empty)
     val globalEqVariables = if (eqLinkElements.nonEmpty) getGlobalEqVars(eqLinkElements) else Seq.empty
 //    for (g <- globalEqVariables) println("eq gv: " + g.identifier)
@@ -213,7 +221,7 @@ object ExtractAndAlign {
       val allGlobalVars = new ArrayBuffer[GlobalSrcVariable]()
       for (gr <- groupedVars) {
         val glVarID = randomUUID().toString()
-        val identifier = AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
+        val identifier = gr._1 // AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
         val srcVarObjs = gr._2.map(_.obj("uid").str)
         val glVar = new GlobalSrcVariable(glVarID, identifier, srcVarObjs)
         allGlobalVars.append(glVar)
@@ -325,9 +333,9 @@ object ExtractAndAlign {
     val allGlobalVars = new ArrayBuffer[GlobalVariable]()
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
-      val identifier = AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
+      val identifier = gr._1//AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap); for now, don't convert: text vars are already symbols and comments shouldnt be converted except for during alignment
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
-      val textFromAllDescrs = gr._2.map(m => m.arguments("description").head.text)
+      val textFromAllDescrs = gr._2.map(m => m.arguments("description").head.text).distinct
       val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs)
       allGlobalVars.append(glVar)
 
@@ -471,7 +479,7 @@ object ExtractAndAlign {
     }
     logger.info(s"Extracted ${textMentions.length} text mentions")
     val onlyEventsAndRelations = textMentions.seq.filter(m => m.matches("EventMention") || m.matches("RelationMention"))
-    (onlyEventsAndRelations.filter(_ matches DESCR_LABEL), onlyEventsAndRelations.filter(_ matches PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches INTERVAL_PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches UNIT_LABEL))
+    (onlyEventsAndRelations.filter(_ matches DESCR_LABEL), onlyEventsAndRelations.filter(_ matches PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches INTERVAL_PARAMETER_SETTING_LABEL), onlyEventsAndRelations.filter(_ matches UNIT_LABEL)) // fixme: should this be UNIT_RELATION_LABEL?
   }
 
   def getCommentDescriptionMentions(commentReader: OdinEngine, alignmentInputFile: Value, variableShortNames: Option[Seq[String]], source: Option[String]): Seq[Mention] = {
@@ -609,8 +617,24 @@ object ExtractAndAlign {
     if (allGlobalVars.nonEmpty && allCommentGlobalVars.nonEmpty) {
       val commentToTextAlignments = alignmentHandler.w2v.alignGlobalCommentVarAndGlobalVars(allCommentGlobalVars, allGlobalVars)
       // group by src idx, and keep only top k (src, dst, score) for each src idx
-      alignments(COMMENT_TO_GLOBAL_VAR) = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
+
+//      println("Alignments")
+//      for (gr <- commentToTextAlignments.groupBy(_.src)) {
+//        for (cta <- gr._2.sortBy(_.score).reverse)
+//        println(allCommentGlobalVars(cta.src).identifier + " "  + allGlobalVars(cta.dst).identifier + " " + cta.score + "<+")
+//      }
+      val aligns = Aligner.topKByDst(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
+
+      println("Alignments")
+      for (a <- aligns) {
+        for (g <- a) {
+          println(allCommentGlobalVars(g.src).identifier + " " + allGlobalVars(g.dst).identifier + " " + g.score)
+        }
+      }
+      alignments(COMMENT_TO_GLOBAL_VAR) = aligns
     }
+
+
 
     alignments.toMap
   }
@@ -802,11 +826,20 @@ object ExtractAndAlign {
       case _ => ???
     }
 
+    val whichArgs: Seq[String] = mention.label match {
+      case UNIT_RELATION_LABEL => Seq("unit")
+      case PARAMETER_SETTING_LABEL => Seq("value")
+      case INTERVAL_PARAMETER_SETTING_LABEL => Seq("valueLeast", "valueMost")
+      case DESCR_LABEL | CONJUNCTION_DESCR_LABEL | CONJUNCTION_DESCR_TYPE_2_LABEL => Seq.empty
+      case _ => throw new NotImplementedError(s"mention label handling not implemented: ${mention.label}")
+    }
+
+    val content = if (whichArgs.nonEmpty) mention.arguments.filter(arg => whichArgs.contains(arg._1)).map(arg => arg._2.head.text).mkString("||") else mention.text
     val jsonObj = ujson.Obj(
       "uid" -> randomUUID.toString(),
       "source" -> docId,
       "original_sentence" -> originalSentence,
-      "content" -> mention.text,
+      "content" -> content,
       "spans" -> makeLocationObj(mention, None, None),
       "arguments" -> ujson.Arr(args)
 

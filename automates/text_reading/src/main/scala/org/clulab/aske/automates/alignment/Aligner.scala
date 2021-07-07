@@ -39,7 +39,6 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable"))  
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
 
-
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
@@ -88,9 +87,10 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable"))  
   // todo: maybe for equations it should not be judged on distance but just on overlap in some way? like b and E are in no way similar...
   // and intersect could be normalized in some way? like by length or something?..
   def alignEqAndTexts(srcTexts: Seq[String], dstTexts: Seq[String]): Seq[Alignment] = {
+    println(srcTexts.mkString("<<++"))
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
-      rendered = AlignmentBaseline.renderForAlign(src)
+      rendered = AlignmentBaseline.replaceWordWithGreek(AlignmentBaseline.renderForAlign(src), AlignmentBaseline.word2greekDict.toMap)
       (dst, j) <- dstTexts.zipWithIndex
       multiplier = intersectMultipler(rendered, dst) // how did I make so many eq to gvar elements to go away? is there a threshold?
       score = 1.0 * multiplier / (editDistance(rendered, dst) + 1.0) // todo: is this good for long-term? next thing to try: only align if rendered starts with the same letter as actual---might need to make this output an option in case if there are no alignments; todo: try to find a way to use intersect multiplier
@@ -131,12 +131,12 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   def getRelevantTextFromGlobalVar(glv: GlobalVariable): String = {
     // ["variable", "description"]
     val relText = relevantArgs match {
-      case x if x.contains("variable") & x.contains("description")=> glv.identifier + " " + glv.textFromAllDescrs.mkString(" ")
-      case x if x.contains("variable") => glv.identifier
+      case x if x.contains("variable") & x.contains("description")=>  AlignmentBaseline.replaceWordWithGreek(glv.identifier, AlignmentBaseline.word2greekDict.toMap) + " " + glv.textFromAllDescrs.mkString(" ")
+      case x if x.contains("variable") => AlignmentBaseline.replaceWordWithGreek(glv.identifier, AlignmentBaseline.word2greekDict.toMap)
       case x if x.contains("description") => glv.textFromAllDescrs.mkString(" ")
       case _ => ???
     }
-//    println("relevant text: " + relText)
+    println("relevant text: " + relText)
     relText
   }
 
@@ -147,20 +147,21 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   def alignGlobalCommentVarAndGlobalVars(commentGlVar: Seq[GlobalVariable], glVars: Seq[GlobalVariable]): Seq[Alignment] = {
     // todo: since we base this on text of multiple descriptions, we can try to add some sort of weight for words that occur multiple times
     // todo: text of conj descrs should be returned based on char offset attachement
+    // fixme: for now, edit distance is
 //    for (g <- commentGlVar) println("_> " + g)
     alignTexts(commentGlVar.map(getRelevantTextFromGlobalVar(_).toLowerCase()), glVars.map(getRelevantTextFromGlobalVar(_).toLowerCase()), useBigrams = true)
   }
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String], useBigrams: Boolean): Seq[Alignment] = {
 
-//    for ((src, i) <- srcTexts.zipWithIndex) {
-//      for ((dst, j) <- dstTexts.zipWithIndex) {
-//        println("++++")
-//        println(src.mkString(""))
-//        println(dst.mkString(""))
-//        println("-> score: " + 1 * compare(src, dst, useBigrams))// + (1.0 / (editDistance(src, dst) + 1.0)))
-//      }
-//    }
+    for ((src, i) <- srcTexts.zipWithIndex) {
+      for ((dst, j) <- dstTexts.zipWithIndex) {
+        println("++++")
+        println(src.mkString(""))
+        println(dst.mkString(""))
+        println("-> score: " + 1 * compare(src, dst, useBigrams))// + (1.0 / (editDistance(src, dst) + 1.0)))
+      }
+    }
 
 
 
@@ -232,19 +233,14 @@ object Aligner {
 //    val overallSum = alignments.map(_.score).sum
     val grouped = alignments.groupBy(_.dst).toSeq
 
-    // score sum doesn't work bc alignment for eq to text bc here we group by source and src is eq and then when we choose top n for dst,
-    // if we normalize by sum, we end up on a different scale
-    //    for ((srcIdx, aa) <- grouped) {
-    //      val scoreSum = aa.map(_.score).sum
-    //      println("score sum: " + scoreSum)
-    //    }
     for {
       (srcIdx, aa) <- grouped
       _ = debugPrint(debug, srcIdx, alignments)
-      // since we added a bunch of multipliers, it might be good to normalize the scores, so we divide them by the sum of all the scores - doesn't work
+      // since we added a bunch of multipliers, it might be good to normalize the scores, so we divide them by the sum of all the scores - doesn't work + this is normalization for all the scores to sum up to 1 - not useful
       // bc scale ends up being different when we choose highest score for dst var
       scoreMax = aa.map(_.score).max
-      topK = aa.sortBy(-_.score/scoreMax).slice(0,k).filter(_.score > scoreThreshold).map(a => Alignment(a.src, a.dst, a.score/scoreMax)) //filter out those with the score below the threshold; threshold is 0 by default
+      topK = aa.sortBy(-_.score).slice(0,k).filter(_.score > scoreThreshold)
+//      topK = aa.sortBy(-_.score/scoreMax).slice(0,k).filter(_.score > scoreThreshold).map(a => Alignment(a.src, a.dst, a.score/scoreMax))//filter out those with the score below the threshold; threshold is 0 by default
       if topK.nonEmpty
     } yield topK
   }
