@@ -104,6 +104,7 @@ rules:
     label: Identifier
     priority: ${priority1}
     type: token
+    action: looksLikeAnIdentifier
     example: "The density of water (ρw); R(t)"
     pattern: |
       [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # excluded units from identifiers.
@@ -122,7 +123,8 @@ rules:
     label: Identifier
     priority: ${priority3}
     type: token
-    example: " the limiting value R∞"
+    action: looksLikeAnIdentifier
+    example: "R(t)"
     pattern: |
       @Identifier "("? @Identifier ")"?
 

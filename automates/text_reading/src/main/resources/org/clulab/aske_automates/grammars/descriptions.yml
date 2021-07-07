@@ -75,6 +75,16 @@ rules:
       |
       (?<= [word = /a|the|,/])? (?<description> [chunk = "I-NP" & !tag = /NNS|NNP|-LRB-|CC/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
 
+  - name: real_appos
+    label: Description
+    priority: ${priority}
+    type: dependency
+    example: "The model’s parameters, β and γ, determine the severity of the epidemic."
+    action: ${action}
+    pattern: |
+      trigger = [lemma=","]
+      description:Phrase = <punct
+      variable:Identifier = <punct appos
 
   - name: identifier_stands_for_descr
     label: Description
