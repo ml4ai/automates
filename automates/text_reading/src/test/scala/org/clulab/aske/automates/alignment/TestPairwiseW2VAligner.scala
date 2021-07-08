@@ -57,5 +57,27 @@ class TestPairwiseW2VAligner extends FlatSpec with Matchers {
     Aligner.getRelevantText(rm, aligner.relevantArgs) should be ("TEMPMIN minimum temperature")
   }
 
+  it should "have the correct alignment for 'maximum surplus storage capacity'" in {
+
+    val srcTexts = Seq(
+      "quantity sold in global trade",
+      "price elasticity of global demand",
+      "expected future production price constant",
+      "maximum surplus storage capacity"
+    )
+
+    val dstTexts = Seq(
+      "maximum storage level",
+      "consumer-side storage level",
+      "quantity sold to the consumer side",
+      "world price"
+    )
+
+    val alignment = aligner.alignTexts(srcTexts, dstTexts, useBigrams = true)
+    val topK = Aligner.topKBySrc(alignment, 1)
+    val onlyTarget = topK.filter(alSet => srcTexts(alSet.head.src) == "maximum surplus storage capacity")
+    dstTexts(onlyTarget.head.head.dst) shouldEqual "maximum storage level"
+
+  }
 
 }
