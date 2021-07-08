@@ -7,7 +7,7 @@
     "!  Calculates growth rates for all disease states given the current state values\n",
     "!-------------------------------------------------------------------------------\n",
     "!     Input Variables:\n",
-    "!     R_0         Basic reproduction number\n",
+    "!     Rb          Basic reproduction number\n",
     "!     beta        The rate of exposure of indidivuals to persons infected with COVID-19\n",
     "!     gamma       The expected recovery rate from COVID-19 for infected individuals\n",
     "!     a           removal rate of infectives\n",

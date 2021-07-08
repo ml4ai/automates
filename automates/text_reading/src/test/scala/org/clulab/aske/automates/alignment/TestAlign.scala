@@ -12,10 +12,11 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.{COMMENT_TO_GLOBAL_VAR, EQ
 
 
 class TestAlign extends TestAlignment {
+  // todo: have negative indir link test
+  //  todo:   complete mismatch should not result in 0.5 (like if there's b and a being compared) - it should be 0. How to capture that? maybe intersect?
+  // todo: tests for what a global var contains?
+  // todo: want tests for indirect links indep of global var - check if highest one for each src var is correct
 
-  // todo: pass arg type somewhere to only get text of that arg in tests
-  // todo: fix order of indir links
-  // todo: for eval, don't limit to top n align - should be all - so set to 100 or something?
   val config: Config = ConfigFactory.load("test.conf")
   val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
   // get general configs
@@ -73,24 +74,23 @@ class TestAlign extends TestAlignment {
   }
 
 
-  // template
   {
     val idfr = "R0" // basic reproduction number
     behavior of idfr
 
     val directDesired = Map(
       GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("microbes per year", passingTest),
-      GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("m2/year", failingTest),
+      GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("m2/year", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("2.71", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("100", passingTest),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER ->("1", passingTest),
-      GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT ->("0.5||1", passingTest), // these may need to be ttwo values separated with ::
-      EQN_TO_GLOBAL_VAR -> ("R_0", passingTest), // think about this
-      COMMENT_TO_GLOBAL_VAR -> ("R_0", passingTest) // make this R is the basic reproduction number in the comments
+      GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT ->("0.5||1", passingTest),
+      EQN_TO_GLOBAL_VAR -> ("R_0", passingTest),
+      COMMENT_TO_GLOBAL_VAR -> ("Rb", passingTest)
     )
     //
     val indirectDesired = Map(
-      SRC_TO_COMMENT -> ("R_0",passingTest)
+      SRC_TO_COMMENT -> ("Rb",passingTest)
     )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
@@ -99,7 +99,6 @@ class TestAlign extends TestAlignment {
   }
 
   {
-    // todo: make fake comment for this and src code var
     val idfr = "c" // number of people exposed
     behavior of idfr
 
@@ -118,11 +117,11 @@ class TestAlign extends TestAlignment {
     //
   }
   {
-    val idfr = "β" //todo: maybe add some text for beta? Did we have any in the otiginal docs? maybe if there is very little text for variable, make aligner depend more on the variable?
+    val idfr = "β" //fixme: maybe if there is very little text for variable, make aligner depend more on the variable?
     behavior of idfr
 
     val directDesired = Map(
-      EQN_TO_GLOBAL_VAR -> ("beta", passingTest), // think about this
+      EQN_TO_GLOBAL_VAR -> ("beta", passingTest),
       COMMENT_TO_GLOBAL_VAR -> ("beta", failingTest),
       GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("", failingNegative),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
@@ -140,10 +139,7 @@ class TestAlign extends TestAlignment {
     }
     runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
   }
-//
-//   todo: convert all to greek while aligning? or all to non-greek?
 
-//  todo:   complete mismatch should not result in 0.5 (like if there's b and a being compared) - it should be 0. How to capture that?
 
   {
     val idfr = "γ"
@@ -232,7 +228,6 @@ class TestAlign extends TestAlignment {
   }
 
   {
-    //todo: need a test with missing indir and comment links
     // todo: double-check these links
     val idfr = "I" // infected
     behavior of idfr
@@ -296,18 +291,11 @@ class TestAlign extends TestAlignment {
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("t_a",passingTest)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-    //
+
   }
-
-
-//
-//
-
-
-    // todo: do we want a few def span tests here? like what a global var should contain? - yes
 
     {
       val idfr = "S"
@@ -317,7 +305,7 @@ class TestAlign extends TestAlignment {
         GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("people", failingTest),
         GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("6.8 millions", failingTest),
         GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("4.5 million", failingTest), //fixme: how did 6.8 get attached to S?
-        EQN_TO_GLOBAL_VAR -> ("S", passingTest), // think about this
+        EQN_TO_GLOBAL_VAR -> ("S", passingTest),
         COMMENT_TO_GLOBAL_VAR -> ("S", failingTest), // make this R is the basic reproduction number in the comments
         GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("", failingNegative),
         GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative)
@@ -333,7 +321,6 @@ class TestAlign extends TestAlignment {
     }
 
 
-  // todo: want tests for indirect links indep of global var - check if highest one for each src var is correct
 
 
   //  // template

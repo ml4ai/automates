@@ -542,7 +542,7 @@ object ExtractAndAlign {
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
         alignments(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
-      // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time')
+      // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
@@ -572,7 +572,7 @@ object ExtractAndAlign {
         alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
-      // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
+      // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
@@ -594,7 +594,7 @@ object ExtractAndAlign {
         alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
       }
 
-      // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time')
+      // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
@@ -623,7 +623,7 @@ object ExtractAndAlign {
 //        for (cta <- gr._2.sortBy(_.score).reverse)
 //        println(allCommentGlobalVars(cta.src).identifier + " "  + allGlobalVars(cta.dst).identifier + " " + cta.score + "<+")
 //      }
-      val aligns = Aligner.topKByDst(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
+      val aligns = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
 
       println("Alignments")
       for (a <- aligns) {
