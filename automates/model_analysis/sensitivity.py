@@ -109,10 +109,10 @@ class SensitivityIndices(object):
     def to_dict(self):
         return {
             "S1": self.O1_indices.tolist(),
-            "S2": self.O2_indices.tolist(),
+            "S2": [] if self.O2_indices is None else self.O2_indices.tolist(),
             "ST": self.OT_indices.tolist(),
             "S1_conf": self.O1_confidence.tolist(),
-            "S2_conf": self.O2_confidence.tolist(),
+            "S2_conf": [] if self.O2_confidence is None else self.O2_confidence.tolist(),
             "ST_conf": self.OT_confidence.tolist(),
             "names": self.parameter_list,
         }
@@ -417,7 +417,7 @@ class SensitivityAnalyzer(object):
                 sobol.analyze,
                 prob_def,
                 np.hstack(y),
-                calc_second_order=True,
+                calc_second_order=calc_2nd,
                 num_resamples=100,
                 conf_level=0.95,
                 seed=None,
