@@ -25,6 +25,7 @@ object DisplayUtils {
       sb.append("Tokens: " + (s.words.indices, s.words, s.tags.get).zipped.mkString(", ") + nl)
       if (printDeps) sb.append(syntacticDependenciesToString(s) + nl)
       sb.append(nl)
+
       
       val sortedMentions = mentionsBySentence(i).sortBy(_.label)
       val (events, entities) = sortedMentions.partition(_ matches "Event")
@@ -68,6 +69,9 @@ object DisplayUtils {
         }
       case _ => ()
     }
+
+    sb.append(s"semantic head word: ${mention.semHead.getOrElse("")} ${mention.semHeadWord.getOrElse("None")} $nl")
+    sb.append(s"syntactic head word: ${mention.synHead.getOrElse("")} ${mention.synHeadWord.getOrElse("None")} $nl")
     sb.append(s"$boundary $nl")
     sb.toString
   }
