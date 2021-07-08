@@ -1,7 +1,5 @@
 package org.clulab.aske.automates.apps
 
-import com.typesafe.config.{Config, ConfigFactory}
-
 import java.io.File
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
@@ -11,6 +9,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.utils.DisplayUtils._
 
 object AutomatesShell extends App {
+
+  // from Clulab Reach: https://github.com/clulab/reach/commit/138be1df4211da125619505654b26d9d19ed905f
 
   val config = ConfigFactory.load()
   val ieSystem = OdinEngine.fromConfig(config[Config]("TextEngine"))
