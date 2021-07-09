@@ -30,7 +30,7 @@ object AutomatesShell extends App {
     "%exit" -> "exit system"
   )
 
-  println(s"\nWelcome to ReachShell!\n")
+  println("\nWelcome to AutomatesShell!\n")
   printCommands()
 
   var running = true
