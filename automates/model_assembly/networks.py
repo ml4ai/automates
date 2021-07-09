@@ -11,6 +11,7 @@ import json
 import ast
 import re
 import os
+import sys
 
 import networkx as nx
 import numpy as np
@@ -29,6 +30,7 @@ from .expression_visitor import (
 from .air import (
     AutoMATES_IR,
     ContainerDef,
+    FuncContainerDef,
     LoopContainerDef,
     StmtDef,
     CallStmtDef,
@@ -506,6 +508,8 @@ class ExpressionFuncNode(BaseFuncNode):
                     list of new variable nodes,
                     list of new hyper edges
             """
+            if isinstance(expr_node_def, ExprValueNode):
+                return ([], [], [])  # Nothing to be done.
             child_defs = [
                 uid2node[child_id] for child_id in expr_node_def.children
             ]
@@ -592,19 +596,20 @@ class BaseConFuncNode(BaseFuncNode):
         for stmt in container.statements:
             if isinstance(stmt, CallStmtDef):
                 # Create a new Container type function node defintion
-                new_con_id = stmt.container_id
+                new_con_id = stmt.callee_container_id
                 con_def = AIR.containers[new_con_id]
-                con_type = con_def["type"]
-                if con_type == "loop":
+                if isinstance(con_def, LoopContainerDef):
                     new_func = LoopConFuncNode.from_container(
                         con_def, AIR, VARS, FUNCS
                     )
-                elif con_type == "function":
+                elif isinstance(con_def, FuncContainerDef):
                     new_func = BaseConFuncNode.from_container(
                         con_def, AIR, VARS, FUNCS
                     )
                 else:
-                    raise TypeError(f"Unrecognized container type: {con_type}")
+                    raise TypeError(
+                        f"Unrecognized container type: {type(con_def)}"
+                    )
             elif isinstance(stmt, LambdaStmtDef):
                 # Create a new Expression type function node definiton
                 new_func = ExpressionFuncNode.from_lambda_stmt(

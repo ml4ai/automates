@@ -472,13 +472,16 @@ class StmtDef(BaseDef):
             )
         elif func_type == "container":
             identifier = CallStmtIdentifier.from_air_json(func_data)
-            return CallStmtDef(identifier, metadata, con_id, inputs, outputs)
+            callee_id = ContainerIdentifier.from_name_str(func_data["name"])
+            return CallStmtDef(
+                identifier, metadata, con_id, inputs, outputs, callee_id
+            )
         else:
             raise ValueError(f"Unrecognized statement type: {func_type}")
 
     def __str__(self):
         base_str = super().__str__()
-        con_id = self.container.identifier
+        con_id = self.container_id
         num_inputs = len(self.inputs)
         num_outputs = len(self.outputs)
         return f"{con_id=}, {num_inputs=}, {num_outputs=}\n{base_str}"
@@ -486,6 +489,7 @@ class StmtDef(BaseDef):
 
 @dataclass(frozen=True)
 class CallStmtDef(StmtDef):
+    callee_container_id: ContainerIdentifier
     # def __init__(self, stmt: dict, con: ContainerDef, file_ref: str):
     #     super().__init__(stmt, con)
     #     self.call_id = BaseIdentifier.from_str(stmt["function"]["name"])

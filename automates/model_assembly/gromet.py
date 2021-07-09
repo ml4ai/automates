@@ -129,12 +129,23 @@ UidJunction = NewType("UidJunction", str)
 UidWire = NewType("UidWire", str)
 
 UidBox = NewType("UidBox", str)
+UidRelation = NewType("UidRelation", UidBox)
+UidExpression = NewType("UidExpression", UidBox)
+UidFunction = NewType("UidFunction", UidBox)
+UidConditional = NewType("UidConditional", UidBox)
+UidLoop = NewType("UidLoop", UidBox)
+UidPredicate = NewType("UidPredicate", UidExpression)
 
 UidOp = NewType("UidOp", str)  # Primitive operator name
 UidFn = NewType("UidFn", str)  # Defined function name
 
 UidVariable = NewType("UidVariable", str)
 UidGromet = NewType("UidGromet", str)
+
+ConditionalBranch = NewType(
+    "ConditionalBranch",
+    Tuple[Union[UidPredicate, None], Union[UidExpression, UidFunction]],
+)
 
 
 # Explicit "reference" objects.
@@ -933,9 +944,7 @@ class Conditional(Box):  # BoxDirected
                 values.
     """
 
-    # branches is a List of
-    #   ( <Predicate>1, <Function>, [<UidWire>+] )
-    branches: List[Tuple[Union[Predicate, None], Function, List[UidWire]]]
+    branches: List[ConditionalBranch]
 
 
 @dataclass
@@ -1008,7 +1017,7 @@ class Loop(Box, HasContents):  # BoxDirected
                 and is thereafter set to True in the Loop body.
     """
 
-    exit_condition: Union[Predicate, None]
+    exit_condition: UidPredicate
 
 
 # Special forms for Pr/T (Predicate/Transition) Petri Nets, used by Galois
