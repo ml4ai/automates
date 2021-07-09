@@ -29,5 +29,6 @@ jobs:
           docker image rm $TR_IMAGE
           docker pull $ASSEMBLY_IMAGE
           docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name test-con $ASSEMBLY_IMAGE
+          docker exec test-con pip install -e .
           docker exec test-con make test
           docker exec -e CODECOV_TOKEN=$CODECOV_TOKEN test-con bash -c 'bash <(curl -s https://codecov.io/bash)'
