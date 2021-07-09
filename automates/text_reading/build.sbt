@@ -5,12 +5,14 @@ organization := "org.clulab"
 scalaVersion := "2.12.4"
 val json4sVersion = "3.5.2"
 
+resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
 //EclipseKeys.withSource := true
 
 libraryDependencies ++= {
   val procVer = "7.5.1"
 
   Seq(
+    "org.clulab"    % "glove-840b-300d"           % "0.1.0",
     "org.clulab"    %% "processors-main"          % procVer,
     "org.clulab"    %% "processors-corenlp"       % procVer,
     "org.clulab"    %% "processors-odin"          % procVer,
