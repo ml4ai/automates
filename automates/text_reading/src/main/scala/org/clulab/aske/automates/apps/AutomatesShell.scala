@@ -11,6 +11,7 @@ import org.clulab.utils.DisplayUtils._
 object AutomatesShell extends App {
 
   // from Clulab Reach: https://github.com/clulab/reach/commit/138be1df4211da125619505654b26d9d19ed905f
+  // this is the initial version of the shell implemented by M. A. Valenzuela-Escarcega
 
   val config = ConfigFactory.load()
   val ieSystem = OdinEngine.fromConfig(config[Config]("TextEngine"))
