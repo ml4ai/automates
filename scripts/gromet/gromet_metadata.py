@@ -12,7 +12,7 @@ Metadatum types:
 (*) <Gromet>.TextualDocumentReferenceSet
 (*) <Gromet>.CodeCollectionReference
 (*) <Box>.EquationDefinition
-(*) <Variable>.TextDefinition
+(*) <Variable>.TextDescription
 (*) <Variable>.TextParameter
 () <Variable>.EquationParameter
 
@@ -124,10 +124,24 @@ class Metadatum(MetadatumElm, ABC):
 
 Metadata = NewType('Metadata', Union[List[Metadatum], None])
 
+MetadatumAny = NewType('MetadatumAny', Metadatum)
+MetadatumGromet = NewType('MetadatumGromet', Metadatum)
+MetadatumBox = NewType('MetadatumBox', Metadatum)
+MetadatumVariable = NewType('MetadatumVariable', Metadatum)
+MetadatumJunction = NewType('MetadatumJunction', Metadatum)
+
 
 # =============================================================================
 # Metadata components
 # =============================================================================
+
+@dataclass
+class TextSpan:
+    page: int
+    block: int
+    char_begin: int
+    char_end: int
+
 
 @dataclass
 class TextExtraction:
@@ -141,10 +155,7 @@ class TextExtraction:
       'char_begin' and 'char_end' are relative to the 'block'.
     """
     document_reference_uid: UidDocumentReference
-    page: int
-    block: int
-    char_begin: int
-    char_end: int
+    text_spans: List[TextSpan]
 
 
 @dataclass
@@ -182,7 +193,7 @@ class CodeFileReference:
 # -----------------------------------------------------------------------------
 
 @dataclass
-class CodeSpanReference(Metadatum):
+class CodeSpanReference(MetadatumAny):
     """
     host: <Any>
     Code span references may be associated with any GroMEt object.
@@ -208,8 +219,9 @@ class CodeSpanReference(Metadatum):
 # -----------------------------------------------------------------------------
 
 @dataclass
-class ModelInterface(Metadatum):
+class ModelInterface(MetadatumGromet):
     """
+    host: <Gromet>
     Explicit definition of model interface.
     The interface identifies explicit roles of these variables
     'variables': All model variables (anything that can be measured)
@@ -251,19 +263,30 @@ class BibjsonAuthor:
 
 
 @dataclass
+class BibjsonIdentifier:
+    type: str
+    id: str
+
+
+@dataclass
+class BibjsonLinkObject:
+    type: str  # will become: BibjsonLinkType
+    location: str
+
+
+@dataclass
 class Bibjson:
     """
     Placeholder for bibjson JSON object; format described in:
         http://okfnlabs.org/bibjson/
     """
-    title: str
+    title: Union[str, None]
     author: List[BibjsonAuthor]
-    type: str
-    website: dict
-    timestamp: str
-    file: str
-    file_url: str
-    identifier: List[dict]
+    type: Union[str, None]
+    website: BibjsonLinkObject
+    timestamp: Union[str, None]
+    link: List[BibjsonLinkObject]
+    identifier: List[BibjsonIdentifier]
 
 
 @dataclass
@@ -277,15 +300,15 @@ class TextualDocumentReference:
     """
     uid: UidDocumentReference
     global_reference_id: GlobalReferenceId
-    cosmos_id: str
-    cosmos_version_number: str
-    automates_id: str
-    automates_version_number: str
+    cosmos_id: Union[str, None]
+    cosmos_version_number: Union[str, None]
+    automates_id: Union[str, None]
+    automates_version_number: Union[str, None]
     bibjson: Bibjson
 
 
 @dataclass
-class TextualDocumentReferenceSet(Metadatum):
+class TextualDocumentReferenceSet(MetadatumGromet):
     """
     host: <Gromet>
     A collection of references to textual documents
@@ -299,7 +322,7 @@ class TextualDocumentReferenceSet(Metadatum):
 # -----------------------------------------------------------------------------
 
 @dataclass
-class CodeCollectionReference(Metadatum):
+class CodeCollectionReference(MetadatumGromet):
     """
     host: <Gromet>
     Reference to a code collection (i.e., repository)
@@ -318,7 +341,7 @@ class CodeCollectionReference(Metadatum):
 # -----------------------------------------------------------------------------
 
 @dataclass
-class EquationDefinition(Metadatum):
+class EquationDefinition(MetadatumBox):
     """
     host: <Box>
     Association of an equation extraction with a Box
@@ -333,20 +356,22 @@ class EquationDefinition(Metadatum):
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# TextDefinition
+# TextDescription
 # -----------------------------------------------------------------------------
 
 @dataclass
-class TextDefinition(Metadatum):
+class TextDescription(MetadatumVariable):
     """
     host: <Variable>
-    Association of text definition of host derived from text source.
+    Association of text description of host derived from text source.
     'variable_identifier': char/string representation of the variable.
     'variable_definition': text definition of the variable.
+    'description_type': type of description, e.g., definition
     """
     text_extraction: TextExtraction
     variable_identifier: str
-    variable_definition: str
+    variable_description: str
+    description_type: str
 
 
 # -----------------------------------------------------------------------------
@@ -354,7 +379,7 @@ class TextDefinition(Metadatum):
 # -----------------------------------------------------------------------------
 
 @dataclass
-class TextParameter(Metadatum):
+class TextParameter(MetadatumVariable):
     """
     host: <Variable>
     Association of parameter values extracted from text.
@@ -369,7 +394,7 @@ class TextParameter(Metadatum):
 # -----------------------------------------------------------------------------
 
 @dataclass
-class TextUnit(Metadatum):
+class TextUnit(MetadatumVariable):
     """
     host: <Variable>
     Association of variable unit type extracted from text.
@@ -383,13 +408,12 @@ class TextUnit(Metadatum):
 # -----------------------------------------------------------------------------
 
 @dataclass
-class EquationParameter(Metadatum):
+class EquationParameter(MetadatumVariable):
     """
     host: <Variable>
     Association of parameter value extracted from equation.
     """
     equation_extraction: EquationExtraction
-    variable_uid: UidVariable
     value: str  # eventually Literal?
 
 
@@ -403,7 +427,7 @@ class EquationParameter(Metadatum):
 # -----------------------------------------------------------------------------
 
 @dataclass
-class ReactionReference(Metadatum):
+class ReactionReference(MetadatumJunction):
     """
     host: <Junction> : PNC Rate
     """
@@ -416,7 +440,7 @@ IndraAgent = NewType('IndraAgent', dict)
 
 
 @dataclass
-class IndraAgentReferenceSet(Metadatum):
+class IndraAgentReferenceSet(MetadatumJunction):
     """
     host: <Junction> : PNC State
     """
@@ -430,6 +454,32 @@ class IndraAgentReferenceSet(Metadatum):
 # =============================================================================
 
 """
+Changes 2021-07-10:
+() Added Variable/Type/Gromet/Variable/Junction/etc. Metadatum sub-types that 
+    we can use to determine which Metdatums that inherit from those are 
+    available at different locations in the GroMEt.
+() Made the following fields in TextualDocumentReference optional
+    cosmos_id, cosmos_version_number, automates_id, automates_version_number
+() Created a BibJSON identifier type: {“type”: str , “id”: str }
+() Made all fields (except identifier) under Bibjson optional
+() Changed TextExtraction:
+    list of: “text_spans”: array, required
+() Added TextSpan: page, block, char_begin, char_end -- all required
+() ALL arrays (lists) are required (even if empty)
+    ONE EXCEPTION: all metadata fields can be None (not updating type)
+() Updated Bibjson: Removed the “file” and “file_url” in favor of “link”
+    link is a List of LinkObject types
+() Added LinkObject: Has the following required fields:
+    type : currently str, but eventually will be BibJSONLinkType (TODO Paul)
+        string options include: “url”, “gdrive”, etc
+    location : a string that can be used to locate whatever is referenced by the Bibjson
+() Changed TextDescription
+    Renamed TextDefinition → TextDescription  (including fields)
+    added field ‘description_type’
+() Changed EquationParameter
+    dropped “variable_id” -- not needed (as it is associated in the metadata of the variable
+
+
 Changes 2021-06-10:
 () Started migration of GrFN metadata types to GroMEt metadatum types.
 """
