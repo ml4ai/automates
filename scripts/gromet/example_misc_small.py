@@ -115,6 +115,7 @@ if __name__ == "__main__":
     __v = Variable(uid=UidVariable("myVariable"),
                    name="nameOfMyVar",
                    type=UidType("myType"),
+                   proxy_state=UidWire("wire1"),
                    states=[UidWire("wire1"), UidWire("wire2")],
                    metadata=None)
     print(json.dumps(asdict(__v)))
