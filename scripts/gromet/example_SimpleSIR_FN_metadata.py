@@ -244,11 +244,10 @@ def generate_gromet() -> Gromet:
                                  bibjson=Bibjson(title="The SIR Model Without Vital Dynamics - Wikipedia",
                                                  author=[BibjsonAuthor(name="Wikimedia Foundation")],
                                                  type="wikipedia",
-                                                 website={"url": "https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model_without_vital_dynamics"},
+                                                 website=BibjsonLinkObject(type="url", location="https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model_without_vital_dynamics"),
                                                  timestamp="2021-01-21T20:13",
-                                                 file="ideal_sir_model_without_vital_dynamics.pdf",
-                                                 file_url="https://drive.google.com/file/d/1lexWCycLLTZq6FtQZ4AtBw30Bjeo5hRD/view?usp=sharing",
-                                                 identifier=[{"type":"aske_id","id":"4b429087-7e7c-4623-80fd-64fb934a8be6"}]))
+                                                 link=[BibjsonLinkObject(type="gdrive", location="https://drive.google.com/file/d/1lexWCycLLTZq6FtQZ4AtBw30Bjeo5hRD/view?usp=sharing")],
+                                                 identifier=[BibjsonIdentifier(type="aske_id", id="4b429087-7e7c-4623-80fd-64fb934a8be6")]))
     metadatum_textual_document_reference_set = \
         TextualDocumentReferenceSet(uid=UidMetadatum("simple_sir_textual_document_ref_set"),
                                     provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
@@ -262,87 +261,93 @@ def generate_gromet() -> Gromet:
 
     variable_S_text_definition_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=1,
-                       char_begin=1,
-                       char_end=7)
+                       text_spans=[TextSpan(page=0,
+                                            block=1,
+                                            char_begin=1,
+                                            char_end=7)])
     variable_S_text_definition = \
-        TextDefinition(uid=UidMetadatum("S_text_definition"),
-                       provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
-                                             timestamp=get_current_datetime()),
-                       text_extraction=variable_S_text_definition_extraction,
-                       variable_identifier="S",
-                       variable_definition="the stock of susceptible population")
+        TextDescription(uid=UidMetadatum("S_text_definition"),
+                        provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                              timestamp=get_current_datetime()),
+                        text_extraction=variable_S_text_definition_extraction,
+                        variable_identifier="S",
+                        variable_description="the stock of susceptible population",
+                        description_type="definition")
 
     variable_I_text_definition_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=1,
-                       char_begin=8,
-                       char_end=13)
+                       text_spans=[TextSpan(page=0,
+                                            block=1,
+                                            char_begin=8,
+                                            char_end=13)])
     variable_I_text_definition = \
-        TextDefinition(uid=UidMetadatum("I_text_definition"),
-                       provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
-                                             timestamp=get_current_datetime()),
-                       text_extraction=variable_I_text_definition_extraction,
-                       variable_identifier="I",
-                       variable_definition="stock of infected")
+        TextDescription(uid=UidMetadatum("I_text_definition"),
+                        provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                              timestamp=get_current_datetime()),
+                        text_extraction=variable_I_text_definition_extraction,
+                        variable_identifier="I",
+                        variable_description="stock of infected",
+                        description_type="definition")
 
     variable_R_text_definition_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=1,
-                       char_begin=15,
-                       char_end=21)
+                       text_spans=[TextSpan(page=0,
+                                            block=1,
+                                            char_begin=15,
+                                            char_end=21)])
     variable_R_text_definition = \
-        TextDefinition(uid=UidMetadatum("R_text_definition"),
-                       provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
-                                             timestamp=get_current_datetime()),
-                       text_extraction=variable_R_text_definition_extraction,
-                       variable_identifier="R",
-                       variable_definition="the stock of recovered population")
+        TextDescription(uid=UidMetadatum("R_text_definition"),
+                        provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                              timestamp=get_current_datetime()),
+                        text_extraction=variable_R_text_definition_extraction,
+                        variable_identifier="R",
+                        variable_description="the stock of recovered population",
+                        description_type="definition")
 
     variable_beta_text_definition_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=2,
-                       char_begin=32,
-                       char_end=45)
+                       text_spans=[TextSpan(page=0,
+                                            block=2,
+                                            char_begin=32,
+                                            char_end=45)])
     variable_beta_text_definition = \
-        TextDefinition(uid=UidMetadatum("beta_text_definition"),
-                       provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
-                                             timestamp=get_current_datetime()),
-                       text_extraction=variable_beta_text_definition_extraction,
-                       variable_identifier="β",
-                       variable_definition="Rate of transmission via contact")
+        TextDescription(uid=UidMetadatum("beta_text_definition"),
+                        provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                              timestamp=get_current_datetime()),
+                        text_extraction=variable_beta_text_definition_extraction,
+                        variable_identifier="β",
+                        variable_description="Rate of transmission via contact",
+                        description_type="definition")
 
     variable_gamma_text_definition_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=2,
-                       char_begin=52,
-                       char_end=65)
+                       text_spans=[TextSpan(page=0,
+                                            block=2,
+                                            char_begin=52,
+                                            char_end=65)])
     variable_gamma_text_definition = \
-        TextDefinition(uid=UidMetadatum("gamma_text_definition"),
-                       provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
-                                             timestamp=get_current_datetime()),
-                       text_extraction=variable_gamma_text_definition_extraction,
-                       variable_identifier="γ",
-                       variable_definition="Rate of recovery from infection")
+        TextDescription(uid=UidMetadatum("gamma_text_definition"),
+                        provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                              timestamp=get_current_datetime()),
+                        text_extraction=variable_gamma_text_definition_extraction,
+                        variable_identifier="γ",
+                        variable_description="Rate of recovery from infection",
+                        description_type="definition")
 
     variable_dt_text_definition_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=1,
-                       block=4,
-                       char_begin=22,
-                       char_end=32)
+                       text_spans=[TextSpan(page=1,
+                                            block=4,
+                                            char_begin=22,
+                                            char_end=32)])
     variable_dt_text_definition = \
-        TextDefinition(uid=UidMetadatum("dt_text_definition"),
-                       provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
-                                             timestamp=get_current_datetime()),
-                       text_extraction=variable_dt_text_definition_extraction,
-                       variable_identifier="dt",
-                       variable_definition="Next inter-event time")
+        TextDescription(uid=UidMetadatum("dt_text_definition"),
+                        provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
+                                              timestamp=get_current_datetime()),
+                        text_extraction=variable_dt_text_definition_extraction,
+                        variable_identifier="dt",
+                        variable_description="Next inter-event time",
+                        description_type="definition")
 
     # -- Variable TextUnit metadata
 
@@ -351,10 +356,10 @@ def generate_gromet() -> Gromet:
 
     variable_S_text_unit_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=1,
-                       char_begin=10,
-                       char_end=20)
+                       text_spans=[TextSpan(page=0,
+                                            block=1,
+                                            char_begin=10,
+                                            char_end=20)])
     variable_S_text_unit = \
         TextUnit(uid=UidMetadatum("S_text_unit"),
                  provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
@@ -364,10 +369,10 @@ def generate_gromet() -> Gromet:
 
     variable_I_text_unit_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=2,
-                       char_begin=32,
-                       char_end=42)
+                       text_spans=[TextSpan(page=0,
+                                            block=2,
+                                            char_begin=32,
+                                            char_end=42)])
     variable_I_text_unit = \
         TextUnit(uid=UidMetadatum("I_text_unit"),
                  provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
@@ -377,10 +382,10 @@ def generate_gromet() -> Gromet:
 
     variable_R_text_unit_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=2,
-                       char_begin=82,
-                       char_end=92)
+                       text_spans=[TextSpan(page=0,
+                                            block=2,
+                                            char_begin=82,
+                                            char_end=92)])
     variable_R_text_unit = \
         TextUnit(uid=UidMetadatum("R_text_unit"),
                  provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
@@ -390,10 +395,10 @@ def generate_gromet() -> Gromet:
 
     variable_dt_text_unit_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=3,
-                       char_begin=12,
-                       char_end=16)
+                       text_spans=[TextSpan(page=0,
+                                            block=3,
+                                            char_begin=12,
+                                            char_end=16)])
     variable_dt_text_unit = \
         TextUnit(uid=UidMetadatum("dt_text_unit"),
                  provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
@@ -408,10 +413,10 @@ def generate_gromet() -> Gromet:
 
     beta_text_parameter_extraction = \
         TextExtraction(document_reference_uid=UidDocumentReference("text_doc_simple_sir_wiki"),
-                       page=0,
-                       block=5,
-                       char_begin=67,
-                       char_end=79)
+                       text_spans=[TextSpan(page=0,
+                                            block=5,
+                                            char_begin=67,
+                                            char_end=79)])
     beta_text_parameter = \
         TextParameter(uid=UidMetadatum("example_beta_text_parameter"),
                       provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
