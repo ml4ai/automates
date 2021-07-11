@@ -25,7 +25,7 @@ rules:
     pattern: |
       trigger = [word = /${functionTrigger2}/] (?= "of")
       input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos | nmod_in appos
-      output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (nsubjpass | dobj)? | <nsubj ccomp nummod | <dep
+      output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (<acl | nsubjpass | dobj)? | <nsubj ccomp nummod | <dep
 
   - name: trigger3 # estimate, calculate, compute, determine, predict is the trigger for this rule
     label: Function
@@ -56,7 +56,7 @@ rules:
     action: ${action}
     example: "The evaporation from the plant surfaces Ep is predicted by using an empirical relation based on local data..."
     pattern: |
-      trigger = (?<= [lemma = /${functionTrigger5}/] [word = "by"]) [word = /.*/]
+      trigger = (?<= [lemma = /${functionTrigger5}/] [word = "by"]) [word = /.*/ & tag = /VBG/]
       input:Phrase+ = dobj | nmod_by
       output:Phrase = <advcl_by nsubjpass | <acl
 
@@ -237,7 +237,7 @@ rules:
     action: ${action}
     example: "The only factors affecting ETo are climatic parameters..."
     pattern: |
-      trigger = [lemma = "affect"]|[lemma = "limit"]
+      trigger = (?<! "not") [lemma = "affect"]|[lemma = "limit"]
       input:Phrase+ = <acl <nsubj | nsubj
       output:Phrase = dobj
 

@@ -44,4 +44,4 @@ functionTrigger6: "lower"
 
 ### SYNTACTIC PATTERNS USED FOR CAPTURING CONTEXTS ###
 
-PP+NP: "[chunk = /B-PP/] [chunk = /I-NP|B-NP/]+"
+PP+NP: "[chunk = /B-PP/] [chunk = /I-NP|B-NP/ & !tag = /-LRB-|-RRB-|WDT/]+"

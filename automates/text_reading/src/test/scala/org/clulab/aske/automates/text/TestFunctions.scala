@@ -140,7 +140,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t5d = "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
-  failingTest should s"find functions from t5d: ${t5d}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t5d: ${t5d}" taggedAs(Somebody) in {
     val desired = Seq(
       "κ" -> Seq("foliage orientation", "solar zenith angle") // note: 0.45 is wrongly captured as one of the inputs here due to bad parsing.
     )
@@ -213,7 +213,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
-  failingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
     val desired = Seq(
       "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"), // note: this test was broken after writing filterInputOverlaps action
       "deep soil temperature boundary condition" -> Seq("average annual air temperature", "amplitude of monthly mean temperatures")
@@ -291,7 +291,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2g = "The evaporation from the soil surface Es is calculated in two stages: (1) the constant rate stage in which Es is limited only by the supply of energy to the surface and (2) the falling rate stage in which water movement to the evaporating sites near the surface is controlled by the hydraulic properties of the soil."
-  failingTest should s"find functions from t2g: ${t2g}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2g: ${t2g}" taggedAs(Somebody) in {
     val desired = Seq(
       "Es" -> Seq("supply of energy to the surface"), // fixme: one additional, unwanted concept is captured as an input due to bad parsing.
       "water movement to the evaporating sites near the surface" -> Seq("hydraulic properties of the soil") // note: this test was broken after writing filterInputOverlaps action

@@ -246,8 +246,8 @@ rules:
     action: ${action}
     pattern: |
       trigger = [lemma=/,/]
-      variable:Identifier = <punct
-      description: Phrase = <punct appos
+      variable:Identifier = <punct [!entity = /ORGANIZATION|PERSON/]
+      description: Phrase = <punct appos [!entity = /ORGANIZATION|PERSON/]
 
 
   - name: descr_is_given_by

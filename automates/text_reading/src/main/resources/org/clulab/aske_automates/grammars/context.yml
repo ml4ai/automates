@@ -17,9 +17,11 @@ rules:
     type: token
     example: "Under the same mulching fraction (fm = 0.5), αb decreased by 8.5% when fsw decreased from 1.0 to 0.5."
     pattern: |
-      (?<= [chunk = /B-SBAR/ & !word = "that"]|[lemma = /(when|where)/]) (?<context> [chunk = /I-NP|B-NP/]+ (${PP+NP})* [chunk = /I-VP|B-VP/]+ ([tag = /CC/]? [chunk = /B-ADVP|I-ADVP|B-ADJP|I-ADJP|B-PRT/]+)* [chunk = /I-NP|B-NP/]* ((${PP+NP})+ ([tag = /TO/] [chunk = /B-NP|I-NP/]+)?)? ([chunk = /B-VP/] [chunk = /B-PP/]? [chunk = /B-NP|I-NP/]* [chunk = /B-ADJP|I-ADJP/]* [chunk = /B-PP/]? [chunk = /I-NP|B-NP/]*)* ([tag = /CC/] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/] ${PP+NP})? ([word = ","] [tag = /CC/] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* (${PP+NP})?)? ([word = "and"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP|I-VP/]+ [chunk = /B-ADJP|I-ADJP/]+)?)
+      (?<= [chunk = /B-SBAR/ & !word = "that"]|[lemma = /(when|where)/]) (?<context> [chunk = /I-NP|B-NP/]+ (${PP+NP})* [chunk = /I-VP|B-VP/]+ ([tag = /CC/]? [chunk = /B-ADVP|I-ADVP|B-ADJP|I-ADJP|B-PRT/]+)* [chunk = /I-NP|B-NP/ & !tag = /WDT/]* ((${PP+NP})+ ([tag = /TO/] [chunk = /B-NP|I-NP/]+)?)? ([chunk = /B-VP/] [chunk = /B-PP/]? [chunk = /B-NP|I-NP/]* [chunk = /B-ADJP|I-ADJP/]* [chunk = /B-PP/]? [chunk = /I-NP|B-NP/]*)* ([tag = /CC/] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/] ${PP+NP})? ([word = ","] [tag = /CC/] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* (${PP+NP})?)? ([word = "and"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP|I-VP/]+ [chunk = /B-ADJP|I-ADJP/]+)?)
       |
       (?<= [lemma = /(when|where)/]) (?<context> [tag = /^NN/] [lemma = /<|>|=|≥|≤/] [tag = /CD/] [tag = /NN/]? ([chunk = /B-VP/] [chunk = /B-NP|I-NP/]+)?)
+      |
+      (?<= [lemma = /when/]) (?<context> [word = "not"]? [chunk = /B-ADJP/])
 
   - name: if_condition
     label: Context
@@ -50,9 +52,9 @@ rules:
     type: token
     example: "Cn = numerator constant that changes with reference type and calculation time step (K mm s3 Mg-1 d-1 or K mm s3 Mg-1 h-1)"
     pattern: |
-      (?<context> (?<= [chunk = /B-NP|I-NP/]) [lemma = /that|who/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP/ & !word = "when"]? ([chunk = /B-PP/]? [chunk = /I-NP|B-NP/]+ [word = "step"]? [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
+      (?<context> (?<= [chunk = /B-NP|I-NP/]) [lemma = /that|who/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP|I-ADJP|B-VP|I-VP/ & !word = "when"]* ([chunk = /B-PP/]? [chunk = /I-NP|B-NP/]+ [word = "step"]? [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
       |
-      (?<context> [lemma = /which/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP/ & !word = "when"]? ([chunk = /B-PP/]? ([chunk = /I-NP|B-NP/ & !tag = /-LRB-|-RRB-/]|[tag = /^NN/])+ [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
+      (?<context> [lemma = /which/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP|I-ADJP/ & !word = "when"]* ([chunk = /B-PP/]? ([chunk = /I-NP|B-NP/ & !tag = /-LRB-|-RRB-/]|[tag = /^NN/])+ [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
     # note: the last [word = "step"] part was added due to the bad parsing.
 
 # note: this rule interferes with preposition_context rule (due to keepLongest) - needs to be fixed
@@ -90,6 +92,8 @@ rules:
       (?<= [chunk = /B-PP/]) (?<context> [chunk = /B-NP/]? [entity = "DATE"]+ ([entity = "DURATION"] [entity = "DATE"])? ([tag = /TO/] [entity = "DATE"]+)?)
       |
       (?<= [chunk = /B-PP/]) (?<context> [chunk = /I-NP|B-NP/ & entity = "LOCATION"]+)
+      |
+      (?<= [chunk = /B-PP/] [chunk = /I-NP|B-NP/ & entity = "LOCATION"]+ [word = "and"]) (?<context> [chunk = /I-NP|B-NP/ & entity = "LOCATION"]+)
 
   - name: after_context
     label: Context
@@ -114,3 +118,12 @@ rules:
     example: "Suppose we increase the r parameter by 1 % to have r = 9.88588 x 10 - 8 , then R infinity will become 116464."
     pattern: |
       (?<= [lemma = "suppose"]) (?<context> [chunk = /I-NP|B-NP/]+ [chunk = /B-VP|I-VP/]+ [chunk = /I-NP|B-NP/]* (${PP+NP})* ([tag = "TO"] [chunk = /I-VP/] ([chunk = /B-NP|I-NP/]|[word = "-"])*)?)
+
+  ### Variable Liveness ###
+  - name: case_a
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Case a First , we assume that IP ( 0 ) = 0.5 million , that is 0.5 mil - lion Hong Kong people are infected by disease B."
+    pattern: |
+      (?<context> [lemma = "case"] [word = /[a-z]|[A-Z]|\d/])

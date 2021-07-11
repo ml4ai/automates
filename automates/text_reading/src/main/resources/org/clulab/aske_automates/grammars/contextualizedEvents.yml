@@ -54,4 +54,4 @@ rules:
     action: ${action}
     example: "Suppose we increase the r parameter by 1 % to have r = 9.88588 x 10 - 8 , then R infinity will become 116464."
     pattern: |
-      @context:Context [word = ","] [word = "then"] @event:ParameterSetting
+      @context:Context [word = ","] [word = "then"]? @event:ParameterSetting
