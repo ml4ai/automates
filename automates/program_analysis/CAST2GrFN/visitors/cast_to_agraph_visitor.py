@@ -164,14 +164,8 @@ class CASTToAGraphVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Boolean):
-        """`[summary]`
-
-        Args:
-            node (Boolean): [description]
-
-        Returns:
-            [type]: [description]
-        """
+        """Visits Boolean nodes, the node's UID is returned
+        so it can be used to connect nodes in the digraph"""
         node_uid = uuid.uuid4()
         self.G.add_node(node_uid, label=node.boolean)
         return node_uid

@@ -75,12 +75,15 @@ class PyASTToCAST(ast.NodeVisitor):
                      this is used to prevent an import cycle that could have no end
            - Filenames: A list of strings used as a stack to maintain the current file being
                         visited
+           - Classes: A dictionary of class names and their associated functions.
                      
         """
 
         self.aliases = {}
         self.visited = set()
         self.filenames = [file_name]
+        self.classes = {}
+
         
 
     def visit_Assign(self, node: ast.Assign):
@@ -102,8 +105,6 @@ class PyASTToCAST(ast.NodeVisitor):
         if len(node.targets) == 1:
             l_visit = self.visit(node.targets[0])
             r_visit = self.visit(node.value)
-            #if len(l_visit) > 1:
-            #    print(l_visit)
             left.extend(l_visit)
             right.extend(r_visit)
 
@@ -252,9 +253,6 @@ class PyASTToCAST(ast.NodeVisitor):
             leftb = left[0:-1]
         if len(right) > 1:
             rightb = right[0:-1]
-        #if len(left) > 1 and len(right) > 1:
-         #   body = left[0:-1] + right[0:-1]
-          #  return body + [BinaryOp(op, left[-1], right[-1], source_refs=ref)]
 
         return leftb + rightb + [BinaryOp(op, left[-1], right[-1], source_refs=ref)]
 
@@ -268,14 +266,22 @@ class PyASTToCAST(ast.NodeVisitor):
 
         Returns:
             ModelBreak: A CAST Break node
+
         """
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
         return [ModelBreak(source_refs=ref)]
 
     def visit_BoolOp(self, node: ast.BoolOp):
-        """Expand into Compare
+        """Visits a BoolOp node, which is a boolean operation connected with 'and'/'or's 
+           The BoolOp node gets converte into an AST Compare node, and then the work is 
+           passed off to it.
 
+        Args:
+            node (ast.BoolOp): An AST BoolOp node
+
+        Returns: 
+            BinaryOp: A BinaryOp node that is composed of operations connected with 'and'/'or's 
 
         """
         op = node.op
@@ -290,7 +296,7 @@ class PyASTToCAST(ast.NodeVisitor):
         """Visits a PyAST Call node, which represents a function call.
         Special care must be taken to see if it's a function call or a class's
         method call. The CAST is generated a little different depending on
-        what kind of call it is.
+        what kind of call it is. 
 
         Args:
             node (ast.Call): a PyAST Call node
@@ -305,6 +311,7 @@ class PyASTToCAST(ast.NodeVisitor):
         if len(node.args) > 0:
             for arg in node.args:
                 func_args.extend(self.visit(arg))
+
         if len(node.keywords) > 0:
             for arg in node.keywords:
                 kw_args.extend(self.visit(arg.value))
@@ -321,7 +328,8 @@ class PyASTToCAST(ast.NodeVisitor):
         """Visits a PyAST ClassDef node, which is used to define user classes.
         Acquiring the fields of the class involves going through the __init__
         function and seeing if the attributes are associated with the self
-        parameter. Otherwise, it's a pretty straight conversion.
+        parameter. In addition, we add to the 'classes' dictionary the name of 
+        the class and a list of all its functions.
 
         Args:
             node (ast.ClassDef): A PyAST class definition node
@@ -331,16 +339,18 @@ class PyASTToCAST(ast.NodeVisitor):
         """
 
         name = node.name
+        self.classes[name] = []
+
         bases = []
         for base in node.bases:
             bases.extend(self.visit(base))
-        #[self.visit(base) for base in node.bases]
         
         funcs = []
         for func in node.body:
             funcs.extend(self.visit(func))
+            if type(func) == ast.FunctionDef:
+                self.classes[name].append(func.name)
         
-        #funcs = [self.visit(func) for func in node.body]
         fields = []
 
         # Get the fields in the class
@@ -483,7 +493,9 @@ class PyASTToCAST(ast.NodeVisitor):
             node (ast.Expr): A PyAST Expression node
 
         Returns:
-            Expr: A CAST Expression node
+            Expr:      A CAST Expression node
+            [AstNode]: A list of AstNodes if the expression consists 
+                       of more than one node
         """
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
@@ -733,7 +745,9 @@ class PyASTToCAST(ast.NodeVisitor):
         return [ModelIf(node_test[0], node_body, node_orelse, source_refs=ref)]
 
     def visit_IfExp(self, node: ast.IfExp):
-        """TODO
+        """Visits a PyAST IfExp node, which is Python's ternary operator.
+        The node gets translated into a CAST ModelIf node by visiting all its parts,
+        since IfExp behaves like an If statement.
 
         Args:
             node (ast.IfExp): [description]
@@ -922,6 +936,7 @@ class PyASTToCAST(ast.NodeVisitor):
     def visit_Raise(self, node: ast.Raise):
         """A PyAST Raise visitor, for Raising exceptions
 
+           TODO: To be implemented.
         """
 
         return []
@@ -1038,7 +1053,6 @@ class PyASTToCAST(ast.NodeVisitor):
 
             if type(node.value) == ast.Call:
                 if type(node.value.func) == ast.Attribute:
-                    #print(node.value.func.attr)
                     temp_list = node.value.func.attr + "_" + (str(uuid.uuid4()).replace("-","_"))
                 else:
                     temp_list = node.value.func.id + "_" + (str(uuid.uuid4()).replace("-","_"))
@@ -1088,7 +1102,6 @@ class PyASTToCAST(ast.NodeVisitor):
             slice_var = Var(Name(temp_list, source_refs=ref), "integer", source_refs=ref)
 
             return [new_list, loop_var, slice_loop, slice_var]
-            #return [Subscript(value, slice_loop, source_refs=ref)]
         elif type(slc) == ast.ExtSlice:
             dims = slc.dims 
             result = []
@@ -1137,11 +1150,6 @@ class PyASTToCAST(ast.NodeVisitor):
                             upper = Call(Name("len", source_refs=ref), [Name(node.value.attr, source_refs=ref)], source_refs=ref)
                         else:
                             upper = Call(Name("len", source_refs=ref), [Name(node.value.id, source_refs=ref)], source_refs=ref)
-
-                        #if type(node.value) == ast.Call:
-                        #    upper = Call(Name("len", source_refs=ref), [Name(node.value.func.id, source_refs=ref)], source_refs=ref)
-                        #else:
-                        #    upper = Call(Name("len", source_refs=ref), [Name(node.value.id, source_refs=ref)], source_refs=ref)
 
                     if dim.step != None:
                         step = self.visit(dim.step)[0]
@@ -1250,7 +1258,11 @@ class PyASTToCAST(ast.NodeVisitor):
         """Visits a PyAST Try node, which represents Try/Except blocks.
         These are used for Python's exception handling
 
+        Currently, the visitor just bypasses the Try/Except feature and just
+        generates CAST for the body of the 'Try' block, assuming the exception(s)
+        are never thrown.
         """
+
         body = []
         for piece in node.body:
             body.extend(self.visit(piece))
