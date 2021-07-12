@@ -138,4 +138,5 @@ class TestAlignFullLink extends TestAlignment {
   // decision should be about which gives us more information
   // score to account for extra links found (false positives)
 
+  // if there is a link that is not in the desired map, add 0 to score and add 1 to the score denominator (make a denominator var and add to that every time you get a wrong link---are links that were supposed to be found but were not equivalent in badness to links that were found but shouldnt have been?)
 }
