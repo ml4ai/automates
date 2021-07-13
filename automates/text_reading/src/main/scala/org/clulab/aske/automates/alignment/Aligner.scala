@@ -10,14 +10,14 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import org.clulab.aske.automates.apps.AlignmentBaseline
 import org.clulab.odin.impl.OdinConfig
 import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
-import org.clulab.utils.FileUtils
+import org.clulab.utils.{FileUtils, Sourcer}
 
 import scala.collection.mutable.ArrayBuffer
 
 case class AlignmentHandler(editDistance: VariableEditDistanceAligner, w2v: PairwiseW2VAligner) {
 
   def this(w2vPath: String, relevantArgs: Set[String]) =
-    this(new VariableEditDistanceAligner(), new PairwiseW2VAligner(new Word2Vec(w2vPath), relevantArgs))
+    this(new VariableEditDistanceAligner(), new PairwiseW2VAligner(new Word2Vec(Sourcer.sourceFromResource(w2vPath), None), relevantArgs))
   def this(config: Config) = this(config[String]("w2vPath"), config[List[String]]("relevantArgs").toSet)
 }
 
@@ -214,6 +214,7 @@ object PairwiseW2VAligner {
   }
 
 }
+
 
 object Aligner {
 
