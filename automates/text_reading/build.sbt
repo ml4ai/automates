@@ -12,7 +12,7 @@ libraryDependencies ++= {
   val procVer = "7.5.1"
 
   Seq(
-    "org.clulab"    % "glove-840b-300d"           % "0.1.0",
+//    "org.clulab"    % "glove-840b-300d"           % "0.1.0",
     "org.clulab"    %% "processors-main"          % procVer,
     "org.clulab"    %% "processors-corenlp"       % procVer,
     "org.clulab"    %% "processors-odin"          % procVer,
