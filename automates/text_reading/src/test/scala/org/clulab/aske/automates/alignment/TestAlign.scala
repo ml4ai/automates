@@ -94,7 +94,7 @@ class TestAlign extends TestAlignment {
     )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
     //
   }
 
@@ -110,10 +110,11 @@ class TestAlign extends TestAlignment {
       "comment_to_gvar" -> ("", failingNegative)
     )
     //
-    val indirectDesired = Map.empty[String, (String, String)] // todo: is there a need to test for negative indir link test?
-    //
+    val indirectDesired = Map(//Map.empty[String, (String, String)]
+      SRC_TO_COMMENT -> ("", failingNegative)
+    )
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
     //
   }
   {
@@ -137,7 +138,7 @@ class TestAlign extends TestAlignment {
     for (link <- directLinks) {
       println(">>" + link._1 + " " + link._2.mkString("\n"))
     }
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
   }
 
 
@@ -158,7 +159,7 @@ class TestAlign extends TestAlignment {
     )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
   }
 
   {
@@ -172,12 +173,15 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
       COMMENT_TO_GLOBAL_VAR -> ("", failingNegative)
 
+
     )
     //
-    val indirectDesired = Map.empty[String, (String, String)]
+    val indirectDesired = Map(//Map.empty[String, (String, String)]
+      SRC_TO_COMMENT -> ("", failingNegative)
+    )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
 
   }
 
@@ -199,7 +203,7 @@ class TestAlign extends TestAlignment {
     )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
     //
   }
 
@@ -223,7 +227,7 @@ class TestAlign extends TestAlignment {
     )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
     //
   }
 
@@ -248,7 +252,7 @@ class TestAlign extends TestAlignment {
     )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
     //
   }
 
@@ -271,7 +275,7 @@ class TestAlign extends TestAlignment {
     )
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
     //
   }
 
@@ -293,7 +297,7 @@ class TestAlign extends TestAlignment {
     )
 
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-    runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+    runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
 
   }
 
@@ -316,7 +320,7 @@ class TestAlign extends TestAlignment {
       )
       //
       val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-      runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
+      runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
       //
     }
 

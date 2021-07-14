@@ -489,10 +489,10 @@ object TestUtils {
     }
 
 
-    def runAllTests(variable: String, directLinks: Map[String, Seq[Value]], indirectLinks: Map[String,
+    def runAllAlignTests(variable: String, directLinks: Map[String, Seq[Value]], indirectLinks: Map[String,
       Seq[Tuple[String,
       Double]]],
-                    directDesired: Map[String, Tuple2[String, String]], indirectDesired: Map[String, Tuple2[String, String]])
+                         directDesired: Map[String, Tuple2[String, String]], indirectDesired: Map[String, Tuple2[String, String]])
     : Unit
     = {
       for (dl <- directDesired) {
@@ -515,6 +515,12 @@ object TestUtils {
       for (dlType <- allLinkTypes("direct").obj.keys) {
         if (!directDesired.contains(dlType)) {
           negativeDirectLinkTest(variable, directLinks, dlType)
+        }
+      }
+
+      for (dlType <- allLinkTypes("indirect").obj.keys) {
+        if (!indirectDesired.contains(dlType)) {
+          negativeIndirectLinkTest(variable, indirectLinks, dlType)
         }
       }
 
