@@ -19,8 +19,7 @@ class TestAlign extends TestAlignment {
   // todo: change paths to mention files in the payload (can't be local path)
   // todo: delete unused files in resources
 
-  val defaultConfig: Config = ConfigFactory.load("test.conf")
-  val config: Config = defaultConfig.withValue("w2vPath", ConfigValueFactory.fromAnyRef("/vectors.txt"))
+  val config: Config = ConfigFactory.load("test.conf")
   val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
   // get general configs
   val serializerName: String = config[String]("apps.serializerName")
