@@ -2,7 +2,7 @@ package org.clulab.aske.automates.alignment
 
 import java.io.File
 import ai.lum.common.ConfigUtils._
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import org.clulab.aske.automates.apps.{AlignmentArguments, ExtractAndAlign}
 import org.clulab.utils.AlignmentJsonUtils
 import ai.lum.common.FileUtils._
@@ -19,7 +19,8 @@ class TestAlign extends TestAlignment {
   // todo: change paths to mention files in the payload (can't be local path)
   // todo: delete unused files in resources
 
-  val config: Config = ConfigFactory.load("test.conf")
+  val defaultConfig: Config = ConfigFactory.load("test.conf")
+  val config: Config = defaultConfig.withValue("w2vPath", ConfigValueFactory.fromAnyRef("/vectors.txt"))
   val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
   // get general configs
   val serializerName: String = config[String]("apps.serializerName")
