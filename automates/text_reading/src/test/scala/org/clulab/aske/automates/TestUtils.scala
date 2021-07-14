@@ -337,16 +337,16 @@ object TestUtils {
     // return indirect links of a given type as a list of strings per each intermediate node
     def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String,
                           indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[Tuple[String, Double]]] =
-    {//Map[String, Map[String, ArrayBuffer[Value]]] = {
+    {
       val indirectLinkEndNodes = new ArrayBuffer[Tuple[String,Double]]()
       val allIndirectLinks = new ArrayBuffer[Value]()
       // we have links for some var, e.g., I(t)
       // through one of the existing links, we can get to another type of node
-      // probably already sorted - double-check
       val topNDirectLinkOfTargetTypeSorted = allDirectVarLinks.filter(_.obj("link_type").str==linkTypeToBuildOffOf).sortBy(_.obj("score").num).reverse.slice(0, nIndirectLinks)
-      for (tdl <- topNDirectLinkOfTargetTypeSorted) {
-        println("dir link: " + tdl)
-      }
+      // keep for debugging
+//      for (tdl <- topNDirectLinkOfTargetTypeSorted) {
+//        println("dir link: " + tdl)
+//      }
       val sortedIntermNodeNames = new ArrayBuffer[String]()
 
       //
@@ -394,10 +394,6 @@ object TestUtils {
         }
       }
 
-//      for (i <- indirectLinkEndNodes) println("END NODE: " + i)
-
-
-      //    Map(indirectLinkType -> groupedByElement2)
       Map(indirectLinkType -> indirectLinkEndNodes)
     }
 
@@ -422,8 +418,6 @@ object TestUtils {
     = {
 
       val maybeGreek = AlignmentBaseline.replaceGreekWithWord(idfr, AlignmentBaseline.greek2wordDict.toMap).replace("\\\\", "")
-      println("IDFR: " + idfr)
-      println("Maybe greek: " + maybeGreek)
       // links are returned as maps from link types to a) full links for direct links and b) sequences of elements linked indirectly to the global var
       // sorted by score based on the two edges in the indirect link
       // all links that contain the target text global var string
@@ -451,27 +445,21 @@ object TestUtils {
         }
 
       }
-//      val oneLink = allDirectLinksForIdfr.head
-//      val linkType = oneLink("link_type").str
-//      val whichElement = whereIsGlobalVar(linkType)
-//      println("WHICH ELEMENT: " + whichElement + " link type:" + linkType)
-//      val fullIdfrUid = oneLink(whichElement).str
+
       val fullIdfrUid = idfrWithIdFromMultipleLinks.head
-      println("full idfr uid: " + fullIdfrUid)
+//      println("full idfr uid: " + fullIdfrUid)
       val onlyWithCorrectIdfr = allDirectLinksForIdfr.filter(link => link(whereIsGlobalVar(link("link_type").str)).str ==
         fullIdfrUid)
       // group those by link type - in testing, will just be checking the rankings of links of each type
       val directLinksGroupedByLinkType = onlyWithCorrectIdfr.groupBy(_.obj("link_type").str)
-      // take the first available link and, depending on the type, get the full name from the correct element
-      // (element_1 or element_2)
 
-      for (l <- directLinksGroupedByLinkType) {
-        // todo: here need to filter out the links that do not have the exact identifier we are looking at,
-        //eg for eq to gvar link, filter out the links where the idfr exact match is in element 1 instead of 2
-        println(s"---${l._1}---")
-        for (i <- l._2.sortBy(el => el("score").num).reverse) println(">> " + i)
-      }
+      // keep for debug
+//      for (l <- directLinksGroupedByLinkType) {
+//        println(s"---${l._1}---")
+//        for (i <- l._2.sortBy(el => el("score").num).reverse) println(">> " + i)
+//      }
 
+      // get indirect links; currently, it's only source to comment links aligned through comment (comment var is the intermediate node)
       val indirectLinks = if (directLinksGroupedByLinkType.contains("comment_to_gvar")) {
         findIndirectLinks(onlyWithCorrectIdfr, allLinks, "comment_to_gvar", "source_to_comment", 3)
 
@@ -484,7 +472,7 @@ object TestUtils {
 //          println(link)
 //        }
 //      }
-      // get indirect links; currently, it's only source to comment links aligned through comment (comment var is the intermediate node)
+
       (directLinksGroupedByLinkType, indirectLinks)
     }
 
@@ -507,11 +495,9 @@ object TestUtils {
         val desired = dl._2._1
         val linkType = dl._1
         val status = dl._2._2
-        println(">>>" + dl._1 + " " + dl._2)
         topIndirectLinkTest(variable, desired, indirectLinks, linkType, status)
       }
 
-      // todo: do something similar for indirect
       for (dlType <- allLinkTypes("direct").obj.keys) {
         if (!directDesired.contains(dlType)) {
           negativeDirectLinkTest(variable, directLinks, dlType)
@@ -523,11 +509,7 @@ object TestUtils {
           negativeIndirectLinkTest(variable, indirectLinks, dlType)
         }
       }
-
     }
-
-
-
   }
 
 }

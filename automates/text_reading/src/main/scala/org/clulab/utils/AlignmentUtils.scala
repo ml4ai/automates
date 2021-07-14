@@ -1,11 +1,10 @@
 package org.clulab.utils
 
 import java.io.File
-
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDescriptionMentions, hasRequiredArgs, hasUnitArg}
-import org.clulab.aske.automates.apps.{AutomatesExporter, ExtractAndAlign, AlignmentArguments}
+import org.clulab.aske.automates.apps.{AlignmentArguments, AlignmentBaseline, AutomatesExporter, ExtractAndAlign}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
@@ -15,6 +14,7 @@ import org.clulab.processors.Document
 import ujson.{Obj, Value}
 import ujson.json4s._
 
+import java.util.UUID.randomUUID
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -47,18 +47,7 @@ object AlignmentJsonUtils {
         ).to(Json4sJson)
         JSONSerializer.toMentions(jvalueMentions)
       }
-
-
-
-//      val groupedByType = textMentions.groupBy(_.label)
-//      for (lg <- groupedByType) {
-//        println(lg._1)
-//        for (m <- lg._2) {
-//          println(m.label + ": " + m.text)
-//        }
-//      }
       Some(textMentions)
-
     } else None
 
 
@@ -99,7 +88,6 @@ object AlignmentJsonUtils {
       Some(ExtractAndAlign.processEquations(equations))
     } else None
 
-//    for (item <- equationChunksAndSource.get) println(item._1 + " | " + item._2)
     val identifierNames = if (jsonObj.contains("source_code")) {
       Some(json("source_code").obj("variables").arr.map(_.obj("name").str))
     } else None
@@ -108,8 +96,8 @@ object AlignmentJsonUtils {
       var shortNames = GrFNParser.getVariableShortNames(identifierNames.get)
       Some(shortNames)
     } else None
-    // source code comments
 
+    // source code comments
     val source = if (identifierNames.isDefined) {
       Some(getSourceFromSrcIdentifiers(identifierNames.get))
     } else None
@@ -141,8 +129,9 @@ object AlignmentJsonUtils {
 
     } else None
 
-//    val exporter = AutomatesExporter("/Users/alexeeva/Repos/automates/automates/text_reading/src/test/resources" +
-//      "/double_epidemic_comment--mentions.json")
+    // uncomment and add outfile path to serialize comment mentions
+    // val outputFile = ""
+//    val exporter = AutomatesExporter(outputFile)
 //    exporter.export(commentDescriptionMentions.get)
 
 
@@ -203,6 +192,77 @@ object AlignmentJsonUtils {
 
     // Parse the comment texts
     commentTextObjects.map(parseCommentText(_))
+  }
+
+  /* Methods for getting global variables */
+  def mkGlobalEqVarLinkElement(glv: GlobalEquationVariable): String = {
+    ujson.Obj(
+      "uid" -> glv.id,
+      "content" -> glv.identifier,
+      "identifier_objects" -> glv.eqVarObjStrings
+    ).toString()
+  }
+
+  def mkGlobalSrcVarLinkElement(glv: GlobalSrcVariable): String = {
+    ujson.Obj(
+      "uid" -> glv.id,
+      "content" -> glv.identifier,
+      "identifier_objects" -> glv.srcVarObjStrings
+    ).toString()
+
+  }
+
+  def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
+    ujson.Obj(
+      "uid" -> glv.id,
+      "content" -> glv.identifier,
+      "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)
+    ).toString()
+  }
+
+  def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
+    val groupedVars = srcVars.groupBy(_.obj("content").str)
+    val allGlobalVars = new ArrayBuffer[GlobalSrcVariable]()
+    for (gr <- groupedVars) {
+      val glVarID = randomUUID().toString()
+      val identifier = gr._1
+      val srcVarObjs = gr._2.map(_.obj("uid").str)
+      val glVar = new GlobalSrcVariable(glVarID, identifier, srcVarObjs)
+      allGlobalVars.append(glVar)
+    }
+    allGlobalVars
+  }
+
+  def getSrcLinkElements(srcVars: Seq[String]): Seq[Value] = {
+    srcVars.map { varName =>
+      val split = varName.split("::")
+      ujson.Obj(
+        "uid" -> randomUUID.toString,
+        "source" -> varName,
+        "content" -> split(2),
+        "model" -> split(0)
+      )
+    }
+  }
+
+
+  def getGlobalEqVars(equationLinkElements: Seq[Value]): Seq[GlobalEquationVariable] = {
+
+
+    val groupedVars = equationLinkElements.groupBy(_.obj("content").str)
+    val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
+    for (gr <- groupedVars) {
+      val glVarID = randomUUID().toString()
+
+      val identifier = AlignmentBaseline.replaceGreekWithWord(gr._1, AlignmentBaseline.greek2wordDict.toMap).replace("\\\\", "")
+      // the commented out part is for debugging
+      val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str) // + "::" + le.obj("content").str)
+      val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
+      allEqGlobalVars.append(glVar)
+
+    }
+
+    allEqGlobalVars
   }
 
 }

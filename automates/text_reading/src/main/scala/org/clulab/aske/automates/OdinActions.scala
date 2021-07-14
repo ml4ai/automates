@@ -565,7 +565,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
         // out of overlapping descrs, take the longest one
         val headDescr = mostComplete.arguments("description").head
-        println("HEad descr: " + headDescr.text)
         val edgesForOnlyThisMen = headDescr.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDescr.tokenInterval.start && math.max(edge._1, edge._2) <= headDescr.tokenInterval.end)
         val conjEdges = edgesForOnlyThisMen.filter(_._3.startsWith("conj"))
         val conjNodes = new ArrayBuffer[Int]()
@@ -618,8 +617,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             previousIndices.append(int)
           }
         }
-
-        for (d <- newDescriptions) println(d.text)
 
         // get the conjoined vars
         val variables = mostComplete.arguments("variable")
@@ -862,6 +859,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeAnIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
+    // here, can add different characters we want to allow in identifiers; use with caution
     val compoundIdentifierComponents = Seq("(", ")")
     //returns mentions that look like an identifier
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {

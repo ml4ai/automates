@@ -20,7 +20,7 @@ import org.clulab.grounding.sparqlResult
 import org.clulab.odin.serialization.json.JSONSerializer
 
 import java.util.UUID.randomUUID
-import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVariable, GlobalVariable}
+import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVariable, GlobalVariable, getGlobalEqVars, getGlobalSrcVars, getSrcLinkElements, mkGlobalEqVarLinkElement, mkGlobalSrcVarLinkElement, mkGlobalVarLinkElement}
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 
 import scala.collection.mutable
@@ -142,110 +142,28 @@ object ExtractAndAlign {
 
     ): Value = {
 
-    def mentionToIDedObjString(mention: Mention, mentionType: String): String = {
-      // creates an id'ed object for each mention
-      val docId = mention.document.id.getOrElse("unk_text_file")
-      val originalSentence = mention.sentenceObj.words.mkString(" ")
-      val offsets = mention.tokenInterval.toString()
-      val args = mentionType match {
-        case INT_PARAM_SETTING_VIA_IDFR | INT_PARAM_SETTING_VIA_CNCPT => getIntParamSetArgObj(mention)
-        case PARAM_SETTING_VIA_IDFR | PARAM_SETTING_VIA_CNCPT | UNIT_VIA_IDFR | UNIT_VIA_CNCPT | TEXT_VAR => getArgObj(mention)
-        case _ => ???
-      }
-
-
-      val jsonObj = ujson.Obj(
-        "uid" -> randomUUID.toString(),
-        "source" -> docId,
-        "original_sentence" -> originalSentence,
-        "content" -> mention.text,
-        "spans" -> makeLocationObj(mention, None, None),
-        "arguments" -> ujson.Arr(args)
-
-      )
-
-      jsonObj.toString()
-    }
-
-
-    def getGlobalEqVars(equationLinkElements: Seq[Value]): Seq[GlobalEquationVariable] = {
-
-
-      val groupedVars = equationLinkElements.groupBy(_.obj("content").str)
-      val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
-      for (gr <- groupedVars) {
-        val glVarID = randomUUID().toString()
-
-        val identifier = AlignmentBaseline.replaceGreekWithWord(gr._1, AlignmentBaseline.greek2wordDict.toMap).replace("\\\\", "")
-        // the commented out part is for debugging
-        val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str) // + "::" + le.obj("content").str)
-        val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
-        allEqGlobalVars.append(glVar)
-
-      }
-
-      allEqGlobalVars
-    }
-
-
-    //    for (cs <- equationChunksAndSource.get) {
-    //      println(cs._1 + " " + cs._2)
-    //    }
-
     // get all global variables before aligning
     val allGlobalVars = if (descriptionMentions.nonEmpty) {
       getGlobalVars(descriptionMentions.get)
     } else Seq.empty
 
-    for (g <- allGlobalVars) println("gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +
-      "\n=========\n")
+    // keep for debugging align
+//    for (g <- allGlobalVars) println("gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +
+//      "\n=========\n")
 
 
     val allCommentGlobalVars = if (commentDescriptionMentions.nonEmpty) {
       getGlobalVars(commentDescriptionMentions.get)
     } else Seq.empty
 
-    for (g <- allCommentGlobalVars) println("comment gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +
-      "\n=========\n")
-//    println("all comm gl vr: " + allCommentGlobalVars)
+    // keep for debugging align
+//    for (g <- allCommentGlobalVars) println("comment gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +
+//      "\n=========\n")
 
-//    for (g <- allCommentGlobalVars) println("comment gv: " + g.identifier)
-
-//    println(equationChunksAndSource + "<<")
     val (eqLinkElements, fullEquations) = if (equationChunksAndSource.nonEmpty) getEquationLinkElements(equationChunksAndSource.get) else (Seq.empty, Seq.empty)
     val globalEqVariables = if (eqLinkElements.nonEmpty) getGlobalEqVars(eqLinkElements) else Seq.empty
-//    for (g <- globalEqVariables) println("eq gv: " + g.identifier)
-
-    def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
-      val groupedVars = srcVars.groupBy(_.obj("content").str)
-      val allGlobalVars = new ArrayBuffer[GlobalSrcVariable]()
-      for (gr <- groupedVars) {
-        val glVarID = randomUUID().toString()
-        val identifier = gr._1 // AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap)
-        val srcVarObjs = gr._2.map(_.obj("uid").str)
-        val glVar = new GlobalSrcVariable(glVarID, identifier, srcVarObjs)
-        allGlobalVars.append(glVar)
-      }
-      allGlobalVars
-    }
-    def getSrcLinkElements(srcVars: Seq[String]): Seq[Value] = {
-      srcVars.map { varName =>
-        val split = varName.split("::")
-        ujson.Obj(
-          "uid" -> randomUUID.toString,
-          "source" -> varName,
-          "content" -> split(2),
-          "model" -> split(0)
-        )
-      }
-    }
-
-
     val srcLinkElements = if (variableNames.nonEmpty) getSrcLinkElements(variableNames.get) else Seq.empty
     val globalSrcVars = if (srcLinkElements.nonEmpty) getGlobalSrcVars(srcLinkElements) else Seq.empty
-//    for (g <- globalSrcVars) println("source gv: " + g.identifier)
-
-
 
     // =============================================
     // Alignment
@@ -270,37 +188,10 @@ object ExtractAndAlign {
 
     val linkElements = getLinkElements(grfn, allGlobalVars, allCommentGlobalVars, equationChunksAndSource, variableNames, parameterSettingMention, intervalParameterSettingMentions,  unitMentions)
 
-    def mkGlobalSrcVarLinkElement(glv: GlobalSrcVariable): String = {
-      ujson.Obj(
-      "uid" -> glv.id,
-        "content" -> glv.identifier,
-        "identifier_objects" -> glv.srcVarObjStrings
-      ).toString()
-
-    }
-
     linkElements(SOURCE) = srcLinkElements.map(_.toString())
     linkElements(GLOBAL_SRC_VAR) = globalSrcVars.map(glv => mkGlobalSrcVarLinkElement(glv))
-
-
-
-    //todo: if make global eq var, add eq and full eq link elements here
-
     linkElements(FULL_TEXT_EQUATION) = fullEquations
     linkElements(EQUATION) = eqLinkElements.map(_.toString())
-
-
-    // todo: move the method elsewhere
-    def mkGlobalEqVarLinkElement(glv: GlobalEquationVariable): String = {
-//      println("gl eq v: " + glv)
-      ujson.Obj(
-        "uid" -> glv.id,
-        "content" -> glv.identifier,
-        "identifier_objects" -> glv.eqVarObjStrings
-      ).toString()
-    }
-
-
     linkElements(GLOBAL_EQ_VAR) = globalEqVariables.map(glv => mkGlobalEqVarLinkElement(glv))
 
 
@@ -432,8 +323,6 @@ object ExtractAndAlign {
   }
 
   def rehydrateLinkElement(element: String, groundToSvo: Boolean, maxSVOgroundingsPerVar: Int, debug: Boolean): ujson.Value = {
-
-//    println("-=>" + element)
     val ujsonObj = ujson.read(element).obj
     ujsonObj
   }
@@ -618,23 +507,9 @@ object ExtractAndAlign {
       val commentToTextAlignments = alignmentHandler.w2v.alignGlobalCommentVarAndGlobalVars(allCommentGlobalVars, allGlobalVars)
       // group by src idx, and keep only top k (src, dst, score) for each src idx
 
-//      println("Alignments")
-//      for (gr <- commentToTextAlignments.groupBy(_.src)) {
-//        for (cta <- gr._2.sortBy(_.score).reverse)
-//        println(allCommentGlobalVars(cta.src).identifier + " "  + allGlobalVars(cta.dst).identifier + " " + cta.score + "<+")
-//      }
       val aligns = Aligner.topKBySrc(commentToTextAlignments, numAlignments.get, scoreThreshold, debug = false)
-
-      println("Alignments")
-      for (a <- aligns) {
-        for (g <- a) {
-          println(allCommentGlobalVars(g.src).identifier + " " + allGlobalVars(g.dst).identifier + " " + g.score)
-        }
-      }
       alignments(COMMENT_TO_GLOBAL_VAR) = aligns
     }
-
-
 
     alignments.toMap
   }
@@ -862,31 +737,6 @@ object ExtractAndAlign {
     // Make Comment Spans from the comment variable mentions
     val linkElements = scala.collection.mutable.HashMap[String, Seq[String]]()
 
-
-
-// moved this out
-//    // Repeat for src code variables
-//    if (variableNames.isDefined) {
-//      linkElements(SOURCE) = variableNames.get.map { varName =>
-//        ujson.Obj(
-//          "uid" -> randomUUID.toString,
-//          "source" ->  varName.split("::")(1),
-//          "content" -> varName.split("::")(2)
-//        ).toString()
-//      }
-//    }
-
-    def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
-//      println("GLVAR line 764: " + glv)
-      ujson.Obj(
-        "uid" -> glv.id,
-        "content" -> glv.identifier,
-        "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)
-      ).toString()
-    }
-
-
-
     if (allGlobalVars.nonEmpty) {
       linkElements(GLOBAL_VAR) = allGlobalVars.map(glv => mkGlobalVarLinkElement(glv))
       linkElements(TEXT_VAR) = allGlobalVars.flatMap(_.textVarObjStrings)
@@ -896,8 +746,6 @@ object ExtractAndAlign {
       linkElements(COMMENT) = allCommentGlobalVars.flatMap(_.textVarObjStrings)
       linkElements(GLOBAL_COMMENT) = allCommentGlobalVars.map(glv => mkGlobalVarLinkElement(glv))
       }
-
-
 
     if (intervalParameterSettingMentions.isDefined) {
       val (throughVar, throughConcept) = intervalParameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m
@@ -914,18 +762,15 @@ object ExtractAndAlign {
           mentionToIDedObjString(mention, INT_PARAM_SETTING_VIA_CNCPT)
         }
       }
-
     }
 
     if (parameterSettingMentions.isDefined) {
-
       val (throughVar, throughConcept) = parameterSettingMentions.get.partition(m => returnAttachmentOfAGivenType(m
         .attachments, "ParamSetAtt").toUJson("attachedTo").str=="variable")
 
       if (throughVar.nonEmpty) {
         linkElements(PARAM_SETTING_VIA_IDFR) = throughVar.map { mention =>
           mentionToIDedObjString(mention, PARAM_SETTING_VIA_IDFR)
-
         }
       }
 
@@ -934,9 +779,7 @@ object ExtractAndAlign {
           mentionToIDedObjString(mention, PARAM_SETTING_VIA_CNCPT)
         }
       }
-
     }
-
 
     if (unitRelationMentions.isDefined) {
 
@@ -955,39 +798,6 @@ object ExtractAndAlign {
         }
       }
     }
-
-    // Repeat for Eqn Variables - trying to move this outside to be able to make equation global variables
-//    if (equationChunksAndSource.isDefined) {
-//      val equation2uuid = mutable.Map[String, UUID]()
-//      linkElements(EQUATION) = equationChunksAndSource.get.map { case (chunk, orig) =>
-//        if (equation2uuid.contains(orig)) {
-//          ujson.Obj(
-//            "uid" -> randomUUID.toString(),
-//            "equation_uid" -> equation2uuid(orig).toString(),
-//            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
-//          ).toString()
-//        } else {
-//          // create a random id for full equation if it is not in the equation 2 uuid map...
-//          val id = randomUUID
-//          //... and add it to the map
-//          equation2uuid(orig) = id
-//          ujson.Obj(
-//            // create a new id for the equation chunk (corresponds to one identifier)
-//            "uid" -> randomUUID().toString(),
-//            "equation_uid" -> id.toString(),
-//            "content" -> AlignmentBaseline.replaceGreekWithWord(chunk, greek2wordDict.toMap)
-//          ).toString()
-//        }
-//      }
-//
-//      linkElements(FULL_TEXT_EQUATION) = equation2uuid.keys.map(key =>
-//        ujson.Obj(
-//          "uid" -> equation2uuid(key).toString(),
-//          "content" -> key
-//        ).toString()
-//      ).toSeq
-//    }
-
     linkElements
   }
 

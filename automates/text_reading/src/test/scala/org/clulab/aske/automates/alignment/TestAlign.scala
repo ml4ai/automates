@@ -12,10 +12,12 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.{COMMENT_TO_GLOBAL_VAR, EQ
 
 
 class TestAlign extends TestAlignment {
-  // todo: have negative indir link test
+
   //  todo:   complete mismatch should not result in 0.5 (like if there's b and a being compared) - it should be 0. How to capture that? maybe intersect?
   // todo: tests for what a global var contains?
   // todo: want tests for indirect links indep of global var - check if highest one for each src var is correct
+  // todo: change paths to mention files in the payload (can't be local path)
+  // todo: delete unused files in resources
 
   val config: Config = ConfigFactory.load("test.conf")
   val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
@@ -61,8 +63,6 @@ class TestAlign extends TestAlignment {
     debug
   )
 
-  println("grounding keys: " + groundings.obj.keySet.mkString("||"))
-
   val links = groundings.obj("links").arr
   val extractedLinkTypes = links.map(_.obj("link_type").str).distinct
 
@@ -103,11 +103,11 @@ class TestAlign extends TestAlignment {
     behavior of idfr
 
     val directDesired = Map(
-      "gvar_to_unit_via_cpcpt" -> ("", failingNegative),
-      "gvar_to_param_setting_via_cpcpt" -> ("", failingNegative),
-      "gvar_to_interval_param_setting_via_cpcpt" -> ("", failingNegative),
-      "equation_to_gvar" -> ("", failingNegative),
-      "comment_to_gvar" -> ("", failingNegative)
+      GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("", failingNegative),
+      GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
+      GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
+      EQN_TO_GLOBAL_VAR -> ("", failingNegative),
+      COMMENT_TO_GLOBAL_VAR -> ("", failingNegative)
     )
     //
     val indirectDesired = Map(//Map.empty[String, (String, String)]
@@ -135,9 +135,9 @@ class TestAlign extends TestAlignment {
     //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
 
-    for (link <- directLinks) {
-      println(">>" + link._1 + " " + link._2.mkString("\n"))
-    }
+//    for (link <- directLinks) {
+//      println(">>" + link._1 + " " + link._2.mkString("\n"))
+//    }
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
   }
 
