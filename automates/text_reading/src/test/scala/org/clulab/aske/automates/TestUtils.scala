@@ -297,7 +297,7 @@ object TestUtils {
         it should f"have a correct $linkType link for global var ${idf}" in {
           // these are already sorted
           val topScoredLink = inDirectLinks(linkType)
-          for (l <- topScoredLink) println(">>>" + l)
+//          for (l <- topScoredLink) println(">>>" + l)
           topScoredLink.head._1.split("::").last shouldEqual desired
           // can't get scores for these right now...
         }
