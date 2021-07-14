@@ -324,6 +324,21 @@ class TestAlign extends TestAlignment {
       //
     }
 
+  /* INDIRECT LINK TESTS
+  for now, the only indirect link is source to comment
+   */
+  val src_comment_links = links.filter(_.obj("link_type").str == SRC_TO_COMMENT)
+  for (link <-src_comment_links) println("-->" + link)
+
+  it should "have a src to comment element for source variable a" in {
+    src_comment_links.exists(l => l.obj("element_1").str.split("::").last == "a" & l.obj("element_2").str.split("::").last == "a" && l.obj("score").num == 1) shouldBe true
+  }
+
+  it should "have a src to comment element for source variable gamma" in {
+    src_comment_links.exists(l => l.obj("element_1").str.split("::").last == "gamma" & l.obj("element_2").str.split("::").last == "gamma" && l.obj("score").num == 1) shouldBe true
+  }
+
+
 
 
 
