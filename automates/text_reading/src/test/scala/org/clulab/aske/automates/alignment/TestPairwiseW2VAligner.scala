@@ -14,7 +14,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TestPairwiseW2VAligner extends FlatSpec with Matchers {
 
-  val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None)
+  val w2v = new Word2Vec(Sourcer.sourceFromResource("vectors.txt"), None)
   lazy val proc = TestUtils.newOdinSystem(ConfigFactory.load("test.conf")).proc
 
   val srcTexts = Seq(
