@@ -260,7 +260,7 @@ object TestUtils {
           // which element in this link type we want to check
           val whichLink = whereIsNotGlobalVar(linkType)
           // element 1 of this link (eq gl var) should be E
-          topScoredLink(whichLink).str.split("::").last shouldEqual desired
+          desired.split("::") should contain (topScoredLink(whichLink).str.split("::").last)
           topScoredLink("score").num > threshold shouldBe true
         }
       } else {
@@ -429,7 +429,7 @@ object TestUtils {
         getLinksWithIdentifierStr(idfr, allLinks, false).filter(link => whereIsGlobalVar.contains(link.obj("link_type").str)) ++    getLinksWithIdentifierStr(maybeGreek, allLinks, false).filter(link => whereIsGlobalVar.contains(link.obj("link_type").str))
       }
 
-      for (l <- allDirectLinksForIdfr) println("link: " + l)
+//      for (l <- allDirectLinksForIdfr) println("link: " + l)
 
       // filtering out the links with no idfr with the correct idf; can't have the link uid in the test itself bc those
       // are randomly generated on every run

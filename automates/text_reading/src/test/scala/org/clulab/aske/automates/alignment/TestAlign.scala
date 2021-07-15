@@ -13,12 +13,6 @@ import org.clulab.aske.automates.apps.ExtractAndAlign.{COMMENT_TO_GLOBAL_VAR, EQ
 
 class TestAlign extends TestAlignment {
 
-  //  todo:   complete mismatch should not result in 0.5 (like if there's b and a being compared) - it should be 0. How to capture that? maybe intersect?
-  // todo: tests for what a global var contains?
-  // todo: want tests for indirect links indep of global var - check if highest one for each src var is correct
-  // todo: change paths to mention files in the payload (can't be local path)
-  // todo: delete unused files in resources
-
   val config: Config = ConfigFactory.load("test.conf")
   val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
   // get general configs
@@ -190,9 +184,9 @@ class TestAlign extends TestAlignment {
     behavior of idfr
 
     val directDesired = Map(
-      GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("2/3", passingTest), // also this: a = 3
+      GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("2/3::3", passingTest),
       EQN_TO_GLOBAL_VAR -> ("a", passingTest),
-      COMMENT_TO_GLOBAL_VAR -> ("a", passingTest), //make this a same var in comments with modified definition - removal rate of infectives
+      COMMENT_TO_GLOBAL_VAR -> ("a", passingTest),
       GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("", failingNegative),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
@@ -232,7 +226,7 @@ class TestAlign extends TestAlignment {
   }
 
   {
-    // todo: double-check these links
+
     val idfr = "I" // infected
     behavior of idfr
 
@@ -285,7 +279,7 @@ class TestAlign extends TestAlignment {
 
     val directDesired = Map(
       GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("mm", passingTest),
-      GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("mm", passingTest), //millimeters is also correct; todo: have test accommodate several possible answers
+      GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("mm::millimeters", passingTest), // both values possible
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("450", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("32", passingTest),
       EQN_TO_GLOBAL_VAR -> ("tau", passingTest),
