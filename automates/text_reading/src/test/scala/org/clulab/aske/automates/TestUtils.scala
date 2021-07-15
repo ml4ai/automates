@@ -299,7 +299,7 @@ object TestUtils {
           val topScoredLink = inDirectLinks(linkType)
 //          for (l <- topScoredLink) println(">>>" + l)
           topScoredLink.head._1.split("::").last shouldEqual desired
-          // can't get scores for these right now...
+          topScoredLink.head._2 > threshold shouldBe true
         }
       } else {
         runFailingTest(f"have a correct $linkType link for global var ${idf}")
@@ -333,7 +333,6 @@ object TestUtils {
       toReturn
     }
 
-    // todo: double-check returning the right number of indirect alignments per intermediate node
     // return indirect links of a given type as a list of strings per each intermediate node
     def findIndirectLinks(allDirectVarLinks: Seq[Value], allLinks: Seq[Value], linkTypeToBuildOffOf: String,
                           indirectLinkType: String, nIndirectLinks: Int): Map[String, Seq[Tuple[String, Double]]] =
@@ -349,9 +348,8 @@ object TestUtils {
 //      }
       val sortedIntermNodeNames = new ArrayBuffer[String]()
 
-      //
+
       for (dl <- topNDirectLinkOfTargetTypeSorted) {
-        println("---")
         // get intermediate node of indirect link - for comment_to_gvar link, it's element_1
         val intermNodeJustName = linkTypeToBuildOffOf match {
           case "comment_to_gvar" => dl("element_1").str
@@ -359,7 +357,7 @@ object TestUtils {
         }
         sortedIntermNodeNames.append(intermNodeJustName)
 
-        //
+
         val indirectLinksForIntermNode = getLinksWithIdentifierStr(intermNodeJustName, allLinks, true).filter(_.obj
         ("link_type").str == indirectLinkType).sortBy(_.obj("score").num).reverse
         for (il <- indirectLinksForIntermNode) {

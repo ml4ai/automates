@@ -2,16 +2,24 @@ package org.clulab.aske.automates.alignment
 
 import java.io.File
 import ai.lum.common.ConfigUtils._
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.apps.{AlignmentArguments, ExtractAndAlign}
 import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
 import ai.lum.common.FileUtils._
-import com.fasterxml.jackson.databind.deser.impl.FailingDeserializer
 import org.clulab.aske.automates.TestUtils.TestAlignment
 import org.clulab.aske.automates.apps.ExtractAndAlign.{COMMENT_TO_GLOBAL_VAR, EQN_TO_GLOBAL_VAR, GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT, GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER, GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT, GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER, GLOBAL_VAR_TO_UNIT_VIA_CONCEPT, GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER, SRC_TO_COMMENT, allLinkTypes}
 import org.clulab.embeddings.word2vec.Word2Vec
 
+/* Tests the alignment payload created based on the toy double-epidemic-and-chime files in /test/resources;
+  should changes need to be made to the toy document, the latex template is stored under /test/resources/toy_document_tex;
+  if changes are made, the new pdf will need to be processed with science parse (or cosmos) and the payload will need to be recreated
+  (can use align_experiment.py for that)
+  Currently, there are three types of tests:
+  1) the test that checks that all supported links are made (the toy document contains all of them); the toy document will need to be updated if new link types are added;
+  2) a set of tests (one for every identifier that occurs in the toy doc) that check if the identifier got correct alignments for every link type (template at the bottom of the file; to ignore negative tests, add a line like this to direct or indirect desired maps: <link_type> -> ("", failingNegative)); if there are two possible values, can add them in desired as a "::"-separated string; interval values are "||"-separated;
+  3) tests for comment_to_gvar tests (the only type of indirect link we have now); there are few because the alignment for them is very basic and whatever can go wrong will be obvious from these two tests.
 
+ */
 class TestAlign extends TestAlignment {
 
   val config: Config = ConfigFactory.load("test.conf")
@@ -66,7 +74,7 @@ class TestAlign extends TestAlignment {
   val extractedLinkTypes = links.map(_.obj("link_type").str).distinct
 
   it should "have all the link types" in {
-    val allLinksTypesFlat = allLinkTypes.obj.filter(_._1 != "disabled").obj.flatMap(obj => obj._2.obj.keySet).toSeq//
+    val allLinksTypesFlat = allLinkTypes.obj.filter(_._1 != "disabled").obj.flatMap(obj => obj._2.obj.keySet).toSeq
     val overlap = extractedLinkTypes.intersect(allLinksTypesFlat)
     overlap.length == extractedLinkTypes.length  shouldBe true
     overlap.length == allLinksTypesFlat.length shouldBe true
@@ -87,14 +95,14 @@ class TestAlign extends TestAlignment {
       EQN_TO_GLOBAL_VAR -> ("R_0", passingTest),
       COMMENT_TO_GLOBAL_VAR -> ("Rb", passingTest)
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("Rb",passingTest)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-    //
+
   }
 
   {
@@ -108,13 +116,13 @@ class TestAlign extends TestAlignment {
       EQN_TO_GLOBAL_VAR -> ("", failingNegative),
       COMMENT_TO_GLOBAL_VAR -> ("", failingNegative)
     )
-    //
+
     val indirectDesired = Map(//Map.empty[String, (String, String)]
       SRC_TO_COMMENT -> ("", failingNegative)
     )
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-    //
+
   }
   {
     val idfr = "β" //fixme: maybe if there is very little text for variable, make aligner depend more on the variable?
@@ -127,16 +135,11 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative)
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("beta",failingTest)
     )
-    //
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
-
-//    for (link <- directLinks) {
-//      println(">>" + link._1 + " " + link._2.mkString("\n"))
-//    }
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
   }
 
@@ -152,11 +155,11 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative)
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("gamma", failingTest)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
   }
@@ -174,11 +177,11 @@ class TestAlign extends TestAlignment {
 
 
     )
-    //
+
     val indirectDesired = Map(//Map.empty[String, (String, String)]
       SRC_TO_COMMENT -> ("", failingNegative)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
 
@@ -196,14 +199,14 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("a",passingTest)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-    //
+
   }
 
   {
@@ -213,21 +216,21 @@ class TestAlign extends TestAlignment {
     val directDesired = Map(
       GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("germs per second", passingTest),
       GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("germs per second", passingTest),
-      GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("65", passingTest), // also this: r = 9.788 × 10-8
+      GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("65::9.788 × 10-8", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("0.5", passingTest),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER ->("negative", failingTest), // need processing for word param settings
-      GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT ->("0.2||5.6", passingTest), // these may need to be ttwo values separated with ::
+      GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT ->("0.2||5.6", passingTest),
       EQN_TO_GLOBAL_VAR -> ("r", passingTest),
-      COMMENT_TO_GLOBAL_VAR -> ("inc_inf", passingTest) //make this a diff var in comments - infection rate
+      COMMENT_TO_GLOBAL_VAR -> ("inc_inf", passingTest)
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("inc_inf",passingTest)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-    //
+
   }
 
   {
@@ -240,19 +243,19 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("10", passingTest),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER ->("0", failingTest),// in text it's "positive", need something for word to param setting conversion + need to test intervals better, e.g., the first one in tuple is lower bound and second is upper OR it does not matter for align - quality of extractions is in param setting testing; here, the important part is being linked properly
       EQN_TO_GLOBAL_VAR -> ("I", failingTest), // I is not in eq but there's I(0), I(t), and I_P; what to align? Or nothing?
-      COMMENT_TO_GLOBAL_VAR -> ("I", failingTest), // make this R is the basic reproduction number in the comments
+      COMMENT_TO_GLOBAL_VAR -> ("I", failingTest),
       GLOBAL_VAR_TO_UNIT_VIA_CONCEPT ->("", failingNegative),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT ->("", failingNegative),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT ->("", failingNegative)
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("I",failingTest)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-    //
+
   }
 
   {
@@ -268,14 +271,14 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative),
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("R", failingTest)
     )
-    //
+
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
     runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-    //
+
   }
 
   {
@@ -288,9 +291,9 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("450", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("32", passingTest),
       EQN_TO_GLOBAL_VAR -> ("tau", passingTest),
-      COMMENT_TO_GLOBAL_VAR -> ("t_a", passingTest) //make this some other var in comment and source that would align well with the definition - make it same exact definition (transmissibility)
+      COMMENT_TO_GLOBAL_VAR -> ("t_a", passingTest)
     )
-    //
+
     val indirectDesired = Map(
       SRC_TO_COMMENT -> ("t_a",passingTest)
     )
@@ -309,25 +312,24 @@ class TestAlign extends TestAlignment {
         GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("6.8 millions", failingTest),
         GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("4.5 million", failingTest), //fixme: how did 6.8 get attached to S?
         EQN_TO_GLOBAL_VAR -> ("S", passingTest),
-        COMMENT_TO_GLOBAL_VAR -> ("S", failingTest), // make this R is the basic reproduction number in the comments
+        COMMENT_TO_GLOBAL_VAR -> ("S", failingTest),
         GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("", failingNegative),
         GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> ("", failingNegative)
       )
-      //
+
       val indirectDesired = Map(
         SRC_TO_COMMENT -> ("S", failingTest)
       )
-      //
+
       val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
       runAllAlignTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
-      //
+
     }
 
   /* INDIRECT LINK TESTS
   for now, the only indirect link is source to comment
    */
   val src_comment_links = links.filter(_.obj("link_type").str == SRC_TO_COMMENT)
-  for (link <-src_comment_links) println("-->" + link)
 
   it should "have a src to comment element for source variable a" in {
     src_comment_links.exists(l => l.obj("element_1").str.split("::").last == "a" & l.obj("element_2").str.split("::").last == "a" && l.obj("score").num == 1) shouldBe true
@@ -338,10 +340,6 @@ class TestAlign extends TestAlignment {
   }
 
 
-
-
-
-  //  // template
 
   //  // template
   //  {
@@ -363,7 +361,7 @@ class TestAlign extends TestAlignment {
   //      SRC_TO_COMMENT -> ("E",passingTest)
   //    )
   //    //
-  //val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
+  //  val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
   //  runAllTests(idfr, directLinks, indirLinks, directDesired, indirectDesired)
   //    //
   //  }
