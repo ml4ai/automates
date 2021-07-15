@@ -18,6 +18,8 @@ case class AlignmentHandler(editDistance: VariableEditDistanceAligner, w2v: Pair
 
   def this(w2vPath: String, relevantArgs: Set[String]) =
     this(new VariableEditDistanceAligner(), new PairwiseW2VAligner(new Word2Vec(w2vPath), relevantArgs))
+  def this(w2v: Word2Vec, relevantArgs: Set[String]) =
+    this(new VariableEditDistanceAligner(), new PairwiseW2VAligner(w2v, relevantArgs))
   def this(config: Config) = this(config[String]("w2vPath"), config[List[String]]("relevantArgs").toSet)
 }
 

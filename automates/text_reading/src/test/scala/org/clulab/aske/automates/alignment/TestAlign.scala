@@ -4,17 +4,21 @@ import java.io.File
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import org.clulab.aske.automates.apps.{AlignmentArguments, ExtractAndAlign}
-import org.clulab.utils.AlignmentJsonUtils
+import org.clulab.utils.{AlignmentJsonUtils, Sourcer}
 import ai.lum.common.FileUtils._
 import com.fasterxml.jackson.databind.deser.impl.FailingDeserializer
 import org.clulab.aske.automates.TestUtils.TestAlignment
 import org.clulab.aske.automates.apps.ExtractAndAlign.{COMMENT_TO_GLOBAL_VAR, EQN_TO_GLOBAL_VAR, GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT, GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER, GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT, GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER, GLOBAL_VAR_TO_UNIT_VIA_CONCEPT, GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER, SRC_TO_COMMENT, allLinkTypes}
+import org.clulab.embeddings.word2vec.Word2Vec
 
 
 class TestAlign extends TestAlignment {
 
   val config: Config = ConfigFactory.load("test.conf")
-  val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
+  val vectors: String = config[String]("alignment.w2vPath")
+  val w2v = new Word2Vec(Sourcer.sourceFromResource(vectors), None)
+  val relevantArgs: List[String] = config[List[String]]("alignment.relevantArgs")
+  val alignmentHandler = new AlignmentHandler(w2v, relevantArgs.toSet)
   // get general configs
   val serializerName: String = config[String]("apps.serializerName")
   val numAlignments: Int = config[Int]("apps.numAlignments")
@@ -25,6 +29,7 @@ class TestAlign extends TestAlignment {
   val appendToGrFN: Boolean = config[Boolean]("apps.appendToGrFN")
 
   // alignment-specific configs
+
   val debug: Boolean = config[Boolean]("alignment.debug")
   val inputDir = new File(getClass.getResource("/").getFile)
   val payLoadFileName: String = config[String]("alignment.unitTestPayload")
