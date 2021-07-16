@@ -32,8 +32,8 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir = "/Users/alexeeva/Desktop/automates-related/TWIST/cosmos"
-  val outputDir = "/Users/alexeeva/Desktop/automates-related/TWIST/cosmos"
+  val inputDir: String = ""
+  val outputDir: String = ""
   val inputType = config[String]("apps.inputType")
 //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   val dataLoader = new CosmosJsonDataLoader
