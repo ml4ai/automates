@@ -47,7 +47,6 @@ os.chdir(curr_path)
 contents = ast.parse(file_contents)
 C = convert.visit(contents)
 C.source_refs = [SourceRef(file_name, None, None, 1, line_count)]
-#C.name = file_name
 
 os.chdir(old_path)
 out_cast = cast.CAST([C])
