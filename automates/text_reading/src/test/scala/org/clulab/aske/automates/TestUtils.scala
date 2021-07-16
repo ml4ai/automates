@@ -90,6 +90,15 @@ object TestUtils {
 
     // General Purpose
 
+    def withinOneSentenceTest(mentions: Seq[Mention]): Unit = {
+      // makes sure all the args of a mentioned are contained within one sentence (note: not same for cross-sentence mentions)
+      for (m <- mentions) {
+        for (arg <- m.arguments) {
+          arg._2.head.sentence shouldEqual m.sentence
+        }
+      }
+    }
+
     def testTextBoundMention(mentions: Seq[Mention], eventType: String, desired: Seq[String]): Unit = {
       val found = mentions.filter(_ matches eventType).map(_.text)
       found.length should be(desired.size)
@@ -186,6 +195,7 @@ object TestUtils {
     def testParameterSettingEventInterval(mentions: Seq[Mention], desired: Seq[Seq[String]]): Unit = {
       testThreeArgEvent(mentions, INTERVAL_PARAMETER_SETTING_LABEL, VARIABLE_ARG, VALUE_LEAST_ARG, VALUE_MOST_ARG, desired)
     }
+
 
     // General Purpose
 

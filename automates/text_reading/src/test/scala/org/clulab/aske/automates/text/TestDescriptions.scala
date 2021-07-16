@@ -793,4 +793,13 @@ class TestDescriptions extends ExtractionTest {
     val mentions = extractMentions(t2o)
     testDescriptionEvent(mentions, desired)
   }
+
+
+  // this is a test based on a real, not well-processed document, so some symbols don't make sense; the point of the test, though, is to prevent incorrect copy-with-arg-ing or grouping of mentions---each descr mention in this document should be contained within one sentence
+  val multiSent1 = "The exponent b controls the shape of the demand curve, and can be interpreted as a short-term price elasticity of world market demand. We investigate two different versions of the model: One (called FixCons, for ﬁxed consumption) in which is prescribed to match ﬁnal consumption Qout observed annual consumption; and one (called FlexCons, for ﬂexible consumption) in which annual deviations from the observed long-term consumption trend are determined within the model based on simulated prices, according to ð Þed ð7Þ QoutðtÞ ¼ Qout;refðtÞ⋅ PðtÞ / PaveðtÞ."
+  // alpha is not reached with any rule because of lambda/c
+  passingTest should s"have each description mention contained within one sentence: ${multiSent1}" taggedAs(Somebody) in {
+    val descrMentions = extractMentions(multiSent1).filter(_.label contains "Description")
+    withinOneSentenceTest(descrMentions)
+  }
 }

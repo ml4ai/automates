@@ -49,7 +49,7 @@ rules:
       variable: Identifier = nsubjpass nmod_of? appos | <acl conj_or
       unit: Unit+ = nmod_as | nmod_in
 
-  # fixme: this rule overpowers the identifier one above
+  # note: this rule overpowers the identifier one above
   - name: phrase_taken_as_unit
     label: UnitRelation
     priority: ${priority}

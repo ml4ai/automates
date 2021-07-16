@@ -353,26 +353,26 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val toReturn = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
 
-    for (gr <- groupedBySent) {
-      val groupedByTokenOverlap = groupByTokenOverlap(gr._2)
-      for (gr0 <- groupedByTokenOverlap.values) {
+    for (sentGroup <- groupedBySent) {
+      val groupedByTokenOverlap = groupByTokenOverlap(sentGroup._2)
+      for (tokOverlapGroup <- groupedByTokenOverlap.values) {
         // we will only be picking the longest one out of the ones that have a variable (identifier) overlap
-        for (gr1 <- groupByVarOverlap(gr0).values) {
+        for (varOverlapGroup <- groupByVarOverlap(tokOverlapGroup).values) {
           // if there are ConjDescrs among overlapping decsrs, then pick the longest conjDescr
-          if (gr1.exists(_.label.contains("ConjDescription"))) {
+          if (varOverlapGroup.exists(_.label.contains("ConjDescription"))) {
             // type 2 has same num of vars and descriptions (a minimum of two pairs)
-            val (type2, type1) = gr1.partition(_.label.contains("Type2"))
+            val (type2, type1) = varOverlapGroup.partition(_.label.contains("Type2"))
 
             if (type2.isEmpty) {
               // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
-              val longestConjDescr = gr1.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
+              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
               toReturn.append(longestConjDescr)
             } else {
-              val longestConjDescr = gr1.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
+              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
               toReturn.append(longestConjDescr)
             }
           } else {
-            for (men <- gr1) toReturn.append(men)
+            for (men <- varOverlapGroup) toReturn.append(men)
           }
         }
       }
@@ -582,7 +582,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         if (allConjNodes.nonEmpty) {
           val sortedConjNodes = allConjNodes.sorted
           for (int <- sortedConjNodes) {
-            // fixme: this depends on where the conj is in the mention
+            // note: this depends on where the conj is in the mention
             // ex. 1: Sl and Sh are the sunlit and shaded leaf contributions.
             // vs
             // ex. 2: Sl and Sh are the leaf contributions of sunlight and shade
