@@ -13,7 +13,7 @@ import org.clulab.embeddings.word2vec.Word2Vec
 /* Tests the alignment payload created based on the toy double-epidemic-and-chime files in /test/resources;
   should changes need to be made to the toy document, the latex template is stored under /test/resources/toy_document_tex;
   if changes are made, the new pdf will need to be processed with science parse (or cosmos) and the payload will need to be recreated
-  (can use align_experiment.py for that)
+  (can use align_experiment.py for that); the sample grfn is only there so that align_experiment is runnable---copy the testing source variables from the testing payload and paste those into the newly created payload;
   Currently, there are three types of tests:
   1) the test that checks that all supported links are made (the toy document contains all of them); the toy document will need to be updated if new link types are added;
   2) a set of tests (one for every identifier that occurs in the toy doc) that check if the identifier got correct alignments for every link type (template at the bottom of the file; to ignore negative tests, add a line like this to direct or indirect desired maps: <link_type> -> ("", failingNegative)); if there are two possible values, can add them in desired as a "::"-separated string; interval values are "||"-separated;

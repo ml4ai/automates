@@ -35,7 +35,9 @@ object ExtractAndExport extends App {
   val inputDir: String = ""
   val outputDir: String = ""
   val inputType = config[String]("apps.inputType")
+  // if using science parse doc, uncomment next line and...
 //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+  //..comment out this line:
   val dataLoader = new CosmosJsonDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
