@@ -374,6 +374,34 @@ def d_sep(g, x, y, z):
     :param z: nodes
     :return: T/F if x is separated from y given z in g
     """
+    def d_sep_helper(include_pa, include_ch, el_name, an_xyz, stack, stack_names, stack_size, stack_top):
+        visitable_parents = []
+        visitable_children = []
+        n_vis_pa = 0
+        n_vis_ch = 0
+        if include_pa:
+            visitable_parents = list((set(parents_unsort([el_name], g)) - {el_name}) & set(an_xyz))
+            n_vis_pa = len(visitable_parents)
+        if include_ch:
+            visitable_children = list((set(children_unsort([el_name], g)) - {el_name}) & set(an_xyz))
+            n_vis_ch = len(visitable_children)
+        if n_vis_pa + n_vis_ch > 0:
+            while n_vis_pa + n_vis_ch + stack_top > stack_size:
+                stack_old = copy.deepcopy(stack)
+                stack_names_old = copy.deepcopy(stack_names)
+                stack_size_old = stack_size
+                stack_size = 2 * stack_size
+                stack = [False] * stack_size
+                stack[0:stack_size_old] = copy.deepcopy(stack_old)
+                stack_names = [None] * stack_size
+                stack_names[0:stack_size_old] = copy.deepcopy(stack_names_old)
+            stack_add = stack_top + n_vis_pa + n_vis_ch
+            stack[stack_top:stack_add] = [True] * n_vis_pa + [False] * n_vis_ch
+            stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents) + copy.deepcopy(
+                visitable_children)
+            stack_top = stack_add
+        return (stack, stack_names, stack_size, stack_top)
+
     an_z = ancestors_unsort(z, g)
     an_xyz = ancestors_unsort(list(set(x) | set(y) | set(z)), g)
     stack_top = len(x)
@@ -414,58 +442,25 @@ def d_sep(g, x, y, z):
             visited_names[visited_top - 1] = el_name
             el_name_in_z = el_name in z
             if el and (not el_name_in_z):
-                visitable_parents = list((set(parents_unsort([el_name], g)) - set([el_name])) & set(an_xyz))
-                visitable_children = list((set(children_unsort([el_name], g)) - set([el_name])) & set(an_xyz))
-                n_vis_pa = len(visitable_parents)
-                n_vis_ch = len(visitable_children)
-                if n_vis_pa + n_vis_ch > 0:
-                    while n_vis_pa + n_vis_ch + stack_top > stack_size:
-                        stack_old = copy.deepcopy(stack)
-                        stack_names_old = copy.deepcopy(stack_names)
-                        stack_size_old = stack_size
-                        stack_size = 2 * stack_size
-                        stack = [False] * stack_size
-                        stack[0:stack_size_old] = copy.deepcopy(stack_old)
-                        stack_names = [None] * stack_size
-                        stack_names[0:stack_size_old] = copy.deepcopy(stack_names_old)
-                    stack_add = stack_top + n_vis_pa + n_vis_ch
-                    stack[stack_top:stack_add] = [True] * n_vis_pa + [False] * n_vis_ch
-                    stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents) + copy.deepcopy(
-                        visitable_children)
-                    stack_top = stack_add
+                (stack, stack_names, stack_size, stack_top) = d_sep_helper(include_pa=True, include_ch=True,
+                                                                           el_name=el_name, an_xyz=an_xyz, stack=stack,
+                                                                           stack_names=stack_names,
+                                                                           stack_size=stack_size, stack_top=stack_top)
             elif not el:
                 if not el_name_in_z:
-                    visitable_children = list((set(children_unsort(el_name, g)) - set(el_name)) & set(an_xyz))
-                    n_vis_ch = len(visitable_children)
-                    if n_vis_ch > 0:
-                        while n_vis_ch + stack_top > stack_size:
-                            stack_old = copy.deepcopy(stack)
-                            stack_size_old = stack_size
-                            stack_names_old = copy.deepcopy(stack_names)
-                            stack_size = 2 * stack_size
-                            stack = [False] * stack_size
-                            stack[0:stack_size_old] = copy.deepcopy(stack_old)
-                            stack_names[0:stack_size_old] = copy.deepcopy(stack_names_old)
-                        stack_add = stack_top + n_vis_ch
-                        stack[stack_top:stack_add] = [False] * n_vis_ch
-                        stack_names[stack_top:stack_add] = copy.deepcopy(visitable_children)
-                        stack_top = stack_add
+                    (stack, stack_names, stack_size, stack_top) = d_sep_helper(include_pa=False, include_ch=True,
+                                                                               el_name=el_name, an_xyz=an_xyz,
+                                                                               stack=stack,
+                                                                               stack_names=stack_names,
+                                                                               stack_size=stack_size,
+                                                                               stack_top=stack_top)
                 if el_name in an_z:
-                    visitable_parents = list((set(parents_unsort([el_name], g)) - set([el_name]) & set(an_xyz)))
-                    n_vis_pa = len(visitable_parents)
-                    if n_vis_pa > 0:
-                        while n_vis_pa + stack_top > stack_size:
-                            stack_old = copy.deepcopy(stack)
-                            stack_size_old = stack_size
-                            stack_names_old = copy.deepcopy(stack_names)
-                            stack_size = 2 * stack_size
-                            stack = [False] * stack_size
-                            stack[0:stack_size_old] = copy.deepcopy(stack_old)
-                            stack_names[0:stack_size_old] = stack_names_old
-                        stack_add = stack_top + n_vis_pa
-                        stack[stack_top:stack_add] = [True] * n_vis_pa
-                        stack_names[stack_top:stack_add] = copy.deepcopy(visitable_parents)
-                        stack_top = stack_add
+                    (stack, stack_names, stack_size, stack_top) = d_sep_helper(include_pa=True, include_ch=False,
+                                                                               el_name=el_name, an_xyz=an_xyz,
+                                                                               stack=stack,
+                                                                               stack_names=stack_names,
+                                                                               stack_size=stack_size,
+                                                                               stack_top=stack_top)
     return True
 
 
