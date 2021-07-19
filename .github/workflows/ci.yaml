@@ -26,6 +26,7 @@ jobs:
           docker run -itd --rm -v $GITHUB_WORKSPACE:/automates --name test-con $TR_IMAGE
           docker exec -w /automates/automates/text_reading test-con sbt -Dapps.projectDir=/automates test
           docker container kill test-con
+          docker container rm test-con
           docker image rm $TR_IMAGE
           docker pull $ASSEMBLY_IMAGE
           docker run $CI_ENV -itd --rm -v $GITHUB_WORKSPACE:/automates --name test-con $ASSEMBLY_IMAGE
