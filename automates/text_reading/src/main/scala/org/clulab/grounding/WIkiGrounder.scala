@@ -14,6 +14,8 @@ import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.utils.FileUtils
+// get a serializer for groundings
+// have option to load previously stored groundings
 //todo: pass the python query file from configs
 //todo: document in wiki
 // todo: add wikidata id, link?, and text to global var

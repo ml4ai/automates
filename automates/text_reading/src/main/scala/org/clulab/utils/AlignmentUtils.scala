@@ -211,13 +211,50 @@ object AlignmentJsonUtils {
     ).toString()
 
   }
+  //searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata"
+  def groundingToJson(grounding: sparqlWikiResult): ujson.Obj = {
+    val descriptions = if (grounding.conceptDescription.nonEmpty) grounding.conceptDescription.get else ujson.Null
+    val score = if (grounding.score.nonEmpty) grounding.score.get else ujson.Null
+    val toReturn = ujson.Obj(
+      "search_term" -> grounding.searchTerm,
+      "concept_ID" -> grounding.conceptID,
+      "concept_label" -> grounding.conceptLabel,
+//      "concept_description" -> grounding.conceptDescription.get ,
+//      "score" -> grounding.score.get,
+      "source" -> grounding.source
+    )
+
+    if (grounding.conceptDescription.isDefined) {
+      toReturn("concept_description") = grounding.conceptDescription.get
+    } else {
+      toReturn("concept_description") = ujson.Null
+    }
+
+    if (grounding.score.isDefined) {
+      toReturn("score") = grounding.score.get
+    } else {
+      toReturn("score") = ujson.Null
+    }
+
+    toReturn//.toString()
+
+  }
 
   def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
-    ujson.Obj(
+    val toReturn = ujson.Obj(
       "uid" -> glv.id,
       "content" -> glv.identifier,
-      "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)
-    ).toString()
+      "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)//,
+//      "groundings" -> groundings
+    )
+
+    if (glv.groundings.isDefined) {
+      toReturn("groundings") = glv.groundings.get.map(o => groundingToJson(o))
+    } else {
+      toReturn("groundings") = ujson.Null
+    }
+
+    toReturn.toString()
   }
 
   def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
