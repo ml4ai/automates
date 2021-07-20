@@ -31,7 +31,7 @@ mwapi:gsrlimit "max".
     SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
 }}
 order by strlen(str(?label))
-LIMIT 20
+LIMIT 30
 """
 r = requests.get(url, params = {'format': 'json', 'query': query})
 data = r.json()

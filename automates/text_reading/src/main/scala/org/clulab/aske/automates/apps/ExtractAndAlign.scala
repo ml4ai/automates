@@ -1,13 +1,15 @@
 package org.clulab.aske.automates.apps
 
+import ai.lum.common.ConfigFactory
+
 import java.io.{File, PrintWriter}
 import java.util.UUID
 import org.clulab.utils.TextUtils._
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config}
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
-import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
+import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler}
 import org.clulab.aske.automates.grfn.GrFNParser.mkHypothesis
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
@@ -16,12 +18,14 @@ import org.clulab.odin.{Attachment, Mention}
 import org.clulab.utils.{AlignmentJsonUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding.sparqlResult
+import org.clulab.grounding.{SVOGrounder, sparqlResult, wikidataGrounder}
 import org.clulab.odin.serialization.json.JSONSerializer
 
 import java.util.UUID.randomUUID
 import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVariable, GlobalVariable, getGlobalEqVars, getGlobalSrcVars, getSrcLinkElements, mkGlobalEqVarLinkElement, mkGlobalSrcVarLinkElement, mkGlobalVarLinkElement}
 import org.clulab.aske.automates.attachments.AutomatesAttachment
+import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.grounding.SVOGrounder.getTerms
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -29,6 +33,8 @@ import scala.collection.mutable.ArrayBuffer
 case class AlignmentArguments(json: Value, identifierNames: Option[Seq[String]], identifierShortNames: Option[Seq[String]], commentDescriptionMentions: Option[Seq[Mention]], descriptionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], intervalParameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]])
 
 object ExtractAndAlign {
+
+
   // Link element types
   val COMMENT = "comment"
   val GLOBAL_COMMENT = "gl_comm"
@@ -117,8 +123,13 @@ object ExtractAndAlign {
   val logger = LoggerFactory.getLogger(this.getClass())
 
 
-  val config = ConfigFactory.load()
+  val config: Config = ConfigFactory.load()
   val pdfAlignDir: String = config[String]("apps.pdfalignDir")
+  val vectors: String = config[String]("alignment.w2vPath")
+  //  println("vectors: " + vectors)
+  // fixme: update vectors here
+  val w2v = new Word2Vec("/Users/alexeeva/Repos/automates/automates/text_reading/src/main/resources/vectors.txt", None)
+  lazy val grounder = wikidataGrounder
 
   def groundMentions(
                       grfn: Value,
@@ -225,9 +236,23 @@ object ExtractAndAlign {
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
       val identifier = gr._1//AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap); for now, don't convert: text vars are already symbols and comments shouldnt be converted except for during alignment
+      println("IDENTIFIER: " + identifier)
+
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
       val textFromAllDescrs = gr._2.map(m => m.arguments("description").head.text).distinct
-      val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs)
+      val terms = gr._2.flatMap(g => getTerms(g)).distinct
+      for (t <- terms) println("->" + t)
+      val groundings = grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, 3)
+      if (groundings.nonEmpty) {
+        for (gr <- groundings.get) {
+
+
+            println(">>" + gr)
+          }
+        }
+
+
+      val glVar = GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs, groundings)
       allGlobalVars.append(glVar)
 
     }

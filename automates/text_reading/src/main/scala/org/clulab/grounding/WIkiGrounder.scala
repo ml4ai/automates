@@ -16,7 +16,21 @@ import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.utils.FileUtils
 //todo: pass the python query file from configs
 //todo: document in wiki
-
+// todo: add wikidata id, link?, and text to global var
+// todo: return only groundings over threshold
+// but what is the threshold? longest term with wiki concept edit distance?
+// can return multiple concepts; possibly both compounds AND components; structured? compound: seq[Grounding], singleton: seq[Grounding]
+// grounding: {
+// id,
+// text,
+// link,
+// score
+//}
+// todo: results of from all terms need to be combined and top n returned - already doing it
+// todo: make a case class for groups of wiki groundings---the map is unusable - no need, just simplified what the grounding and ranking method returns
+// todo: exclude verbs from terms?
+// todo: tests for the grounder
+// todo: cache results to avoid regrounding what we already know
 
 case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
 
@@ -32,14 +46,14 @@ object WikiGrounding {
 
 
 
-
+// fixme: rename to capital letter
 object wikidataGrounder {
 
   val config: Config = ConfigFactory.load()
   val sparqlDir: String = config[String]("grounding.sparqlDir")
   val stopWords = FileUtils.loadFromOneColumnTSV("src/main/resources/stopWords.tsv")
 //  val currentDir: String = System.getProperty("user.dir")
-def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Map[String, Seq[sparqlWikiResult]]] = {
+def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Seq[sparqlWikiResult]] = {
 
   //todo: can I pass mentions here? that way can compare the whole sentence to the definition and alt labels instead of just the term list. although the terms come from elements and those are already missing mention info; can I store sentence along with the terms? maybe as the final element of the term list and then just do terms [:-1]
   // can I ground while creating global vars?
@@ -58,6 +72,8 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
       if (result.nonEmpty) {
         val lineResults = new ArrayBuffer[sparqlWikiResult]()
         val resultLines = result.split("\n")
+        println("TERM: " + term)
+        println(resultLines.mkString("\n"))
         for (line <- resultLines) {
 //          println("line: "+ line)
           val splitLine = line.trim().split("\t")
@@ -72,9 +88,9 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
           val altLabel = if (splitLine.length > 4) Some(splitLine(4)) else None
 //          println("alt label: "+ altLabel)
           val textWordList = (sentence ++ term_list ++ List(variable)).distinct.filter(w => !stopWords.contains(w))
-//          println("text: " + textWordList.mkString("::"))
+          println("text: " + textWordList.mkString("::"))
           val wikidataWordList = conceptDescription.getOrElse("").split(" ") ++ altLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ").filter(_.length > 0) :+ conceptLabel.toLowerCase()
-//          println("wiki: " + wikidataWordList.mkString("::"))
+          println("wiki: " + wikidataWordList.mkString("::"))
 
 
 //          val score = 1 - 1/(editDistanceNormalized(conceptLabel, term) + w2v.avgSimilarity(textWordList,  wikidataWordList)+ wordOverlap(textWordList, wikidataWordList) + 1)
@@ -84,10 +100,10 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
           //    val wikiGroundings = grounder.groundTermsToWikidataRanked("Cr", Seq("crop"), sent.sentences.head.words, w2v, 10).getOrElse("No groundings")
           val score = editDistanceNormalized(conceptLabel, term) + editDistanceNormalized(textWordList.mkString(" "),  wikidataWordList.mkString(" ")) + w2v.maxSimilarity(textWordList,  wikidataWordList) + wordOverlap(textWordList, wikidataWordList)
 //          val score = w2v.avgSimilarity(textWordList,  wikidataWordList)
-//          println("score: " + score)
-//          print("score components: " + editDistanceNormalized(conceptLabel, term) + " " + editDistanceNormalized(textWordList.mkString(" "),  wikidataWordList.mkString(" ")) + " " + w2v.avgSimilarity(textWordList,  wikidataWordList) + " "+ w2v.maxSimilarity(textWordList,  wikidataWordList) + " " + wordOverlap(textWordList, wikidataWordList)  + "\n")
+          println("score: " + score)
+          print("score components: " + editDistanceNormalized(conceptLabel, term) + " " + editDistanceNormalized(textWordList.mkString(" "),  wikidataWordList.mkString(" ")) + " " + w2v.avgSimilarity(textWordList,  wikidataWordList) + " "+ w2v.maxSimilarity(textWordList,  wikidataWordList) + " " + wordOverlap(textWordList, wikidataWordList)  + "\n")
           val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, Some(score), "wikidata")
-//          println("line result: ", lineResult)
+          println("line result: ", lineResult)
           lineResults += lineResult
 
         }
@@ -110,13 +126,13 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
 
       } else println("Result empty")
-      println("allSparqlWikiResults inside the loop : " + allSparqlWikiResults)
+      println("\nallSparqlWikiResults inside the loop : " + allSparqlWikiResults + "\n")
 
       resultsFromAllTerms ++= allSparqlWikiResults
 
     }
 
-    Some(Map(variable -> getTopKWiki(resultsFromAllTerms.toList.distinct.sortBy(_.score).reverse, k)))
+    Some(getTopKWiki(resultsFromAllTerms.toList.distinct.sortBy(_.score).reverse, k))
 
 
   } else None

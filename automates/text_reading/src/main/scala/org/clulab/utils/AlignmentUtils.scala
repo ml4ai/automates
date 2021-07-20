@@ -8,7 +8,7 @@ import org.clulab.aske.automates.apps.{AlignmentArguments, AlignmentBaseline, Au
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.grounding.sparqlResult
+import org.clulab.grounding.{sparqlResult, sparqlWikiResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.processors.Document
 import ujson.{Obj, Value}
@@ -22,7 +22,7 @@ object AlignmentJsonUtils {
   /**stores methods that are specific to processing json with alignment components;
     * other related methods are in GrFNParser*/
 
-  case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDescrs: Seq[String])
+  case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDescrs: Seq[String], groundings: Option[Seq[sparqlWikiResult]])
 
   case class GlobalEquationVariable(id: String, identifier: String, eqVarObjStrings: Seq[String])
 

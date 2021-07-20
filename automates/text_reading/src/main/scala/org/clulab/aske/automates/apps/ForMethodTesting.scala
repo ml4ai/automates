@@ -24,52 +24,6 @@ object ForMethodTesting {
     val w2v = new Word2Vec("/Users/alexeeva/Repos/automates/automates/text_reading/src/main/resources/vectors.txt", None)
 
 
-
-    def runSparqlQuery(term: String, scriptDir: String): String = {
-      //todo: currently, the sparql query returns up to 9 results to avoid overloading the server; this is currently defined
-      //in the query in sparqlWrapper.py, but should be passed as a var.
-      val command = Seq("python", s"$sparqlDir/sparqlWikiWrapper.py", term)
-      val process = Process(command, new File(s"$scriptDir"))
-      process.!!
-    }
-
-    def groundTerms(terms: Seq[String]): Seq[sparqlResult] = {
-      val resultsFromAllTerms = new ArrayBuffer[sparqlResult]()
-      for (word <- terms) {
-        val result = runSparqlQuery(word, sparqlDir)
-
-        if (result.nonEmpty) {
-          //each line in the result is a separate entry returned by the query:
-          val resultLines = result.split("\n")
-          //represent each returned entry/line as a sparqlResult and sort those by edit distance score (lower score is better)
-
-          val sparqlResults = resultLines.map(rl => new sparqlResult(rl.split("\t")(0).trim(), rl.split("\t")(1).trim(), rl.split("\t")(2).trim(), Some(editDistanceNormalized(rl.split("\t")(1).trim(), word)), "SVO")).sortBy(sr => sr.score).reverse
-
-          for (sr <- sparqlResults) resultsFromAllTerms += sr
-        }
-      }
-      resultsFromAllTerms
-    }
-
-
-    def groundVarTermsToSVO(variable: String, terms: Seq[String], k: Int):  Option[Map[String, Seq[sparqlResult]]] = {
-      // ground terms from one variable
-      println(s"grounding variable $variable")
-
-
-      if (terms.nonEmpty) {
-        val resultsFromAllTerms = groundTerms(terms)
-        val svoGroundings = rankAndReturnSVOGroundings(variable, k, resultsFromAllTerms)
-        //      println(s"svo groundings: $svoGroundings")
-        if (svoGroundings.isDefined) {
-          return svoGroundings
-        } else None
-
-
-
-      } else None
-    }
-
 //    val grounded = groundTerms(Seq("crop"))
 //    for (g <- grounded) println("->" + g)
 
