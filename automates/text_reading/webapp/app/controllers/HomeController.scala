@@ -13,7 +13,8 @@ import org.clulab.aske.automates.attachments.MentionLocationAttachment
 import org.clulab.aske.automates.data.CosmosJsonDataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
-import org.clulab.grounding.SVOGrounder
+import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
+import org.clulab.grounding.{SVOGrounder, wikidataGrounder}
 import org.clulab.odin.serialization.json.JSONSerializer
 import upickle.default._
 
@@ -21,6 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 import ujson.json4s.Json4sJson
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.utils.AlignmentJsonUtils.SeqOfGlobalVariables
 import org.clulab.utils.{AlignmentJsonUtils, DisplayUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.json4s
@@ -92,9 +94,34 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     //    val grfnFile = new File(grfnPath)
     //    val grfn = ujson.read(grfnFile.readString())
     //    val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", grfnPath)
-    val result = SVOGrounder.mentionsToGroundingsJson(defMentions,k)   //slice for debugging to avoid overloading the server: defMentions.slice(0,10), k)
+    val result = SVOGrounder.mentionsToGroundingsJson(defMentions,k)
     Ok(result).as(JSON)
   }
+
+  // -------------------------------------------
+  //      API entry points for WikidataGrounder
+  // -------------------------------------------
+
+  def groundMentionsToWikidata: Action[AnyContent] = Action { request =>
+
+    // writes a json file with groundings associated with identifier strings
+
+    val data = request.body.asJson.get.toString()
+    println("DATA: " + data)
+    val json = ujson.read(data)
+
+      val mentionsPath = json("mentions").str
+      val mentionsFile = new File(mentionsPath)
+
+      val ujsonOfMenFile = ujson.read(mentionsFile)
+      val defMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile).filter(m => m.label contains "Description")
+      val glVars = wikidataGrounder.mentionsToGlobalVarsWithWikidataGroundings(defMentions)
+
+
+      Ok(glVars).as(JSON)
+
+  }
+
 
   def groundStringToSVO: Action[AnyContent] = Action { request =>
     val string = request.body.asText.get

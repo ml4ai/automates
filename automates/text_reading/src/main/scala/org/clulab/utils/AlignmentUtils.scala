@@ -13,6 +13,8 @@ import org.clulab.odin.serialization.json.JSONSerializer
 import org.clulab.processors.Document
 import ujson.{Obj, Value}
 import ujson.json4s._
+import upickle.default.macroRW
+import upickle.default.{ReadWriter, macroRW}
 
 import java.util.UUID.randomUUID
 import scala.collection.mutable.ArrayBuffer
@@ -23,6 +25,16 @@ object AlignmentJsonUtils {
     * other related methods are in GrFNParser*/
 
   case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDescrs: Seq[String], groundings: Option[Seq[sparqlWikiResult]])
+
+  object GlobalVariable {
+    implicit val rw: ReadWriter[GlobalVariable] = macroRW
+  }
+
+  case class SeqOfGlobalVariables(globalVars: Seq[GlobalVariable])
+
+  object SeqOfGlobalVariables {
+    implicit val rw: ReadWriter[SeqOfGlobalVariables] = macroRW
+  }
 
   case class GlobalEquationVariable(id: String, identifier: String, eqVarObjStrings: Seq[String])
 

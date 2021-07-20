@@ -11,11 +11,16 @@ import scala.sys.process.Process
 import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
+import org.clulab.aske.automates.apps.ExtractAndAlign
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.grounding.SVOGrounder.groundDescriptionsToSVO
+import org.clulab.utils.AlignmentJsonUtils.SeqOfGlobalVariables
 import org.clulab.utils.FileUtils
 // get a serializer for groundings
 // have option to load previously stored groundings
+// todo: how to write a query that will return the closest string, e.g., time for time
+// todo: is the query not deterministic? time was time one time but then that one disappeared
 //todo: pass the python query file from configs
 //todo: document in wiki
 // todo: add wikidata id, link?, and text to global var
@@ -41,12 +46,16 @@ object sparqlWikiResult {
 
 }
 
-case class WikiGrounding(variable: String, groundings: Seq[sparqlResult])
+case class WikiGrounding(variable: String, groundings: Seq[sparqlWikiResult])
 object WikiGrounding {
   implicit val rw: ReadWriter[WikiGrounding] = macroRW
 }
 
+case class SeqOfWikiGrounding(groundings: Seq[WikiGrounding])
 
+object SeqOfWikiGrounding {
+  implicit val rw: ReadWriter[SeqOfWikiGrounding] = macroRW
+}
 
 // fixme: rename to capital letter
 object wikidataGrounder {
@@ -179,6 +188,14 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
   def wordOverlap(list1: Seq[String], list2: Seq[String]): Double = {
     list1.union(list2).length/(list1 ++ list2).length
+  }
+
+
+  /** Grounding a sequence of mentions and return a pretty-printable json string*/
+  def mentionsToGlobalVarsWithWikidataGroundings(mentions: Seq[Mention]): String = {
+    val globalVars = ExtractAndAlign.getGlobalVars(mentions)
+    val groundings = SeqOfWikiGrounding(globalVars.map(gv => WikiGrounding(gv.identifier, gv.groundings.getOrElse(Seq.empty))))
+    write(groundings, indent = 4)
   }
 
 }

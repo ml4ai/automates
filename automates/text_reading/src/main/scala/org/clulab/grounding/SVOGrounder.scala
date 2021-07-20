@@ -83,6 +83,7 @@ object SVOGrounder {
     write(seqOfGroundings, indent = 4)
   }
 
+
   /** produces svo groundings for text_var link elements*/
   def groundHypothesesToSVO(hypotheses: Seq[ujson.Obj], k: Int): Option[Map[String, Seq[sparqlResult]]] = {
     val textVarLinkElements = new ArrayBuffer[ujson.Value]()
