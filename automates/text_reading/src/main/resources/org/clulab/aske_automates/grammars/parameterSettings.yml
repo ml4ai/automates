@@ -246,3 +246,5 @@ rules:
     example: "We expect the time T of 5-10 days"
     pattern: |
       (@variable:Identifier | @variable:Phrase) [word="of"] @value:Value (?=@unit:Unit)
+
+

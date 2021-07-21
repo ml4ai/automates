@@ -51,6 +51,27 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
+  // SuperMaaS papers tests
+  val t1b = "Vernalisation is simulated from daily average crown temperature and daily maximum and minimum temperatures using the original CERES can occur if daily maximum temperature is above 30 o C."
+  failingTest should s"extract the parameter setting(s) from t1b: ${t1b}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "daily maximum temperature" -> Seq("30", "")
+    )
+    val mentions = extractMentions(t1b)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val t2b = "The duration of grain filling ( tt_startgf_to_mat ) is cultivar specific and usually lies between 500 and 800 o C days ."
+  failingTest should s"extract the parameter setting(s) from t2b: ${t2b}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "duration of grain filling" -> Seq("500", "800")
+    )
+    val mentions = extractMentions(t2b)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+
+
 
   //
 //  // Tests from paper: 2005-THE ASCE STANDARDIZED REFERENCE EVAPOTRANSPIRATION EQUATION
@@ -66,4 +87,12 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
 //  }
 
 
+  // supermaas test todo:
+//  It is assumed that leaf expansion growth is reduced when the supply / demand ratio for water is below 1.1 and stops when supply / demand ratio reaches 0.1 .
+  // The current model specifies sla_max as varying from 27 000 to 22000 mm 2 g -1 t o constrain daily leaf area increase where carbon is limiting .
+  //This proportion ( ratio_root_shoot ) is specified for each growth stage , and varies from 1.0 at emergence , to 0.09 at flowering .
+//  Senescence due to frost commences when temperatures decrease below -5 o C.
+  //Above an LAI of 4.0 light competition causes leaf area to be lost .
+//  Regrowth in ensured if the parameter min_tpla is set to a value greater than zero .
+//  The kl factor is empirically derived , incorporating both plant and soil factors which limit rate of water uptake - it represents the fraction of available soil water that can potentially be taken up on that day from that layer , and values typically vary between 0.01 for deep layers with low root length densities to 0.10 for surface layers with high root length densities do layer = 1 , deepest_layer ( do loop to calculate available water for all layers ) sw_avail = sw ( layer ) - ll = sw_avail * kl ( layer ) Soil water demand is calculated as in the ' biomass accumulation ' section above where potential biomass production is a function of radiation interception and rue .
 }

@@ -87,3 +87,8 @@ class TestUnits extends ExtractionTest {
 
 
 }
+
+//supermaas papers
+//todo: add test "The phase is comprised of an initial period of fixed thermal time during which shoot elongation is slow ( the \" lag \" phase ) and a linear period , where the rate of shoot elongation towards the soil surface is linearly related to air temperature ( measured in o Cd mm -1 ) ."
+// Figure 2 : Performance of the fababean module ( observed versus simulated grain yield in g / m2 ) against test datasets reported by Turpin et al. ( 2003 ) .
+// Maximum specific leaf area ( sla_max ) defines the maximum leaf area ( m 2 ) that can be expanded per gram of biomass .

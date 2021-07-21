@@ -795,6 +795,15 @@ class TestDescriptions extends ExtractionTest {
   }
 
 
+  // SuperMaaS tests
+
+  val u1a = "the daily herbage harvest (grazed) is 400 kg DM/ha."
+  failingTest should s"find NO descriptions from u1a: ${u1a}" taggedAs(Somebody) in {
+    val desired = Seq.empty[(String, Seq[String])]
+    val mentions = extractMentions(u1a)
+    testDescriptionEvent(mentions, desired)
+  }
+
   // this is a test based on a real, not well-processed document, so some symbols don't make sense; the point of the test, though, is to prevent incorrect copy-with-arg-ing or grouping of mentions---each descr mention in this document should be contained within one sentence
   val multiSent1 = "The exponent b controls the shape of the demand curve, and can be interpreted as a short-term price elasticity of world market demand. We investigate two different versions of the model: One (called FixCons, for ﬁxed consumption) in which is prescribed to match ﬁnal consumption Qout observed annual consumption; and one (called FlexCons, for ﬂexible consumption) in which annual deviations from the observed long-term consumption trend are determined within the model based on simulated prices, according to ð Þed ð7Þ QoutðtÞ ¼ Qout;refðtÞ⋅ PðtÞ / PaveðtÞ."
   // alpha is not reached with any rule because of lambda/c
@@ -802,4 +811,6 @@ class TestDescriptions extends ExtractionTest {
     val descrMentions = extractMentions(multiSent1).filter(_.label contains "Description")
     withinOneSentenceTest(descrMentions)
   }
+
+
 }
