@@ -56,12 +56,21 @@ def to_table(csv_table):
     return pd.DataFrame(new_table, columns=col_names, index=row_names)
 
 
-def pd_tables(sa_obj, compute_S2=True):
+def pd_tables(sa_obj, compute_S2):
+    #     json_file = file
+
+    #     sa_obj = {}
+    #     with open(json_file) as f:
+    #         sa_obj = json.load(f)
+
     outputs = []
     inputs = []
 
-    for v in sa_obj["output_variables"]:
-        outputs.append(v["variable_name"])
+    #     for v in sa_obj["output_variables"]:
+    #         outputs.append(v["variable_name"])
+
+    for i in range(len(sa_obj["sensitivity_indices"])):
+        outputs.append(f"v{i + 1}")
 
     for v in sa_obj["input_variables"]:
         identifier = v["variable_name"]
@@ -77,10 +86,8 @@ def pd_tables(sa_obj, compute_S2=True):
         si = sa_obj['sensitivity_indices'][idx]
         table[idx + 1][0] = outputs[idx]
         for i in range(len(si['S1'])):
-            S1_val = "--" if si['S1'][i] is None or math.isnan(si['S1'][i]) else str(si['S1'][i]).split(".")[0] + "." + \
-                                                                                 str(si['S1'][i]).split(".")[1][:3]
-            S1_conf = "--" if si['S1_conf'][i] is None or math.isnan(si['S1_conf'][i]) else \
-            str(si['S1_conf'][i]).split(".")[0] + "." + str(si['S1_conf'][i]).split(".")[1][:3]
+            S1_val = "--" if si['S1'][i] is None or math.isnan(si['S1'][i]) else round(si['S1'][i], 3)
+            S1_conf = "--" if si['S1_conf'][i] is None or math.isnan(si['S1_conf'][i]) else round(si['S1_conf'][i], 3)
 
             table[idx + 1][i + 1] = f"{S1_val} +/- {S1_conf}"
 
@@ -94,10 +101,8 @@ def pd_tables(sa_obj, compute_S2=True):
         si = sa_obj['sensitivity_indices'][idx]
         st_table[idx + 1][0] = outputs[idx]
         for i in range(len(si['ST'])):
-            ST_val = "--" if si['ST'][i] is None or math.isnan(si['ST'][i]) else str(si['ST'][i]).split(".")[0] + "." + \
-                                                                                 str(si['ST'][i]).split(".")[1][:3]
-            ST_conf = "--" if si['ST_conf'][i] is None or math.isnan(si['ST_conf'][i]) else \
-            str(si['ST_conf'][i]).split(".")[0] + "." + str(si['ST_conf'][i]).split(".")[1][:3]
+            ST_val = "--" if si['ST'][i] is None or math.isnan(si['ST'][i]) else round(si['ST'][i], 3)
+            ST_conf = "--" if si['ST_conf'][i] is None or math.isnan(si['ST_conf'][i]) else round(si['ST_conf'][i], 3)
 
             st_table[idx + 1][i + 1] = f"{ST_val} +/- {ST_conf}"
 
@@ -119,12 +124,9 @@ def pd_tables(sa_obj, compute_S2=True):
             s2_trimmed = [outputs[idx]]
             for i in range(n_inputs):
                 for j in range(i + 1, n_inputs):
-                    s2_val = "--" if s2_raw[i][j] is None or math.isnan(s2_raw[i][j]) else str(s2_raw[i][j]).split(".")[
-                                                                                               0] + "." + \
-                                                                                           str(s2_raw[i][j]).split(".")[
-                                                                                               1][:3]
-                    s2_conf = "--" if s2_raw_conf[i][j] is None or math.isnan(s2_raw_conf[i][j]) else \
-                    str(s2_raw_conf[i][j]).split(".")[0] + "." + str(s2_raw_conf[i][j]).split(".")[1][:3]
+                    s2_val = "--" if s2_raw[i][j] is None or math.isnan(s2_raw[i][j]) else round(s2_raw[i][j], 3)
+                    s2_conf = "--" if s2_raw_conf[i][j] is None or math.isnan(s2_raw_conf[i][j]) else round(
+                        s2_raw_conf[i][j], 3)
                     s2_trimmed.append(f"{s2_val} +/- {s2_conf}")
             s2_table[idx + 1] = s2_trimmed
         return (to_table(table), to_table(s2_table), to_table(st_table))
