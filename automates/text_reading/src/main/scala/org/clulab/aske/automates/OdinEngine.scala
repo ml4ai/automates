@@ -86,8 +86,8 @@ class OdinEngine(
 
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other) ++
-      untangled)).toVector
+    loadableAttributes.actions.replaceWithLongerValue(loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other) ++
+      untangled))).toVector
 
   }
 

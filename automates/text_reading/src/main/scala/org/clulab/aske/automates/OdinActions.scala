@@ -8,7 +8,7 @@ import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
@@ -90,6 +90,30 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     toReturn ++ other
   }
+
+  def replaceWithLongerValue(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    // group values by sentence to avoid replacing a value from one sent with a longer value from a different one
+    val allValueMentionsBySent = mentions.filter(_.label == "Value").groupBy(_.sentence)
+    val (mentionsWithValues, other) = mentions.partition(m => m.arguments.contains("value"))// for now, if there are two vars, then both would be either identifiers or not identifiers, so can just check the first one
+    for (m <- mentionsWithValues) {
+      val newValues = new ArrayBuffer[Mention]()
+      for (valArg <- m.arguments("value")) {
+        val overlappingMention = findMentionWithOverlappingInterval(valArg.tokenInterval, allValueMentionsBySent(m.sentence))
+        if (overlappingMention.nonEmpty) {
+          newValues.append(overlappingMention.get)
+        }
+      }
+      if (newValues.nonEmpty) {
+        // construct a new mention with the new identifiers
+        val newArgs = m.arguments.filter(_._1 != "value") ++ Map("value" -> newValues)
+        val newMen = copyWithArgs(m, newArgs)
+        toReturn.append(newMen)
+      }
+    }
+    toReturn ++ other
+  }
+
 
   def keepWithGivenArgs(mentions: Seq[Mention], argTypes: Seq[String]): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
@@ -215,11 +239,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
-      val newArgs = mutable.Map[String, Seq[Mention]]()
-      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
+      // assume there's only one arg of each type
+      val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
+      // takes care of accidental arg overlap
+      if (tokenIntervals.distinct.length == tokenIntervals.length) {
+//        val newArgs = mutable.Map[String, Seq[Mention]]()
+        val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
 
-      val att = new UnitAttachment(attachedTo, "ParamSetAtt")
-      newMentions.append(m.withAttachment(att))
+        val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
+        newMentions.append(m.withAttachment(att))
+      }
+
     }
     newMentions
   }

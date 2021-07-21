@@ -14,7 +14,7 @@ rules:
     action: ${paramSetAction}
     pattern: |
       trigger = [lemma='be']
-      variable:Phrase = <cop nsubj nmod_of | <cop nsubj
+      variable:Phrase = <cop nsubj nmod_of | <cop nsubj [!tag = "CD"]
       value:Value = <cop nummod?
 
   - name: var-equals_value
@@ -183,7 +183,7 @@ rules:
     pattern: |
       trigger = [word=/(?i)^hard-code|set/]
       variable:Phrase = nsubj | nsubjpass
-      value:Value = /nmod_to/ nummod?
+      value:Value = /nmod_to/ nummod? | xcomp /nummod|compound/
 
 
   - name: var_taken_as
@@ -321,5 +321,14 @@ rules:
     action: ${paramSetAction}
     pattern: |
       trigger = [lemma="value"]
-      variable:Phrase = nmod_of | compound
+      variable:Phrase = nmod_of | compound | <dobj nsubj
       value:Value = <dobj advcl_to | nmod_of | <nsubj
+
+  - name: tilda_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    example: "CDN is the denitrification constant (~-0.035)."
+    action: ${paramSetAction}
+    pattern: |
+      (@variable:Phrase [!tag="CD"] ) "("? [word="~"] @value:Value ")"?

@@ -14,7 +14,8 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/values.yml"
     vars:
-      priority: 4
+      priority: 3
+      compoundPriority: 4
 
   - import: "org/clulab/aske_automates/grammars/descriptions.yml"
     vars:
