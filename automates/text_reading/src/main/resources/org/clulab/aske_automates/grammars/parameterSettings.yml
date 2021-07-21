@@ -14,7 +14,7 @@ rules:
     action: ${paramSetAction}
     pattern: |
       trigger = [lemma='be']
-      variable:Phrase = <cop nsubj
+      variable:Phrase = <cop nsubj nmod_of | <cop nsubj
       value:Value = <cop nummod?
 
   - name: var-equals_value
@@ -103,9 +103,9 @@ rules:
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
     pattern: |
       trigger = [lemma='range']
-      variable:Phrase = nsubj | <acl_to
-      valueLeastIncl:Value = nmod_from | nmod_between nummod
-      valueMostIncl:Value = nmod_from nmod | nmod_between nummod conj_and
+      variable:Phrase = nsubj | <acl_to | compound
+      valueLeastIncl:Value = nmod_from | nmod_between nummod | <nmod_of nmod_from
+      valueMostIncl:Value = nmod_from nmod | nmod_between nummod conj_and | <nmod_of nmod_from nmod
 
 
   - name: var-vary_between_symbols_interval
@@ -308,7 +308,18 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: token
-    example: "The labile P immobilization factor varies linearly from 0.01 for cLP = 0 to 0.02 for cLP = 10 and remains constant at 0.02 for cLP > 10."
+    example: "At planting time, the model takes a soil sample and applies up to 15 kg/ha of N fertilizer if needed."
     action: ${paramSetAction}
     pattern: |
       @value:Value [word=/\w*/]{,3} of @variable:Phrase
+
+  - name: value_of
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "If the parameters above are used to simulate the future spread of epidemic we obtain the value of R∞ to be 350."
+    action: ${paramSetAction}
+    pattern: |
+      trigger = [lemma="value"]
+      variable:Phrase = nmod_of | compound
+      value:Value = <dobj advcl_to | nmod_of | <nsubj
