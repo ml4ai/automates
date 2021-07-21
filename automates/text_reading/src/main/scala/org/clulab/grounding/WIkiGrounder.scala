@@ -38,6 +38,7 @@ import org.clulab.utils.FileUtils
 // todo: exclude verbs from terms?
 // todo: tests for the grounder
 // todo: cache results to avoid regrounding what we already know
+// todo: read in groundings as a map and use them while creating global vars; add path to groundings in the payload and read them during arg reading
 
 case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
 
