@@ -15,7 +15,7 @@ rules:
     pattern: |
       trigger = [lemma='be']
       variable:Phrase = <cop nsubj
-      value:Value = <cop nummod
+      value:Value = <cop nummod?
 
   - name: var-equals_value
     label: ParameterSetting
@@ -71,7 +71,7 @@ rules:
       # @trigger:Phrase "=" @Value:Value
       (@variable:Identifier|@variable:Phrase) [word="&"] [word="="] @value:Value
 
-  - name: var-vary_between
+  - name: var-vary
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
@@ -79,9 +79,9 @@ rules:
     example: "The value of Kcbmax was varied between 0.9 and 1.4"
     pattern: |
       trigger = [lemma='vary']
-      variable:Identifier = nsubjpass nmod_of
-      valueLeastIncl:Value = nmod_between
-      valueMostIncl:Value = nmod_between conj_and
+      variable:Phrase = nsubjpass nmod_of | nsubj
+      valueLeastIncl:Value = nmod_between | nmod_from
+      valueMostIncl:Value = nmod_between conj_and | nmod_from nmod
 
   - name: interval_between
     label: IntervalParameterSetting
@@ -103,7 +103,7 @@ rules:
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
     pattern: |
       trigger = [lemma='range']
-      variable:Phrase = nsubj
+      variable:Phrase = nsubj | <acl_to
       valueLeastIncl:Value = nmod_from | nmod_between nummod
       valueMostIncl:Value = nmod_from nmod | nmod_between nummod conj_and
 
@@ -162,6 +162,17 @@ rules:
       trigger = [lemma=/more|over/]
       variable:Phrase = <advmod nsubj
       valueLeastExcl:Value = <advmod [tag = "CD"]
+
+  - name: var-less_than
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "If the temperature in the second soil layer is less than 0 °C"
+    pattern: |
+      trigger = [lemma=/less/]
+      variable:Phrase = <advmod nsubj | <advmod <nummod nsubj
+      valueMostExcl:Value = <advmod [tag = "CD"]
 
   - name: var_hard-coded
     label: ParameterSetting
@@ -247,4 +258,57 @@ rules:
     pattern: |
       (@variable:Identifier | @variable:Phrase) [word="of"] @value:Value (?=@unit:Unit)
 
+  - name: var_stay_around_to
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "most of the daily new number of confirmed cases from the community stayed around 15 to 25"
+    pattern: |
+      trigger = [lemma='stay']
+      variable:Phrase = nsubj
+      valueLeastIncl:Value = dobj compound
+      valueMostIncl:Value = dobj
 
+  - name: var-assigned
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "the curve number is assigned a value of 98 regardless of the soil water content."
+    action: ${paramSetAction}
+    pattern: |
+      trigger = [lemma=/assign|assume/]
+      variable:Phrase = nsubjpass
+      value:Value = dobj nmod_of | xcomp nummod
+
+
+  - name: var_lower_limit
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "most of the daily new number of confirmed cases from the community stayed around 15 to 25"
+    pattern: |
+      trigger = (?<="lower") [word="limit"]
+      variable:Phrase = nmod_of
+      valueLeastIncl:Value = <nsubj
+
+  - name: var-constant
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "The labile P immobilization factor varies linearly from 0.01 for cLP = 0 to 0.02 for cLP = 10 and remains constant at 0.02 for cLP > 10."
+    action: ${paramSetAction}
+    pattern: |
+      trigger = [lemma="constant"]
+      variable:Phrase = <xcomp nsubj
+      value:Value = <xcomp nmod_at
+
+  - name: value_var
+    label: ParameterSetting
+    priority: ${priority}
+    type: token
+    example: "The labile P immobilization factor varies linearly from 0.01 for cLP = 0 to 0.02 for cLP = 10 and remains constant at 0.02 for cLP > 10."
+    action: ${paramSetAction}
+    pattern: |
+      @value:Value [word=/\w*/]{,3} of @variable:Phrase
