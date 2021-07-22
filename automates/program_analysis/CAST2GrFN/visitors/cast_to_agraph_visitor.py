@@ -420,7 +420,7 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         class_init = False
         for n in self.cast.nodes[0].body:
-            if type(n) == ClassDef and n.name == node.name:
+            if isinstance(n,ClassDef) and n.name == node.name:
                 class_init = True
                 self.G.add_node(node_uid, label=node.name + " Init()")
                 break
