@@ -192,8 +192,6 @@ class SAExecutionEnvironment(object):
                     f"Error: Unable to gather inputs needed to compute dependent variable {v.name}"
                 )
 
-        pprint(known_inputs)
-
         return self.grfn(known_inputs, desired_outputs=self.outputs)
 
 
@@ -351,10 +349,8 @@ class SensitivityAnalyzer(object):
 
         outputs = execution_env(vectorized_input_samples)
 
-        pprint(outputs)
-
         def parse_output(o):
-            if len(o.shape) > 1:
+            if isinstance(o, np.ndarray) and len(o.shape) > 1:
                 return np.transpose(outputs["tma"])
             return [np.array(o)]
 
@@ -410,9 +406,7 @@ class SensitivityAnalyzer(object):
         (Y, exec_time) = cls.__execute_CG(exec_env, samples, prob_def, C, V)
 
         results = list()
-        print(len(Y))
         for y in Y:
-            print(y)
             (S, analyze_time) = cls.__run_analysis(
                 sobol.analyze,
                 prob_def,

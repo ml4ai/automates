@@ -76,7 +76,7 @@ def basic_function_def_and_assignment_cast():
     a = Assignment(left=v, right=n)
     f = FunctionDef(name="exampleFunction", func_args=[], body=[a])
     m = Module(name="ExampleModule", body=[f])
-    return CAST([m])
+    return CAST([m], cast_source_language="")
 
 
 @pytest.fixture
@@ -418,6 +418,6 @@ def test_only_extract():
 
 
 def test_unknown_cast_node():
-    c = CAST([object()])
+    c = CAST([object()], cast_source_language="")
     with pytest.raises(C2ATypeError):
         c.to_GrFN()

@@ -3,7 +3,9 @@ import subprocess
 import os
 import random
 import json
+import re
 import numpy as np
+from sys import platform 
 
 # import automates.model_assembly.networks as networks
 import automates.utils.misc as misc
@@ -19,25 +21,32 @@ GCC_TEST_DATA_DIRECTORY = "tests/data/program_analysis/GCC2GrFN"
 def cleanup():
     if os.path.exists("./ast.json"):
         os.remove("ast.json")
-    # TODO remove object files too
-    # os.remove("*.o")
 
+    for item in os.listdir("./"):
+        if item.endswith(".o"):
+            os.remove("./" + item)
 
 @pytest.fixture(scope="module", autouse=True)
 def run_before_tests(request):
-    # TODO ensure gcc plugin is compiled
-    # prepare something ahead of all tests
-    # results = subprocess.run(
-    #     [
-    #         gpp_command,
-    #         plugin_option,
-    #         "-c",
-    #         c_file,
-    #         "-o",
-    #         "/dev/null",
-    #     ]
-    # )
-    misc.rd.seed(0)
+    print("TEST")
+    # Change to the plugin dir and remove the current plugin image
+    cur_dir = os.getcwd()
+    os.chdir("automates/program_analysis/gcc_plugin/plugin/")
+    if os.path.exists("./ast_dump.so"):
+        os.remove("./ast_dump.so")
+
+    if platform == "linux" or platform == "linux2":
+        # linux, run "make linux"
+        subprocess.run(["make", "linux"],stdout=subprocess.DEVNULL)
+    elif platform == "darwin":
+        # OS X, run "make"
+        subprocess.run(["make"],stdout=subprocess.DEVNULL)
+    elif platform == "win32":
+        raise Exception("Error: Unable to run tests on windows.")
+    
+    # Return to working dir
+    os.chdir(cur_dir)
+    
     assert os.path.exists(
         "automates/program_analysis/gcc_plugin/plugin/ast_dump.so"
     ), f"Error: GCC AST dump plugin does not exist at expected location: {GCC_PLUGIN_IMAGE}"
@@ -53,6 +62,7 @@ def run_around_tests():
     # Run the test function
     yield
 
+    # clean up generated files
     cleanup()
 
 

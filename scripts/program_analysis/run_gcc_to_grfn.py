@@ -121,7 +121,7 @@ def run_gcc_pipeline():
     json.dump(cast.to_json_object(), open(f"{program_name}--CAST.json", "w+"))
 
     print("Transforming CAST into GrFN...")
-    # Set random seed to 0 for UUID generation for consistent results in 
+    # Set random seed to 0 for UUID generation for consistent results in
     # GrFN generation for tests
     misc.rd.seed(0)
     grfn = cast.to_GrFN()
@@ -154,30 +154,30 @@ def run_gcc_pipeline():
     # }
 
     # STEMP EPIC SOILT inputs
-    inputs = {
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::b::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::bcv::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::cumdpt::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dp::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dsmid::-1": [1, 1, 1, 1, 1],
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::nlayr::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::pesw::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tav::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tavg::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmax::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmin::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wetday::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wft::-1": 20,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::ww::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::-1": [1, 2, 3, 4, 5],
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::st::-1": [1, 1, 1, 1, 1],
-    }
+    # inputs = {
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::b::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::bcv::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::cumdpt::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dp::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dsmid::-1": [1, 1, 1, 1, 1],
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::nlayr::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::pesw::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tav::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tavg::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmax::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmin::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wetday::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wft::-1": 20,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::ww::-1": 1,
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::-1": [1, 2, 3, 4, 5],
+    #     "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::st::-1": [1, 1, 1, 1, 1],
+    # }
 
     # GE Simple PI controller dynamics inputs
-    # inputs = {
-    #     "GE_simple_PI_controller_dynamics::GE_simple_PI_controller_dynamics.main::integrator_state::-1": 0
-    #     # "GE_simple_PI_controller::GE_simple_PI_controller.main::integrator_state::-1": 0
-    # }
+    inputs = {
+        "GE_simple_PI_controller_dynamics::GE_simple_PI_controller_dynamics.main::integrator_state::-1": 0
+        # "GE_simple_PI_controller::GE_simple_PI_controller.main::integrator_state::-1": 0
+    }
 
     print("Executing GrFN...")
     inputs = {}

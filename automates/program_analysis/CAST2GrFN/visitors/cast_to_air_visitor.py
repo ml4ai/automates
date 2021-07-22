@@ -63,16 +63,21 @@ from automates.program_analysis.CAST2GrFN.visitors.cast_to_air_function_map impo
     get_builtin_func_info,
 )
 
+from automates.model_assembly.metadata import (
+    TypedMetadata,
+    VariableFromSource
+)
+
 def generate_from_source_metadata(from_source: bool, reason: str):
-    return {
-            "type": "from_source",
+    return TypedMetadata.from_data({
+            "type": "FROM_SOURCE",
             "provenance": {
                 "method": "PROGRAM_ANALYSIS_PIPELINE",
                 "timestamp": datetime.now()
             },
             "from_source": from_source,
             "creation_reason": reason
-        }
+        })
 
 class CASTToAIRVisitor(CASTVisitor):
     cast_nodes: typing.List[AstNode]
@@ -488,6 +493,16 @@ class CASTToAIRVisitor(CASTVisitor):
             called_func_name = node.func
         elif isinstance(node.func, Name):
             called_func_name = node.func.name
+        elif isinstance(node.func, Attribute):
+            def parse_attr(attr):
+                val_str = ""
+                if isinstance(attr.value, Attribute):
+                    val_str = parse_attr(attr.value)
+                else:
+                    val_str = attr.value.name
+                return f"{val_str}.{attr.attr.name}"
+
+            called_func_name = parse_attr(node.func)
 
         # Skip printf calls for now
         if called_func_name == "printf" or called_func_name == "print":
@@ -653,6 +668,8 @@ class CASTToAIRVisitor(CASTVisitor):
                     },
                 }
             )
+
+        self.visit_node_list_and_flatten(node.funcs)
 
         air_type_def = C2ATypeDef(
             name=name,

@@ -157,7 +157,12 @@ class VariableDefinition(GenericDefinition):
             "code_type": "identifier",
         }
         code_span_metadata = [CodeSpanReference.from_air_data(code_span_data)]
-        metadata = [TypedMetadata.from_data(mdict) for mdict in data["metadata"]] + code_span_metadata
+        metadata = (
+            []
+            if "metadata" not in data
+            else [TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
+            + code_span_metadata
+        )
         return cls(
             var_id,
             type_str,

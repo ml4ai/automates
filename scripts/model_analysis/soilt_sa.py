@@ -124,7 +124,8 @@ def gather_stemp_epic_soilt_inputs():
 def main():
 
     # N = 100000
-    N = 10000
+    # N = 10000
+    N = 10
 
     if len(sys.argv) < 2:
         raise Exception(
@@ -162,7 +163,14 @@ def main():
     print("Running sensitivity analysis...")
 
     analyzer = SensitivityAnalyzer()
-    Si_list = analyzer.Si_from_Sobol(N, grfn, bounds, inputs, outputs)
+    Si_list = analyzer.Si_from_Sobol(
+        N, 
+        grfn,
+        bounds, 
+        inputs, 
+        outputs, 
+        calc_2nd=True
+    )
 
     # for Si in Si_list:
     #     print(Si.to_dict())

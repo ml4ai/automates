@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from automates.program_analysis.CAST2GrFN.model.cast import AstNode, var
+from automates.model_assembly.metadata import BaseMetadata, MetadataType, TypedMetadata, VariableFromSource
 
 
 class C2ATypeError(TypeError):
@@ -138,7 +139,7 @@ class C2AVariable(object):
         """
         return f"{self.identifier_information.build_identifier()}::{str(self.version)}"
 
-    def add_metadata(self, data: dict):
+    def add_metadata(self, data: BaseMetadata):
         self.metadata.append(data)
 
     def to_AIR(self):
@@ -162,27 +163,28 @@ class C2AVariable(object):
 
         has_from_source_metadata = False
         for m in self.metadata:
-            has_from_source_metadata = has_from_source_metadata or m["type"] == "from_source"
+            has_from_source_metadata = (has_from_source_metadata 
+                or m.type == MetadataType.FROM_SOURCE)
         # If from_source does not exist already, then it wasnt handled by a special
         # case where we added a variable during processing, so add True from_source
         # metadata
         if not has_from_source_metadata:
-            self.add_metadata({
-                "type": "from_source",
+            self.add_metadata(TypedMetadata.from_data({
+                "type": "FROM_SOURCE",
                 "provenance": {
                     "method": "PROGRAM_ANALYSIS_PIPELINE",
                     "timestamp": datetime.now()
                 },
                 "from_source": True,
                 "creation_reason": "UNKNOWN"
-            })
+            }))
 
         return {
             "name": self.build_identifier(),
             "source_refs": [self.source_ref.to_AIR()],
             "domain": domain,
             "domain_constraint": "(and (> v -infty) (< v infty))",  # TODO
-            "metadata": self.metadata,
+            "metadata": [m.to_dict() for m in self.metadata],
         }
 
 

@@ -93,7 +93,8 @@ def test_igraph_conversion():
         4.916666666666668,
     ]
 
-    assert g.vs["label"] == expected_node_names
+    node_names_without_uids = [v.rsplit("::", 1)[0] for v in g.vs["label"]]
+    assert node_names_without_uids == expected_node_names
     assert g.vs.degree() == expected_node_degrees
     assert g.es.edge_betweenness() == expected_edge_betweenness
     os.remove(gml_file_location)

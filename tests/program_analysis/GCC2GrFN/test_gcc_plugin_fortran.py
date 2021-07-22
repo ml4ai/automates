@@ -38,6 +38,7 @@ def run_around_tests():
     cleanup()
 
 
+@pytest.mark.skip(reason="Need to implement")
 def run_gcc_plugin_with_for_file(c_file):
     gpp_command = GCC_10_BIN_DIRECTORY + "gfortran++-10.1"
     plugin_option = f"-fplugin={GCC_PLUGIN_IMAGE}"
@@ -61,5 +62,6 @@ def run_gcc_plugin_with_for_file(c_file):
 # TODO all pre-existing for2py tests
 
 
+@pytest.mark.skip(reason="Need to implement")
 def test_simple_soilt_routine():
     pass

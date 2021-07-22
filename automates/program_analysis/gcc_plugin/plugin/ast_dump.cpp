@@ -47,7 +47,7 @@
 
 /* plugin license check */
 
-int plugin_is_GPL_compatible;
+int plugin_is_GPL_compatible = 1;
 
 #define MAX_RECORD_TYPES 10000
 #define MAX_LINE_NUMBER 16000
@@ -257,9 +257,19 @@ static void dump_gimple_srcref(gimple *stmt)
 
 static void dump_decl_srcref(tree stmt)
 {
-  json_int_field("line_start", DECL_SOURCE_LINE(stmt));
-  json_int_field("col_start", DECL_SOURCE_COLUMN(stmt));
-  json_string_field("file", DECL_SOURCE_FILE(stmt));
+  int line = DECL_SOURCE_LINE(stmt);
+  int col = DECL_SOURCE_COLUMN(stmt);
+  const char *file = DECL_SOURCE_FILE(stmt);
+  json_int_field("line_start", line);
+  json_int_field("col_start", col);
+  if (file != 0)
+  {
+    json_string_field("file", file);
+  }
+  else
+  {
+    json_string_field("file", "");
+  }
 }
 
 static void dump_type(tree type);
@@ -448,9 +458,12 @@ static void dump_record_type_decl(tree type)
         json_field("type");
         dump_type(TREE_TYPE(field));
 
-        json_int_field("line_start", DECL_SOURCE_LINE(field));
-        json_int_field("col_start", DECL_SOURCE_COLUMN(field));
-        json_string_field("file", DECL_SOURCE_FILE(field));
+        if (DECL_SOURCE_LOCATION(field))
+        {
+          json_int_field("line_start", DECL_SOURCE_LINE(field));
+          json_int_field("col_start", DECL_SOURCE_COLUMN(field));
+          json_string_field("file", DECL_SOURCE_FILE(field));
+        }
 
         json_end_object();
       }
@@ -637,7 +650,10 @@ static void dump_op(tree op)
       }
       // json_int_field("offset", int_bit_position(op));
       json_int_field("size", TREE_INT_CST_LOW(DECL_SIZE(op)));
-      dump_decl_srcref(op);
+      if (DECL_SOURCE_LOCATION(op))
+      {
+        dump_decl_srcref(op);
+      }
       break;
 
     case CONST_DECL:

@@ -32,6 +32,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     VarType,
     Var,
     source_ref,
+    subscript,
 )
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast_utils import (
     is_pass_through_expr,
@@ -184,6 +185,19 @@ class GCC2CAST:
             return Assignment(left=var, right=default_val)
         return None
 
+    def parse_addr_expr(self, operand):
+        value = operand["value"]
+        val_code = value["code"]
+        # test = self.parse_operand(value)
+        if is_const_operator(val_code):
+            return get_const_value(value)
+        elif val_code == "array_ref":
+            return self.parse_array_ref_operand(value)
+        else:
+            name = value["name"]
+            name = name.replace(".", "_")
+            return Name(name=name)
+
     def parse_operand(self, operand):
         code = operand["code"]
         if code == "ssa_name":
@@ -201,28 +215,22 @@ class GCC2CAST:
             elif "id" in operand:
                 return self.variables_ids_to_expression[operand["id"]]
         elif code == "addr_expr":
-            value = operand["value"]
-            val_code = value["code"]
-            if is_const_operator(val_code):
-                return get_const_value(value)
-            elif val_code == "array_ref":
-                return self.parse_array_ref_operand(value)
-            else:
-                name = value["name"]
-                name = name.replace(".", "_")
-                return Name(name=name)
+            return self.parse_addr_expr(operand)
 
     def parse_pointer_arithmetic_expr(self, op):
         pointer = self.parse_operand(op[0])
         offset_with_type_mult = self.parse_operand(op[1])
         source_refs = [SourceRef()]
 
+        # For C/C++:
         # Offsets for pointer arithmetic will be a binary op performing
         # the multiplication of the pointer for the particular type with the
         # RHS being the actual position calculation. So, remove the
         # type multiplication part.
         # TODO does this apply for void pointers?
-        offset = offset_with_type_mult.right
+        offset = offset_with_type_mult
+        if isinstance(offset_with_type_mult, BinaryOp):
+            offset = offset_with_type_mult.right
 
         return Subscript(
             value=Name(name=pointer.name), slice=offset, source_refs=source_refs
@@ -230,17 +238,22 @@ class GCC2CAST:
 
     def parse_array_ref_operand(self, operand):
         array = operand["array"]
+        subscript_val = None
         if "name" in array:
             name = array["name"]
+            subscript_val = Name(name=name.replace(".", "_"))
         elif "pointer" in array:
             pointer = array["pointer"]
             name = pointer["name"]
-        name = name.replace(".", "_")
+            subscript_val = Name(name=name.replace(".", "_"))
+        elif array == "component_ref":
+            component = self.parse_component_ref(array)[0]
+            subscript_val = component
 
         index = operand["index"]
         index_result = self.parse_operand(index)
 
-        return Subscript(value=Name(name=name), slice=index_result)
+        return Subscript(value=subscript_val, slice=index_result)
 
     def parse_constructor(self, operand):
         type = operand["type"]
@@ -385,6 +398,8 @@ class GCC2CAST:
                 assign_value = get_builtin_func_cast(operator)
                 for arg in operands:
                     assign_value.arguments.append(self.parse_operand(arg))
+            elif operator == "addr_expr":
+                assign_value = self.parse_addr_expr(operands[0])
             else:
                 cast_op = get_cast_operator(operator)
                 ops = []

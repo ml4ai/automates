@@ -86,12 +86,14 @@ def test_Sobol():
         "PETPT::petpt::msalb::-1": [0.0, 1.0],
         "PETPT::petpt::xhlai::-1": [0.0, 20.0],
     }
+    I = {}
     petpt_grfn = GroundedFunctionNetwork.from_json(
         "tests/data/model_analysis/PT_GrFN.json"
     )
-    print(petpt_grfn.input_name_map)
+    # print(petpt_grfn.input_name_map)
     (indices, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
-        N, petpt_grfn, B, save_time=True
+        N, petpt_grfn, B, I, save_time=True
     )
 
+    print(type(timing_data))
     (sample_time_sobol, exec_time_sobol, analyze_time_sobol) = timing_data

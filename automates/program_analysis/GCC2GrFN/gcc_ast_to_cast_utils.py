@@ -84,6 +84,7 @@ def is_valid_operator(op):
         or op == "component_ref"
         or op == "mem_ref"
         or op == "pointer_plus_expr"
+        # or op == "addr_expr"
     )
 
 
@@ -143,6 +144,10 @@ def gcc_type_to_var_type(type, type_ids_to_defined_types):
         # the name.
         object_name = type_ids_to_defined_types[type["id"]].name
         return f"object${object_name}"
+    elif type_name == "union_type":
+        object_name = type_ids_to_defined_types[type["id"]].name
+    elif type_name == "enumeral_type":
+        object_name = type_ids_to_defined_types[type["id"]].name
     else:
         # TODO custom exception
         raise Exception(f"Error: Unknown gcc type {type_name}")
