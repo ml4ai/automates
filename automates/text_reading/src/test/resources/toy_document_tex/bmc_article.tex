@@ -1,0 +1,335 @@
+%% BioMed_Central_Tex_Template_v1.06
+%%                                      %
+%  bmc_article.tex            ver: 1.06 %
+%                                       %
+
+%%IMPORTANT: do not delete the first line of this template
+%%It must be present to enable the BMC Submission system to
+%%recognise this template!!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                     %%
+%%  LaTeX template for BioMed Central  %%
+%%     journal article submissions     %%
+%%                                     %%
+%%          <8 June 2012>              %%
+%%                                     %%
+%%                                     %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                 %%
+%% For instructions on how to fill out this Tex template           %%
+%% document please refer to Readme.html and the instructions for   %%
+%% authors page on the biomed central website                      %%
+%% http://www.biomedcentral.com/info/authors/                      %%
+%%                                                                 %%
+%% Please do not use \input{...} to include other tex files.       %%
+%% Submit your LaTeX manuscript as one .tex document.              %%
+%%                                                                 %%
+%% All additional figures and files should be attached             %%
+%% separately and not embedded in the \TeX\ document itself.       %%
+%%                                                                 %%
+%% BioMed Central currently use the MikTex distribution of         %%
+%% TeX for Windows) of TeX and LaTeX.  This is available from      %%
+%% http://www.miktex.org                                           %%
+%%                                                                 %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% additional documentclass options:
+%  [doublespacing]
+%  [linenumbers]   - put the line numbers on margins
+
+%%% loading packages, author definitions
+
+%\documentclass[twocolumn]{bmcart}% uncomment this for twocolumn layout and comment line below
+\documentclass{bmcart}
+
+%%% Load packages
+%\usepackage{amsthm,amsmath}
+%\RequirePackage{natbib}
+%\RequirePackage[authoryear]{natbib}% uncomment this for author-year bibliography
+%\RequirePackage{hyperref}
+\usepackage[utf8]{inputenc} %unicode support
+%\usepackage[applemac]{inputenc} %applemac support if unicode package fails
+%\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                             %%
+%%  If you wish to display your graphics for   %%
+%%  your own use using includegraphic or       %%
+%%  includegraphics, then comment out the      %%
+%%  following two lines of code.               %%
+%%  NB: These line *must* be included when     %%
+%%  submitting to BMC.                         %%
+%%  All figure files must be submitted as      %%
+%%  separate graphics through the BMC          %%
+%%  submission process, not included in the    %%
+%%  submitted article.                         %%
+%%                                             %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\def\includegraphic{}
+\def\includegraphics{}
+
+
+
+%%% Put your definitions there:
+\startlocaldefs
+\endlocaldefs
+
+
+%%% Begin ...
+\begin{document}
+
+%%% Start of article front matter
+\begin{frontmatter}
+
+\begin{fmbox}
+\dochead{Research}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the title of your article here     %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{A toy article based on "A double epidemic model for the SARS propagation and CHIME}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors here                   %%
+%%                                          %%
+%% Specify information, if available,       %%
+%% in the form:                             %%
+%%   <key>={<id1>,<id2>}                    %%
+%%   <key>=                                 %%
+%% Comment or delete the keys which are     %%
+%% not used. Repeat \author command as much %%
+%% as required.                             %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\author[
+   addressref={aff1},                   % id's of addresses, e.g. {aff1,aff2}
+   %corref={aff1},                       % id of corresponding address, if any
+   noteref={n1},                        % id's of article notes, if any
+   email={toy_email@arizona.edu}   % email address
+]{\inits{MA}\fnm{Maria} \snm{Alexeeva}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors' addresses here        %%
+%%                                          %%
+%% Repeat \address commands as much as      %%
+%% required.                                %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\address[id=aff1]{%                           % unique id
+  \orgname{Ling and ISchool}, % university, etc
+  %\street{Waterloo Road},                     %
+  %\postcode{}                                % post or zip code
+  \city{Tucson},                              % city
+  \cny{USA}                                    % country
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter short notes here                   %%
+%%                                          %%
+%% Short notes will be after addresses      %%
+%% on first page.                           %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{artnotes}
+%\note{Sample of title note}     % note to the article
+\note[id=n1]{Equal contributor} % note, connected to author
+\end{artnotes}
+
+\end{fmbox}% comment this for two column layout
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The Abstract begins here                 %%
+%%                                          %%
+%% Please refer to the Instructions for     %%
+%% authors on http://www.biomedcentral.com  %%
+%% and include the section headings         %%
+%% accordingly for your article type.       %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{abstractbox}
+
+\begin{abstract} % abstract
+	
+\parttitle{Attention}
+Some of the information in this document is not factually correct and was only included to test the functionality of the alignment component of the Automates project developed at the UArizona. A lot of the text is based on work by Ng. et al, 2003.
+
+\parttitle{Background} %if any
+An epidemic of a Severe Acute Respiratory Syndrome (SARS) caused by a new
+coronavirus has spread from the Guangdong province to the rest of China and to the world, with
+a puzzling contagion behavior. It is important both for predicting the future of the present outbreak
+and for implementing effective prophylactic measures, to identify the causes of this behavior.
+
+\parttitle{Results} %if any
+In this report, we show first that the standard Susceptible-Infected-Removed (SIR) model
+cannot account for the patterns observed in various regions where the disease spread. 
+
+\parttitle{Conclusion}
+We find that, in order to reconcile the existing data and the spread of the disease, it
+is convenient to suggest that a first milder outbreak protected against the SARS. Regions that had
+not seen the first epidemic, or that were affected simultaneously with the SARS suffered much
+more, with a very high percentage of persons affected. 
+\end{abstract}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The keywords begin here                  %%
+%%                                          %%
+%% Put each keyword in separate \kwd{}.     %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{keyword}
+\kwd{SARS}
+\kwd{SIR}
+\kwd{infection}
+\end{keyword}
+
+% MSC classifications codes, if any
+%\begin{keyword}[class=AMS]
+%\kwd[Primary ]{}
+%\kwd{}
+%\kwd[; secondary ]{}
+%\end{keyword}
+
+\end{abstractbox}
+%
+%\end{fmbox}% uncomment this for twcolumn layout
+
+\end{frontmatter}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The Main Body begins here                %%
+%%                                          %%
+%% Please refer to the instructions for     %%
+%% authors on:                              %%
+%% http://www.biomedcentral.com/info/authors%%
+%% and include the section headings         %%
+%% accordingly for your article type.       %%
+%%                                          %%
+%% See the Results and Discussion section   %%
+%% for details on how to create sub-sections%%
+%%                                          %%
+%% use \cite{...} to cite references        %%
+%%  \cite{koon} and                         %%
+%%  \cite{oreg,khar,zvai,xjon,schn,pond}    %%
+%%  \nocite{smith,marg,hunn,advi,koha,mouse}%%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%% start of article main body
+% <put your article body there>
+
+%%%%%%%%%%%%%%%%
+%% Background %%
+%%
+\section*{Content}
+Review on the standard SIR model
+Consider a disease that, after recovery, confers immunity
+(which includes deaths: dead individuals are still
+counted). We assume that there is no entry into or departure from the population. The population can then be
+divided into three distinct classes; the susceptibles, S, who
+can catch the disease; the infectives, I, who have the disease and can transmit it; and the removed class, R, namely
+those who have either had the disease, or are recovered,
+immune or isolated until recovered. In other words, the model consists of individuals who are either Susceptible (S), Infected (I), or Recovered (R). The function I, measured in individuals, first increases exponentially. 
+
+
+The relations of interest are governed by the following
+system of nonlinear ordinary differential equations:
+
+
+\begin{math}
+\frac{dS}{dt} = -r S(t) I(t)
+\end{math}
+
+
+\begin{math}
+\frac{dI}{dt} = r S(t) I(t) - a I(t)
+\end{math}
+
+\begin{math}
+\frac{dR}{dt} = a I(t)
+\end{math}
+
+\begin{math}
+\frac{dS}{dt} = -r S(t) I(t) - r_P S(t) I_P(t)
+\end{math}
+
+where r is the infection rate and a the removal rate of
+infectives. The parameters r and a characterize the propagation of the disease and can also be used as control
+parameters in order to stop the epidemic. The infection rate is measured in germs per second and ranges between 0.2 and 5.6 germs per second. Infection rate of 0.5 germs per second is considered low, and r of 65 germs per second is considered high. When r is negative, it is time to celebrate.  %\cite{koon,oreg,khar,zvai,xjon,schn,pond,smith,marg,hunn,advi,koha,mouse}
+
+
+
+
+\section{Reproduction number}
+
+There are two epidemics, one
+epidemic is SARS caused by a coronavirus virus, call it
+virus A.
+An important descriptive parameter of virus A is the basic reproduction number, or R0, measured in microbes per year. This represents the average number of people who will be infected by any given infected person. When R0 is greater than 1, it means that a disease will grow. When the basic reproduction number is between 0.5 and 1, the danger is moderate. A higher R0 implies more rapid transmission and a more rapid growth of the epidemic. 
+
+R0 is larger when the pathogen is more infectious people are infectious for longer periods of time the number susceptible people is higher. Right now, we have an R0 of 2.71 mm, but last month the basic reproduction number was 100 $m^2/year$.
+
+
+
+\section{Transmissibility}
+
+The model's parameters,
+$\beta$ and $\gamma$ , determine the severity of the epidemic.
+
+\begin{math}
+\beta = \tau \times c
+\end{math}
+
+
+which is the transmissibility $\tau$ multiplied by the average number of people exposed c. The transmissibility is the basic virulence of the pathogen. 
+
+Transmissibility is measured in millimeters.  
+For example, if we take the susceptible S = 6.8
+million people (e.g. the case of Hong Kong) and the
+infected class of I = 10 individuals, together with a = 2/3
+and r = 9.788 × 10-8, then transmissibility is set to 32 mm. But other times, $\tau$ $=$ 450 mm, for example, when a = 3 and susceptibles = 4.5 million. Currently, I is positive. 
+
+For many deterministic epidemic models, an infection can get started in a fully
+susceptible population if and only if $R0 > 1$. 
+
+
+
+%\nocite{oreg,schn,pond,smith,marg,hunn,advi,koha,mouse}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Backmatter begins here                   %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{backmatter}
+
+References
+
+Ng, Tuen Wai, Gabriel Turinici, and Antoine Danchin. "A double epidemic model for the SARS propagation." BMC Infectious Diseases 3.1 (2003): 1-16.
+
+
+\end{backmatter}
+\end{document}

@@ -3,11 +3,9 @@ package org.clulab.aske.automates.data
 import java.io.File
 
 import ai.lum.common.StringUtils._
-import org.clulab.aske.automates.apps.AlignmentBaseline
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.utils.FileUtils.getTextFromFile
 import org.clulab.aske.automates.cosmosjson._
-import scala.collection.mutable
 import scala.util.matching.Regex
 
 
@@ -68,7 +66,7 @@ class CosmosJsonDataLoader extends DataLoader {
     */
   def loadFile(f: File): Seq[String] = {
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
-    cosmosDoc.cosmosOjects.map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)
+    cosmosDoc.cosmosOjects.filter(_.cls.getOrElse("") == "Body Text").map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)
   }
   override val extension: String = "json"
 }

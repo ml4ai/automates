@@ -178,7 +178,7 @@ class ExpansionHandler() extends LazyLogging {
     // Expand on outgoing deps
     val interval2 = traverseOutgoingLocal(incomingExpanded, maxHops, maxHopLength, stateFromAvoid, entity.sentenceObj, expansionType)
 
-    val outgoingExpanded = incomingExpanded.asInstanceOf[TextBoundMention].copy(tokenInterval = interval2)
+    val outgoingExpanded = incomingExpanded.asInstanceOf[TextBoundMention].copy(tokenInterval = interval2, foundBy = entity.foundBy + "++expanded")
 //    println("\noriginal:  " + entity.text + " " + entity.labels.mkString("") + " " + entity.foundBy)
 //    println("expanded:  " + incomingExpanded.text + " " + incomingExpanded.labels.mkString("") ++ incomingExpanded.foundBy)
 
@@ -435,7 +435,7 @@ object ExpansionHandler {
     "advcl_to".r,
     "^advcl_because".r,
     "advmod".r,
-    //"amod".r,
+//    "amod".r,
     "^case".r,
     "^cc$".r,
     "ccomp".r,
@@ -443,7 +443,6 @@ object ExpansionHandler {
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
-    "nmod_at".r,
     "nmod_through".r,
     "^nmod_as".r,
     "^nmod_because".r,

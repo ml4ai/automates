@@ -7,9 +7,9 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
 
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.aske.automates.data.{DataLoader, TextRouter}
+import org.clulab.aske.automates.data.DataLoader
 import org.clulab.aske.automates.OdinEngine
-import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
+import org.clulab.utils.FileUtils
 
 import org.clulab.serialization.DocumentSerializer
 
