@@ -9,6 +9,19 @@ Once installed, from the project root run:
 `$ sbt webapp/run`
 and point a browser to `localhost:9000`
 
+## Running the shell
+
+As an alternative to the webapp, you can see the results of extraction using the shell. From the project root run:
+
+```bash
+> sh shell
+```
+or 
+```
+> sbt 'runMain org.clulab.aske.automates.apps.AutomatesShell'
+```
+and enter the text to process at the prompt to see the extracted event mentions (including semantic and syntactic heads for each) along with the tokens, part of speech tags, and syntactic dependencies for each sentence. 
+
 ## Scala project installation notes
 
 ### Mac (High Sierra 10.13.5)

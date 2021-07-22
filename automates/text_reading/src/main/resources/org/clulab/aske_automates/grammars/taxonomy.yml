@@ -3,11 +3,11 @@
       - Identifier:
         - VariableGazetteer
       - Model
-  - Measurement:
-    - Value:
-      - ValueAndUnit
-    - Unit:
-        - UnitRelation
+      - Measurement:
+        - Value:
+          - ValueAndUnit
+        - Unit:
+            - UnitRelation
 - Event:
   - Conj
   - Causal
