@@ -480,6 +480,13 @@ class ExpressionVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         new_uid = ExprAbstractNode.create_node_id()
         num_args = len(node.args) + len(node.keywords)
+        print(ast.dump(node))
+        if isinstance(node.func, ast.Attribute):
+            pass
+        elif isinstance(node.func, ast.Name):
+            pass
+        else:
+            raise TypeError(f"Unexpected func type in Call: {type(node.func)}")
         self.nodes.append(
             ExprOperatorNode(
                 new_uid,
