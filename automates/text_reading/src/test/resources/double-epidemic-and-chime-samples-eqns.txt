@@ -1,0 +1,35 @@
+\frac{dS}{dt} = -r S(t) I(t)
+\frac{dI}{dt} = r S(t) I(t) - a I(t)
+\frac{dR}{dt} = a I(t)
+\frac{dS}{dt} = -r S(t) I(t) - r_P S(t) I_P(t)
+\frac{dE}{dt} = r S(t) I(t) - b E(t)
+\frac{dI}{dt} = b E(t) - a I(t)
+\frac{dR}{dt} = a I(t)
+I_P (0) = 500000
+S(0) = 6300000
+E(0) = 100
+I(0) = 50
+r = 10.19 \times 10^{-8}
+r_P = 7.079 \times 10^{-8}
+a = 0.47
+a_P = 0.461
+b = 0.103
+I_P(0) = 10
+S(0) = 6800000
+E(0) = 100
+I(0) = 50
+r = 10.08 \times 10^{-8}
+r_P = 7.94 \times 10^{-8}
+a = 0.52
+a_P = 0.12
+b = 0.105
+S_{t+1} = S_t - \beta S_t I_t
+I_{t+1} = I_t + \beta S_t I_t - \gamma I_t
+R_{t+1} = R_t + \gamma I_t
+\beta = \tau \times c
+R_0 = \beta / \gamma
+g = 2^{1/T_d} - 1
+g = \beta S - \gamma
+\beta = (g + \gamma)
+
+

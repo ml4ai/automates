@@ -1,11 +1,7 @@
 package org.clulab.aske.automates.data
 
-import java.io.{File, PrintWriter}
-
-import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.OdinEngine
 import com.typesafe.config.{Config, ConfigFactory}
-import scala.util.matching.Regex
 
 trait Router {
   def route(text: String): OdinEngine

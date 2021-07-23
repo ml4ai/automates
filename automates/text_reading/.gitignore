@@ -63,3 +63,5 @@ scripts/*
 
 # other
 hotspot*
+*bmc_article.pdf
+*bmc_article.synctex.gz
