@@ -1,200 +1,245 @@
 {
     "nodes": [
         {
+            "name": "ExampleModule",
             "body": [
                 {
+                    "name": "ExampleClass",
                     "bases": [],
-                    "fields": [
-                        {
-                            "node_type": "Var",
-                            "type": "String",
-                            "val": "exampleClassVar"
-                        }
-                    ],
                     "funcs": [
                         {
+                            "name": "exampleClassFunction",
+                            "func_args": [
+                                {
+                                    "val": "exampleArg",
+                                    "type": "Number",
+                                    "source_refs": null,
+                                    "node_type": "Var"
+                                }
+                            ],
                             "body": [
                                 {
                                     "left": {
-                                        "node_type": "Var",
+                                        "val": "exampleVar",
                                         "type": "Number",
-                                        "val": "exampleVar"
+                                        "source_refs": null,
+                                        "node_type": "Var"
                                     },
-                                    "node_type": "Assignment",
                                     "right": {
-                                        "node_type": "UnaryOp",
                                         "op": "USub",
                                         "value": {
-                                            "left": {
-                                                "node_type": "Var",
-                                                "type": "Number",
-                                                "val": "exampleArg"
-                                            },
-                                            "node_type": "BinaryOp",
                                             "op": "Add",
+                                            "left": {
+                                                "val": "exampleArg",
+                                                "type": "Number",
+                                                "source_refs": null,
+                                                "node_type": "Var"
+                                            },
                                             "right": {
-                                                "node_type": "Number",
-                                                "number": 36.2
-                                            }
-                                        }
-                                    }
+                                                "number": 36.2,
+                                                "source_refs": null,
+                                                "node_type": "Number"
+                                            },
+                                            "source_refs": null,
+                                            "node_type": "BinaryOp"
+                                        },
+                                        "source_refs": null,
+                                        "node_type": "UnaryOp"
+                                    },
+                                    "source_refs": null,
+                                    "node_type": "Assignment"
                                 },
                                 {
-                                    "node_type": "ModelReturn",
                                     "value": {
-                                        "node_type": "String",
-                                        "string": "str"
-                                    }
+                                        "string": "str",
+                                        "source_refs": null,
+                                        "node_type": "String"
+                                    },
+                                    "source_refs": null,
+                                    "node_type": "ModelReturn"
                                 }
                             ],
-                            "func_args": [
-                                {
-                                    "node_type": "Var",
-                                    "type": "Number",
-                                    "val": "exampleArg"
-                                }
-                            ],
-                            "name": "exampleClassFunction",
+                            "source_refs": null,
                             "node_type": "FunctionDef"
                         }
                     ],
-                    "name": "ExampleClass",
+                    "fields": [
+                        {
+                            "val": "exampleClassVar",
+                            "type": "String",
+                            "source_refs": null,
+                            "node_type": "Var"
+                        }
+                    ],
+                    "source_refs": null,
                     "node_type": "ClassDef"
                 },
                 {
+                    "name": "exampleFunction",
+                    "func_args": [],
                     "body": [
                         {
                             "left": {
-                                "node_type": "Var",
+                                "val": "exampleObject",
                                 "type": "ExampleClass",
-                                "val": "exampleObject"
+                                "source_refs": null,
+                                "node_type": "Var"
                             },
-                            "node_type": "Assignment",
                             "right": {
-                                "arguments": [],
                                 "func": {
                                     "name": "ExampleClass",
+                                    "source_refs": null,
                                     "node_type": "Name"
                                 },
+                                "arguments": [],
+                                "source_refs": null,
                                 "node_type": "Call"
-                            }
+                            },
+                            "source_refs": null,
+                            "node_type": "Assignment"
                         },
                         {
+                            "expr": {
+                                "op": "Eq",
+                                "left": {
+                                    "number": 1,
+                                    "source_refs": null,
+                                    "node_type": "Number"
+                                },
+                                "right": {
+                                    "number": 1,
+                                    "source_refs": null,
+                                    "node_type": "Number"
+                                },
+                                "source_refs": null,
+                                "node_type": "BinaryOp"
+                            },
                             "body": [
                                 {
+                                    "expr": {
+                                        "op": "Eq",
+                                        "left": {
+                                            "number": 1,
+                                            "source_refs": null,
+                                            "node_type": "Number"
+                                        },
+                                        "right": {
+                                            "number": 1,
+                                            "source_refs": null,
+                                            "node_type": "Number"
+                                        },
+                                        "source_refs": null,
+                                        "node_type": "BinaryOp"
+                                    },
                                     "body": [
                                         {
+                                            "source_refs": null,
                                             "node_type": "ModelContinue"
                                         }
                                     ],
-                                    "expr": {
-                                        "left": {
-                                            "node_type": "Number",
-                                            "number": 1
-                                        },
-                                        "node_type": "BinaryOp",
-                                        "op": "Eq",
-                                        "right": {
-                                            "node_type": "Number",
-                                            "number": 1
-                                        }
-                                    },
-                                    "node_type": "ModelIf",
                                     "orelse": [
                                         {
+                                            "source_refs": null,
                                             "node_type": "ModelBreak"
                                         }
-                                    ]
+                                    ],
+                                    "source_refs": null,
+                                    "node_type": "ModelIf"
                                 },
                                 {
                                     "expr": {
+                                        "value": {
+                                            "val": "exampleObject",
+                                            "type": "ExampleClass",
+                                            "source_refs": null,
+                                            "node_type": "Var"
+                                        },
                                         "attr": {
                                             "name": "exampleClassFunction",
+                                            "source_refs": null,
                                             "node_type": "Name"
                                         },
-                                        "node_type": "Attribute",
-                                        "value": {
-                                            "node_type": "Var",
-                                            "type": "ExampleClass",
-                                            "val": "exampleObject"
-                                        }
+                                        "source_refs": null,
+                                        "node_type": "Attribute"
                                     },
+                                    "source_refs": null,
                                     "node_type": "Expr"
                                 }
                             ],
-                            "expr": {
-                                "left": {
-                                    "node_type": "Number",
-                                    "number": 1
-                                },
-                                "node_type": "BinaryOp",
-                                "op": "Eq",
-                                "right": {
-                                    "node_type": "Number",
-                                    "number": 1
-                                }
-                            },
+                            "source_refs": null,
                             "node_type": "Loop"
                         },
                         {
                             "left": {
-                                "node_type": "Var",
+                                "val": "exampleSet",
                                 "type": "Set",
-                                "val": "exampleSet"
+                                "source_refs": null,
+                                "node_type": "Var"
                             },
-                            "node_type": "Assignment",
                             "right": {
-                                "node_type": "Set",
-                                "values": []
-                            }
+                                "values": [],
+                                "source_refs": null,
+                                "node_type": "Set"
+                            },
+                            "source_refs": null,
+                            "node_type": "Assignment"
                         },
                         {
                             "left": {
-                                "node_type": "Var",
+                                "val": "exampleList",
                                 "type": "List",
-                                "val": "exampleList"
+                                "source_refs": null,
+                                "node_type": "Var"
                             },
-                            "node_type": "Assignment",
                             "right": {
-                                "node_type": "List",
-                                "values": []
-                            }
+                                "values": [],
+                                "source_refs": null,
+                                "node_type": "List"
+                            },
+                            "source_refs": null,
+                            "node_type": "Assignment"
                         },
                         {
                             "left": {
-                                "node_type": "Var",
+                                "val": "exampleDict",
                                 "type": "Dict",
-                                "val": "exampleDict"
+                                "source_refs": null,
+                                "node_type": "Var"
                             },
-                            "node_type": "Assignment",
                             "right": {
                                 "keys": [],
-                                "node_type": "Dict",
-                                "values": []
-                            }
+                                "values": [],
+                                "source_refs": null,
+                                "node_type": "Dict"
+                            },
+                            "source_refs": null,
+                            "node_type": "Assignment"
                         },
                         {
                             "expr": {
-                                "node_type": "Subscript",
-                                "slice": {
-                                    "node_type": "String",
-                                    "string": "key"
-                                },
                                 "value": {
-                                    "node_type": "Var",
+                                    "val": "exampleDict",
                                     "type": "Dict",
-                                    "val": "exampleDict"
-                                }
+                                    "source_refs": null,
+                                    "node_type": "Var"
+                                },
+                                "slice": {
+                                    "string": "key",
+                                    "source_refs": null,
+                                    "node_type": "String"
+                                },
+                                "source_refs": null,
+                                "node_type": "Subscript"
                             },
+                            "source_refs": null,
                             "node_type": "Expr"
                         }
                     ],
-                    "func_args": [],
-                    "name": "exampleFunction",
+                    "source_refs": null,
                     "node_type": "FunctionDef"
                 }
             ],
-            "name": "ExampleModule",
+            "source_refs": null,
             "node_type": "Module"
         }
     ]
