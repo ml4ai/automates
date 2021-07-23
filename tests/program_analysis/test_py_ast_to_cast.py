@@ -58,7 +58,7 @@ def run_test_case(filepath, prog_name):
     out_cast = cast.CAST([test_C])
     to_compare = out_cast.to_json_object()
 
-    raw_json = json.load(open(f"{DATA_DIR}/expected_output/{prog_name.split('.')[0]}.CAST.json","r"))
+    raw_json = json.load(open(f"{DATA_DIR}/expected_output/{prog_name.split('.')[0]}--CAST.json","r"))
 
     assert raw_json == to_compare
 
