@@ -1752,7 +1752,13 @@ class GroundedFunctionNetwork(nx.DiGraph):
             "variables": [var.to_dict() for var in self.variables],
             "functions": [func.to_dict() for func in self.lambdas],
             "subgraphs": [sgraph.to_dict() for sgraph in self.subgraphs],
-            "types": [t_def.to_dict() for t_def in self.types],
+            # TODO fix this
+            "types": [
+                t_def.to_dict()
+                for t_def in (
+                    self.types if isinstance(self.types, list) else self.types.values()
+                )
+            ],
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
