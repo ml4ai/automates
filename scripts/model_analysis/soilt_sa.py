@@ -83,13 +83,11 @@ def gather_stemp_epic_soilt_inputs():
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::nlayr::-1": 10,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tma::-1": [0, 0, 0, 0, 0],
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::ww::-1": 1,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::b::-1": 0,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::cumdpt::-1": 1,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::dp::-1": 1,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::pesw::-1": 1,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wetday::-1": 1,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::wft::-1": 20,
-        "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::ww::-1": 1,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tav::-1": 1,
         "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmin::-1": SADependentVariable(
             "stemp_epic_soilt::stemp_epic_soilt.soilt_epic::tmin::-1",
@@ -163,14 +161,7 @@ def main():
     print("Running sensitivity analysis...")
 
     analyzer = SensitivityAnalyzer()
-    Si_list = analyzer.Si_from_Sobol(
-        N, 
-        grfn,
-        bounds, 
-        inputs, 
-        outputs, 
-        calc_2nd=True
-    )
+    Si_list = analyzer.Si_from_Sobol(N, grfn, bounds, inputs, outputs, calc_2nd=True)
 
     # for Si in Si_list:
     #     print(Si.to_dict())

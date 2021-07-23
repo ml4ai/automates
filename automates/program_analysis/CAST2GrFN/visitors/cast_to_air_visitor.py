@@ -1,7 +1,7 @@
 import typing
 from functools import singledispatchmethod
 from collections.abc import Iterable
-from datetime import datetime 
+from datetime import datetime
 
 from .cast_visitor import CASTVisitor
 from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
@@ -63,21 +63,22 @@ from automates.program_analysis.CAST2GrFN.visitors.cast_to_air_function_map impo
     get_builtin_func_info,
 )
 
-from automates.model_assembly.metadata import (
-    TypedMetadata,
-    VariableFromSource
-)
+from automates.model_assembly.metadata import TypedMetadata, VariableFromSource
+
 
 def generate_from_source_metadata(from_source: bool, reason: str):
-    return TypedMetadata.from_data({
+    return TypedMetadata.from_data(
+        {
             "type": "FROM_SOURCE",
             "provenance": {
                 "method": "PROGRAM_ANALYSIS_PIPELINE",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             "from_source": from_source,
-            "creation_reason": reason
-        })
+            "creation_reason": reason,
+        }
+    )
+
 
 class CASTToAIRVisitor(CASTVisitor):
     cast_nodes: typing.List[AstNode]
@@ -130,7 +131,6 @@ class CASTToAIRVisitor(CASTVisitor):
         if node.source_refs is not None and len(node.source_refs) > 0:
             source_ref = self.retrieve_source_ref(node.source_refs[0])
 
-
         assign_lambda_list = []
         input_variables = right_res[-1].input_variables
         output_variables = list()
@@ -161,21 +161,23 @@ class CASTToAIRVisitor(CASTVisitor):
             )
             lambda_expr = f"lambda {','.join([v.get_name() for v in lambda_inputs])}: {right_res[-1].lambda_expr}"
 
-            assign_lambda_list.append(C2AExpressionLambda(
-                C2AIdentifierInformation(
+            assign_lambda_list.append(
+                C2AExpressionLambda(
+                    C2AIdentifierInformation(
+                        C2ALambdaType.ASSIGN,
+                        self.state.get_scope_stack(),
+                        self.state.current_module,
+                        C2AIdentifierType.LAMBDA,
+                    ),
+                    input_variables,
+                    output_variables,
+                    updated_variables,
                     C2ALambdaType.ASSIGN,
-                    self.state.get_scope_stack(),
-                    self.state.current_module,
-                    C2AIdentifierType.LAMBDA,
-                ),
-                input_variables,
-                output_variables,
-                updated_variables,
-                C2ALambdaType.ASSIGN,
-                source_ref,
-                lambda_expr,
-                node,
-            ))
+                    source_ref,
+                    lambda_expr,
+                    node,
+                )
+            )
 
         elif isinstance(node.left, Subscript):
             slice_result = left_res[-1]
@@ -212,29 +214,28 @@ class CASTToAIRVisitor(CASTVisitor):
                 f"{right_res[-1].lambda_expr}), {val_result.lambda_expr})[1]"
             )
 
-            assign_lambda_list.append(C2AExpressionLambda(
-                C2AIdentifierInformation(
+            assign_lambda_list.append(
+                C2AExpressionLambda(
+                    C2AIdentifierInformation(
+                        C2ALambdaType.ASSIGN,
+                        self.state.get_scope_stack(),
+                        self.state.current_module,
+                        C2AIdentifierType.LAMBDA,
+                    ),
+                    input_variables,
+                    output_variables,
+                    updated_variables,
                     C2ALambdaType.ASSIGN,
-                    self.state.get_scope_stack(),
-                    self.state.current_module,
-                    C2AIdentifierType.LAMBDA,
-                ),
-                input_variables,
-                output_variables,
-                updated_variables,
-                C2ALambdaType.ASSIGN,
-                source_ref,
-                lambda_expr,
-                node,
-            ))
+                    source_ref,
+                    lambda_expr,
+                    node,
+                )
+            )
 
         elif isinstance(node.left, Tuple):
 
             # This only works if its a call with a result var
-            right_side_var = [
-                v
-                for v in right_res[-1].input_variables
-            ][0]
+            right_side_var = [v for v in right_res[-1].input_variables][0]
             tuple_name = right_side_var.identifier_information.name
             for idx, v in enumerate(left_res[-1].input_variables):
                 self.visit(
@@ -247,21 +248,23 @@ class CASTToAIRVisitor(CASTVisitor):
                     )
                 )
 
-                assign_lambda_list.append(C2AExpressionLambda(
-                C2AIdentifierInformation(
-                    C2ALambdaType.ASSIGN,
-                    self.state.get_scope_stack(),
-                    self.state.current_module,
-                    C2AIdentifierType.LAMBDA,
-                ),
-                [right_side_var],
-                [v],
-                [],
-                C2ALambdaType.ASSIGN,
-                source_ref,
-                f"lambda {tuple_name}: {tuple_name}[{idx}]",
-                node,
-            ))
+                assign_lambda_list.append(
+                    C2AExpressionLambda(
+                        C2AIdentifierInformation(
+                            C2ALambdaType.ASSIGN,
+                            self.state.get_scope_stack(),
+                            self.state.current_module,
+                            C2AIdentifierType.LAMBDA,
+                        ),
+                        [right_side_var],
+                        [v],
+                        [],
+                        C2ALambdaType.ASSIGN,
+                        source_ref,
+                        f"lambda {tuple_name}: {tuple_name}[{idx}]",
+                        node,
+                    )
+                )
 
             # lambda_expr = (
             #     f"lambda {','.join([v.get_name() for v in lambda_inputs])}:"
@@ -389,7 +392,7 @@ class CASTToAIRVisitor(CASTVisitor):
 
     def get_op(self, op):
         op_map = {
-            "Pow": "^", #TODO
+            "Pow": "^",  # TODO
             "Mult": "*",
             "Add": "+",
             "Sub": "-",
@@ -410,7 +413,7 @@ class CASTToAIRVisitor(CASTVisitor):
             "USub": "- ",
             "And": "&&",
             "Or": "||",
-            "Mod": "%"
+            "Mod": "%",
         }
         return op_map[op] if op in op_map else None
 
@@ -425,7 +428,7 @@ class CASTToAIRVisitor(CASTVisitor):
         source_ref = C2ASourceRef(
             file=None, line_begin=None, line_end=None, col_start=None, col_end=None
         )
-        if node.source_refs != None:
+        if node.source_refs is not None:
             source_ref = self.retrieve_source_ref(node.source_refs[0])
 
         return (
@@ -494,6 +497,7 @@ class CASTToAIRVisitor(CASTVisitor):
         elif isinstance(node.func, Name):
             called_func_name = node.func.name
         elif isinstance(node.func, Attribute):
+
             def parse_attr(attr):
                 val_str = ""
                 if isinstance(attr.value, Attribute):
@@ -609,7 +613,7 @@ class CASTToAIRVisitor(CASTVisitor):
             output_vars.append(output_var)
 
         src_ref = C2ASourceRef("", None, None, None, None)
-        if node.source_refs != None and len(node.source_refs) > 0:
+        if node.source_refs is not None and len(node.source_refs) > 0:
             src_ref = self.retrieve_source_ref(node.source_refs[0])
 
         container_call_lambda = C2AContainerCallLambda(
@@ -961,7 +965,7 @@ class CASTToAIRVisitor(CASTVisitor):
             C2AIdentifierType.CONTAINER,
         )
         cond_con = self.state.find_container(self.state.get_scope_stack() + [node_name])
-        if cond_con == None:
+        if cond_con is None:
             # Create and add If/Loop container
             cond_con = None
             if condition_type == "IF":
@@ -999,7 +1003,9 @@ class CASTToAIRVisitor(CASTVisitor):
         )
         cond_assign_result = self.visit(cond_assign)
         cond_assign_lambda = cond_assign_result[-1]
-        cond_assign_lambda.output_variables[-1].add_metadata(generate_from_source_metadata(False, "CONDITION_RESULT"))
+        cond_assign_lambda.output_variables[-1].add_metadata(
+            generate_from_source_metadata(False, "CONDITION_RESULT")
+        )
         cond_assign_lambda_with_correct_type = C2AExpressionLambda(
             cond_assign_lambda.identifier_information,
             cond_assign_lambda.input_variables,
@@ -1091,7 +1097,9 @@ class CASTToAIRVisitor(CASTVisitor):
                 source_refs=expr.source_refs,
             )
             decision_assign_result = self.visit(decision_assign)[-1]
-            decision_assign_result.output_variables[-1].add_metadata(generate_from_source_metadata(False, "LOOP_EXIT_VAR"))
+            decision_assign_result.output_variables[-1].add_metadata(
+                generate_from_source_metadata(False, "LOOP_EXIT_VAR")
+            )
             # Update type of lambda to decision
             decision_assign_result = C2AExpressionLambda(
                 decision_assign_result.identifier_information,
@@ -1489,7 +1497,6 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         return NotImplemented
 
-
     @visit.register
     def _(self, node: ModelReturn):
         """
@@ -1512,11 +1519,13 @@ class CASTToAIRVisitor(CASTVisitor):
         )
         assign_res = self.visit(return_assign)
 
-        # Position -1 should be the added var holding the result of the 
+        # Position -1 should be the added var holding the result of the
         # return expression
         result_air_var = assign_res[-1].output_variables
 
-        result_air_var[-1].add_metadata(generate_from_source_metadata(False, "COMPLEX_RETURN_EXPR"))
+        result_air_var[-1].add_metadata(
+            generate_from_source_metadata(False, "COMPLEX_RETURN_EXPR")
+        )
 
         self.state.current_function.add_outputs(result_air_var)
         return assign_res
@@ -1785,7 +1794,7 @@ class CASTToAIRVisitor(CASTVisitor):
         source_ref = C2ASourceRef(
             file=None, line_begin=None, line_end=None, col_start=None, col_end=None
         )
-        if node.source_refs != None:
+        if node.source_refs is not None:
             source_ref = self.retrieve_source_ref(node.source_refs[0])
 
         return val_result[:-1] + [

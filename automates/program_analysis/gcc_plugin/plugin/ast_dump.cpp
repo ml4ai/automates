@@ -1421,11 +1421,12 @@ FILE *generate_ast_file_ptr()
   strcpy(main_input_filename_copy, main_input_filename);
 
   // Strip any path in front of file name
-  char *name, *tok = strtok(main_input_filename_copy, "/");
+  char *saveptr;
+  char *name, *tok = strtok_r(main_input_filename_copy, "/", &saveptr);
   while (tok != NULL)
   {
     name = tok;
-    tok = strtok(NULL, "/");
+    tok = strtok_r(NULL, "/", &saveptr);
   }
 
   // Strip file extension

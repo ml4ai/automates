@@ -274,15 +274,13 @@ class SensitivityAnalyzer(object):
                 raise SensitivityAnalysisExecutionError(
                     f"Error: unable to compute input sets for dependent variables '{[v.name for v in remaining_dependents]}'"
                 )
-            else:
-                newly_computable_names = [v.name for v in newly_computabe]
-                remaining_dependents = [
-                    v
-                    for v in remaining_dependents
-                    if v.name not in newly_computable_names
-                ]
-                current_input_set = current_input_set.union(set(newly_computable_names))
-                dependent_computation_order.extend(newly_computabe)
+
+            newly_computable_names = [v.name for v in newly_computabe]
+            remaining_dependents = [
+                v for v in remaining_dependents if v.name not in newly_computable_names
+            ]
+            current_input_set = current_input_set.union(set(newly_computable_names))
+            dependent_computation_order.extend(newly_computabe)
 
         return dependent_computation_order
 

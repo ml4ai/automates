@@ -737,7 +737,8 @@ class GrFNSubgraph:
                 + " in subgraph during execution."
                 + f" Expected 1 but {len(input_interfaces)} were found."
             )
-        elif len(input_interfaces) == 0:
+
+        if len(input_interfaces) == 0:
             return None
 
         return input_interfaces[0]
@@ -1197,7 +1198,7 @@ class GroundedFunctionNetwork(nx.DiGraph):
         node_to_subgraph = {n: s for s in self.subgraphs for n in s.nodes}
         self.root_subgraph(self, subgraph_to_hyper_edges, node_to_subgraph, set())
         # Return the output
-        if desired_outputs != None and len(desired_outputs) > 0:
+        if desired_outputs is not None and len(desired_outputs) > 0:
             root_var_nodes = [
                 n
                 for n, _ in self.out_degree()

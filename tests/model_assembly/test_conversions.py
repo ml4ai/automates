@@ -7,11 +7,6 @@ from automates.model_assembly.networks import (
     CausalAnalysisGraph,
 )
 
-from automates.model_assembly.networks import (
-    GroundedFunctionNetwork,
-    CausalAnalysisGraph,
-)
-
 
 def test_igraph_conversion():
     gml_filepath = "tests/data/model_assembly"

@@ -181,7 +181,7 @@ class GCC2CAST:
         )
         if "id" in v:
             self.variables_ids_to_expression[v["id"]] = default_val
-        if var != None:
+        if var is not None:
             return Assignment(left=var, right=default_val)
         return None
 
@@ -594,7 +594,7 @@ class GCC2CAST:
         body = []
         for v in var_declarations:
             res = self.parse_variable_definition(v)
-            if res != None:
+            if res is not None:
                 body.append(res)
 
         arguments = []

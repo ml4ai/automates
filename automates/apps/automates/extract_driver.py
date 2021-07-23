@@ -8,10 +8,6 @@ from automates.model_assembly.model_dynamics import extract_model_dynamics
 
 
 def extract_io_from_grfn(GrFN):
-    GrFN.inputs
-    GrFN.literal_vars
-    GrFN.outputs
-
     # TODO return variable types
 
     optional_inputs = [
