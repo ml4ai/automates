@@ -56,13 +56,13 @@ def test_conditional_non_identifiability():
     z = ["Z"]
     with pytest.raises(gm.IDANotIdentifiable):
         identifiability(y, x, g, z)
-
-
+        
+        
 def test_d_sep_true():
     g = igraph.Graph(edges=[[0, 2], [1, 2], [2, 3], [2, 4], [3, 5], [5, 6]], directed=True)
     g.vs["name"] = ["A", "B", "C", "D", "E", "F", "G"]
     assert gm.d_sep(g, ["D"], ["E"], ["C"])
-
+    
     
 def test_d_sep_false():
     g = igraph.Graph(edges=[[0, 2], [1, 2], [2, 3], [2, 4], [3, 5], [5, 6]], directed=True)
