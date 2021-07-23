@@ -6,23 +6,45 @@ rules:
   ####VALUES####
   ###Possible improvement: many of these rules can potentially take both variables and concepts as their "variable" argument; to avoid writing a separate rule for each of the two cases, we can have one rule that has concept as a variable arg, but then apply an action which reassigns the label of the argument to "Identifier" if it passes the looksLikeAnIdentifier heuristic. This could increase the number of false positives, though, so for now we will just add concepts to rules strictly based on when they appear in literature (instead of using this action flow to all rules)
 
+  - name: var-be_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "basic reproduction number was 100 m2/year"
+    action: ${paramSetAction}
+    pattern: |
+      trigger = [lemma='be']
+      variable:Phrase = <cop nsubj
+      value:Value = <cop nummod
+
   - name: var-equals_value
     label: ParameterSetting
     priority: ${priority}
     type: dependency
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    action: processParamSetting
+    action: ${paramSetAction}
     pattern: |
       trigger = [lemma='=']
       variable:Identifier = nsubj
       value:Value = dobj
+
+  - name: var-word-equals_value
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    example: "c was equal to 30 people."
+    action: ${paramSetAction}
+    pattern: |
+      trigger = [lemma='equal']
+      variable:Identifier = nsubj
+      value:Value = nmod_to nummod
 
   - name: var-equals_value2
     label: ParameterSetting
     priority: ${priority}
     type: dependency
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    action: processParamSetting
+    action: ${paramSetAction}
     pattern: |
       trigger = [lemma='=']
       variable:Identifier = <amod
@@ -33,7 +55,7 @@ rules:
     priority: ${priority}
     type: token
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    action: processParamSetting
+    action: ${paramSetAction}
     pattern: |
       (@variable:Identifier|@variable:Phrase [!tag="CD"]) (?<trigger> [word="="]) @value:Value
 
@@ -44,7 +66,7 @@ rules:
     priority: ${priority}
     type: token
     example: ""
-    action: processParamSetting
+    action: ${paramSetAction}
     pattern: |
       # @trigger:Phrase "=" @Value:Value
       (@variable:Identifier|@variable:Phrase) [word="&"] [word="="] @value:Value
@@ -53,7 +75,7 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
-    action: processParamSettingInt
+    action: ${paramIntAction}
     example: "The value of Kcbmax was varied between 0.9 and 1.4"
     pattern: |
       trigger = [lemma='vary']
@@ -61,24 +83,36 @@ rules:
       valueLeastIncl:Value = nmod_between
       valueMostIncl:Value = nmod_between conj_and
 
+  - name: interval_between
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "When the basic reproductive number is between 0.5 and 1..."
+    pattern: |
+      trigger = [lemma='between']
+      variable:Phrase = <case nsubj
+      valueLeastIncl:Value = <case
+      valueMostIncl:Value = <case conj_and
+
   - name: var_ranges
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
-    action: processParamSettingInt
+    action: ${paramIntAction}
     example: "where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance"
     pattern: |
       trigger = [lemma='range']
-      variable:Identifier = nsubj
-      valueLeastIncl:Value = nmod_from
-      valueMostIncl:Value = nmod_from nmod
+      variable:Phrase = nsubj
+      valueLeastIncl:Value = nmod_from | nmod_between nummod
+      valueMostIncl:Value = nmod_from nmod | nmod_between nummod conj_and
 
-#
+
   - name: var-vary_between_symbols_interval
     label: IntervalParameterSetting
     priority: ${priority}
     type: token
-    action: processParamSettingInt
+    action: ${paramIntAction}
     example: "Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield for 0.9 < Kcbmax < 1.15"
     pattern: |
       @valueLeastExcl:Value [word = "<"] (?<trigger> @Identifier) [word = "<"] @valueMostExcl:Value
@@ -88,7 +122,7 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
-    action: processParamSettingInt
+    action: ${paramIntAction}
     example: "but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='>']
@@ -100,30 +134,52 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: dependency
-    action: processParamSettingInt
+    action: ${paramIntAction}
     example: "but simulated yield decreased rapidly for Kcbmax < 1.15 (fig. 6a)."
     pattern: |
       trigger = [lemma='<']
       variable:Phrase = </dep|advmod/ <nummod? <dep | <advmod <nummod
       valueMostExcl:Value = </dep|advmod/ [tag = "CD"]
 
+  - name: var-greater_than
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "When R0 is greater than 1"
+    pattern: |
+      trigger = [lemma=/more|greater/]
+      variable:Phrase = nsubj
+      valueLeastExcl:Value = nmod_than [tag = "CD"]
+
+  - name: var-more_than
+    label: IntervalParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramIntAction}
+    example: "When R0 is more than 1..."
+    pattern: |
+      trigger = [lemma=/more|over/]
+      variable:Phrase = <advmod nsubj
+      valueLeastExcl:Value = <advmod [tag = "CD"]
+
   - name: var_hard-coded
     label: ParameterSetting
     priority: ${priority}
     type: dependency
-    action: processParamSetting
+    action: ${paramSetAction}
     example: "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
     pattern: |
-      trigger = [word=/(?i)^hard-coded/]
-      variable:Phrase = nsubj
-      value:Value = /nmod_to/
+      trigger = [word=/(?i)^hard-code|set/]
+      variable:Phrase = nsubj | nsubjpass
+      value:Value = /nmod_to/ nummod?
 
 
   - name: var_taken_as
     label: ParameterSetting
     priority: ${priority}
     type: dependency
-    action: processParamSetting
+    action: ${paramSetAction}
     example: "The density of water (ρw) is taken as 1.0 Mg m-3."
     pattern: |
       trigger = [word=/(?i)^taken/]
@@ -136,7 +192,7 @@ rules:
     label: IntervalParameterSetting
     priority: ${priority}
     type: token
-    action: processParamSettingInt
+    action: ${paramIntAction}
     example: "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
     pattern: |
       (?<trigger> [lemma="value"]) of @variable:Identifier from @valueLeastIncl:Value to @valueMostIncl:Value
@@ -146,7 +202,7 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: token
-    action: processParamSetting
+    action: ${paramSetAction}
     example: "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from DSSAT-CSM version 4.5 for Arizona conditions."
     pattern: |
       /(?i)with/ (an|a|the) @variable:Identifier of @value:Value
@@ -154,7 +210,7 @@ rules:
   - name: var-noun_of2
     label: ParameterSetting
     priority: ${priority}
-    action: processParamSetting
+    action: ${paramSetAction}
     example: "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed measurements to a standard height of 2.0 m"
     pattern: |
       trigger = [word = "standard" & tag = "JJ"]
@@ -165,7 +221,7 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: token
-    action: processParamSetting
+    action: ${paramSetAction}
     example: "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
     pattern: |
       (?<variable> [word = "DOY"]) @value:Value
@@ -174,7 +230,7 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: dependency
-    action: processParamSetting
+    action: ${paramSetAction}
     example: "In 2014, the authors linked the problem to a misspecification of the equation used to adjust wind speed measurements to a standard height of 2.0 m"
     pattern: |
       trigger = [word=/(?i)adjust/]
@@ -186,6 +242,7 @@ rules:
     label: ParameterSetting
     priority: ${priority}
     type: token
+    action: ${paramSetAction}
     example: "We expect the time T of 5-10 days"
     pattern: |
-      @variable:Identifier [word="of"] @value:Value (?=@unit:Unit)
+      (@variable:Identifier | @variable:Phrase) [word="of"] @value:Value (?=@unit:Unit)

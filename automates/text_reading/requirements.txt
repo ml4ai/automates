@@ -6,3 +6,4 @@ webcolors
 pdf2image
 Pillow
 pdfminer.six
+numpy
