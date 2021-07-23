@@ -12,6 +12,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Attribute,
     BinaryOp,
     BinaryOperator,
+    Boolean,
     Call,
     ClassDef,
     Dict,
@@ -28,6 +29,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Number,
     Set,
     String,
+    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
@@ -161,6 +163,14 @@ class CASTToAGraphVisitor(CASTVisitor):
         return node_uid
 
     @visit.register
+    def _(self, node: Boolean):
+        """Visits Boolean nodes, the node's UID is returned
+        so it can be used to connect nodes in the digraph"""
+        node_uid = uuid.uuid4()
+        self.G.add_node(node_uid, label=node.boolean)
+        return node_uid
+
+    @visit.register
     def _(self, node: Call):
         """Visits Call (function call) nodes. We check to see
         if we have arguments to the node and act accordingly.
@@ -231,7 +241,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         self.G.add_node(node_uid, label="Dict")
 
         for n in keys + values:
-            self.G.add_edges(node_uid, n)
+            self.G.add_edge(node_uid, n)
 
         return node_uid
 
@@ -253,6 +263,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         This node's UID is returned."""
         args = []
         body = []
+        print(node.name)
         if len(node.func_args) > 0:
             args = self.visit_list(node.func_args)
         if len(node.body) > 0:
@@ -342,7 +353,7 @@ class CASTToAGraphVisitor(CASTVisitor):
         orelse = []
         if len(node.body) > 0:
             body = self.visit_list(node.body)
-        if node.orelse is not None:
+        if len(node.orelse) > 0:
             orelse = self.visit_list(node.orelse)
 
         node_uid = uuid.uuid4()
@@ -409,7 +420,7 @@ class CASTToAGraphVisitor(CASTVisitor):
 
         class_init = False
         for n in self.cast.nodes[0].body:
-            if type(n) == ClassDef and n.name == node.name:
+            if isinstance(n,ClassDef) and n.name == node.name:
                 class_init = True
                 self.G.add_node(node_uid, label=node.name + " Init()")
                 break
