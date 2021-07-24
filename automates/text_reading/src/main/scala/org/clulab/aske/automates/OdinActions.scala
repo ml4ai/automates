@@ -995,7 +995,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val contextSameSntnce = contextMens.filter(c => c.sentence == m.sentence)
         if (contextSameSntnce.nonEmpty) {
           for (c <- contextSameSntnce) contextTokInt += c.tokenInterval
-          if (findOverlappingInterval(m.tokenInterval, contextTokInt.toList) != Interval(0,0)) {
+          if (findOverlappingInterval(m.tokenInterval, contextTokInt.toList) != None) {
             mensSelected.append(m)
           } else toReturn.append(m)
           if (mensSelected.nonEmpty) {
