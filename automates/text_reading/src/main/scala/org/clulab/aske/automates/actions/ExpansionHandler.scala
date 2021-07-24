@@ -353,7 +353,7 @@ class ExpansionHandler() extends LazyLogging {
       getNewTokenInterval(allIntervals)
     }
     else orig.tokenInterval
-  for ((argName, argPathsMap) <- orig.paths) {println("HERE: " + argName)}
+//  for ((argName, argPathsMap) <- orig.paths) {println("HERE: " + argName)}
     val paths = for {
       (argName, argPathsMap) <- orig.paths
       origPath = argPathsMap(orig.arguments(argName).head)

@@ -47,7 +47,6 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"
     vars:
-      action: contextActionFlow
       priority: 10
 
 #  - import: "org/clulab/aske_automates/grammars/template.yml"
