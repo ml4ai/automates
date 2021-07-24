@@ -32,10 +32,12 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/input_files"
-  val outputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/output_files"
+  val inputDir: String = ""
+  val outputDir: String = ""
   val inputType = config[String]("apps.inputType")
-//  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+  // if using science parse doc, uncomment next line and...
+  //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+  //..comment out this line:
   val dataLoader = new CosmosJsonDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
@@ -171,8 +173,7 @@ case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString().replace(".json", "_mentions.tsv") ))
     pw.write("filename\tsentence\tmention type\tmention text\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "Context") || (m.label matches "Function") || (m.label matches "ContextEvent"))
-
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation")) //|| (m.label matches "Context"))
     for (m <- contentMentions) {
       pw.write(new File(filename).getName() + "\t")
       pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())
