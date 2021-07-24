@@ -84,13 +84,20 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
+    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
     //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
-    val (descriptionMentions, nonDescrMens) = events.partition(_.label.contains("Description"))
+    val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
+    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+//    val allContexts = mensWithContextAttachment ++ nonContexts
+    val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
     val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
+//    val (contextEvents, other) = nonFuncMens.partition(_.label.contains("ContextEvent"))
+//    val contextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
-    val contextAttachment = loadableAttributes.actions.makeNewContextEvents(events)
-    (loadableAttributes.actions.keepLongest(other) ++ untangled ++ loadableAttributes.actions.keepLongest(combining) ++ loadableAttributes.actions.keepLongest(contextAttachment)).toVector
+//    val contextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+//    val contextAttachment= loadableAttributes.actions.contextToAttachment(newContexts ++ contextEvents)
+    (loadableAttributes.actions.keepLongest(other) ++ untangled ++ loadableAttributes.actions.keepLongest(combining)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {

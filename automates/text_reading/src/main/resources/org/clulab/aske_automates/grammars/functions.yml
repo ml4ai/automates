@@ -68,7 +68,7 @@ rules:
     example: "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
     pattern: |
       trigger = [word = "difference"]
-      input:Phrase+ = nmod_of | nmod_between (conj_and)?
+      input:Phrase+ = nmod_of [!word = "course"] | nmod_between (conj_and)?
       output:Phrase = nsubj | <nmod_from nsubjpass | <nmod_as <acl nsubj | <nsubj
       # note: if the sequence of inputs matter (if it has to be "input1 - input2"), the rule needs to be fixed.
 
@@ -144,7 +144,7 @@ rules:
     pattern: |
       trigger = [lemma = "plus"] | [lemma = "minus"]
       input:Phrase+ = <cc (conj_plus | conj_minus)?
-      output:Phrase = <cc (<dobj | <nmod_to) nsubj
+      output:Phrase = <cc (<dobj | <nmod_to) nsubj | <cc <nsubj
 
   # note: relation rules? (the relation between input and output is too vague to be denoted as "function")
 
@@ -253,16 +253,16 @@ rules:
       output:Phrase = nsubj | nsubjpass
 
 # note: this rule produces too many false positives
-#  - name: equation
-#    label: Function
-#    priority: ${priority}
-#    type: dependency
-#    action: ${action}
-#    example: "The model was used to obtain the total evaporation rate E = Es + Ep of a developing grain sorghum (Sorghum bicolor L.) canopy in central Texas"
-#    pattern: |
-#      trigger = [word = "="]
-#      input:Phrase+ = dobj | parataxis nsubjpass
-#      output:Phrase = nsubj
+  - name: equation
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The model was used to obtain the total evaporation rate E = Es + Ep of a developing grain sorghum (Sorghum bicolor L.) canopy in central Texas"
+    pattern: |
+      trigger = [word = "="]
+      input:Phrase+ = dobj [!tag = /CD/] | parataxis nsubjpass [!tag = /CD/]
+      output:Phrase = nsubj [!tag = /CD/]
 
   - name: convert_to
     label: Function
