@@ -46,7 +46,7 @@ rules:
     example: "T = daily mean air temperature [°C]. ETc = potential (expected) crop evapotranspiration in the absence of environmental or water stresses... "
     pattern: |
       trigger = [word = "="]
-      variable: Identifier = ("nmod:npmod" | <amod compound?)?
+      variable: Identifier = ("nmod:npmod" | <amod compound?)
       description: Phrase = (dobj | <amod)? [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
       #<amod results in a description where var and descr are the same entity in this example: "Because the aim of equation 8 is potential soil evaporation, Ke is obtained from equation A5 with "
       #don't add 'dep' here---too unpredictable
@@ -72,9 +72,19 @@ rules:
     action: ${action}
     pattern: |
       (?<= [word = /a|the|,/])? (?<description> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Identifier (?! [chunk = I-NP])
-#      |
-#      (?<description> [word = /.*/]) (?<variable> [entity = "B-GreekLetter"])
+      |
+      (?<= [word = /a|the|,/])? (?<description> [chunk = "I-NP" & !tag = /NNS|NNP|-LRB-|CC/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
 
+  - name: real_appos
+    label: Description
+    priority: ${priority}
+    type: dependency
+    example: "The model’s parameters, β and γ, determine the severity of the epidemic."
+    action: ${action}
+    pattern: |
+      trigger = [lemma=","]
+      description:Phrase = <punct
+      variable:Identifier = <punct appos
 
   - name: identifier_stands_for_descr
     label: Description
@@ -155,6 +165,16 @@ rules:
       description: Phrase = (/nmod_as|nmod_by|nmod_with|dobj/ nmod_of?) [!entity = "NUMBER"]
       #NB!Not good for "Crop coefficients (Kcs) are calculated for the current Penman-Monteith ET approach in DSSAT-CSM as:"
 
+  - name: denoted_descr
+    label: Description
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The crop evapotranspiration under standard conditions, denoted as ETc..."
+    pattern: |
+      trigger = [lemma=/denote/]
+      variable:Identifier = nmod_as
+      description: Phrase = <acl
 
   - name: identifier_is_defined
     label: Description
@@ -204,9 +224,9 @@ rules:
     example: "LAI is the actual leaf area index"
     action: ${action}
     pattern: |
-      trigger = (?<!"that") [lemma="be"]
+      trigger = (?<!"that") [lemma="be"] (?![word="100"])
       description:Phrase = <cop /${agents}/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = "," & !word = "which"]
-      variable:Identifier =  <cop  [!entity = /NUMBER|B-unit/ ]
+      variable:Identifier =  <cop [!entity = /NUMBER|B-unit/]
 
   - name: comma_appos_identifier
     label: Description
@@ -215,9 +235,7 @@ rules:
     action: ${action}
     example: "Susceptible individuals, S, are infected by infected individuals, I..."
     pattern: |
-      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," ([word = "denoted"] [word = "as"])? @variable:Identifier (?! [lemma = "be"]) (?! [chunk = /I-NP|B-NP/])
-      |
-      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Identifier [word = ","] (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
+      (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/])  [word = ","] @variable:Identifier [word = ","] (?! [lemma = /be|and/]) (?! [chunk = /I-NP|B-NP/])
       |
       (@description: Phrase [!entity = "NUMBER" & !word = /\(|\)|,|=|\[|\]/]) "," @variable:Identifier (?! /.*/) (?! [lemma = "be"]|[word = "and"]) (?! [chunk = /I-NP|B-NP/])
       |

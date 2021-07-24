@@ -7,33 +7,38 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/entities.yml"
     vars:
-      priority: 1
+      priority1: 1
+      priority2: 2
+      priority3: 3
+
 
   - import: "org/clulab/aske_automates/grammars/values.yml"
     vars:
-      priority: 2
+      priority: 4
 
   - import: "org/clulab/aske_automates/grammars/descriptions.yml"
     vars:
       action: descriptionActionFlow #note: there are two rules that do not use this action flow
-      priority: 3
+      priority: 5
 
   - import: "org/clulab/aske_automates/grammars/parameterSettings.yml"
     vars:
-      priority: 5
+      paramSetAction: processParamSetting
+      paramIntAction: processParamSettingInt
+      priority: 7
 
   - import: "org/clulab/aske_automates/grammars/units.yml"
     vars:
-      priority: 4
+      priority: 6
 
   - import: "org/clulab/aske_automates/grammars/unitRels.yml"
     vars:
-      priority: 6
+      priority: 8
       action: unitActionFlow
 
   - import: "org/clulab/aske_automates/grammars/model.yml"
     vars:
-      priority: 7
+      priority: 9
 
   - import: "org/clulab/aske_automates/grammars/context.yml"
     vars:
@@ -42,7 +47,6 @@ rules:
   - import: "org/clulab/aske_automates/grammars/functions.yml"
     vars:
       action: functionActionFlow
-      context: "/^advcl_/" #advcl_because here is only to check if patterns can be sent in as variables
       priority: 9
 
   - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"

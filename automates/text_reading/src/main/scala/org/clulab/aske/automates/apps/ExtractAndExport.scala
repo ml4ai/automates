@@ -8,10 +8,9 @@ import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRou
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
+import org.clulab.utils.{FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
-import org.json4s
 import org.json4s.jackson.JsonMethods._
 
 /**
@@ -76,7 +75,7 @@ object ExtractAndExport extends App {
       println(dm.text)
 //      println(dm.foundBy)
       for (arg <- dm.arguments) {
-        println(arg._1 + ": " + dm.arguments(arg._1).head.text)
+        println(arg._1 + ": " + dm.arguments(arg._1).map(_.text).mkString("||"))
       }
       if (dm.attachments.nonEmpty) {
         for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
@@ -96,7 +95,7 @@ object ExtractAndExport extends App {
       }
     }
     val unitMentions = mentions.filter(_ matches "UnitRelation")
-    println("Unit setting mentions: ")
+    println("Unit mentions: ")
     for (m <- unitMentions) {
       println("----------------")
       println(m.text)

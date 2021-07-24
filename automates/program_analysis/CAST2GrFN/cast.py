@@ -1,5 +1,7 @@
+import ast
 import json
 import typing
+import networkx as nx
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -7,6 +9,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Attribute,
     BinaryOp,
     BinaryOperator,
+    Boolean,
     Call,
     ClassDef,
     Dict,
@@ -23,6 +26,7 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
     Number,
     Set,
     String,
+    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
@@ -49,6 +53,7 @@ CAST_NODES_TYPES_LIST = [
     Attribute,
     BinaryOp,
     BinaryOperator,
+    Boolean,
     Call,
     ClassDef,
     Dict,
@@ -65,6 +70,7 @@ CAST_NODES_TYPES_LIST = [
     Number,
     Set,
     String,
+    SourceRef,
     Subscript,
     Tuple,
     UnaryOp,
@@ -101,6 +107,22 @@ class CAST(object):
             ]
         )
 
+    def to_AGraph(self):
+        G = nx.DiGraph()
+        for node in self.nodes:
+            print("node",node)
+            print("type",type(node))
+            for ast_node in ast.walk(node.body):
+                for child_node in ast_node.children:
+                    G.add_edge(ast_node,child_node)
+        A = nx.nx_agraph.to_agraph(G)
+        A.graph_attr.update(
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+        )
+        A.node_attr.update({"fontname": "Menlo"})
+        return A
+
+
     def to_GrFN(self):
         c2a_visitor = CASTToAIRVisitor(self.nodes)
         air = c2a_visitor.to_air()
@@ -125,12 +147,8 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        # TODO: fix this to send objects and metadata
-        #       (and documentation as a form of metadata)
-        air = AutoMATES_IR(
-            GenericIdentifier.from_str(
-                "@container::initial::@global::exampleFunction"
-            ),
+        grfn = GroundedFunctionNetwork.from_AIR(
+            GenericIdentifier.from_str("@container::initial::@global::main"),
             C,
             V,
             T,
@@ -144,7 +162,7 @@ class CAST(object):
     def write_cast_object(self, cast_value):
         if isinstance(cast_value, list):
             return [self.write_cast_object(val) for val in cast_value]
-        elif not isinstance(cast_value, AstNode):
+        elif not isinstance(cast_value, AstNode) and not isinstance(cast_value, SourceRef):
             return cast_value
 
         return dict(
@@ -178,7 +196,7 @@ class CAST(object):
             return [cls.parse_cast_json(item) for item in data]
         elif data is None:
             return None
-        elif isinstance(data, (float, int, str)):
+        elif isinstance(data, (float, int, str, bool)):
             # If we see a primitave type, simply return its value
             return data
 
