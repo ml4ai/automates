@@ -107,11 +107,27 @@ rules:
     action: looksLikeAnIdentifier
     example: "The density of water (ρw); R(t); IP(0)"
     pattern: |
-      [word=/\b[A-Za-z]\b|\b[A-Z][A-Z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/] ")" # note: allowed two capital letters to be in front of the paranthese
+      [word=/\b[A-Za-z]\b|\b[A-Z][A-Z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # note: excluded units from identifiers & allowed two capital letters to be in front of the paranthese.
       |
       [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
-      |
-      [word=/\b[A-Z]\b/] [word = "infinity"]
+
+  - name: compound_identifier_special_chars_expanded
+    label: Identifier
+    priority: ${priority2}
+    type: token
+    example: "e°"
+    pattern: |
+      @Identifier [word=/infinity|degrees/]
+
+  - name: compound_identifier2
+    label: Identifier
+    priority: ${priority3}
+    type: token
+    action: looksLikeAnIdentifier
+    example: "R(t)"
+    pattern: |
+      @Identifier "("? @Identifier ")"?
+
 
 #  - name: var_greek_and_latin
 #    label: Identifier
