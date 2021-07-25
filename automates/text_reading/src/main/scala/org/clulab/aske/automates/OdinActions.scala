@@ -384,6 +384,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     grouped.toMap
   }
 
+  def longestAndWithAtt(mentions: Seq[Mention]): Mention = {
+    val maxLength = mentions.maxBy(_.tokenInterval.length).tokenInterval.length
+    val (ofMaxLength, other) = mentions.partition(_.tokenInterval.length==maxLength)
+    if (ofMaxLength.exists(_.attachments.nonEmpty)) {
+      val (withAtt, other) = ofMaxLength.partition(_.attachments.nonEmpty)
+      return withAtt.head
+    } else {
+      ofMaxLength.head
+    }
+
+  }
+
   def filterOutOverlappingDescrMen(mentions: Seq[Mention]): Seq[Mention] = {
     // input is only mentions with the label ConjDescription (types 1 and 2) or Description with conjunctions
     // this is to get rid of conj descriptions that are redundant in the presence of a more complete ConjDescription
@@ -397,15 +409,23 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         for (varOverlapGroup <- groupByVarOverlap(tokOverlapGroup).values) {
           // if there are ConjDescrs among overlapping decsrs, then pick the longest conjDescr
           if (varOverlapGroup.exists(_.label.contains("ConjDescription"))) {
+
+
+
+
             // type 2 has same num of vars and descriptions (a minimum of two pairs)
             val (type2, type1) = varOverlapGroup.partition(_.label.contains("Type2"))
 
             if (type2.isEmpty) {
+              println("=======")
+              for (m <- type1) {
+                println("+++++>" + m.text + " " + m.attachments.mkString("|") + " " + m.label)
+              }
               // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
-              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescription"))//.maxBy(_.tokenInterval.length)
               toReturn.append(longestConjDescr)
             } else {
-              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescriptionType2"))//.maxBy(_.tokenInterval.length)
               toReturn.append(longestConjDescr)
             }
           } else {
@@ -500,24 +520,37 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
    */
   def untangleConj(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
+    for (m <- mentions) {
+      println("====> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label )
+    } // still has attachment
     // fixme: account for cases when one conj is not part of the extracted description
     //todo: if plural noun (eg entopies) - lemmatize?
 
     val (descrs, nondescrs) = mentions.partition(_.label.contains("Description"))
     // check if there's overlap between conjdescrs and standard descrs; if there is, drop the standard descr; add nondescrs
     val withoutOverlap = filterOutOverlappingDescrMen(descrs) ++ nondescrs
+
+    for (m <- withoutOverlap) {
+      println("=====> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label )
+    }
     // all that have conj (to be grouped further) and those with no conj
     val (withConj, withoutConj) = withoutOverlap.partition(m => hasConj(m))
 
+
+
     // descrs that were found as ConjDescriptions - that is events with multiple variables (at least partially) sharing a descriptions vs descriptions that were found with standard rule that happened to have conjunctions in their descriptions
     val (conjDescrs, standardDescrsWithConj) = withConj.partition(_.label.contains("ConjDescription"))
-    val (conjType2, conjType1) = withConj.partition(_.label.contains("Type2"))
+    val (conjType2, conjType1) = conjDescrs.partition(_.label.contains("Type2"))
 
     val toReturn = new ArrayBuffer[Mention]()
 
 
     for (m <- untangleConjunctionsType2(conjType2)) {
       toReturn.append(m)
+    }
+
+    for (c <- conjType1) {
+      println("conj type 1: " + c.text + c.attachments.mkString("|") + c.arguments("variable").mkString("::"))
     }
     // the descrs found with conj description rules should be processed differently from standard descrs that happen to have conjs
     for (m <- untangleConjunctions(conjType1)) {
@@ -592,7 +625,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     for (gr1 <- groupedBySent) {
       val groupedByIntervalOverlap = groupByTokenOverlap(gr1._2)
       for (gr <- groupedByIntervalOverlap) {
+        for (g <- gr._2) {
+          println("-> " + g.text + " " + g.attachments.mkString("|"))
+        }
         val mostComplete = gr._2.maxBy(_.arguments.toSeq.length)
+        println("Most complete: " + mostComplete.text + " " + mostComplete.attachments.mkString("|"))
         // out of overlapping descrs, take the longest one
         val headDescr = mostComplete.arguments("description").head
         val edgesForOnlyThisMen = headDescr.sentenceObj.dependencies.get.allEdges.filter(edge => math.min(edge._1, edge._2) >= headDescr.tokenInterval.start && math.max(edge._1, edge._2) <= headDescr.tokenInterval.end)
@@ -656,7 +693,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
             val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
             val newInt = Interval(math.min(v.tokenInterval.start, newDescriptions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDescriptions(i).tokenInterval.end))
-            // construct a new description with new token int, foundBy, and args
+//             construct a new description with new token int, foundBy, and args
             val newDescrMen = mostComplete match {
               case e: EventMention => {
                 new EventMention(
@@ -669,7 +706,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case r: RelationMention => {
@@ -682,13 +719,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case _ => ???
 
             }
 
+//            toReturn.append(newDescrMen)
             if (descrAttachments(i).toUJson("charOffsets").arr.length > 1) {
               val descrWithAtt = newDescriptions(i).withAttachment(descrAttachments(i))
               val newArgs = Map("variable" -> Seq(v), "description" -> Seq(descrWithAtt))
@@ -716,7 +754,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case r: RelationMention => {
@@ -729,7 +767,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case _ => ???
