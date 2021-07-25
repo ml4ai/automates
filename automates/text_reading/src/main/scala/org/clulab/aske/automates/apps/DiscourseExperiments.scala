@@ -1,13 +1,14 @@
 package org.clulab.aske.automates.apps
 
 import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
-
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.discourse.rstparser.{DiscourseTree, TokenOffset}
+import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
 
 import scala.collection.mutable.ArrayBuffer
@@ -24,7 +25,7 @@ object DiscourseExperiments extends App {
 //  val outputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/discourse-related/data/mitre_data/output"
 
 //  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/Processed_SuperMaaS_model_documents-20210607T204611Z-001/Processed_SuperMaaS_model_documents/JSON_data"
-  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/ak-function-files/jsons"
+//  val inputDir = "/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/ak-function-files/jsons"
 
 //  val inputType = "txt"
   val inputType = "json"
@@ -33,54 +34,55 @@ object DiscourseExperiments extends App {
     DataLoader.selectLoader(inputType)
   }
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
-  val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+//  val files = FileUtils.findFiles(inputDir, dataLoader.extension)
   val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
+  lazy val processor = new FastNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
-  // START ANALYZING DISCOURSE PARSER RELATIONS IN ASKE FILES
-
-  val discExplorer = new DiscourseExplorer
-
-
-  val askeDiscourse = new PrintWriter(new File("/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/ak-function-files/jsons/paragraph_discourse_parses.tsv" ))
-  askeDiscourse.write("doc" + "\t" + "relation" + "\t" + "nucleus" + "\t" + "satellite" + "\t" + "start"+ "\t" + "end" + "\n")
-  files.foreach { file =>
-    val fileName = file.getName()
-    val texts = dataLoader.loadFile(file)
-    println("filename: " + fileName)
-//    println("Texts: " + texts.mkString(" ").slice(0, 1500) + "\n")
-    if (texts.nonEmpty)  {
-      val paragraphDocs = if (inputKind=="cosmos") {
-        texts.map(t => reader.annotate(t.split("::").head)).filter(_.isDefined).map(_.get)
-      } else {
-        texts.map(t => reader.annotate(t)).filter(_.isDefined).map(_.get)
-      }
-
-      val trees = paragraphDocs.map(d => d.discourseTree.get)
-      for (t <- trees) {
-        //      println("START TREE")
-        for (tuple <- discExplorer.findRootPairs(t) ) {
-          askeDiscourse.write(file.getName() + "\t" + tuple.relation + "\t" + tuple.nucText.mkString(" ") + "\t" + tuple.satText.mkString(" ") + "\t" + tuple.start + "\t" + tuple.end + "\n")
-          //        println("->" + tuple.relation + ": " + tuple.nucText.mkString(" ") + "||" + " " + tuple.satText.mkString(" ") + " || " + tuple.start + " " + tuple.end + "\n")
-        }
-      }
-    }
-
-
-  }
-  askeDiscourse.close()
-
-// START RUN DISC PARSER ON SHORT TEXT
-//  val text = "es = saturation vapor pressure at 1.5 to 2.5-m height (kPa), calculated for daily time steps as the average of saturation vapor pressure at maximum and minimum air temperature"
+//  // START ANALYZING DISCOURSE PARSER RELATIONS IN ASKE FILES
 //
 //  val discExplorer = new DiscourseExplorer
-//  val doc = reader.annotate(text)
-//          //      println("-->" + doc.discourseTree.get)
-//          val tree = doc.discourseTree.get
-//          //      println(tree.firstToken + "<<-")
-//          for (tuple <- discExplorer.findRootPairs(tree) ) {
 //
-//              println("->" + tuple.relation + ": " + tuple.nucText.mkString(" ") + "||" + " " + tuple.satText.mkString(" ") + " || " + tuple.start + " " + tuple.end + "\n")
-//            }
+//
+//  val askeDiscourse = new PrintWriter(new File("/media/alexeeva/ee9cacfc-30ac-4859-875f-728f0764925c/storage/automates-related/ak-function-files/jsons/paragraph_discourse_parses.tsv" ))
+//  askeDiscourse.write("doc" + "\t" + "relation" + "\t" + "nucleus" + "\t" + "satellite" + "\t" + "start"+ "\t" + "end" + "\n")
+//  files.foreach { file =>
+//    val fileName = file.getName()
+//    val texts = dataLoader.loadFile(file)
+//    println("filename: " + fileName)
+////    println("Texts: " + texts.mkString(" ").slice(0, 1500) + "\n")
+//    if (texts.nonEmpty)  {
+//      val paragraphDocs = if (inputKind=="cosmos") {
+//        texts.map(t => reader.annotate(t.split("::").head)).filter(_.isDefined).map(_.get)
+//      } else {
+//        texts.map(t => reader.annotate(t)).filter(_.isDefined).map(_.get)
+//      }
+//
+//      val trees = paragraphDocs.map(d => d.discourseTree.get)
+//      for (t <- trees) {
+//        //      println("START TREE")
+//        for (tuple <- discExplorer.findRootPairs(t) ) {
+//          askeDiscourse.write(file.getName() + "\t" + tuple.relation + "\t" + tuple.nucText.mkString(" ") + "\t" + tuple.satText.mkString(" ") + "\t" + tuple.start + "\t" + tuple.end + "\n")
+//          //        println("->" + tuple.relation + ": " + tuple.nucText.mkString(" ") + "||" + " " + tuple.satText.mkString(" ") + " || " + tuple.start + " " + tuple.end + "\n")
+//        }
+//      }
+//    }
+//
+//
+//  }
+//  askeDiscourse.close()
+
+// START RUN DISC PARSER ON SHORT TEXT
+  val text = "Simulations of crop development and growth for over 28 crops are possible, including the CERES family of models for maize and sorghum and the CROPGRO family of models for soybean and cotton."
+
+  val discExplorer = new DiscourseExplorer
+  val doc = processor.annotate(text)
+          //      println("-->" + doc.discourseTree.get)
+          val tree = doc.discourseTree.get
+          //      println(tree.firstToken + "<<-")
+          for (tuple <- discExplorer.findRootPairs(tree) ) {
+
+              println("->" + tuple.relation + ": " + tuple.nucText.mkString(" ") + "||" + " " + tuple.satText.mkString(" ") + " || " + tuple.start + " " + tuple.end + "\n")
+            }
   // END RUN DISC PARSER ON SHORT TEXT
 
   // START EXPERIMENT FOR BSH: OVERLAP BETWEEN CAUSE DISCOURSE RELATIONS AND EIDOS CAUSAL EXTRACTIONS
