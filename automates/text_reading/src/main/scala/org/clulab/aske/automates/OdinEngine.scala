@@ -149,6 +149,8 @@ object OdinEngine {
 
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
+  val CONJ_DESCRIPTION_LABEL: String = "ConjDescription"
+  val CONJ_DESCRIPTION_TYPE2_LABEL: String = "ConjDescriptionType2"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
