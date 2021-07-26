@@ -493,12 +493,11 @@ def parallel_worlds(g, gamma):
             int_vars_checked.append(event.int_var)
             for node in initial_verts:
                 if node["orig_name"] == event.int_var:  # Case sensitive
-                    va = event.obs_val
+                    iv = event.int_value
                 else:
-                    va = None
-                cg.add_vertices(1,
-                                attributes={"name": f"{node['orig_name']}_{event.int_var}", "orig_name": node["name"],
-                                            "obs_val": va, "int_var": event.int_var})
+                    iv = None
+                cg.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_value}",
+                                               "orig_name": node["name"], "obs_val": iv, "int_var": event.int_var})
 
             for edge in obs_elist:
                 vlist0 = cg.vs.select(orig_name=cg.vs(edge.tuple[0])["orig_name"][0])
@@ -687,6 +686,7 @@ class CF:
     orig_name: str = None
     obs_val: str = None
     int_var: str = None
+    int_value: str = None
 
 
 class IDANotIdentifiable(Exception):
