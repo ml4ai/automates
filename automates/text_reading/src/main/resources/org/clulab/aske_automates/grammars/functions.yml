@@ -140,7 +140,7 @@ rules:
     action: ${action}
     example: "Ea equals the water input plus a fraction extracted from soil water, caused by this soil water deficit condition."
     pattern: |
-      trigger = [lemma = "plus"] | [lemma = "minus"]
+      trigger = [lemma = /plus|minus/]
       input:Phrase+ = <cc (conj_plus | conj_minus)?
       output:Phrase = <cc (<dobj | <nmod_to) nsubj | <cc <nsubj
 
@@ -157,7 +157,6 @@ rules:
       input:Phrase+ = nmod_to | <amod? conj_and | <conj_and <case | <nmod_to nmod_to?
       output:Phrase = <amod? nsubj | <conj_and <case <nmod_proportional <dep nsubj | <nmod_to <nsubj
       #fixme: inputs and outputs need to be expanded.
-      #todo: the number of inputs should not be fixed as two. -> fixed.
 
   - name: computation
     label: Function
@@ -234,7 +233,7 @@ rules:
     action: ${action}
     example: "The only factors affecting ETo are climatic parameters..."
     pattern: |
-      trigger = (?<! "not") [lemma = "affect"]|[lemma = "limit"]
+      trigger = (?<! "not") [lemma = /affect|limit/]
       input:Phrase+ = <acl <nsubj | nsubj
       output:Phrase = dobj
 
@@ -380,7 +379,7 @@ rules:
     action: ${action}
     example: "The daily weather values as well as all soil properties and current soil water content, by layer, are required as input."
     pattern: |
-      trigger = [lemma = "require"] (?= [word = "as"] ([word = "input"]|[word = "inputs"]))
+      trigger = [lemma = "require"] (?= [word = "as"] ([word = /input|inputs/]))
       input:Phrase+ = nsubjpass conj_and? | nmod_as
       output:Phrase? = nmod_for
 
@@ -412,7 +411,7 @@ rules:
     action: ${action}
     example: "the large-scale parameters must include sea-surface temperature and wind, temperature and humidity at the lowest layers of the model, and some measure of stability if this lowest level is more than a few meters above the surface."
     pattern: |
-      trigger = (?<= [lemma = "parameter"] [tag = /MD/]?) [lemma = "include"]|[lemma = "appear"]
+      trigger = (?<= [lemma = "parameter"] [tag = /MD/]?) [lemma = /include|appear/]
       input:Phrase+ = dobj | <advcl_so_that conj_and | nmod_in nmod_of (nmod_such_as | conj_and)
       output:Phrase? = <advcl_so_that nsubjpass
 
@@ -423,7 +422,7 @@ rules:
     action: ${action}
     example: "The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
     pattern: |
-      trigger = [word = "additional"]|[word = "remaining"] (?= [tag = /JJ/]? [lemma = "parameter"])
+      trigger = [word = /additional|remaining/] (?= [tag = /JJ/]? [lemma = "parameter"])
       input:Phrase+ = <amod <nsubj
 
 #  - name: output_is_calculated
