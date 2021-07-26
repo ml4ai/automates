@@ -5,7 +5,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
 import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.apps.AlignmentBaseline
+import org.clulab.aske.automates.apps.{AlignmentBaseline, ExtractAndAlign}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
@@ -36,6 +36,7 @@ object TestUtils {
 
   protected var mostRecentOdinEngine: Option[OdinEngine] = None
   protected var mostRecentConfig: Option[Config] = None
+  val extractorAligner = ExtractAndAlign
 
   // This is the standard way to extract mentions for testing
   def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = {
@@ -104,6 +105,20 @@ object TestUtils {
       found.length should be(desired.size)
 
       desired.foreach(d => found should contain(d))
+    }
+
+    def testIfHasAttachmentType(mentions: Seq[Mention], attachmentType: String): Unit = {
+      for (f <- mentions) {
+        extractorAligner.returnAttachmentOfAGivenTypeOption(f.attachments, attachmentType).isDefined shouldBe true
+      }
+    }
+
+    def testIfHasAttachments(mentions: Seq[Mention]): Unit = {
+      mentions.foreach(f => testIfHasAttachment(f))
+    }
+
+    def testIfHasAttachment(mention: Mention): Unit = {
+      mention.attachments.nonEmpty shouldBe true
     }
 
     //used for parameter setting tests where the setting is an interval

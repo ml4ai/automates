@@ -384,6 +384,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     grouped.toMap
   }
 
+  def longestAndWithAtt(mentions: Seq[Mention]): Mention = {
+    val maxLength = mentions.maxBy(_.tokenInterval.length).tokenInterval.length
+    val (ofMaxLength, other) = mentions.partition(_.tokenInterval.length==maxLength)
+    if (ofMaxLength.exists(_.attachments.nonEmpty)) {
+      val (withAtt, other) = ofMaxLength.partition(_.attachments.nonEmpty)
+      return withAtt.head
+    } else {
+      ofMaxLength.head
+    }
+
+  }
+
   def filterOutOverlappingDescrMen(mentions: Seq[Mention]): Seq[Mention] = {
     // input is only mentions with the label ConjDescription (types 1 and 2) or Description with conjunctions
     // this is to get rid of conj descriptions that are redundant in the presence of a more complete ConjDescription
@@ -397,15 +409,19 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         for (varOverlapGroup <- groupByVarOverlap(tokOverlapGroup).values) {
           // if there are ConjDescrs among overlapping decsrs, then pick the longest conjDescr
           if (varOverlapGroup.exists(_.label.contains("ConjDescription"))) {
+
+
+
+
             // type 2 has same num of vars and descriptions (a minimum of two pairs)
             val (type2, type1) = varOverlapGroup.partition(_.label.contains("Type2"))
 
             if (type2.isEmpty) {
               // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
-              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescription"))//.maxBy(_.tokenInterval.length)
               toReturn.append(longestConjDescr)
             } else {
-              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescriptionType2"))//.maxBy(_.tokenInterval.length)
               toReturn.append(longestConjDescr)
             }
           } else {
@@ -506,12 +522,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val (descrs, nondescrs) = mentions.partition(_.label.contains("Description"))
     // check if there's overlap between conjdescrs and standard descrs; if there is, drop the standard descr; add nondescrs
     val withoutOverlap = filterOutOverlappingDescrMen(descrs) ++ nondescrs
+
     // all that have conj (to be grouped further) and those with no conj
     val (withConj, withoutConj) = withoutOverlap.partition(m => hasConj(m))
 
+
+
     // descrs that were found as ConjDescriptions - that is events with multiple variables (at least partially) sharing a descriptions vs descriptions that were found with standard rule that happened to have conjunctions in their descriptions
     val (conjDescrs, standardDescrsWithConj) = withConj.partition(_.label.contains("ConjDescription"))
-    val (conjType2, conjType1) = withConj.partition(_.label.contains("Type2"))
+    val (conjType2, conjType1) = conjDescrs.partition(_.label.contains("Type2"))
 
     val toReturn = new ArrayBuffer[Mention]()
 
@@ -569,7 +588,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             m.document,
             m.keep,
             m.foundBy ++ "++untangleConjunctionsType2",
-            Set.empty
+            m.attachments
           ))
         }
       } else {
@@ -656,38 +675,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
             val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
             val newInt = Interval(math.min(v.tokenInterval.start, newDescriptions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDescriptions(i).tokenInterval.end))
-            // construct a new description with new token int, foundBy, and args
-            val newDescrMen = mostComplete match {
-              case e: EventMention => {
-                new EventMention(
-                  mostComplete.labels,
-                  newInt,
-                  mostComplete.asInstanceOf[EventMention].trigger,
-                  newArgs,
-                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
-                  mostComplete.sentence,
-                  mostComplete.document,
-                  mostComplete.keep,
-                  mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
-                )
-              }
-              case r: RelationMention => {
-                new RelationMention(
-                  mostComplete.labels,
-                  newInt,
-                  newArgs,
-                  mostComplete.paths, // the paths are off
-                  mostComplete.sentence,
-                  mostComplete.document,
-                  mostComplete.keep,
-                  mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
-                )
-              }
-              case _ => ???
-
-            }
 
             if (descrAttachments(i).toUJson("charOffsets").arr.length > 1) {
               val descrWithAtt = newDescriptions(i).withAttachment(descrAttachments(i))
@@ -716,7 +703,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case r: RelationMention => {
@@ -729,7 +716,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case _ => ???
