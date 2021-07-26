@@ -549,6 +549,25 @@ def parallel_worlds(g, gamma):
     return cg
 
 
+def merge_nodes(g, node1, node2, gamma):
+
+    pa1 = parents_unsort(node1, g)
+    ch1 = children_unsort(node1, g)
+
+
+def make_cg(g, gamma):
+    # Construct parallel worlds graph
+    cg = parallel_worlds(g, gamma)
+
+    # Rename nodes with descriptive, unique names
+    for node in cg.vs():
+        if node["int_var"] is not None:
+            if node["val_assign"] is not None:
+                node["name"] = f"\\bar{{{node['original_name']}}}_{node['int_var']}"
+            else:
+                node["name"] = f"{node['original_name']}_{node['int_var']}"
+    return cg
+
 @dataclass(unsafe_hash=True)
 class Probability:
     var: list = field(default_factory=list)
