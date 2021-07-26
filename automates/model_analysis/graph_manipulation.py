@@ -476,7 +476,7 @@ def parallel_worlds(g, gamma):
     # Create iGraph attributes keeping track of node/edge properties
     for node in cg.vs():
         node["orig_name"] = node["name"]
-        node["val_assign"] = None
+        node["obs_val"] = None
         node["int_var"] = None
     for edge in cg.es():
         edge["initial_edge"] = True
@@ -493,12 +493,12 @@ def parallel_worlds(g, gamma):
             int_vars_checked.append(event.int_var)
             for node in initial_verts:
                 if node["orig_name"] == event.int_var:  # Case sensitive
-                    va = event.val_assign
+                    va = event.obs_val
                 else:
                     va = None
                 cg.add_vertices(1,
                                 attributes={"name": f"{node['orig_name']}_{event.int_var}", "orig_name": node["name"],
-                                            "val_assign": va, "int_var": event.int_var})
+                                            "obs_val": va, "int_var": event.int_var})
 
             for edge in obs_elist:
                 vlist0 = cg.vs.select(orig_name=cg.vs(edge.tuple[0])["orig_name"][0])
@@ -529,11 +529,11 @@ def parallel_worlds(g, gamma):
         # For old vertex, find all vertices with the same original name, connect unobserved vertex to each instance
         verts_0 = cg.vs.select(orig_name=old_vert_name0)
         for vert in verts_0:
-            if vert["val_assign"] is None:
+            if vert["obs_val"] is None:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
         verts_1 = cg.vs.select(orig_name=old_vert_name1)
         for vert in verts_1:
-            if vert["val_assign"] is None:
+            if vert["obs_val"] is None:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
     for node in initial_verts:
         # if "U" not in parents_unsort(cg_node_info[i].orig_name, cg):
@@ -544,13 +544,23 @@ def parallel_worlds(g, gamma):
             # Find all nodes across parallel worlds
             verts_to_connect = cg.vs.select(orig_name=node["name"])
             for vert in verts_to_connect:
-                if vert["val_assign"] is None:
+                if vert["obs_val"] is None:
                     unobs_edges_to_add.append((new_vert_indx, vert.index))
     cg.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
     return cg
 
 
 def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not just names
+    """
+    Merges node1 and node2 into one vertex, with all of the parents/children of node1 and node2 connected appropriately
+    and updates gamma as necessary to accommodate the removed vertex
+
+    :param g: graph
+    :param node1: the vertex to be merged with node2
+    :param node2: the vertex to be merged with node1
+    :param gamma: counterfactual conjunction, represented as a list
+    :return: updated graph g and updated gamma
+    """
     def merge_nodes_helper(node_keep, node_delete):
         pa_delete = parents_unsort([node_delete["name"]], g)
         ch_delete = children_unsort([node_delete["name"]], g)
@@ -560,7 +570,7 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
         ch = list(set(ch_delete)-set(ch_keep))
 
         deleted_node_info = {"name": node_delete["name"], "int_var": node_delete["int_var"],
-                             "val_assign": node_delete["val_assign"]}
+                             "obs_val": node_delete["obs_val"]}
         g.delete_vertices(node_delete["name"])
         node_keep_index = node_keep.index
         edges_to_add = []
@@ -582,11 +592,11 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
                 event.orig_name = node_keep["orig_name"]
             if event.int_var == deleted_node_info["int_var"]:
                 event.int_var = node_keep["int_var"]
-            if event.val_assign == deleted_node_info["val_assign"]:
-                event.val_assign = node_keep["val_assign"]
+            if event.obs_val == deleted_node_info["obs_val"]:
+                event.obs_val = node_keep["obs_val"]
 
     # For readability, I prefer to keep the simplest name
-    if node2["val_assign"] is not None:
+    if node2["obs_val"] is not None:
         merge_nodes_helper(node_keep=node2, node_delete=node1)
     elif node2["int_var"] is None:
         merge_nodes_helper(node_keep=node2, node_delete=node1)
@@ -595,6 +605,11 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     return g, gamma
 
 
+def should_merge(node1, node2):
+
+    return None
+    
+    
 def make_cg(g, gamma):
     # Construct parallel worlds graph
     p_worlds = parallel_worlds(copy.deepcopy(g), gamma)
@@ -602,12 +617,12 @@ def make_cg(g, gamma):
     # Rename nodes with descriptive, unique names
     for node in p_worlds.vs():
         if node["int_var"] is not None:
-            if node["val_assign"] is not None:
+            if node["obs_val"] is not None:
                 node["name"] = f"\\bar{{{node['original_name']}}}_{node['int_var']}"
             else:
                 node["name"] = f"{node['original_name']}_{node['int_var']}"
         else:
-            if node["val_assign"] is not None:
+            if node["obs_val"] is not None:
                 node["name"] = f"\\bar{{{node['original_name']}}}"
     return p_worlds
 
@@ -670,7 +685,7 @@ class Results:
 @dataclass
 class CF:
     orig_name: str = None
-    val_assign: str = None
+    obs_val: str = None
     int_var: str = None
 
 

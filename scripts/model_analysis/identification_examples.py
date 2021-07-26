@@ -5,7 +5,7 @@ gamma = [gm.CF("Y", "y", "X"), gm.CF("X", "x_prime"), gm.CF("Z", "z", "D"), gm.C
 graph_9a = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
 graph_9a.vs["name"] = ["X", "W", "Y", "D", "Z"]
 # graph_9a.vs["orig_name"] = ["X", "W", "Y", "D", "Z"]
-# graph_9a.vs["val_assign"] = ["x_prime", None, None, "d", None]
+# graph_9a.vs["obs_val"] = ["x_prime", None, None, "d", None]
 # graph_9a.vs["int_var"] = [None, "X", "X", None, "X"]
 graph_9a.es["description"] = ["O", "O", "O", "O", "U", "U"]
 cg = gm.parallel_worlds(graph_9a, gamma)
