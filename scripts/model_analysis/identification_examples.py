@@ -8,7 +8,7 @@ graph_9a.vs["name"] = ["X", "W", "Y", "D", "Z"]
 # graph_9a.vs["val_assign"] = ["x_prime", None, None, "d", None]
 # graph_9a.vs["int_var"] = [None, "X", "X", None, "X"]
 graph_9a.es["description"] = ["O", "O", "O", "O", "U", "U"]
-cg = gm.make_cg(graph_9a, gamma)
+cg = gm.parallel_worlds(graph_9a, gamma)
 # print(cg)
 
 

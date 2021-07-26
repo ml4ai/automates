@@ -464,7 +464,14 @@ def d_sep(g, x, y, z):
     return True
 
 
-def make_cg(g, gamma):
+def parallel_worlds(g, gamma):
+    """
+    The first step in the "make_cg" algorithm in Complete Identification Methods for the Causal Hierarchy, by
+     Shpitser and Pearl.
+    :param g: The original graph.
+    :param gamma: A conjunction of counterfactual statements (represented as a list).
+    :return: The "parallel worlds" graph
+    """
     cg = observed_graph(g)
     # Create iGraph attributes keeping track of node/edge properties
     for node in cg.vs():
@@ -476,7 +483,6 @@ def make_cg(g, gamma):
     initial_verts = cg.vs.select(int_var=None)
     obs_elist = cg.es.select(initial_edge=True)
 
-    # First Bullet
     # Replicate graph for each intervention mentioned in gamma
     num_int_vars = 0
     int_vars_checked = []
