@@ -277,7 +277,6 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
             cond_string = ")"
         p = f"{p}{cond_string}"
     if s_print and start_sum:
-
         p = ",".join([p, "\\right)"])
     return p
 
@@ -294,7 +293,7 @@ def c_components(g, topo):
     v = g.vs["name"]
     bidirected = []
     for i in range(0, n):
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             if a[i][j] >= 1 and a[j][i] >= 1:
                 bidirected.append(i)
                 bidirected.append(j)
@@ -374,6 +373,7 @@ def d_sep(g, x, y, z):
     :param z: nodes
     :return: T/F if x is separated from y given z in g
     """
+
     def d_sep_helper(include_pa, include_ch, el_name, an_xyz, stack, stack_names, stack_size, stack_top):
         visitable_parents = []
         visitable_children = []
@@ -496,8 +496,9 @@ def parallel_worlds(g, gamma):
                     va = event.val_assign
                 else:
                     va = None
-                cg.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_var}", "orig_name": node["name"],
-                                               "val_assign": va, "int_var": event.int_var})
+                cg.add_vertices(1,
+                                attributes={"name": f"{node['orig_name']}_{event.int_var}", "orig_name": node["name"],
+                                            "val_assign": va, "int_var": event.int_var})
 
             for edge in obs_elist:
                 vlist0 = cg.vs.select(orig_name=cg.vs(edge.tuple[0])["orig_name"][0])
@@ -507,7 +508,7 @@ def parallel_worlds(g, gamma):
                         if (node0["int_var"] == node1["int_var"]) and (node0["int_var"] is not None):
                             obs_edges_to_add.append((node0.index, node1.index))
                             break
-    cg.add_edges(set(obs_edges_to_add), attributes={"description": ["O"]*len(obs_edges_to_add)})
+    cg.add_edges(set(obs_edges_to_add), attributes={"description": ["O"] * len(obs_edges_to_add)})
 
     # Add Unobserved Edges
     g_unobs_elist = g.es.select(description="U")
@@ -549,24 +550,67 @@ def parallel_worlds(g, gamma):
     return cg
 
 
-def merge_nodes(g, node1, node2, gamma):
+def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not just names
+    def merge_nodes_helper(node_keep, node_delete):
+        pa_delete = parents_unsort([node_delete["name"]], g)
+        ch_delete = children_unsort([node_delete["name"]], g)
+        pa_keep = parents_unsort([node_keep["name"]], g)
+        ch_keep = children_unsort([node_keep["name"]], g)
+        pa = list(set(pa_delete)-set(pa_keep))
+        ch = list(set(ch_delete)-set(ch_keep))
 
-    pa1 = parents_unsort(node1, g)
-    ch1 = children_unsort(node1, g)
+        deleted_node_info = {"name": node_delete["name"], "int_var": node_delete["int_var"],
+                             "val_assign": node_delete["val_assign"]}
+        g.delete_vertices(node_delete["name"])
+        node_keep_index = node_keep.index
+        edges_to_add = []
+
+        # Parents and Children of deleted vertex attached appropriately to the kept vertex
+        for parent in pa:
+            parent_index = g.vs.select(name=parent).indices[0]
+            edges_to_add.append((parent_index, node_keep_index))
+        for child in ch:
+            child_index = g.vs.select(name=child).indices[0]
+            edges_to_add.append((node_keep_index, child_index))
+
+        # I assume that unobserved vertices (and edges) have already been removed by the set difference step
+        g.add_edges(edges_to_add, attributes={"description": ["O"] * len(edges_to_add)})
+
+        # Rename events in gamma if necessary
+        for event in gamma:
+            if event.orig_name == deleted_node_info["orig_name"]:
+                event.orig_name = node_keep["orig_name"]
+            if event.int_var == deleted_node_info["int_var"]:
+                event.int_var = node_keep["int_var"]
+            if event.val_assign == deleted_node_info["val_assign"]:
+                event.val_assign = node_keep["val_assign"]
+
+    # For readability, I prefer to keep the simplest name
+    if node2["val_assign"] is not None:
+        merge_nodes_helper(node_keep=node2, node_delete=node1)
+    elif node2["int_var"] is None:
+        merge_nodes_helper(node_keep=node2, node_delete=node1)
+    else:
+        merge_nodes_helper(node_keep=node1, node_delete=node2)
+    return g, gamma
 
 
 def make_cg(g, gamma):
     # Construct parallel worlds graph
-    cg = parallel_worlds(g, gamma)
+    p_worlds = parallel_worlds(copy.deepcopy(g), gamma)
 
     # Rename nodes with descriptive, unique names
-    for node in cg.vs():
+    for node in p_worlds.vs():
         if node["int_var"] is not None:
             if node["val_assign"] is not None:
                 node["name"] = f"\\bar{{{node['original_name']}}}_{node['int_var']}"
             else:
                 node["name"] = f"{node['original_name']}_{node['int_var']}"
-    return cg
+        else:
+            if node["val_assign"] is not None:
+                node["name"] = f"\\bar{{{node['original_name']}}}"
+    return p_worlds
+
 
 @dataclass(unsafe_hash=True)
 class Probability:
@@ -625,13 +669,6 @@ class Results:
 
 @dataclass
 class CF:
-    node: str = None
-    val_assign: str = None
-    int_var: str = None
-
-
-@dataclass
-class CGNode:
     orig_name: str = None
     val_assign: str = None
     int_var: str = None
@@ -639,5 +676,3 @@ class CGNode:
 
 class IDANotIdentifiable(Exception):
     pass
-
-

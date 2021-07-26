@@ -16,3 +16,7 @@ mit_dsep_ex = igraph.Graph(edges=[[0, 2], [1, 2], [2, 3], [2, 4], [3, 5], [5, 6]
 mit_dsep_ex.vs["name"] = ["A", "B", "C", "D", "E", "F", "G"]
 print(gm.d_sep(mit_dsep_ex, ["A"], ["B"], ["D", "F"]))
 print(gm.d_sep(mit_dsep_ex, ["D"], ["E"], ["C"]))
+
+ch = gm.children_unsort(["Z"], graph_9a)
+vert = graph_9a.vs.select(name=ch[0])
+print(vert["orig_name"])
