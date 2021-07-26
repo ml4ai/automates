@@ -333,6 +333,7 @@ def pid_c_cast():
     return CAST([pid_module])
 
 
+@pytest.mark.skip("Skipping due to changes in AIR")
 def test_basic_function_def_and_assignment(
     basic_function_def_and_assignment_grfn,
     basic_function_def_and_assignment_cast,
