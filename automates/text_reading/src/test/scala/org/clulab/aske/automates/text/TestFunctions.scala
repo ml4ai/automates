@@ -215,7 +215,7 @@ class TestFunctions extends ExtractionTest {
   val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
   passingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"), // note: this test was broken after writing filterInputOverlaps action
+      "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"),
       "deep soil temperature boundary condition" -> Seq("average annual air temperature", "amplitude of monthly mean temperatures")
     )
     val mentions = extractMentions(t2f)
@@ -402,7 +402,7 @@ class TestFunctions extends ExtractionTest {
   val t3j = "T0 is itself strongly governed by R and ground dryness."
   passingTest should s"find functions from t3j: ${t3j}" taggedAs(Somebody) in {
     val desired = Seq(
-      "T0" -> Seq("R", "ground dryness") //todo: mention with "itself" as an output should be filtered out
+      "T0" -> Seq("R", "ground dryness")
     )
     val mentions = extractMentions(t3j)
     testFunctionEvent(mentions, desired)
@@ -416,17 +416,6 @@ class TestFunctions extends ExtractionTest {
     val mentions = extractMentions(t4j)
     testFunctionEvent(mentions, desired)
   }
-
-  val t5j = "In subsection 4a, the remaining large-scale parameter is the depth of the mixed layer."
-  failingTest should s"find functions from t5j: ${t5j}" taggedAs(Somebody) in {
-    val desired = Seq(
-      "" -> Seq("depth of the mixed layer")
-    )
-    val mentions = extractMentions(t5j)
-    testFunctionEvent(mentions, desired)
-  }
-
-
   // Tests from 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
   val t1k = "While it is true that the DSSAT-CSM crop coefficient Kcs is multiplied by a reference ET, the resulting value (E0) denotes ET potential, therefore demand, and not necessarily actual ET."
   failingTest should s"find functions from t1k: ${t1k}" taggedAs(Somebody) in {

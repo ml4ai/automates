@@ -92,7 +92,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [entity=/PERSON|ORGANIZATION|LOCATION/]{2,4} #note: adjusted {2,3} -> {2,4} to account for more cases. Can we adjust the number to {3,4}? (i.e. Mainland China, Hong Kong not captured as a phrase due to this rule)
+      [entity=/PERSON|ORGANIZATION/]{3,4} #note: adjusted {2,3} -> {2,4} to account for more cases. Can we adjust the number to {3,4}? (i.e. Mainland China, Hong Kong not captured as a phrase due to this rule)
       |
       [chunk = /B-NP/ & entity= /PERSON/] [chunk = /I-NP/ & word = /[A-Z]/]{1,2}
 

@@ -21,7 +21,7 @@ rules:
       [entity = /NUMBER|PERCENT/ & tag = /CD/] [word = /x|-/] [entity = /NUMBER|PERCENT/ & tag = /CD/]
       |
       [entity = /NUMBER|PERCENT/ & !lemma = "%"]{2,}
-      # note: second rule added to address cases like "12 milions". got rid of tag = /CD/ part ("millions" is captured as number, but does not have tag = /CD/)
+      # note: second rule added to address cases like "12 milions". got rid of tag = /CD/ part ("millions" is captured as number, but does not have tag = /CD/. It is tagged as /NNS/.)
 
 
 

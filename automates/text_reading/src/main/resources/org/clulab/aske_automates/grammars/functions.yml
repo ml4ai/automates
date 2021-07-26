@@ -120,8 +120,6 @@ rules:
       trigger = [lemma = "add"]
       input:Phrase+ = nsubjpass | nmod_to | dobj
       output:Phrase = nmod_to acl_to dobj | nmod_to acl_to dobj conj_and | <advcl_by nsubjpass
-      #todo: how to extract sets of "one output & inputs" multiple times?
-      # (i.e. infiltration & the amount applied, the amount of rainfall as one set and runoff & the amount applied, the amount of rainfall as the other)
 
   - name: partition
     label: Function
@@ -247,7 +245,7 @@ rules:
     action: ${action}
     example: "The only factors affecting ETo are climatic parameters..."
     pattern: |
-      trigger = [word = "related"]|[word = "referred"] (?= "to")
+      trigger = [word = /related|referred/] (?= "to")
       input:Phrase+ = nmod_to nmod_through?
       output:Phrase = nsubj | nsubjpass
 
@@ -336,7 +334,7 @@ rules:
     action: ${action}
     example: "They suggested that the main factors controlling α included leaf area index (LAI), vapor pressure deficit (VPD) and soil moisture content (θ)."
     pattern: |
-      trigger = (?<= [lemma = "factor"]|[lemma = "variable"]) [word = "controlling"]|[word = "influencing"]
+      trigger = (?<= [lemma = /factor|variable/]) [word = /controlling|influencing/]
       input:Phrase+ = <acl <nsubj dobj | <amod <nsubj
       output:Phrase = dobj | <amod
 

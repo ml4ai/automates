@@ -1245,7 +1245,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
-      if singleCapitalWord.findFirstIn(descrText.text).isEmpty
+//      if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
 //      if m.tags.get.exists(_.contains("N"))
 
