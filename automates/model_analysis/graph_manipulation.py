@@ -472,17 +472,17 @@ def parallel_worlds(g, gamma):
     :param gamma: A conjunction of counterfactual statements (represented as a list).
     :return: The "parallel worlds" graph
     """
-    cg = observed_graph(g)
+    p_worlds = observed_graph(g)
     # Create iGraph attributes keeping track of node/edge properties
-    for node in cg.vs():
+    for node in p_worlds.vs():
         node["orig_name"] = node["name"]
         node["obs_val"] = None
         node["int_var"] = None
         node["int_value"] = None
-    for edge in cg.es():
+    for edge in p_worlds.es():
         edge["initial_edge"] = True
-    initial_verts = cg.vs.select(int_var=None)
-    obs_elist = cg.es.select(initial_edge=True)
+    initial_verts = p_worlds.vs.select(int_var=None)
+    obs_elist = p_worlds.es.select(initial_edge=True)
 
     # Replicate graph for each intervention mentioned in gamma
     num_int_vars = 0
@@ -499,19 +499,19 @@ def parallel_worlds(g, gamma):
                     ov = event.obs_val
                 if node["orig_name"] == event.int_var:
                     iv = event.int_value
-                cg.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_value}",
+                p_worlds.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_value}",
                                                "orig_name": node["name"], "obs_val": ov,
                                                "int_var": event.int_var, "int_value": iv})
 
             for edge in obs_elist:
-                vlist0 = cg.vs.select(orig_name=cg.vs(edge.tuple[0])["orig_name"][0])
-                vlist1 = cg.vs.select(orig_name=cg.vs(edge.tuple[1])["orig_name"][0])
+                vlist0 = p_worlds.vs.select(orig_name=p_worlds.vs(edge.tuple[0])["orig_name"][0])
+                vlist1 = p_worlds.vs.select(orig_name=p_worlds.vs(edge.tuple[1])["orig_name"][0])
                 for node0 in vlist0:
                     for node1 in vlist1:
                         if (node0["int_var"] == node1["int_var"]) and (node0["int_var"] is not None):
                             obs_edges_to_add.append((node0.index, node1.index))
                             break
-    cg.add_edges(set(obs_edges_to_add), attributes={"description": ["O"] * len(obs_edges_to_add)})
+    p_worlds.add_edges(set(obs_edges_to_add), attributes={"description": ["O"] * len(obs_edges_to_add)})
 
     # Add Unobserved Edges
     g_unobs_elist = g.es.select(description="U")
@@ -525,16 +525,16 @@ def parallel_worlds(g, gamma):
     num_unobs_verts = 0
     for edge in new_unobs_elist:
         num_unobs_verts = num_unobs_verts + 1
-        cg.add_vertices(1, attributes={"name": f"U_{num_unobs_verts}"})
-        new_vert_indx = cg.vs.select(name=f"U_{num_unobs_verts}").indices[0]
+        p_worlds.add_vertices(1, attributes={"name": f"U_{num_unobs_verts}"})
+        new_vert_indx = p_worlds.vs.select(name=f"U_{num_unobs_verts}").indices[0]
         old_vert_name0 = g.vs(edge.tuple[0])["name"][0]
         old_vert_name1 = g.vs(edge.tuple[1])["name"][0]
         # For old vertex, find all vertices with the same original name, connect unobserved vertex to each instance
-        verts_0 = cg.vs.select(orig_name=old_vert_name0)
+        verts_0 = p_worlds.vs.select(orig_name=old_vert_name0)
         for vert in verts_0:
             if vert["obs_val"] is None:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
-        verts_1 = cg.vs.select(orig_name=old_vert_name1)
+        verts_1 = p_worlds.vs.select(orig_name=old_vert_name1)
         for vert in verts_1:
             if vert["obs_val"] is None:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
@@ -542,15 +542,15 @@ def parallel_worlds(g, gamma):
         # if "U" not in parents_unsort(cg_node_info[i].orig_name, cg):
         i = node.index
         if not any(i in edge for edge in unobs_edges_to_add):
-            cg.add_vertices(1, attributes={"name": f"U_{node['name']}"})
-            new_vert_indx = cg.vs.select(name=f"U_{node['name']}").indices[0]
+            p_worlds.add_vertices(1, attributes={"name": f"U_{node['name']}"})
+            new_vert_indx = p_worlds.vs.select(name=f"U_{node['name']}").indices[0]
             # Find all nodes across parallel worlds
-            verts_to_connect = cg.vs.select(orig_name=node["name"])
+            verts_to_connect = p_worlds.vs.select(orig_name=node["name"])
             for vert in verts_to_connect:
                 if vert["obs_val"] is None:
                     unobs_edges_to_add.append((new_vert_indx, vert.index))
-    cg.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
-    return cg
+    p_worlds.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
+    return p_worlds
 
 
 def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not just names
@@ -610,7 +610,7 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
 
 def should_merge(node1, node2):
 
-    return None
+    return False
     
     
 def make_cg(g, gamma):
