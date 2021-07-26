@@ -478,6 +478,7 @@ def parallel_worlds(g, gamma):
         node["orig_name"] = node["name"]
         node["obs_val"] = None
         node["int_var"] = None
+        node["int_value"] = None
     for edge in cg.es():
         edge["initial_edge"] = True
     initial_verts = cg.vs.select(int_var=None)
@@ -492,12 +493,15 @@ def parallel_worlds(g, gamma):
             num_int_vars = num_int_vars + 1
             int_vars_checked.append(event.int_var)
             for node in initial_verts:
-                if node["orig_name"] == event.int_var:  # Case sensitive
+                iv = None
+                ov = None
+                if node["orig_name"] == event.orig_name:
+                    ov = event.obs_val
+                if node["orig_name"] == event.int_var:
                     iv = event.int_value
-                else:
-                    iv = None
                 cg.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_value}",
-                                               "orig_name": node["name"], "obs_val": iv, "int_var": event.int_var})
+                                               "orig_name": node["name"], "obs_val": ov,
+                                               "int_var": event.int_var, "int_value": iv})
 
             for edge in obs_elist:
                 vlist0 = cg.vs.select(orig_name=cg.vs(edge.tuple[0])["orig_name"][0])
