@@ -87,8 +87,20 @@ class OdinEngine(
     val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
     val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
 
+    for (m <- mensWithContextAttachment) {
+      println("=> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label)
+    } // has att
+
+    for (m <- nonContexts) {
+      println("==> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label )
+    }
+
     // post-process the mentions with untangleConj and combineFunction
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
+    for (m <- descriptionMentions) {
+      println("===> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label )
+    }
+
     val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
@@ -137,6 +149,8 @@ object OdinEngine {
 
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
+  val CONJ_DESCRIPTION_LABEL: String = "ConjDescription"
+  val CONJ_DESCRIPTION_TYPE2_LABEL: String = "ConjDescriptionType2"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
