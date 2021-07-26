@@ -248,7 +248,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def contextsToStrings(context: Seq[Mention], state: State = new State()): Seq[String] = {
     val contexts = new ArrayBuffer[String]
-    var oneStringContext = new String
     if (context.nonEmpty) {
       for (c <- keepLongest(context)) {
         val contextInformation = c.arguments("context")
@@ -986,7 +985,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val mensSelected = new ArrayBuffer[Mention]
     val contextSelected = new ArrayBuffer[Mention]
     val toReturn = new ArrayBuffer[Mention]
-    val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label == "ParamSetting")
+    val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
     // note: attachment to description creates too many false positives - needs to be revised to be applied to description mentions.
     // val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label.contains("Description") || m.label == "ParamSetting")
     val contextMens = mentions.filter(_.label == "Context")
