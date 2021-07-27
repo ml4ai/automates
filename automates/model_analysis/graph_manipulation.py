@@ -570,11 +570,9 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     :return: updated graph g and updated gamma
     """
     def merge_nodes_helper(node_keep, node_delete):
-        pa_delete = parents_unsort([node_delete["name"]], g)
         ch_delete = children_unsort([node_delete["name"]], g)
         pa_keep = parents_unsort([node_keep["name"]], g)
         ch_keep = children_unsort([node_keep["name"]], g)
-        pa = list(set(pa_delete)-set(pa_keep))
         ch = list(set(ch_delete)-set(ch_keep))
 
         deleted_node_info = {"name": node_delete["name"], "int_var": node_delete["int_var"],
@@ -583,15 +581,10 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
         node_keep_index = node_keep.index
         edges_to_add = []
 
-        # Parents and Children of deleted vertex attached appropriately to the kept vertex
-        for parent in pa:
-            parent_index = g.vs.select(name=parent).indices[0]
-            edges_to_add.append((parent_index, node_keep_index))
+        # Children of deleted vertex attached appropriately to the kept vertex
         for child in ch:
             child_index = g.vs.select(name=child).indices[0]
             edges_to_add.append((node_keep_index, child_index))
-
-        # I assume that unobserved vertices (and edges) have already been removed by the set difference step
         g.add_edges(edges_to_add, attributes={"description": ["O"] * len(edges_to_add)})
 
         # Rename events in gamma if necessary
@@ -634,9 +627,6 @@ def should_merge(g, node1, node2):
                     break
                 if candidate == check_pa_set[-1]:
                     return False
-    else:
-        None
-        # Check special cases (see D and d)
     return False
     
     
