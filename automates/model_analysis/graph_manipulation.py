@@ -537,11 +537,11 @@ def parallel_worlds(g, gamma):
         # For old vertex, find all vertices with the same original name, connect unobserved vertex to each instance
         verts_0 = p_worlds.vs.select(orig_name=old_vert_name0)
         for vert in verts_0:
-            if vert["obs_val"] is None:
+            if vert["int_var"] != vert["orig_name"]:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
         verts_1 = p_worlds.vs.select(orig_name=old_vert_name1)
         for vert in verts_1:
-            if vert["obs_val"] is None:
+            if vert["int_var"] != vert["orig_name"]:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
     for node in initial_verts:
         # if "U" not in parents_unsort(cg_node_info[i].orig_name, cg):
@@ -552,7 +552,7 @@ def parallel_worlds(g, gamma):
             # Find all nodes across parallel worlds
             verts_to_connect = p_worlds.vs.select(orig_name=node["name"])
             for vert in verts_to_connect:
-                if vert["obs_val"] is None:
+                if vert["int_var"] != vert["orig_name"]:
                     unobs_edges_to_add.append((new_vert_indx, vert.index))
     p_worlds.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
     return p_worlds
@@ -616,26 +616,27 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
 def should_merge(g, node1, node2):
     pa1 = parents_unsort([node1], g)
     pa2 = parents_unsort([node2], g)
-    ch1 = children_unsort([node1], g)
-    ch2 = children_unsort([node2], g)
 
+    # Lemma 24, First condition: alpha and beta have the same domain of values
+    if node1.obs_val != node2.obs_val:
+        return False
+
+    # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and
+    # f(gamma) have the same domain of values
     if len(pa1) == len(pa2):
         mismatched_parents = list(set(pa1)-set(pa2))
         if len(mismatched_parents) == 0:
             return True
-
-
-
-
-
-
-
-        None
-        # Do the normal stuff
+        for pa in mismatched_parents:
+            check_pa_set = list(set(mismatched_parents)-pa)
+            for candidate in check_pa_set:
+                if g.vs.select(name=candidate).obs_val == g.vs.select(name=pa).obs_val:
+                    break
+                if candidate == check_pa_set[-1]:
+                    return False
     else:
         None
         # Check special cases (see D and d)
-
     return False
     
     

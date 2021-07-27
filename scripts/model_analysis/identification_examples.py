@@ -10,6 +10,7 @@ graph_9a.vs["name"] = ["X", "W", "Y", "D", "Z"]
 # graph_9a.vs["int_var"] = [None, "X", "X", None, "X"]
 graph_9a.es["description"] = ["O", "O", "O", "O", "U", "U"]
 cg = gm.parallel_worlds(graph_9a, gamma)
+print(cg)
 print(cg.vs()["name"])
 print(cg.vs()["orig_name"])
 print(cg.vs()["obs_val"])
