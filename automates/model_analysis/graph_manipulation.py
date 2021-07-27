@@ -617,16 +617,18 @@ def should_merge(g, node1, node2):
     # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and
     # f(gamma) have the same domain of values
     if len(pa1) == len(pa2):
-        mismatched_parents = list(set(pa1)-set(pa2))
-        if len(mismatched_parents) == 0:
+        unmatched_parents = list(set(pa1)-set(pa2))
+        if len(unmatched_parents) == 0:
             return True
-        for pa in mismatched_parents:
-            check_pa_set = list(set(mismatched_parents)-pa)
+        for pa in unmatched_parents:
+            check_pa_set = list(set(unmatched_parents)-pa)
             for candidate in check_pa_set:
                 if g.vs.select(name=candidate).obs_val == g.vs.select(name=pa).obs_val:
+                    unmatched_parents = list(set(unmatched_parents)-candidate)
                     break
                 if candidate == check_pa_set[-1]:
                     return False
+        return True
     return False
     
     
