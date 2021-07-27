@@ -498,10 +498,10 @@ def parallel_worlds(g, gamma):
                 if node["orig_name"] == event.orig_name:
                     ov = event.obs_val
                 if node["orig_name"] == event.int_var:
-                    iv = event.int_value
+                    ov = event.int_value
                 p_worlds.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_value}",
-                                               "orig_name": node["name"], "obs_val": ov,
-                                               "int_var": event.int_var, "int_value": iv})
+                                                     "orig_name": node["name"], "obs_val": ov,
+                                                     "int_var": event.int_var, "int_value": event.int_value})
 
             for edge in obs_elist:
                 vlist0 = p_worlds.vs.select(orig_name=p_worlds.vs(edge.tuple[0])["orig_name"][0])
@@ -608,7 +608,28 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     return g, gamma
 
 
-def should_merge(node1, node2):
+def should_merge(g, node1, node2):
+    pa1 = parents_unsort([node1], g)
+    pa2 = parents_unsort([node2], g)
+    ch1 = children_unsort([node1], g)
+    ch2 = children_unsort([node2], g)
+
+    if len(pa1) == len(pa2):
+        mismatched_parents = list(set(pa1)-set(pa2))
+        if len(mismatched_parents) == 0:
+            return True
+
+
+
+
+
+
+
+        None
+        # Do the normal stuff
+    else:
+        None
+        # Check special cases (see D and d)
 
     return False
     
