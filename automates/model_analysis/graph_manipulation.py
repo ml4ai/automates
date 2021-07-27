@@ -484,6 +484,11 @@ def parallel_worlds(g, gamma):
     initial_verts = p_worlds.vs.select(int_var=None)
     obs_elist = p_worlds.es.select(initial_edge=True)
 
+    for event in gamma:
+        if event.obs_val is not None and event.int_var is None:
+            node_to_obs = p_worlds.vs.select(name=event.orig_name)
+            node_to_obs["obs_val"] = event.obs_val
+
     # Replicate graph for each intervention mentioned in gamma
     num_int_vars = 0
     int_vars_checked = []
