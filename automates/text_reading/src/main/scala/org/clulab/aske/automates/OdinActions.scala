@@ -622,7 +622,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val variables = mostComplete.arguments("variable")
         for ((v, i) <- variables.zipWithIndex) {
           // if there are new descrs, we will assume that they should be matched with the vars in the linear left to right order
-          if (newDescriptions.nonEmpty) {
+          if (newDescriptions.nonEmpty && newDescriptions.length == variables.length) {
 
             val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
             val newInt = Interval(math.min(v.tokenInterval.start, newDescriptions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDescriptions(i).tokenInterval.end))
