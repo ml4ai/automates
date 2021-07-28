@@ -533,10 +533,8 @@ class Box(TypedGrometElm):
         (L, J, P, W, B, V) = [list() for _ in range(6)]
         if isinstance(func, BaseConFuncNode):
             (func_box, box_vars) = Function.from_func_node(func)
-            print(func_box.wires)
             W.extend(func_box.wires)
             func_box.wires = [w.uid for w in func_box.wires]
-            print(VARS)
             for var in box_vars:
                 var.metadata = VARS[VariableIdentifier.from_str(var.uid)].metadata
 
@@ -616,7 +614,6 @@ class HasContents:
             for h_edge in hyper_graph
             if len(list(hyper_graph.predecessors(h_edge))) == 0
         ]
-        print("INITIAL EDGES -------------\n", initial_edges)
 
         live_vars = {
             ivar_id.name: (func.identifier, ivar_id) for ivar_id in func.input_variables
@@ -625,7 +622,6 @@ class HasContents:
         def wire_across_funcs(edges: List[HyperEdge]):
             next_funcs = list()
             new_live_vars = dict()
-            print(func.identifier, live_vars.keys())
             for child_edge in edges:
                 child_func = child_edge.func_node
                 next_funcs.extend(list(hyper_graph.successors(child_edge)))
@@ -786,9 +782,9 @@ class Expr(GrometElm):
     @classmethod
     def from_hyper_graph(cls, func: ExpressionFuncNode):
         h_graph = func.hyper_graph
-        if len(h_graph.nodes) == 0:
-            print(func)
-            return
+        # if len(h_graph.nodes) == 0:
+        #     print(func)
+        #     return
         output_h_edge = [
             e for e in h_graph.nodes if len(list(h_graph.successors(e))) == 0
         ][0]
