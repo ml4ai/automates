@@ -6,7 +6,7 @@ import ast
 
 import networkx as nx
 
-from ..utils.misc import uuid
+from automates.utils.misc import uuid
 
 
 @dataclass(repr=False, frozen=False)
