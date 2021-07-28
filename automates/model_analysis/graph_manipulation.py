@@ -109,6 +109,7 @@ def parents_unsort(node, g_obs):
     pa_list = g_obs.neighborhood(node, order=1, mode="in")
     pa_ind = list(set([p for pas in pa_list for p in pas]))
     pa_names = to_names(pa_ind, g_obs)
+    pa_names.remove(node[0])
     return pa_names
 
 
@@ -122,6 +123,7 @@ def children_unsort(node, g):
     ch_list = g.neighborhood(node, order=1, mode="out")
     ch_ind = list(set([c for chs in ch_list for c in chs]))
     ch_names = to_names(ch_ind, g)
+    ch_names.remove(node[0])
     return ch_names
 
 
@@ -569,84 +571,155 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     :param gamma: counterfactual conjunction, represented as a list
     :return: updated graph g and updated gamma
     """
-    def merge_nodes_helper(node_keep, node_delete):
-        ch_delete = children_unsort([node_delete["name"]], g)
-        pa_keep = parents_unsort([node_keep["name"]], g)
-        ch_keep = children_unsort([node_keep["name"]], g)
-        ch = list(set(ch_delete)-set(ch_keep))
+    ch_delete = children_unsort(node2["name"], g)
+    pa_keep = parents_unsort(node1["name"], g)
+    ch_keep = children_unsort(node1["name"], g)
+    ch = list(set(ch_delete)-set(ch_keep))
 
-        deleted_node_info = {"name": node_delete["name"], "int_var": node_delete["int_var"],
-                             "obs_val": node_delete["obs_val"]}
-        g.delete_vertices(node_delete["name"])
-        node_keep_index = node_keep.index
-        edges_to_add = []
+    deleted_node_info = {"name": node2["name"], "int_var": node2["int_var"],
+                         "obs_val": node2["obs_val"], "orig_name":node2["orig_name"]}
+    g.delete_vertices(node2["name"])
+    node_keep_index = node1.indices[0]
+    edges_to_add = []
 
-        # Children of deleted vertex attached appropriately to the kept vertex
-        for child in ch:
-            child_index = g.vs.select(name=child).indices[0]
-            edges_to_add.append((node_keep_index, child_index))
-        g.add_edges(edges_to_add, attributes={"description": ["O"] * len(edges_to_add)})
+    # Children of deleted vertex attached appropriately to the kept vertex
+    for child in ch:
+        child_index = g.vs.select(name=child).indices[0]
+        edges_to_add.append((node_keep_index, child_index))
+    g.add_edges(edges_to_add, attributes={"description": ["O"] * len(edges_to_add)})
 
-        # Rename events in gamma if necessary
-        for event in gamma:
-            if event.orig_name == deleted_node_info["orig_name"]:
-                event.orig_name = node_keep["orig_name"]
-            if event.int_var == deleted_node_info["int_var"]:
-                event.int_var = node_keep["int_var"]
-            if event.obs_val == deleted_node_info["obs_val"]:
-                event.obs_val = node_keep["obs_val"]
+    # Rename events in gamma if necessary
+    for event in gamma:
+        if event.orig_name == deleted_node_info["orig_name"]:
+            event.orig_name = node1["orig_name"]
+        if event.int_var == deleted_node_info["int_var"]:
+            event.int_var = node1["int_var"]
+        if event.obs_val == deleted_node_info["obs_val"]:
+            event.obs_val = node1["obs_val"]
+    return g, gamma
 
     # For readability, I prefer to keep the simplest name
-    if node2["obs_val"] is not None:
-        merge_nodes_helper(node_keep=node2, node_delete=node1)
-    elif node2["int_var"] is None:
-        merge_nodes_helper(node_keep=node2, node_delete=node1)
-    else:
-        merge_nodes_helper(node_keep=node1, node_delete=node2)
-    return g, gamma
+    # if node2["obs_val"] is not None:
+    #     name_to_keep = node2["name"]
+    #     name_to_del = node1["name"]
+    #     merge_nodes_helper(node_keep=node2, node_delete=node1)
+    # elif node2["int_var"] is None:
+    #     name_to_keep = node2["name"]
+    #     name_to_del = node1["name"]
+    #     merge_nodes_helper(node_keep=node2, node_delete=node1)
+    # else:
+    #     name_to_keep = node1["name"]
+    #     name_to_del = node2["name"]
+    #     merge_nodes_helper(node_keep=node1, node_delete=node2)
+    # return g, gamma, name_to_keep, name_to_del
 
 
 def should_merge(g, node1, node2):
-    pa1 = parents_unsort([node1], g)
-    pa2 = parents_unsort([node2], g)
+    pa1 = parents_unsort(node1["name"], g)
+    pa2 = parents_unsort(node2["name"], g)
+    print("unmatched_parents:", list(set(pa1) ^ set(pa2)))
 
-    # Lemma 24, First condition: alpha and beta have the same domain of values
-    if node1.obs_val != node2.obs_val:
-        return False
+    # # Lemma 24, First condition: alpha and beta have the same domain of values
+    # if node1["obs_val"] != node2["obs_val"]:
+    #     print(node1["obs_val"], node2["obs_val"])
+    #     print("obs_val failure")
+    #     return False
 
     # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and
     # f(gamma) have the same domain of values
     if len(pa1) == len(pa2):
-        unmatched_parents = list(set(pa1)-set(pa2))
+        unmatched_parents = list(set(pa1) ^ set(pa2))
         if len(unmatched_parents) == 0:
+            print("merged approved, identical parents")  # todo: testing line
             return True
         for pa in unmatched_parents:
-            check_pa_set = list(set(unmatched_parents)-pa)
+            # check_pa_set = list(set(unmatched_parents)-set(pa))
+            check_pa_set = copy.deepcopy(unmatched_parents)
+            check_pa_set.remove(pa)
             for candidate in check_pa_set:
-                if g.vs.select(name=candidate).obs_val == g.vs.select(name=pa).obs_val:
-                    unmatched_parents = list(set(unmatched_parents)-candidate)
+                print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
+                print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
+                if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
+                    # unmatched_parents = list(set(unmatched_parents)-candidate)
+                    unmatched_parents.remove(candidate)
+                    print("found bijective parent")  # todo: testing line
                     break
                 if candidate == check_pa_set[-1]:
+                    print("no bijective parent")  # todo: testing line
                     return False
+        print("merge approved, all parents matched")  # todo: testing line
         return True
+    print("no matching parents")  # todo: testing line
     return False
     
     
 def make_cg(g, gamma):
     # Construct parallel worlds graph
-    p_worlds = parallel_worlds(copy.deepcopy(g), gamma)
+    cg = parallel_worlds(g, gamma)
 
-    # Rename nodes with descriptive, unique names
-    for node in p_worlds.vs():
-        if node["int_var"] is not None:
-            if node["obs_val"] is not None:
-                node["name"] = f"\\bar{{{node['original_name']}}}_{node['int_var']}"
-            else:
-                node["name"] = f"{node['original_name']}_{node['int_var']}"
-        else:
-            if node["obs_val"] is not None:
-                node["name"] = f"\\bar{{{node['original_name']}}}"
-    return p_worlds
+    # # Rename vertices with descriptive, unique names
+    # for node in cg.vs():
+    #     if node["int_var"] is not None:
+    #         if node["obs_val"] is not None:
+    #             node["name"] = f"\\bar{{{node['orig_name']}}}_{node['int_var']}"
+    #         else:
+    #             node["name"] = f"{node['orig_name']}_{node['int_var']}"
+    #     else:
+    #         if node["obs_val"] is not None:
+    #             node["name"] = f"\\bar{{{node['orig_name']}}}"
+
+    # Topological ordering
+    # topo_indices = p_worlds.topological_sorting()
+    # topo_names = []
+    # for i in topo_indices:
+    #     topo_names.append(p_worlds.vs[i]["name"])
+
+    # Set of original vertices before parallel worlds and topological order of these vertices
+    original_topo_indices = observed_graph(g).topological_sorting()
+    original_topo_names = []
+    for i in original_topo_indices:
+        original_topo_names.append(g.vs[i]["name"])
+
+    # Merge redundant vertices and update names in gamma if necessary
+    gamma_prime = copy.deepcopy(gamma)
+    for orig_node in original_topo_names:
+        merge_candidates = cg.vs.select(orig_name=orig_node)["name"]
+        while len(merge_candidates) > 1:
+            print("merge_candidates at beginning of loop:", merge_candidates)  # todo: testing line
+            primary_node = cg.vs.select(name=merge_candidates[0])
+            secondary_candidates = copy.deepcopy(merge_candidates)
+            secondary_candidates.remove(merge_candidates[0])
+            for secondary_node_name in secondary_candidates:
+                secondary_node = cg.vs.select(name=secondary_node_name)
+                print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
+                if should_merge(cg, primary_node, secondary_node):
+                    (cg, gamma_prime) = merge_nodes(cg, primary_node, secondary_node, gamma_prime)
+                    merge_candidates.remove(secondary_node_name)
+            merge_candidates.remove(primary_node["name"][0])
+    return cg
+
+
+    # Merge redundant vertices, and update names in gamma if necessary
+    # gamma_prime = copy.deepcopy(gamma)
+    # for orig_node in original_topo_names:
+    #     merge_candidates = cg.vs.select(orig_name=orig_node)["name"]
+    #     while len(merge_candidates) > 1:
+    #         print(merge_candidates)
+    #         primary_node = cg.vs.select(name=merge_candidates[0])
+    #         secondary_candidates = copy.deepcopy(merge_candidates)
+    #         secondary_candidates.remove(merge_candidates[0])
+    #         for secondary_node_name in secondary_candidates:
+    #             secondary_node = cg.vs.select(name=secondary_node_name)
+    #             print(primary_node["name"], secondary_node["name"])
+    #             if should_merge(cg, primary_node, secondary_node):
+    #                 (cg, gamma_prime, kept_node, del_node) = merge_nodes(cg, primary_node, secondary_node, gamma_prime)
+    #                 merge_candidates.remove(del_node[0])
+    #                 if kept_node[0] not in merge_candidates:
+    #                     merge_candidates.append(kept_node[0])
+    #                 break
+    #             else:
+    #                 merge_candidates.remove(secondary_node_name)
+    # return cg
 
 
 @dataclass(unsafe_hash=True)
