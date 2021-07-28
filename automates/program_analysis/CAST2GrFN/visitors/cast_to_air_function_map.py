@@ -23,20 +23,31 @@ func_map = {
 }
 
 
-def is_builtin_func(language, name):
+class UnsupportedLanguageExcepetion(Exception):
+    pass
+
+
+class UnknownLanguageBuiltinExcepetion(Exception):
+    pass
+
+
+def is_in_language_map(language):
     if language not in func_map:
         raise Exception(f"Error: Unknown language in builtins map: {language}")
+
+
+def is_builtin_func(language, name):
+    is_in_language_map(language)
     language_map = func_map[language]
     return name in language_map
 
 
 def get_builtin_func_info(language, name):
-    if language not in func_map:
-        raise Exception(f"Error: Unknown language in builtins map: {language}")
+    is_in_language_map(language)
 
     language_map = func_map[language]
     if name not in language_map:
-        raise Exception(
+        raise UnknownLanguageBuiltinExcepetion(
             f'Error: Unknown builtin function for language "{language}": {name}'
         )
 

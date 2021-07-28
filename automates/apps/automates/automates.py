@@ -33,7 +33,7 @@ def translate():
         grfn_result = translate_fortran(body)
     else:
         return ApiResponse(
-            200, "", f"Unable to process source code of type {source_language}"
+            400, "", f"Unable to process source code of type {source_language}"
         )
 
     output_model = body["output_model"]
@@ -45,7 +45,7 @@ def translate():
             }
         )
     else:
-        return ApiResponse(200, "", f"Unable to process output of type {output_model}")
+        return ApiResponse(400, "", f"Unable to process output of type {output_model}")
 
 
 @bp_api_v1.route("/extract/variable_io", methods=["POST"])

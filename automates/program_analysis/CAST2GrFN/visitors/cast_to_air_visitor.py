@@ -159,6 +159,8 @@ class CASTToAIRVisitor(CASTVisitor):
             lambda_inputs = build_unique_list_with_order(
                 right_res[-1].input_variables, lambda v: v
             )
+            # TODO create a make_lambda_arg_list() function that holds the str
+            # join code here that is also found in a few other places
             lambda_expr = f"lambda {','.join([v.get_name() for v in lambda_inputs])}: {right_res[-1].lambda_expr}"
 
             assign_lambda_list.append(
@@ -391,8 +393,9 @@ class CASTToAIRVisitor(CASTVisitor):
             )
 
     def get_op(self, op):
+        # TODO move this definition to a global var or seperate file
         op_map = {
-            "Pow": "^",  # TODO
+            "Pow": "^",
             "Mult": "*",
             "Add": "+",
             "Sub": "-",
@@ -492,6 +495,7 @@ class CASTToAIRVisitor(CASTVisitor):
         """
         TODO
         """
+        # TODO throw an exception if no matching case
         if isinstance(node.func, str):
             called_func_name = node.func
         elif isinstance(node.func, Name):
@@ -1024,14 +1028,18 @@ class CASTToAIRVisitor(CASTVisitor):
         line_high = -1
         for b in body_result:
             if b.source_ref.line_begin is not None:
-                if b.source_ref.line_begin > -1 and b.source_ref.line_begin < line_low:
+                if b.source_ref.line_begin > -1 and (
+                    b.source_ref.line_begin < line_low or line_low == -1
+                ):
                     line_low = b.source_ref.line_begin
-                elif (
+
+                if (
                     b.source_ref.line_end is not None
                     and b.source_ref.line_end > line_high
                 ):
                     line_high = b.source_ref.line_end
-                elif b.source_ref.line_begin > line_high:
+
+                if b.source_ref.line_begin > line_high:
                     line_high = b.source_ref.line_begin
 
         cond_con.add_body_source_ref(
@@ -1127,26 +1135,25 @@ class CASTToAIRVisitor(CASTVisitor):
                     v[1].identifier_information.name for v in matching_vars
                 ]
 
+                def enumerate_vars_and_update_version(vars):
+                    for (idx, v) in enumerate(vars):
+                        name = v.identifier_information.name
+                        if name in decision_var_names:
+                            new_var = C2AVariable(
+                                v.identifier_information,
+                                v.version + 1,
+                                v.type_name,
+                                v.source_ref,
+                            )
+                            vars[idx] = new_var
+
+                            if not self.state.is_var_identifier_in_variables(
+                                new_var.build_identifier()
+                            ):
+                                self.state.add_variable(new_var)
+
                 vars_to_output_from_input_decision = list()
                 for b in body_result:
-
-                    def enumerate_vars_and_update_version(vars):
-                        for (idx, v) in enumerate(vars):
-                            name = v.identifier_information.name
-                            if name in decision_var_names:
-                                new_var = C2AVariable(
-                                    v.identifier_information,
-                                    v.version + 1,
-                                    v.type_name,
-                                    v.source_ref,
-                                )
-                                vars[idx] = new_var
-
-                                if not self.state.is_var_identifier_in_variables(
-                                    new_var.build_identifier()
-                                ):
-                                    self.state.add_variable(new_var)
-
                     enumerate_vars_and_update_version(b.input_variables)
                     enumerate_vars_and_update_version(b.output_variables)
                     enumerate_vars_and_update_version(b.updated_variables)
@@ -1201,7 +1208,7 @@ class CASTToAIRVisitor(CASTVisitor):
 
                 input_decision_lambda_str = (
                     f"lambda "
-                    f"{','.join(initial_vars)},{','.join(updated_vars)}: "
+                    f"{','.join(initial_vars + updated_vars)}: "
                     f"({','.join(initial_vars)}) "
                     f"if {' and '.join([v + ' is None' for v in updated_vars])} "
                     f"else ({','.join(updated_vars)})"
@@ -1237,7 +1244,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 ]
                 output_decision_lambda_str = (
                     f"lambda EXIT,"
-                    f"{','.join(initial_vars)},{','.join(updated_vars)}: "
+                    f"{','.join(initial_vars + updated_vars)}: "
                     f"({','.join(initial_vars)}) "
                     f"if EXIT "
                     f"else ({','.join(updated_vars)})"

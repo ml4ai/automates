@@ -310,6 +310,7 @@ class SensitivityAnalyzer(object):
 
         return SAExecutionEnvironment(G, ordered_dependents, constants, O)
 
+    # TODO Remove timeit decorators
     @staticmethod
     @timeit
     def __run_analysis(analyzer, *args, **kwargs):

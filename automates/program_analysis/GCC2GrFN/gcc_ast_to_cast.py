@@ -68,6 +68,7 @@ class GCC2CAST:
     def to_cast(self):
         modules = []
         self.source_language = "unknown"
+        # NOTE may have issues with casing of the extension
         if "mainInputFilename" in self.gcc_asts[0]:
             file_extension = self.gcc_asts[0]["mainInputFilename"].split(".")[-1]
             if file_extension == "c":
@@ -315,7 +316,7 @@ class GCC2CAST:
             if "name" in lhs:
                 name = lhs["name"]
                 name = name.replace(".", "_")
-                assign_var =  Var(val=Name(name=name), type=cast_type)
+                assign_var = Var(val=Name(name=name), type=cast_type)
             elif "id" in lhs:
                 assign_var = self.variables_ids_to_expression[lhs["id"]]
 
@@ -406,6 +407,7 @@ class GCC2CAST:
                 for op in operands:
                     ops.append(self.parse_operand(op))
                 assign_value = None
+                # TODO handle if there are more than 2 ops
                 if len(ops) == 1:
                     assign_value = UnaryOp(
                         op=cast_op, value=ops[0], source_refs=src_ref

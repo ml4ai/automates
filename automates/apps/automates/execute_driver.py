@@ -14,6 +14,13 @@ def parse_execution_results(results):
 
 def gather_additional_outputs(outputs, GrFN):
     desired_output_values = {}
+    # FIXME hange this code from doing a linear time loop through all the
+    # variables in the GrFN to instead loop through all of the variable
+    # identifiers in outputs. Assert that each identifier presented in outputs
+    #  appears in an identifier variable index stored in GrFN (we may need to
+    #  create this structure) and have that assertion wrapped in a try/catch in
+    # case it fails to return an error message that certain desired output
+    # identifiers were not found in the GrFN.
     for n in GrFN.variables:
         n_name = str(n.identifier)
         if n_name in set(outputs):
@@ -25,6 +32,7 @@ def gather_additional_outputs(outputs, GrFN):
 
 
 def execute_grfn_json(grfn_json, input_json, outputs_json):
+    # TODO Before execution happens, verify all required inputs are given
     GrFN = GroundedFunctionNetwork.from_dict(grfn_json)
     execution_inputs = parse_execution_inputs(input_json)
     results = parse_execution_results(GrFN(execution_inputs))

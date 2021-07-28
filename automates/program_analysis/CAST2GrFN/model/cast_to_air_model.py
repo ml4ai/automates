@@ -6,7 +6,12 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from automates.program_analysis.CAST2GrFN.model.cast import AstNode, var
-from automates.model_assembly.metadata import BaseMetadata, MetadataType, TypedMetadata, VariableFromSource
+from automates.model_assembly.metadata import (
+    BaseMetadata,
+    MetadataType,
+    TypedMetadata,
+    VariableFromSource,
+)
 
 
 class C2ATypeError(TypeError):
@@ -163,21 +168,26 @@ class C2AVariable(object):
 
         has_from_source_metadata = False
         for m in self.metadata:
-            has_from_source_metadata = (has_from_source_metadata 
-                or m.type == MetadataType.FROM_SOURCE)
+            if m.type == MetadataType.FROM_SOURCE:
+                has_from_source_metadata = True
+                break
         # If from_source does not exist already, then it wasnt handled by a special
         # case where we added a variable during processing, so add True from_source
         # metadata
         if not has_from_source_metadata:
-            self.add_metadata(TypedMetadata.from_data({
-                "type": "FROM_SOURCE",
-                "provenance": {
-                    "method": "PROGRAM_ANALYSIS_PIPELINE",
-                    "timestamp": datetime.now()
-                },
-                "from_source": True,
-                "creation_reason": "UNKNOWN"
-            }))
+            self.add_metadata(
+                TypedMetadata.from_data(
+                    {
+                        "type": "FROM_SOURCE",
+                        "provenance": {
+                            "method": "PROGRAM_ANALYSIS_PIPELINE",
+                            "timestamp": datetime.now(),
+                        },
+                        "from_source": True,
+                        "creation_reason": "UNKNOWN",
+                    }
+                )
+            )
 
         return {
             "name": self.build_identifier(),
@@ -533,7 +543,7 @@ class C2AAttributeAccessState(object):
         lambda_dict_accesses = ",".join(
             [f'{obj_var_name}["{v}"]' for v in lambda_dict_keys if obj_var_name != v]
         )
-        lambda_expr = f"lambda {obj_var_name}:" f" ({lambda_dict_accesses})"
+        lambda_expr = f"lambda {obj_var_name}: ({lambda_dict_accesses})"
         return lambda_expr
 
     def add_attribute_access(self, var, attr_var):
@@ -820,13 +830,19 @@ class C2AState(object):
 
         for con in container_air:
             hanging_lambda_vars = [
-                v for l in con["body"] if is_hanging_lambda(l,con) for v in l["output"]
+                v for l in con["body"] if is_hanging_lambda(l, con) for v in l["output"]
             ]
             # Trim variables
             var_air = [v for v in var_air if v["name"] not in hanging_lambda_vars]
             if "return_value" in con:
                 hanging_ret_vars = {v for v in con["return_value"] if v in hanging_vars}
-                lambdas_calling = [l for c in container_air for l in c["body"] if l["function"]["type"] == "container" and l["function"]["name"] == con["name"]]
+                lambdas_calling = [
+                    l
+                    for c in container_air
+                    for l in c["body"]
+                    if l["function"]["type"] == "container"
+                    and l["function"]["name"] == con["name"]
+                ]
 
                 if len(lambdas_calling) == 0:
                     con["return_value"] = [
@@ -843,6 +859,6 @@ class C2AState(object):
                 all_arg_vars.difference_update(hanging_arg_vars)
                 var_air = [v for v in var_air if v["name"] not in hanging_arg_vars]
 
-            con["body"] = [l for l in con["body"] if not is_hanging_lambda(l,con)]
+            con["body"] = [l for l in con["body"] if not is_hanging_lambda(l, con)]
 
         return {"containers": container_air, "variables": var_air, "types": types_air}
