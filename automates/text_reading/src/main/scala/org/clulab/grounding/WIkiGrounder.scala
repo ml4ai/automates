@@ -39,7 +39,7 @@ import org.clulab.utils.FileUtils
 // todo: tests for the grounder
 // todo: cache results to avoid regrounding what we already know
 // todo: read in groundings as a map and use them while creating global vars; add path to groundings in the payload and read them during arg reading
-
+// alt labels should be a seq of strings, not a string: alternativeLabel
 case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
 
 object sparqlWikiResult {
@@ -52,10 +52,10 @@ object WikiGrounding {
   implicit val rw: ReadWriter[WikiGrounding] = macroRW
 }
 
-case class SeqOfWikiGrounding(groundings: Seq[WikiGrounding])
+case class SeqOfWikiGroundings(wikiGroundings: Seq[WikiGrounding])
 
-object SeqOfWikiGrounding {
-  implicit val rw: ReadWriter[SeqOfWikiGrounding] = macroRW
+object SeqOfWikiGroundings {
+  implicit val rw: ReadWriter[SeqOfWikiGroundings] = macroRW
 }
 
 // fixme: rename to capital letter
@@ -194,8 +194,8 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
   /** Grounding a sequence of mentions and return a pretty-printable json string*/
   def mentionsToGlobalVarsWithWikidataGroundings(mentions: Seq[Mention]): String = {
-    val globalVars = ExtractAndAlign.getGlobalVars(mentions)
-    val groundings = SeqOfWikiGrounding(globalVars.map(gv => WikiGrounding(gv.identifier, gv.groundings.getOrElse(Seq.empty))))
+    val globalVars = ExtractAndAlign.getGlobalVars(mentions, Some(Map.empty))
+    val groundings = SeqOfWikiGroundings(globalVars.map(gv => WikiGrounding(gv.identifier, gv.groundings.getOrElse(Seq.empty))))
     write(groundings, indent = 4)
   }
 

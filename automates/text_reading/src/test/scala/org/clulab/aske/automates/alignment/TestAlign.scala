@@ -60,6 +60,7 @@ class TestAlign extends TestAlignment {
     argsForGrounding.commentDescriptionMentions,
     argsForGrounding.equationChunksAndSource,
     argsForGrounding.svoGroundings,
+    argsForGrounding.wikigroundings,
     groundToSVO,
     maxSVOgroundingsPerVar,
     alignmentHandler,

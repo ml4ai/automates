@@ -17,6 +17,7 @@ import upickle.default.macroRW
 import upickle.default.{ReadWriter, macroRW}
 
 import java.util.UUID.randomUUID
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -43,6 +44,33 @@ object AlignmentJsonUtils {
   /**get arguments for the aligner depending on what data are provided**/
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): AlignmentArguments = {
 
+    //todo: add this to payload:
+    val pathToWikiGroundings = "/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding_time_grounded_correctly.json"
+    val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings))
+//    println(groundingsAsUjson + " <<<")
+    val groundToWiki = true
+    val contains = true // just a temp val to later be switched to whether or not the payload contains the groundings
+    val wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]] = if (groundToWiki) {
+      //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
+      //      if (jsonObj.contains("SVOgroundings")) {
+      if (contains) {
+        val groundingMap = mutable.Map[String, Seq[sparqlWikiResult]]()
+        for (item <- groundingsAsUjson("wikiGroundings").arr) {
+          println("item: " + item)
+          val identString = item.obj("variable").str
+          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
+          groundingMap(identString) = groundings
+        }
+        Some(groundingMap.toMap)
+      } else None
+
+    } else None
+
+      println(">>>>" + wikigroundings)
+//        Some(groundingsAsUjson("wikiGroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").str), Some(gr("alternativeLabel").str), Some(gr("score").arr.head.num), gr("source").str)).toSeq).map(item => (item._1, item._2)))
+//      } else None
+//
+//    } else None
     val jsonObj = json.obj
     // load text mentions
     val allMentions =  if (jsonObj.contains("mentions")) {
@@ -157,7 +185,7 @@ object AlignmentJsonUtils {
 
 
 
-    AlignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    AlignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings, wikigroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")
@@ -240,6 +268,12 @@ object AlignmentJsonUtils {
       toReturn("concept_description") = grounding.conceptDescription.get
     } else {
       toReturn("concept_description") = ujson.Null
+    }
+
+    if (grounding.alternativeLabel.isDefined) {
+      toReturn("alternative_labels") = grounding.alternativeLabel.get
+    } else {
+      toReturn("alternative_labels") = ujson.Null
     }
 
     if (grounding.score.isDefined) {
