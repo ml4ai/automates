@@ -130,11 +130,11 @@ def sir(s, i, r, beta, gamma, n):
 #     s           Current amount of individuals that are susceptible
 #     i           Current amount of individuals that are infectious
 #     r           Current amount of individuals that are recovered
-#     T           An array used to record the current day during the simulation
-#     S           An array used to record the susceptible population changes during the simulation
-#     I           An array used to record the currently infected population changes during the simulation
-#     R           An array used to record the recovered population changes during the simulation
-#     E           An array used to record the total (ever) infected (i + r) population changes during the simulation
+#     d_a         An array (list) used to record the current day during the simulation
+#     s_a         An array (list) used to record the susceptible population changes during the simulation
+#     i_a         An array (list) used to record the currently infected population changes during the simulation
+#     r_a         An array (list) used to record the recovered population changes during the simulation
+#     e_a         An array (list) used to record the total (ever) infected (i + r) population changes during the simulation
 #
 #     Input Variables:
 #     gamma       The expected recovery rate from COVID-19 for infected individuals
@@ -158,8 +158,8 @@ def sir(s, i, r, beta, gamma, n):
 #  Calls:       sir
 # ==============================================================================
 def sim_sir(s, i, r, gamma, i_day,  ### original inputs
-            N_p, betas, days, ### changes to original CHIME sim_sir to simplify policy bookkeeping
-            T, S, I, R, E  ### changes to original CHIME sim_sir simulation bookkeeping - here, bookkeeping represented as lists that are passed in as arguments
+            N_p, betas, days,  ### changes to original CHIME sim_sir to simplify policy bookkeeping
+            d_a, s_a, i_a, r_a, e_a  ### changes to original CHIME sim_sir simulation bookkeeping - here, bookkeeping represented as lists that are passed in as arguments
             ):
     n = s + i + r  ## simsir_n_exp
     d = i_day  ## simsir_d_exp
@@ -169,28 +169,28 @@ def sim_sir(s, i, r, gamma, i_day,  ### original inputs
     ### Here, the array size is for this bookkeeping is determined outside of sim_sir
     ### and the arrays are passed in as arguments.
 
-    index = 1  ## simsir_idx_exp  ### here, index is 1-based instead of 0-based
+    index = 0  ## simsir_idx_exp
     for p_idx in range(N_p):  ## simsir_loop_1
         beta = betas[p_idx]  ## simsir_loop_1_beta_exp
         n_days = days[p_idx]  ## simsir_loop_1_N_d_exp
         for d_idx in range(n_days):  ## simsir_loop_1_1
-            T[index] = d  ## simsir_loop_1_1_T_exp
-            S[index] = s  ## simsir_loop_1_1_S_exp
-            I[index] = i  ## simsir_loop_1_1_I_exp
-            R[index] = r  ## simsir_loop_1_1_R_exp
-            E[index] = i + r  # updated "ever" infected (= i + r)  ### In CHIME sir.py, this is performed at end as sum of two numpy arrays; here perform iteratively
+            d_a[index] = d  ## simsir_loop_1_1_T_exp
+            s_a[index] = s  ## simsir_loop_1_1_S_exp
+            i_a[index] = i  ## simsir_loop_1_1_I_exp
+            r_a[index] = r  ## simsir_loop_1_1_R_exp
+            e_a[index] = i + r  # updated "ever" infected (= i + r)  ### In CHIME sir.py, this is performed at end as sum of two numpy arrays; here perform iteratively
             index += 1  ## simsir_loop_1_1_idx_exp
 
             s, i, r = sir(s, i, r, beta, gamma, n)  ## simsir_loop_1_1_call_sir_exp
             d += 1  ## simsir_loop_1_1_d_exp
 
     # Record the last update (since sir() is called at the tail of the inner loop above)
-    T[index] = d  ## simsir_T_exp
-    S[index] = s  ## simsir_S_exp
-    I[index] = i  ## simsir_I_exp
-    R[index] = r  ## simsir_R_exp
+    d_a[index] = d  ## simsir_T_exp
+    s_a[index] = s  ## simsir_S_exp
+    i_a[index] = i  ## simsir_I_exp
+    r_a[index] = r  ## simsir_R_exp
 
-    return s, i, r, E  ### return
+    return s, i, r, d_a, s_a, i_a, r_a, e_a  ### return
 
 
 def main():
@@ -213,11 +213,11 @@ def main():
     # initialize lists for policy and simulation state bookkeeping
     policys_betas = [0.0] * N_p  ## TODO size      # main_pbetas_seq
     policy_days = [0] * N_p  ## main_pdays_seq
-    T = [0.0] * N_t  ## main_T_seq
-    S = [0.0] * N_t  ## main_S_seq
-    I = [0.0] * N_t  ## main_I_seq
-    R = [0.0] * N_t  ## main_R_seq
-    E = [0.0] * N_t  # "ever" infected (= I + R) ## main_E_seq
+    d_a = [0.0] * N_t  ## main_T_seq
+    s_a = [0.0] * N_t  ## main_S_seq
+    i_a = [0.0] * N_t  ## main_I_seq
+    r_a = [0.0] * N_t  ## main_R_seq
+    e_a = [0.0] * N_t  # "ever" infected (= I + R) ## main_E_seq
 
     # initial population
     s_n = 1000  ## main_s_n_exp
@@ -235,16 +235,17 @@ def main():
         policy_days[p_idx] = n_days * p_idx  ## main_loop_1_pdays_exp
 
     # simulate dynamics (corresponding roughly to run_projection() )
-    s_n, i_n, r_n, E = sim_sir(s_n, i_n, r_n, gamma, i_day,  ## main_call_simsir_exp
-                               N_p, policys_betas, policy_days,
-                               T, S, I, R, E)
+    s_n, i_n, r_n, d_a, s_a, i_a, r_a, e_a \
+        = sim_sir(s_n, i_n, r_n, gamma, i_day,  ## main_call_simsir_exp
+                  N_p, policys_betas, policy_days,
+                  d_a, s_a, i_a, r_a, e_a)
 
     print("s_n: " + str(s_n))
     print("i_n: " + str(i_n))
     print("r_n: " + str(r_n))
-    print("E: " + str(E))
+    print("E: " + str(e_a))
 
-    return T, S, I, R, E  # return simulated dynamics
+    return d_a, s_a, i_a, r_a, e_a  # return simulated dynamics
 
 
 main()
