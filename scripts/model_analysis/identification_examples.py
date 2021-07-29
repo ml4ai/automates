@@ -18,8 +18,9 @@ pw = gm.parallel_worlds(graph_9a, gamma)
 # print(pw.vs()["int_value"])
 
 
-cg = gm.make_cg(graph_9a, gamma)
+(cg, gamma_prime) = gm.make_cg(graph_9a, gamma)
 print(cg)
+print(gamma_prime)
 
 # mit_dsep_ex = igraph.Graph(edges=[[0, 2], [1, 2], [2, 3], [2, 4], [3, 5], [5, 6]], directed=True)
 # mit_dsep_ex.vs["name"] = ["A", "B", "C", "D", "E", "F", "G"]

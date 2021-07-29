@@ -576,8 +576,8 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     ch_keep = children_unsort(node1["name"], g)
     ch = list(set(ch_delete)-set(ch_keep))
 
-    deleted_node_info = {"name": node2["name"], "int_var": node2["int_var"],
-                         "obs_val": node2["obs_val"], "orig_name":node2["orig_name"]}
+    deleted_node_info = {"name": node2["name"][0], "int_var": node2["int_var"][0], "obs_val": node2["obs_val"][0],
+                         "orig_name": node2["orig_name"][0], "int_value": node2["int_value"][0]}
     g.delete_vertices(node2["name"])
     node_keep_index = node1.indices[0]
     edges_to_add = []
@@ -596,6 +596,8 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
             event.int_var = node1["int_var"]
         if event.obs_val == deleted_node_info["obs_val"]:
             event.obs_val = node1["obs_val"]
+        if event.int_value == deleted_node_info["int_value"]:
+            event.int_value = node1["int_value"]
     return g, gamma
 
     # For readability, I prefer to keep the simplest name
@@ -698,7 +700,7 @@ def make_cg(g, gamma):
                     (cg, gamma_prime) = merge_nodes(cg, primary_node, secondary_node, gamma_prime)
                     merge_candidates.remove(secondary_node_name)
             merge_candidates.remove(primary_node["name"][0])
-    return cg
+    return cg, gamma_prime
 
 
     # Merge redundant vertices, and update names in gamma if necessary
