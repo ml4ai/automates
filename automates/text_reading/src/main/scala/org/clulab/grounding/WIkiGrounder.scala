@@ -17,13 +17,12 @@ import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.grounding.SVOGrounder.groundDescriptionsToSVO
 import org.clulab.utils.AlignmentJsonUtils.SeqOfGlobalVariables
 import org.clulab.utils.FileUtils
-// get a serializer for groundings
-// have option to load previously stored groundings
+// get a serializer for groundings - done?
+// have option to load previously stored groundings -done
 // todo: how to write a query that will return the closest string, e.g., time for time
 // todo: is the query not deterministic? time was time one time but then that one disappeared
 //todo: pass the python query file from configs
 //todo: document in wiki
-// todo: add wikidata id, link?, and text to global var
 // todo: return only groundings over threshold
 // but what is the threshold? longest term with wiki concept edit distance?
 // can return multiple concepts; possibly both compounds AND components; structured? compound: seq[Grounding], singleton: seq[Grounding]
