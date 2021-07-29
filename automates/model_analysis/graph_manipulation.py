@@ -639,11 +639,13 @@ def should_merge(g, node1, node2):
             for candidate in check_pa_set:
                 print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
                 print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
-                if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
-                    # unmatched_parents = list(set(unmatched_parents)-candidate)
-                    unmatched_parents.remove(candidate)
-                    print("found bijective parent")  # todo: testing line
-                    break
+                if (g.vs.select(name=candidate)["obs_val"][0] is not None) \
+                        or (g.vs.select(name=pa)["obs_val"][0] is not None):
+                    if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
+                        # unmatched_parents = list(set(unmatched_parents)-candidate)
+                        unmatched_parents.remove(candidate)
+                        print("found bijective parent")  # todo: testing line
+                        break
                 if candidate == check_pa_set[-1]:
                     print("no bijective parent")  # todo: testing line
                     return False
