@@ -114,9 +114,9 @@ class RuleBasedEntityFinder(
   private def filterEntities(entities: Seq[Mention]): Seq[Mention] = {
     // ignore citations and remove any entity that is too long given our criteria
     val filteredEntities = entities.filter(m => EntityConstraints.withinMaxLength(m, maxLength))
-    val longest = RuleBasedEntityFinder.keepLongest(filteredEntities, new State())
+//    val longest = RuleBasedEntityFinder.keepLongest(filteredEntities, new State())
     for {
-      m <- longest
+      m <- filteredEntities
       if EntityConstraints.validFinalTag(m)
       if EntityConstraints.matchingBrackets(m)
     } yield m
@@ -128,7 +128,8 @@ class RuleBasedEntityFinder(
     */
   def expand(entity: Mention, maxHops: Int): Mention = {
     val interval = traverseOutgoing(entity, maxHops)
-    new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
+//    new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
+    entity
   }
 
   /** Used by expand to selectively traverse the provided syntactic dependency graph **/
@@ -216,6 +217,7 @@ object RuleBasedEntityFinder extends LazyLogging {
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => m.end - m.start)
     } yield longest
     mns.toVector.distinct
+//    mentions
   }
 
 }

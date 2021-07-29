@@ -105,7 +105,7 @@ rules:
     example: "Initial conditions for total cases and total exposed are calculated by dividing hospitalizations by the hospitalization rate."
     pattern: |
       trigger = [lemma = "divide"]
-      input:Phrase+ = dobj | <acl | nmod_by
+      input:Phrase+ = dobj | <acl | nmod_by | nmod_with
       output:Phrase = nsubjpass | <acl <nmod_as (nmod_since | <acl)
 
   #double_epidemic

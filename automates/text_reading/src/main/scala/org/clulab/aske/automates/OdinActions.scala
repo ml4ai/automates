@@ -8,7 +8,7 @@ import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment, FunctionAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
@@ -212,6 +212,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     newMentions
   }
 
+  def processFunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val trigger = if (m.isInstanceOf[EventMention]) m.asInstanceOf[EventMention].trigger.text else "no Trigger"
+      val foundBy = m.foundBy
+      val att = new FunctionAttachment("FunctionAtt", trigger, foundBy)
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
+  }
 
   def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()
@@ -1182,7 +1193,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val filteredMen = filterFunction(mentions, state)
     val filteredOutputs = if (filteredMen.nonEmpty) filterOutputOverlaps(filteredMen, state) else Seq.empty
     val filteredInputs = if (filteredOutputs.nonEmpty) filterInputOverlaps(filteredOutputs, state) else Seq.empty
-    val toReturn = if (filteredInputs.nonEmpty) filterFunctionArgs(filteredInputs, state) else Seq.empty
+    val filteredArgs = if (filteredInputs.nonEmpty) filterFunctionArgs(filteredInputs, state) else Seq.empty
+    val toReturn = if (filteredArgs.nonEmpty) processFunctions(filteredArgs, state) else Seq.empty
 
     toReturn
 //    mentions

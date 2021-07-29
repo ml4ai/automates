@@ -114,3 +114,17 @@ class ContextAttachment(attType: String, context: ujson.Value, foundBy: String) 
     contextsToJsonObj
   }
 }
+
+class FunctionAttachment(attType: String, trigger: String, foundBy: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = {
+    val toReturn = ujson.Obj()
+    toReturn("attType") = attType //"FunctionAtt"
+    toReturn("trigger") = trigger
+    toReturn("foundBy") = foundBy
+    toReturn
+  }
+
+}
