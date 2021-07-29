@@ -623,7 +623,7 @@ def should_merge(g, node1, node2):
                         or (g.vs.select(name=pa)["obs_val"][0] is not None):
                     if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
                         # unmatched_parents = list(set(unmatched_parents)-candidate)
-                        unmatched_parents.remove(candidate)
+                        unmatched_parents.remove(candidate)  # todo: ask Paul if this is ok
                         print("found bijective parent")  # todo: testing line
                         break
                 if candidate == check_pa_set[-1]:
