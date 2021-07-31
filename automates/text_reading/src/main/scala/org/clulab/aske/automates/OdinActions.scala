@@ -872,7 +872,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
         val newFunctions = copyWithArgs(c, newArgs)
         toReturn.append(newFunctions)
-      } else Seq()
+      }
     }
     for (f <- fragment) {
       if (f.arguments.contains("input")) {
@@ -881,7 +881,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           val newInputs = Map("input" -> inputFilter, "output" -> Seq())
           val newInputMens = copyWithArgs(f, newInputs)
           toReturn.append(newInputMens)
-        } else Seq()
+        }
       }
       if (f.arguments.contains("output")) {
         val outputFilter = f.arguments("output").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
@@ -889,7 +889,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           val newOutputs = Map("input" -> Seq(), "output" -> outputFilter)
           val newOutputMens = copyWithArgs(f, newOutputs)
           toReturn.append(newOutputMens)
-        } else Seq()
+        }
       }
     }
     toReturn ++ other
@@ -1233,7 +1233,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
-//      if singleCapitalWord.findFirstIn(descrText.text).isEmpty
+      if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
 //      if m.tags.get.exists(_.contains("N"))
 

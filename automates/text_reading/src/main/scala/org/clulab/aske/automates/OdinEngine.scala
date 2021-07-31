@@ -87,25 +87,14 @@ class OdinEngine(
     val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
     val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
 
-    for (m <- mensWithContextAttachment) {
-      println("=> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label)
-    } // has att
-
-    for (m <- nonContexts) {
-      println("==> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label )
-    }
-
     // post-process the mentions with untangleConj and combineFunction
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
-    for (m <- descriptionMentions) {
-      println("===> " + m.text + " " +  m.attachments.mkString("||") + " " + m.label )
-    }
 
     val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled)).toVector
 
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {

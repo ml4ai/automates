@@ -128,8 +128,7 @@ class RuleBasedEntityFinder(
     */
   def expand(entity: Mention, maxHops: Int): Mention = {
     val interval = traverseOutgoing(entity, maxHops)
-//    new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
-    entity
+    new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
   }
 
   /** Used by expand to selectively traverse the provided syntactic dependency graph **/
