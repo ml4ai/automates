@@ -419,13 +419,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         for (varOverlapGroup <- groupByVarOverlap(tokOverlapGroup).values) {
           // if there are ConjDescrs among overlapping decsrs, then pick the longest conjDescr
           if (varOverlapGroup.exists(_.label.contains("ConjDescription"))) {
-
-
-
-
             // type 2 has same num of vars and descriptions (a minimum of two pairs)
             val (type2, type1) = varOverlapGroup.partition(_.label.contains("Type2"))
-
             if (type2.isEmpty) {
               // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
               val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescription"))//.maxBy(_.tokenInterval.length)
@@ -536,14 +531,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // all that have conj (to be grouped further) and those with no conj
     val (withConj, withoutConj) = withoutOverlap.partition(m => hasConj(m))
 
-
-
     // descrs that were found as ConjDescriptions - that is events with multiple variables (at least partially) sharing a descriptions vs descriptions that were found with standard rule that happened to have conjunctions in their descriptions
     val (conjDescrs, standardDescrsWithConj) = withConj.partition(_.label.contains("ConjDescription"))
     val (conjType2, conjType1) = conjDescrs.partition(_.label.contains("Type2"))
-
     val toReturn = new ArrayBuffer[Mention]()
-
 
     for (m <- untangleConjunctionsType2(conjType2)) {
       toReturn.append(m)
@@ -567,7 +558,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     // make sure to add non-conj events
     for (m <- withoutConj) toReturn.append(m)
-
 
     // filter by start offset can eliminate the shorter description 'index' if there are two overlapping descriptions - "index" and "index card"; filter by end offset can eliminate the shorter description 'index' if there are two overlapping descriptions - "index" and "leaf area index"
     filterDescrsByOffsets(filterDescrsByOffsets(toReturn, "varAndDescrStartOffset"), "varAndDescrEndOffset")

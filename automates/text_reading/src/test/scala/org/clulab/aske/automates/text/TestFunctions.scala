@@ -4,7 +4,6 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestFunctions extends ExtractionTest {
 
-  // todo: how to test fragment (mentions with only input/output) extraction??
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
 
   val t1a = "Rnl, net long-wave radiation, is the difference between upward long-wave radiation from the standardized surface (Rlu) and downward long-wave radiation from the sky (Rld),"
@@ -294,7 +293,7 @@ class TestFunctions extends ExtractionTest {
   passingTest should s"find functions from t2g: ${t2g}" taggedAs(Somebody) in {
     val desired = Seq(
       "Es" -> Seq("supply of energy to the surface"), // fixme: one additional, unwanted concept is captured as an input due to bad parsing.
-      "water movement to the evaporating sites near the surface" -> Seq("hydraulic properties of the soil") // note: this test was broken after writing filterInputOverlaps action
+      "water movement to the evaporating sites near the surface" -> Seq("hydraulic properties of the soil")
     )
     val mentions = extractMentions(t2g)
     testFunctionEvent(mentions, desired)

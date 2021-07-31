@@ -163,23 +163,9 @@ object TestUtils {
     def testUnaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, desired: Seq[String]): Unit = {
       val found = mentions.filter(_ matches eventType)
       found.length should be(desired.size)
-
       val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
-      for (g <- grouped) {
-        println("g: " + g._1)
-        for (i <- g._2) {
-          println("-> " + i.text)
-        }
-      }
-
-      for (d <- desired) { // Seq[String] - the text of the arg, not the type
-        println("d" + d)
-        println("corr mention: " + grouped.getOrElse(d, "Nothing"))
-
-      }
       // when desired matches the text of the input arg, corresponding mentions are returned and the test passes
-      // when the text does not match, there is no key in grouped for that so the returned seq is empty, and we get a failing test
-      //
+      // when the text does not match, there is no key in grouped for that so the returned seq is empty, and we get a failing test//
       for {
         desiredFragment <- desired
         correspondingMentions = grouped.getOrElse(desiredFragment, Seq())
