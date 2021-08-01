@@ -124,11 +124,35 @@ class Metadatum(MetadatumElm, ABC):
 
 Metadata = NewType('Metadata', Union[List[Metadatum], None])
 
-MetadatumAny = NewType('MetadatumAny', Metadatum)
-MetadatumGromet = NewType('MetadatumGromet', Metadatum)
-MetadatumBox = NewType('MetadatumBox', Metadatum)
-MetadatumVariable = NewType('MetadatumVariable', Metadatum)
-MetadatumJunction = NewType('MetadatumJunction', Metadatum)
+
+# MetadatumAny = NewType('MetadatumAny', Metadatum)
+@dataclass
+class MetadatumAny(Metadatum):
+    pass
+
+
+# MetadatumGromet = NewType('MetadatumGromet', Metadatum)
+@dataclass
+class MetadatumGromet(Metadatum):
+    pass
+
+
+# MetadatumBox = NewType('MetadatumBox', Metadatum)
+@dataclass
+class MetadatumBox(Metadatum):
+    pass
+
+
+# MetadatumVariable = NewType('MetadatumVariable', Metadatum)
+@dataclass
+class MetadatumVariable(Metadatum):
+    pass
+
+
+# MetadatumJunction = NewType('MetadatumJunction', Metadatum)
+@dataclass
+class MetadatumJunction(Metadatum):
+    pass
 
 
 # =============================================================================
