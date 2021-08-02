@@ -603,14 +603,14 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
 def should_merge(g, node1, node2):
     pa1 = parents_unsort(node1["name"], g)
     pa2 = parents_unsort(node2["name"], g)
-    print("unmatched_parents:", list(set(pa1) ^ set(pa2)))
+    # print("unmatched_parents:", list(set(pa1) ^ set(pa2)))  # todo: testing line
 
     # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and
     # f(gamma) have the same domain of values
     if len(pa1) == len(pa2):
         unmatched_parents = list(set(pa1) ^ set(pa2))
         if len(unmatched_parents) == 0:
-            print("merged approved, identical parents")  # todo: testing line
+            # print("merged approved, identical parents")  # todo: testing line
             return True
         for pa in unmatched_parents:
             # check_pa_set = list(set(unmatched_parents)-set(pa))
@@ -623,15 +623,15 @@ def should_merge(g, node1, node2):
                         or (g.vs.select(name=pa)["obs_val"][0] is not None):
                     if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
                         # unmatched_parents = list(set(unmatched_parents)-candidate)
-                        unmatched_parents.remove(candidate)  # todo: ask Paul if this is ok
-                        print("found bijective parent")  # todo: testing line
+                        unmatched_parents.remove(candidate)
+                        # print("found bijective parent")  # todo: testing line
                         break
                 if candidate == check_pa_set[-1]:
-                    print("no bijective parent")  # todo: testing line
+                    # print("no bijective parent")  # todo: testing line
                     return False
-        print("merge approved, all parents matched")  # todo: testing line
+        # print("merge approved, all parents matched")  # todo: testing line
         return True
-    print("no matching parents")  # todo: testing line
+    # print("no matching parents")  # todo: testing line
     return False
     
     
@@ -650,13 +650,13 @@ def make_cg(g, gamma):
     for orig_node in original_topo_names:
         merge_candidates = cg.vs.select(orig_name=orig_node)["name"]
         while len(merge_candidates) > 1:
-            print("merge_candidates at beginning of loop:", merge_candidates)  # todo: testing line
+            # print("merge_candidates at beginning of loop:", merge_candidates)  # todo: testing line
             primary_node = cg.vs.select(name=merge_candidates[0])
             secondary_candidates = copy.deepcopy(merge_candidates)
             secondary_candidates.remove(merge_candidates[0])
             for secondary_node_name in secondary_candidates:
                 secondary_node = cg.vs.select(name=secondary_node_name)
-                print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
+                # print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
                 if should_merge(cg, primary_node, secondary_node):
                     (cg, gamma_prime) = merge_nodes(cg, primary_node, secondary_node, gamma_prime)
                     merge_candidates.remove(secondary_node_name)
