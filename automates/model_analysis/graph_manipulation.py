@@ -563,6 +563,9 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     :param gamma: counterfactual conjunction, represented as a list
     :return: updated graph g and updated gamma
     """
+    if (node1["int_var"] == node1["orig_name"]) and (node2["int_var"] == node2["orig_name"]):
+        if node1["int_value"] != node2["int_value"]:
+            return g, "Inconsistent"
     ch_delete = children_unsort(node2["name"], g)
     pa_keep = parents_unsort(node1["name"], g)
     ch_keep = children_unsort(node1["name"], g)
@@ -651,6 +654,8 @@ def make_cg(g, gamma):
                 # print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
                 if should_merge(cg, primary_node, secondary_node):
                     (cg, gamma_prime) = merge_nodes(cg, primary_node, secondary_node, gamma_prime)
+                    if gamma_prime == "Inconsistent":
+                        return cg, gamma_prime
                     merge_candidates.remove(secondary_node_name)
             merge_candidates.remove(primary_node["name"][0])
 
