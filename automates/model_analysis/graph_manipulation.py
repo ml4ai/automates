@@ -157,28 +157,28 @@ def children_unsort(node, g):
 #
 #
 # # Assume "O" and "U" are specified in "description" attribute
-# def compare_graphs(g1, g2):
-#     """
-#     Determines if two graphs are the same (including edge descriptions)
-#     :param g1: First graph
-#     :param g2: Second graph
-#     :return: T/F indicating if G1 is the same as G2
-#     """
-#     e1 = numpy.array(g1.get_edgelist())
-#     n1 = numpy.shape(e1)[0]
-#     e2 = numpy.array(g2.get_edgelist())
-#     n2 = numpy.shape(e2)[0]
-#     if n1 != n2:
-#         return False
-#     if "description" in g1.es.attributes():
-#         e1 = numpy.append(e1, numpy.transpose([g1.es["description"]]), axis=1)
-#     else:
-#         e1 = numpy.append(e1, numpy.transpose([numpy.repeat("O", n1)]), axis=1)
-#     if "description" in g2.es.attributes():
-#         e2 = numpy.append(e2, numpy.transpose([g2.es["description"]]), axis=1)
-#     else:
-#         e2 = numpy.append(e2, numpy.transpose([numpy.repeat("O", n2)]), axis=1)
-#     return numpy.array_equal(e1, e2)
+def compare_graphs(g1, g2):
+    """
+    Determines if two graphs are the same (including edge descriptions)
+    :param g1: First graph
+    :param g2: Second graph
+    :return: T/F indicating if G1 is the same as G2
+    """
+    e1 = numpy.array(g1.get_edgelist())
+    n1 = numpy.shape(e1)[0]
+    e2 = numpy.array(g2.get_edgelist())
+    n2 = numpy.shape(e2)[0]
+    if n1 != n2:
+        return False
+    if "description" in g1.es.attributes():
+        e1 = numpy.append(e1, numpy.transpose([g1.es["description"]]), axis=1)
+    else:
+        e1 = numpy.append(e1, numpy.transpose([numpy.repeat("O", n1)]), axis=1)
+    if "description" in g2.es.attributes():
+        e2 = numpy.append(e2, numpy.transpose([g2.es["description"]]), axis=1)
+    else:
+        e2 = numpy.append(e2, numpy.transpose([numpy.repeat("O", n2)]), axis=1)
+    return numpy.array_equal(e1, e2)
 
 
 # Edge Selection Function (for line 3 section of ID)
@@ -312,6 +312,31 @@ def c_components(g, topo):
             rank = rank + topo.index(node)
         cc_rank.append(rank)
     (cc_sorted, _) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1], reverse=True))))
+    print(cc_sorted)
+    return cc_sorted
+
+
+def c_components_new(g, topo):
+    """
+    Finds c-components in graph g
+    :param g: graph
+    :param topo: topological ordering
+    :return: list of c-components (each c-component is a list of nodes)
+    """
+    bidirected_edges = g.es.select(description="U")
+    g_bidirected = g.subgraph_edges(bidirected_edges, delete_vertices=False)
+    subgraphs = g_bidirected.decompose()
+    cc = []
+    cc_rank = []
+    for subgraph in subgraphs:
+        nodes = ts(subgraph.vs["name"], topo)
+        cc.append(nodes)
+        rank = 0
+        for node in nodes:
+            rank = rank + topo.index(node)
+        cc_rank.append(rank)
+    (cc_sorted, _) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1], reverse=True))))
+    print(cc_sorted)
     return cc_sorted
 
 
@@ -617,8 +642,8 @@ def should_merge(g, node1, node2):
             check_pa_set = copy.deepcopy(unmatched_parents)
             check_pa_set.remove(pa)
             for candidate in check_pa_set:
-                print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
-                print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
+                # print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
+                # print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
                 if (g.vs.select(name=candidate)["obs_val"][0] is not None) \
                         or (g.vs.select(name=pa)["obs_val"][0] is not None):
                     if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
