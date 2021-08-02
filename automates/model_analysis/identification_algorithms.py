@@ -249,3 +249,22 @@ def compute_IDC(y, x, z, p, g, g_obs, v, topo, tree):
     tree.call.id_check = nxt.tree.call.id_check
     tree.children.append(nxt.tree)
     return gm.ResultsInternal(p=nxt.p, tree=tree)
+
+
+def cf_identifiability(g, gamma, delta=None):
+    if "description" not in g.edge_attributes():
+        g.es["description"] = numpy.repeat("O", len(g.es))
+    g_obs = gm.observed_graph(g)
+    if not g_obs.is_dag():
+        raise ValueError("Graph 'G' is not a DAG.")
+    if delta is not None:
+        return cf_ID(g, gamma)
+    return cf_IDC(g, gamma, delta)
+
+
+def cf_ID(g, gamma):
+    return None
+
+
+def cf_IDC(g, gamma, delta):
+    return None
