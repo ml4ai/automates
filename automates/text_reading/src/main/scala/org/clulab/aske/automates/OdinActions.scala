@@ -997,17 +997,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   contextSelected.append(c)
                 }
               }
-              //              val filteredContext = filterContextSelected(contextSelected, m)
-              if (contextSelected.nonEmpty) {
-                val newMen = contextToAttachment(m, contextSelected, foundBy = "tokenInterval overlap", state)
+              val filteredContext = filterContextSelected(contextSelected, m)
+              if (filteredContext.nonEmpty) {
+                val newMen = contextToAttachment(m, filteredContext, foundBy = "tokenInterval overlap", state)
                 toReturn.append(newMen)
-              }
+              } else toReturn.append(m)
             }
           }
         } else toReturn.append(m)
       }
     }
     toReturn.distinct ++ mensNotToAttach
+//    mentions
   }
 
 //  def makeNewContextEvents(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -1060,15 +1061,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val filteredContext = new ArrayBuffer[Mention]
     val contextNumCheck = new ArrayBuffer[Mention]
     val completeFilterContext = new ArrayBuffer[Mention]
-    val trigger = new ArrayBuffer[Mention]
-    if (mention.isInstanceOf[EventMention]) trigger.append(mention.asInstanceOf[EventMention].trigger)
+    val trigger = if (mention.isInstanceOf[EventMention]) mention.asInstanceOf[EventMention].trigger.tokenInterval else null
     for (c <- contexts) {
     for (argType <- mention.arguments) {
       for {
         arg <- argType._2
         newMention = mention match {
-          case rm: RelationMention => if (!(c.startOffset == arg.startOffset && c.endOffset == arg.endOffset)) contextNumCheck.append(c)
-          case em: EventMention => if (!(c.startOffset == arg.startOffset && c.endOffset == arg.endOffset)) contextNumCheck.append(c)
+          case rm: RelationMention => if (!c.tokenInterval.overlaps(arg.tokenInterval)) contextNumCheck.append(c)
+          case em: EventMention => if (!c.tokenInterval.overlaps(arg.tokenInterval) && !c.tokenInterval.overlaps(trigger)) contextNumCheck.append(c)
           case _ => ???
       }
         } yield contextNumCheck
