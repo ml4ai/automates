@@ -258,11 +258,35 @@ def cf_identifiability(g, gamma, delta=None):
     if not g_obs.is_dag():
         raise ValueError("Graph 'G' is not a DAG.")
     if delta is not None:
-        return cf_ID(g, gamma)
-    return cf_IDC(g, gamma, delta)
+        return cf_IDC(g, gamma, delta)
+    return cf_ID(g, gamma)
 
 
 def cf_ID(g, gamma):
+    # Line 1
+    if len(gamma) == 0:
+        print("gamma is empty")
+        return 1
+
+    for event in gamma:
+        if event.orig_name == event.int_var:
+
+            # Line 2
+            if event.obs_val != event.int_value:
+                print("Violates Axiom of Effectiveness, gamma is inconsistent")
+                return 0
+
+            # Line 3
+            if event.obs_val == event.int_value:
+                return cf_ID(g, gamma.remove(event))
+
+    # Line 4
+    (cg, gamma_prime) = gm.make_cg(g, gamma)
+
+    # Line 5
+    if gamma_prime == "Inconsistent":
+        print("gamma_prime is inconsistent")
+        return 0
     return None
 
 
