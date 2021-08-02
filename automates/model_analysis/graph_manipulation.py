@@ -290,42 +290,9 @@ def c_components(g, topo):
     :param topo: topological ordering
     :return: list of c-components (each c-component is a list of nodes)
     """
-    a = g.get_adjacency()
-    n = a.shape[0]
-    v = g.vs["name"]
-    bidirected = []
-    for i in range(0, n):
-        for j in range(i + 1, n):
-            if a[i][j] >= 1 and a[j][i] >= 1:
-                bidirected.append(i)
-                bidirected.append(j)
-    bidirected_edges = g.es.select(_within=bidirected)
-    g_bidirected = g.subgraph_edges(bidirected_edges, delete_vertices=False)
-    subgraphs = g_bidirected.decompose()
-    cc = []
-    cc_rank = []
-    for subgraph in subgraphs:
-        nodes = ts(subgraph.vs["name"], topo)
-        cc.append(nodes)
-        rank = 0
-        for node in nodes:
-            rank = rank + topo.index(node)
-        cc_rank.append(rank)
-    (cc_sorted, _) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1], reverse=True))))
-    print(cc_sorted)
-    return cc_sorted
-
-
-def c_components_new(g, topo):
-    """
-    Finds c-components in graph g
-    :param g: graph
-    :param topo: topological ordering
-    :return: list of c-components (each c-component is a list of nodes)
-    """
-    bidirected_edges = g.es.select(description="U")
-    g_bidirected = g.subgraph_edges(bidirected_edges, delete_vertices=False)
-    subgraphs = g_bidirected.decompose()
+    unobs_edges = g.es.select(description="U")
+    g_unobs = g.subgraph_edges(unobs_edges, delete_vertices=False)
+    subgraphs = g_unobs.decompose()
     cc = []
     cc_rank = []
     for subgraph in subgraphs:
