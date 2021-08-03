@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
-import org.clulab.discourse.rstparser.{DiscourseTree, TokenOffset}
+import org.clulab.discourse.rstparser.{DiscourseTree, RSTParser, RelationClassifier, TokenOffset}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
@@ -74,6 +74,8 @@ object DiscourseExperiments extends App {
 // START RUN DISC PARSER ON SHORT TEXT
   val text = "Simulations of crop development and growth for over 28 crops are possible, including the CERES family of models for maize and sorghum and the CROPGRO family of models for soybean and cotton."
 
+
+
   val discExplorer = new DiscourseExplorer
   val doc = processor.annotate(text)
           //      println("-->" + doc.discourseTree.get)
@@ -83,6 +85,35 @@ object DiscourseExperiments extends App {
 
               println("->" + tuple.relation + ": " + tuple.nucText.mkString(" ") + "||" + " " + tuple.satText.mkString(" ") + " || " + tuple.start + " " + tuple.end + "\n")
             }
+
+
+  // Here, trying to use relations classifier
+  // todo: need to be able if the edus interval array is actually doing any work here or is the text of fragments to classify relations between is enough
+  //  val text1 = "Rains cause flooding;"
+  val text1 = "Previous studies indicated that maize height and LAI would reduce when they suffer water deficit during the early growing stage."
+  val doc1 = processor.annotate(text1)
+  //  val text2 = "in contrast, excessive sun."
+  val text2 = "In contrast they don't help."
+  val doc2 = processor.annotate(text2)
+
+  val fullSent = "Previous studies indicated that maize height and LAI would reduce when they suffer water deficit during the early growing stage. In contrast they don't help."
+  val fullSentDoc = processor.annotate(fullSent)
+
+  val rstParser = RSTParser.loadFrom("org/clulab/discourse/rstparser/model.dep.rst.gz")
+
+//  println("-> " + doc1.discourseTree.get)
+//  println("=>" + doc2.discourseTree.get)
+  val edus = Array(Array((0,3)))//org.clulab.discourse.rstparser.Utils.mkGoldEDUs(fullSentDoc.discourseTree.get, fullSentDoc)
+  println(":>" + edus.isEmpty)
+  println(":::>" + edus.head.head._1 + " " + edus.head.head._2)
+  println("::>" + doc1.discourseTree.get)
+  println("::::>" + doc2.discourseTree.get)
+  println(";;>" + fullSentDoc.discourseTree.get)
+  println(rstParser.relModel + "<<")
+  val datum = rstParser.relModel.mkDatum(doc1.discourseTree.get, doc2.discourseTree.get, fullSentDoc, edus, "Label")
+  val label = rstParser.relModel.classifier.classOf(datum)
+  println("LABEL: " + label)
+
   // END RUN DISC PARSER ON SHORT TEXT
 
   // START EXPERIMENT FOR BSH: OVERLAP BETWEEN CAUSE DISCOURSE RELATIONS AND EIDOS CAUSAL EXTRACTIONS
