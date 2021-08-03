@@ -7,11 +7,11 @@ term = sys.argv[1]
 #have this regex as filter: "^(\\w*\\s){{0,2}}{term}(\\sof)?(\\s\\w*){{0,3}}$"
 #make item description optional in the printout (some sort of getOrElse("None"))
 # is mwapi:gsrsearch '{term}' more time consuming than mwapi:gsrsearch "inlabel:'{term}'"? (potentially larger search space)
-# previously used order by strlen(str(?label)) for sorting
+# todo: get this to work order by desc(strlen(str(?searchterm))/strlen(str(?itemLabel))) with search term defined as   VALUES ?term {term} before service
 
 url = 'https://query.wikidata.org/sparql'
 query = f"""
-SELECT DISTINCT ?item ?itemLabel ?itemDescription ?itemAltLabel
+SELECT DISTINCT ?item ?itemLabel ?itemDescription ?itemAltLabel ?subclassOf
 WHERE
 {{
     SERVICE wikibase:mwapi
@@ -28,11 +28,13 @@ mwapi:gsrlimit "max".
 ?article schema:about ?item ;
     schema:isPartOf <https://en.wikipedia.org/> .
 
+    ?item wdt:P279 ?subclassOf.
     FILTER REGEX (?label, "^(\\\\w*\\\\s){{0,2}}?{term}(\\\\sof)?(\\\\s\\\\w*){{0,3}}?$")
 
     SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
 }}
-order by desc(strlen(str(?label))/strlen(str(?itemLabel)))
+order by strlen(str(?label))
+
 LIMIT 30
 """
 r = requests.get(url, params = {'format': 'json', 'query': query})
@@ -41,17 +43,14 @@ data = r.json()
 
 
 for result in data["results"]["bindings"]:
-	if 'itemDescription' in result.keys() and 'itemAltLabel' in result.keys():
-		print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}\t{result['itemDescription']['value']}\t{result['itemAltLabel']['value']}")
-	elif 'itemDescription' in result.keys() and not 'itemAltLabel' in result.keys():
-		print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}\t{result['itemDescription']['value']}")
+    item = result['item']['value']
+    itemLabel = result['itemLabel']['value']
+    descr = result['itemDescription']['value'] if 'itemDescription' in result.keys()  else "NA"
+    altLabel = result['itemAltLabel']['value'] if 'itemAltLabel' in result.keys()  else "NA"
+    subClassOf = result['subclassOf']['value'] if 'subclassOf' in result.keys()  else "NA"
 
-	elif 'itemAltLabel' in result.keys() and not 'itemDescription' in result.keys():
-		print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}\t{result['itemAltLabel']['value']}")
-
-	else:
-	    print(f"{term}\t{result['item']['value']}\t{result['itemLabel']['value']}")#\t{result['itemDescription']['value']}")
-
+    print(f"{term}\t{item}\t{itemLabel}\t{descr}\t{altLabel}\t{subClassOf}")
+	
 
 #the link to the query on wikidata api https://w.wiki/Sfu
 

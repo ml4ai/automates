@@ -7,7 +7,7 @@ import org.clulab.aske.automates.data.CosmosJsonDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.grounding.SVOGrounder.{editDistanceNormalized, groundTerms, rankAndReturnSVOGroundings, runSparqlQuery, sparqlDir}
-import org.clulab.grounding.{sparqlResult, wikidataGrounder}
+import org.clulab.grounding.{sparqlResult, WikidataGrounder}
 import org.clulab.utils.Sourcer
 import ai.lum.common.ConfigUtils._
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -36,7 +36,7 @@ object ForMethodTesting {
 //    val text = "The farmer grows crops in an agricultural district of Brittany."
     val text = "I went to get a haircut and the barber gave me a crop."
     val sent = proc.annotate(text)
-    val grounder = wikidataGrounder
+    val grounder = WikidataGrounder
     val wikiGroundings = grounder.groundTermsToWikidataRanked("Cr", Seq("crop"), sent.sentences.head.words, w2v, 10).getOrElse("No groundings")
 
     println(">>>" + wikiGroundings)

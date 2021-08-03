@@ -14,7 +14,7 @@ import org.clulab.aske.automates.data.CosmosJsonDataLoader
 import org.clulab.aske.automates.data.ScienceParsedDataLoader
 import org.clulab.aske.automates.scienceparse.ScienceParseClient
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.grounding.{SVOGrounder, sparqlWikiResult, wikidataGrounder}
+import org.clulab.grounding.{SVOGrounder, sparqlWikiResult, WikidataGrounder}
 import org.clulab.odin.serialization.json.JSONSerializer
 import upickle.default._
 
@@ -115,7 +115,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
       val ujsonOfMenFile = ujson.read(mentionsFile)
       val defMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile).filter(m => m.label contains "Description")
-      val glVars = wikidataGrounder.mentionsToGlobalVarsWithWikidataGroundings(defMentions)
+      val glVars = WikidataGrounder.mentionsToGlobalVarsWithWikidataGroundings(defMentions)
 
 
       Ok(glVars).as(JSON)

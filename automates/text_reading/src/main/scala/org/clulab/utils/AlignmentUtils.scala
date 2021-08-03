@@ -58,7 +58,7 @@ object AlignmentJsonUtils {
         for (item <- groundingsAsUjson("wikiGroundings").arr) {
           println("item: " + item)
           val identString = item.obj("variable").str
-          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
+          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("subclassOf").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
           groundingMap(identString) = groundings
         }
         Some(groundingMap.toMap)
@@ -274,6 +274,12 @@ object AlignmentJsonUtils {
       toReturn("alternative_labels") = grounding.alternativeLabel.get
     } else {
       toReturn("alternative_labels") = ujson.Null
+    }
+
+    if (grounding.subClassOf.isDefined) {
+      toReturn("subclassOf") = grounding.alternativeLabel.get
+    } else {
+      toReturn("subclassOf") = ujson.Null
     }
 
     if (grounding.score.isDefined) {

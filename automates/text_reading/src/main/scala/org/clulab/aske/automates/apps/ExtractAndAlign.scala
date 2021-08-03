@@ -18,7 +18,7 @@ import org.clulab.odin.{Attachment, Mention}
 import org.clulab.utils.{AlignmentJsonUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding.{SVOGrounder, sparqlResult, sparqlWikiResult, wikidataGrounder}
+import org.clulab.grounding.{SVOGrounder, sparqlResult, sparqlWikiResult, WikidataGrounder}
 import org.clulab.odin.serialization.json.JSONSerializer
 
 import java.util.UUID.randomUUID
@@ -129,7 +129,7 @@ object ExtractAndAlign {
   //  println("vectors: " + vectors)
   // fixme: update vectors here
   val w2v = new Word2Vec("/Users/alexeeva/Repos/automates/automates/text_reading/src/main/resources/vectors.txt", None)
-  lazy val grounder = wikidataGrounder
+  lazy val grounder = WikidataGrounder
 
   def groundMentions(
                       grfn: Value,
