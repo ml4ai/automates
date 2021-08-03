@@ -6,6 +6,8 @@ term = sys.argv[1]
 #todo for the query:
 #have this regex as filter: "^(\\w*\\s){{0,2}}{term}(\\sof)?(\\s\\w*){{0,3}}$"
 #make item description optional in the printout (some sort of getOrElse("None"))
+# is mwapi:gsrsearch '{term}' more time consuming than mwapi:gsrsearch "inlabel:'{term}'"? (potentially larger search space)
+# previously used order by strlen(str(?label)) for sorting
 
 url = 'https://query.wikidata.org/sparql'
 query = f"""
@@ -17,7 +19,7 @@ WHERE
     bd:serviceParam wikibase:endpoint "www.wikidata.org";
 wikibase:api "Generator";
 mwapi:generator "search";
-mwapi:gsrsearch "inlabel:'{term}'";
+mwapi:gsrsearch "'{term}'";
 mwapi:gsrlimit "max".
 ?item wikibase:apiOutputItem mwapi:title.
 }}
@@ -30,7 +32,7 @@ mwapi:gsrlimit "max".
 
     SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
 }}
-order by strlen(str(?label))
+order by desc(strlen(str(?label))/strlen(str(?itemLabel)))
 LIMIT 30
 """
 r = requests.get(url, params = {'format': 'json', 'query': query})
