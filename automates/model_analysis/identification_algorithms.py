@@ -272,7 +272,8 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     if len(gamma) == 0:
         print("gamma is empty")
         tree.call.line = 1
-        return 1, tree  # todo: make sure int is ok
+        tree.call.id_check = True
+        return gm.CfResultsInternal(p, 1, tree)
 
     for event in gamma:
         if event.orig_name == event.int_var:
@@ -280,11 +281,17 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
             # Line 2
             if event.obs_val != event.int_value:
                 print("Violates Axiom of Effectiveness, gamma is inconsistent")
-                return 0
+                tree.call.line = 2
+                tree.call.id_check = True
+                return gm.CfResultsInternal(p, 0, tree)
 
             # Line 3
             if event.obs_val == event.int_value:
-                return cf_ID(g, gamma.remove(event))
+                nxt = cf_ID(g, gamma.remove(event), v, p)
+                tree.children.append(nxt.tree)
+                tree.call.line = 3
+                tree.call.id_check = nxt.tree.call.id_check
+                return gm.CfResultsInternal(nxt.p, nxt.p_int, tree)
 
     # Line 4
     (cg, gamma_prime) = gm.make_cg(g, gamma)
@@ -292,7 +299,9 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     # Line 5
     if gamma_prime == "Inconsistent":
         print("gamma_prime is inconsistent")
-        return 0
+        tree.call.line = 5
+        tree.call.id_check = True
+        return gm.CfResultsInternal(p, 0, tree)
     return None
 
 

@@ -738,7 +738,7 @@ class TreeNode:
 class CfTreeNode:
     root: Probability = Probability()
     call: Call = CfCall()
-    children: List[TreeNode] = field(default_factory=list)
+    children: List[CfTreeNode] = field(default_factory=list)
 
 
 @dataclass(unsafe_hash=True)
@@ -750,6 +750,7 @@ class ResultsInternal:
 @dataclass(unsafe_hash=True)
 class CfResultsInternal:
     p: Probability = Probability()
+    p_int: int = None
     tree: CfTreeNode = CfTreeNode()
 
 
