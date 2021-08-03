@@ -258,13 +258,13 @@ object ExtractAndAlign {
         }
       }
 
-      if (groundings.nonEmpty) {
-        for (gr <- groundings.get) {
-
-
-            println(">>" + gr)
-          }
-        }
+//      if (groundings.nonEmpty) {
+//        for (gr <- groundings.get) {
+//
+//
+//            println(">>" + gr)
+//          }
+//        }
 
 
       val glVar = GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs, groundings)

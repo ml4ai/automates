@@ -94,14 +94,25 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
         }
 
+        // when there are multiple subclassOf per wikidata entry, each returned separately, so we need to make one new wiki result object with all of the subclass entries
+        val grouped = lineResults.groupBy(_.conceptID)
+        val newLineResults = new ArrayBuffer[sparqlWikiResult]()
+        for (g <- grouped) {
+          if (g._2.length > 1) {
+            val allClassOf = Some(g._2.map(_.subClassOf.getOrElse("NA")).mkString(","))
+            val oneResultInGroup = g._2.head
+            newLineResults.append(new sparqlWikiResult(oneResultInGroup.searchTerm, oneResultInGroup.conceptID, oneResultInGroup.conceptLabel, oneResultInGroup.conceptDescription, oneResultInGroup.alternativeLabel, allClassOf, oneResultInGroup.score, oneResultInGroup.source))
+          }
+        }
 
-        val allLabels = lineResults.map(res => res.conceptLabel)
+
+        val allLabels = newLineResults.map(res => res.conceptLabel)
 //                println("all labels: " + allLabels.mkString("|"))
         val duplicates = allLabels.groupBy(identity).collect { case (x, ys) if ys.lengthCompare(1) > 0 => x }.toList
         //
 //         for (d <- duplicates) println("dup: " + d)
         //
-        val (uniqueLabelResLines, nonUniqLabelResLines) = lineResults.partition(res => !duplicates.contains(res.conceptLabel))
+        val (uniqueLabelResLines, nonUniqLabelResLines) = newLineResults.partition(res => !duplicates.contains(res.conceptLabel))
         //
         allSparqlWikiResults ++= uniqueLabelResLines
         //out of the items with the same label, e.g., crop (grown and harvested plant or animal product) vs. crop (hairstyle), choose the one with the highest score based on similarity of the wikidata description and alternative label to the sentence and search term the search term from
