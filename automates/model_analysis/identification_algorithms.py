@@ -302,6 +302,17 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         tree.call.line = 5
         tree.call.id_check = True
         return gm.CfResultsInternal(p, 0, tree)
+
+    # Line 6
+    cg_obs = gm.observed_graph(cg)
+    cg_topo = cg_obs.topological_sorting()
+    s = gm.c_components(cg, cg_topo)
+    if len(s) > 1:
+        tree.call.line = 6
+        product_list = []
+        id_check_list = []
+        for s_element in s:
+            None
     return None
 
 
