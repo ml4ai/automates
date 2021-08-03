@@ -257,16 +257,22 @@ def cf_identifiability(g, gamma, delta=None):
     g_obs = gm.observed_graph(g)
     if not g_obs.is_dag():
         raise ValueError("Graph 'G' is not a DAG.")
+    topo = g_obs.topological_sorting()
     if delta is not None:
         return cf_IDC(g, gamma, delta)
-    return cf_ID(g, gamma)
+    return cf_ID(g, gamma, topo)
 
 
-def cf_ID(g, gamma):
+def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
+    if (len(p.var) == 0) and (not (p.product or p.fraction)):
+        p = gm.Probability(var=v)
+    tree.call = gm.CfCall(gamma=gamma, p=p, g=g, line=0, v=v, id_check=False)
+
     # Line 1
     if len(gamma) == 0:
         print("gamma is empty")
-        return 1
+        tree.call.line = 1
+        return 1, tree  # todo: make sure int is ok
 
     for event in gamma:
         if event.orig_name == event.int_var:

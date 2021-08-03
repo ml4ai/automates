@@ -714,6 +714,20 @@ class Call:
 
 
 @dataclass(unsafe_hash=True)
+class CfCall:
+    gamma: str = ""
+    delta: str = ""
+    p: Probability = Probability()
+    g: igraph.Graph = igraph.Graph()
+    line: int = 0
+    v: list = field(default_factory=list)
+    id_check: bool = False
+    ancestors: list = field(default_factory=list)
+    s: list = field(default_factory=list)
+    s_prime: list = field(default_factory=list)
+
+
+@dataclass(unsafe_hash=True)
 class TreeNode:
     root: Probability = Probability()
     call: Call = Call()
@@ -721,9 +735,22 @@ class TreeNode:
 
 
 @dataclass(unsafe_hash=True)
+class CfTreeNode:
+    root: Probability = Probability()
+    call: Call = CfCall()
+    children: List[TreeNode] = field(default_factory=list)
+
+
+@dataclass(unsafe_hash=True)
 class ResultsInternal:
     p: Probability = Probability()
     tree: TreeNode = TreeNode()
+
+
+@dataclass(unsafe_hash=True)
+class CfResultsInternal:
+    p: Probability = Probability()
+    tree: CfTreeNode = CfTreeNode()
 
 
 @dataclass(unsafe_hash=True)
