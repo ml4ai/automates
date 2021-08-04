@@ -189,6 +189,7 @@ def sim_sir(s, i, r, gamma, i_day,  ### original inputs
     s_a[index] = s  ## simsir_S_exp
     i_a[index] = i  ## simsir_I_exp
     r_a[index] = r  ## simsir_R_exp
+    e_a[index] = i + r  # updated "ever" infected (= i + r)  ### In CHIME sir.py, this is performed at end as sum of two numpy arrays; here perform iteratively
 
     return s, i, r, d_a, s_a, i_a, r_a, e_a  ### return
 
