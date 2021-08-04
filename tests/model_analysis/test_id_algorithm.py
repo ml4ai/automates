@@ -72,7 +72,7 @@ def test_d_sep_false():
 
 def test_make_cg():
     # Setup
-    gamma = [gm.CF("Y", "y", "X", "x"), gm.CF("X", "x_prime"), gm.CF("Z", "z", "D", "d"), gm.CF("D", "d")]
+    gamma = [gm.CF("Y", "y", ["X"], ["x"]), gm.CF("X", "x_prime"), gm.CF("Z", "z", ["D"], ["d"]), gm.CF("D", "d")]
     g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
     g.vs["name"] = ["X", "W", "Y", "D", "Z"]
     g.es["description"] = ["O", "O", "O", "O", "U", "U"]
@@ -84,6 +84,6 @@ def test_make_cg():
     cg_exp = igraph.Graph(edges=[[1, 2], [4, 5], [3, 4], [6, 0], [6, 5], [2, 5]], directed=True)
     cg_exp.vs["name"] = ['X', 'D', 'Z', 'X_X', 'W_X', 'Y_X', 'U_1']
     cg_exp.es["description"] = ["O", "O", "O", "U", "U", "O"]
-    gamma_prime_exp = [gm.CF('Y', 'y', 'X', 'x'), gm.CF('X', 'x_prime'), gm.CF('Z'), gm.CF('D', 'd')]
+    gamma_prime_exp = [gm.CF('Y', 'y', ['X'], ['x']), gm.CF('X', 'x_prime'), gm.CF('Z'), gm.CF('D', 'd')]
 
-    assert gm.compare_graphs(cg, cg_exp) and (gamma_prime == gamma_prime_exp)
+    assert cg.isomorphic(cg_exp) and (gamma_prime == gamma_prime_exp)

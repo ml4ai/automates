@@ -154,31 +154,6 @@ def children_unsort(node, g):
 #     con_names = to_names(con_ind, g)
 #     con = ts(con_names, topo)
 #     return con
-#
-#
-# # Assume "O" and "U" are specified in "description" attribute
-def compare_graphs(g1, g2):
-    """
-    Determines if two graphs are the same (including edge descriptions)
-    :param g1: First graph
-    :param g2: Second graph
-    :return: T/F indicating if G1 is the same as G2
-    """
-    e1 = numpy.array(g1.get_edgelist())
-    n1 = numpy.shape(e1)[0]
-    e2 = numpy.array(g2.get_edgelist())
-    n2 = numpy.shape(e2)[0]
-    if n1 != n2:
-        return False
-    if "description" in g1.es.attributes():
-        e1 = numpy.append(e1, numpy.transpose([g1.es["description"]]), axis=1)
-    else:
-        e1 = numpy.append(e1, numpy.transpose([numpy.repeat("O", n1)]), axis=1)
-    if "description" in g2.es.attributes():
-        e2 = numpy.append(e2, numpy.transpose([g2.es["description"]]), axis=1)
-    else:
-        e2 = numpy.append(e2, numpy.transpose([numpy.repeat("O", n2)]), axis=1)
-    return numpy.array_equal(e1, e2)
 
 
 # Edge Selection Function (for line 3 section of ID)
@@ -580,8 +555,8 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     ch_keep = children_unsort(node1["name"], g)
     ch = list(set(ch_delete)-set(ch_keep))
 
-    deleted_node_info = {"name": node2["name"][0], "int_vars": node2["int_vars"][0], "obs_val": node2["obs_val"][0],
-                         "orig_name": node2["orig_name"][0], "int_values": node2["int_values"][0]}
+    deleted_node_info = {"name": node2["name"][0], "int_vars": node2["int_vars"], "obs_val": node2["obs_val"][0],
+                         "orig_name": node2["orig_name"][0], "int_values": node2["int_values"]}
     g.delete_vertices(node2["name"])
     node_keep_index = node1.indices[0]
     edges_to_add = []
@@ -598,7 +573,6 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
             if event.int_vars == deleted_node_info["int_vars"]:
                 if event.obs_val == deleted_node_info["obs_val"]:
                     if event.int_values == deleted_node_info["int_values"]:
-                        print("I updated ", node1["name"])
                         event.orig_name = node1["orig_name"][0]
                         event.int_vars = node1["int_vars"][0]
                         event.obs_val = node1["obs_val"][0]
@@ -608,35 +582,35 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
 def should_merge(g, node1, node2):
     pa1 = parents_unsort(node1["name"], g)
     pa2 = parents_unsort(node2["name"], g)
-    print("unmatched_parents:", list(set(pa1) ^ set(pa2)))  # todo: testing line
+    # print("unmatched_parents:", list(set(pa1) ^ set(pa2)))  # todo: testing line
 
     # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and
     # f(gamma) have the same domain of values
     if len(pa1) == len(pa2):
         unmatched_parents = list(set(pa1) ^ set(pa2))
         if len(unmatched_parents) == 0:
-            print("merged approved, identical parents")  # todo: testing line
+            # print("merged approved, identical parents")  # todo: testing line
             return True
         for pa in unmatched_parents:
             # check_pa_set = list(set(unmatched_parents)-set(pa))
             check_pa_set = copy.deepcopy(unmatched_parents)
             check_pa_set.remove(pa)
             for candidate in check_pa_set:
-                print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
-                print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
+                # print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
+                # print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
                 if (g.vs.select(name=candidate)["obs_val"][0] is not None) \
                         or (g.vs.select(name=pa)["obs_val"][0] is not None):
                     if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
                         # unmatched_parents = list(set(unmatched_parents)-candidate)
                         unmatched_parents.remove(candidate)
-                        print("found bijective parent")  # todo: testing line
+                        # print("found bijective parent")  # todo: testing line
                         break
                 if candidate == check_pa_set[-1]:
-                    print("no bijective parent")  # todo: testing line
+                    # print("no bijective parent")  # todo: testing line
                     return False
-        print("merge approved, all parents matched")  # todo: testing line
+        # print("merge approved, all parents matched")  # todo: testing line
         return True
-    print("no matching parents")  # todo: testing line
+    # print("no matching parents")  # todo: testing line
     return False
     
     
@@ -655,13 +629,13 @@ def make_cg(g, gamma):
     for orig_node in original_topo_names:
         merge_candidates = cg.vs.select(orig_name=orig_node)["name"]
         while len(merge_candidates) > 1:
-            print("merge_candidates at beginning of loop:", merge_candidates)  # todo: testing line
+            # print("merge_candidates at beginning of loop:", merge_candidates)  # todo: testing line
             primary_node = cg.vs.select(name=merge_candidates[0])
             secondary_candidates = copy.deepcopy(merge_candidates)
             secondary_candidates.remove(merge_candidates[0])
             for secondary_node_name in secondary_candidates:
                 secondary_node = cg.vs.select(name=secondary_node_name)
-                print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
+                # print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
                 if should_merge(cg, primary_node, secondary_node):
                     (cg, gamma_prime) = merge_nodes(cg, primary_node, secondary_node, gamma_prime)
                     if gamma_prime == "Inconsistent":
@@ -676,7 +650,6 @@ def make_cg(g, gamma):
             nodes_in_gamma_prime.append(f"{event.orig_name}_{event.int_vars}")
         else:
             nodes_in_gamma_prime.append(event.orig_name)
-    print(cg)
     relevant_nodes = ancestors_unsort(nodes_in_gamma_prime, cg)
     cg = cg.subgraph(relevant_nodes)
 
