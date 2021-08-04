@@ -100,7 +100,7 @@ def test_make_cg_multi_intervention():
     (cg, gamma_prime) = gm.make_cg(g, gamma)
 
     # Expected Results
-    cg_exp = igraph.Graph(edges=[[]], directed=True)
+    cg_exp = igraph.Graph(edges=[[2, 3], [4, 3], [1, 2], [5, 0], [5, 3]], directed=True)
     cg_exp.vs["name"] = ['X', "X_['X', 'Z']", "W_['X', 'Z']", "Y_['X', 'Z']", "Z_['X', 'Z']", 'U_1']
     cg_exp.es["description"] = ["O", "O", "O", "U", "U"]
     gamma_prime_exp = [gm.CF("Y", "y", ["X", "Z"], ["x", "z"]), gm.CF("X", "x_prime")]
