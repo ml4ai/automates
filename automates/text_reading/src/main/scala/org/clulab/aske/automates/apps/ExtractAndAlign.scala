@@ -18,7 +18,7 @@ import org.clulab.odin.{Attachment, Mention}
 import org.clulab.utils.{AlignmentJsonUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding.{SVOGrounder, sparqlResult, sparqlWikiResult, WikidataGrounder}
+import org.clulab.grounding.{SVOGrounder, SeqOfWikiGroundings, WikiGrounding, WikidataGrounder, sparqlResult, sparqlWikiResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 
 import java.util.UUID.randomUUID
@@ -26,6 +26,7 @@ import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVar
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.grounding.SVOGrounder.getTerms
+import upickle.default.write
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -145,6 +146,7 @@ object ExtractAndAlign {
                       wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]],
                       groundToSVO: Boolean,
                       groundToWiki: Boolean,
+                      saveWikiGroundings: Boolean,
                       maxSVOgroundingsPerVar: Int,
                       alignmentHandler: AlignmentHandler,
                       numAlignments: Option[Int],
@@ -159,6 +161,17 @@ object ExtractAndAlign {
     val allGlobalVars = if (descriptionMentions.nonEmpty) {
       getGlobalVars(descriptionMentions.get, wikigroundings, groundToWiki)
     } else Seq.empty
+
+    if (saveWikiGroundings) {
+      val groundings = SeqOfWikiGroundings(allGlobalVars.map(gv => WikiGrounding(gv.identifier, gv.groundings.getOrElse(Seq.empty))))
+      val asString = write(groundings, indent = 4)
+      val exporter = JSONDocExporter()
+      // todo: should be getting doc id from descr mentions, but doesn't see it
+      val fileName = if (descriptionMentions.isDefined && descriptionMentions.get.nonEmpty) descriptionMentions.get.head.document.id.getOrElse("unknown_document") else "unknown_document"
+      exporter.export(asString, fileName.replace(".json", "").concat("-wikidata-groundings"))
+    }
+
+
 
     // keep for debugging align
 //    for (g <- allGlobalVars) println("gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +

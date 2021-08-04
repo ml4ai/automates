@@ -64,6 +64,7 @@ class TestAlign extends TestAlignment {
     argsForGrounding.wikigroundings,
     groundToSVO,
     groundToWiki,
+    saveWikiGroundings = false,
     maxSVOgroundingsPerVar,
     alignmentHandler,
     Some(numAlignments),

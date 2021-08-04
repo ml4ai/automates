@@ -60,6 +60,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   private val defaultSerializerName = "AutomatesJSONSerializer" // other - "JSONSerializer"
   private val debugDefault = true
   private val groundToWikiDefault: Boolean = generalConfig[Boolean]("apps.groundToWiki")
+  private val saveWikiGroundingsDefault: Boolean = generalConfig[Boolean]("apps.saveWikiGroundingsDefault")
 
   logger.info("Completed Initialization ...")
   // -------------------------------------------------
@@ -288,6 +289,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       json("toggles").obj("groundToWiki").bool
     } else groundToWikiDefault
 
+    val saveWikiGroundings = if (jsonObj.contains("toggles")) {
+      json("toggles").obj("saveWikiGroundings").bool
+    } else saveWikiGroundingsDefault
+
     val appendToGrFN = if (jsonObj.contains("toggles")) {
       json("toggles").obj("appendToGrFN").bool
     } else appendToGrFNDefault
@@ -323,6 +328,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.wikigroundings,
         groundToSVO,
         groundToWiki,
+        saveWikiGroundings,
         maxSVOgroundingsPerVar,
         alignmentHandler,
         Some(numAlignments),
