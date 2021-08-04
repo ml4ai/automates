@@ -10,7 +10,7 @@ def main(args):
     MODEL_NAME = os.path.basename(args.grfn_file).replace("--GrFN.json", "")
 
     MENTIONS_PATH = f"{CUR_DIR}/{MODEL_NAME}--mentions.json"
-    ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}--alignment.json"
+    ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}--alignment1.json"
 
     caller = TextReadingInterface(f"http://{args.address}:{args.port}")
     if not os.path.isfile(MENTIONS_PATH):
@@ -18,8 +18,9 @@ def main(args):
     else:
         print(f"Mentions have been previously extracted and are stored in {MENTIONS_PATH}")
 
+
     hypothesis_data = caller.get_link_hypotheses(
-        MENTIONS_PATH, args.eqn_file, args.grfn_file, args.comm_file
+        MENTIONS_PATH, args.eqn_file, args.grfn_file, args.comm_file, args.wikidata_file,
     )
     json.dump({"grounding": hypothesis_data}, open(ALIGNMENT_PATH, "w"))
 
@@ -30,6 +31,7 @@ if __name__ == "__main__":
     parser.add_argument("comm_file", help="filepath to a comments JSON file")
     parser.add_argument("doc_file", help="filepath to a source text pdf file")
     parser.add_argument("eqn_file", help="filepath to an equations txt file")
+    parser.add_argument("--wikidata_file", help="filepath to a wikidata grounding json file", type=str, default=None)
     parser.add_argument(
         "-a",
         "--address",

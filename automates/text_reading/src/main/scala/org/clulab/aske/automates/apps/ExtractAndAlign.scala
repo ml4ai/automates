@@ -206,16 +206,6 @@ object ExtractAndAlign {
     linkElements(EQUATION) = eqLinkElements.map(_.toString())
     linkElements(GLOBAL_EQ_VAR) = globalEqVariables.map(glv => mkGlobalEqVarLinkElement(glv))
 
-
-    // fixme: rethink svo grounding
-//    linkElements(TEXT_VAR) =  if (groundToSVO) {
-//      // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
-//      if (alignments.contains("GLOBAL_VAR_TO_SVO")) {
-//        updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(GLOBAL_VAR_TO_SVO))
-//      } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
-//
-//    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
-
     for (le <- linkElements.keys) {
       outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar, false)}
     }

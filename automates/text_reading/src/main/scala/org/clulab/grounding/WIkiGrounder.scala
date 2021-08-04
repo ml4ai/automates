@@ -8,14 +8,10 @@ import org.clulab.odin.{Attachment, Mention, SynPath}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.Process
-import scala.collection.mutable
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
 import org.clulab.aske.automates.apps.ExtractAndAlign
-import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.embeddings.word2vec.Word2Vec
-import org.clulab.grounding.SVOGrounder.groundDescriptionsToSVO
-import org.clulab.utils.AlignmentJsonUtils.SeqOfGlobalVariables
 import org.clulab.utils.FileUtils
 
 // todo before pr: figure out paths when deserializing (add path to groundings in the payload and read them during arg reading)
@@ -98,11 +94,13 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
         val grouped = lineResults.groupBy(_.conceptID)
         val newLineResults = new ArrayBuffer[sparqlWikiResult]()
         for (g <- grouped) {
+//          println("start group")
           if (g._2.length > 1) {
+
             val allClassOf = Some(g._2.map(_.subClassOf.getOrElse("NA")).mkString(","))
             val oneResultInGroup = g._2.head
             newLineResults.append(new sparqlWikiResult(oneResultInGroup.searchTerm, oneResultInGroup.conceptID, oneResultInGroup.conceptLabel, oneResultInGroup.conceptDescription, oneResultInGroup.alternativeLabel, allClassOf, oneResultInGroup.score, oneResultInGroup.source))
-          }
+          } else newLineResults.append(g._2.head)
         }
 
 

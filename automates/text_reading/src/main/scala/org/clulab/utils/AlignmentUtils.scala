@@ -45,7 +45,8 @@ object AlignmentJsonUtils {
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): AlignmentArguments = {
 
     //todo: add this to payload:
-    val pathToWikiGroundings = "/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding_time_grounded_correctly.json"
+    val pathToWikiGroundings = json("wikidata").str
+    println("PATH TO WIKI: " + pathToWikiGroundings)//"/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding_time_grounded_correctly.json"
     val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings))
 //    println(groundingsAsUjson + " <<<")
     val groundToWiki = true
@@ -58,7 +59,10 @@ object AlignmentJsonUtils {
         for (item <- groundingsAsUjson("wikiGroundings").arr) {
           println("item: " + item)
           val identString = item.obj("variable").str
-          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("subclassOf").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
+          println("HERE")
+          println("ITEM: " + item)
+          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("subClassOf").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
+          println("HERE 1")
           groundingMap(identString) = groundings
         }
         Some(groundingMap.toMap)
@@ -277,9 +281,9 @@ object AlignmentJsonUtils {
     }
 
     if (grounding.subClassOf.isDefined) {
-      toReturn("subclassOf") = grounding.alternativeLabel.get
+      toReturn("subClassOf") = grounding.subClassOf.get
     } else {
-      toReturn("subclassOf") = ujson.Null
+      toReturn("subClassOf") = ujson.Null
     }
 
     if (grounding.score.isDefined) {
