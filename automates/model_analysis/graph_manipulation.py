@@ -471,15 +471,15 @@ def parallel_worlds(g, gamma):
     for node in p_worlds.vs():
         node["orig_name"] = node["name"]
         node["obs_val"] = None
-        node["int_var"] = None
-        node["int_value"] = None
+        node["int_vars"] = []
+        node["int_values"] = []
     for edge in p_worlds.es():
         edge["initial_edge"] = True
-    initial_verts = p_worlds.vs.select(int_var=None)
+    initial_verts = p_worlds.vs.select(int_vars=[])
     obs_elist = p_worlds.es.select(initial_edge=True)
 
     for event in gamma:
-        if event.obs_val is not None and event.int_var is None:
+        if event.obs_val is not None and len(event.int_vars) == 0:
             node_to_obs = p_worlds.vs.select(name=event.orig_name)
             node_to_obs["obs_val"] = event.obs_val
 
@@ -488,26 +488,25 @@ def parallel_worlds(g, gamma):
     int_vars_checked = []
     obs_edges_to_add = []
     for event in gamma:
-        if event.int_var is not None and event.int_var not in int_vars_checked:
+        if len(event.int_vars) > 0 and event.int_vars not in int_vars_checked:
             num_int_vars = num_int_vars + 1
-            int_vars_checked.append(event.int_var)
+            int_vars_checked.append(event.int_vars)
             for node in initial_verts:
-                iv = None
                 ov = None
                 if node["orig_name"] == event.orig_name:
                     ov = event.obs_val
-                if node["orig_name"] == event.int_var:
-                    ov = event.int_value
-                p_worlds.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_var}",
+                if node["orig_name"] in event.int_vars:  # untested change
+                    ov = event.int_values
+                p_worlds.add_vertices(1, attributes={"name": f"{node['orig_name']}_{event.int_vars}",
                                                      "orig_name": node["name"], "obs_val": ov,
-                                                     "int_var": event.int_var, "int_value": event.int_value})
+                                                     "int_vars": event.int_vars, "int_values": event.int_values})
 
             for edge in obs_elist:
                 vlist0 = p_worlds.vs.select(orig_name=p_worlds.vs(edge.tuple[0])["orig_name"][0])
                 vlist1 = p_worlds.vs.select(orig_name=p_worlds.vs(edge.tuple[1])["orig_name"][0])
                 for node0 in vlist0:
                     for node1 in vlist1:
-                        if (node0["int_var"] == node1["int_var"]) and (node0["int_var"] is not None):
+                        if (node0["int_vars"] == node1["int_vars"]) and (len(node0["int_vars"]) > 0):
                             obs_edges_to_add.append((node0.index, node1.index))
                             break
     p_worlds.add_edges(set(obs_edges_to_add), attributes={"description": ["O"] * len(obs_edges_to_add)})
@@ -524,6 +523,7 @@ def parallel_worlds(g, gamma):
     num_unobs_verts = 0
     for edge in new_unobs_elist:
         num_unobs_verts = num_unobs_verts + 1
+        empty_list = []
         p_worlds.add_vertices(1, attributes={"name": f"U_{num_unobs_verts}", "description": "U"})
         new_vert_indx = p_worlds.vs.select(name=f"U_{num_unobs_verts}").indices[0]
         old_vert_name0 = g.vs(edge.tuple[0])["name"][0]
@@ -531,11 +531,11 @@ def parallel_worlds(g, gamma):
         # For old vertex, find all vertices with the same original name, connect unobserved vertex to each instance
         verts_0 = p_worlds.vs.select(orig_name=old_vert_name0)
         for vert in verts_0:
-            if vert["int_var"] != vert["orig_name"]:
+            if vert["orig_name"] not in vert["int_vars"]:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
         verts_1 = p_worlds.vs.select(orig_name=old_vert_name1)
         for vert in verts_1:
-            if vert["int_var"] != vert["orig_name"]:
+            if vert["orig_name"] not in vert["int_vars"]:
                 unobs_edges_to_add.append((new_vert_indx, vert.index))
     for node in initial_verts:
         # if "U" not in parents_unsort(cg_node_info[i].orig_name, cg):
@@ -546,9 +546,18 @@ def parallel_worlds(g, gamma):
             # Find all nodes across parallel worlds
             verts_to_connect = p_worlds.vs.select(orig_name=node["name"])
             for vert in verts_to_connect:
-                if vert["int_var"] != vert["orig_name"]:
+                if vert["orig_name"] not in vert["int_vars"]:
                     unobs_edges_to_add.append((new_vert_indx, vert.index))
     p_worlds.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
+
+    nodes_to_remove = []
+    for node in p_worlds.vs():
+        if node["int_vars"] is not None:
+            if node["orig_name"] in node["int_vars"]:
+                for name in ancestors_unsort([node["name"]], p_worlds):
+                    if name != node["name"]:
+                        nodes_to_remove.append(name)
+    p_worlds.delete_vertices(nodes_to_remove)
     return p_worlds
 
 
@@ -563,16 +572,16 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     :param gamma: counterfactual conjunction, represented as a list
     :return: updated graph g and updated gamma
     """
-    if (node1["int_var"] == node1["orig_name"]) and (node2["int_var"] == node2["orig_name"]):
-        if node1["int_value"] != node2["int_value"]:
+    if (node1["orig_name"] in node1["int_vars"]) and (node2["orig_name"] in node2["int_vars"]):
+        if node1["int_values"] != node2["int_values"]:
             return g, "Inconsistent"
     ch_delete = children_unsort(node2["name"], g)
     pa_keep = parents_unsort(node1["name"], g)
     ch_keep = children_unsort(node1["name"], g)
     ch = list(set(ch_delete)-set(ch_keep))
 
-    deleted_node_info = {"name": node2["name"][0], "int_var": node2["int_var"][0], "obs_val": node2["obs_val"][0],
-                         "orig_name": node2["orig_name"][0], "int_value": node2["int_value"][0]}
+    deleted_node_info = {"name": node2["name"][0], "int_vars": node2["int_vars"][0], "obs_val": node2["obs_val"][0],
+                         "orig_name": node2["orig_name"][0], "int_values": node2["int_values"][0]}
     g.delete_vertices(node2["name"])
     node_keep_index = node1.indices[0]
     edges_to_add = []
@@ -586,47 +595,48 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     # Rename events in gamma if necessary
     for event in gamma:
         if event.orig_name == deleted_node_info["orig_name"]:
-            if event.int_var == deleted_node_info["int_var"]:
+            if event.int_vars == deleted_node_info["int_vars"]:
                 if event.obs_val == deleted_node_info["obs_val"]:
-                    if event.int_value == deleted_node_info["int_value"]:
+                    if event.int_values == deleted_node_info["int_values"]:
+                        print("I updated ", node1["name"])
                         event.orig_name = node1["orig_name"][0]
-                        event.int_var = node1["int_var"][0]
+                        event.int_vars = node1["int_vars"][0]
                         event.obs_val = node1["obs_val"][0]
-                        event.int_value = node1["int_value"][0]
+                        event.int_values = node1["int_values"][0]
     return g, gamma
 
 def should_merge(g, node1, node2):
     pa1 = parents_unsort(node1["name"], g)
     pa2 = parents_unsort(node2["name"], g)
-    # print("unmatched_parents:", list(set(pa1) ^ set(pa2)))  # todo: testing line
+    print("unmatched_parents:", list(set(pa1) ^ set(pa2)))  # todo: testing line
 
     # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and
     # f(gamma) have the same domain of values
     if len(pa1) == len(pa2):
         unmatched_parents = list(set(pa1) ^ set(pa2))
         if len(unmatched_parents) == 0:
-            # print("merged approved, identical parents")  # todo: testing line
+            print("merged approved, identical parents")  # todo: testing line
             return True
         for pa in unmatched_parents:
             # check_pa_set = list(set(unmatched_parents)-set(pa))
             check_pa_set = copy.deepcopy(unmatched_parents)
             check_pa_set.remove(pa)
             for candidate in check_pa_set:
-                # print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
-                # print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
+                print("candidate name:", candidate, ", candidate obs_val:", g.vs.select(name=candidate)["obs_val"])
+                print("other name:", pa, ", other obs_val:", g.vs.select(name=pa)["obs_val"])
                 if (g.vs.select(name=candidate)["obs_val"][0] is not None) \
                         or (g.vs.select(name=pa)["obs_val"][0] is not None):
                     if g.vs.select(name=candidate)["obs_val"] == g.vs.select(name=pa)["obs_val"]:
                         # unmatched_parents = list(set(unmatched_parents)-candidate)
                         unmatched_parents.remove(candidate)
-                        # print("found bijective parent")  # todo: testing line
+                        print("found bijective parent")  # todo: testing line
                         break
                 if candidate == check_pa_set[-1]:
-                    # print("no bijective parent")  # todo: testing line
+                    print("no bijective parent")  # todo: testing line
                     return False
-        # print("merge approved, all parents matched")  # todo: testing line
+        print("merge approved, all parents matched")  # todo: testing line
         return True
-    # print("no matching parents")  # todo: testing line
+    print("no matching parents")  # todo: testing line
     return False
     
     
@@ -645,13 +655,13 @@ def make_cg(g, gamma):
     for orig_node in original_topo_names:
         merge_candidates = cg.vs.select(orig_name=orig_node)["name"]
         while len(merge_candidates) > 1:
-            # print("merge_candidates at beginning of loop:", merge_candidates)  # todo: testing line
+            print("merge_candidates at beginning of loop:", merge_candidates)  # todo: testing line
             primary_node = cg.vs.select(name=merge_candidates[0])
             secondary_candidates = copy.deepcopy(merge_candidates)
             secondary_candidates.remove(merge_candidates[0])
             for secondary_node_name in secondary_candidates:
                 secondary_node = cg.vs.select(name=secondary_node_name)
-                # print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
+                print("pair of nodes considered for merge:", primary_node["name"], secondary_node["name"])  # todo: testing line
                 if should_merge(cg, primary_node, secondary_node):
                     (cg, gamma_prime) = merge_nodes(cg, primary_node, secondary_node, gamma_prime)
                     if gamma_prime == "Inconsistent":
@@ -662,10 +672,11 @@ def make_cg(g, gamma):
     # Reduce graph to ancestors of vertices mentioned in gamma_prime
     nodes_in_gamma_prime = []
     for event in gamma_prime:
-        if event.int_var is not None:
-            nodes_in_gamma_prime.append(f"{event.orig_name}_{event.int_var}")
+        if len(event.int_vars) > 0:
+            nodes_in_gamma_prime.append(f"{event.orig_name}_{event.int_vars}")
         else:
             nodes_in_gamma_prime.append(event.orig_name)
+    print(cg)
     relevant_nodes = ancestors_unsort(nodes_in_gamma_prime, cg)
     cg = cg.subgraph(relevant_nodes)
 
@@ -674,8 +685,6 @@ def make_cg(g, gamma):
     for node in unobserved_nodes:
         if len(children_unsort([node], cg)) < 2:
             cg.delete_vertices(node)
-
-    # Need to do something about remaining unobserved nodes
     return cg, gamma_prime
 
 
@@ -766,8 +775,8 @@ class Results:
 class CF:
     orig_name: str = None
     obs_val: str = None
-    int_var: str = None
-    int_value: str = None
+    int_vars: List[str] = field(default_factory=list)
+    int_values: List[str] = field(default_factory=list)
 
 
 class IDANotIdentifiable(Exception):
