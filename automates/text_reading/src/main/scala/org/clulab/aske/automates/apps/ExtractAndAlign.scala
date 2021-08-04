@@ -125,10 +125,10 @@ object ExtractAndAlign {
 
   val config: Config = ConfigFactory.load()
   val pdfAlignDir: String = config[String]("apps.pdfalignDir")
+  val groundToWiki: Boolean = config[Boolean]("apps.groundToWiki")
   val vectors: String = config[String]("alignment.w2vPath")
-  //  println("vectors: " + vectors)
-  // fixme: update vectors here
-  val w2v = new Word2Vec("/Users/alexeeva/Repos/automates/automates/text_reading/src/main/resources/vectors.txt", None)
+  val w2v = new Word2Vec(vectors, None)
+
   lazy val grounder = WikidataGrounder
 
   def groundMentions(
@@ -164,6 +164,7 @@ object ExtractAndAlign {
 //      "\n=========\n")
 
 
+    // todo: have a separate method for gl comment vars with no grounding and no location on the page
     val allCommentGlobalVars = if (commentDescriptionMentions.nonEmpty) {
       getGlobalVars(commentDescriptionMentions.get, wikigroundings)
     } else Seq.empty
@@ -238,15 +239,20 @@ object ExtractAndAlign {
 
 //      val groundings = grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, 3)
       // todo: need to also have a check for whether or not we want to ground to wikidata
-      val groundings = if (!wikigroundings.isDefined || wikigroundings.get.isEmpty) {
-        grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, 3)
-      } else {
-        if (wikigroundings.get.contains(identifier)) {
-          Some(wikigroundings.get(identifier))
+      val groundings = if (groundToWiki) {
+
+        // if there are no existing wikigroundings, ground
+        if (!wikigroundings.isDefined || wikigroundings.get.isEmpty) {
+          grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, 3)
         } else {
-          None
+          // if there are previously extracted groundings, find grounding for the identifier
+          if (wikigroundings.get.contains(identifier)) {
+            Some(wikigroundings.get(identifier))
+          } else {
+            None
+          }
         }
-      }
+      } else None
 
 //      if (groundings.nonEmpty) {
 //        for (gr <- groundings.get) {

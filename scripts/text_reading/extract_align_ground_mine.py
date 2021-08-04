@@ -82,6 +82,7 @@ def call_parquetJson_to_mentions():
     # if not os.path.isfile(grfn_path):
     #     raise RuntimeError(f"GrFN not found: {grfn_name}")
 
+
     res = requests.post(
         f"{webservice}/parquetJson_to_mentions",
         headers={"Content-type": "application/json"},
@@ -94,19 +95,23 @@ def call_parquetJson_to_mentions():
     )
     # print(f"HTTP {res} for /align on ({mentions_name}, {grfn_name})")
     json_dict = res.json()
-    json.dump(json_dict, open("masha1.json", "w"), indent=4)
+    json.dump(json_dict, open("masha9.json", "w"), indent=4)
 
 def call_cosmos_json_to_mentions():
+    outfile = "masha1.json"
     res = requests.post(
         f"{webservice}/cosmos_json_to_mentions",
         headers={"Content-type": "application/json"},
         json={
-            "pathToJson": "/home/alexeeva/Repos/automates/scripts/model_assembly/cosmos_to_mentions_payload.json"
+            "cosmos_file": "/Users/alexeeva/Desktop/automates-related/TWIST/cosmos/TWIST--COSMOS-data.json",
+            "outfile": outfile
         },
     )
 
-    json_dict = res.json()
-    json.dump(json_dict, open("masha9.json", "w"), indent=4)
+    # the method itself exports mentions
+    # json_dict = res.json()
+    # json.dump(json_dict, open(outfile, "w"), indent=4)
+
 
 
 def call_groundMentionsToSVO(mentions_name, out_name):
@@ -162,6 +167,7 @@ if __name__ == "__main__":
     # )
     #
     # call_groundMentionsToSVO("CHIME-SIR-mentions", "CHIME-SIR-mentions-svo_grounding")
+    # call_groundMentionsToWikidata("/Users/alexeeva/Repos/automates/automates/text_reading/masha1.json", "/Users/alexeeva/Repos/automates/automates/text_reading/masha1-wiki-groundings.json")
     call_groundMentionsToWikidata("/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions.json", "/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding.json")
     # call_groundMentionsToSVO("PT-mentions", "PT-svo_grounding")
 

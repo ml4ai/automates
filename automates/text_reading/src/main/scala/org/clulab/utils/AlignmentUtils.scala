@@ -42,19 +42,21 @@ object AlignmentJsonUtils {
   case class GlobalSrcVariable(id: String, identifier: String, srcVarObjStrings: Seq[String])
 
   /**get arguments for the aligner depending on what data are provided**/
-  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): AlignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, groundToWiki: Boolean, serializerName: String): AlignmentArguments = {
 
     //todo: add this to payload:
     val pathToWikiGroundings = json("wikidata").str
-    println("PATH TO WIKI: " + pathToWikiGroundings)//"/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding_time_grounded_correctly.json"
-    val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings))
+
 //    println(groundingsAsUjson + " <<<")
-    val groundToWiki = true
-    val contains = true // just a temp val to later be switched to whether or not the payload contains the groundings
+//    val contains = true // just a temp val to later be switched to whether or not the payload contains the groundings
     val wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]] = if (groundToWiki) {
+      println("PATH TO WIKI: " + pathToWikiGroundings)//"/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding_time_grounded_correctly.json"
+
       //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
       //      if (jsonObj.contains("SVOgroundings")) {
-      if (contains) {
+      // load if exist; none otherwise
+      if (pathToWikiGroundings != "None") {
+        val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings))
         val groundingMap = mutable.Map[String, Seq[sparqlWikiResult]]()
         for (item <- groundingsAsUjson("wikiGroundings").arr) {
           println("item: " + item)

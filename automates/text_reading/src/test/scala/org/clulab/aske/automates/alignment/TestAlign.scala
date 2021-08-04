@@ -33,6 +33,7 @@ class TestAlign extends TestAlignment {
   val numAlignmentsSrcToComment: Int = config[Int]("apps.numAlignmentsSrcToComment")
   val scoreThreshold: Int = config[Int]("apps.scoreThreshold")
   val groundToSVO: Boolean = config[Boolean]("apps.groundToSVO")
+  val groundToWiki: Boolean = config[Boolean]("apps.groundToWiki")
   val maxSVOgroundingsPerVar: Int = config[Int]("apps.maxSVOgroundingsPerVar")
   val appendToGrFN: Boolean = config[Boolean]("apps.appendToGrFN")
 
