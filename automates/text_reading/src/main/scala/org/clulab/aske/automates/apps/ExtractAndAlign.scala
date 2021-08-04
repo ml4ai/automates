@@ -125,7 +125,7 @@ object ExtractAndAlign {
 
   val config: Config = ConfigFactory.load()
   val pdfAlignDir: String = config[String]("apps.pdfalignDir")
-  val groundToWiki: Boolean = config[Boolean]("apps.groundToWiki")
+  val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
   val vectors: String = config[String]("alignment.w2vPath")
   val w2v = new Word2Vec(vectors, None)
 
@@ -144,6 +144,7 @@ object ExtractAndAlign {
                       SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]],
                       wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]],
                       groundToSVO: Boolean,
+                      groundToWiki: Boolean,
                       maxSVOgroundingsPerVar: Int,
                       alignmentHandler: AlignmentHandler,
                       numAlignments: Option[Int],
@@ -156,7 +157,7 @@ object ExtractAndAlign {
 
     // get all global variables before aligning
     val allGlobalVars = if (descriptionMentions.nonEmpty) {
-      getGlobalVars(descriptionMentions.get, wikigroundings)
+      getGlobalVars(descriptionMentions.get, wikigroundings, groundToWiki)
     } else Seq.empty
 
     // keep for debugging align
@@ -166,7 +167,7 @@ object ExtractAndAlign {
 
     // todo: have a separate method for gl comment vars with no grounding and no location on the page
     val allCommentGlobalVars = if (commentDescriptionMentions.nonEmpty) {
-      getGlobalVars(commentDescriptionMentions.get, wikigroundings)
+      getGlobalVars(commentDescriptionMentions.get, wikigroundings, false)
     } else Seq.empty
 
     // keep for debugging align
@@ -221,7 +222,7 @@ object ExtractAndAlign {
     } else outputJson
   }
 
-  def getGlobalVars(descrMentions: Seq[Mention], wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]]): Seq[GlobalVariable] = {
+  def getGlobalVars(descrMentions: Seq[Mention], wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]], groundToWiki: Boolean): Seq[GlobalVariable] = {
 
     val groupedVars = descrMentions.groupBy(_.arguments("variable").head.text.replace(".", ""))
     val allGlobalVars = new ArrayBuffer[GlobalVariable]()
@@ -243,7 +244,7 @@ object ExtractAndAlign {
 
         // if there are no existing wikigroundings, ground
         if (!wikigroundings.isDefined || wikigroundings.get.isEmpty) {
-          grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, 3)
+          grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, numOfWikiGroundings)
         } else {
           // if there are previously extracted groundings, find grounding for the identifier
           if (wikigroundings.get.contains(identifier)) {

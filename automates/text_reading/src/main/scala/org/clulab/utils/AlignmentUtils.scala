@@ -44,12 +44,11 @@ object AlignmentJsonUtils {
   /**get arguments for the aligner depending on what data are provided**/
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, groundToWiki: Boolean, serializerName: String): AlignmentArguments = {
 
-    //todo: add this to payload:
-    val pathToWikiGroundings = json("wikidata").str
 
 //    println(groundingsAsUjson + " <<<")
 //    val contains = true // just a temp val to later be switched to whether or not the payload contains the groundings
     val wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]] = if (groundToWiki) {
+      val pathToWikiGroundings = json("wikidata").str
       println("PATH TO WIKI: " + pathToWikiGroundings)//"/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding_time_grounded_correctly.json"
 
       //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")

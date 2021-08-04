@@ -322,6 +322,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         argsForGrounding.svoGroundings, //Some(Seq.empty)
         argsForGrounding.wikigroundings,
         groundToSVO,
+        groundToWiki,
         maxSVOgroundingsPerVar,
         alignmentHandler,
         Some(numAlignments),

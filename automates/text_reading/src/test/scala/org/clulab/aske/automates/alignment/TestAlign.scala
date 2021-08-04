@@ -33,7 +33,7 @@ class TestAlign extends TestAlignment {
   val numAlignmentsSrcToComment: Int = config[Int]("apps.numAlignmentsSrcToComment")
   val scoreThreshold: Int = config[Int]("apps.scoreThreshold")
   val groundToSVO: Boolean = config[Boolean]("apps.groundToSVO")
-  val groundToWiki: Boolean = config[Boolean]("apps.groundToWiki")
+  val groundToWiki: Boolean = false //config[Boolean]("apps.groundToWiki")
   val maxSVOgroundingsPerVar: Int = config[Int]("apps.maxSVOgroundingsPerVar")
   val appendToGrFN: Boolean = config[Boolean]("apps.appendToGrFN")
 
@@ -47,7 +47,7 @@ class TestAlign extends TestAlignment {
   val payloadJson: ujson.Value = ujson.read(payloadFile.readString())
   val jsonObj: ujson.Value = payloadJson.obj
 
-  val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO, serializerName)
+  val argsForGrounding: AlignmentArguments = AlignmentJsonUtils.getArgsForAlignment(payloadPath, jsonObj, groundToSVO, groundToWiki, serializerName)
 
 
   val groundings: ujson.Value = ExtractAndAlign.groundMentions(
@@ -63,6 +63,7 @@ class TestAlign extends TestAlignment {
     argsForGrounding.svoGroundings,
     argsForGrounding.wikigroundings,
     groundToSVO,
+    groundToWiki,
     maxSVOgroundingsPerVar,
     alignmentHandler,
     Some(numAlignments),
