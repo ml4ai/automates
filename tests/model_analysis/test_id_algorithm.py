@@ -87,3 +87,22 @@ def test_make_cg():
     gamma_prime_exp = [gm.CF('Y', 'y', ['X'], ['x']), gm.CF('X', 'x_prime'), gm.CF('Z'), gm.CF('D', 'd')]
 
     assert cg.isomorphic(cg_exp) and (gamma_prime == gamma_prime_exp)
+
+
+def test_make_cg_multi_intervention():
+    # Setup
+    gamma = [gm.CF("Y", "y", ["X", "Z"], ["x", "z"]), gm.CF("X", "x_prime")]
+    g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
+    g.vs["name"] = ["X", "W", "Y", "D", "Z"]
+    g.es["description"] = ["O", "O", "O", "O", "U", "U"]
+
+    # Function Results
+    (cg, gamma_prime) = gm.make_cg(g, gamma)
+
+    # Expected Results
+    cg_exp = igraph.Graph(edges=[[]], directed=True)
+    cg_exp.vs["name"] = ['X', "X_['X', 'Z']", "W_['X', 'Z']", "Y_['X', 'Z']", "Z_['X', 'Z']", 'U_1']
+    cg_exp.es["description"] = ["O", "O", "O", "U", "U"]
+    gamma_prime_exp = [gm.CF("Y", "y", ["X", "Z"], ["x", "z"]), gm.CF("X", "x_prime")]
+
+    assert cg.isomorphic(cg_exp) and (gamma_prime == gamma_prime_exp)
