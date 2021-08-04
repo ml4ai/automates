@@ -22,18 +22,33 @@ class AutoMATES_IR:
         self.documentation = D
         self.metadata = M
 
+    def to_json(self):
+        json_dict = {
+            "entrypoint": self.entrypoint,
+            "containers": self.containers,
+            "variables": self.variables,
+            "types": self.type_definitions,
+            "objects": self.objects,
+            "documentation": self.documentation,
+            "metadata": self.metadata,
+        }
+
+        with open("test.json", "w") as f:
+            json.dump(json_dict, f)
+
     @classmethod
     def from_json(cls, filepath: str) -> AutoMATES_IR:
         data = json.load(open(filepath, "r"))
 
         C, V, O, D = dict(), dict(), dict(), dict()
 
-        code_refs = CodeCollectionReference.from_sources(data["sources"])
-        code_file_uid = code_refs.files[0].uid
         M = [
             GrFNCreation.from_name(filepath.replace("--AIR.json", "")),
-            code_refs,
         ]
+        if "sources" in data:
+            code_refs = CodeCollectionReference.from_sources(data["sources"])
+            code_file_uid = code_refs.files[0].uid
+            M.append(code_refs)
 
         for var_data in data["variables"]:
             # new_var = GenericDefinition.from_dict(var_data)
