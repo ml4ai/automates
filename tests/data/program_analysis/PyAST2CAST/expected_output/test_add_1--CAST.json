@@ -1,0 +1,75 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "expr": {
+                        "left": {
+                            "node_type": "Number",
+                            "number": 1,
+                            "source_refs": [
+                                {
+                                    "col_end": 1,
+                                    "col_start": 0,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "test_add_1.py"
+                                }
+                            ]
+                        },
+                        "node_type": "BinaryOp",
+                        "op": "Add",
+                        "right": {
+                            "node_type": "Number",
+                            "number": 2,
+                            "source_refs": [
+                                {
+                                    "col_end": 3,
+                                    "col_start": 2,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "test_add_1.py"
+                                }
+                            ]
+                        },
+                        "source_refs": [
+                            {
+                                "col_end": 3,
+                                "col_start": 0,
+                                "node_type": "SourceRef",
+                                "row_end": 1,
+                                "row_start": 1,
+                                "source_file_name": "test_add_1.py"
+                            }
+                        ]
+                    },
+                    "node_type": "Expr",
+                    "source_refs": [
+                        {
+                            "col_end": 3,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 1,
+                            "row_start": 1,
+                            "source_file_name": "test_add_1.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "test_add_1",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": 1,
+                    "row_start": 1,
+                    "source_file_name": "test_add_1.py"
+                }
+            ]
+        }
+    ]
+}

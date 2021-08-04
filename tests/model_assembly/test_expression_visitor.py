@@ -8,7 +8,7 @@ from typing import NoReturn
 import networkx as nx
 
 from automates.utils.misc import rd
-from automates.model_assembly.expression_visitor import (
+from automates.model_assembly.expression_trees.expression_visitor import (
     ExpressionVisitor,
     nodes2DiGraph,
 )
