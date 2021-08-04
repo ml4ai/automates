@@ -175,7 +175,7 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
   /** Grounding a sequence of mentions and return a pretty-printable json string*/
   def mentionsToGlobalVarsWithWikidataGroundings(mentions: Seq[Mention]): String = {
-    val globalVars = ExtractAndAlign.getGlobalVars(mentions, Some(Map.empty), false)
+    val globalVars = ExtractAndAlign.getGlobalVars(mentions, Some(Map.empty), true)
     val groundings = SeqOfWikiGroundings(globalVars.map(gv => WikiGrounding(gv.identifier, gv.groundings.getOrElse(Seq.empty))))
     write(groundings, indent = 4)
   }
