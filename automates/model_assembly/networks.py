@@ -30,6 +30,7 @@ from .expression_visitor import (
 from .air import (
     AutoMATES_IR,
     ContainerDef,
+    CondContainerDef,
     FuncContainerDef,
     LoopContainerDef,
     StmtDef,
@@ -627,6 +628,10 @@ class BaseConFuncNode(BaseFuncNode):
                     new_func = BaseConFuncNode.from_container(
                         con_def, AIR, VARS, FUNCS
                     )
+                elif isinstance(con_def, CondContainerDef):
+                    new_func = CondConFuncNode.from_container(
+                        con_def, AIR, VARS, FUNCS
+                    )
                 else:
                     raise TypeError(
                         f"Unrecognized container type: {type(con_def)}"
@@ -677,12 +682,68 @@ class BaseConFuncNode(BaseFuncNode):
 
 @dataclass(repr=False, frozen=False)
 class CondConFuncNode(BaseConFuncNode):
-    pass
+    condition_node: ExpressionFuncNode
+
+    @classmethod
+    def from_container(
+        cls,
+        container: ContainerDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> CondConFuncNode:
+        mock_func_node = BaseConFuncNode.from_container(
+            container, AIR, VARS, FUNCS
+        )
+        return cls(
+            identifier=mock_func_node.identifier,
+            type=mock_func_node.type,
+            input_variables=mock_func_node.input_variables,
+            output_variables=mock_func_node.output_variables,
+            hyper_edges=mock_func_node.hyper_edges,
+            hyper_graph=mock_func_node.hyper_graph,
+            metadata=mock_func_node.metadata,
+            exit=mock_func_node.exit,
+            condition_node=cls.find_condition_node(mock_func_node),
+        )
+
+    @staticmethod
+    def find_condition_node(base_func: BaseConFuncNode):
+        # NOTE: If there is more than one condition node then this will find whichever is the first in the list of hyper-edges. Extend this function once we have GrFNs that have more than a single condition node in a ConditionalContainerDef
+        for h_edge in base_func.hyper_edges:
+            func = h_edge.func_node
+            if isinstance(func, ExpressionFuncNode):
+                if func.type == FunctionType.CONDITION:
+                    return func
+        return None
 
 
 @dataclass(repr=False, frozen=False)
 class LoopConFuncNode(BaseConFuncNode):
-    pass
+    exit_condition: ExpressionFuncNode
+
+    @classmethod
+    def from_container(
+        cls,
+        container: ContainerDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> BaseConFuncNode:
+        mock_func_node = BaseConFuncNode.from_container(
+            container, AIR, VARS, FUNCS
+        )
+        return cls(
+            identifier=mock_func_node.identifier,
+            type=mock_func_node.type,
+            input_variables=mock_func_node.input_variables,
+            output_variables=mock_func_node.output_variables,
+            hyper_edges=mock_func_node.hyper_edges,
+            hyper_graph=mock_func_node.hyper_graph,
+            metadata=mock_func_node.metadata,
+            exit=mock_func_node.exit,
+            exit_condition=CondConFuncNode.find_condition_node(mock_func_node),
+        )
 
 
 @dataclass(repr=False, frozen=False)
