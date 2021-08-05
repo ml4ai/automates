@@ -138,7 +138,13 @@ def execute_gromet_experiment_json(experiment_json):
 
     results = {}
     if model_name == "SIR-simple":
-        expected_sir_simple_inputs = ["S", "I", "R", "beta", "gamma"]
+        expected_sir_simple_inputs = [
+            "SIR-simple::SIR-simple::sir::0::--::s::0",
+            "SIR-simple::SIR-simple::sir::0::--::i::0",
+            "SIR-simple::SIR-simple::sir::0::--::r::0",
+            "SIR-simple::SIR-simple::sir::0::--::beta::0",
+            "SIR-simple::SIR-simple::sir::0::--::gamma::0",
+        ]
         try:
             results = run_model_experiment(
                 model_name,
@@ -156,8 +162,8 @@ def execute_gromet_experiment_json(experiment_json):
             }
 
     elif model_name == "CHIME-SIR":
+        expected_sir_simple_inputs = []
         try:
-            expected_sir_simple_inputs = []
             results = run_model_experiment(
                 model_name,
                 start,

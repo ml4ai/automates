@@ -112,7 +112,8 @@ def execute(
 
 def drive(start, end, step, parameters):
 
-    (S, E, I, R) = execute(**parameters, n_days=end)
+    param_names_to_vals = {k.split("::")[-2]: v for k, v in parameters.items()}
+    (S, E, I, R) = execute(**param_names_to_vals, n_days=end)
 
     def process_time_step_results(result_arr):
         stepped_results = []
@@ -121,9 +122,11 @@ def drive(start, end, step, parameters):
         return stepped_results
 
     return {
-        "S": process_time_step_results(S),
-        "E": process_time_step_results(E),
-        "I": process_time_step_results(I),
-        "R": process_time_step_results(R),
-        "n_days": process_time_step_results(range(end + 1)),
+        "CHIME_SIR::CHIME_SIR::main::0::--::s_a::1": process_time_step_results(S),
+        "CHIME_SIR::CHIME_SIR::main::0::--::e_a::1": process_time_step_results(E),
+        "CHIME_SIR::CHIME_SIR::main::0::--::i_a::1": process_time_step_results(I),
+        "CHIME_SIR::CHIME_SIR::main::0::--::r_a::1": process_time_step_results(R),
+        "CHIME_SIR::CHIME_SIR::main::0::--::n_days::0": process_time_step_results(
+            range(end + 1)
+        ),
     }
