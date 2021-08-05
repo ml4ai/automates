@@ -272,9 +272,7 @@ class ExpressionVisitor(ast.NodeVisitor):
             if isinstance(key, ast.Constant):
                 self.nodes.append(ExprValueNode(key_uid, key.value, [val_uid]))
             elif isinstance(key, ast.Name):
-                self.nodes.append(
-                    ExprVariableNode(key_uid, "", key.id, [val_uid])
-                )
+                self.nodes.append(ExprVariableNode(key_uid, "", key.id, [val_uid]))
             else:
                 raise TypeError(f"Unrecognized key type in dict: {type(key)}")
             key_uids.append(key_uid)
@@ -282,16 +280,10 @@ class ExpressionVisitor(ast.NodeVisitor):
         new_uid = ExprAbstractNode.create_node_id()
         if need_to_pack:
             pack_uid = ExprAbstractNode.create_node_id()
-            self.nodes.append(
-                ExprOperatorNode(pack_uid, "PACK", dict_name_uids)
-            )
-            self.nodes.append(
-                ExprVariableNode(new_uid, "", "COMPOSITE", [pack_uid])
-            )
+            self.nodes.append(ExprOperatorNode(pack_uid, "PACK", dict_name_uids))
+            self.nodes.append(ExprVariableNode(new_uid, "", "COMPOSITE", [pack_uid]))
         else:
-            self.nodes.append(
-                ExprVariableNode(new_uid, "", "COMPOSITE", key_uids)
-            )
+            self.nodes.append(ExprVariableNode(new_uid, "", "COMPOSITE", key_uids))
         self.uid_stack.put(new_uid)
 
     def visit_List(self, node: ast.List) -> NoReturn:
@@ -362,9 +354,7 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 "ACCESS",
-                self.reverse_uid_list(
-                    [self.uid_stack.get(), self.uid_stack.get()]
-                ),
+                self.reverse_uid_list([self.uid_stack.get(), self.uid_stack.get()]),
             )
         )
         self.uid_stack.put(new_uid)
@@ -382,9 +372,7 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 node.op.__class__.__name__,
-                self.reverse_uid_list(
-                    [self.uid_stack.get(), self.uid_stack.get()]
-                ),
+                self.reverse_uid_list([self.uid_stack.get(), self.uid_stack.get()]),
             )
         )
         self.uid_stack.put(new_uid)
@@ -463,9 +451,7 @@ class ExpressionVisitor(ast.NodeVisitor):
             ExprOperatorNode(
                 new_uid,
                 "IfExpr",
-                self.reverse_uid_list(
-                    [self.uid_stack.get() for _ in range(3)]
-                ),
+                self.reverse_uid_list([self.uid_stack.get() for _ in range(3)]),
             )
         )
         self.uid_stack.put(new_uid)
@@ -480,20 +466,19 @@ class ExpressionVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         new_uid = ExprAbstractNode.create_node_id()
         num_args = len(node.args) + len(node.keywords)
-        print(ast.dump(node))
+        node_name = None
         if isinstance(node.func, ast.Attribute):
-            pass
+            # num_args += 1
+            op_name = node.func.attr
         elif isinstance(node.func, ast.Name):
-            pass
+            op_name = node.func.id
         else:
             raise TypeError(f"Unexpected func type in Call: {type(node.func)}")
         self.nodes.append(
             ExprOperatorNode(
                 new_uid,
-                f"{node.func.id}()",
-                self.reverse_uid_list(
-                    [self.uid_stack.get() for _ in range(num_args)]
-                ),
+                f"{node_name}()",
+                self.reverse_uid_list([self.uid_stack.get() for _ in range(num_args)]),
             )
         )
         self.uid_stack.get()  # Pop the func node off of the stack

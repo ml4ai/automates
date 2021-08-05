@@ -371,6 +371,24 @@ class BaseFuncNode(ABC):
         }
 
 
+# TODO: Some class hierarchy changes need to be made because literals shouldn't have inputs, hyper-edges, or a hypergraph and I'm not even sold on them needing to be unique. Maybe we should think about that?
+@dataclass(repr=False)
+class LiteralFuncNode:
+    identifier: str
+    type: FunctionType
+    value: Any
+
+    def __eq__(self, other: LiteralFuncNode) -> bool:
+        return self.identifier == other.identifier
+
+    def __hash__(self):
+        return hash(self.identifier)
+
+    @classmethod
+    def from_value_node(cls, node: ExprValueNode):
+        return cls(uuid.uuid4(), FunctionType.LITERAL, node.value)
+
+
 @dataclass(repr=False)
 class OperationFuncNode(BaseFuncNode):
     def __hash__(self):
@@ -509,7 +527,9 @@ class ExpressionFuncNode(BaseFuncNode):
                     list of new hyper edges
             """
             if isinstance(expr_node_def, ExprValueNode):
-                return ([], [], [])  # Nothing to be done.
+                return LiteralFuncNode.from_value_node(expr_node_def)
+            elif isinstance(expr_node_def, ExprVariableNode):
+                return None  # Nothing to be done.
             child_defs = [
                 uid2node[child_id] for child_id in expr_node_def.children
             ]
@@ -530,7 +550,8 @@ class ExpressionFuncNode(BaseFuncNode):
                     child_def, ExprDefinitionNode
                 ):
                     child_out_var = convert_to_hyperedge(child_def)
-                    input_var_nodes.append(child_out_var)
+                    if child_out_var is not None:
+                        input_var_nodes.append(child_out_var)
                 else:
                     raise TypeError(
                         f"Unexpected Expr def type: {type(child_def)}"
@@ -1827,7 +1848,7 @@ class GroundedFunctionNetwork:
         return subgraphs_to_func_sets
 
     def to_AGraph(self):
-        """ Export to a PyGraphviz AGraph object. """
+        """Export to a PyGraphviz AGraph object."""
         var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
         input_nodes = set([v for v in var_nodes if self.in_degree(v) == 0])
         output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
