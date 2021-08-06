@@ -8,6 +8,7 @@ import pytz
 """
 Metadatum types:
 (*) <Any>.CodeSpanReference
+(*) <Gromet>.ModelDescription  # provides textual description and name of the model
 (*) <Gromet>.ModelInterface  # designates variables, parameters, initial_conditions
 (*) <Gromet>.TextualDocumentReferenceSet
 (*) <Gromet>.CodeCollectionReference
@@ -241,6 +242,17 @@ class CodeSpanReference(MetadatumAny):
 # -----------------------------------------------------------------------------
 # ModelInterface
 # -----------------------------------------------------------------------------
+
+@dataclass
+class ModelDescription(MetadatumGromet):
+    """
+    host: <Gromet>
+    Provides summary textual description of the model
+        along with a human-readable name.
+    """
+    name: str
+    description: str
+
 
 @dataclass
 class ModelInterface(MetadatumGromet):
