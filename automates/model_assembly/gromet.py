@@ -9,8 +9,10 @@ from .networks import (
     GroundedFunctionNetwork,
     BaseFuncNode,
     BaseConFuncNode,
+    CondConFuncNode,
     ExpressionFuncNode,
     OperationFuncNode,
+    LoopConFuncNode,
     VariableNode,
     HyperEdge,
 )
@@ -144,7 +146,7 @@ UidGromet = NewType("UidGromet", str)
 
 ConditionalBranch = NewType(
     "ConditionalBranch",
-    Tuple[Union[UidPredicate, None], Union[UidExpression, UidFunction]],
+    Tuple[Union[UidPredicate, None], UidBox],
 )
 
 
@@ -1028,7 +1030,7 @@ class Conditional(Box):  # BoxDirected
             type=UidType("Conditional"),
             name=func.identifier.name,
             ports=Box.get_ports(func),
-            branches=[],
+            branches=cls.separate_branches(func),
             metadata=func.metadata,
         )
 
@@ -1039,6 +1041,51 @@ class Conditional(Box):  # BoxDirected
                 "Conditional", func_id.namespace, func_id.scope, func_id.name
             )
         )
+
+    @staticmethod
+    def separate_branches(func: CondConFuncNode):
+        branches = list()
+        decision_node = func.decision_node
+
+        id2func = {
+            edge.func_node.identifier: edge.func_node
+            for edge in func.hyper_edges
+        }
+        input_vars = decision_node.input_variables
+        new_branch = []
+        for v, var_id in enumerate(input_vars):
+            if "COND" in var_id.name:
+                if len(new_branch) == 0:
+                    for func_id, func_node in id2func.items():
+                        if func_id.name.contains(var_id.name):
+                            pred = Predicate.from_func_node(func_node)
+                            new_branch.append(pred)
+                            break
+                else:
+                    branches.append(new_branch)
+                    new_branch = []
+            else:
+                for func_id, func_node in id2func.items():
+                    if func_id.name.contains(var_id.name):
+                        if isinstance(func_node, ExpressionFuncNode):
+                            body = Expression.from_func_node(func_node)
+                            new_branch.append(body)
+                        elif isinstance(func_node, BaseConFuncNode):
+                            body = Function.from_func_node(func_node)
+                            new_branch.append(body)
+                        elif isinstance(func_node, CondConFuncNode):
+                            body = Conditional.from_func_node(func_node)
+                            new_branch.append(body)
+                        elif isinstance(func_node, LoopConFuncNode):
+                            body = Loop.from_func_node(func_node)
+                            new_branch.append(body)
+                        else:
+                            raise TypeError(
+                                f"Unexpected FuncNode type of {type(func_node)} during Conditional branch creation for {func.identifier}"
+                            )
+                        break
+
+        return branches
 
 
 @dataclass
@@ -1133,6 +1180,7 @@ class Loop(Box, HasContents):  # BoxDirected
                 boxes=boxes,
                 junctions=junctions,
                 metadata=func.metadata,
+                exit_condition=Predicate.from_func_node(func.exit_condition),
             ),
             box_vars,
         )

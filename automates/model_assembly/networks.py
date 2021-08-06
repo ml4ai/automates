@@ -682,7 +682,7 @@ class BaseConFuncNode(BaseFuncNode):
 
 @dataclass(repr=False, frozen=False)
 class CondConFuncNode(BaseConFuncNode):
-    condition_node: ExpressionFuncNode
+    decision_node: ExpressionFuncNode
 
     @classmethod
     def from_container(
@@ -704,17 +704,14 @@ class CondConFuncNode(BaseConFuncNode):
             hyper_graph=mock_func_node.hyper_graph,
             metadata=mock_func_node.metadata,
             exit=mock_func_node.exit,
-            condition_node=cls.find_condition_node(mock_func_node),
+            decision_node=cls.find_decision_node(mock_func_node),
         )
-
+    
     @staticmethod
-    def find_condition_node(base_func: BaseConFuncNode):
-        # NOTE: If there is more than one condition node then this will find whichever is the first in the list of hyper-edges. Extend this function once we have GrFNs that have more than a single condition node in a ConditionalContainerDef
-        for h_edge in base_func.hyper_edges:
-            func = h_edge.func_node
-            if isinstance(func, ExpressionFuncNode):
-                if func.type == FunctionType.CONDITION:
-                    return func
+    def find_decision_node(base_func: BaseConFuncNode):
+        for edge in base_func.hyper_edges:
+            if edge.func_node.type == FunctionType.DECISION:
+                return edge.func_node
         return None
 
 
@@ -742,8 +739,17 @@ class LoopConFuncNode(BaseConFuncNode):
             hyper_graph=mock_func_node.hyper_graph,
             metadata=mock_func_node.metadata,
             exit=mock_func_node.exit,
-            exit_condition=CondConFuncNode.find_condition_node(mock_func_node),
+            exit_condition=cls.find_condition_node(mock_func_node),
         )
+    
+    @staticmethod
+    def find_condition_node(base_func: BaseConFuncNode):
+        # NOTE: If there is more than one condition node then this will find whichever is the first in the list of hyper-edges. Extend this function once we have GrFNs that have more than a single condition node in a ConditionalContainerDef
+        for h_edge in base_func.hyper_edges:
+            func = h_edge.func_node
+            if func.type == FunctionType.CONDITION:
+                return func
+        return None
 
 
 @dataclass(repr=False, frozen=False)
