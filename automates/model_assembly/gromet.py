@@ -579,6 +579,7 @@ class Box(TypedGrometElm):
     ):
         (L, J, P, W, B, V) = [list() for _ in range(6)]
         if isinstance(func, BaseConFuncNode):
+            B.append(BoxCall.from_func_node(func))
             (func_box, box_vars) = Function.from_func_node(func)
             print(func_box.wires)
             W.extend(func_box.wires)
@@ -593,9 +594,19 @@ class Box(TypedGrometElm):
         elif isinstance(func, ExpressionFuncNode):
             func_box = Expression.from_func_node(func)
         elif isinstance(func, CondConFuncNode):
+            B.append(BoxCall.from_func_node(func))
             func_box = Conditional.from_func_node(func)
+            W.extend(func_box.wires)
+            func_box.wires = [w.uid for w in func_box.wires]
         elif isinstance(func, LoopConFuncNode):
-            func_box = Loop.from_func_node(func)
+            B.append(BoxCall.from_func_node(func))
+            (func_box, box_vars) = Loop.from_func_node(func)
+            W.extend(func_box.wires)
+            func_box.wires = [w.uid for w in func_box.wires]
+            for var in box_vars:
+                var.metadata = VARS[
+                    VariableIdentifier.from_str(var.uid)
+                ].metadata
         elif isinstance(func, LiteralFuncNode):
             L.append(Literal.from_func_node(func))
             return (L, J, P, W, B, V)  # Nothing else to do here
