@@ -767,7 +767,31 @@ class HasContents:
             else:
                 variables[origin_var] = new_var_vals
             wires.append(new_wire)
-        return wires, variables
+
+        junctions = list()
+        for edge in func.hyper_edges:
+            if len(edge.inputs) == 0 and len(edge.outputs) == 1:
+                out_var = edge.outputs[0]
+                input_count = 0
+                for temp_edge in func.hyper_edges:
+                    if out_var in temp_edge.inputs:
+                        input_count += 1
+                if input_count > 1:
+                    expression_func = edge.func_node
+                    l_func = None
+                    for child_edge in expression_func.hyper_edges:
+                        if isinstance(child_edge.func_node, LiteralFuncNode):
+                            l_func = child_edge.func_node
+                            break
+                    if l_func is None:
+                        raise RuntimeError(
+                            f"No literal node found for {out_var.identifier} under function: {func.identifier}"
+                        )
+                    new_junc = Junction.from_var_node_and_lit_func(
+                        out_var, l_func
+                    )
+                    junctions.append(new_junc)
+        return wires, variables, junctions
 
     @staticmethod
     def box_ids_from_hyper_edges(h_edges: List[HyperEdge]) -> List[UidBox]:
@@ -827,13 +851,12 @@ class Function(Box, HasContents):  # BoxDirected
 
     @classmethod
     def from_func_node(cls, func: BaseConFuncNode):
-        wires, var_dict = HasContents.wires_from_hyper_graph(func)
+        wires, var_dict, juncs = HasContents.wires_from_hyper_graph(func)
         box_vars = [
             Variable.from_id_and_elements(v_id, els)
             for v_id, els in var_dict.items()
         ]
         boxes = HasContents.box_ids_from_hyper_edges(func.hyper_edges)
-        junctions = list()
 
         return (
             cls(
@@ -843,7 +866,7 @@ class Function(Box, HasContents):  # BoxDirected
                 ports=Box.get_ports(func),
                 wires=wires,
                 boxes=boxes,
-                junctions=junctions,
+                junctions=juncs,
                 metadata=func.metadata,
             ),
             box_vars,
@@ -1168,13 +1191,12 @@ class Loop(Box, HasContents):  # BoxDirected
 
     @classmethod
     def from_func_node(cls, func: LoopConFuncNode):
-        wires, var_dict = HasContents.wires_from_hyper_graph(func)
+        wires, var_dict, juncs = HasContents.wires_from_hyper_graph(func)
         box_vars = [
             Variable.from_id_and_elements(v_id, els)
             for v_id, els in var_dict.items()
         ]
         boxes = HasContents.box_ids_from_hyper_edges(func.hyper_edges)
-        junctions = list()
 
         return (
             cls(
@@ -1184,7 +1206,7 @@ class Loop(Box, HasContents):  # BoxDirected
                 ports=Box.get_ports(func),
                 wires=wires,
                 boxes=boxes,
-                junctions=junctions,
+                junctions=juncs,
                 metadata=func.metadata,
                 exit_condition=Predicate.from_func_node(func.exit_condition),
             ),
