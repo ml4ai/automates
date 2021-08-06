@@ -12,6 +12,7 @@ from .networks import (
     CondConFuncNode,
     ExpressionFuncNode,
     OperationFuncNode,
+    LiteralFuncNode,
     LoopConFuncNode,
     VariableNode,
     HyperEdge,
@@ -331,10 +332,8 @@ class Literal(TypedGrometElm):
     value: Any
 
     @classmethod
-    def from_expr_value_node(
-        cls, node: ExprValueNode, parent: Expr, container: Expression
-    ):
-        lit_name = f"{container.name}::{parent.name}::{node.value}"
+    def from_func_node(cls, node: LiteralFuncNode):
+        lit_name = f"Literal::{node.identifier}::{node.value}"
         return cls(
             type=UidType("Literal"),
             name=lit_name,
@@ -593,6 +592,13 @@ class Box(TypedGrometElm):
             V.extend(box_vars)
         elif isinstance(func, ExpressionFuncNode):
             func_box = Expression.from_func_node(func)
+        elif isinstance(func, CondConFuncNode):
+            func_box = Conditional.from_func_node(func)
+        elif isinstance(func, LoopConFuncNode):
+            func_box = Loop.from_func_node(func)
+        elif isinstance(func, LiteralFuncNode):
+            L.append(Literal.from_func_node(func))
+            return (L, J, P, W, B, V)  # Nothing else to do here
         elif isinstance(func, OperationFuncNode):
             # NOTE: handle these in expression func nodes
             return (L, J, P, W, B, V)
