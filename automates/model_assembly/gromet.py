@@ -779,6 +779,7 @@ class HasContents:
                 variables[origin_var] = new_var_vals
             wires.append(new_wire)
 
+        # NOTE: Junctions are created here
         junctions = list()
         for edge in func.hyper_edges:
             if len(edge.inputs) == 0 and len(edge.outputs) == 1:
@@ -900,10 +901,6 @@ class Expr(GrometElm):
 
     call: Union[RefFn, RefOp]
     args: List[Union[UidPort, Literal, Expr]]
-
-    @classmethod
-    def from_func_node(cls, func: OperationFuncNode):
-        pass
 
     @classmethod
     def from_hyper_graph(cls, func: ExpressionFuncNode):
@@ -1087,15 +1084,15 @@ class Conditional(Box):  # BoxDirected
         new_branch = []
         for v, var_id in enumerate(input_vars):
             if "COND" in var_id.name:
-                if len(new_branch) == 0:
-                    for func_id, func_node in id2func.items():
-                        if func_id.name.contains(var_id.name):
-                            pred = Predicate.from_func_node(func_node)
-                            new_branch.append(pred)
-                            break
-                else:
+                if len(new_branch) > 0:
                     branches.append(new_branch)
                     new_branch = []
+
+                for func_id, func_node in id2func.items():
+                    if func_id.name.contains(var_id.name):
+                        pred = Predicate.from_func_node(func_node)
+                        new_branch.append(pred)
+                        break
             else:
                 for func_id, func_node in id2func.items():
                     if func_id.name.contains(var_id.name):
@@ -1277,6 +1274,7 @@ class Variable(TypedGrometElm):
             uid=UidVariable(
                 "::".join(
                     [
+                        "Variable",
                         var_id.namespace,
                         var_id.scope,
                         var_id.name,
@@ -1327,7 +1325,7 @@ class Gromet(TypedGrometElm):
             variables.extend(nvars)
 
         gromet_type = UidType("GroMEt")
-        gromet_name = ""
+        gromet_name = G.identifier.name
         gromet_metdata = G.metadata
         gromet_id = UidGromet(str(uuid.uuid4()))
         root_uid = Box.uid_from_func_id(G.entry_point)
