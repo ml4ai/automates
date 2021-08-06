@@ -2219,63 +2219,167 @@ class GroundedFunctionNetwork:
 # =============================================================================
 @dataclass
 class CAGContainer:
+    """
+    A container definition to be stored in a CausalAnalysisGraph that holds a collection of nodes that are contained under a container type FuncNode in GrFN. This class also holds a reference to a parent CAGContainer. If the parent reference is null then this is the root container of the CAG.
+    """
+
     uid: str
     identifier: CAGContainerIdentifier
     type: str
     parent: CAGContainerIdentifier
     nodes: List[VariableIdentifier]
+    metadata: List[TypedMetadata]
 
     @classmethod
-    def from_func_node(cls, func: BaseFuncNode):
-        # TODO: finish implementation
+    def from_func_node(cls, func: BaseConFuncNode, parent: FunctionIdentifier):
+        """Creates a CAGContainer from a GrFN FuncNode definition and the identifier of a parent FuncNode
+
+        Args:
+            func (BaseConFuncNode): A container type FuncNode that this CAGContainer will represent at the CAG level
+            parent (FunctionIdentifier): The identifier of the funcNode that contained func in the GrFN
+
+        Returns:
+            CAGContainer: a CAG container definition
+        """
         con_id = CAGContainerIdentifier.from_function_id(func.identifier)
+        if parent is not None:
+            parent_id = CAGContainerIdentifier.from_function_id(
+                parent.identifier
+            )
+        else:
+            parent_id = None
+
+        # FIXME: @Tito the variables captured during container creation here may have a superset of all the variables you actually want to have appear in the CAG
+        variables = list()
+        for edge in func.hyper_edges:
+            variables.extend([v.identifier for v in edge.inputs])
+            variables.extend([v.identifier for v in edge.outputs])
+
         return cls(
             uid=str(uuid.uuid4()),
             identifier=con_id,
             type=str(func.type),
-            parent=None,
-            nodes=[]
+            parent=parent_id,
+            nodes=list(set(variables)),
+            metadata=func.metadata
         )
 
-    def to_dict(self):
+    @classmethod
+    def from_dict(cls, data: dict) -> CAGContainer:
+        """Reloads a CAGContainer from a dictionary that has been loaded from a JSON file
+
+        Args:
+            data (dict): the data dict from the saved CAG JSON
+
+        Returns:
+            CAGContainer: A CAGContainer with all the data from the data dict arg
+        """
+        return NotImplemented
+
+    def to_dict(self) -> dict:
+        """Returns this class data as a JSON serializable dictionary
+
+        Returns:
+            dict: a dictionary of serializable values
+        """
         return {
             "uid": self.uid,
             "identifier": str(self.identifier),
             "type": self.type,
             "parent": str(self.parent),
             "nodes": [str(var_id) for var_id in self.nodes],
+            "metadata": [m.to_dict() for m in self.metadata],
         }
 
 
 @dataclass
 class CausalAnalysisGraph:
+    """
+    A causal representation of a GrFN or GroMEt. This graph shows the following:
+        (0) the variables present in a GrFN or GroMEt
+        (1) the interactions between variables (in the form of edges)
+        (2) the containers from the original GrFN/GroMEt
+        (3) which variables were included in which container
+        (4) which containers are children of other containers
+
+    The class here captures all of that using lists of variables, edges, and containers. Along with that we capture identifier information, the date of creation, and any metadata that existed at the GrFN/GroMEt level in the appropriate location either at the level of the CAG, CAGContainer, or VariableNode.
+
+    NOTE: We still have both identifiers and uids, but we now have a schema that *should* ensure that identifiers are unique and sufficient. Eventually we should switch to only using identifiers (since they are more human readable) but since we haven't tested uniqueness yet we are leaving uids in for now just in case we need them.
+    """
+
     uid: str
     identifier: CAGIdentifier
     date_created: str
     variables: List[VariableNode]
     edges: List[Tuple[VariableIdentifier, VariableIdentifier]]
     containers: List[CAGContainer]
+    metadata: List[TypedMetadata]
 
     @classmethod
     def from_GrFN(cls, G: GroundedFunctionNetwork):
-        # TODO: finish implementation
+        """Builds a CausalAnalysisGraph (CAG) from a GrFN using GrFN 3.0
+
+        Args:
+            G (GroundedFunctionNetwork): A GrFN 3.0 object
+
+        Returns:
+            A CausalAnalysisGraph object
+        """
+
+        def containers_from_hyper_edges(
+            func: BaseConFuncNode, parent: BaseConFuncNode = None
+        ) -> List[CAGContainer]:
+            """Returns a list of CAGContainers created from the hyper edges of this function node and all child function nodes that hold container functions
+
+            Args:
+                func (BaseConFuncNode): A container function node from GrFN
+
+            Returns:
+                A list of CAGContainers translated from the hyper edges
+            """
+            res = [CAGContainer.from_func_node(func, parent)]
+            for edge in func.hyper_edges:
+                child_func = edge.func_node
+                if isinstance(child_func, BaseConFuncNode):
+                    new_cons = containers_from_hyper_edges(child_func, func)
+                    res.extend(new_cons)
+
+            return res
+
+        cons = containers_from_hyper_edges(G.functions[G.entry_point])
+
+        # TODO: @Tito implement this
         return cls(
             uid=str(uuid.uuid4()),
             identifier=CAGIdentifier.from_GrFN_id(G.identifier),
             date_created=str(datetime.now()),
             variables=[],
             edges=[],
-            containers=[],
+            containers=cons,
+            metadata=G.metadata,
         )
 
-    def to_json(self) -> str:
-        """Outputs the contents of this GrFN to a JSON object string.
+    @classmethod
+    def from_json_file(cls, json_filepath: str) -> CausalAnalysisGraph:
+        """Reload a CAG from a JSON file.
 
-        :return: Description of returned object.
-        :rtype: type
-        :raises ExceptionName: Why the exception is raised.
+        Args:
+            json_filepath (str): filepath to the CAG JSON file
+
+        Returns:
+            CausalAnalysisGraph: A CAG with all data from the JSON file
         """
-        data = {
+        # TODO: @Tito implement this
+        data = json.load(open(json_filepath, "r"))
+        return NotImplemented
+
+    def to_dict(self) -> dict:
+        """Generates a dictionary of JSON serializable data that represents this CAG object.
+
+        Returns:
+            dict: A dictionary that can be serialized to JSON
+        """
+        return {
             "uid": self.uid,
             "identifier": str(self.identifier),
             "daet_created": self.date_created,
@@ -2285,8 +2389,16 @@ class CausalAnalysisGraph:
                 for src, dst in self.edges
             ],
             "containers": [con.to_dict() for con in self.containers],
+            "metadata": [m.to_dict() for m in self.metadata],
         }
-        return json.dumps(data)
+
+    def to_json(self) -> str:
+        """Generates a JSON serialized string for this CAG object
+
+        Returns:
+            str: A JSON string with all of the data of this CAG object
+        """
+        return json.dumps(self.to_dict())
 
     def to_json_file(self, json_path) -> None:
         with open(json_path, "w") as outfile:
