@@ -17,7 +17,7 @@ def main():
     """
     f_name = sys.argv[1]
     file_contents = open(f_name).read()
-    C = CAST([])
+    C = CAST([], "python")
     C2 = C.from_json_str(file_contents)
 
     V = CASTToAGraphVisitor(C2)
