@@ -1430,6 +1430,7 @@ class GrFNType:
         return d
 
 
+# NOTE: this is the GrFN 3.0 definition
 @dataclass
 class GroundedFunctionNetwork:
     uid: str
