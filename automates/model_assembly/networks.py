@@ -3,6 +3,7 @@ from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
 from abc import ABC, abstractmethod, abstractclassmethod
 from functools import singledispatch
 from dataclasses import dataclass
+from datetime import datetime
 from itertools import product
 from copy import deepcopy
 
@@ -48,6 +49,8 @@ from .identifiers import (
     ObjectIdentifier,
     VariableIdentifier,
     TypeIdentifier,
+    CAGIdentifier,
+    CAGContainerIdentifier,
 )
 from .metadata import (
     TypedMetadata,
@@ -2211,147 +2214,59 @@ class GroundedFunctionNetwork:
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T, M)
 
 
-class CausalAnalysisGraph(nx.DiGraph):
-    def __init__(self, G, S, uid, date, ns, sc, nm):
-        super().__init__(G)
-        self.subgraphs = S
-        self.uid = uid
-        self.timestamp = date
-        self.namespace = ns
-        self.scope = sc
-        self.name = nm
+# =============================================================================
+# TODO: @Tito fill in the code here for the new GrFN 2 CAG pipeline
+# =============================================================================
+@dataclass
+class CAGContainer:
+    uid: str
+    identifier: CAGContainerIdentifier
+    type: str
+    parent: CAGContainerIdentifier
+    nodes: List[VariableIdentifier]
 
     @classmethod
-    def from_GrFN(cls, GrFN: GroundedFunctionNetwork):
-        """Export to a Causal Analysis Graph (CAG) object.
-        The CAG shows the influence relationships between the variables and
-        elides the function nodes."""
-
-        G = nx.DiGraph()
-        for var_node in GrFN.variables:
-            G.add_node(var_node, **var_node.get_kwargs())
-        for edge in GrFN.hyper_edges:
-            if edge.lambda_fn.func_type == LambdaType.INTERFACE:
-                G.add_edges_from(list(zip(edge.inputs, edge.outputs)))
-            else:
-                G.add_edges_from(list(product(edge.inputs, edge.outputs)))
-
-        def delete_paths_at_level(nodes: list):
-            orig_nodes = deepcopy(nodes)
-
-            while len(nodes) > 0:
-                updated_nodes = list()
-                for node in nodes:
-                    node_var_name = node.identifier.var_name
-                    succs = list(G.successors(node))
-                    for next_node in succs:
-                        if (
-                            next_node.identifier.var_name == node_var_name
-                            and len(list(G.predecessors(next_node))) == 1
-                        ):
-                            next_succs = list(G.successors(next_node))
-                            G.remove_node(next_node)
-                            updated_nodes.append(node)
-                            for succ_node in next_succs:
-                                G.add_edge(node, succ_node)
-                nodes = updated_nodes
-
-            next_level_nodes = list()
-            for node in orig_nodes:
-                next_level_nodes.extend(list(G.successors(node)))
-            next_level_nodes = list(set(next_level_nodes))
-
-            if len(next_level_nodes) > 0:
-                delete_paths_at_level(next_level_nodes)
-
-        def correct_subgraph_nodes(subgraph: GrFNSubgraph):
-            cag_subgraph_nodes = list(
-                set(G.nodes).intersection(set(subgraph.nodes))
-            )
-            subgraph.nodes = cag_subgraph_nodes
-
-            for new_subgraph in GrFN.subgraphs.successors(subgraph):
-                correct_subgraph_nodes(new_subgraph)
-
-        input_nodes = [n for n in G.nodes if G.in_degree(n) == 0]
-        delete_paths_at_level(input_nodes)
-        root_subgraph = [n for n, d in GrFN.subgraphs.in_degree() if d == 0][0]
-        correct_subgraph_nodes(root_subgraph)
+    def from_func_node(cls, func: BaseFuncNode):
+        # TODO: finish implementation
+        con_id = CAGContainerIdentifier.from_function_id(func.identifier)
         return cls(
-            G,
-            GrFN.subgraphs,
-            GrFN.uid,
-            GrFN.timestamp,
-            GrFN.namespace,
-            GrFN.scope,
-            GrFN.name,
+            uid=str(uuid.uuid4()),
+            identifier=con_id,
+            type=str(func.type),
+            parent=None,
+            nodes=[]
         )
 
-    def to_AGraph(self):
-        """Returns a variable-only view of the GrFN in the form of an AGraph.
+    def to_dict(self):
+        return {
+            "uid": self.uid,
+            "identifier": str(self.identifier),
+            "type": self.type,
+            "parent": str(self.parent),
+            "nodes": [str(var_id) for var_id in self.nodes],
+        }
 
-        Returns:
-            type: A CAG constructed via variable influence in the GrFN object.
 
-        """
-        A = nx.nx_agraph.to_agraph(self)
-        A.graph_attr.update(
-            {
-                "dpi": 227,
-                "fontsize": 20,
-                "fontcolor": "black",
-                "fontname": "Menlo",
-                "rankdir": "TB",
-            }
+@dataclass
+class CausalAnalysisGraph:
+    uid: str
+    identifier: CAGIdentifier
+    date_created: str
+    variables: List[VariableNode]
+    edges: List[Tuple[VariableIdentifier, VariableIdentifier]]
+    containers: List[CAGContainer]
+
+    @classmethod
+    def from_GrFN(cls, G: GroundedFunctionNetwork):
+        # TODO: finish implementation
+        return cls(
+            uid=str(uuid.uuid4()),
+            identifier=CAGIdentifier.from_GrFN_id(G.identifier),
+            date_created=str(datetime.now()),
+            variables=[],
+            edges=[],
+            containers=[],
         )
-        A.node_attr.update(
-            shape="rectangle",
-            color="#650021",
-            fontname="Menlo",
-            fontcolor="black",
-        )
-        for node in A.iternodes():
-            node.attr["fontcolor"] = "black"
-            node.attr["style"] = "rounded"
-        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
-
-        def get_subgraph_nodes(subgraph: GrFNSubgraph):
-            return subgraph.nodes + [
-                node
-                for child_graph in self.subgraphs.successors(subgraph)
-                for node in get_subgraph_nodes(child_graph)
-            ]
-
-        def populate_subgraph(subgraph: GrFNSubgraph, parent: AGraph):
-            all_sub_nodes = get_subgraph_nodes(subgraph)
-            container_subgraph = parent.add_subgraph(
-                all_sub_nodes,
-                name=f"cluster_{str(subgraph)}",
-                label=subgraph.basename,
-                style="bold, rounded",
-                rankdir="TB",
-                color=subgraph.border_color,
-            )
-
-            for new_subgraph in self.subgraphs.successors(subgraph):
-                populate_subgraph(new_subgraph, container_subgraph)
-
-        root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
-        populate_subgraph(root_subgraph, A)
-        return A
-
-    def to_igraph_gml(self, filepath: str) -> NoReturn:
-        filename = os.path.join(
-            filepath,
-            f"{self.namespace}__{self.scope}__{self.name}--igraph.gml",
-        )
-
-        V = [str(v) for v in super().nodes]
-        E = [(str(e1), str(e2)) for e1, e2 in super().edges]
-        iG = nx.DiGraph()
-        iG.add_nodes_from(V)
-        iG.add_edges_from(E)
-        nx.write_gml(iG, filename)
 
     def to_json(self) -> str:
         """Outputs the contents of this GrFN to a JSON object string.
@@ -2362,16 +2277,186 @@ class CausalAnalysisGraph(nx.DiGraph):
         """
         data = {
             "uid": self.uid,
-            "identifier": "::".join(
-                ["@container", self.namespace, self.scope, self.name]
-            ),
-            "timestamp": self.timestamp,
+            "identifier": str(self.identifier),
+            "daet_created": self.date_created,
             "variables": [var.to_dict() for var in self.nodes],
-            "edges": [(src.uid, dst.uid) for src, dst in self.edges],
-            "subgraphs": [sgraphs.to_dict() for sgraphs in self.subgraphs],
+            "edges": [
+                (str(src.identifier), str(dst.identifier))
+                for src, dst in self.edges
+            ],
+            "containers": [con.to_dict() for con in self.containers],
         }
         return json.dumps(data)
 
     def to_json_file(self, json_path) -> None:
         with open(json_path, "w") as outfile:
             outfile.write(self.to_json())
+
+
+# =============================================================================
+
+
+# class CausalAnalysisGraph(nx.DiGraph):
+#     def __init__(self, G, S, uid, date, ns, sc, nm):
+#         super().__init__(G)
+#         self.subgraphs = S
+#         self.uid = uid
+#         self.timestamp = date
+#         self.namespace = ns
+#         self.scope = sc
+#         self.name = nm
+
+#     @classmethod
+#     def from_GrFN(cls, GrFN: GroundedFunctionNetwork):
+#         """Export to a Causal Analysis Graph (CAG) object.
+#         The CAG shows the influence relationships between the variables and
+#         elides the function nodes."""
+
+#         G = nx.DiGraph()
+#         for var_node in GrFN.variables:
+#             G.add_node(var_node, **var_node.get_kwargs())
+#         for edge in GrFN.hyper_edges:
+#             if edge.lambda_fn.func_type == LambdaType.INTERFACE:
+#                 G.add_edges_from(list(zip(edge.inputs, edge.outputs)))
+#             else:
+#                 G.add_edges_from(list(product(edge.inputs, edge.outputs)))
+
+#         def delete_paths_at_level(nodes: list):
+#             orig_nodes = deepcopy(nodes)
+
+#             while len(nodes) > 0:
+#                 updated_nodes = list()
+#                 for node in nodes:
+#                     node_var_name = node.identifier.var_name
+#                     succs = list(G.successors(node))
+#                     for next_node in succs:
+#                         if (
+#                             next_node.identifier.var_name == node_var_name
+#                             and len(list(G.predecessors(next_node))) == 1
+#                         ):
+#                             next_succs = list(G.successors(next_node))
+#                             G.remove_node(next_node)
+#                             updated_nodes.append(node)
+#                             for succ_node in next_succs:
+#                                 G.add_edge(node, succ_node)
+#                 nodes = updated_nodes
+
+#             next_level_nodes = list()
+#             for node in orig_nodes:
+#                 next_level_nodes.extend(list(G.successors(node)))
+#             next_level_nodes = list(set(next_level_nodes))
+
+#             if len(next_level_nodes) > 0:
+#                 delete_paths_at_level(next_level_nodes)
+
+#         def correct_subgraph_nodes(subgraph: GrFNSubgraph):
+#             cag_subgraph_nodes = list(
+#                 set(G.nodes).intersection(set(subgraph.nodes))
+#             )
+#             subgraph.nodes = cag_subgraph_nodes
+
+#             for new_subgraph in GrFN.subgraphs.successors(subgraph):
+#                 correct_subgraph_nodes(new_subgraph)
+
+#         input_nodes = [n for n in G.nodes if G.in_degree(n) == 0]
+#         delete_paths_at_level(input_nodes)
+#         root_subgraph = [n for n, d in GrFN.subgraphs.in_degree() if d == 0][0]
+#         correct_subgraph_nodes(root_subgraph)
+#         return cls(
+#             G,
+#             GrFN.subgraphs,
+#             GrFN.uid,
+#             GrFN.timestamp,
+#             GrFN.namespace,
+#             GrFN.scope,
+#             GrFN.name,
+#         )
+
+#     def to_AGraph(self):
+#         """Returns a variable-only view of the GrFN in the form of an AGraph.
+
+#         Returns:
+#             type: A CAG constructed via variable influence in the GrFN object.
+
+#         """
+#         A = nx.nx_agraph.to_agraph(self)
+#         A.graph_attr.update(
+#             {
+#                 "dpi": 227,
+#                 "fontsize": 20,
+#                 "fontcolor": "black",
+#                 "fontname": "Menlo",
+#                 "rankdir": "TB",
+#             }
+#         )
+#         A.node_attr.update(
+#             shape="rectangle",
+#             color="#650021",
+#             fontname="Menlo",
+#             fontcolor="black",
+#         )
+#         for node in A.iternodes():
+#             node.attr["fontcolor"] = "black"
+#             node.attr["style"] = "rounded"
+#         A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+
+#         def get_subgraph_nodes(subgraph: GrFNSubgraph):
+#             return subgraph.nodes + [
+#                 node
+#                 for child_graph in self.subgraphs.successors(subgraph)
+#                 for node in get_subgraph_nodes(child_graph)
+#             ]
+
+#         def populate_subgraph(subgraph: GrFNSubgraph, parent: AGraph):
+#             all_sub_nodes = get_subgraph_nodes(subgraph)
+#             container_subgraph = parent.add_subgraph(
+#                 all_sub_nodes,
+#                 name=f"cluster_{str(subgraph)}",
+#                 label=subgraph.basename,
+#                 style="bold, rounded",
+#                 rankdir="TB",
+#                 color=subgraph.border_color,
+#             )
+
+#             for new_subgraph in self.subgraphs.successors(subgraph):
+#                 populate_subgraph(new_subgraph, container_subgraph)
+
+#         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
+#         populate_subgraph(root_subgraph, A)
+#         return A
+
+#     def to_igraph_gml(self, filepath: str) -> NoReturn:
+#         filename = os.path.join(
+#             filepath,
+#             f"{self.namespace}__{self.scope}__{self.name}--igraph.gml",
+#         )
+
+#         V = [str(v) for v in super().nodes]
+#         E = [(str(e1), str(e2)) for e1, e2 in super().edges]
+#         iG = nx.DiGraph()
+#         iG.add_nodes_from(V)
+#         iG.add_edges_from(E)
+#         nx.write_gml(iG, filename)
+
+#     def to_json(self) -> str:
+#         """Outputs the contents of this GrFN to a JSON object string.
+
+#         :return: Description of returned object.
+#         :rtype: type
+#         :raises ExceptionName: Why the exception is raised.
+#         """
+#         data = {
+#             "uid": self.uid,
+#             "identifier": "::".join(
+#                 ["@container", self.namespace, self.scope, self.name]
+#             ),
+#             "timestamp": self.timestamp,
+#             "variables": [var.to_dict() for var in self.nodes],
+#             "edges": [(src.uid, dst.uid) for src, dst in self.edges],
+#             "subgraphs": [sgraphs.to_dict() for sgraphs in self.subgraphs],
+#         }
+#         return json.dumps(data)
+
+#     def to_json_file(self, json_path) -> None:
+#         with open(json_path, "w") as outfile:
+#             outfile.write(self.to_json())

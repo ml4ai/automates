@@ -83,6 +83,20 @@ class AIRIdentifier(NamedIdentifier):
 
 
 @dataclass(frozen=True)
+class CAGIdentifier(NamedIdentifier):
+    def __str__(self):
+        return f"CAG::{super().__str__()}"
+    
+     @classmethod
+    def from_GrFN_id(cls, grfn_id: GrFNIdentifier):
+        return cls(grfn_id.namespace, grfn_id.scope, grfn_id.name)
+
+    @classmethod
+    def from_filename(cls, filename: str):
+        return cls("", "", filename)
+
+
+@dataclass(frozen=True)
 class GrFNIdentifier(NamedIdentifier):
     def __str__(self):
         return f"GrFN::{super().__str__()}"
@@ -111,6 +125,21 @@ class ContainerIdentifier(NamedIdentifier):
     def from_name_str(cls, name: str) -> ContainerIdentifier:
         (_, ns, sc, name) = name.split("::")
         return cls(ns, sc, name)
+
+
+@dataclass(frozen=True)
+class CAGContainerIdentifier(IndexedIdentifier):
+    def __str__(self):
+        return f"CAGContainer::{super().__str__()}"
+    
+    @classmethod
+    def from_function_id(cls, func_id: FileIdentifier):
+        return cls(func_id.namespace, func_id.scope, func_id.name, func_id.index)
+
+    @classmethod
+    def from_name_str(cls, name: str) -> ContainerIdentifier:
+        (_, ns, sc, name, idx) = name.split("::")
+        return cls(ns, sc, name, int(idx))
 
 
 @dataclass(frozen=True)
