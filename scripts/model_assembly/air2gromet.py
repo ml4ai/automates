@@ -20,7 +20,6 @@ def main(args):
     GrFN = GroundedFunctionNetwork.from_AIR(AIR)
     grfn_file = air_filepath.replace("AIR.json", "GrFN3.json")
     GrFN.to_json_file(grfn_file)
-    sys.exit()
 
     if (
         args.tr_comm_file != None
@@ -45,10 +44,10 @@ def main(args):
             },
         )
 
-    # GroMEt = Gromet.from_GrFN(GrFN)
+    GroMEt = Gromet.from_GrFN(GrFN)
 
-    # gromet_file = air_filepath.replace("AIR.json", "GroMEt.json")
-    # gromet_to_json(GroMEt, gromet_file)
+    gromet_file = air_filepath.replace("AIR.json", "GroMEt.json")
+    gromet_to_json(GroMEt, gromet_file)
 
     # A = G.to_AGraph()
     # grfn_pdf_name = air_filepath.replace("AIR.json", "GrFN.pdf")
