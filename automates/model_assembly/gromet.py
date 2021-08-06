@@ -1066,20 +1066,12 @@ class Conditional(Box):  # BoxDirected
     @classmethod
     def from_func_node(cls, func: CondConFuncNode):
         return cls(
-            uid=cls.uid_from_func_id(func.identifier),
+            uid=UidConditional(Box.build_uid(func.identifier, "Conditional")),
             type=UidType("Conditional"),
             name=func.identifier.name,
             ports=Box.get_ports(func),
             branches=cls.separate_branches(func),
             metadata=func.metadata,
-        )
-
-    @staticmethod
-    def uid_from_func_id(func_id: FunctionIdentifier):
-        return UidConditional(
-            "::".join(
-                "Conditional", func_id.namespace, func_id.scope, func_id.name
-            )
         )
 
     @staticmethod
@@ -1108,17 +1100,25 @@ class Conditional(Box):  # BoxDirected
                 for func_id, func_node in id2func.items():
                     if func_id.name.contains(var_id.name):
                         if isinstance(func_node, ExpressionFuncNode):
-                            body = Expression.from_func_node(func_node)
-                            new_branch.append(body)
+                            body_id = UidExpression(
+                                Box.build_uid(func.identifier, "Expression")
+                            )
+                            new_branch.append(body_id)
                         elif isinstance(func_node, BaseConFuncNode):
-                            body = Function.from_func_node(func_node)
-                            new_branch.append(body)
+                            body_id = UidFunction(
+                                Box.build_uid(func.identifier, "Function")
+                            )
+                            new_branch.append(body_id)
                         elif isinstance(func_node, CondConFuncNode):
-                            body = Conditional.from_func_node(func_node)
-                            new_branch.append(body)
+                            body_id = UidConditional(
+                                Box.build_uid(func.identifier, "Conditional")
+                            )
+                            new_branch.append(body_id)
                         elif isinstance(func_node, LoopConFuncNode):
-                            body = Loop.from_func_node(func_node)
-                            new_branch.append(body)
+                            body_id = UidLoop(
+                                Box.build_uid(func.identifier, "Loop")
+                            )
+                            new_branch.append(body_id)
                         else:
                             raise TypeError(
                                 f"Unexpected FuncNode type of {type(func_node)} during Conditional branch creation for {func.identifier}"
@@ -1211,7 +1211,7 @@ class Loop(Box, HasContents):  # BoxDirected
 
         return (
             cls(
-                uid=cls.uid_from_func_id(func.identifier),
+                uid=UidLoop(Box.build_uid(func.identifier, "Loop")),
                 type=UidType("Loop"),
                 name=func.identifier.name,
                 ports=Box.get_ports(func),
@@ -1222,12 +1222,6 @@ class Loop(Box, HasContents):  # BoxDirected
                 exit_condition=Predicate.from_func_node(func.exit_condition),
             ),
             box_vars,
-        )
-
-    @staticmethod
-    def uid_from_func_id(func_id: FunctionIdentifier):
-        return UidLoop(
-            "::".join("Loop", func_id.namespace, func_id.scope, func_id.name)
         )
 
 

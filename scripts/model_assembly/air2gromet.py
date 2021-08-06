@@ -7,9 +7,10 @@ from automates.model_assembly.air import AutoMATES_IR
 from automates.model_assembly.gromet import Gromet, gromet_to_json
 from automates.model_assembly.text_reading_linker import TextReadingLinker
 from automates.model_assembly.interfaces import (
-    TextReadingAppInterface, 
-    LocalTextReadingInterface
+    TextReadingAppInterface,
+    LocalTextReadingInterface,
 )
+
 
 def main(args):
 
@@ -18,10 +19,12 @@ def main(args):
     AIR = AutoMATES_IR.from_air_json(air_json_data)
     GrFN = GroundedFunctionNetwork.from_AIR(AIR)
 
-    if (args.tr_comm_file != None
+    if (
+        args.tr_comm_file != None
         and args.tr_doc_file != None
-        and args.tr_eqn_file != None):
-    
+        and args.tr_eqn_file != None
+    ):
+
         name = air_filepath.split("/")[-1].rsplit("--AIR", 1)[0]
         tr_interface = LocalTextReadingInterface(name)
         if args.tr_address != None:
@@ -30,11 +33,14 @@ def main(args):
             )
 
         tr_linker = TextReadingLinker(tr_interface)
-        GrFN = tr_linker.perform_tr_grfn_linking(GrFN, {
-            "comm_file": args.tr_comm_file,
-            "eqn_file": args.tr_eqn_file,
-            "doc_file": args.tr_doc_file
-        })
+        GrFN = tr_linker.perform_tr_grfn_linking(
+            GrFN,
+            {
+                "comm_file": args.tr_comm_file,
+                "eqn_file": args.tr_eqn_file,
+                "doc_file": args.tr_doc_file,
+            },
+        )
 
     GroMEt = Gromet.from_GrFN(GrFN)
 
@@ -52,20 +58,23 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("air_filepath", help="Path to AIR file")
-    parser.add_argument("--tr_comm_file", 
+    parser.add_argument(
+        "--tr_comm_file",
         type=str,
         default=None,
-        help="filepath to a comments JSON file"
+        help="filepath to a comments JSON file",
     )
-    parser.add_argument("--tr_doc_file",
+    parser.add_argument(
+        "--tr_doc_file",
         type=str,
         default=None,
-        help="filepath to a source text pdf file"
+        help="filepath to a source text pdf file",
     )
-    parser.add_argument("--tr_eqn_file", 
+    parser.add_argument(
+        "--tr_eqn_file",
         type=str,
         default=None,
-        help="filepath to an equations txt file"
+        help="filepath to an equations txt file",
     )
     parser.add_argument(
         "--tr_address",
