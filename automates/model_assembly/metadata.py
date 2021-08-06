@@ -470,6 +470,7 @@ class GrFNCreation(TypedMetadata):
         data.update({"name": self.name})
         return data
 
+
 @dataclass
 class EquationExtraction(BaseMetadata):
     source_type: str
@@ -478,14 +479,11 @@ class EquationExtraction(BaseMetadata):
 
     @classmethod
     def from_data(cls, data: dict) -> EquationExtraction:
-        return cls(
-            "equation_document_source",
-            "",
-            data["equation_number"]
-        )
+        return cls("equation_document_source", "", data["equation_number"])
 
     def to_dict(self) -> str:
         return NotImplemented
+
 
 @dataclass
 class TextSpan(BaseMetadata):
@@ -494,13 +492,11 @@ class TextSpan(BaseMetadata):
 
     @classmethod
     def from_data(cls, data: dict) -> TextSpan:
-        return cls(
-            data["char_begin"],
-            data["char_end"]
-        )
+        return cls(data["char_begin"], data["char_end"])
 
     def to_dict(self) -> str:
         return NotImplemented
+
 
 @dataclass
 class TextSpanRef(BaseMetadata):
@@ -510,14 +506,11 @@ class TextSpanRef(BaseMetadata):
 
     @classmethod
     def from_data(cls, data: dict) -> TextSpanRef:
-        return cls(
-            None,
-            None,
-            TextSpan.from_data(data["span"])
-        )
+        return cls(None, None, TextSpan.from_data(data["span"]))
 
     def to_dict(self) -> str:
-        return NotImplemented 
+        return NotImplemented
+
 
 @dataclass
 class TextExtraction(BaseMetadata):
@@ -530,11 +523,12 @@ class TextExtraction(BaseMetadata):
         return cls(
             "text_document_source",
             "",
-            [TextSpanRef.from_data(span) for span in data["text_spans"]]
+            [TextSpanRef.from_data(span) for span in data["text_spans"]],
         )
 
     def to_dict(self) -> str:
-        return NotImplemented 
+        return NotImplemented
+
 
 @dataclass
 class VariableEquationParameter(TypedMetadata):
@@ -549,7 +543,7 @@ class VariableEquationParameter(TypedMetadata):
             data["provenance"],
             EquationExtraction.from_data(data["equation_extraction"]),
             data["variable_identifier"],
-            data["value"] 
+            data["value"],
         )
 
     def to_dict(self):
@@ -557,6 +551,7 @@ class VariableEquationParameter(TypedMetadata):
         # TODO
         # data.update({"name": self.name})
         return data
+
 
 @dataclass
 class VariableTextDefinition(TypedMetadata):
@@ -571,7 +566,7 @@ class VariableTextDefinition(TypedMetadata):
             data["provenance"],
             TextExtraction.from_data(data["text_extraction"]),
             data["variable_identifier"],
-            data["variable_definition"] 
+            data["variable_definition"],
         )
 
     def to_dict(self):
@@ -579,6 +574,7 @@ class VariableTextDefinition(TypedMetadata):
         # TODO
         # data.update({"name": self.name})
         return data
+
 
 @dataclass
 class VariableTextParameter(TypedMetadata):
@@ -593,9 +589,9 @@ class VariableTextParameter(TypedMetadata):
             data["provenance"],
             TextExtraction.from_data(data["text_extraction"]),
             data["variable_identifier"],
-            data["value"] 
+            data["value"],
         )
-    
+
     def to_dict(self):
         data = super().to_dict()
         # TODO
@@ -603,6 +599,7 @@ class VariableTextParameter(TypedMetadata):
         #     "text_extraction": self.name
         # })
         return data
+
 
 @dataclass
 class CodeCollectionReference(TypedMetadata):

@@ -75,7 +75,7 @@ class IndexedIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class AIRIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(AIR)\t{super().__str__()}"
+        return f"AIR::{super().__str__()}"
 
     @classmethod
     def from_filename(cls, filename: str):
@@ -85,7 +85,7 @@ class AIRIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class GrFNIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(GrFN)\t{super().__str__()}"
+        return f"GrFN::{super().__str__()}"
 
     @classmethod
     def from_air_id(cls, air_id: AIRIdentifier):
@@ -95,7 +95,7 @@ class GrFNIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class GroMEtIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(GroMEt)\t{super().__str__()}"
+        return f"GroMEt::{super().__str__()}"
 
     @classmethod
     def from_grfn_id(cls, grfn_id: GrFNIdentifier):
@@ -105,7 +105,7 @@ class GroMEtIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class ContainerIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(Container)\t{super().__str__()}"
+        return f"Container::{super().__str__()}"
 
     @classmethod
     def from_name_str(cls, name: str) -> ContainerIdentifier:
@@ -116,7 +116,7 @@ class ContainerIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class FunctionIdentifier(IndexedIdentifier):
     def __str__(self):
-        return f"(Function)\t{super().__str__()}"
+        return f"Function::{super().__str__()}"
 
     @classmethod
     def from_container_id(cls, con_id: ContainerIdentifier):
@@ -139,7 +139,7 @@ class FunctionIdentifier(IndexedIdentifier):
 @dataclass(frozen=True)
 class TypeIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(Type)\t{super().__str__()}"
+        return f"Type::{super().__str__()}"
 
     @classmethod
     def from_air_json(cls, data: dict):
@@ -151,7 +151,7 @@ class TypeIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class ObjectIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(Object)\t{super().__str__()}"
+        return f"Object::{super().__str__()}"
 
     @classmethod
     def from_air_json(cls, data: dict):
@@ -163,13 +163,13 @@ class ObjectIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class StmtIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(Stmt)\t{super().__str__()}"
+        return f"Stmt::{super().__str__()}"
 
 
 @dataclass(frozen=True)
 class CallStmtIdentifier(NamedIdentifier):
     def __str__(self):
-        return f"(CallStmt)\t{super().__str__()}"
+        return f"CallStmt::{super().__str__()}"
 
     @classmethod
     def from_air_json(cls, data: dict) -> CallStmtIdentifier:
@@ -180,7 +180,7 @@ class CallStmtIdentifier(NamedIdentifier):
 @dataclass(frozen=True)
 class LambdaStmtIdentifier(IndexedIdentifier):
     def __str__(self):
-        return f"(LambdaStmt)\t{super().__str__()}"
+        return f"LambdaStmt::{super().__str__()}"
 
     @classmethod
     def from_air_json(cls, data: dict) -> LambdaStmtIdentifier:
@@ -194,7 +194,7 @@ class VariableIdentifier(IndexedIdentifier):
         return super().__hash__()
 
     def __str__(self):
-        return f"(Variable)\t{super().__str__()}"
+        return f"Variable::{super().__str__()}"
 
     @classmethod
     def from_anonymous(cls, namespace: str, scope: str):
@@ -247,7 +247,7 @@ class AIRVariableIdentifier(IndexedIdentifier):
         return hash((super().__hash__(), self.container.__hash__()))
 
     def __str__(self):
-        return f"(Variable)\t{super().__str__()}\t{ {str(self.container)} }"
+        return f"Variable::{super().__str__()}\t{ {str(self.container)} }"
 
     @classmethod
     def from_air_json(cls, data: dict) -> AIRVariableIdentifier:
@@ -281,7 +281,7 @@ class NetworkVariableIdentifier(IndexedIdentifier):
         return hash(super().__hash__(), self.function_id.__hash__())
 
     def __str__(self):
-        return f"(Variable)\t{super().__str__()}\t{ {str(self.function_id)} }"
+        return f"Variable::{super().__str__()}\t{ {str(self.function_id)} }"
 
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):

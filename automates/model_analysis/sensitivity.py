@@ -110,7 +110,7 @@ class SensitivityIndices(object):
         }
 
     def to_json(self):
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_data())
 
     def to_json_file(self, filepath: str):
         with open(filepath, "w") as f:
