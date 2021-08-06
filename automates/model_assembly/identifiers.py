@@ -86,8 +86,8 @@ class AIRIdentifier(NamedIdentifier):
 class CAGIdentifier(NamedIdentifier):
     def __str__(self):
         return f"CAG::{super().__str__()}"
-    
-     @classmethod
+
+    @classmethod
     def from_GrFN_id(cls, grfn_id: GrFNIdentifier):
         return cls(grfn_id.namespace, grfn_id.scope, grfn_id.name)
 
@@ -131,10 +131,12 @@ class ContainerIdentifier(NamedIdentifier):
 class CAGContainerIdentifier(IndexedIdentifier):
     def __str__(self):
         return f"CAGContainer::{super().__str__()}"
-    
+
     @classmethod
     def from_function_id(cls, func_id: FileIdentifier):
-        return cls(func_id.namespace, func_id.scope, func_id.name, func_id.index)
+        return cls(
+            func_id.namespace, func_id.scope, func_id.name, func_id.index
+        )
 
     @classmethod
     def from_name_str(cls, name: str) -> ContainerIdentifier:

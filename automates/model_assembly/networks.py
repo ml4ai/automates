@@ -2310,7 +2310,7 @@ class CausalAnalysisGraph:
     uid: str
     identifier: CAGIdentifier
     date_created: str
-    variables: List[VariableNode]
+    nodes: List[VariableNode]
     edges: List[Tuple[VariableIdentifier, VariableIdentifier]]
     containers: List[CAGContainer]
     metadata: List[TypedMetadata]
@@ -2353,7 +2353,7 @@ class CausalAnalysisGraph:
             uid=str(uuid.uuid4()),
             identifier=CAGIdentifier.from_GrFN_id(G.identifier),
             date_created=str(datetime.now()),
-            variables=[],
+            nodes=[],
             edges=[],
             containers=cons,
             metadata=G.metadata,
@@ -2383,7 +2383,7 @@ class CausalAnalysisGraph:
             "uid": self.uid,
             "identifier": str(self.identifier),
             "daet_created": self.date_created,
-            "variables": [var.to_dict() for var in self.nodes],
+            "nodes": [var.to_dict() for var in self.nodes],
             "edges": [
                 (str(src.identifier), str(dst.identifier))
                 for src, dst in self.edges
