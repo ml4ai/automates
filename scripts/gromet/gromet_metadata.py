@@ -263,7 +263,7 @@ class ModelInterface(MetadatumGromet):
     'variables': All model variables (anything that can be measured)
     'parameters': Variables that are generally set to explicit values
         (either by default or in experiment spec).
-        Often these remain constant during execution/simultation,
+        Often these remain constant during execution/simulation,
         although they may be updated by the model during
         execution/simulation depending on conditions.
     'initial_conditions': Variables that typically take an initial
