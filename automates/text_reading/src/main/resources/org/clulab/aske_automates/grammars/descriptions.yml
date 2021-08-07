@@ -71,9 +71,9 @@ rules:
     example: "whereby the effect of the climate on crop water requirements is given by the reference evapotranspiration ETo and the effect of the crop by the crop coefficient Kc. Susceptible individuals, S, are infected by infected individuals, I, at a per-capita rate βL, and infected individuals recover at a per-capita rate γ to become recovered individuals, R."
     action: ${action}
     pattern: |
-      (?<= [word = /a|the|,/])? (?<description> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Identifier (?! [chunk = I-NP])
+      (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Identifier (?! [chunk = I-NP])
       |
-      (?<= [word = /a|the|,/])? (?<description> [chunk = "I-NP" & !tag = /NNS|NNP|-LRB-|CC/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
+      (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [chunk = "I-NP" & !tag = /NNS|NNP|-LRB-|CC/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
 
   - name: real_appos
     label: Description
@@ -133,7 +133,7 @@ rules:
     label: Description
     priority: ${priority}
     type: dependency
-    example: "First, water uptake per unit of root length is computed in each soil layer (Url, m3 m−1 d−1) as an exponential function that depends on:..."
+    example: "β can be interpreted as the effective contact rate."
 #    action: ${action}
     pattern: |
       trigger = [lemma="interpret"]

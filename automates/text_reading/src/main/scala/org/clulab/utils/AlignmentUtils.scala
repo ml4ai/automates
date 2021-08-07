@@ -58,12 +58,8 @@ object AlignmentJsonUtils {
         val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings))
         val groundingMap = mutable.Map[String, Seq[sparqlWikiResult]]()
         for (item <- groundingsAsUjson("wikiGroundings").arr) {
-          println("item: " + item)
           val identString = item.obj("variable").str
-          println("HERE")
-          println("ITEM: " + item)
           val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("subClassOf").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
-          println("HERE 1")
           groundingMap(identString) = groundings
         }
         Some(groundingMap.toMap)
@@ -71,11 +67,6 @@ object AlignmentJsonUtils {
 
     } else None
 
-      println(">>>>" + wikigroundings)
-//        Some(groundingsAsUjson("wikiGroundings").arr.map(v => v.obj("variable").str -> v.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").str), Some(gr("alternativeLabel").str), Some(gr("score").arr.head.num), gr("source").str)).toSeq).map(item => (item._1, item._2)))
-//      } else None
-//
-//    } else None
     val jsonObj = json.obj
     // load text mentions
     val allMentions =  if (jsonObj.contains("mentions")) {
@@ -102,7 +93,6 @@ object AlignmentJsonUtils {
         .filter(m => m.label.contains("Description"))
         .filter(m => hasRequiredArgs(m, "description")))
     } else None
-
 
     val parameterSettingMentions = if (allMentions.nonEmpty) {
       Some(allMentions

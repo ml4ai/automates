@@ -10,7 +10,7 @@ def main(args):
     MODEL_NAME = os.path.basename(args.grfn_file).replace("--GrFN.json", "")
 
     MENTIONS_PATH = f"{CUR_DIR}/{MODEL_NAME}--mentions.json"
-    ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}--alignment1.json"
+    ALIGNMENT_PATH = f"{CUR_DIR}/{MODEL_NAME}--alignment.json"
 
     caller = TextReadingInterface(f"http://{args.address}:{args.port}")
     if not os.path.isfile(MENTIONS_PATH):

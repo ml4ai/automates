@@ -103,8 +103,8 @@ def call_cosmos_json_to_mentions():
         f"{webservice}/cosmos_json_to_mentions",
         headers={"Content-type": "application/json"},
         json={
-            "cosmos_file": "/Users/alexeeva/Desktop/automates-related/TWIST/cosmos/TWIST--COSMOS-data.json",
-            "outfile": outfile
+            "pathToCosmosJson": "/Users/alexeeva/Desktop/automates-related/CHIME/CHIME-online-manual-T2021-01-19-CLEAN--COSMOS-data.json",
+            "outfile": "/Users/alexeeva/Desktop/automates-related/CHIME/outputs/CHIME-online-manual-T2021-01-19-CLEAN-mentions.json"
         },
     )
 
@@ -168,7 +168,8 @@ if __name__ == "__main__":
     #
     # call_groundMentionsToSVO("CHIME-SIR-mentions", "CHIME-SIR-mentions-svo_grounding")
     # call_groundMentionsToWikidata("/Users/alexeeva/Repos/automates/automates/text_reading/masha1.json", "/Users/alexeeva/Repos/automates/automates/text_reading/masha1-wiki-groundings.json")
-    call_groundMentionsToWikidata("/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions.json", "/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding.json")
+    # call_groundMentionsToWikidata("/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions.json", "/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding.json")
+    call_groundMentionsToWikidata("/Users/alexeeva/Desktop/automates-related/CHIME/outputs/CHIME-online-manual-T2021-01-19-CLEAN-mentions.json", "/Users/alexeeva/Desktop/automates-related/CHIME/outputs/CHIME-online-manual-T2021-01-19-CLEAN-wikidata-groundings.json")
     # call_groundMentionsToSVO("PT-mentions", "PT-svo_grounding")
 
     # call_pdf_to_mentions("petpno_Penman", "PNO-mentions")

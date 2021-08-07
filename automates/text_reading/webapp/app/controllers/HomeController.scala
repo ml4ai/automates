@@ -222,7 +222,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data)
     println("_>>" + pathJson)
-    val jsonPath = pathJson("cosmos_file").str
+    val jsonPath = pathJson("pathToCosmosJson").str
     println(">>>" + jsonPath)
     logger.info(s"Extracting mentions from $jsonPath")
 
