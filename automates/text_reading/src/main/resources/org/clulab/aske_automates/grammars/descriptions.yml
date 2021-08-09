@@ -306,7 +306,7 @@ rules:
     label: Description
     priority: ${priority}
     type: token
-    example: "the average number of people exposed c."
+    example: ""
     action: ${action}
     pattern: |
       [word=/a|an|the/] (?<description> [tag=/JJ|VBN/] [tag=/^N/] ) @variable:Identifier (?![tag=/^N/])

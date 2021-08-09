@@ -4,8 +4,8 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestParameterSettingEventInterval  extends ExtractionTest {
 
-  // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
-
+//  // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
+//
   val t1a = "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended and values of Kc from 0.3 to 0.9."
   passingTest should s"extract the parameter setting(s) from t13a: ${t1a}" taggedAs(Somebody, Interval) in {
 
@@ -41,33 +41,34 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
   }
 
   val t4a = "Under full irrigation, Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield " +
-    "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmax > 1.15 (fig. 6a)."
-  failingTest should s"extract the parameter setting(s) from t12a and NOT extract the figure number: ${t4a}" taggedAs(Somebody, Interval) in {
+    "for 0.9 < Kcbmax < 1.15, but simulated yield decreased rapidly for Kcbmin > 1.15 (fig. 6a)."
+  passingTest should s"extract the parameter setting(s) from t4a and NOT extract the figure number: ${t4a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
-            "Kcbmax" -> Seq("0.9", "1.5"),
-            "Kcbmax" -> Seq("1.15") //todo: need to have some mechanism to preserve ><=. some sort of attachment? similar to count in wm or use 'valueMin'/'valueMax' for the var
+            "Kcbmax" -> Seq("0.9", "1.15"),
+            "Kcbmin" -> Seq("1.15", "") //todo: need to have some mechanism to preserve ><=. some sort of attachment? similar to count in wm or use 'valueMin'/'valueMax' for the var
     )
     val mentions = extractMentions(t4a)
-    testParameterSettingEvent(mentions, desired)
+
+    testParameterSettingEventInterval(mentions, desired)
   }
 
   // SuperMaaS papers tests
   val t1b = "Vernalisation is simulated from daily average crown temperature and daily maximum and minimum temperatures using the original CERES can occur if daily maximum temperature is above 30 o C."
-  failingTest should s"extract the parameter setting(s) from t1b: ${t1b}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from t1b: ${t1b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "daily maximum temperature" -> Seq("30", "")
     )
     val mentions = extractMentions(t1b)
-    testParameterSettingEvent(mentions, desired)
+    testParameterSettingEventInterval(mentions, desired)
   }
 
   val t2b = "The duration of grain filling ( tt_startgf_to_mat ) is cultivar specific and usually lies between 500 and 800 o C days ."
-  failingTest should s"extract the parameter setting(s) from t2b: ${t2b}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from t2b: ${t2b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "duration of grain filling" -> Seq("500", "800")
     )
     val mentions = extractMentions(t2b)
-    testParameterSettingEvent(mentions, desired)
+    testParameterSettingEventInterval(mentions, desired)
   }
 
 

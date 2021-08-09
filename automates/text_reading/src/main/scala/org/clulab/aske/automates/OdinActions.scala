@@ -31,14 +31,21 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val expandedIdentifiers = keepLongestIdentifier(identifiers)
 
       val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
-      val (functions, nonExpandable) = other.partition(m => m.label.contains("Function"))
+      val (functions, nonFunc) = other.partition(m => m.label.contains("Function"))
+      // only expand concepts in param settings, not the identifier-looking variables (e.g., expand `temperature` in `temparature is set to 0`, but not `T` in `T is set to 0`)
+      val (paramSettingsNoIdfr, nonExpandable) = nonFunc.partition(m => m.label.contains("ParameterSetting") && !m.arguments("variable").head.labels.contains("Identifier"))
+
+      val expandedParamSettings = expansionHandler.get.expandArguments(paramSettingsNoIdfr, state, List("variable"))
 
       val expandedDescriptions = expansionHandler.get.expandArguments(descriptions, state, validArgs)
       val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
+
+
+
       val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
       // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
-      keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ nonExpandable
+      keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedParamSettings ++ nonExpandable
 //      allDescrs ++ other
 
     } else {
@@ -213,13 +220,33 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             inclUpper = Some(true)
           }
 
+            // assumes only one variable argument
+          case "variable" => {
+            newArgs(arg._1) = if (looksLikeAnIdentifier(arg._2, state).nonEmpty) Seq(copyWithLabel(arg._2.head, "Identifier")) else arg._2
+          }
           case _ => newArgs(arg._1) = arg._2
         }
       }
 
 
+      // required for expansion
+      val newPaths = mutable.Map[String, Map[Mention, SynPath]]()
+
+      val oldArgNewArgMap = Map(
+        "valueMostIncl"->"valueMost",
+        "valueMostExcl"->"valueMost",
+        "valueLeastIncl"->"valueLeast",
+        "valueLeastExcl"->"valueLeast",
+        "variable" -> "variable"
+
+      )
+      for (key <- m.paths.keys) {
+        val value = m.paths(key)
+        newPaths(oldArgNewArgMap(key)) = value
+      }
+
       val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
-      newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
+      newMentions.append(copyWithArgsAndPaths(m, newArgs.toMap, newPaths.toMap).withAttachment(att))
     }
     newMentions
   }
@@ -243,11 +270,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val tokenIntervals = m.arguments.map(_._2.head).map(_.tokenInterval).toSeq
       // takes care of accidental arg overlap
       if (tokenIntervals.distinct.length == tokenIntervals.length) {
-//        val newArgs = mutable.Map[String, Seq[Mention]]()
-        val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
+        val newArgs = mutable.Map[String, Seq[Mention]]()
+        val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
+
+          newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "value" -> m.arguments("value"))
+          "variable"
+        } else {
+          newArgs += ("variable" -> m.arguments("variable"), "value" -> m.arguments("value"))
+          "concept"
+        }
 
         val att = new ParamSetAttachment(attachedTo, "ParamSetAtt")
-        newMentions.append(m.withAttachment(att))
+        newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
       }
 
     }
@@ -764,6 +798,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
   }
 
+  def copyWithArgsAndPaths(orig: Mention, newArgs: Map[String, Seq[Mention]], newPaths: Map[String, Map[Mention, SynPath]]): Mention = {
+    orig match {
+      case tb: TextBoundMention => ???
+      case rm: RelationMention => rm.copy(arguments = newArgs, paths = newPaths)
+      case em: EventMention => em.copy(arguments = newArgs, paths = newPaths)
+      case _ => ???
+    }
+  }
+
   def copyWithLabel(m: Mention, lab: String): Mention = {
     val newLabels = taxonomy.hypernymsFor(lab)
     val copy = m match {
@@ -886,6 +929,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentions.flatMap(mkDescriptionMention)
   }
 
+  def allCaps(string: String): Boolean = {
+    // assume it's true, but return false if find evidence to the contrary
+    for (ch <- string) {
+      if (!ch.isUpper) {
+        return false
+      }
+    }
+    true
+  }
 
   def looksLikeAnIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
@@ -900,6 +952,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (v.words.exists(_ == "and")) return false
       if (v.words.length > 3 && v.words.tail.intersect(compoundIdentifierComponents).nonEmpty) return true
       if (v.words.length < 3 && v.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))) return true
+      if (v.entities.get.exists(_ == "B-unit")) return false
+      // account for all caps variables, e.g., EORATIO
+      if (v.words.length == 1 && allCaps(v.words.head)) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
       if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for identifiers that include a greek letter---those are found as separate words even if there is not space
       if (v.words.length != 1) return false
@@ -909,7 +964,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (freqWords.contains(word.toLowerCase())) return false //filter out potential variables that are freq words
       if (word.length > 6) return false
       // an identifier/variable cannot be a unit
-      if (v.entities.get.exists(_ == "B-unit")) return false
+
       val tag = v.tags.get.head
       if (tag == "POS") return false
       return (
@@ -1041,10 +1096,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
-      // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
-//      if m.tags.get.exists(_.contains("N"))
+      // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
+      if (m.tags.get.exists(t => t.startsWith("N") || t == "VBN") || m.words.exists(w => capitalized(w)))
 
     } yield m
+  }
+
+  def capitalized(string: String): Boolean = {
+    string.head.isUpper && !allCaps(string.tail)
   }
 
   def changeLabel(orig: Mention, label: String): Mention = {

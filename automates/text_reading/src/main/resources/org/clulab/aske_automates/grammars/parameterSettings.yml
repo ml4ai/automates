@@ -13,7 +13,7 @@ rules:
     example: "basic reproduction number was 100 m2/year"
     action: ${paramSetAction}
     pattern: |
-      trigger = [lemma='be']
+      trigger = [lemma='be'] (?![word = "above"])
       variable:Phrase = <cop nsubj nmod_of | <cop nsubj [!tag = "CD"]
       value:Value = <cop nummod?
 
@@ -78,10 +78,10 @@ rules:
     action: ${paramIntAction}
     example: "The value of Kcbmax was varied between 0.9 and 1.4"
     pattern: |
-      trigger = [lemma='vary']
+      trigger = [lemma=/vary|lie/]
       variable:Phrase = nsubjpass nmod_of | nsubj
-      valueLeastIncl:Value = nmod_between | nmod_from
-      valueMostIncl:Value = nmod_between conj_and | nmod_from nmod
+      valueLeastIncl:Value = nmod_between nummod? | nmod_from
+      valueMostIncl:Value = nmod_between nummod? conj_and | nmod_from nmod
 
   - name: interval_between
     label: IntervalParameterSetting
@@ -115,7 +115,7 @@ rules:
     action: ${paramIntAction}
     example: "Kcbmax with the ETo-Kcb method had little influence on maize and cotton yield for 0.9 < Kcbmax < 1.15"
     pattern: |
-      @valueLeastExcl:Value [word = "<"] (?<trigger> @Identifier) [word = "<"] @valueMostExcl:Value
+      @valueLeastExcl:Value [word = "<"] (?<variable> @Identifier) [word = "<"] @valueMostExcl:Value
 #
 
   - name: var-more_than_symbol
@@ -159,9 +159,9 @@ rules:
     action: ${paramIntAction}
     example: "When R0 is more than 1..."
     pattern: |
-      trigger = [lemma=/more|over/]
-      variable:Phrase = <advmod nsubj
-      valueLeastExcl:Value = <advmod [tag = "CD"]
+      trigger = [lemma=/more|over|above/]
+      variable:Phrase = </advmod|case/ nsubj
+      valueLeastExcl:Value = <advmod [tag = "CD"] | <case nummod
 
   - name: var-less_than
     label: IntervalParameterSetting
@@ -235,7 +235,7 @@ rules:
     action: ${paramSetAction}
     example: "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
     pattern: |
-      (?<variable> [word = "DOY"]) @value:Value
+      (?<variable> [word="DOY"] ) @value:Value
 
   - name: adjust_to_setting
     label: ParameterSetting

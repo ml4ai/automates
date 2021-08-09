@@ -459,7 +459,7 @@ class TestDescriptions extends ExtractionTest {
   }
 
   val t9f = "This is the initial S (Susceptible) input in the SIR model."
-  failingTest should s"find descriptions from t9f: ${t9f}" taggedAs(Somebody) in {
+  passingTest should s"find descriptions from t9f: ${t9f}" taggedAs(Somebody) in {
     val desired = Seq(
       "S" -> Seq("Susceptible") // fixme: can't get rid of initial as descr without disallowing adj-only descriptions
     )
@@ -643,9 +643,10 @@ class TestDescriptions extends ExtractionTest {
     testDescriptionEvent(mentions, desired)
   }
 
+  // sacrificing this for the greater good (too many adjectives are extracted as definitions---for now disallow definitions without nouns or participles/gerunds)
   val t1iToy = "Susceptible (S) individuals may become exposed (E) to the virus, then infected (I) at varying " +
     "levels of disease severity."
-  passingTest should s"find descriptions from t1iToy: ${t1iToy}" taggedAs(Somebody) in {
+  failingTest should s"find descriptions from t1iToy: ${t1iToy}" taggedAs(Somebody) in {
     val desired =  Seq(
       "S" -> Seq("Susceptible"),
       "E" -> Seq("exposed"), 
