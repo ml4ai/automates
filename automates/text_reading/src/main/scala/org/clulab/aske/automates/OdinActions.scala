@@ -32,10 +32,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
       val (functions, nonFunc) = other.partition(m => m.label.contains("Function"))
-      // only expand concepts in param settings, not the identifier-looking variables (e.g., expand `temperature` in `temparature is set to 0`, but not `T` in `T is set to 0`)
-      val (paramSettingsNoIdfr, nonExpandable) = nonFunc.partition(m => m.label.contains("ParameterSetting") && !m.arguments("variable").head.labels.contains("Identifier"))
+      // only expand concepts in param settings and units, not the identifier-looking variables (e.g., expand `temperature` in `temparature is set to 0`, but not `T` in `T is set to 0`)
+      val (paramSettingsAndUnitsNoIdfr, nonExpandable) = nonFunc.partition(m => (m.label.contains("ParameterSetting") || m.label.contains("UnitRelation")) && !m.arguments("variable").head.labels.contains("Identifier"))
 
-      val expandedParamSettings = expansionHandler.get.expandArguments(paramSettingsNoIdfr, state, List("variable"))
+      val expandedParamSettings = expansionHandler.get.expandArguments(paramSettingsAndUnitsNoIdfr, state, List("variable"))
 
       val expandedDescriptions = expansionHandler.get.expandArguments(descriptions, state, validArgs)
       val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
@@ -255,9 +255,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val newMentions = new ArrayBuffer[Mention]()
     for (m <- mentions) {
       val newArgs = mutable.Map[String, Seq[Mention]]()
-      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
+      val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) {
+        newArgs += ("variable" -> Seq(copyWithLabel(m.arguments("variable").head, "Identifier")), "unit" -> m.arguments("unit"))
+        "variable"
+      } else {
+        newArgs += ("variable" -> m.arguments("variable"), "unit" -> m.arguments("unit"))
+        "concept"
+      }
       val att = new UnitAttachment(attachedTo, "UnitAtt")
-      newMentions.append(m.withAttachment(att))
+      newMentions.append(copyWithArgs(m, newArgs.toMap).withAttachment(att))
     }
     newMentions
   }
