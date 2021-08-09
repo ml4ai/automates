@@ -423,10 +423,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             val (type2, type1) = varOverlapGroup.partition(_.label.contains("Type2"))
             if (type2.isEmpty) {
               // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
-              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescription"))//.maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescription"))
               toReturn.append(longestConjDescr)
             } else {
-              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescriptionType2"))//.maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescriptionType2"))
               toReturn.append(longestConjDescr)
             }
           } else {
@@ -919,9 +919,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   newInputs.append(p)
                   val overlappingInterval = i.tokenInterval.overlaps(p.tokenInterval)
                   // if there's no overlap, append the identifier input to the inputNumCheck
-                  if (overlappingInterval == false) {
-                    inputNumCheck.append(i)
-                  }
+                  if (!overlappingInterval) { inputNumCheck.append(i) }
                 }
                 // if the number of identifier inputs appended to the inputNumCheck is the same as the number of phrase inputs,
                 // it means that there is no overlap, so attach the identifier input to newInputs.
@@ -955,7 +953,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             if (phraseOutputMen.nonEmpty) {
               for (p <- phraseOutputMen) {
               val overlappingInterval = i.arguments("output").head.tokenInterval.overlaps(p.arguments("output").head.tokenInterval)
-              if (overlappingInterval == false) {outputNumCheck.append(i)}
+              if (!overlappingInterval) {outputNumCheck.append(i)}
               else Seq()
             }
               if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq()
@@ -974,8 +972,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val contextSelected = new ArrayBuffer[Mention]
     val toReturn = new ArrayBuffer[Mention]
     val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
-    // note: attachment to description creates too many false positives - needs to be revised to be applied to description mentions.
-    // val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label.contains("Description") || m.label == "ParamSetting")
+    // note: attachment to description creates too many false positives - needs to be revised to be applied to description mentions
     val contextMens = mentions.filter(_.label == "Context")
     if (mensToAttach.nonEmpty) {
       for (m <- mensToAttach) {
@@ -1089,7 +1086,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (word.length > 6) return false
       // an identifier/variable cannot be a unit
       if (v.entities.get.exists(_ == "B-unit")) return false
-//      if (v.entities.get.exists(_ == "ORGANIZATION")) return false // filter out organizations
       val tag = v.tags.get.head
       if (tag == "POS") return false
       return (

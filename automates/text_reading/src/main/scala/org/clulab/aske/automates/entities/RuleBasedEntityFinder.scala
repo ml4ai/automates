@@ -114,7 +114,7 @@ class RuleBasedEntityFinder(
   private def filterEntities(entities: Seq[Mention]): Seq[Mention] = {
     // ignore citations and remove any entity that is too long given our criteria
     val filteredEntities = entities.filter(m => EntityConstraints.withinMaxLength(m, maxLength))
-//    val longest = RuleBasedEntityFinder.keepLongest(filteredEntities, new State())
+    val longest = RuleBasedEntityFinder.keepLongest(filteredEntities, new State())
     for {
       m <- filteredEntities
       if EntityConstraints.validFinalTag(m)
@@ -216,7 +216,6 @@ object RuleBasedEntityFinder extends LazyLogging {
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => m.end - m.start)
     } yield longest
     mns.toVector.distinct
-//    mentions
   }
 
 }

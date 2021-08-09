@@ -173,9 +173,6 @@ object TestUtils {
     }
 
     def testUnaryEventStrings(ms: Seq[Mention], arg1Role: String, eventType: String, arg1Strings: Seq[String]) = {
-      for (m <- ms) {
-        println("m: " + m.text + "||" + m.arguments(arg1Role))
-      }
       val functionFragment = for {
         m <- ms
         a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))

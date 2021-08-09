@@ -172,7 +172,7 @@ object AutomatesJSONSerializer {
       case "FunctionAtt" => {
         val foundBy = json("foundBy").str
         val trigger = json("trigger").str
-        new ContextAttachment(attType, trigger, foundBy)
+        new FunctionAttachment(attType, trigger, foundBy)
       }
       case _ => ???
     }
