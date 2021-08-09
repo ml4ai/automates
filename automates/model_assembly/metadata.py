@@ -35,10 +35,12 @@ class MetadataType(AutoMATESBaseEnum):
     NONE = auto()
     GRFN_CREATION = auto()
     EQUATION_EXTRACTION = auto()
-    TEXT_EXTRACTION = auto()
+    TEXT_DEFINITION = auto()
     CODE_SPAN_REFERENCE = auto()
     CODE_COLLECTION_REFERENCE = auto()
     DOMAIN = auto()
+    PARAMETER_SETTING = auto()
+    EQUATION_PARAMETER = auto()
 
     @classmethod
     def from_str(cls, data: str):
@@ -54,6 +56,12 @@ class MetadataType(AutoMATESBaseEnum):
             return CodeCollectionReference
         elif mtype == cls.DOMAIN:
             return Domain
+        elif mtype == cls.TEXT_DEFINITION:
+            return VariableTextDefinition
+        elif mtype == cls.PARAMETER_SETTING:
+            return VariableTextParameter
+        elif mtype == cls.EQUATION_PARAMETER:
+            return VariableEquationParameter
         else:
             raise MissingEnumError(
                 "Unhandled MetadataType to TypedMetadata conversion "
@@ -460,6 +468,136 @@ class GrFNCreation(TypedMetadata):
     def to_dict(self):
         data = super().to_dict()
         data.update({"name": self.name})
+        return data
+
+
+@dataclass
+class EquationExtraction(BaseMetadata):
+    source_type: str
+    document_reference_uid: str
+    equation_number: int
+
+    @classmethod
+    def from_data(cls, data: dict) -> EquationExtraction:
+        return cls("equation_document_source", "", data["equation_number"])
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class TextSpan(BaseMetadata):
+    char_begin: int
+    char_end: int
+
+    @classmethod
+    def from_data(cls, data: dict) -> TextSpan:
+        return cls(data["char_begin"], data["char_end"])
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class TextSpanRef(BaseMetadata):
+    page: int
+    block: int
+    span: TextSpan
+
+    @classmethod
+    def from_data(cls, data: dict) -> TextSpanRef:
+        return cls(None, None, TextSpan.from_data(data["span"]))
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class TextExtraction(BaseMetadata):
+    source_type: str
+    document_reference_uid: str
+    text_spans: List[TextSpanRef]
+
+    @classmethod
+    def from_data(cls, data: dict) -> TextExtraction:
+        return cls(
+            "text_document_source",
+            "",
+            [TextSpanRef.from_data(span) for span in data["text_spans"]],
+        )
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class VariableEquationParameter(TypedMetadata):
+    equation_extraction: EquationExtraction
+    variable_identifier: str
+    value: str
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableEquationParameter:
+        return cls(
+            data["type"],
+            data["provenance"],
+            EquationExtraction.from_data(data["equation_extraction"]),
+            data["variable_identifier"],
+            data["value"],
+        )
+
+    def to_dict(self):
+        data = super().to_dict()
+        # TODO
+        # data.update({"name": self.name})
+        return data
+
+
+@dataclass
+class VariableTextDefinition(TypedMetadata):
+    text_extraction: TextExtraction
+    variable_identifier: str
+    variable_definition: str
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableTextDefinition:
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_data(data["text_extraction"]),
+            data["variable_identifier"],
+            data["variable_definition"],
+        )
+
+    def to_dict(self):
+        data = super().to_dict()
+        # TODO
+        # data.update({"name": self.name})
+        return data
+
+
+@dataclass
+class VariableTextParameter(TypedMetadata):
+    text_extraction: TextExtraction
+    variable_identifier: str
+    value: str
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableTextParameter:
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_data(data["text_extraction"]),
+            data["variable_identifier"],
+            data["value"],
+        )
+
+    def to_dict(self):
+        data = super().to_dict()
+        # TODO
+        # data.update({
+        #     "text_extraction": self.name
+        # })
         return data
 
 

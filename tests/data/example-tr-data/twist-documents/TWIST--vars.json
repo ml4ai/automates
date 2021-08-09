@@ -1,0 +1,8 @@
+{
+    "variables": [
+        "TWIST_coreSimple::main::qx::0",
+        "TWIST_coreSimple::main::p_max_prod_const::0",
+        "TWIST_coreSimple::main::b::0",
+        "TWIST_coreSimple::main::q_storage_max_cons::0"
+    ]
+}

@@ -1,0 +1,38 @@
+{
+  "sir-simple$file_head": [
+    "********************************************************************************\n",
+    "!     Input Variables:\n",
+    "!     S        Amount of susceptible members at the current timestep\n",
+    "!     I        Amount of infected members at the current timestep\n",
+    "!     R        Amount of recovered members at the current timestep\n",
+    "!     beta     Rate of transmission via contact\n",
+    "!     gamma    Rate of recovery from infection\n",
+    "!     dt       Next inter-event time\n",
+    "!\n",
+    "!     State Variables:\n",
+    "!     infected    Increase in infected at the current timestep\n",
+    "!     recovered   Increase in recovered at the current timestep\n",
+    "********************************************************************************\n"
+  ],
+  "sir-simple$file_foot": [],
+  "@container::SIR-simple::@global::sir": {
+    "head": [
+      "********************************************************************************\n",
+      "!     Input Variables:\n",
+      "!     S        Amount of susceptible members at the current timestep\n",
+      "!     I        Amount of infected members at the current timestep\n",
+      "!     R        Amount of recovered members at the current timestep\n",
+      "!     beta     Rate of transmission via contact\n",
+      "!     gamma    Rate of recovery from infection\n",
+      "!     dt       Next inter-event time\n",
+      "!\n",
+      "!     State Variables:\n",
+      "!     infected    Increase in infected at the current timestep\n",
+      "!     recovered   Increase in recovered at the current timestep\n",
+      "********************************************************************************\n"
+    ],
+    "neck": [],
+    "foot": [],
+    "internal": {}
+  }
+}

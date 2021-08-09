@@ -1,0 +1,104 @@
+beta
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+1,1,1.503,1, beta Rate of transmission via contact,['S(0) = 0'],S(0)
+0.5,1,1.503,0.5, beta Rate of transmission via contact,['S(0) = 0'],R(0)
+0.5,1,1.503,0.5, beta Rate of transmission via contact,['S(0) = 0'],S(t)
+
+recovered
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+1,1,1.477,1, recovered Increase in recovered at the current timestep,['dR dt = 0'],R
+
+s
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.49,1, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(0)
+0.5,1,1.49,0.5, S Amount of susceptible members at the current timestep,['S(0) = 0'],R(0)
+0.5,1,1.49,0.5, S Amount of susceptible members at the current timestep,['S(0) = 0'],S(t)
+
+i
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+1,1,1.487,1, I Amount of infected members at the current timestep,['dR dt = 0'],I
+
+dt
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],N
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],d
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],I
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],d
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],R
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],\\beta
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],d
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],S
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],N
+0.333,1,1.411,0.333,dt Next inter-event time,['dR dt = 0'],S
+
+r
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+1,1,1.472,1, R Amount of recovered members at the current timestep,['S(0) = 0'],S(0)
+0.5,1,1.472,0.5, R Amount of recovered members at the current timestep,['S(0) = 0'],R(0)
+0.5,1,1.472,0.5, R Amount of recovered members at the current timestep,['S(0) = 0'],S(t)
+
+gamma
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+1,1,1.521,1, gamma Rate of recovery from infection,['dR dt = 0'],I
+
+infected
+Link Score,Var-Comm Score,Comm-Text Score,Text-Eqn Score,Comment Span,Text Mention,Equation Symbol
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+1,1,1.491,1, infected Increase in infected at the current timestep,['dR dt = 0'],I
+

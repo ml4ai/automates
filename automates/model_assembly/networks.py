@@ -3,6 +3,7 @@ from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
 from abc import ABC, abstractmethod, abstractclassmethod
 from functools import singledispatch
 from dataclasses import dataclass
+from datetime import datetime
 from itertools import product
 from copy import deepcopy
 
@@ -30,6 +31,7 @@ from .expression_visitor import (
 from .air import (
     AutoMATES_IR,
     ContainerDef,
+    CondContainerDef,
     FuncContainerDef,
     LoopContainerDef,
     StmtDef,
@@ -47,6 +49,8 @@ from .identifiers import (
     ObjectIdentifier,
     VariableIdentifier,
     TypeIdentifier,
+    CAGIdentifier,
+    CAGContainerIdentifier,
 )
 from .metadata import (
     TypedMetadata,
@@ -157,9 +161,8 @@ class VariableNode(BaseNode):
 
     @classmethod
     def from_expr_def(cls, expr_namespace, expr_scope):
-        uid = str(uuid.uuid4())
         var_id = VariableIdentifier.from_anonymous(expr_namespace, expr_scope)
-        return cls(uid, var_id, [])
+        return cls(BaseNode.create_node_id(), var_id, [])
 
     def get_fullname(self):
         return f"{self.name}\n({self.index})"
@@ -256,9 +259,13 @@ class VariableNode(BaseNode):
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
+    def add_metadata(self, metadata):
+        self.metadata.append(metadata)
+
 
 @dataclass(repr=False)
 class BaseFuncNode(ABC):
+    uid: str
     identifier: FunctionIdentifier
     type: FunctionType
     input_variables: List[VariableIdentifier]
@@ -310,6 +317,7 @@ class BaseFuncNode(ABC):
         hyper_graph = cls.create_hyper_graph(hyper_edges)
 
         return (
+            data["uid"],
             data["identifier"],
             FunctionType.from_str(data["type"]),
             data["input_variables"],
@@ -358,17 +366,36 @@ class BaseFuncNode(ABC):
         return [get_or_create_var(v_id) for v_id in ids]
 
     @abstractmethod
-    def to_data(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
-            "identifier": self.identifier,
+            "uid": self.uid,
+            "identifier": str(self.identifier),
             "type": str(self.type),
-            "input_variables": self.input_variables,
-            "output_variables": self.output_variables,
+            "input_variables": [str(v_id) for v_id in self.input_variables],
+            "output_variables": [str(v_id) for v_id in self.output_variables],
             "expression": None,
             "exit": None,
-            "hyper_edges": [h.to_data() for h in self.hyper_edges],
-            "metadata": [m.to_data() for m in self.metadata],
+            "hyper_edges": [h.to_dict() for h in self.hyper_edges],
+            "metadata": [m.to_dict() for m in self.metadata],
         }
+
+
+# TODO: Some class hierarchy changes need to be made because literals shouldn't have inputs, hyper-edges, or a hypergraph and I'm not even sold on them needing to be unique. Maybe we should think about that?
+@dataclass(repr=False)
+class LiteralFuncNode:
+    identifier: str
+    type: FunctionType
+    value: Any
+
+    def __eq__(self, other: LiteralFuncNode) -> bool:
+        return self.identifier == other.identifier
+
+    def __hash__(self):
+        return hash(self.identifier)
+
+    @classmethod
+    def from_value_node(cls, node: ExprValueNode):
+        return cls(uuid.uuid4(), FunctionType.LITERAL, node.value)
 
 
 @dataclass(repr=False)
@@ -388,6 +415,7 @@ class OperationFuncNode(BaseFuncNode):
 
         metadata = list()
         return cls(
+            str(uuid.uuid4()),
             FunctionIdentifier.from_operator_func(
                 operation, int(uuid.uuid4())
             ),
@@ -403,9 +431,9 @@ class OperationFuncNode(BaseFuncNode):
     def from_data(cls, data: Dict[str, Any]):
         return cls(*(super().from_data(data)), data["identifier"])
 
-    def to_data(self) -> Dict[str, Any]:
-        data = super().to_data()
-        data.update({"identifier": self.identifier})
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update({"identifier": str(self.identifier)})
         return data
 
 
@@ -454,6 +482,7 @@ class ExpressionFuncNode(BaseFuncNode):
         FUNCS.update({f.identifier: f for f in new_funcs})
 
         return cls(
+            str(uuid.uuid4()),
             func_id,
             expr_type,
             [i.identifier for i in inputs],
@@ -509,7 +538,9 @@ class ExpressionFuncNode(BaseFuncNode):
                     list of new hyper edges
             """
             if isinstance(expr_node_def, ExprValueNode):
-                return ([], [], [])  # Nothing to be done.
+                return LiteralFuncNode.from_value_node(expr_node_def)
+            elif isinstance(expr_node_def, ExprVariableNode):
+                return None  # Nothing to be done.
             child_defs = [
                 uid2node[child_id] for child_id in expr_node_def.children
             ]
@@ -530,7 +561,8 @@ class ExpressionFuncNode(BaseFuncNode):
                     child_def, ExprDefinitionNode
                 ):
                     child_out_var = convert_to_hyperedge(child_def)
-                    input_var_nodes.append(child_out_var)
+                    if child_out_var is not None:
+                        input_var_nodes.append(child_out_var)
                 else:
                     raise TypeError(
                         f"Unexpected Expr def type: {type(child_def)}"
@@ -562,15 +594,15 @@ class ExpressionFuncNode(BaseFuncNode):
         expr = data["expression"]
         return cls(*base_values, expr, load_lambda_function(expr))
 
-    def to_data(self) -> Dict[str, Any]:
-        data = super().to_data()
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
         data.update({"expression": self.expression})
         return data
 
 
 @dataclass(repr=False, frozen=False)
 class BaseConFuncNode(BaseFuncNode):
-    exit: FunctionIdentifier = None
+    exit: FunctionIdentifier
 
     def __hash__(self):
         return super().__hash__()
@@ -606,6 +638,10 @@ class BaseConFuncNode(BaseFuncNode):
                     new_func = BaseConFuncNode.from_container(
                         con_def, AIR, VARS, FUNCS
                     )
+                elif isinstance(con_def, CondContainerDef):
+                    new_func = CondConFuncNode.from_container(
+                        con_def, AIR, VARS, FUNCS
+                    )
                 else:
                     raise TypeError(
                         f"Unrecognized container type: {type(con_def)}"
@@ -634,6 +670,7 @@ class BaseConFuncNode(BaseFuncNode):
             if first_output.identifier.name == "EXIT":
                 exit_id = first_output
         return cls(
+            str(uuid.uuid4()),
             func_id,
             func_type,
             [i.identifier for i in inputs],
@@ -648,117 +685,181 @@ class BaseConFuncNode(BaseFuncNode):
     def from_data(cls, data: Dict[str, Any]):
         return cls(*(super().from_data(data)), data["identifier"])
 
-    def to_data(self) -> Dict[str, Any]:
-        data = super().to_data()
-        data.update({"identifier": self.identifier})
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update({"identifier": str(self.identifier)})
         return data
 
 
 @dataclass(repr=False, frozen=False)
 class CondConFuncNode(BaseConFuncNode):
-    pass
+    decision_node: ExpressionFuncNode
+
+    @classmethod
+    def from_container(
+        cls,
+        container: ContainerDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> CondConFuncNode:
+        mock_func_node = BaseConFuncNode.from_container(
+            container, AIR, VARS, FUNCS
+        )
+        return cls(
+            uid=mock_func_node.uid,
+            identifier=mock_func_node.identifier,
+            type=mock_func_node.type,
+            input_variables=mock_func_node.input_variables,
+            output_variables=mock_func_node.output_variables,
+            hyper_edges=mock_func_node.hyper_edges,
+            hyper_graph=mock_func_node.hyper_graph,
+            metadata=mock_func_node.metadata,
+            exit=mock_func_node.exit,
+            decision_node=cls.find_decision_node(mock_func_node),
+        )
+
+    @staticmethod
+    def find_decision_node(base_func: BaseConFuncNode):
+        for edge in base_func.hyper_edges:
+            if edge.func_node.type == FunctionType.DECISION:
+                return edge.func_node
+        return None
 
 
 @dataclass(repr=False, frozen=False)
 class LoopConFuncNode(BaseConFuncNode):
-    pass
-
-
-@dataclass(repr=False, frozen=False)
-class LambdaNode(BaseNode):
-    func_type: LambdaType
-    func_str: str
-    function: callable
-    metadata: List[TypedMetadata]
-
-    def __hash__(self):
-        return hash(self.uid)
-
-    def __eq__(self, other) -> bool:
-        return self.uid == other.uid
-
-    def __str__(self):
-        return f"{self.get_label()}: {self.uid}"
-
-    def __call__(self, *values) -> Iterable[np.ndarray]:
-        expected_num_args = len(self.get_signature())
-        input_num_args = len(values)
-        if expected_num_args != input_num_args:
-            raise RuntimeError(
-                f"""Incorrect number of inputs
-                (expected {expected_num_args} found {input_num_args})
-                for lambda:\n{self.func_str}"""
-            )
-        try:
-            if self.np_shape != (1,):
-                res = self.v_function(*values)
-            else:
-                res = self.function(*values)
-            if self.func_type == LambdaType.LITERAL:
-                return [np.full(self.np_shape, res, dtype=np.float64)]
-            elif isinstance(res, tuple):
-                return [item for item in res]
-            else:
-                return [self.parse_result(values, res)]
-        except Exception as e:
-            print(f"Exception occured in {self.func_str}")
-            raise GrFNExecutionException(e)
-
-    def parse_result(self, values, res):
-        if isinstance(res, dict):
-            res = {k: self.parse_result(values, v) for k, v in res.items()}
-        elif len(values) == 0:
-            res = np.full(self.np_shape, res, dtype=np.float64)
-        return res
-
-    def get_kwargs(self):
-        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
-
-    def get_label(self):
-        return self.func_type.shortname()
-
-    def get_signature(self):
-        return self.function.__code__.co_varnames
+    exit_condition: ExpressionFuncNode
 
     @classmethod
-    def from_AIR(
-        cls, lm_id: str, lm_type: str, lm_str: str, mdata: List[TypedMetadata]
-    ):
-        lambda_fn = load_lambda_function(lm_str)
-        if mdata is None:
-            mdata = list()
-        return cls(lm_id, lm_type, lm_str, lambda_fn, mdata)
-
-    @classmethod
-    def from_dict(cls, data: dict):
-        lambda_fn = load_lambda_function(data["lambda"])
-        lambda_type = LambdaType.from_str(data["type"])
-        if "metadata" in data:
-            metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
-        else:
-            metadata = []
+    def from_container(
+        cls,
+        container: ContainerDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> BaseConFuncNode:
+        mock_func_node = BaseConFuncNode.from_container(
+            container, AIR, VARS, FUNCS
+        )
         return cls(
-            data["uid"],
-            lambda_type,
-            data["lambda"],
-            lambda_fn,
-            metadata,
+            uid=mock_func_node.uid,
+            identifier=mock_func_node.identifier,
+            type=mock_func_node.type,
+            input_variables=mock_func_node.input_variables,
+            output_variables=mock_func_node.output_variables,
+            hyper_edges=mock_func_node.hyper_edges,
+            hyper_graph=mock_func_node.hyper_graph,
+            metadata=mock_func_node.metadata,
+            exit=mock_func_node.exit,
+            exit_condition=cls.find_condition_node(mock_func_node),
         )
 
-    def to_dict(self) -> dict:
-        return {
-            "uid": self.uid,
-            "type": str(self.func_type),
-            "lambda": self.func_str,
-            "metadata": [m.to_dict() for m in self.metadata],
-        }
+    @staticmethod
+    def find_condition_node(base_func: BaseConFuncNode):
+        # NOTE: If there is more than one condition node then this will find whichever is the first in the list of hyper-edges. Extend this function once we have GrFNs that have more than a single condition node in a ConditionalContainerDef
+        for h_edge in base_func.hyper_edges:
+            func = h_edge.func_node
+            if func.type == FunctionType.CONDITION:
+                return func
+        return None
+
+
+# @dataclass(repr=False, frozen=False)
+# class LambdaNode(BaseNode):
+#     func_type: LambdaType
+#     func_str: str
+#     function: callable
+#     metadata: List[TypedMetadata]
+
+#     def __hash__(self):
+#         return hash(self.uid)
+
+#     def __eq__(self, other) -> bool:
+#         return self.uid == other.uid
+
+#     def __str__(self):
+#         return f"{self.get_label()}: {self.uid}"
+
+#     def __call__(self, *values) -> Iterable[np.ndarray]:
+#         expected_num_args = len(self.get_signature())
+#         input_num_args = len(values)
+#         if expected_num_args != input_num_args:
+#             raise RuntimeError(
+#                 f"""Incorrect number of inputs
+#                 (expected {expected_num_args} found {input_num_args})
+#                 for lambda:\n{self.func_str}"""
+#             )
+#         try:
+#             if self.np_shape != (1,):
+#                 res = self.v_function(*values)
+#             else:
+#                 res = self.function(*values)
+#             if self.func_type == LambdaType.LITERAL:
+#                 return [np.full(self.np_shape, res, dtype=np.float64)]
+#             elif isinstance(res, tuple):
+#                 return [item for item in res]
+#             else:
+#                 return [self.parse_result(values, res)]
+#         except Exception as e:
+#             print(f"Exception occured in {self.func_str}")
+#             raise GrFNExecutionException(e)
+
+#     def parse_result(self, values, res):
+#         if isinstance(res, dict):
+#             res = {k: self.parse_result(values, v) for k, v in res.items()}
+#         elif len(values) == 0:
+#             res = np.full(self.np_shape, res, dtype=np.float64)
+#         return res
+
+#     def get_kwargs(self):
+#         return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
+
+#     def get_label(self):
+#         return self.func_type.shortname()
+
+#     def get_signature(self):
+#         return self.function.__code__.co_varnames
+
+#     @classmethod
+#     def from_AIR(
+#         cls, lm_id: str, lm_type: str, lm_str: str, mdata: List[TypedMetadata]
+#     ):
+#         lambda_fn = load_lambda_function(lm_str)
+#         if mdata is None:
+#             mdata = list()
+#         return cls(lm_id, lm_type, lm_str, lambda_fn, mdata)
+
+#     @classmethod
+#     def from_dict(cls, data: dict):
+#         lambda_fn = load_lambda_function(data["lambda"])
+#         lambda_type = LambdaType.from_str(data["type"])
+#         if "metadata" in data:
+#             metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+#         else:
+#             metadata = []
+#         return cls(
+#             data["uid"],
+#             lambda_type,
+#             data["lambda"],
+#             lambda_fn,
+#             metadata,
+#         )
+
+#     def to_dict(self) -> dict:
+#         return {
+#             "uid": self.uid,
+#             "type": str(self.func_type),
+#             "lambda": self.func_str,
+#             "metadata": [m.to_dict() for m in self.metadata],
+#         }
 
 
 @dataclass
 class HyperEdge:
     func_node: BaseFuncNode
-    inputs: Iterable[VariableNode]
-    outputs: Iterable[VariableNode]
+    inputs: List[VariableNode]
+    outputs: List[VariableNode]
 
     def __call__(self):
         result = self.func_node(
@@ -834,502 +935,504 @@ class HyperEdge:
 
     def to_dict(self) -> dict:
         return {
-            "inputs": [n.uid for n in self.inputs],
-            "function": self.func_node.uid,
-            "outputs": [n.uid for n in self.outputs],
+            "inputs": [str(n.identifier) for n in self.inputs],
+            "function": str(self.func_node.identifier),
+            "outputs": [str(n.identifier) for n in self.outputs],
         }
 
 
-@dataclass(repr=False)
-class GrFNSubgraph:
-    uid: str
-    namespace: str
-    scope: str
-    basename: str
-    occurrence_num: int
-    parent: str
-    type: str
-    border_color: str
-    nodes: Iterable[BaseNode]
-    metadata: List[TypedMetadata]
+# @dataclass(repr=False)
+# class GrFNSubgraph:
+#     uid: str
+#     namespace: str
+#     scope: str
+#     basename: str
+#     occurrence_num: int
+#     parent: str
+#     type: str
+#     border_color: str
+#     nodes: Iterable[BaseNode]
+#     metadata: List[TypedMetadata]
 
-    def __hash__(self):
-        return hash(self.__str__())
+#     def __hash__(self):
+#         return hash(self.__str__())
 
-    def __repr__(self):
-        return self.__str__()
+#     def __repr__(self):
+#         return self.__str__()
 
-    def __str__(self):
-        context = f"{self.namespace}.{self.scope}"
-        return f"{self.basename}::{self.occurrence_num} ({context})"
+#     def __str__(self):
+#         context = f"{self.namespace}.{self.scope}"
+#         return f"{self.basename}::{self.occurrence_num} ({context})"
 
-    def __eq__(self, other) -> bool:
-        return (
-            self.occurrence_num == other.occurrence_num
-            and self.border_color == other.border_color
-            and set([n.uid for n in self.nodes])
-            == set([n.uid for n in other.nodes])
-        )
+#     def __eq__(self, other) -> bool:
+#         return (
+#             self.occurrence_num == other.occurrence_num
+#             and self.border_color == other.border_color
+#             and set([n.uid for n in self.nodes])
+#             == set([n.uid for n in other.nodes])
+#         )
 
-    def __call__(
-        self,
-        grfn: GroundedFunctionNetwork,
-        subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
-        node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
-        all_nodes_visited: Set[VariableNode],
-    ) -> List[BaseNode]:
-        """
-        Handles the execution of the lambda functions within a subgraoh of
-        GrFN. We place the logic in this function versus directly in __call__
-        so the logic can be shared in the loop subgraph type.
+#     def __call__(
+#         self,
+#         grfn: GroundedFunctionNetwork,
+#         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
+#         node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
+#         all_nodes_visited: Set[VariableNode],
+#     ) -> List[BaseNode]:
+#         """
+#         Handles the execution of the lambda functions within a subgraoh of
+#         GrFN. We place the logic in this function versus directly in __call__
+#         so the logic can be shared in the loop subgraph type.
 
-        Args:
-            grfn (GroundedFucntioNetwork):
-                The GrFN we are operating on. Used to find successors of nodes.
-            subgraphs_to_hyper_edges (Dict[GrFNSubgraph, List[HyperEdge]]):
-                A list of a subgraph to the hyper edges with nodes in the
-                subgraph.
-            node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
-                nodes to the subgraph they are contained in.
-            all_nodes_visited (Set[VariableNode]):
-                Holds the set of all variable nodes that have been visited
+#         Args:
+#             grfn (GroundedFucntioNetwork):
+#                 The GrFN we are operating on. Used to find successors of nodes.
+#             subgraphs_to_hyper_edges (Dict[GrFNSubgraph, List[HyperEdge]]):
+#                 A list of a subgraph to the hyper edges with nodes in the
+#                 subgraph.
+#             node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
+#                 nodes to the subgraph they are contained in.
+#             all_nodes_visited (Set[VariableNode]):
+#                 Holds the set of all variable nodes that have been visited
 
-        Raises:
-            Exception: Raised when we find multiple input interface nodes.
+#         Raises:
+#             Exception: Raised when we find multiple input interface nodes.
 
-        Returns:
-            List[BaseNode]: The final list of nodes that we update/output
-            to in the parent container.
-        """
-        # Grab all hyper edges in this subgraph
-        hyper_edges = subgraphs_to_hyper_edges[self]
-        nodes_to_hyper_edge = {e.lambda_fn: e for e in hyper_edges}
+#         Returns:
+#             List[BaseNode]: The final list of nodes that we update/output
+#             to in the parent container.
+#         """
+#         # Grab all hyper edges in this subgraph
+#         hyper_edges = subgraphs_to_hyper_edges[self]
+#         nodes_to_hyper_edge = {e.lambda_fn: e for e in hyper_edges}
 
-        # There should be only one lambda node of type interface with outputs
-        # all in the same subgraph. Identify this node as the entry point of
-        # execution within this subgraph. Will be none if no input.
-        input_interface_hyper_edge_node = self.get_input_interface_hyper_edge(
-            hyper_edges
-        )
-        output_interface_hyper_edge_node = self.get_output_interface_node(
-            hyper_edges
-        )
+#         # There should be only one lambda node of type interface with outputs
+#         # all in the same subgraph. Identify this node as the entry point of
+#         # execution within this subgraph. Will be none if no input.
+#         input_interface_hyper_edge_node = self.get_input_interface_hyper_edge(
+#             hyper_edges
+#         )
+#         output_interface_hyper_edge_node = self.get_output_interface_node(
+#             hyper_edges
+#         )
 
-        # Add nodes that must be configured via user input as they have no
-        # input edge
-        standalone_vars = [
-            n
-            for n in self.nodes
-            if isinstance(n, VariableNode) and grfn.in_degree(n) == 0
-        ]
-        all_nodes_visited.update(standalone_vars)
+#         # Add nodes that must be configured via user input as they have no
+#         # input edge
+#         standalone_vars = [
+#             n
+#             for n in self.nodes
+#             if isinstance(n, VariableNode) and grfn.in_degree(n) == 0
+#         ]
+#         all_nodes_visited.update(standalone_vars)
 
-        # Find the hyper edge nodes with no input to initialize the execution
-        # queue and var nodes with no incoming edges
-        node_execute_queue = [
-            e.lambda_fn for e in hyper_edges if len(e.inputs) == 0
-        ]
-        node_execute_queue.extend(
-            [s for n in standalone_vars for s in grfn.successors(n)]
-        )
+#         # Find the hyper edge nodes with no input to initialize the execution
+#         # queue and var nodes with no incoming edges
+#         node_execute_queue = [
+#             e.lambda_fn for e in hyper_edges if len(e.inputs) == 0
+#         ]
+#         node_execute_queue.extend(
+#             [s for n in standalone_vars for s in grfn.successors(n)]
+#         )
 
-        if input_interface_hyper_edge_node:
-            node_execute_queue.insert(
-                0, input_interface_hyper_edge_node.lambda_fn
-            )
+#         if input_interface_hyper_edge_node:
+#             node_execute_queue.insert(
+#                 0, input_interface_hyper_edge_node.lambda_fn
+#             )
 
-        # Need to recurse to a different subgraph if no nodes to execute here
-        if len(node_execute_queue) == 0:
-            global_literal_nodes = [
-                n
-                for n in grfn.nodes
-                if isinstance(n, LambdaNode)
-                and grfn.in_degree(n) == 0
-                and n.func_type == LambdaType.LITERAL
-            ]
-            global_output_vars = [
-                n
-                for n in grfn.nodes
-                if isinstance(n, VariableNode) and grfn.out_degree(n) == 0
-            ]
+#         # Need to recurse to a different subgraph if no nodes to execute here
+#         if len(node_execute_queue) == 0:
+#             global_literal_nodes = [
+#                 n
+#                 for n in grfn.nodes
+#                 if isinstance(n, LambdaNode)
+#                 and grfn.in_degree(n) == 0
+#                 and n.func_type == LambdaType.LITERAL
+#             ]
+#             global_output_vars = [
+#                 n
+#                 for n in grfn.nodes
+#                 if isinstance(n, VariableNode) and grfn.out_degree(n) == 0
+#             ]
 
-            # Choose a literal node with maximum distance to the output
-            # to begin recursing.
-            lit_node_to_max_dist = dict()
-            for (l_node, o_node) in product(
-                global_literal_nodes, global_output_vars
-            ):
-                max_dist = max(
-                    [
-                        len(path)
-                        for path in all_simple_paths(grfn, l_node, o_node)
-                    ]
-                )
-                lit_node_to_max_dist[l_node] = max_dist
-            lits_by_dist = sorted(
-                list(lit_node_to_max_dist.items()),
-                key=lambda t: t[1],
-                reverse=True,
-            )
-            (L_node, _) = lits_by_dist[0]
-            subgraph = node_to_subgraph[L_node]
-            subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
-            subgraph_input_interface = subgraph.get_input_interface_hyper_edge(
-                subgraph_hyper_edges
-            )
-            subgraph_outputs = subgraph(
-                grfn,
-                subgraphs_to_hyper_edges,
-                node_to_subgraph,
-                all_nodes_visited,
-            )
+#             # Choose a literal node with maximum distance to the output
+#             # to begin recursing.
+#             lit_node_to_max_dist = dict()
+#             for (l_node, o_node) in product(
+#                 global_literal_nodes, global_output_vars
+#             ):
+#                 max_dist = max(
+#                     [
+#                         len(path)
+#                         for path in all_simple_paths(grfn, l_node, o_node)
+#                     ]
+#                 )
+#                 lit_node_to_max_dist[l_node] = max_dist
+#             lits_by_dist = sorted(
+#                 list(lit_node_to_max_dist.items()),
+#                 key=lambda t: t[1],
+#                 reverse=True,
+#             )
+#             (L_node, _) = lits_by_dist[0]
+#             subgraph = node_to_subgraph[L_node]
+#             subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
+#             subgraph_input_interface = subgraph.get_input_interface_hyper_edge(
+#                 subgraph_hyper_edges
+#             )
+#             subgraph_outputs = subgraph(
+#                 grfn,
+#                 subgraphs_to_hyper_edges,
+#                 node_to_subgraph,
+#                 all_nodes_visited,
+#             )
 
-            node_execute_queue.extend(
-                set(
-                    f_node
-                    for o_node in subgraph_outputs
-                    for f_node in grfn.successors(o_node)
-                    if f_node not in all_nodes_visited
-                )
-            )
+#             node_execute_queue.extend(
+#                 set(
+#                     f_node
+#                     for o_node in subgraph_outputs
+#                     for f_node in grfn.successors(o_node)
+#                     if f_node not in all_nodes_visited
+#                 )
+#             )
 
-        while node_execute_queue:
-            executed = True
-            executed_visited_variables = set()
-            node_to_execute = node_execute_queue.pop(0)
+#         while node_execute_queue:
+#             executed = True
+#             executed_visited_variables = set()
+#             node_to_execute = node_execute_queue.pop(0)
 
-            # TODO remove?
-            if node_to_execute in all_nodes_visited:
-                continue
+#             # TODO remove?
+#             if node_to_execute in all_nodes_visited:
+#                 continue
 
-            if node_to_execute not in nodes_to_hyper_edge:
-                # Node is not in current subgraph
-                if node_to_execute.func_type == LambdaType.INTERFACE:
-                    subgraph = node_to_subgraph[node_to_execute]
-                    subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
-                    subgraph_input_interface = (
-                        subgraph.get_input_interface_hyper_edge(
-                            subgraph_hyper_edges
-                        )
-                    )
-                    # Either the subgraph has no input interface or all the
-                    # inputs must be set.
-                    if subgraph_input_interface is None or all(
-                        [
-                            n in all_nodes_visited
-                            for n in subgraph_input_interface.inputs
-                        ]
-                    ):
-                        # We need to recurse into a new subgraph as the
-                        # next node is an interface thats not in the
-                        # current subgraph
+#             if node_to_execute not in nodes_to_hyper_edge:
+#                 # Node is not in current subgraph
+#                 if node_to_execute.func_type == LambdaType.INTERFACE:
+#                     subgraph = node_to_subgraph[node_to_execute]
+#                     subgraph_hyper_edges = subgraphs_to_hyper_edges[subgraph]
+#                     subgraph_input_interface = (
+#                         subgraph.get_input_interface_hyper_edge(
+#                             subgraph_hyper_edges
+#                         )
+#                     )
+#                     # Either the subgraph has no input interface or all the
+#                     # inputs must be set.
+#                     if subgraph_input_interface is None or all(
+#                         [
+#                             n in all_nodes_visited
+#                             for n in subgraph_input_interface.inputs
+#                         ]
+#                     ):
+#                         # We need to recurse into a new subgraph as the
+#                         # next node is an interface thats not in the
+#                         # current subgraph
 
-                        # subgraph execution returns the updated output nodes
-                        # so we can mark them as visited here in the parent
-                        # in order to continue execution
-                        executed_visited_variables.update(
-                            subgraph(
-                                grfn,
-                                subgraphs_to_hyper_edges,
-                                node_to_subgraph,
-                                all_nodes_visited,
-                            )
-                        )
-                    else:
-                        node_to_execute = subgraph_input_interface.lambda_fn
-                        executed = False
-                else:
-                    raise GrFNExecutionException(
-                        "Error: Attempting to execute non-interface node"
-                        + f" {node_to_execute} found in another subgraph."
-                    )
-            elif all(
-                [
-                    n in all_nodes_visited
-                    for n in nodes_to_hyper_edge[node_to_execute].inputs
-                ]
-            ):
-                # All of the input nodes have been visited, so the input values
-                # are initialized and we can execute. In the case of literal
-                # nodes, inputs is empty and all() will default to True.
-                to_execute = nodes_to_hyper_edge[node_to_execute]
-                to_execute()
-                executed_visited_variables.update(to_execute.outputs)
-            else:
-                # We still are waiting on input values to be computed, push to
-                # the back of the queue
-                executed = False
+#                         # subgraph execution returns the updated output nodes
+#                         # so we can mark them as visited here in the parent
+#                         # in order to continue execution
+#                         executed_visited_variables.update(
+#                             subgraph(
+#                                 grfn,
+#                                 subgraphs_to_hyper_edges,
+#                                 node_to_subgraph,
+#                                 all_nodes_visited,
+#                             )
+#                         )
+#                     else:
+#                         node_to_execute = subgraph_input_interface.lambda_fn
+#                         executed = False
+#                 else:
+#                     raise GrFNExecutionException(
+#                         "Error: Attempting to execute non-interface node"
+#                         + f" {node_to_execute} found in another subgraph."
+#                     )
+#             elif all(
+#                 [
+#                     n in all_nodes_visited
+#                     for n in nodes_to_hyper_edge[node_to_execute].inputs
+#                 ]
+#             ):
+#                 # All of the input nodes have been visited, so the input values
+#                 # are initialized and we can execute. In the case of literal
+#                 # nodes, inputs is empty and all() will default to True.
+#                 to_execute = nodes_to_hyper_edge[node_to_execute]
+#                 to_execute()
+#                 executed_visited_variables.update(to_execute.outputs)
+#             else:
+#                 # We still are waiting on input values to be computed, push to
+#                 # the back of the queue
+#                 executed = False
 
-            if executed:
-                all_nodes_visited.update(executed_visited_variables)
-                all_nodes_visited.add(node_to_execute)
-                node_execute_queue.extend(
-                    [
-                        succ
-                        for var in executed_visited_variables
-                        for succ in grfn.successors(var)
-                        if (
-                            succ in self.nodes
-                            and succ not in all_nodes_visited
-                        )
-                        or (
-                            var in self.nodes
-                            and succ.func_type == LambdaType.INTERFACE
-                        )
-                    ]
-                )
-            else:
-                node_execute_queue.extend(
-                    [
-                        lambda_pred
-                        for var_pred in grfn.predecessors(node_to_execute)
-                        for lambda_pred in grfn.predecessors(var_pred)
-                        if (
-                            lambda_pred in self.nodes
-                            and lambda_pred not in all_nodes_visited
-                        )
-                        or lambda_pred.func_type == LambdaType.INTERFACE
-                    ]
-                )
-                node_execute_queue.append(node_to_execute)
+#             if executed:
+#                 all_nodes_visited.update(executed_visited_variables)
+#                 all_nodes_visited.add(node_to_execute)
+#                 node_execute_queue.extend(
+#                     [
+#                         succ
+#                         for var in executed_visited_variables
+#                         for succ in grfn.successors(var)
+#                         if (
+#                             succ in self.nodes
+#                             and succ not in all_nodes_visited
+#                         )
+#                         or (
+#                             var in self.nodes
+#                             and succ.func_type == LambdaType.INTERFACE
+#                         )
+#                     ]
+#                 )
+#             else:
+#                 node_execute_queue.extend(
+#                     [
+#                         lambda_pred
+#                         for var_pred in grfn.predecessors(node_to_execute)
+#                         for lambda_pred in grfn.predecessors(var_pred)
+#                         if (
+#                             lambda_pred in self.nodes
+#                             and lambda_pred not in all_nodes_visited
+#                         )
+#                         or lambda_pred.func_type == LambdaType.INTERFACE
+#                     ]
+#                 )
+#                 node_execute_queue.append(node_to_execute)
 
-        return (
-            {}
-            if not output_interface_hyper_edge_node
-            else {n for n in output_interface_hyper_edge_node.outputs}
-        )
+#         return (
+#             {}
+#             if not output_interface_hyper_edge_node
+#             else {n for n in output_interface_hyper_edge_node.outputs}
+#         )
 
-    @classmethod
-    def from_container(
-        cls, con: ContainerDef, occ: int, parent_subgraph: GrFNSubgraph
-    ):
-        id = con.identifier
+#     @classmethod
+#     def from_container(
+#         cls, con: ContainerDef, occ: int, parent_subgraph: GrFNSubgraph
+#     ):
+#         id = con.identifier
 
-        class_to_create = cls
-        if isinstance(con, LoopContainerDef):
-            class_to_create = GrFNLoopSubgraph
+#         class_to_create = cls
+#         if isinstance(con, LoopContainerDef):
+#             class_to_create = GrFNLoopSubgraph
 
-        return class_to_create(
-            str(uuid.uuid4()),
-            id.namespace,
-            id.scope,
-            id.con_name,
-            occ,
-            None if parent_subgraph is None else parent_subgraph.uid,
-            con.__class__.__name__,
-            cls.get_border_color(con.__class__.__name__),
-            [],
-            con.metadata,
-        )
+#         return class_to_create(
+#             str(uuid.uuid4()),
+#             id.namespace,
+#             id.scope,
+#             id.con_name,
+#             occ,
+#             None if parent_subgraph is None else parent_subgraph.uid,
+#             con.__class__.__name__,
+#             cls.get_border_color(con.__class__.__name__),
+#             [],
+#             con.metadata,
+#         )
 
-    def get_input_interface_hyper_edge(self, hyper_edges):
-        """
-        Get the interface node for input in this subgraph
+#     def get_input_interface_hyper_edge(self, hyper_edges):
+#         """
+#         Get the interface node for input in this subgraph
 
-        Args:
-            hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
-                subgraph.
+#         Args:
+#             hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
+#                 subgraph.
 
-        Returns:
-            LambdaNode: The lambda node for the input interface. None if there
-                is no input for this subgraph.
-        """
-        input_interfaces = [
-            e
-            for e in hyper_edges
-            if e.lambda_fn.func_type == LambdaType.INTERFACE
-            and all([o in self.nodes for o in e.outputs])
-        ]
+#         Returns:
+#             LambdaNode: The lambda node for the input interface. None if there
+#                 is no input for this subgraph.
+#         """
+#         input_interfaces = [
+#             e
+#             for e in hyper_edges
+#             if e.lambda_fn.func_type == LambdaType.INTERFACE
+#             and all([o in self.nodes for o in e.outputs])
+#         ]
 
-        if len(input_interfaces) > 1 and self.parent:
-            raise GrFNExecutionException(
-                "Found multiple input interface nodes"
-                + " in subgraph during execution."
-                + f" Expected 1 but {len(input_interfaces)} were found."
-            )
-        elif len(input_interfaces) == 0:
-            return None
+#         if len(input_interfaces) > 1 and self.parent:
+#             raise GrFNExecutionException(
+#                 "Found multiple input interface nodes"
+#                 + " in subgraph during execution."
+#                 + f" Expected 1 but {len(input_interfaces)} were found."
+#             )
+#         elif len(input_interfaces) == 0:
+#             return None
 
-        return input_interfaces[0]
+#         return input_interfaces[0]
 
-    def get_output_interface_node(self, hyper_edges):
-        """
-        Get the interface node for output in this subgraph
+#     def get_output_interface_node(self, hyper_edges):
+#         """
+#         Get the interface node for output in this subgraph
 
-        Args:
-            hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
-                subgraph.
+#         Args:
+#             hyper_edges (List[HyperEdge]): All hyper edges with nodes in this
+#                 subgraph.
 
-        Returns:
-            LambdaNode: The lambda node for the output interface.
-        """
-        output_interfaces = [
-            e
-            for e in hyper_edges
-            if e.lambda_fn.func_type == LambdaType.INTERFACE
-            and all([o in self.nodes for o in e.inputs])
-        ]
+#         Returns:
+#             LambdaNode: The lambda node for the output interface.
+#         """
+#         output_interfaces = [
+#             e
+#             for e in hyper_edges
+#             if e.lambda_fn.func_type == LambdaType.INTERFACE
+#             and all([o in self.nodes for o in e.inputs])
+#         ]
 
-        if not self.parent:
-            # The root subgraph has no output interface
-            return None
-        elif len(output_interfaces) != 1:
-            raise GrFNExecutionException(
-                "Found multiple output interface nodes"
-                + " in subgraph during execution."
-                + f" Expected 1 but {len(output_interfaces)} were found."
-            )
-        return output_interfaces[0]
+#         if not self.parent:
+#             # The root subgraph has no output interface
+#             return None
+#         elif len(output_interfaces) != 1:
+#             raise GrFNExecutionException(
+#                 "Found multiple output interface nodes"
+#                 + " in subgraph during execution."
+#                 + f" Expected 1 but {len(output_interfaces)} were found."
+#             )
+#         return output_interfaces[0]
 
-    @staticmethod
-    def get_border_color(type_str):
-        if type_str == "CondContainerDef":
-            return "orange"
-        elif type_str == "FuncContainerDef":
-            return "forestgreen"
-        elif type_str == "LoopContainerDef":
-            return "navyblue"
-        else:
-            raise TypeError(f"Unrecognized subgraph type: {type_str}")
+#     @staticmethod
+#     def get_border_color(type_str):
+#         if type_str == "CondContainerDef":
+#             return "orange"
+#         elif type_str == "FuncContainerDef":
+#             return "forestgreen"
+#         elif type_str == "LoopContainerDef":
+#             return "navyblue"
+#         else:
+#             raise TypeError(f"Unrecognized subgraph type: {type_str}")
 
-    @classmethod
-    def from_dict(cls, data: dict, all_nodes: Dict[str, BaseNode]):
-        subgraph_nodes = [all_nodes[n_id] for n_id in data["nodes"]]
-        type_str = data["type"]
+#     @classmethod
+#     def from_dict(cls, data: dict, all_nodes: Dict[str, BaseNode]):
+#         subgraph_nodes = [all_nodes[n_id] for n_id in data["nodes"]]
+#         type_str = data["type"]
 
-        class_to_create = cls
-        if type_str == "LoopContainerDef":
-            class_to_create = GrFNLoopSubgraph
+#         class_to_create = cls
+#         if type_str == "LoopContainerDef":
+#             class_to_create = GrFNLoopSubgraph
 
-        return class_to_create(
-            data["uid"],
-            data["namespace"],
-            data["scope"],
-            data["basename"],
-            data["occurrence_num"],
-            data["parent"],
-            type_str,
-            cls.get_border_color(type_str),
-            subgraph_nodes,
-            [TypedMetadata.from_data(d) for d in data["metadata"]]
-            if "metadata" in data
-            else [],
-        )
+#         return class_to_create(
+#             data["uid"],
+#             data["namespace"],
+#             data["scope"],
+#             data["basename"],
+#             data["occurrence_num"],
+#             data["parent"],
+#             type_str,
+#             cls.get_border_color(type_str),
+#             subgraph_nodes,
+#             [TypedMetadata.from_data(d) for d in data["metadata"]]
+#             if "metadata" in data
+#             else [],
+#         )
 
-    def to_dict(self):
-        return {
-            "uid": self.uid,
-            "namespace": self.namespace,
-            "scope": self.scope,
-            "basename": self.basename,
-            "occurrence_num": self.occurrence_num,
-            "parent": self.parent,
-            "type": self.type,
-            "border_color": self.border_color,
-            "nodes": [n.uid for n in self.nodes],
-            "metadata": [m.to_dict() for m in self.metadata],
-        }
-
-
-@dataclass(repr=False, eq=False)
-class GrFNLoopSubgraph(GrFNSubgraph):
-    def __call__(
-        self,
-        grfn: GroundedFunctionNetwork,
-        subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
-        node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
-        all_nodes_visited: Set[VariableNode],
-    ):
-        """
-        Handle a call statement on an object of type GrFNSubgraph
-
-        Args:
-            grfn (GroundedFucntioNetwork):
-                The GrFN we are operating on. Used to find successors of nodes.
-            subgraphs_to_hyper_edges (Dict[GrFNSubgraph, List[HyperEdge]]):
-                A list of a subgraph to the hyper edges with nodes in the
-                subgraph.
-            node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
-                nodes to the subgraph they are contained in.
-            all_nodes_visited (Set[VariableNode]):
-                Holds the set of all variable nodes that have been visited
-        """
-
-        # First, find exit node within the subgraph
-        exit_var_nodes = [
-            n
-            for n in self.nodes
-            if isinstance(n, VariableNode) and n.identifier.var_name == "EXIT"
-        ]
-        if len(exit_var_nodes) != 1:
-            raise GrFNExecutionException(
-                "Found incorrect number of exit var nodes in"
-                + " loop subgraph during execution."
-                + f" Expected 1 but {len(exit_var_nodes)} were found."
-            )
-        exit_var_node = exit_var_nodes[0]
-
-        # Find the first decision node and mark its input variables as
-        # visited so we can execute the cyclic portion of the loop
-        input_interface = self.get_input_interface_hyper_edge(
-            subgraphs_to_hyper_edges[self]
-        )
-        initial_decision = {
-            n
-            for v in input_interface.outputs
-            for n in grfn.successors(v)
-            if n.func_type == LambdaType.DECISION
-        }
-        first_decision_vars = {
-            v
-            for lm_node in initial_decision
-            for v in grfn.predecessors(lm_node)
-            if isinstance(v, VariableNode)
-        }
-
-        var_results = set()
-        initial_visited_nodes = set()
-        # Loop until the exit value becomes true
-        while (
-            exit_var_node.value is None
-            or (
-                isinstance(exit_var_node.value, bool)
-                and not exit_var_node.value
-            )
-            or (
-                isinstance(exit_var_node.value, np.ndarray)
-                and not all(exit_var_node.value)
-            )
-        ):
-            initial_visited_nodes = all_nodes_visited.copy()
-            initial_visited_nodes.update(first_decision_vars)
-            var_results = super().__call__(
-                grfn,
-                subgraphs_to_hyper_edges,
-                node_to_subgraph,
-                initial_visited_nodes,
-            )
-        all_nodes_visited = all_nodes_visited.union(initial_visited_nodes)
-        return var_results
+#     def to_dict(self):
+#         return {
+#             "uid": self.uid,
+#             "namespace": self.namespace,
+#             "scope": self.scope,
+#             "basename": self.basename,
+#             "occurrence_num": self.occurrence_num,
+#             "parent": self.parent,
+#             "type": self.type,
+#             "border_color": self.border_color,
+#             "nodes": [n.uid for n in self.nodes],
+#             "metadata": [m.to_dict() for m in self.metadata],
+#         }
 
 
-class GrFNType:
-    name: str
-    fields: List[Tuple[str, str]]
+# @dataclass(repr=False, eq=False)
+# class GrFNLoopSubgraph(GrFNSubgraph):
+#     def __call__(
+#         self,
+#         grfn: GroundedFunctionNetwork,
+#         subgraphs_to_hyper_edges: Dict[GrFNSubgraph, List[HyperEdge]],
+#         node_to_subgraph: Dict[LambdaNode, GrFNSubgraph],
+#         all_nodes_visited: Set[VariableNode],
+#     ):
+#         """
+#         Handle a call statement on an object of type GrFNSubgraph
 
-    def __init__(self, name, fields):
-        self.name = name
-        self.fields = fields
+#         Args:
+#             grfn (GroundedFucntioNetwork):
+#                 The GrFN we are operating on. Used to find successors of nodes.
+#             subgraphs_to_hyper_edges (Dict[GrFNSubgraph, List[HyperEdge]]):
+#                 A list of a subgraph to the hyper edges with nodes in the
+#                 subgraph.
+#             node_to_subgraph (Dict[LambdaNode, GrFNSubgraph]):
+#                 nodes to the subgraph they are contained in.
+#             all_nodes_visited (Set[VariableNode]):
+#                 Holds the set of all variable nodes that have been visited
+#         """
 
-    def get_initial_dict(self):
-        d = {}
-        for field in self.fields:
-            d[field] = None
-        return d
+#         # First, find exit node within the subgraph
+#         exit_var_nodes = [
+#             n
+#             for n in self.nodes
+#             if isinstance(n, VariableNode) and n.identifier.var_name == "EXIT"
+#         ]
+#         if len(exit_var_nodes) != 1:
+#             raise GrFNExecutionException(
+#                 "Found incorrect number of exit var nodes in"
+#                 + " loop subgraph during execution."
+#                 + f" Expected 1 but {len(exit_var_nodes)} were found."
+#             )
+#         exit_var_node = exit_var_nodes[0]
+
+#         # Find the first decision node and mark its input variables as
+#         # visited so we can execute the cyclic portion of the loop
+#         input_interface = self.get_input_interface_hyper_edge(
+#             subgraphs_to_hyper_edges[self]
+#         )
+#         initial_decision = {
+#             n
+#             for v in input_interface.outputs
+#             for n in grfn.successors(v)
+#             if n.func_type == LambdaType.DECISION
+#         }
+#         first_decision_vars = {
+#             v
+#             for lm_node in initial_decision
+#             for v in grfn.predecessors(lm_node)
+#             if isinstance(v, VariableNode)
+#         }
+
+#         var_results = set()
+#         initial_visited_nodes = set()
+#         # Loop until the exit value becomes true
+#         while (
+#             exit_var_node.value is None
+#             or (
+#                 isinstance(exit_var_node.value, bool)
+#                 and not exit_var_node.value
+#             )
+#             or (
+#                 isinstance(exit_var_node.value, np.ndarray)
+#                 and not all(exit_var_node.value)
+#             )
+#         ):
+#             initial_visited_nodes = all_nodes_visited.copy()
+#             initial_visited_nodes.update(first_decision_vars)
+#             var_results = super().__call__(
+#                 grfn,
+#                 subgraphs_to_hyper_edges,
+#                 node_to_subgraph,
+#                 initial_visited_nodes,
+#             )
+#         all_nodes_visited = all_nodes_visited.union(initial_visited_nodes)
+#         return var_results
 
 
+# class GrFNType:
+#     name: str
+#     fields: List[Tuple[str, str]]
+
+#     def __init__(self, name, fields):
+#         self.name = name
+#         self.fields = fields
+
+#     def get_initial_dict(self):
+#         d = {}
+#         for field in self.fields:
+#             d[field] = None
+#         return d
+
+
+# NOTE: this is the GrFN 3.0 definition
 @dataclass
 class GroundedFunctionNetwork:
+    uid: str
     identifier: GrFNIdentifier
     entry_point: FunctionIdentifier
     functions: Dict[FunctionIdentifier, BaseFuncNode]
@@ -1577,12 +1680,13 @@ class GroundedFunctionNetwork:
         METADATA = AIR.metadata
 
         root_con = AIR.containers[AIR.entrypoint]
-        root_func = BaseConFuncNode.from_container(root_con, AIR, VARS, FUNCS)
-        root_func_id = root_func.identifier
-        FUNCS[root_func_id] = root_func
+        entry_func = BaseConFuncNode.from_container(root_con, AIR, VARS, FUNCS)
+        entry_func_id = entry_func.identifier
+        FUNCS[entry_func_id] = entry_func
         return cls(
+            str(uuid.uuid4()),
             GrFNIdentifier.from_air_id(AIR.identifier),
-            root_func_id,
+            entry_func_id,
             FUNCS,
             VARS,
             OBJECTS,
@@ -1827,7 +1931,7 @@ class GroundedFunctionNetwork:
         return subgraphs_to_func_sets
 
     def to_AGraph(self):
-        """ Export to a PyGraphviz AGraph object. """
+        """Export to a PyGraphviz AGraph object."""
         var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
         input_nodes = set([v for v in var_nodes if self.in_degree(v) == 0])
         output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
@@ -2011,31 +2115,29 @@ class GroundedFunctionNetwork:
         :rtype: type
         :raises ExceptionName: Why the exception is raised.
         """
-        subgraph_funcs = [sgraph.to_dict() for sgraph in self.subgraphs]
-        lambda_funcs = [func.to_dict() for func in self.lambdas]
-        visitor = ExpressionVisitor()
-        expr_node_lists = [
-            visitor.visit(ast.parse(lm_node.func_str))
-            for lm_node in self.lambdas
-        ]
-        operator_nodes = list()
-        for expr_nodes_obj in expr_node_lists:
-            expr_nodes = expr_nodes_obj.nodes
-            for expr_node in expr_nodes:
-                if isinstance(expr_node, ExprOperatorNode):
-                    new_op_func = dict()
+        # subgraph_funcs = [sgraph.to_dict() for sgraph in self.subgraphs]
+        # lambda_funcs = [func.to_dict() for func in self.lambdas]
+        # visitor = ExpressionVisitor()
+        # expr_node_lists = [
+        #     visitor.visit(ast.parse(lm_node.func_str))
+        #     for lm_node in self.lambdas
+        # ]
+        # operator_nodes = list()
+        # for expr_nodes_obj in expr_node_lists:
+        #     expr_nodes = expr_nodes_obj.nodes
+        #     for expr_node in expr_nodes:
+        #         if isinstance(expr_node, ExprOperatorNode):
+        #             new_op_func = dict()
 
-        operator_func_defs = []
+        # operator_func_defs = []
         data = {
             "uid": self.uid,
-            "entry_point": "::".join(
-                ["@container", self.namespace, self.scope, self.name]
-            ),
-            "timestamp": self.timestamp,
-            "hyper_edges": [edge.to_dict() for edge in self.hyper_edges],
-            "variables": [var.to_dict() for var in self.variables],
-            "functions": subgraph_funcs + lambda_funcs + operator_funcs,
-            "types": [t_def.to_dict() for t_def in self.types],
+            "identifier": str(self.identifier),
+            "entry_point": str(self.entry_point),
+            "variables": [var.to_dict() for var in self.variables.values()],
+            "functions": [func.to_dict() for func in self.functions.values()],
+            "types": [t_def.to_dict() for t_def in self.types.values()],
+            "objects": [obj.to_dict() for obj in self.objects.values()],
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
@@ -2112,167 +2214,361 @@ class GroundedFunctionNetwork:
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T, M)
 
 
-class CausalAnalysisGraph(nx.DiGraph):
-    def __init__(self, G, S, uid, date, ns, sc, nm):
-        super().__init__(G)
-        self.subgraphs = S
-        self.uid = uid
-        self.timestamp = date
-        self.namespace = ns
-        self.scope = sc
-        self.name = nm
+# =============================================================================
+# TODO: @Tito fill in the code here for the new GrFN 2 CAG pipeline
+# =============================================================================
+@dataclass
+class CAGContainer:
+    """
+    A container definition to be stored in a CausalAnalysisGraph that holds a collection of nodes that are contained under a container type FuncNode in GrFN. This class also holds a reference to a parent CAGContainer. If the parent reference is null then this is the root container of the CAG.
+    """
+
+    uid: str
+    identifier: CAGContainerIdentifier
+    type: str
+    parent: CAGContainerIdentifier
+    nodes: List[VariableIdentifier]
+    metadata: List[TypedMetadata]
 
     @classmethod
-    def from_GrFN(cls, GrFN: GroundedFunctionNetwork):
-        """Export to a Causal Analysis Graph (CAG) object.
-        The CAG shows the influence relationships between the variables and
-        elides the function nodes."""
+    def from_func_node(cls, func: BaseConFuncNode, parent: FunctionIdentifier):
+        """Creates a CAGContainer from a GrFN FuncNode definition and the identifier of a parent FuncNode
 
-        G = nx.DiGraph()
-        for var_node in GrFN.variables:
-            G.add_node(var_node, **var_node.get_kwargs())
-        for edge in GrFN.hyper_edges:
-            if edge.lambda_fn.func_type == LambdaType.INTERFACE:
-                G.add_edges_from(list(zip(edge.inputs, edge.outputs)))
-            else:
-                G.add_edges_from(list(product(edge.inputs, edge.outputs)))
-
-        def delete_paths_at_level(nodes: list):
-            orig_nodes = deepcopy(nodes)
-
-            while len(nodes) > 0:
-                updated_nodes = list()
-                for node in nodes:
-                    node_var_name = node.identifier.var_name
-                    succs = list(G.successors(node))
-                    for next_node in succs:
-                        if (
-                            next_node.identifier.var_name == node_var_name
-                            and len(list(G.predecessors(next_node))) == 1
-                        ):
-                            next_succs = list(G.successors(next_node))
-                            G.remove_node(next_node)
-                            updated_nodes.append(node)
-                            for succ_node in next_succs:
-                                G.add_edge(node, succ_node)
-                nodes = updated_nodes
-
-            next_level_nodes = list()
-            for node in orig_nodes:
-                next_level_nodes.extend(list(G.successors(node)))
-            next_level_nodes = list(set(next_level_nodes))
-
-            if len(next_level_nodes) > 0:
-                delete_paths_at_level(next_level_nodes)
-
-        def correct_subgraph_nodes(subgraph: GrFNSubgraph):
-            cag_subgraph_nodes = list(
-                set(G.nodes).intersection(set(subgraph.nodes))
-            )
-            subgraph.nodes = cag_subgraph_nodes
-
-            for new_subgraph in GrFN.subgraphs.successors(subgraph):
-                correct_subgraph_nodes(new_subgraph)
-
-        input_nodes = [n for n in G.nodes if G.in_degree(n) == 0]
-        delete_paths_at_level(input_nodes)
-        root_subgraph = [n for n, d in GrFN.subgraphs.in_degree() if d == 0][0]
-        correct_subgraph_nodes(root_subgraph)
-        return cls(
-            G,
-            GrFN.subgraphs,
-            GrFN.uid,
-            GrFN.timestamp,
-            GrFN.namespace,
-            GrFN.scope,
-            GrFN.name,
-        )
-
-    def to_AGraph(self):
-        """Returns a variable-only view of the GrFN in the form of an AGraph.
+        Args:
+            func (BaseConFuncNode): A container type FuncNode that this CAGContainer will represent at the CAG level
+            parent (FunctionIdentifier): The identifier of the funcNode that contained func in the GrFN
 
         Returns:
-            type: A CAG constructed via variable influence in the GrFN object.
-
+            CAGContainer: a CAG container definition
         """
-        A = nx.nx_agraph.to_agraph(self)
-        A.graph_attr.update(
-            {
-                "dpi": 227,
-                "fontsize": 20,
-                "fontcolor": "black",
-                "fontname": "Menlo",
-                "rankdir": "TB",
-            }
-        )
-        A.node_attr.update(
-            shape="rectangle",
-            color="#650021",
-            fontname="Menlo",
-            fontcolor="black",
-        )
-        for node in A.iternodes():
-            node.attr["fontcolor"] = "black"
-            node.attr["style"] = "rounded"
-        A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
-
-        def get_subgraph_nodes(subgraph: GrFNSubgraph):
-            return subgraph.nodes + [
-                node
-                for child_graph in self.subgraphs.successors(subgraph)
-                for node in get_subgraph_nodes(child_graph)
-            ]
-
-        def populate_subgraph(subgraph: GrFNSubgraph, parent: AGraph):
-            all_sub_nodes = get_subgraph_nodes(subgraph)
-            container_subgraph = parent.add_subgraph(
-                all_sub_nodes,
-                name=f"cluster_{str(subgraph)}",
-                label=subgraph.basename,
-                style="bold, rounded",
-                rankdir="TB",
-                color=subgraph.border_color,
+        con_id = CAGContainerIdentifier.from_function_id(func.identifier)
+        if parent is not None:
+            parent_id = CAGContainerIdentifier.from_function_id(
+                parent.identifier
             )
+        else:
+            parent_id = None
 
-            for new_subgraph in self.subgraphs.successors(subgraph):
-                populate_subgraph(new_subgraph, container_subgraph)
+        # FIXME: @Tito the variables captured during container creation here may have a superset of all the variables you actually want to have appear in the CAG
+        variables = list()
+        for edge in func.hyper_edges:
+            variables.extend([v.identifier for v in edge.inputs])
+            variables.extend([v.identifier for v in edge.outputs])
 
-        root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
-        populate_subgraph(root_subgraph, A)
-        return A
-
-    def to_igraph_gml(self, filepath: str) -> NoReturn:
-        filename = os.path.join(
-            filepath,
-            f"{self.namespace}__{self.scope}__{self.name}--igraph.gml",
+        return cls(
+            uid=str(uuid.uuid4()),
+            identifier=con_id,
+            type=str(func.type),
+            parent=parent_id,
+            nodes=list(set(variables)),
+            metadata=func.metadata,
         )
 
-        V = [str(v) for v in super().nodes]
-        E = [(str(e1), str(e2)) for e1, e2 in super().edges]
-        iG = nx.DiGraph()
-        iG.add_nodes_from(V)
-        iG.add_edges_from(E)
-        nx.write_gml(iG, filename)
+    @classmethod
+    def from_dict(cls, data: dict) -> CAGContainer:
+        """Reloads a CAGContainer from a dictionary that has been loaded from a JSON file
+
+        Args:
+            data (dict): the data dict from the saved CAG JSON
+
+        Returns:
+            CAGContainer: A CAGContainer with all the data from the data dict arg
+        """
+        return NotImplemented
+
+    def to_dict(self) -> dict:
+        """Returns this class data as a JSON serializable dictionary
+
+        Returns:
+            dict: a dictionary of serializable values
+        """
+        return {
+            "uid": self.uid,
+            "identifier": str(self.identifier),
+            "type": self.type,
+            "parent": str(self.parent),
+            "nodes": [str(var_id) for var_id in self.nodes],
+            "metadata": [m.to_dict() for m in self.metadata],
+        }
+
+
+@dataclass
+class CausalAnalysisGraph:
+    """
+    A causal representation of a GrFN or GroMEt. This graph shows the following:
+        (0) the variables present in a GrFN or GroMEt
+        (1) the interactions between variables (in the form of edges)
+        (2) the containers from the original GrFN/GroMEt
+        (3) which variables were included in which container
+        (4) which containers are children of other containers
+
+    The class here captures all of that using lists of variables, edges, and containers. Along with that we capture identifier information, the date of creation, and any metadata that existed at the GrFN/GroMEt level in the appropriate location either at the level of the CAG, CAGContainer, or VariableNode.
+
+    NOTE: We still have both identifiers and uids, but we now have a schema that *should* ensure that identifiers are unique and sufficient. Eventually we should switch to only using identifiers (since they are more human readable) but since we haven't tested uniqueness yet we are leaving uids in for now just in case we need them.
+    """
+
+    uid: str
+    identifier: CAGIdentifier
+    date_created: str
+    nodes: List[VariableNode]
+    edges: List[Tuple[VariableIdentifier, VariableIdentifier]]
+    containers: List[CAGContainer]
+    metadata: List[TypedMetadata]
+
+    @classmethod
+    def from_GrFN(cls, G: GroundedFunctionNetwork):
+        """Builds a CausalAnalysisGraph (CAG) from a GrFN using GrFN 3.0
+
+        Args:
+            G (GroundedFunctionNetwork): A GrFN 3.0 object
+
+        Returns:
+            A CausalAnalysisGraph object
+        """
+
+        def containers_from_hyper_edges(
+            func: BaseConFuncNode, parent: BaseConFuncNode = None
+        ) -> List[CAGContainer]:
+            """Returns a list of CAGContainers created from the hyper edges of this function node and all child function nodes that hold container functions
+
+            Args:
+                func (BaseConFuncNode): A container function node from GrFN
+
+            Returns:
+                A list of CAGContainers translated from the hyper edges
+            """
+            res = [CAGContainer.from_func_node(func, parent)]
+            for edge in func.hyper_edges:
+                child_func = edge.func_node
+                if isinstance(child_func, BaseConFuncNode):
+                    new_cons = containers_from_hyper_edges(child_func, func)
+                    res.extend(new_cons)
+
+            return res
+
+        cons = containers_from_hyper_edges(G.functions[G.entry_point])
+
+        # TODO: @Tito implement this
+        return cls(
+            uid=str(uuid.uuid4()),
+            identifier=CAGIdentifier.from_GrFN_id(G.identifier),
+            date_created=str(datetime.now()),
+            nodes=[],
+            edges=[],
+            containers=cons,
+            metadata=G.metadata,
+        )
+
+    @classmethod
+    def from_json_file(cls, json_filepath: str) -> CausalAnalysisGraph:
+        """Reload a CAG from a JSON file.
+
+        Args:
+            json_filepath (str): filepath to the CAG JSON file
+
+        Returns:
+            CausalAnalysisGraph: A CAG with all data from the JSON file
+        """
+        # TODO: @Tito implement this
+        data = json.load(open(json_filepath, "r"))
+        return NotImplemented
+
+    def to_dict(self) -> dict:
+        """Generates a dictionary of JSON serializable data that represents this CAG object.
+
+        Returns:
+            dict: A dictionary that can be serialized to JSON
+        """
+        return {
+            "uid": self.uid,
+            "identifier": str(self.identifier),
+            "daet_created": self.date_created,
+            "nodes": [var.to_dict() for var in self.nodes],
+            "edges": [
+                (str(src.identifier), str(dst.identifier))
+                for src, dst in self.edges
+            ],
+            "containers": [con.to_dict() for con in self.containers],
+            "metadata": [m.to_dict() for m in self.metadata],
+        }
 
     def to_json(self) -> str:
-        """Outputs the contents of this GrFN to a JSON object string.
+        """Generates a JSON serialized string for this CAG object
 
-        :return: Description of returned object.
-        :rtype: type
-        :raises ExceptionName: Why the exception is raised.
+        Returns:
+            str: A JSON string with all of the data of this CAG object
         """
-        data = {
-            "uid": self.uid,
-            "identifier": "::".join(
-                ["@container", self.namespace, self.scope, self.name]
-            ),
-            "timestamp": self.timestamp,
-            "variables": [var.to_dict() for var in self.nodes],
-            "edges": [(src.uid, dst.uid) for src, dst in self.edges],
-            "subgraphs": [sgraphs.to_dict() for sgraphs in self.subgraphs],
-        }
-        return json.dumps(data)
+        return json.dumps(self.to_dict())
 
     def to_json_file(self, json_path) -> None:
         with open(json_path, "w") as outfile:
             outfile.write(self.to_json())
+
+
+# =============================================================================
+
+
+# class CausalAnalysisGraph(nx.DiGraph):
+#     def __init__(self, G, S, uid, date, ns, sc, nm):
+#         super().__init__(G)
+#         self.subgraphs = S
+#         self.uid = uid
+#         self.timestamp = date
+#         self.namespace = ns
+#         self.scope = sc
+#         self.name = nm
+
+#     @classmethod
+#     def from_GrFN(cls, GrFN: GroundedFunctionNetwork):
+#         """Export to a Causal Analysis Graph (CAG) object.
+#         The CAG shows the influence relationships between the variables and
+#         elides the function nodes."""
+
+#         G = nx.DiGraph()
+#         for var_node in GrFN.variables:
+#             G.add_node(var_node, **var_node.get_kwargs())
+#         for edge in GrFN.hyper_edges:
+#             if edge.lambda_fn.func_type == LambdaType.INTERFACE:
+#                 G.add_edges_from(list(zip(edge.inputs, edge.outputs)))
+#             else:
+#                 G.add_edges_from(list(product(edge.inputs, edge.outputs)))
+
+#         def delete_paths_at_level(nodes: list):
+#             orig_nodes = deepcopy(nodes)
+
+#             while len(nodes) > 0:
+#                 updated_nodes = list()
+#                 for node in nodes:
+#                     node_var_name = node.identifier.var_name
+#                     succs = list(G.successors(node))
+#                     for next_node in succs:
+#                         if (
+#                             next_node.identifier.var_name == node_var_name
+#                             and len(list(G.predecessors(next_node))) == 1
+#                         ):
+#                             next_succs = list(G.successors(next_node))
+#                             G.remove_node(next_node)
+#                             updated_nodes.append(node)
+#                             for succ_node in next_succs:
+#                                 G.add_edge(node, succ_node)
+#                 nodes = updated_nodes
+
+#             next_level_nodes = list()
+#             for node in orig_nodes:
+#                 next_level_nodes.extend(list(G.successors(node)))
+#             next_level_nodes = list(set(next_level_nodes))
+
+#             if len(next_level_nodes) > 0:
+#                 delete_paths_at_level(next_level_nodes)
+
+#         def correct_subgraph_nodes(subgraph: GrFNSubgraph):
+#             cag_subgraph_nodes = list(
+#                 set(G.nodes).intersection(set(subgraph.nodes))
+#             )
+#             subgraph.nodes = cag_subgraph_nodes
+
+#             for new_subgraph in GrFN.subgraphs.successors(subgraph):
+#                 correct_subgraph_nodes(new_subgraph)
+
+#         input_nodes = [n for n in G.nodes if G.in_degree(n) == 0]
+#         delete_paths_at_level(input_nodes)
+#         root_subgraph = [n for n, d in GrFN.subgraphs.in_degree() if d == 0][0]
+#         correct_subgraph_nodes(root_subgraph)
+#         return cls(
+#             G,
+#             GrFN.subgraphs,
+#             GrFN.uid,
+#             GrFN.timestamp,
+#             GrFN.namespace,
+#             GrFN.scope,
+#             GrFN.name,
+#         )
+
+#     def to_AGraph(self):
+#         """Returns a variable-only view of the GrFN in the form of an AGraph.
+
+#         Returns:
+#             type: A CAG constructed via variable influence in the GrFN object.
+
+#         """
+#         A = nx.nx_agraph.to_agraph(self)
+#         A.graph_attr.update(
+#             {
+#                 "dpi": 227,
+#                 "fontsize": 20,
+#                 "fontcolor": "black",
+#                 "fontname": "Menlo",
+#                 "rankdir": "TB",
+#             }
+#         )
+#         A.node_attr.update(
+#             shape="rectangle",
+#             color="#650021",
+#             fontname="Menlo",
+#             fontcolor="black",
+#         )
+#         for node in A.iternodes():
+#             node.attr["fontcolor"] = "black"
+#             node.attr["style"] = "rounded"
+#         A.edge_attr.update({"color": "#650021", "arrowsize": 0.5})
+
+#         def get_subgraph_nodes(subgraph: GrFNSubgraph):
+#             return subgraph.nodes + [
+#                 node
+#                 for child_graph in self.subgraphs.successors(subgraph)
+#                 for node in get_subgraph_nodes(child_graph)
+#             ]
+
+#         def populate_subgraph(subgraph: GrFNSubgraph, parent: AGraph):
+#             all_sub_nodes = get_subgraph_nodes(subgraph)
+#             container_subgraph = parent.add_subgraph(
+#                 all_sub_nodes,
+#                 name=f"cluster_{str(subgraph)}",
+#                 label=subgraph.basename,
+#                 style="bold, rounded",
+#                 rankdir="TB",
+#                 color=subgraph.border_color,
+#             )
+
+#             for new_subgraph in self.subgraphs.successors(subgraph):
+#                 populate_subgraph(new_subgraph, container_subgraph)
+
+#         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
+#         populate_subgraph(root_subgraph, A)
+#         return A
+
+#     def to_igraph_gml(self, filepath: str) -> NoReturn:
+#         filename = os.path.join(
+#             filepath,
+#             f"{self.namespace}__{self.scope}__{self.name}--igraph.gml",
+#         )
+
+#         V = [str(v) for v in super().nodes]
+#         E = [(str(e1), str(e2)) for e1, e2 in super().edges]
+#         iG = nx.DiGraph()
+#         iG.add_nodes_from(V)
+#         iG.add_edges_from(E)
+#         nx.write_gml(iG, filename)
+
+#     def to_json(self) -> str:
+#         """Outputs the contents of this GrFN to a JSON object string.
+
+#         :return: Description of returned object.
+#         :rtype: type
+#         :raises ExceptionName: Why the exception is raised.
+#         """
+#         data = {
+#             "uid": self.uid,
+#             "identifier": "::".join(
+#                 ["@container", self.namespace, self.scope, self.name]
+#             ),
+#             "timestamp": self.timestamp,
+#             "variables": [var.to_dict() for var in self.nodes],
+#             "edges": [(src.uid, dst.uid) for src, dst in self.edges],
+#             "subgraphs": [sgraphs.to_dict() for sgraphs in self.subgraphs],
+#         }
+#         return json.dumps(data)
+
+#     def to_json_file(self, json_path) -> None:
+#         with open(json_path, "w") as outfile:
+#             outfile.write(self.to_json())

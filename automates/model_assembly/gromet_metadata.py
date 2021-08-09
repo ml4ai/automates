@@ -8,6 +8,7 @@ import pytz
 """
 Metadatum types:
 (*) <Any>.CodeSpanReference
+(*) <Gromet>.ModelDescription  # provides textual description and name of the model
 (*) <Gromet>.ModelInterface  # designates variables, parameters, initial_conditions
 (*) <Gromet>.TextualDocumentReferenceSet
 (*) <Gromet>.CodeCollectionReference
@@ -26,12 +27,12 @@ INDRA Metadatum types:
 # =============================================================================
 
 # The following also get defined in gromet.py, which imports this file...
-UidVariable = NewType("UidVariable", str)
-UidJunction = NewType("UidJunction", str)
+UidVariable = NewType('UidVariable', str)
+UidJunction = NewType('UidJunction', str)
 
-UidMetadatum = NewType("UidMetadatum", str)
-UidDocumentReference = NewType("UidDocumentReference", str)
-UidCodeFileReference = NewType("UidCodeFileReference", str)
+UidMetadatum = NewType('UidMetadatum', str)
+UidDocumentReference = NewType('UidDocumentReference', str)
+UidCodeFileReference = NewType('UidCodeFileReference', str)
 
 # ISO 8601 Extended format: YYYY-MM-DDTHH:mm:ss:ffffff_ZZZ±zzzz
 # where
@@ -48,13 +49,13 @@ UidCodeFileReference = NewType("UidCodeFileReference", str)
 # _    : Time zone delimiter
 # ZZZ  : Three-letter timezone
 # zzzz : 4 number UTC timezone offset
-Datetime = NewType("Datetime", str)
+Datetime = NewType('Datetime', str)
 
-TZ_PDT = pytz.timezone("US/Pacific")
-TZ_MST = pytz.timezone("US/Arizona")
-TZ_MDT = pytz.timezone("US/Mountain")
-TZ_CDT = pytz.timezone("US/Central")
-TZ_EDT = pytz.timezone("US/Eastern")
+TZ_PDT = pytz.timezone('US/Pacific')
+TZ_MST = pytz.timezone('US/Arizona')
+TZ_MDT = pytz.timezone('US/Mountain')
+TZ_CDT = pytz.timezone('US/Central')
+TZ_EDT = pytz.timezone('US/Eastern')
 # for tz in pytz.common_timezones:
 #     print(tz)
 
@@ -64,11 +65,10 @@ TZ_EDT = pytz.timezone("US/Eastern")
 # There will generally be a set of 1 or more methods that may generate
 # each Metadatum type
 # For example: AutoMATES program analysis creates code_span metadata.
-MetadatumMethod = NewType("MetadatumMethod", str)
+MetadatumMethod = NewType('MetadatumMethod', str)
 
 
 # -----------------------------------------------------------------------------
-
 
 def get_current_datetime(tz=TZ_MST) -> Datetime:
     """
@@ -87,7 +87,6 @@ def get_current_datetime(tz=TZ_MST) -> Datetime:
 # Metadatum
 # =============================================================================
 
-
 @dataclass
 class MetadatumElm(ABC):
     """
@@ -95,7 +94,6 @@ class MetadatumElm(ABC):
     Implements __post_init__ that saves syntactic type (syntax)
         as GroMEt element class name.
     """
-
     metadata_type: str = field(init=False)
 
     def __post_init__(self):
@@ -107,7 +105,6 @@ class Provenance(MetadatumElm):
     """
     Provenance of metadata
     """
-
     method: MetadatumMethod
     timestamp: Datetime
 
@@ -117,7 +114,6 @@ class Metadatum(MetadatumElm, ABC):
     """
     Metadatum base.
     """
-
     uid: UidMetadatum
     provenance: Provenance
 
@@ -126,19 +122,42 @@ class Metadatum(MetadatumElm, ABC):
 #       Will be based on: https://ml4ai.github.io/automates-v2/grfn_metadata.html
 
 
-Metadata = NewType("Metadata", Union[List[Metadatum], None])
+Metadata = NewType('Metadata', Union[List[Metadatum], None])
 
-MetadatumAny = NewType("MetadatumAny", Metadatum)
-MetadatumGromet = NewType("MetadatumGromet", Metadatum)
-MetadatumBox = NewType("MetadatumBox", Metadatum)
-MetadatumVariable = NewType("MetadatumVariable", Metadatum)
-MetadatumJunction = NewType("MetadatumJunction", Metadatum)
+
+# MetadatumAny = NewType('MetadatumAny', Metadatum)
+@dataclass
+class MetadatumAny(Metadatum):
+    pass
+
+
+# MetadatumGromet = NewType('MetadatumGromet', Metadatum)
+@dataclass
+class MetadatumGromet(Metadatum):
+    pass
+
+
+# MetadatumBox = NewType('MetadatumBox', Metadatum)
+@dataclass
+class MetadatumBox(Metadatum):
+    pass
+
+
+# MetadatumVariable = NewType('MetadatumVariable', Metadatum)
+@dataclass
+class MetadatumVariable(Metadatum):
+    pass
+
+
+# MetadatumJunction = NewType('MetadatumJunction', Metadatum)
+@dataclass
+class MetadatumJunction(Metadatum):
+    pass
 
 
 # =============================================================================
 # Metadata components
 # =============================================================================
-
 
 @dataclass
 class TextSpan:
@@ -159,7 +178,6 @@ class TextExtraction:
       'block' is found on a 'page'
       'char_begin' and 'char_end' are relative to the 'block'.
     """
-
     document_reference_uid: UidDocumentReference
     text_spans: List[TextSpan]
 
@@ -172,11 +190,10 @@ class EquationExtraction:
     'equation_number' is 0-indexed, relative order of equation
       as identified in the document.
     """
-
     document_reference_uid: UidDocumentReference
     equation_number: int
     equation_source_latex: str  # latex
-    equation_source_mml: str  # MathML
+    equation_source_mml: str    # MathML
 
 
 @dataclass
@@ -185,7 +202,6 @@ class CodeFileReference:
     'name': filename
     'path': Assume starting from root of code collection
     """
-
     uid: UidCodeFileReference
     name: str
     path: str
@@ -200,7 +216,6 @@ class CodeFileReference:
 # CodeSpanReference
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class CodeSpanReference(MetadatumAny):
     """
@@ -210,13 +225,12 @@ class CodeSpanReference(MetadatumAny):
     code span coordinates are relative to the source file
         (denoted by the file_id)
     """
-
     code_type: str  # 'IDENTIFIER', 'CODE_BLOCK'
     file_id: UidCodeFileReference
     line_begin: int
-    line_end: Union[int, None]  # None if one one line
+    line_end: Union[int, None]   # None if one one line
     col_begin: Union[int, None]  # None if multi-line
-    col_end: Union[int, None]  # None if single char or multi-line
+    col_end: Union[int, None]    # None if single char or multi-line
 
 
 # =============================================================================
@@ -227,6 +241,16 @@ class CodeSpanReference(MetadatumAny):
 # -----------------------------------------------------------------------------
 # ModelInterface
 # -----------------------------------------------------------------------------
+
+@dataclass
+class ModelDescription(MetadatumGromet):
+    """
+    host: <Gromet>
+    Provides summary textual description of the model
+        along with a human-readable name.
+    """
+    name: str
+    description: str
 
 
 @dataclass
@@ -248,7 +272,6 @@ class ModelInterface(MetadatumGromet):
             throughout irrespective of original model variable
             value update structure).
     """
-
     variables: List[Union[UidVariable, UidJunction]]
     parameters: List[Union[UidVariable, UidJunction]]
     initial_conditions: List[Union[UidVariable, UidJunction]]
@@ -292,7 +315,6 @@ class Bibjson:
     Placeholder for bibjson JSON object; format described in:
         http://okfnlabs.org/bibjson/
     """
-
     title: Union[str, None]
     author: List[BibjsonAuthor]
     type: Union[str, None]
@@ -311,7 +333,6 @@ class TextualDocumentReference:
     'automates_id': ID of AutoMATES component used to process document.
     'automates_version_number': Version number of AutoMATES component.
     """
-
     uid: UidDocumentReference
     global_reference_id: GlobalReferenceId
     cosmos_id: Union[str, None]
@@ -328,7 +349,6 @@ class TextualDocumentReferenceSet(MetadatumGromet):
     A collection of references to textual documents
     (e.g., software documentation, scientific publications, etc.).
     """
-
     documents: List[TextualDocumentReference]
 
 
@@ -336,14 +356,12 @@ class TextualDocumentReferenceSet(MetadatumGromet):
 # CodeCollectionReference
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class CodeCollectionReference(MetadatumGromet):
     """
     host: <Gromet>
     Reference to a code collection (i.e., repository)
     """
-
     global_reference_id: GlobalReferenceId
     file_ids: List[CodeFileReference]
 
@@ -357,7 +375,6 @@ class CodeCollectionReference(MetadatumGromet):
 # EquationDefinition
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class EquationDefinition(MetadatumBox):
     """
@@ -365,7 +382,6 @@ class EquationDefinition(MetadatumBox):
     Association of an equation extraction with a Box
         (e.g., Function, Expression, Relation).
     """
-
     equation_extraction: EquationExtraction
 
 
@@ -378,7 +394,6 @@ class EquationDefinition(MetadatumBox):
 # TextDescription
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class TextDescription(MetadatumVariable):
     """
@@ -388,7 +403,6 @@ class TextDescription(MetadatumVariable):
     'variable_definition': text definition of the variable.
     'description_type': type of description, e.g., definition
     """
-
     text_extraction: TextExtraction
     variable_identifier: str
     variable_description: str
@@ -399,14 +413,12 @@ class TextDescription(MetadatumVariable):
 # TextParameter
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class TextParameter(MetadatumVariable):
     """
     host: <Variable>
     Association of parameter values extracted from text.
     """
-
     text_extraction: TextExtraction
     variable_identifier: str
     value: str  # eventually Literal?
@@ -416,14 +428,12 @@ class TextParameter(MetadatumVariable):
 # TextParameter
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class TextUnit(MetadatumVariable):
     """
     host: <Variable>
     Association of variable unit type extracted from text.
     """
-
     text_extraction: TextExtraction
     unit: str
 
@@ -432,14 +442,12 @@ class TextUnit(MetadatumVariable):
 # EquationParameter
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class EquationParameter(MetadatumVariable):
     """
     host: <Variable>
     Association of parameter value extracted from equation.
     """
-
     equation_extraction: EquationExtraction
     value: str  # eventually Literal?
 
@@ -453,19 +461,17 @@ class EquationParameter(MetadatumVariable):
 # INDRA Metadatums
 # -----------------------------------------------------------------------------
 
-
 @dataclass
 class ReactionReference(MetadatumJunction):
     """
     host: <Junction> : PNC Rate
     """
-
     indra_stmt_hash: str
     reaction_rule: str
     is_reverse: bool
 
 
-IndraAgent = NewType("IndraAgent", dict)
+IndraAgent = NewType('IndraAgent', dict)
 
 
 @dataclass
@@ -473,7 +479,6 @@ class IndraAgentReferenceSet(MetadatumJunction):
     """
     host: <Junction> : PNC State
     """
-
     indra_agent_references: List[IndraAgent]
 
 
@@ -509,5 +514,4 @@ Changes 2021-07-10:
 () Changed EquationParameter
     dropped “variable_id” -- not needed (as it is associated in the metadata of the variable
 Changes 2021-06-10:
-() Started migration of GrFN metadata types to GroMEt metadatum types.
-"""
+() Started migration of GrFN metadata types to
