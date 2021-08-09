@@ -8,7 +8,10 @@ from automates.apps.automates.extract_driver import (
     extract_expr_trees_from_grfn_json,
     extract_model_dynamics_from_grfn_json,
 )
-from automates.apps.automates.execute_driver import execute_grfn_json
+from automates.apps.automates.execute_driver import (
+    execute_grfn_json,
+    execute_gromet_experiment_json,
+)
 
 # Create app and blueprint objects
 app = Flask(__name__)
@@ -111,6 +114,18 @@ def execute_grfn():
 
     execution_results = execute_grfn_json(grfn_json, input_json, outputs_json)
     return jsonify(execution_results)
+
+
+@bp_api_v1.route("/execute/gromet_experiment", methods=["POST"])
+def execute_gromet_experiment():
+    """
+
+    Returns:
+        [type]: [description]
+    """
+    experiment_json = request.json
+    experiment_results = execute_gromet_experiment_json(experiment_json)
+    return jsonify(experiment_results)
 
 
 # Register API blueprints
