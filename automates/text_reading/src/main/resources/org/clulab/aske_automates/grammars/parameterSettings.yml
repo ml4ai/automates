@@ -36,8 +36,8 @@ rules:
     action: ${paramSetAction}
     pattern: |
       trigger = [lemma='equal']
-      variable:Identifier = nsubj
-      value:Value = nmod_to nummod
+      variable:Phrase = nsubj
+      value:Value = /nmod_to|dobj/ nummod
 
   - name: var-equals_value2
     label: ParameterSetting

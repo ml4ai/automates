@@ -45,12 +45,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
       // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
-      keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedParamSettings ++ nonExpandable
+      resolveCoref(keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedParamSettings ++ nonExpandable)
 //      allDescrs ++ other
 
     } else {
       mentions
     }
+
   }
 
   def findOverlappingInterval(tokenInt: Interval, intervals: Seq[Interval]): Option[Interval] = {
@@ -268,6 +269,94 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     newMentions
   }
 
+  def returnFirstNPInterval(mention: Mention): Option[Interval] = {
+    val nPChunks = new ArrayBuffer[Int]()
+    for ((chunk, idx) <- mention.sentenceObj.chunks.get.zipWithIndex) {
+      println("ch, id: " + chunk + " " + idx + " " + mention.sentenceObj.words(idx))
+
+      if (chunk.contains("NP")) {
+//        println("append: " + idx + " " + chunk)
+        nPChunks.append(idx)
+      }
+
+
+    }
+    if (nPChunks.nonEmpty) {
+      val contSpan = findContinuousSpan(nPChunks)
+      println("cont span: " + contSpan.mkString(" "))
+      Some(Interval(contSpan.head, contSpan.last + 1))
+    }  else None
+  }
+
+  def findContinuousSpan(indices: Seq[Int]): Seq[Int] = {
+    val toReturn = new ArrayBuffer[Int]()
+    println("indices: " + indices.mkString(" || "))
+    for ((item, idx) <- indices.zipWithIndex) {
+      println("item, idx: " + item + " " + idx)
+//      if (idx == 0) {
+//        toReturn.append(item)
+//        println("appending first idx: " + item + " " + idx)
+//      } else {
+        val plus1 = idx + 1
+        val diff = indices(idx + 1) - item
+        println("plus1 " + idx + " " + plus1 + " diff: " + diff)
+        if (indices(idx + 1) - item == 1) {
+          println("appending")
+          toReturn.append(item)
+          if (idx == indices.length -1) {
+            return toReturn
+          }
+        } else {
+          toReturn.append(item)
+          return toReturn
+        }
+
+    }
+    toReturn
+  }
+
+  def replaceIt(mention: Mention): Mention = {
+    val firstBNPInterval = returnFirstNPInterval(mention)
+    println("fbnp: " + firstBNPInterval)
+    if (firstBNPInterval.isDefined) {
+//      val labels: Seq[String],
+//      val tokenInterval: Interval,
+//      val sentence: Int,
+//      val document: Document,
+//      val keep: Boolean,
+//      val foundBy: String,
+//      val attachments: Set[Attachment] = Set.empty
+      val newVarArg = new TextBoundMention(
+        mention.labels,
+        firstBNPInterval.get,
+  mention.sentence,
+  mention.document,
+  mention.keep,
+  "resolving_coref",
+  Set.empty
+
+      )
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      for (arg <- mention.arguments) {
+        if (arg._1 == "variable") {
+          newArgs += (arg._1 -> Seq(newVarArg))
+        } else {
+          newArgs += (arg._1 -> mention.arguments(arg._1))
+        }
+      }
+      copyWithArgs(mention, newArgs.toMap)
+    } else mention
+  }
+
+  // assume the first NP in a sentence is what `it` resolves to; todo: check with D. Bell's paper to see if that makes sense and add citation here
+  def resolveCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    for (m <- mentions) println("=>" + m.label + " " + m.text)
+    val (withIt, woIt) = mentions.partition(m => m.arguments.contains("variable") && m.arguments("variable").head.text == "it")
+    for (i <- withIt) println("->" + i.text + " " + i.label)
+    val resolved: Seq[Mention] = withIt.map(m => replaceIt(m))
+    resolved ++ woIt
+
+  }
 
   def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()

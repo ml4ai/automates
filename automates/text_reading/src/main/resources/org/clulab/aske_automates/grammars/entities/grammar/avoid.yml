@@ -78,7 +78,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [entity="DATE"]
+     (?=[tag = /IN/]) [entity="DATE"]
 
   - name: "ie"
     label: Avoid

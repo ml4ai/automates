@@ -45,10 +45,10 @@ class TestParameterSetting  extends ExtractionTest {
     "prior calibration efforts."
   failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "SKc" -> Seq("0.4", "0.9") // todo: need a more fine-grained test with modifiers, e.g., SKc -> 0.5, maize; potential trigger - "level"
+      "SKc" -> Seq("0.5", "0.6") // todo: need a more fine-grained test with modifiers, e.g., SKc -> 0.5, maize; potential trigger - "level"
     )
 
-    //fixme: change the test --- part should be in param setting interval + need a better rule to capture 0.5 and 0.6
+    //fixme: need a better rule to capture 0.5 and 0.6
     val mentions = extractMentions(t3a)
     testParameterSettingEvent(mentions, desired)
   }
@@ -197,7 +197,7 @@ class TestParameterSetting  extends ExtractionTest {
   val t4b = " The inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
   failingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "The inverse ratio of λ ρw times energy flux" -> Seq("1.0")
+      "inverse ratio of λ ρw times energy flux in MJ m-2 d-1" -> Seq("1.0") // the phrase has extended a little farther than ideal (including the unit), but good for our purposes
     )
     val mentions = extractMentions(t4b)
     testParameterSettingEvent(mentions, desired)
@@ -206,7 +206,7 @@ class TestParameterSetting  extends ExtractionTest {
   val t1c = "We therefore assume that S(0) = 6.8 – 0.5 = 6.3 million."
   failingTest should s"extract the parameter setting(s) from t1c: ${t1c}" taggedAs(Somebody) in {
     val desired = Seq(
-      "S(0)" -> Seq("6.3") // fixme: is million a param setting or unit?
+      "S(0)" -> Seq("6.3 million")
     )
     val mentions = extractMentions(t1c)
     testParameterSettingEvent(mentions, desired)
@@ -243,11 +243,20 @@ class TestParameterSetting  extends ExtractionTest {
   }
 
   val u4a = "where sowing depth was known and it is set to 1.5 o Cd per mm ."
-  failingTest should s"extract the parameter setting(s) from u4a: ${u4a}" taggedAs(Somebody) in {
+  passingTest should s"extract the parameter setting(s) from u4a: ${u4a}" taggedAs(Somebody) in {
     val desired = Seq(
       "sowing depth" -> Seq("1.5")
     )
     val mentions = extractMentions(u4a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  val u4atoy = " where St is sowing depth  and it is set to 1.5 o Cd per mm ."
+  failingTest should s"extract the parameter setting(s) from u4atoy: ${u4atoy}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "St" -> Seq("1.5")
+    )
+    val mentions = extractMentions(u4atoy)
     testParameterSettingEvent(mentions, desired)
   }
 
