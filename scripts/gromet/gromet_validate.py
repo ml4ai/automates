@@ -541,7 +541,7 @@ def validate(gromet):
                 '''
                 if p_id not in loop_wires_tgts:
                     # (3b) Every PortOutput PortCall must have an incoming Wire
-                    print(f"Error [Loop 3c]: PortInput '{p_id}' of Loop '{l_id}'"
+                    print(f"Error [Loop 3b]: PortInput '{p_id}' of Loop '{l_id}'"
                           f" is not the tgt of at least one incoming Wire.")
                 '''
 
