@@ -95,7 +95,7 @@ def generate_gromet() -> Gromet:
                  metadata=None),
 
         Variable(uid=UidVariable('V:loop_1.out.k'),
-                 name='k_out',
+                 name='k',
                  type=UidType('Integer'),
                  proxy_state=UidPort('P:loop_1.out.k'),
                  states=[UidPort('P:loop_1.out.k'),
