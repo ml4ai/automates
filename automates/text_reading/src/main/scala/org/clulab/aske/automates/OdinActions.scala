@@ -329,7 +329,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     } else mention
   }
 
-  // assume the first NP in a sentence is what `it` resolves to; todo: check with D. Bell's paper to see if that makes sense and add citation here
+  // assume the first NP in a sentence is what `it` resolves to;
+  // see "An Investigation of Coreference Phenomena in the Biomedical Domain", Bell et al (2016): "a generally trustworthy heuristic that the earliest named entity in the sentence is likely to be the antecedent of a pronoun if they match grammatically (Hobbs, 1978)." The risk of first NP in our papers of interest not matching grammarically is, probably, low enough to just take the first NP for now
   def resolveCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (withIt, woIt) = mentions.partition(m => m.arguments.contains("variable") && m.arguments("variable").head.text == "it")
     val resolved: Seq[Mention] = withIt.map(m => replaceIt(m))
