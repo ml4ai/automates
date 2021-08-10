@@ -536,10 +536,15 @@ def validate(gromet):
                     # (3a) All Loop PortOutputs must be PortCalls
                     print(f"Error [Loop 3a]: PortOutput '{p_id}' of Loop '{l_id}'"
                           f" is type '{port['syntax']}' but must be a PortCall")
+
+                # CTM 2021-08-10 : Not requiring all loop PortOutput PortCalls to have incoming Wires
+                '''
                 if p_id not in loop_wires_tgts:
                     # (3b) Every PortOutput PortCall must have an incoming Wire
                     print(f"Error [Loop 3c]: PortInput '{p_id}' of Loop '{l_id}'"
                           f" is not the tgt of at least one incoming Wire.")
+                '''
+
             else:
                 # (3c) All Loop ports must be PortInput or PortOutput
                 print(f"ERROR [Loop 3c]: {port['syntax']} '{p_id}'"
@@ -963,8 +968,10 @@ def collect_expr_literals(expr) -> list:
 DEFAULT_ROOT = 'examples'
 # DEFAULT_PATH = 'examples/call_ex1_gromet_FunctionNetwork.json'
 # DEFAULT_PATH = 'examples/SimpleSIR_metadata_gromet_FunctionNetwork.json'
-DEFAULT_PATH = 'examples/cond_ex1_gromet_FunctionNetwork.json'
-FORCE_BATCH = True  # True
+# DEFAULT_PATH = 'examples/cond_ex1_gromet_FunctionNetwork.json'
+# DEFAULT_PATH = 'loop_ex1_gromet_FunctionNetwork.json'
+DEFAULT_PATH = 'loop_ex2_gromet_FunctionNetwork.json'
+FORCE_BATCH = False  # True
 
 
 def main():
