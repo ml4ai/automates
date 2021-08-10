@@ -82,11 +82,15 @@ class VariableIdentifier(GenericIdentifier):
 
     @classmethod
     def from_str(cls, var_id: str):
-        elements = var_id.split("::")
-        if len(elements) == 4:
-            (ns, sc, vn, ix) = elements
+        split = var_id.split("::")
+        # We introduced a change where we now append "::<uid>" onto variable
+        # ids to create unique variable nodes for multiple calls to the same
+        # function. We should probably only have the else case, but to be safe
+        # for now, keep both around.
+        if len(split) == 4:
+            (ns, sc, vn, ix) = split
         else:
-            (_, ns, sc, vn, ix) = elements
+            (_, ns, sc, vn, ix) = split
         return cls(ns, sc, vn, int(ix))
 
     def __str__(self):
@@ -152,7 +156,13 @@ class VariableDefinition(GenericDefinition):
             "file_uid": file_ref,
             "code_type": "identifier",
         }
-        metadata = [CodeSpanReference.from_air_data(code_span_data)]
+        code_span_metadata = [CodeSpanReference.from_air_data(code_span_data)]
+        metadata = (
+            []
+            if "metadata" not in data
+            else [TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
+            + code_span_metadata
+        )
         return cls(
             var_id,
             type_str,
@@ -233,7 +243,7 @@ class TypeDefinition(GenericDefinition):
     def from_data(cls, data: dict) -> TypeDefinition:
         metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
         return cls(
-            "",
+            data["name"],
             "",
             data["name"],
             data["metatype"],
@@ -307,9 +317,7 @@ class GenericContainer(ABC):
     @abstractmethod
     def __str__(self):
         args_str = "\n".join([f"\t{arg}" for arg in self.arguments])
-        outputs_str = "\n".join(
-            [f"\t{var}" for var in self.returns + self.updated]
-        )
+        outputs_str = "\n".join([f"\t{var}" for var in self.returns + self.updated])
         return f"Inputs:\n{args_str}\nVariables:\n{outputs_str}"
 
     @staticmethod
@@ -383,23 +391,19 @@ class GenericStmt(ABC):
 
     @abstractmethod
     def __str__(self):
-        inputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.inputs]
-        )
-        outputs_str = ", ".join(
-            [f"{id.var_name} ({id.index})" for id in self.outputs]
-        )
+        inputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.inputs])
+        outputs_str = ", ".join([f"{id.var_name} ({id.index})" for id in self.outputs])
         return f"Inputs: {inputs_str}\nOutputs: {outputs_str}"
 
     @staticmethod
-    def create_statement(
-        stmt_data: dict, container: GenericContainer, file_ref: str
-    ):
+    def create_statement(stmt_data: dict, container: GenericContainer, file_ref: str):
         func_type = stmt_data["function"]["type"]
         if func_type == "lambda":
             return LambdaStmt(stmt_data, container, file_ref)
         elif func_type == "container":
             return CallStmt(stmt_data, container, file_ref)
+        elif func_type == "operator":
+            return OperatorStmt(stmt_data, container, file_ref)
         else:
             raise ValueError(f"Undefined statement type: {func_type}")
 
@@ -427,6 +431,19 @@ class CallStmt(GenericStmt):
     def __str__(self):
         generic_str = super().__str__()
         return f"<CallStmt>: {self.call_id}\n{generic_str}"
+
+
+class OperatorStmt(GenericStmt):
+    def __init__(self, stmt: dict, con: GenericContainer):
+        super().__init__(stmt, con)
+        self.call_id = GenericIdentifier.from_str(stmt["function"]["name"])
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        generic_str = super().__str__()
+        return f"<OperatorStmt>: {self.call_id}\n{generic_str}"
 
 
 class LambdaStmt(GenericStmt):

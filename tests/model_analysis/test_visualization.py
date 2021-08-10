@@ -11,9 +11,7 @@ from automates.model_analysis.visualization import SensitivityVisualizer
 def sensitivity_visualizer():
 
     N = [10, 100, 1000, 10000]
-    tG = GroundedFunctionNetwork.from_json(
-        "tests/data/model_analysis/PT_GrFN.json"
-    )
+    tG = GroundedFunctionNetwork.from_json("tests/data/model_analysis/PT_GrFN.json")
     var_bounds = {
         "PETPT::petpt::tmax::-1": [-30.0, 60.0],
         "PETPT::petpt::tmin::-1": [-30.0, 60.0],
@@ -28,7 +26,7 @@ def sensitivity_visualizer():
 
     for i in range(len(N)):
         (Si_list, timing_data) = SensitivityAnalyzer.Si_from_Sobol(
-            N[i], tG, var_bounds, save_time=True
+            N[i], tG, var_bounds, save_time=True, I={}
         )
         Si = Si_list[0]
         (sample_time, exec_time, analysis_time) = timing_data
@@ -38,17 +36,11 @@ def sensitivity_visualizer():
         for k in range(sobol_dict["O2_indices"].shape[0]):
             for l in range(k, sobol_dict["O2_indices"].shape[1]):
                 if k != l:
-                    sobol_dict["O2_indices"][l][k] = sobol_dict["O2_indices"][
-                        k
-                    ][l]
+                    sobol_dict["O2_indices"][l][k] = sobol_dict["O2_indices"][k][l]
 
-        sobol_dict["O2_indices"] = np.nan_to_num(
-            sobol_dict["O2_indices"]
-        ).tolist()
+        sobol_dict["O2_indices"] = np.nan_to_num(sobol_dict["O2_indices"]).tolist()
 
-        S2_dataframe = pd.DataFrame(
-            data=sobol_dict["O2_indices"], columns=var_names
-        )
+        S2_dataframe = pd.DataFrame(data=sobol_dict["O2_indices"], columns=var_names)
 
         sobol_dict_visualizer = {
             "sample size": np.log10(N[i]),

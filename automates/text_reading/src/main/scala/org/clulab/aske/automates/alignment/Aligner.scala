@@ -107,11 +107,13 @@ class VariableEditDistanceAligner(relevantArgs: Set[String] = Set("variable"))  
   * @param relevantArgs a Set of the string argument names that you want to include in the similarity (e.g., "variable" or "description")
   */
 class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) extends Aligner {
+
+  val stopWords = FileUtils.loadFromOneColumnTSV("src/main/resources/stopWords.tsv")
+
   def this(w2vPath: String, relevantArgs: Set[String]) = this(new Word2Vec(w2vPath), relevantArgs)
 
   def getBigrams(textStrings: Seq[String]): Seq[String] = {
     val bigrams = new ArrayBuffer[String]()
-    val stopWords = FileUtils.loadFromOneColumnTSV("src/main/resources/stopWords.tsv")
     val woStopWords = textStrings.filter(tok => !stopWords.contains(tok))
     for (i <- 0 to woStopWords.length - 2) {
       val bigram = woStopWords.slice(i, i+2).mkString(" ")
