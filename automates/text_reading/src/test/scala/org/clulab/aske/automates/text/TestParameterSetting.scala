@@ -4,22 +4,18 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestParameterSetting  extends ExtractionTest {
 
-//  passingTest should "set parameters 1" in {
-//    val text = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
-//      "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
-//
-//    val desired = Seq(
-//      "LAI" -> Seq("0")
-//    )
-//    val mentions = extractMentions(text)
-//    testParameterSettingEvent(mentions, desired)
-//  }
+  val text1 = "where Kcdmin is the minimum crop coefficient or Kcd at LAI = 0, Kcdmax is the maximum crop " +
+    "coefficient at high LAI, and SKc is a shaping parameter that determines the shape of the Kcd versus LAI curve."
+  passingTest should s"extract the parameter setting(s) from text 1: ${text1}" in {
+    val desired = Seq(
+      "LAI" -> Seq("0")
+    )
+    val mentions = extractMentions(text1)
+    testParameterSettingEvent(mentions, desired)
+  }
 
 
   // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
-
-  //todo: decide if we want to explicitly state in the name of the test what we are extracting
-  //can be done after we have confirmed that the tests look correct
 
   val t1a = "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
   passingTest should s"extract the parameter setting(s) from t1a: ${t1a}" taggedAs(Somebody) in {

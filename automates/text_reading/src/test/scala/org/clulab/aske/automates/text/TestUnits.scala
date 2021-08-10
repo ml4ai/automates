@@ -83,10 +83,42 @@ class TestUnits extends ExtractionTest {
     testUnitEvent(mentions, desired)
   }
 
+  // supermaas papers
+  val t9a = "Figure 2 : Performance of the fababean module ( observed versus simulated grain yield in g / m2 ) against test datasets reported by Turpin et al. ( 2003 ) ."
+  passingTest should s"extract variables and units from t9a: ${t9a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Performance of the fababean module" -> Seq("g / m2")
+    )
+    val mentions = extractMentions(t9a)
+    testUnitEvent(mentions, desired)
+  }
 
+  val t10a = "Figure 2 : Performance of the fababean module ( observed versus simulated grain yield in g / m2 ) against test datasets reported by Turpin et al. ( 2003 ) ."
+  passingTest should s"extract variables and units from t10a: ${t10a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Performance of the fababean module" -> Seq("g / m2")
+    )
+    val mentions = extractMentions(t10a)
+    testUnitEvent(mentions, desired)
+  }
+
+  val t11a = "Maximum specific leaf area ( sla_max ) defines the maximum leaf area ( m 2 ) that can be expanded per gram of biomass ."
+  passingTest should s"extract variables and units from t11a: ${t11a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Maximum specific leaf area" -> Seq("m 2") // ideally `sla_max` but works for our purposes since we can align to identifier through concept
+    )
+    val mentions = extractMentions(t11a)
+    testUnitEvent(mentions, desired)
+  }
+
+  val t12a = "The phase is comprised of an initial period of fixed thermal time during which shoot elongation is slow ( the \"lag\" phase) and a linear period , where the rate of shoot elongation towards the soil surface is linearly related to air temperature ( measured in o Cd mm -1 ) ."
+  failingTest should s"extract variables and units from t12a: ${t12a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "rate of shoot elongation towards the soil surface" -> Seq("o Cd mm -1") //todo: is this right?
+    )
+    val mentions = extractMentions(t12a)
+    testUnitEvent(mentions, desired)
+  }
 }
 
-//supermaas papers
-//todo: add test "The phase is comprised of an initial period of fixed thermal time during which shoot elongation is slow ( the \" lag \" phase ) and a linear period , where the rate of shoot elongation towards the soil surface is linearly related to air temperature ( measured in o Cd mm -1 ) ."
-// Figure 2 : Performance of the fababean module ( observed versus simulated grain yield in g / m2 ) against test datasets reported by Turpin et al. ( 2003 ) .
-// Maximum specific leaf area ( sla_max ) defines the maximum leaf area ( m 2 ) that can be expanded per gram of biomass .
+
