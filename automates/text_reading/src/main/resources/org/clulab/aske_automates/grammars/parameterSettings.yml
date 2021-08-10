@@ -181,9 +181,9 @@ rules:
     action: ${paramSetAction}
     example: "EORATIO for maize simulations was hard-coded to 1.0 within DSSAT-CSM."
     pattern: |
-      trigger = [word=/(?i)^hard-code|set/]
+      trigger = [word=/(?i)^hard-code|set|initiali[sz]ed/]
       variable:Phrase = nsubj | nsubjpass
-      value:Value = /nmod_to/ nummod? | xcomp /nummod|compound/
+      value:Value =  /nmod_to/ nmod_of?  nummod? | xcomp /nummod|compound/
 
 
   - name: var_taken_as
@@ -322,7 +322,7 @@ rules:
     pattern: |
       trigger = [lemma="value"]
       variable:Phrase = nmod_of | compound | <dobj nsubj
-      value:Value = <dobj advcl_to | nmod_of | <nsubj
+      value:Value = <dobj advcl_to | nmod_of | <nsubj | <nsubjpass xcomp nummod
 
   - name: tilda_value
     label: ParameterSetting
