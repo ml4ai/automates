@@ -356,7 +356,7 @@ def generate_gromet() -> Gromet:
                  # contents
                  wires=[UidWire('W:loop_ex1.loop_1.k'),
                         UidWire('W:loop_1.loop_ex1.k')],
-                 junctions=[UidJunction('J:loop_ex2.i')],
+                 junctions=[UidJunction('J:loop_ex1.i')],
                  boxes=[UidBox('B:loop_1')],
 
                  metadata=None)

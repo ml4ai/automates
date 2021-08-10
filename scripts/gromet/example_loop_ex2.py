@@ -95,16 +95,49 @@ def generate_gromet() -> Gromet:
                  metadata=None),
 
         Variable(uid=UidVariable('V:loop_1.out.k'),
-                 name='k_out',
+                 name='k',
                  type=UidType('Integer'),
                  proxy_state=UidPort('P:loop_1.out.k'),
                  states=[UidPort('P:loop_1.out.k'),
                          UidPort('P:loop_1_k_exp.out.k'),
                          UidWire('W:loop_1_k_exp.loop_1.k')],
+                 metadata=None),
+
+        Variable(uid=UidVariable('V:loop_ex2.e'),
+                 name='e',
+                 type=UidType('Integer'),
+                 proxy_state=UidJunction('J:loop_ex2.e'),
+                 states=[UidJunction('J:loop_ex2.e'),
+                         UidWire('W:loop_ex2.loop_1.e'),
+                         UidPort('P:loop_1.in.i')],
+                 metadata=None),
+
+        # todo loop_1.e
+        Variable(uid=UidVariable('V:loop_1.e'),
+                 name='e',
+                 type=UidType('Integer'),
+                 proxy_state=UidPort('P:loop_1.in.i'),
+                 states=[UidPort('P:loop_1.in.i'),
+                         UidWire('W:loop_1.loop_1_cond.e'),
+                         UidPort('P:loop_1_cond.in.e')],
                  metadata=None)
     ]
 
     wires = [
+        Wire(uid=UidWire('W:loop_ex2.loop_1.e'),
+             type=None,
+             value_type=UidType('Integer'),
+             name=None, value=None, metadata=None,
+             src=UidJunction('J:loop_ex2.e'),
+             tgt=UidPort('P:loop_1.in.i')),
+
+        Wire(uid=UidWire('W:loop_1.loop_1_cond.e'),
+             type=None,
+             value_type=UidType('Integer'),
+             name=None, value=None, metadata=None,
+             src=UidPort('P:loop_1.in.i'),
+             tgt=UidPort('P:loop_1_cond.in.e')),
+
         Wire(uid=UidWire('W:loop_ex2.loop_1.k'),
              type=None,
              value_type=UidType('Integer'),
@@ -162,6 +195,17 @@ def generate_gromet() -> Gromet:
     ]
 
     junctions = [
+
+        Junction(uid=UidJunction('J:loop_ex2.e'),
+                 name='e',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Integer'),
+                               value=Val('5'),
+                               name=None, metadata=None),
+                 value_type=UidType('Integer'),
+                 metadata=None),
+
         # loop index initialization:
         Junction(uid=UidJunction('J:loop_ex2.i'),
                  name='i',
@@ -199,6 +243,13 @@ def generate_gromet() -> Gromet:
              type=UidType('PortInput'),
              value_type=UidType('Integer'),
              name='i',
+             value=None,
+             metadata=None),
+        Port(uid=UidPort('P:loop_1_cond.in.e'),
+             box=UidBox('B:loop_1_cond'),
+             type=UidType('PortInput'),
+             value_type=UidType('Integer'),
+             name='e',
              value=None,
              metadata=None),
         # loop_1_cond out
@@ -245,6 +296,13 @@ def generate_gromet() -> Gromet:
              metadata=None),
 
         # loop_1 in
+        Port(uid=UidPort('P:loop_1.in.e'),
+             box=UidBox('B:loop_1'),
+             type=UidType('PortInput'),
+             value_type=UidType('Integer'),
+             name='e',
+             value=None,
+             metadata=None),
         Port(uid=UidPort('P:loop_1.in.k'),
              box=UidBox('B:loop_1'),
              type=UidType('PortInput'),
@@ -260,6 +318,14 @@ def generate_gromet() -> Gromet:
              value=None,
              metadata=None),
         # loop_1 out
+        PortCall(uid=UidPort('P:loop_1.out.e'),
+                 call=UidPort('P:loop_1.in.e'),
+                 box=UidBox('B:loop_1'),
+                 type=UidType('PortOutput'),
+                 value_type=UidType('Integer'),
+                 name='e',
+                 value=None,
+                 metadata=None),
         PortCall(uid=UidPort('P:loop_1.out.k'),
                  call=UidPort('P:loop_1.in.k'),
                  box=UidBox('B:loop_1'),
@@ -280,15 +346,13 @@ def generate_gromet() -> Gromet:
 
     e0 = Expr(call=RefOp(UidOp('geq')),
               args=[UidPort('P:loop_1_cond.in.i'),
-                    Literal(uid=None,
-                            type=UidType('Integer'),
-                            value=Val('5'),
-                            name=None, metadata=None)])
+                    UidPort('P:loop_1_cond.in.e')])
     loop_1_cond = \
         Predicate(uid=UidBox('B:loop_1_cond'),
                   type=None,
                   name=None,
                   ports=[UidPort('P:loop_1_cond.in.i'),
+                         UidPort('P:loop_1_cond.in.e'),
                          UidPort('P:loop_1_cond.out.exit')],
                   tree=e0,
                   metadata=None)
@@ -327,9 +391,11 @@ def generate_gromet() -> Gromet:
         Loop(uid=UidBox('B:loop_1'),
              type=None,
              name=None,
-             ports=[UidPort('P:loop_1.in.k'),
-                    UidPort('P:loop_1.out.k'),
+             ports=[UidPort('P:loop_1.in.e'),
+                    UidPort('P:loop_1.in.k'),
                     UidPort('P:loop_1.in.i'),
+                    UidPort('P:loop_1.out.e'),
+                    UidPort('P:loop_1.out.k'),
                     UidPort('P:loop_1.out.i')],
 
              exit_condition=UidBox('B:loop_1_cond'),
@@ -337,6 +403,7 @@ def generate_gromet() -> Gromet:
              # contents
              wires=[UidWire('W:loop_1.loop_1_k_exp.k'),
                     UidWire('W:loop_1.loop_1_cond.i'),
+                    UidWire('W:loop_1.loop_1_cond.e'),
                     UidWire('W:loop_1.loop_1_i_exp.i'),
                     UidWire('W:loop_1_i_exp.loop_1.i'),
                     UidWire('W:loop_1_k_exp.loop_1.k')],
@@ -354,9 +421,11 @@ def generate_gromet() -> Gromet:
                         UidPort('P:loop_ex2.out.k')],
 
                  # contents
-                 wires=[UidWire('W:loop_ex2.loop_1.k'),
+                 wires=[UidWire('W:loop_ex2.loop_1.e'),
+                        UidWire('W:loop_ex2.loop_1.k'),
                         UidWire('W:loop_1.loop_ex2.k')],
-                 junctions=None,
+                 junctions=[UidJunction('J:loop_ex2.e'),
+                            UidJunction('J:loop_ex2.i')],
                  boxes=[UidBox('B:loop_1')],
 
                  metadata=None)
