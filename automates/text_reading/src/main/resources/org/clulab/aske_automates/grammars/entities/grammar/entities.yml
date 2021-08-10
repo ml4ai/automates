@@ -12,6 +12,13 @@ rules:
       [chunk='B-NP' & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
       #todo: can we add parens in avoid without making it invisible in rules?
 
+  - name: simple-np-with-slash
+    label: Phrase
+    priority: 2
+    type: token
+    pattern: |
+      @Phrase "/" @Phrase
+
   - name: single_VP # note: edited the pattern to include single lower case VPs as well. changing pattern didn't break more rules, but needs to check if this cause any errors.
     label: Phrase
     priority: 1

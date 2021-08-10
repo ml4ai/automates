@@ -272,10 +272,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def returnFirstNPInterval(mention: Mention): Option[Interval] = {
     val nPChunks = new ArrayBuffer[Int]()
     for ((chunk, idx) <- mention.sentenceObj.chunks.get.zipWithIndex) {
-      println("ch, id: " + chunk + " " + idx + " " + mention.sentenceObj.words(idx))
 
       if (chunk.contains("NP")) {
-//        println("append: " + idx + " " + chunk)
         nPChunks.append(idx)
       }
 
@@ -283,25 +281,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     if (nPChunks.nonEmpty) {
       val contSpan = findContinuousSpan(nPChunks)
-      println("cont span: " + contSpan.mkString(" "))
       Some(Interval(contSpan.head, contSpan.last + 1))
     }  else None
   }
 
   def findContinuousSpan(indices: Seq[Int]): Seq[Int] = {
     val toReturn = new ArrayBuffer[Int]()
-    println("indices: " + indices.mkString(" || "))
     for ((item, idx) <- indices.zipWithIndex) {
-      println("item, idx: " + item + " " + idx)
-//      if (idx == 0) {
-//        toReturn.append(item)
-//        println("appending first idx: " + item + " " + idx)
-//      } else {
         val plus1 = idx + 1
         val diff = indices(idx + 1) - item
-        println("plus1 " + idx + " " + plus1 + " diff: " + diff)
         if (indices(idx + 1) - item == 1) {
-          println("appending")
           toReturn.append(item)
           if (idx == indices.length -1) {
             return toReturn
@@ -317,24 +306,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def replaceIt(mention: Mention): Mention = {
     val firstBNPInterval = returnFirstNPInterval(mention)
-    println("fbnp: " + firstBNPInterval)
+
     if (firstBNPInterval.isDefined) {
-//      val labels: Seq[String],
-//      val tokenInterval: Interval,
-//      val sentence: Int,
-//      val document: Document,
-//      val keep: Boolean,
-//      val foundBy: String,
-//      val attachments: Set[Attachment] = Set.empty
       val newVarArg = new TextBoundMention(
         mention.labels,
         firstBNPInterval.get,
-  mention.sentence,
-  mention.document,
-  mention.keep,
-  "resolving_coref",
-  Set.empty
-
+        mention.sentence,
+        mention.document,
+        mention.keep,
+        "resolving_coref",
+        Set.empty
       )
       val newArgs = mutable.Map[String, Seq[Mention]]()
       for (arg <- mention.arguments) {
@@ -350,9 +331,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   // assume the first NP in a sentence is what `it` resolves to; todo: check with D. Bell's paper to see if that makes sense and add citation here
   def resolveCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    for (m <- mentions) println("=>" + m.label + " " + m.text)
     val (withIt, woIt) = mentions.partition(m => m.arguments.contains("variable") && m.arguments("variable").head.text == "it")
-    for (i <- withIt) println("->" + i.text + " " + i.label)
     val resolved: Seq[Mention] = withIt.map(m => replaceIt(m))
     resolved ++ woIt
 

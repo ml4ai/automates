@@ -13,7 +13,7 @@ rules:
     example: "basic reproduction number was 100 m2/year"
     action: ${paramSetAction}
     pattern: |
-      trigger = [lemma='be'] (?![word = "above"])
+      trigger = [lemma='be'] (?![word = /above|below/])
       variable:Phrase = <cop nsubj nmod_of | <cop nsubj [!tag = "CD"]
       value:Value = <cop nummod?
 
@@ -79,7 +79,7 @@ rules:
     example: "The value of Kcbmax was varied between 0.9 and 1.4"
     pattern: |
       trigger = [lemma=/vary|lie/]
-      variable:Phrase = nsubjpass nmod_of | nsubj
+      variable:Phrase = nsubjpass nmod_of | nsubj | <advcl_as dobj
       valueLeastIncl:Value = nmod_between nummod? | nmod_from
       valueMostIncl:Value = nmod_between nummod? conj_and | nmod_from nmod
 
@@ -170,9 +170,20 @@ rules:
     action: ${paramIntAction}
     example: "If the temperature in the second soil layer is less than 0 °C"
     pattern: |
-      trigger = [lemma=/less/]
-      variable:Phrase = <advmod nsubj | <advmod <nummod nsubj
-      valueMostExcl:Value = <advmod [tag = "CD"]
+      trigger = [lemma=/less|below/]
+      variable:Phrase = </advmod|case/ <nmod_below? nsubj | <advmod <nummod nsubj
+      valueMostExcl:Value = </advmod|case/ nummod? [tag = "CD"]
+
+  - name: var-reaches-value
+    label: ParameterSetting
+    priority: ${priority}
+    type: dependency
+    action: ${paramSetAction}
+    example: "and stops when supply / demand ratio reaches 0.1 ."
+    pattern: |
+      trigger = [lemma=/reach/]
+      variable:Phrase = nsubj
+      value:Value = dobj [tag = "CD"]
 
   - name: var_hard-coded
     label: ParameterSetting

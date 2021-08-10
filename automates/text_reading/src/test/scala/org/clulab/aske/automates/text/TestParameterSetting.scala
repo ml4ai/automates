@@ -343,6 +343,19 @@ class TestParameterSetting  extends ExtractionTest {
     val mentions = extractMentions(u14a)
     testParameterSettingEvent(mentions, desired)
   }
+
+  val u15a = "It is assumed that leaf expansion growth is reduced when the supply / demand ratio for water is below 1.1 and stops when supply / demand ratio reaches 0.1 ."
+  passingTest should s"extract the parameter setting(s) from u15a: ${u15a}" taggedAs(Somebody, Interval) in {
+    val desired = Seq(
+      "supply / demand ratio" -> Seq("0.1")
+    )
+    val mentions = extractMentions(u15a)
+    testParameterSettingEvent(mentions, desired)
+  }
+
+  //
+
+
 //  val t4b = "The value of RHmax generally exceeds 90% and approaches 100%."
 //  passingTest should s"extract the parameter setting(s) from t1b: ${t4b}" taggedAs(Somebody) in {
 //    val desired = Seq(
