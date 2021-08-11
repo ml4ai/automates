@@ -39,9 +39,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       val expandedDescriptions = expansionHandler.get.expandArguments(descriptions, state, validArgs)
       val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
-
-
-
       val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
       // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
@@ -239,7 +236,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         "valueLeastIncl"->"valueLeast",
         "valueLeastExcl"->"valueLeast",
         "variable" -> "variable"
-
       )
       for (key <- m.paths.keys) {
         val value = m.paths(key)
@@ -276,8 +272,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (chunk.contains("NP")) {
         nPChunks.append(idx)
       }
-
-
     }
     if (nPChunks.nonEmpty) {
       val contSpan = findContinuousSpan(nPChunks)
@@ -287,19 +281,13 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def findContinuousSpan(indices: Seq[Int]): Seq[Int] = {
     val toReturn = new ArrayBuffer[Int]()
+    // append current index
     for ((item, idx) <- indices.zipWithIndex) {
-        val plus1 = idx + 1
-        val diff = indices(idx + 1) - item
-        if (indices(idx + 1) - item == 1) {
-          toReturn.append(item)
-          if (idx == indices.length -1) {
-            return toReturn
-          }
-        } else {
-          toReturn.append(item)
+        toReturn.append(item)
+        // if reached end of seq or if the next index is more than one step away (that means we have reached the end of the continuous index span), return what we have assembled by now
+        if (idx == indices.length -1 || indices(idx + 1) - item != 1) {
           return toReturn
         }
-
     }
     toReturn
   }

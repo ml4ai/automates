@@ -2,20 +2,10 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-  - name: value_cd
-    label: Value
-    priority: ${priority}
-    type: token
-    #action: identifierArguments
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
-    pattern: |
-      (?<![tag=/IN/])[tag = /CD/]
-
   - name: value_entity
     label: Value
     priority: ${priority}
     type: token
-    #action: identifierArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
       [entity = /NUMBER|PERCENT/ & tag = /CD/]
@@ -24,7 +14,6 @@ rules:
     label: Value
     priority: ${priority}
     type: token
-    #action: identifierArguments
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     pattern: |
       [entity = /NUMBER|PERCENT/ & tag = /CD/] [word = "x"] [entity = /NUMBER|PERCENT/ & tag = /CD/]
@@ -33,8 +22,7 @@ rules:
     label: Value
     priority: ${compoundPriority}
     type: token
-    #action: identifierArguments
-    example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
+    example: "63 million of cats"
     pattern: |
       @Value @Value
 

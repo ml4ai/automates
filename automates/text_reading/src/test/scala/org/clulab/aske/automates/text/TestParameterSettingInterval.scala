@@ -4,8 +4,8 @@ import org.clulab.aske.automates.TestUtils._
 
 class TestParameterSettingEventInterval  extends ExtractionTest {
 
-//  // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
-//
+  // Tests from paper: 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
+
   val t1a = "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended and values of Kc from 0.3 to 0.9."
   passingTest should s"extract the parameter setting(s) from t13a: ${t1a}" taggedAs(Somebody, Interval) in {
 
@@ -83,7 +83,7 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
   val t4b = "The current model specifies sla_max as varying from 27 000 to 22000 mm 2 g -1 t o constrain daily leaf area increase where carbon is limiting ."
   failingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
-      "sla_max" -> Seq("27 000", "22000") //fixme: make one value out of 27 and 000
+      "sla_max" -> Seq("27 000", "22000")  // fixme: min and max values are mixed up
     )
     val mentions = extractMentions(t4b)
     testParameterSettingEventInterval(mentions, desired)
@@ -92,7 +92,7 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
   val t5b = "This proportion ( ratio_root_shoot ) is specified for each growth stage , and varies from 1.0 at emergence , to 0.09 at flowering ."
   failingTest should s"extract the parameter setting(s) from t5b: ${t5b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
-      "ratio_root_shoot" -> Seq("0.9", "1.0") //fixme: min and max in wrong order...
+      "ratio_root_shoot" -> Seq("0.09", "1.0") //fixme: min and max in wrong order...
     )
     val mentions = extractMentions(t5b)
     testParameterSettingEventInterval(mentions, desired)
@@ -116,7 +116,7 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
     testParameterSettingEventInterval(mentions, desired)
   }
 
-  val t8b = "Regrowth in ensured if the parameter min_tpla is set to a value greater than zero ."
+  val t8b = "Regrowth is ensured if the parameter min_tpla is set to a value greater than zero ."
   failingTest should s"extract the parameter setting(s) from t8b: ${t8b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "min_tpla" -> Seq("0", "")

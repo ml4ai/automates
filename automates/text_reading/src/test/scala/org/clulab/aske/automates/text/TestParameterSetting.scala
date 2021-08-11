@@ -41,7 +41,8 @@ class TestParameterSetting  extends ExtractionTest {
     "prior calibration efforts."
   failingTest should s"extract the parameter setting(s) from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "SKc" -> Seq("0.5", "0.6") // todo: need a more fine-grained test with modifiers, e.g., SKc -> 0.5, maize; potential trigger - "level"
+      "SKc" -> Seq("0.5"),
+      "Skc" -> Seq("0.6") // todo: need a more fine-grained test with modifiers, e.g., SKc -> 0.5, maize; potential trigger - "level"
     )
 
     //fixme: need a better rule to capture 0.5 and 0.6
@@ -279,7 +280,8 @@ class TestParameterSetting  extends ExtractionTest {
   val u7a = "Phenology APSIM-Barley uses 11 crop stages and ten phases ( time between stages ) ."
   failingTest should s"extract the parameter setting(s) from u7a: ${u7a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "crop stages" -> Seq("11")
+      "crop stages" -> Seq("11"),
+      "phases" -> Seq("ten") // when have started handling word param settings, switch to `10`
     )
     val mentions = extractMentions(u7a)
     testParameterSettingEvent(mentions, desired)
@@ -294,7 +296,7 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
-  val u10a = "The barley module allows a total retranslocation of no more than 20 % of stem biomass present at the start of grainfilling Grain yield on a commercial moisture basis is calculated using the parameter grn_water_cont = 0.125 ."
+  val u10a = "The barley module allows a total retranslocation of no more than 20 % of stem biomass present at the start of grainfilling. Grain yield on a commercial moisture basis is calculated using the parameter grn_water_cont = 0.125 ."
   failingTest should s"extract the parameter setting(s) from u10a: ${u10a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "grn_water_cont" -> Seq("0.125")

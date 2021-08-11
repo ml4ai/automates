@@ -813,5 +813,4 @@ class TestDescriptions extends ExtractionTest {
     withinOneSentenceTest(descrMentions)
   }
 
-
 }

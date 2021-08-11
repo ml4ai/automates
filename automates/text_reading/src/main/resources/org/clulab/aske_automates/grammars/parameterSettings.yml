@@ -194,7 +194,7 @@ rules:
     pattern: |
       trigger = [word=/(?i)^hard-code|set|initiali[sz]ed/]
       variable:Phrase = nsubj | nsubjpass
-      value:Value =  /nmod_to/ nmod_of?  nummod? | xcomp /nummod|compound/
+      value:Value = /nmod_to/ nmod_of? nummod? | xcomp /nummod|compound/
 
 
   - name: var_taken_as
@@ -246,7 +246,7 @@ rules:
     action: ${paramSetAction}
     example: "As canopy cover increased with vegetative growth, the transpiration portion exceeded the evaporation portion of ET, beginning around DOY 165 for maize and DOY 175 for cotton."
     pattern: |
-      (?<variable> [word="DOY"] ) @value:Value
+      (?<variable> [word = "DOY"]) @value:Value
 
   - name: adjust_to_setting
     label: ParameterSetting
@@ -298,7 +298,7 @@ rules:
     priority: ${priority}
     type: dependency
     action: ${paramIntAction}
-    example: "most of the daily new number of confirmed cases from the community stayed around 15 to 25"
+    example: ""
     pattern: |
       trigger = (?<="lower") [word="limit"]
       variable:Phrase = nmod_of
@@ -322,7 +322,7 @@ rules:
     example: "At planting time, the model takes a soil sample and applies up to 15 kg/ha of N fertilizer if needed."
     action: ${paramSetAction}
     pattern: |
-      @value:Value [word=/\w*/]{,3} of @variable:Phrase
+      @value:Value [word=/\w*/]{,4} of @variable:Phrase
 
   - name: value_of
     label: ParameterSetting

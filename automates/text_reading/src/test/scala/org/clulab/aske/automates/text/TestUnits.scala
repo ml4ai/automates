@@ -102,21 +102,21 @@ class TestUnits extends ExtractionTest {
     testUnitEvent(mentions, desired)
   }
 
-  val t11a = "Maximum specific leaf area ( sla_max ) defines the maximum leaf area ( m 2 ) that can be expanded per gram of biomass ."
-  passingTest should s"extract variables and units from t11a: ${t11a}" taggedAs(Somebody) in {
+  val t10a = "Maximum specific leaf area ( sla_max ) defines the maximum leaf area ( m 2 ) that can be expanded per gram of biomass ."
+  passingTest should s"extract variables and units from t10a: ${t10a}" taggedAs(Somebody) in {
     val desired = Seq(
       "Maximum specific leaf area" -> Seq("m 2") // ideally `sla_max` but works for our purposes since we can align to identifier through concept
     )
-    val mentions = extractMentions(t11a)
+    val mentions = extractMentions(t10a)
     testUnitEvent(mentions, desired)
   }
 
-  val t12a = "The phase is comprised of an initial period of fixed thermal time during which shoot elongation is slow ( the \"lag\" phase) and a linear period , where the rate of shoot elongation towards the soil surface is linearly related to air temperature ( measured in o Cd mm -1 ) ."
-  failingTest should s"extract variables and units from t12a: ${t12a}" taggedAs(Somebody) in {
+  val t11a = "The phase is comprised of an initial period of fixed thermal time during which shoot elongation is slow ( the \"lag\" phase) and a linear period , where the rate of shoot elongation towards the soil surface is linearly related to air temperature ( measured in o Cd mm -1 ) ."
+  failingTest should s"extract variables and units from t11a: ${t11a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "rate of shoot elongation towards the soil surface" -> Seq("o Cd mm -1") //todo: is this right?
+      "rate of shoot elongation towards the soil surface" -> Seq("o Cd mm -1")
     )
-    val mentions = extractMentions(t12a)
+    val mentions = extractMentions(t11a)
     testUnitEvent(mentions, desired)
   }
 }
