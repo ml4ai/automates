@@ -7,8 +7,9 @@
         - Value:
           - ValueAndUnit
         - Unit:
-            - UnitRelation
+          - UnitRelation
 - Event:
+  - ContextEvent
   - Conj
   - Causal
   - Description:
@@ -17,3 +18,4 @@
   - ParameterSetting
   - IntervalParameterSetting
   - Function
+  - Context

@@ -16,7 +16,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2a = "Similar to equation 2, E0 is calculated as the product of Kcd and ETpm."
-  failingTest should s"find functions from t2a: ${t2a}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2a: ${t2a}" taggedAs(Somebody) in {
     val desired = Seq(
       "E0" -> Seq("Kcd", "ETpm")
     )
@@ -89,7 +89,6 @@ class TestFunctions extends ExtractionTest {
   }
 
   // Tests from CHIME-online-manual
-  // fixme: inverse_of rule contains only one input. how should we test such rules?
   val t1c = "γ is the inverse of the mean recovery time, in days."
   passingTest should s"find functions from t1c: ${t1c}" taggedAs(Somebody) in {
     val desired = Seq(
@@ -103,7 +102,8 @@ class TestFunctions extends ExtractionTest {
   val t1d = "In this model, ET is a product of the equilibrium evaporation (ETeq) and PT coefficient (α), where ETeq can be obtained from meteorological data (net radiation, soil heat flux, and air temperature)."
   passingTest should s"find functions from t1d: ${t1d}" taggedAs(Somebody) in {
     val desired = Seq(
-      "ET" -> Seq("equilibrium evaporation", "PT coefficient")
+      "ET" -> Seq("equilibrium evaporation", "PT coefficient"),
+      "ETeq" -> Seq("meteorological data")
     )
     val mentions = extractMentions(t1d)
     testFunctionEvent(mentions, desired)
@@ -118,9 +118,59 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  val t3d = "Leaf area was calculated by summing rectangular area of each leaf (product of leaf length and maximum width) multiplied by a factor of 0.74, which was obtained by analyzing the ratio of rectangular area to real area, measured by an AM300 (ADC BioScientific Ltd., UK)."
+  failingTest should s"find functions from t3d: ${t3d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "Leaf area" -> Seq("rectangular area of each leaf (product of leaf length and maximum width) multiplied by a factor of 0.74"), // NOTE: how can be extract the whole phrase?? (parentheses))
+      "rectangular area of each leaf" -> Seq("leaf length", "maximum width"),
+      "a factor of 0.74" -> Seq("ratio of rectangular area to real area")
+    )
+    val mentions = extractMentions(t3d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t4d = "where τ is the fraction of net radiation transmission reached soil surface;"
+  failingTest should s"find functions from t4d: ${t4d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "τ" -> Seq("net radiation transmission reached soil surface")
+    )
+    val mentions = extractMentions(t4d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t5d = "κ, canopy extinction coefficient of radiation, is dependent on foliage orientation and solar zenith angle, 0.45 for this study (Campbell and Norman, 1998)."
+  passingTest should s"find functions from t5d: ${t5d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "κ" -> Seq("foliage orientation", "solar zenith angle") // note: 0.45 is wrongly captured as one of the inputs here due to bad parsing.
+    )
+    val mentions = extractMentions(t5d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t6d = "fs is fraction of leaf senescence, defined as the difference between unit and the ratio of chlorophyll content at the maturity stage (Cc,m) to that at the filling stage (Cc,f), i.e. (1.0 - Cc,m//Cc,f)."
+  failingTest should s"find functions from t6d: ${t6d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "fs" -> Seq("leaf senescence"),
+      "fs" -> Seq("unit and the ratio of chlorophyll content at the maturity stage (Cc,m) to that at the filling stage (Cc,f)") // note: expansion stops when there's a parentheses, how could that be fixed?
+    )
+    val mentions = extractMentions(t6d)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t7d = "Although the difference of total ET between two years was about 10%, the difference of total ET per LAI was less than 3%, suggesting that inter-annual difference of ET was primarily related to LAI."
+  failingTest should s"find functions from t7d: ${t7d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "about 10%" -> Seq("total ET"), // note: should it be just total ET, or total ET between two years?
+      "less than 3%"-> Seq("total ET per LAI"), // fixme: simple-np rule is not working properly here
+      "inter-annual difference of ET"-> Seq("LAI")
+    )
+    val mentions = extractMentions(t7d)
+    testFunctionEvent(mentions, desired)
+  }
+
   // Tests from Global estimation of evapotranspiration using a leaf area index-based surface energy and water balance model
   val t1e = "calculating total E (E0) as the sum of the canopy transpiration and soil evaporation, assuming the absence of soil water stress"
-  failingTest should s"find functions from t1e: ${t1e}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t1e: ${t1e}" taggedAs(Somebody) in {
     val desired = Seq(
       "total E" -> Seq("canopy transpiration", "soil evaporation")
     )
@@ -129,7 +179,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t2e = "Since air Rh, defined as ea divided by es, is also capable of representing the humidity deficit of air, there are arguments about the choice between Rh and D in E or stomatal conductance estimation."
-  failingTest should s"find functions from t2e: ${t2e}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t2e: ${t2e}" taggedAs(Somebody) in {
     val desired = Seq(
       "air Rh" -> Seq("ea", "es")
     )
@@ -138,7 +188,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t3e = "Wilting point Wp and field capacity Wc were calculated from soil depth and soil texture information, i.e., the relative proportion of sand, silt and clay, according to a set of prediction equations developed by Saxton et al. (1986)."
-  failingTest should s"find functions from t3e: ${t3e}" taggedAs(Somebody) in {
+  passingTest should s"find functions from t3e: ${t3e}" taggedAs(Somebody) in {
     val desired = Seq(
       "Wilting point Wp" -> Seq("soil depth", "soil texture information"), // multiple outputs: needs to be addressed in the next meeting!
       "field capacity Wc" -> Seq("soil depth", "soil texture information")
@@ -164,7 +214,7 @@ class TestFunctions extends ExtractionTest {
   val t2f = "Soil temperature is computed from air temperature and a deep soil temperature boundary condition that is calculated from the average annual air temperature and the amplitude of monthly mean temperatures."
   passingTest should s"find functions from t2f: ${t2f}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"), // note: only one rule applies even when multiple rules should apply. needs to find out why.
+      "Soil temperature" -> Seq("air temperature", "deep soil temperature boundary condition"),
       "deep soil temperature boundary condition" -> Seq("average annual air temperature", "amplitude of monthly mean temperatures")
     )
     val mentions = extractMentions(t2f)
@@ -296,7 +346,7 @@ class TestFunctions extends ExtractionTest {
   }
 
   val t8g = "For example, consider a case in which the average air temperature is 32°C, Lai = 2.7, Rn0 = 5.0, E0 = 5.0, and ΣEs1 < U."
-  failingTest should s"find NO functions from t8g: ${t8g}" taggedAs(Somebody) in {
+  passingTest should s"find NO functions from t8g: ${t8g}" taggedAs(Somebody) in {
     val desired = Seq.empty[(String, Seq[String])]
     val mentions = extractMentions(t8g) // fixme: when the right side of an equal sign is only a numerical value, the equation should not be captured as a function, but as a parameter setting.
     testFunctionEvent(mentions, desired)
@@ -314,9 +364,81 @@ class TestFunctions extends ExtractionTest {
     testFunctionEvent(mentions, desired)
   }
 
+  // Tests from 1985-description and performance of CERES-Wheat_A_user-oriented wheat yield model
+
+  val t1i = "The primary variable influencing development rate is temperature."
+  failingTest should s"find functions from t1i: ${t1i}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "development rate" -> Seq("temperature") //note: overlap between trigger and output??
+    )
+    val mentions = extractMentions(t1i)
+    testFunctionEvent(mentions, desired)
+  }
+
+  // Tests from paper: PT-1972-On the Assessment of Surface Heat Flux and Evaporation using Large-Scale Parameters-petpt
+
+  val t1j = "The rate of conduction of heat near the interface between two media is governed by the quantity pc√K pertaining to each medium."
+  failingTest should s"find functions from t1j: ${t1j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "The rate of conduction of heat near the interface between two media" -> Seq("quantity pc√K pertaining to each medium") //todo: identifier within Phrase should be filtered out
+    )
+    val mentions = extractMentions(t1j)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t2j = "However, when the thermal balance between the two media is disturbed, as by advection, the heat subsequently passing from one to the other over any not-too-short time is governed by and proportional to the conductive capacity of the lower ranking medium."
+  failingTest should s"find functions from t2j: ${t2j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "heat subsequently passing from one to the other over any not-too-short time" -> Seq("conductive capacity of the lower ranking medium"), //todo: tuning expansion handler needed?
+      "heat subsequently passing from one to the other over any not-too-short time" -> Seq("conductive capacity of the lower ranking medium")
+    )
+    val mentions = extractMentions(t2j)
+    testFunctionEvent(mentions, desired)
+    val functionMentions = mentions.filter(_.label == "Function")
+    functionMentions.head.text shouldEqual functionMentions.last.text
+  }
+
+  val t3j = "T0 is itself strongly governed by R and ground dryness."
+  passingTest should s"find functions from t3j: ${t3j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "T0" -> Seq("R", "ground dryness")
+    )
+    val mentions = extractMentions(t3j)
+    testFunctionEvent(mentions, desired)
+  }
+
+  val t4j = "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and, if this height is not low enough, on the stability."
+  passingTest should s"find functions from t4j: ${t4j}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "heat transfer coefficients" -> Seq("reference height selected for T and u", "stability") //todo: context is required as a key here. test needs to be revised?
+    )
+    val mentions = extractMentions(t4j)
+    testFunctionEvent(mentions, desired)
+  }
+  // Tests from 2017-IMPLEMENTING STANDARDIZED REFERENCE EVAPOTRANSPIRATION AND DUAL CROP COEFFICIENT APPROACH IN THE DSSAT CROPPING SYSTEM MODEL
+  val t1k = "While it is true that the DSSAT-CSM crop coefficient Kcs is multiplied by a reference ET, the resulting value (E0) denotes ET potential, therefore demand, and not necessarily actual ET."
+  failingTest should s"find functions from t1k: ${t1k}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "E0" -> Seq("Kcs", "reference ET") // fixme: why is "DSSAT-CSM crop coefficient Kcs" captured as identifier?
+    )
+    val mentions = extractMentions(t1k)
+    testFunctionEvent(mentions, desired)
+  }
+
+  // Tests from APSIM_Cropping Systems
+  val t1l = "empirical soil parameters are influenced by the number and thickness of specified layers"
+  failingTest should s"find functions from t1l: ${t1l}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "empirical soil parameters" -> Seq("number of specified layers", "thickness of specified layers")
+    )
+    val mentions = extractMentions(t1l)
+    testFunctionEvent(mentions, desired)
+  }
+
 }
 
   // note: below are the example sentences that contain functional relations (I think), but I'm not sure what to do about with them for now.
+  // todo: where KEP (typically ranging from 0.5 to 0.8) is defined as an energy extinction coefficient of the canopy for total solar irradiance, used for partitioning E0 to EPo and ESo (Ritchie, 1998).
   // Tests from paper: ASCE-2005-The ASCE Standardized Reference-TechReport-petasce
   // todo: "The values for Cn consider the time step and aerodynamic roughness of the surface (i.e., reference type)."
   // todo: "The constant in the denominator, Cd, considers the time step, bulk surface resistance, and aerodynamic roughness of the surface (the latter two terms vary with reference type, time step and daytime/nighttime)."
@@ -358,3 +480,5 @@ class TestFunctions extends ExtractionTest {
 // todo: These data demonstrate that the initial fast rate of drying is followed by a decreasing rate.
 // todo: In the Adelanto soil, the evaporation rate began to decline below the approximate Eo of 8 mm/day when the cumulative evaporation reached about 12 mm.
 // todo: A plot of (9) expressing Ep as a fraction of E0 versus Lai is given in Figure 5.
+
+// Tests from 1985-description and performance of CERES-Wheat_A_user-oriented wheat yield model
