@@ -22,15 +22,15 @@ class GrometIds:
 class CommonNode:
     uid: UidCommonNode
     type: str  # one of: 'input', 'output', 'internal'
-    g1_variable: UidVariable
-    g2_variable: UidVariable
+    g1_variable: List[UidVariable]
+    g2_variable: List[UidVariable]
 
 
 @dataclass
 class OAPNode:
     uid: UidCommonNode
-    g1_variables: List[UidVariable]
-    g2_variables: List[UidVariable]
+    g1_variables: Union[List[UidVariable], None]
+    g2_variables: Union[List[UidVariable], None]
 
 
 @dataclass
@@ -53,8 +53,8 @@ class GrometIntersectionGraph:
     gromet_ids: GrometIds
 
     common_nodes: List[CommonNode]
-    oap_nodes: List[OAPNode]
-    noap_nodes: List[NOAPNode]
+    oap_nodes: Union[List[OAPNode], None]
+    noap_nodes: Union[List[NOAPNode], None]
     edges: List[Edge]
 
 
@@ -66,7 +66,7 @@ def gig_to_json(gig: GrometIntersectionGraph,
                 tgt_file: Union[str, None] = None,
                 tgt_root: Union[str, None] = None):
     if tgt_file is None:
-        tgt_file = f"gig_{gig.gromet_ids.g1_name}>{gig.gromet_ids.g2_name}.json"
+        tgt_file = f"gig__{gig.gromet_ids.g1_name}-{gig.gromet_ids.g2_name}.json"
     if tgt_root is not None:
         tgt_file = os.path.join(tgt_root, tgt_file)
     json.dump(asdict(gig),
