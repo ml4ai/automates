@@ -970,7 +970,8 @@ DEFAULT_ROOT = 'examples'
 # DEFAULT_PATH = 'examples/SimpleSIR_metadata_gromet_FunctionNetwork.json'
 # DEFAULT_PATH = 'examples/cond_ex1_gromet_FunctionNetwork.json'
 # DEFAULT_PATH = 'loop_ex1_gromet_FunctionNetwork.json'
-DEFAULT_PATH = 'loop_ex2_gromet_FunctionNetwork.json'
+# DEFAULT_PATH = 'loop_ex2_gromet_FunctionNetwork.json'
+DEFAULT_PATH = 'CHIME_SIR_gromet_FunctionNetwork.json'
 FORCE_BATCH = False  # True
 
 

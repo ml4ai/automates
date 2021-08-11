@@ -34,7 +34,7 @@ def generate_gig() -> GrometIntersectionGraph:
 
         CommonNode(
             uid=UidCommonNode('beta'),
-            type='internal',
+            type='input',
             g1_variable=UidVariable('beta'),
             # todo
             g2_variable=UidVariable()
@@ -78,7 +78,8 @@ def generate_gig() -> GrometIntersectionGraph:
             uid=UidCommonNode('OAP_1'),
             g1_variables=[
                 UidVariable('infected'),
-                UidVariable('recovered')
+                UidVariable('recovered'),
+                UidVariable('dt')
             ],
             # todo
             g2_variables=[]
@@ -110,56 +111,29 @@ def generate_gig() -> GrometIntersectionGraph:
 
     edges = [
         Edge(
-            type='equal',
+            type='no_overlap',
             src=UidCommonNode('S_in'),
             dst=UidCommonNode('OAP_1')
         ),
         Edge(
-            type='equal',
+            type='no_overlap',
             src=UidCommonNode('I_in'),
             dst=UidCommonNode('OAP_1')
         ),
         Edge(
-            type='equal',
+            type='no_overlap',
             src=UidCommonNode('R_in'),
             dst=UidCommonNode('OAP_1')
         ),
         Edge(
-            type='equal',
+            type='no_overlap',
             src=UidCommonNode('beta'),
             dst=UidCommonNode('OAP_1')
         ),
         Edge(
-            type='equal',
-            src=UidCommonNode('gamma'),
-            dst=UidCommonNode('OAP_1')
-        ),
-
-        Edge(
-            type='no_overlap',
-            src=UidCommonNode('NOAP_SimpleSIR_1'),
-            dst=UidCommonNode('OAP_1')
-        ),
-        Edge(
-            type='no_overlap',
-            src=UidCommonNode('NOAP_CHINE_2'),
-            dst=UidCommonNode('OAP_1')
-        ),
-
-        Edge(
-            type='no_overlap',
-            src=UidCommonNode('S_in'),
-            dst=UidCommonNode('NOAP_CHIME_1')
-        ),
-        Edge(
-            type='no_overlap',
-            src=UidCommonNode('NOAP_CHIME_1'),
-            dst=UidCommonNode('beta')
-        ),
-        Edge(
             type='no_overlap',
             src=UidCommonNode('gamma'),
-            dst=UidCommonNode('NOAP_CHIME_1')
+            dst=UidCommonNode('OAP_1')
         ),
 
         Edge(
