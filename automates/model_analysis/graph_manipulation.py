@@ -278,7 +278,6 @@ def c_components(g, topo):
             rank = rank + topo.index(node)
         cc_rank.append(rank)
     (cc_sorted, _) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1], reverse=True))))
-    print(cc_sorted)
     return cc_sorted
 
 
