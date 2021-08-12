@@ -5,7 +5,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.odin.Mention
 import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.apps.AlignmentBaseline
+import org.clulab.aske.automates.apps.{AlignmentBaseline, ExtractAndAlign}
 import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
@@ -36,6 +36,7 @@ object TestUtils {
 
   protected var mostRecentOdinEngine: Option[OdinEngine] = None
   protected var mostRecentConfig: Option[Config] = None
+  val extractorAligner = ExtractAndAlign
 
   // This is the standard way to extract mentions for testing
   def extractMentions(ieSystem: OdinEngine, text: String): Seq[Mention] = {
@@ -106,6 +107,20 @@ object TestUtils {
       desired.foreach(d => found should contain(d))
     }
 
+    def testIfHasAttachmentType(mentions: Seq[Mention], attachmentType: String): Unit = {
+      for (f <- mentions) {
+        extractorAligner.returnAttachmentOfAGivenTypeOption(f.attachments, attachmentType).isDefined shouldBe true
+      }
+    }
+
+    def testIfHasAttachments(mentions: Seq[Mention]): Unit = {
+      mentions.foreach(f => testIfHasAttachment(f))
+    }
+
+    def testIfHasAttachment(mention: Mention): Unit = {
+      mention.attachments.nonEmpty shouldBe true
+    }
+
     //used for parameter setting tests where the setting is an interval
     def testThreeArgEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, arg2Role: String, arg3Role: String, desired: Seq[(String, Seq[String])]): Unit = {
 
@@ -144,6 +159,26 @@ object TestUtils {
       } yield (a1, a2)
 
       arg2Strings.foreach(arg2String => identifierDescriptionPairs should contain ((arg1String, arg2String)))
+    }
+
+    def testUnaryEvent(mentions: Seq[Mention], eventType: String, arg1Role: String, desired: Seq[String]): Unit = {
+      val found = mentions.filter(_ matches eventType)
+      found.length should be(desired.size)
+      val grouped = found.groupBy(_.arguments(arg1Role).head.text) // we assume only one variable (arg1) arg!
+      // when desired matches the text of the input arg, corresponding mentions are returned and the test passes
+      // when the text does not match, there is no key in grouped for that so the returned seq is empty, and we get a failing test//
+      for {
+        desiredFragment <- desired
+        correspondingMentions = grouped.getOrElse(desiredFragment, Seq())
+      } testUnaryEventStrings(correspondingMentions, arg1Role, eventType, desired)
+    }
+
+    def testUnaryEventStrings(ms: Seq[Mention], arg1Role: String, eventType: String, arg1Strings: Seq[String]) = {
+      val functionFragment = for {
+        m <- ms
+        a1 <- m.arguments.getOrElse(arg1Role, Seq()).map(TextUtils.getMentionText(_))
+      } yield a1
+      arg1Strings.foreach(arg1String => functionFragment should contain (arg1String))
     }
 
     //used for parameter setting tests where the setting is an interval

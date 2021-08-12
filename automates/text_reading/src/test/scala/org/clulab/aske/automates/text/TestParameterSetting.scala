@@ -194,7 +194,7 @@ class TestParameterSetting  extends ExtractionTest {
   val t4b = " The inverse ratio of λ ρw times energy flux in MJ m-2 d-1 equals 1.0 mm d-1."
   passingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody) in {
     val desired = Seq(
-      "inverse ratio of λ ρw times energy flux in MJ m-2 d-1" -> Seq("1.0") // the phrase has extended a little farther than ideal (including the unit), but good for our purposes
+      "inverse ratio of λ ρw times energy flux" -> Seq("1.0")
     )
     val mentions = extractMentions(t4b)
     testParameterSettingEvent(mentions, desired)

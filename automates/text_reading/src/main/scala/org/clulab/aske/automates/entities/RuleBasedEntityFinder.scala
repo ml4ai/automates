@@ -116,7 +116,7 @@ class RuleBasedEntityFinder(
     val filteredEntities = entities.filter(m => EntityConstraints.withinMaxLength(m, maxLength))
     val longest = RuleBasedEntityFinder.keepLongest(filteredEntities, new State())
     for {
-      m <- longest
+      m <- filteredEntities
       if EntityConstraints.validFinalTag(m)
       if EntityConstraints.matchingBrackets(m)
     } yield m

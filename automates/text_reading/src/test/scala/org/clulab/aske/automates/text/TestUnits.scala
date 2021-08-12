@@ -93,15 +93,6 @@ class TestUnits extends ExtractionTest {
     testUnitEvent(mentions, desired)
   }
 
-  val t10a = "Figure 2 : Performance of the fababean module ( observed versus simulated grain yield in g / m2 ) against test datasets reported by Turpin et al. ( 2003 ) ."
-  passingTest should s"extract variables and units from t10a: ${t10a}" taggedAs(Somebody) in {
-    val desired = Seq(
-      "Performance of the fababean module" -> Seq("g / m2")
-    )
-    val mentions = extractMentions(t10a)
-    testUnitEvent(mentions, desired)
-  }
-
   val t10a = "Maximum specific leaf area ( sla_max ) defines the maximum leaf area ( m 2 ) that can be expanded per gram of biomass ."
   passingTest should s"extract variables and units from t10a: ${t10a}" taggedAs(Somebody) in {
     val desired = Seq(

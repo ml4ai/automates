@@ -1,7 +1,7 @@
 package org.clulab.aske.automates.serializer
 
 
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, MentionLocationAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, FunctionAttachment, MentionLocationAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
 import org.clulab.odin
 import org.clulab.odin.{Attachment, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
@@ -165,6 +165,15 @@ object AutomatesJSONSerializer {
       }
 
       case "UnitAtt" => new UnitAttachment(json("attachedTo").str, attType)
+      case "ContextAtt" => {
+        val foundBy = json("foundBy").str
+        new ContextAttachment(attType, json("contexts").arr, foundBy)
+      }
+      case "FunctionAtt" => {
+        val foundBy = json("foundBy").str
+        val trigger = json("trigger").str
+        new FunctionAttachment(attType, trigger, foundBy)
+      }
       case _ => ???
     }
     toReturn
@@ -273,6 +282,8 @@ object AutomatesJSONSerializer {
       case a: ParamSetAttachment => a.toUJson
       case a: ParamSettingIntAttachment => a.toUJson
       case a: UnitAttachment => a.toUJson
+      case a: ContextAttachment => a.toUJson
+      case a: FunctionAttachment => a.toUJson
       case _ => ???
     }
   }

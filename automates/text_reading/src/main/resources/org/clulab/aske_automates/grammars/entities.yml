@@ -98,7 +98,7 @@ rules:
     type: token
     example: "a per-capita rate γ"
     pattern: |
-      [word=/[A-Za-z]\./ & !word=/al.|i.e/ & !entity=/PERSON/] (?![word=/^[a-z]/])
+      [word=/[A-Za-z]\./ & !word=/al.|i.e|etc.|ETC.|e.g/ & !entity = /PERSON/] (?![word=/^[a-z]/])
       # exclude "al." as in "et al." and i.e as in i.e., <example>
 
   - name: compound_identifier
@@ -106,9 +106,9 @@ rules:
     priority: ${priority1}
     type: token
     action: looksLikeAnIdentifier
-    example: "The density of water (ρw); R(t)"
+    example: "The density of water (ρw); R(t); IP(0)"
     pattern: |
-      [word=/\b[A-Za-z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # excluded units from identifiers.
+      [word=/\b[A-Za-z]\b|\b[A-Z][A-Z]\b/] "(" [word=/\b[A-Za-z]\b|[0-9]/ & !entity = /B-unit/] ")" # note: excluded units from identifiers & allowed two capital letters to be in front of the paranthese.
       |
       [entity="B-GreekLetter"] [word=/\w/ & !tag=/^V|MD/]
 
