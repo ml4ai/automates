@@ -1141,7 +1141,6 @@ class PyASTToCAST(ast.NodeVisitor):
                     else:
                         if isinstance(node.value,ast.Call):
                             if isinstance(node.value.func,ast.Attribute):
-                                print(node.value.func)
                                 upper = Call(Name("len", source_refs=ref), [Name(node.value.func.attr, source_refs=ref)], source_refs=ref)
                             else:
                                 upper = Call(Name("len", source_refs=ref), [Name(node.value.func.id, source_refs=ref)], source_refs=ref)
