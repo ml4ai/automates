@@ -2,6 +2,9 @@ from __future__ import annotations
 import json
 from typing import NewType, List, Tuple, Union, Dict, Any
 from dataclasses import dataclass, field, asdict
+
+import networkx as nx
+from pygraphviz import AGraph
 from pprint import pprint
 
 from ..utils.misc import uuid
@@ -729,21 +732,7 @@ class HasContents:
             # if len(list(hyper_graph.predecessors(h_edge))) == 0
             # or all([i.identifier.name in live_var_names for i in h_edge.inputs])
         ]
-        pprint(live_vars.keys())
         print("INITIAL EDGES -------------")
-        # print(hyper_graph.number_of_nodes())
-        # print(hyper_graph.number_of_edges())
-        # print(func.uid)
-        print(len(initial_edges))
-        # pprint([e for e in initial_edges])
-        # for hyper_edge_node in hyper_graph.nodes:
-        #     print(type(hyper_edge_node))
-        #     print(f"    {type(hyper_edge_node.func_node)}")
-        for h_edge in hyper_graph:
-            for i in h_edge.inputs:
-                print(i.identifier.name, end=",")
-            print()
-        print()
 
         # def wire_across_funcs(edges: List[HyperEdge]):
         #     next_funcs = list()
@@ -1254,6 +1243,14 @@ class Loop(Box, HasContents):  # BoxDirected
     exit_condition: UidPredicate
 
     @classmethod
+    def find_output_decision_node(cls, func: LoopConFuncNode):
+        pass
+
+    @classmethod
+    def remove_decision_nodes(cls, func: LoopConFuncNode):
+        pass
+
+    @classmethod
     def from_func_node(cls, func: LoopConFuncNode):
         wires, var_dict, juncs = HasContents.wires_from_hyper_graph(func)
         box_vars = [
@@ -1399,6 +1396,38 @@ class Gromet(TypedGrometElm):
             boxes,
             variables,
         )
+
+    def to_agraph(self):
+        graph = nx.DiGraph()
+
+        box_to_nodes = {box.uid: set() for box in self.boxes}
+        edge_list = list()
+
+        def get_port_with_uid(uid):
+            try:
+                return [port for port in self.ports if port.uid == uid][0]
+            except IndexError:
+                print(f"Error: Unable to find port {uid}")
+
+        for wire in self.wires:
+            src_port = get_port_with_uid(wire.src)
+            tgt_port = get_port_with_uid(wire.tgt)
+
+            if src_port.uid not in box_to_nodes[src_port.box]:
+                box_to_nodes[src_port.box].add(src_port.uid)
+            if tgt_port.uid not in box_to_nodes[tgt_port.box]:
+                box_to_nodes[tgt_port.box].add(tgt_port.uid)
+
+            edge_list.append((wire.src, wire.tgt))
+
+            graph.add_edge(wire.src, wire.tgt)
+
+        agraph = nx.nx_agraph.to_agraph(graph)
+        return agraph
+
+    def to_graphviz_pdf(self):
+        agraph = self.to_agraph()
+        agraph.draw(self.name + "--GroMEt.pdf", prog="dot")
 
 
 """

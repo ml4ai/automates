@@ -7,9 +7,10 @@ from automates.model_assembly.air import AutoMATES_IR
 from automates.model_assembly.gromet import Gromet, gromet_to_json
 from automates.model_assembly.text_reading_linker import TextReadingLinker
 from automates.model_assembly.interfaces import (
-    TextReadingAppInterface, 
-    LocalTextReadingInterface
+    TextReadingAppInterface,
+    LocalTextReadingInterface,
 )
+
 
 def main(args):
 
@@ -47,6 +48,7 @@ def main(args):
 
     gromet_file = air_filepath.replace("AIR.json", "GroMEt.json")
     gromet_to_json(GroMEt, gromet_file)
+    GroMEt.to_graphviz_pdf()
 
     # A = G.to_AGraph()
     # grfn_pdf_name = air_filepath.replace("AIR.json", "GrFN.pdf")
