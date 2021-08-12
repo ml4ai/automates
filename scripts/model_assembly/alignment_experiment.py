@@ -22,7 +22,7 @@ def main(args):
     hypothesis_data = caller.get_link_hypotheses(
         MENTIONS_PATH, args.eqn_file, args.grfn_file, args.comm_file, args.wikidata_file,
     )
-    json.dump({"grounding": hypothesis_data}, open(ALIGNMENT_PATH, "w"))
+    json.dump({"grounding": hypothesis_data}, open(ALIGNMENT_PATH, "w", encoding='utf8'), ensure_ascii=False)
 
 
 if __name__ == "__main__":

@@ -299,19 +299,6 @@ object TestUtils {
     def topDirectLinkTest(idf: String, desired: String, directLinks: Map[String, Seq[Value]],
                           linkType: String, status: String): Unit = {
 
-      if (idf == "R0") {
-
-        println("\n")
-        val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.mkString("\n")
-        println(topScoredLink)
-        // which element in this link type we want to check
-        val whichLink = whereIsNotGlobalVar(linkType)
-        println("->" + desired)
-//        println("-->" + topScoredLink(whichLink).str.split("::").last)
-//        println("--->" + topScoredLink(whichLink).str)
-
-      }
-
       val threshold = allLinkTypes("direct").obj(linkType).num
       if (status == "passing") {
         it should f"have a correct $linkType link for global var ${idf}" in {

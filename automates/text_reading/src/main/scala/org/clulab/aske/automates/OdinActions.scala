@@ -1062,11 +1062,21 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentions.flatMap(mkDescriptionMention)
   }
 
+  def allCaps(string: String): Boolean = {
+    // assume it's true, but return false if find evidence to the contrary
+    for (ch <- string) {
+      if (!ch.isUpper) {
+        return false
+      }
+    }
+    true
+  }
 
   def looksLikeAnIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
 
     // here, can add different characters we want to allow in identifiers; use with caution
     val compoundIdentifierComponents = Seq("(", ")")
+
     //returns mentions that look like an identifier
     def passesFilters(v: Mention, isArg: Boolean): Boolean = {
       // If the variable/identifier was found with a Gazetteer passed through the webservice, keep it
@@ -1076,27 +1086,32 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       if (v.words.exists(_ == "and")) return false
       if (v.words.length > 3 && v.words.tail.intersect(compoundIdentifierComponents).nonEmpty) return true
       if (v.words.length < 3 && v.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))) return true
+      if (v.entities.get.exists(_ == "B-unit")) return false
+      if (allCaps(v.words.mkString("").replace(" ", ""))) return true
+      // account for all caps variables, e.g., EORATIO
+      if (v.words.length == 1 && allCaps(v.words.head)) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
       if ((v.words.length >= 1) && v.entities.get.exists(m => m matches "B-GreekLetter")) return true //account for identifiers that include a greek letter---those are found as separate words even if there is not space
       if (v.words.length != 1) return false
       if (v.words.head.contains("-") & v.words.head.last.isDigit) return false
       // Else, the identifier candidate has length 1
       val word = v.words.head
+      if (word.contains("_")) return true
       if (freqWords.contains(word.toLowerCase())) return false //filter out potential variables that are freq words
       if (word.length > 6) return false
       // an identifier/variable cannot be a unit
-      if (v.entities.get.exists(_ == "B-unit")) return false
+
       val tag = v.tags.get.head
       if (tag == "POS") return false
       return (
         word.toLowerCase != word // mixed case or all UPPER
-        |
-        v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
-        |
-        word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
-        |
-        word.length < 3 && word.exists(_.isDigit) && !word.contains("-")  && word.replaceAll("\\d|\\s", "").length > 0//this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
-      |
+          |
+          v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
+          |
+          word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+          |
+          word.length < 3 && word.exists(_.isDigit) && !word.contains("-") && word.replaceAll("\\d|\\s", "").length > 0 //this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
+          |
           (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
     }
@@ -1229,6 +1244,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
+      if (descrText.words.exists(_.length > 1))
       if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
 //      if m.tags.get.exists(_.contains("N"))

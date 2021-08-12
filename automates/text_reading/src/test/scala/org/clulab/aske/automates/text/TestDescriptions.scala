@@ -520,11 +520,9 @@ class TestDescriptions extends ExtractionTest {
     testDescriptionEvent(mentions, desired)
   }
 
-    val t3g = "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection)" +
-    " which can be considered as a variant of the standard SIR."
+    val t3g = "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection)."
   passingTest should s"find descriptions from t3g: ${t3g}" taggedAs(Somebody) in {
     val desired =  Seq(
-//      "SEIRP" -> Seq("variant of the standard SIR"), // todo: check if this is the one that should be extracted here. ask Paul.
       "E" -> Seq("Exposed class"),
       "P" -> Seq("protection")
     )
