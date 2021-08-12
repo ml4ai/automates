@@ -90,7 +90,7 @@ class TestAlign extends TestAlignment {
     behavior of idfr
 
     val directDesired = Map(
-      GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("microbes per year", passingTest),
+      GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> ("microbes per year::mm", passingTest),
       GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> ("m2/year", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> ("2.71", passingTest),
       GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> ("100", passingTest),
