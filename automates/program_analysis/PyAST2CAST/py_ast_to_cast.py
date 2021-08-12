@@ -122,9 +122,6 @@ class PyASTToCAST(ast.NodeVisitor):
 
         ref = [SourceRef(source_file_name=self.filenames[-1], col_start=node.col_offset, col_end=node.end_col_offset, row_start=node.lineno, row_end=node.end_lineno)]
 
-        #print(right)
-        #print("-------------------------------------------------------------------------------")
-    
         return [Assignment(left[0], right[0], source_refs=ref)]
 
     def visit_Attribute(self, node: ast.Attribute):
