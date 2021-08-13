@@ -33,7 +33,7 @@ class TestUnits extends ExtractionTest {
   }
 
   val t4a = "In one type, water uptake is a function of the difference in water potentials ( , J kg−1) and the conductances (C, kg s m−4) between adjacent components in the soil–plant system."
-  failingTest should s"extract variables and units from t4a: ${t4a}" taggedAs(Somebody) in {
+  passingTest should s"extract variables and units from t4a: ${t4a}" taggedAs(Somebody) in {
     val desired = Seq(
       "water potentials" -> Seq("J kg−1"),
       "conductances" -> Seq("kg s m−4")
