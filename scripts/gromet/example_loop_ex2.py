@@ -109,7 +109,7 @@ def generate_gromet() -> Gromet:
                  proxy_state=UidJunction('J:loop_ex2.e'),
                  states=[UidJunction('J:loop_ex2.e'),
                          UidWire('W:loop_ex2.loop_1.e'),
-                         UidPort('P:loop_1.in.i')],
+                         UidPort('P:loop_1.in.e')],
                  metadata=None),
 
         # todo loop_1.e
@@ -135,7 +135,7 @@ def generate_gromet() -> Gromet:
              type=None,
              value_type=UidType('Integer'),
              name=None, value=None, metadata=None,
-             src=UidPort('P:loop_1.in.i'),
+             src=UidPort('P:loop_1.in.e'),
              tgt=UidPort('P:loop_1_cond.in.e')),
 
         Wire(uid=UidWire('W:loop_ex2.loop_1.k'),
@@ -344,9 +344,11 @@ def generate_gromet() -> Gromet:
                  metadata=None),
     ]
 
-    e0 = Expr(call=RefOp(UidOp('geq')),
+    e0 = Expr(call=RefOp(UidOp('lt')),
               args=[UidPort('P:loop_1_cond.in.i'),
                     UidPort('P:loop_1_cond.in.e')])
+    e0_not = Expr(call=RefOp(UidOp('not')),
+                  args=[e0])
     loop_1_cond = \
         Predicate(uid=UidBox('B:loop_1_cond'),
                   type=None,
@@ -354,7 +356,7 @@ def generate_gromet() -> Gromet:
                   ports=[UidPort('P:loop_1_cond.in.i'),
                          UidPort('P:loop_1_cond.in.e'),
                          UidPort('P:loop_1_cond.out.exit')],
-                  tree=e0,
+                  tree=e0_not,
                   metadata=None)
 
     e1 = Expr(call=RefOp(UidOp('+')),
@@ -423,7 +425,8 @@ def generate_gromet() -> Gromet:
                  # contents
                  wires=[UidWire('W:loop_ex2.loop_1.e'),
                         UidWire('W:loop_ex2.loop_1.k'),
-                        UidWire('W:loop_1.loop_ex2.k')],
+                        UidWire('W:loop_1.loop_ex2.k'),
+                        UidWire('W:loop_ex2.i>loop_1.in.i')],
                  junctions=[UidJunction('J:loop_ex2.e'),
                             UidJunction('J:loop_ex2.i')],
                  boxes=[UidBox('B:loop_1')],

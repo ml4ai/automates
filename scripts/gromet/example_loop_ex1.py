@@ -278,19 +278,21 @@ def generate_gromet() -> Gromet:
                  metadata=None),
     ]
 
-    e0 = Expr(call=RefOp(UidOp('geq')),
+    e0 = Expr(call=RefOp(UidOp('lt')),
               args=[UidPort('P:loop_1_cond.in.i'),
                     Literal(uid=None,
                             type=UidType('Integer'),
                             value=Val('5'),
                             name=None, metadata=None)])
+    e0_not = Expr(call=RefOp(UidOp('not')),
+                  args=[e0])
     loop_1_cond = \
         Predicate(uid=UidBox('B:loop_1_cond'),
                   type=None,
                   name=None,
                   ports=[UidPort('P:loop_1_cond.in.i'),
                          UidPort('P:loop_1_cond.out.exit')],
-                  tree=e0,
+                  tree=e0_not,
                   metadata=None)
 
     e1 = Expr(call=RefOp(UidOp('+')),
@@ -355,7 +357,8 @@ def generate_gromet() -> Gromet:
 
                  # contents
                  wires=[UidWire('W:loop_ex1.loop_1.k'),
-                        UidWire('W:loop_1.loop_ex1.k')],
+                        UidWire('W:loop_1.loop_ex1.k'),
+                        UidWire('W:loop_ex1.i>loop_1.in.i')],
                  junctions=[UidJunction('J:loop_ex1.i')],
                  boxes=[UidBox('B:loop_1')],
 
