@@ -1,0 +1,32 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+# This rule is not complete. Description part needs to be adjusted.
+
+  - name: model_suggests
+    label: ModelDescription
+    priority: ${priority}
+    type: token
+    #    action: modelArguments
+    example: "The model also suggests that there might exist a SARS precursor in a large reservoir, prompting for implementation of precautionary measures when the weather cools down."
+    pattern: |
+      [tag = /DT/]? (?<model> [chunk = /B-NP/]? [chunk = /I-NP/]* [word = "model"]) [word = "also"]? [lemma = /suggest/] [word = /that/] (?<modelDescr> [word = /there/])
+
+  - name: model_which_is
+    label: ModelDescription
+    priority: ${priority}
+    type: token
+    #    action: modelArguments
+    example: "We begin with a brief review on a classical epidemic model, the so called Susceptible-Infected-Removed (SIR) model which is simple and useful when one tries to understand the propagation of many real-life epidemics."
+    pattern: |
+      [tag = /DT/]? (?<model> [chunk = /B-NP/]? [chunk = /I-NP/]* [word = "model"]) (?<trigger> [word = "which"] [word = "is"]) (?<modelDescr> [tag = /JJ/])
+
+  - name: modelLimitation
+    label: ModelDescription
+    priority: ${priority}
+    type: token
+    #    action: modelArguments
+    example: "we show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
+    pattern: |
+      @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [word = /.*/]*)

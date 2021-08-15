@@ -132,6 +132,7 @@ object OdinEngine {
 
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
+  val MODEL_DESCRIPTION_LABEL: String = "ModelDescription"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
@@ -149,6 +150,8 @@ object OdinEngine {
   val UNIT_ARG: String = "unit"
   val FUNCTION_INPUT_ARG: String = "input"
   val FUNCTION_OUTPUT_ARG: String = "output"
+  val MODEL_NAME_ARG: String = "model"
+  val MODEL_DESCRIPTION_ARG: String = "modelDescr"
 
 
   val logger = LoggerFactory.getLogger(this.getClass())

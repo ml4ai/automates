@@ -45,6 +45,10 @@ rules:
       action: filterFunction
       priority: 10
 
+  - import: "org/clulab/aske_automates/grammars/modelDescriptions.yml"
+    vars:
+      priority: 10
+
 
 #  - import: "org/clulab/aske_automates/grammars/template.yml"
 #    vars:

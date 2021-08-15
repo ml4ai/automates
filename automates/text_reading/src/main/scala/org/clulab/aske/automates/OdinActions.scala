@@ -772,6 +772,15 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     mentionsDisplayOnlyArgs
   }
 
+  def modelDescrArguments(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val mentionsDisplayOnlyArgs = for {
+      m <- mentions
+      arg <- m.arguments.values.flatten
+    } yield copyWithLabel(arg, "ModelDescription")
+
+    mentionsDisplayOnlyArgs
+  }
+
   def filterFunction(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
