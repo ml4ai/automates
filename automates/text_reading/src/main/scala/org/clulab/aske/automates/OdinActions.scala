@@ -8,12 +8,13 @@ import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
-import org.clulab.aske.automates.attachments.{DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, ParamSettingIntAttachment, UnitAttachment, FunctionAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 
 
@@ -23,7 +24,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   val proc = new FastNLPProcessor()
   def globalAction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
 
-
+//mentions
     if (expansionHandler.nonEmpty) {
       // expand arguments
 
@@ -211,6 +212,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     newMentions
   }
 
+  def processFunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      val trigger = if (m.isInstanceOf[EventMention]) m.asInstanceOf[EventMention].trigger.text else "no Trigger"
+      val foundBy = m.foundBy
+      val att = new FunctionAttachment("FunctionAtt", trigger, foundBy)
+      newMentions.append(m.withAttachment(att))
+    }
+    newMentions
+  }
 
   def processParamSetting(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val newMentions = new ArrayBuffer[Mention]()
@@ -224,8 +236,42 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     newMentions
   }
 
+  def processRuleBasedContextEvent(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val contextAttachedMens = new ArrayBuffer[Mention]
+    for (m <- mentions) {
+      val toAttach = m.arguments.getOrElse("event", Seq())
+      val contexts = m.arguments.getOrElse("context", Seq())
+      val foundBy = m.foundBy
+      if (toAttach.nonEmpty) {
+        for (t <- toAttach) {
+          contextAttachedMens.append(contextToAttachment(t, contexts, foundBy, state))
+        }
+      }
+    }
+    contextAttachedMens
+  }
+
+  def contextToAttachment(menToAttach: Mention, contexts: Seq[Mention], foundBy: String, state: State = new State()): Mention = {
+    val newArgs = mutable.Map[String, Seq[Mention]]()
+    val att = new ContextAttachment("ContextAtt", context = contextsToStrings(contexts, state), foundBy)
+    menToAttach.withAttachment(att)
+  }
+
+  def contextsToStrings(context: Seq[Mention], state: State = new State()): Seq[String] = {
+    val contexts = new ArrayBuffer[String]
+    if (context.nonEmpty) {
+      for (c <- keepLongest(context)) {
+        val contextInformation = c.arguments("context")
+        for (i <- contextInformation) {
+          contexts.append(i.text)
+        }
+      }
+    }
+  contexts
+  }
+
   def keepLongestIdentifier(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    // used to avoid identifiers like R(t) being found as separate R, t, R(t, and so on
+    // used to avoid identifiers like R ( t ) being found as separate R, t, R(t, and so on
     val maxInGroup = new ArrayBuffer[Mention]()
     val groupedBySent = mentions.groupBy(_.sentence)
     for (gbs <- groupedBySent) {
@@ -238,10 +284,11 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     maxInGroup.distinct
   }
 
-
   /** Keeps the longest mention for each group of overlapping mentions **/ // note: edited to allow functions to have overlapping inputs/outputs
   def keepLongest(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-    val (functions, other) = mentions.partition(_.label == "Function")
+    val (functions, other) = mentions.partition(m => m.label == "Function" && m.arguments.contains("output") && m.arguments("output").nonEmpty)
+    // distinguish between EventMention and RelationMention in functionMentions
+    val (functionEm, functionRm) = functions.partition(_.isInstanceOf[EventMention])
     val mns: Iterable[Mention] = for {
       // find mentions of the same label and sentence overlap
       (k, v) <- other.groupBy(m => (m.sentence, m.label))
@@ -249,14 +296,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       // for overlapping mentions starting at the same token, keep only the longest
       longest = v.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    val fns: Iterable[Mention] = for {
-      // if the label is "Function", find mentions of the same trigger and sentence overlap
-      (k, v) <- functions.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
+    val ems: Iterable[Mention] = for {
+      (k, v) <- functionEm.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval))
       (a, b) <- v.groupBy(m => m.arguments("output").head.tokenInterval)
       m <- b
       longest = b.filter(_.tokenInterval.overlaps(m.tokenInterval)).maxBy(m => (m.end - m.start) + 0.1 * m.arguments.size)
     } yield longest
-    mns.toVector.distinct ++ fns.toVector.distinct
+
+    mns.toVector.distinct ++ ems.toVector.distinct ++ functionRm
   }
 
 
@@ -347,6 +394,18 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     grouped.toMap
   }
 
+  def longestAndWithAtt(mentions: Seq[Mention]): Mention = {
+    val maxLength = mentions.maxBy(_.tokenInterval.length).tokenInterval.length
+    val (ofMaxLength, other) = mentions.partition(_.tokenInterval.length==maxLength)
+    if (ofMaxLength.exists(_.attachments.nonEmpty)) {
+      val (withAtt, other) = ofMaxLength.partition(_.attachments.nonEmpty)
+      return withAtt.head
+    } else {
+      ofMaxLength.head
+    }
+
+  }
+
   def filterOutOverlappingDescrMen(mentions: Seq[Mention]): Seq[Mention] = {
     // input is only mentions with the label ConjDescription (types 1 and 2) or Description with conjunctions
     // this is to get rid of conj descriptions that are redundant in the presence of a more complete ConjDescription
@@ -362,13 +421,12 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
           if (varOverlapGroup.exists(_.label.contains("ConjDescription"))) {
             // type 2 has same num of vars and descriptions (a minimum of two pairs)
             val (type2, type1) = varOverlapGroup.partition(_.label.contains("Type2"))
-
             if (type2.isEmpty) {
               // use conf descrs type 1 only if there are no overlapping (more complete) type 2 descriptions
-              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescription").maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescription"))
               toReturn.append(longestConjDescr)
             } else {
-              val longestConjDescr = varOverlapGroup.filter(_.label == "ConjDescriptionType2").maxBy(_.tokenInterval.length)
+              val longestConjDescr = longestAndWithAtt(varOverlapGroup.filter(_.label == "ConjDescriptionType2"))
               toReturn.append(longestConjDescr)
             }
           } else {
@@ -379,12 +437,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     toReturn.distinct
   }
-
-
-  // keep this as a stub for function action flow
-   def functionActionFlow(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-     mentions.distinct
-   }
 
   // this should be the descr text bound mention
   def getDiscontCharOffset(m: Mention, newTokenList: List[Int]): Seq[(Int, Int)] = {
@@ -475,15 +527,14 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val (descrs, nondescrs) = mentions.partition(_.label.contains("Description"))
     // check if there's overlap between conjdescrs and standard descrs; if there is, drop the standard descr; add nondescrs
     val withoutOverlap = filterOutOverlappingDescrMen(descrs) ++ nondescrs
+
     // all that have conj (to be grouped further) and those with no conj
     val (withConj, withoutConj) = withoutOverlap.partition(m => hasConj(m))
 
     // descrs that were found as ConjDescriptions - that is events with multiple variables (at least partially) sharing a descriptions vs descriptions that were found with standard rule that happened to have conjunctions in their descriptions
     val (conjDescrs, standardDescrsWithConj) = withConj.partition(_.label.contains("ConjDescription"))
-    val (conjType2, conjType1) = withConj.partition(_.label.contains("Type2"))
-
+    val (conjType2, conjType1) = conjDescrs.partition(_.label.contains("Type2"))
     val toReturn = new ArrayBuffer[Mention]()
-
 
     for (m <- untangleConjunctionsType2(conjType2)) {
       toReturn.append(m)
@@ -508,10 +559,8 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     // make sure to add non-conj events
     for (m <- withoutConj) toReturn.append(m)
 
-
     // filter by start offset can eliminate the shorter description 'index' if there are two overlapping descriptions - "index" and "index card"; filter by end offset can eliminate the shorter description 'index' if there are two overlapping descriptions - "index" and "leaf area index"
     filterDescrsByOffsets(filterDescrsByOffsets(toReturn, "varAndDescrStartOffset"), "varAndDescrEndOffset")
-
   }
 
   def untangleConjunctionsType2(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -539,7 +588,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
             m.document,
             m.keep,
             m.foundBy ++ "++untangleConjunctionsType2",
-            Set.empty
+            m.attachments
           ))
         }
       } else {
@@ -626,38 +675,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
             val newArgs = Map("variable" -> Seq(v), "description" -> Seq(newDescriptions(i)))
             val newInt = Interval(math.min(v.tokenInterval.start, newDescriptions(i).tokenInterval.start), math.max(v.tokenInterval.end, newDescriptions(i).tokenInterval.end))
-            // construct a new description with new token int, foundBy, and args
-            val newDescrMen = mostComplete match {
-              case e: EventMention => {
-                new EventMention(
-                  mostComplete.labels,
-                  newInt,
-                  mostComplete.asInstanceOf[EventMention].trigger,
-                  newArgs,
-                  mostComplete.paths, // the paths are off; fixme: drop paths to one of the old args or consturct new paths somehow
-                  mostComplete.sentence,
-                  mostComplete.document,
-                  mostComplete.keep,
-                  mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
-                )
-              }
-              case r: RelationMention => {
-                new RelationMention(
-                  mostComplete.labels,
-                  newInt,
-                  newArgs,
-                  mostComplete.paths, // the paths are off
-                  mostComplete.sentence,
-                  mostComplete.document,
-                  mostComplete.keep,
-                  mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
-                )
-              }
-              case _ => ???
-
-            }
 
             if (descrAttachments(i).toUJson("charOffsets").arr.length > 1) {
               val descrWithAtt = newDescriptions(i).withAttachment(descrAttachments(i))
@@ -686,7 +703,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case r: RelationMention => {
@@ -699,7 +716,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
                   mostComplete.document,
                   mostComplete.keep,
                   mostComplete.foundBy ++ "++untangleConjunctions",
-                  Set.empty
+                  mostComplete.attachments
                 )
               }
               case _ => ???
@@ -826,7 +843,196 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       toReturn.append(newFunctions)
     }
 
+    toReturn.filter(_.arguments.nonEmpty) ++ other
+  }
+
+  def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (functions, other) = mentions.partition(_.label == "Function")
+    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
+    val toReturn = new ArrayBuffer[Mention]()
+    for (f <- fragment) {
+      val newInputs = new ArrayBuffer[Mention]()
+      val newOutputs = new ArrayBuffer[Mention]()
+      val prevSentences = functions.filter(_.sentence < f.sentence)
+      if (prevSentences.nonEmpty) {
+        val menToAttach = prevSentences.maxBy(_.sentence)
+        if (f.arguments.contains("input")) {
+          newInputs ++= menToAttach.arguments.getOrElse("input", Seq()) ++ f.arguments.getOrElse("input", Seq())
+        }
+        if (f.arguments.contains("output")) {
+          newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
+        }
+        val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
+        val newFunctions = copyWithArgs(f, newArgs)
+        toReturn.append(newFunctions)
+      } else toReturn.append(f)
+    }
+    toReturn ++ other ++ complete
+  }
+
+  def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    val (functions, other) = mentions.partition(_.label == "Function")
+    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
+    for (c <- complete) {
+      val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && !m.tags.get.head.contains("VB"))
+      val newOutputs = c.arguments("output").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && !m.tags.get.head.contains("VB"))
+      if (newInputs.nonEmpty && newOutputs.nonEmpty) {
+        val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
+        val newFunctions = copyWithArgs(c, newArgs)
+        toReturn.append(newFunctions)
+      }
+    }
+    for (f <- fragment) {
+      if (f.arguments.contains("input")) {
+        val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
+        if (inputFilter.nonEmpty) {
+          val newInputs = Map("input" -> inputFilter, "output" -> Seq())
+          val newInputMens = copyWithArgs(f, newInputs)
+          toReturn.append(newInputMens)
+        }
+      }
+      if (f.arguments.contains("output")) {
+        val outputFilter = f.arguments("output").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
+        if (outputFilter.nonEmpty) {
+          val newOutputs = Map("input" -> Seq(), "output" -> outputFilter)
+          val newOutputMens = copyWithArgs(f, newOutputs)
+          toReturn.append(newOutputMens)
+        }
+      }
+    }
     toReturn ++ other
+  }
+
+  def filterInputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = new ArrayBuffer[Mention]()
+    for (m <- mentions) {
+      val identifierInputs = new ArrayBuffer[Mention]()
+      val phraseInputs = new ArrayBuffer[Mention]()
+      val newInputs = new ArrayBuffer[Mention]()
+      val outputs = new ArrayBuffer[Mention]()
+
+      for (arg <- m.arguments) {
+        if (arg._1 == "input") {
+          // if the argument is an input, distinguish between identifier inputs and phrase inputs
+          if (arg._2.exists(_.label == "Identifier")) {
+            identifierInputs ++= arg._2.filter(_.label.contains("Identifier"))
+            phraseInputs ++= arg._2.filterNot(_.label.contains("Identifier"))
+          } else phraseInputs ++= arg._2
+          // if there is an identifier input, check if there's an overlap between the identifier input and other phrase inputs
+          if (identifierInputs.nonEmpty) {
+            for (i <- identifierInputs) {
+              val inputNumCheck = new ArrayBuffer[Mention]
+              if (phraseInputs.nonEmpty) {
+                for (p <- phraseInputs) {
+                  newInputs.append(p)
+                  val overlappingInterval = i.tokenInterval.overlaps(p.tokenInterval)
+                  // if there's no overlap, append the identifier input to the inputNumCheck
+                  if (!overlappingInterval) { inputNumCheck.append(i) }
+                }
+                // if the number of identifier inputs appended to the inputNumCheck is the same as the number of phrase inputs,
+                // it means that there is no overlap, so attach the identifier input to newInputs.
+                // if the number is not the same, it means there is an overlap, so don't attach.
+                if (inputNumCheck.length == phraseInputs.length) newInputs.append(i)
+                // if there's no phrase inputs, just append the identifier inputs to the newInputs.
+              } else newInputs.append(i)
+            }
+            // if there's no identifier inputs, just append the phrase inputs to the newInputs.
+          } else newInputs ++= phraseInputs
+        } else outputs ++= arg._2
+      }
+      // make new arguments with newInputs and outputArgs
+        val newArgs = Map("input" -> newInputs.distinct, "output" -> outputs)
+        val newFunctions = copyWithArgs(m, newArgs)
+        toReturn.append(newFunctions)
+    }
+    toReturn
+  }
+
+  def filterOutputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val phraseTokInt = new ArrayBuffer[Interval]
+    val newMentions = new ArrayBuffer[Mention]
+    val groupMens = mentions.groupBy(m => (m.sentence, m.asInstanceOf[EventMention].trigger.tokenInterval, m.foundBy))
+    for (group <- groupMens) {
+      if (group._2.head.arguments("output").nonEmpty) {
+        val (identOutputMen, phraseOutputMen) = group._2.partition(_.arguments("output").head.label.contains("Identifier"))
+        if (identOutputMen.nonEmpty) {
+          for (i <- identOutputMen) {
+            val outputNumCheck = new ArrayBuffer[Mention]
+            if (phraseOutputMen.nonEmpty) {
+              for (p <- phraseOutputMen) {
+              val overlappingInterval = i.arguments("output").head.tokenInterval.overlaps(p.arguments("output").head.tokenInterval)
+              if (!overlappingInterval) {outputNumCheck.append(i)}
+              else Seq()
+            }
+              if (outputNumCheck.length == phraseOutputMen.length) newMentions.append(i) else Seq()
+            }
+          }
+        }
+        newMentions ++= phraseOutputMen
+      } else newMentions ++= group._2
+    }
+    newMentions
+  }
+
+  def makeNewMensWithContexts(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val contextTokInt = new ArrayBuffer[Interval]
+    val mensSelected = new ArrayBuffer[Mention]
+    val contextSelected = new ArrayBuffer[Mention]
+    val toReturn = new ArrayBuffer[Mention]
+    val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
+    // note: attachment to description creates too many false positives - needs to be revised to be applied to description mentions
+    val contextMens = mentions.filter(_.label == "Context")
+    if (mensToAttach.nonEmpty) {
+      for (m <- mensToAttach) {
+        val contextSameSntnce = contextMens.filter(c => c.sentence == m.sentence)
+        if (contextSameSntnce.nonEmpty) {
+          for (c <- contextSameSntnce) contextTokInt += c.tokenInterval
+          if (findOverlappingInterval(m.tokenInterval, contextTokInt.toList) != None) {
+            mensSelected.append(m)
+          } else toReturn.append(m)
+          if (mensSelected.nonEmpty) {
+            for (m <- mensSelected) {
+              for (c <- contextSameSntnce) {
+                if (m.sentence == c.sentence && m.tokenInterval.overlaps(c.tokenInterval)) {
+                  contextSelected.append(c)
+                }
+              }
+              if (contextSelected.nonEmpty) {
+                val newMen = contextToAttachment(m, contextSelected, foundBy = "tokenInterval overlap", state)
+                toReturn.append(newMen)
+              }
+            }
+          }
+        } else toReturn.append(m)
+      }
+    }
+    toReturn.distinct ++ mensNotToAttach
+  }
+
+  def filterContextSelected(contexts: Seq[Mention], mention: Mention): Seq[Mention] = {
+    val filteredContext = new ArrayBuffer[Mention]
+    val contextNumCheck = new ArrayBuffer[Mention]
+    val completeFilterContext = new ArrayBuffer[Mention]
+    val trigger = new ArrayBuffer[Mention]
+    if (mention.isInstanceOf[EventMention]) trigger.append(mention.asInstanceOf[EventMention].trigger)
+    for (c <- contexts) {
+    for (argType <- mention.arguments) {
+      for {
+        arg <- argType._2
+        newMention = mention match {
+          case rm: RelationMention => if (!(c.startOffset == arg.startOffset && c.endOffset == arg.endOffset)) contextNumCheck.append(c)
+          case em: EventMention => if (!(c.startOffset == arg.startOffset && c.endOffset == arg.endOffset)) contextNumCheck.append(c)
+          case _ => ???
+      }
+        } yield contextNumCheck
+      if (contextNumCheck.nonEmpty && contextNumCheck.length == argType._2.length) {
+        filteredContext.append(c)
+      }
+      completeFilterContext ++= filteredContext.filter(c => c.tokenInterval != mention.tokenInterval)
+      }
+    }
+    completeFilterContext.distinct
   }
 
   def selectShorterAsIdentifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -978,6 +1184,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     toReturn
   }
 
+  def functionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val filteredMen = filterFunction(mentions, state)
+    val filteredOutputs = if (filteredMen.nonEmpty) filterOutputOverlaps(filteredMen, state) else Seq.empty
+    val filteredInputs = if (filteredOutputs.nonEmpty) filterInputOverlaps(filteredOutputs, state) else Seq.empty
+    val filteredArgs = if (filteredInputs.nonEmpty) filterFunctionArgs(filteredInputs, state) else Seq.empty
+    val toReturn = if (filteredArgs.nonEmpty) processFunctions(filteredArgs, state) else Seq.empty
+
+    toReturn
+//    mentions
+  }
+
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {
     for {
       //every mention in array...
@@ -1010,6 +1227,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
+    val singleCapitalWord = """^[A-Z]+$""".r
     for {
       m <- mentions
       descrText = m match {
@@ -1020,6 +1238,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
 
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
+      if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       // make sure there's at least one noun; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
 //      if m.tags.get.exists(_.contains("N"))
 

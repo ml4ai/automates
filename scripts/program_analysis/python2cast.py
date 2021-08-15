@@ -49,7 +49,7 @@ C = convert.visit(contents)
 C.source_refs = [SourceRef(file_name, None, None, 1, line_count)]
 
 os.chdir(old_path)
-out_cast = cast.CAST([C])
+out_cast = cast.CAST([C], "python")
 # Then, print CAST as JSON
 if '--rawjson' in sys.argv:
     print(json.dumps(out_cast.to_json_object(),sort_keys=True,indent=None))
@@ -58,7 +58,7 @@ else:
         print(out_cast.to_json_str())
     else:
         out_name = file_name.split(".")[0]
-        print("Writing CAST to "+out_name+".CAST.json")
+        print("Writing CAST to "+out_name+"--CAST.json")
         out_handle = open(out_name+"--CAST.json","w")
         out_handle.write(out_cast.to_json_str())
     

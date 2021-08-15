@@ -81,14 +81,20 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
-    //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
-    val (descriptionMentions, other) = events.partition(_.label.contains("Description"))
 
+    // process context attachments to the initially extracted mentions
+    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
+    val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
+    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+
+    // post-process the mentions with untangleConj and combineFunction
+    val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
+
+    val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
+    val combining = loadableAttributes.actions.combineFunction(functionMentions)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other) ++
-      untangled)).toVector
-
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -133,6 +139,8 @@ object OdinEngine {
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
   val MODEL_DESCRIPTION_LABEL: String = "ModelDescription"
+  val CONJ_DESCRIPTION_LABEL: String = "ConjDescription"
+  val CONJ_DESCRIPTION_TYPE2_LABEL: String = "ConjDescriptionType2"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
@@ -141,6 +149,8 @@ object OdinEngine {
   val UNIT_LABEL: String = "UnitRelation"
   val MODEL_LABEL: String = "Model"
   val FUNCTION_LABEL: String = "Function"
+  val CONTEXT_LABEL: String = "Context"
+  val CONTEXT_EVENT_LABEL: String = "ContextEvent"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"
@@ -152,7 +162,8 @@ object OdinEngine {
   val FUNCTION_OUTPUT_ARG: String = "output"
   val MODEL_NAME_ARG: String = "model"
   val MODEL_DESCRIPTION_ARG: String = "modelDescr"
-
+  val CONTEXT_ARG: String = "context"
+  val CONTEXT_EVENT_ARG: String = "event"
 
   val logger = LoggerFactory.getLogger(this.getClass())
   // Used by LexiconNER

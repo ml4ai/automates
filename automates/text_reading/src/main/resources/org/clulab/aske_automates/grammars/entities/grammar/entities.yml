@@ -7,9 +7,12 @@ rules:
     type: token
     pattern: |
       # avoids event triggers, coordinations, refs, etc.
-      [chunk='B-NP' & !mention=Avoid & !entity=NUMBER]? [chunk='I-NP' & !mention=Avoid & !word = /\(|\)|,|=|\[|\]/]+
+      [chunk='B-NP' & !mention=Avoid & !entity=NUMBER & !tag = /VBG/]? [chunk='I-NP' & !mention=Avoid & !word = /\(|\)|,|=|\[|\]/]+
       |
-      [chunk='B-NP' & !mention=Avoid & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
+      [chunk='B-NP' & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]
+      |
+      [tag = "NNP" & entity = LOCATION]+
+      # note: last rule added to deal with the cases like "Hong Kong"
       #todo: can we add parens in avoid without making it invisible in rules?
 
   - name: single_VP # note: edited the pattern to include single lower case VPs as well. changing pattern didn't break more rules, but needs to check if this cause any errors.
