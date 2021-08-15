@@ -14,6 +14,7 @@ import org.clulab.struct.Interval
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 import scala.util.matching.Regex
 
 
@@ -203,8 +204,24 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
 
   def processParamSettingInt(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+
     val newMentions = new ArrayBuffer[Mention]()
+
+    def parseDouble(s: String): Option[Double] = Try { s.toDouble }.toOption
+
     for (m <- mentions) {
+      val valueArgs = m.arguments.filter(_._1.contains("value"))
+      // if there are two value args, that means we have both least and most value, so it makes sense to try to remap the least and most values in case they are in the wrong order (example: "... varying from 27 000 to 22000...")
+      val valueMentionsSorted: Option[Seq[Mention]] = if (valueArgs.toSeq.length == 2) {
+        // check if the values are actual numbers
+        if (valueArgs.forall(arg => parseDouble(arg._2.head.text.replace(" ", "")).isDefined)) {
+          // if yes, sort them in increasing order (so that the least value is first and most is last)
+          Some(valueArgs.flatMap(_._2).toSeq.sortBy(_.text.replace(" ", "").toDouble))
+        } else None
+      } else None
+
+      println("sorted: " + valueMentionsSorted.mkString("||"))
+
       val newArgs = mutable.Map[String, Seq[Mention]]()
       val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
       var inclLower: Option[Boolean] = None
@@ -212,19 +229,27 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       for (arg <- m.arguments) {
         arg._1 match {
           case "valueLeastExcl" => {
-            newArgs("valueLeast") = arg._2
+            newArgs("valueLeast") = if (valueMentionsSorted.isDefined) {
+              Seq(valueMentionsSorted.get.head)
+            } else arg._2
             inclLower = Some(false)
           }
           case "valueLeastIncl" => {
-            newArgs("valueLeast") = arg._2
+            newArgs("valueLeast") = if (valueMentionsSorted.isDefined) {
+              Seq(valueMentionsSorted.get.head)
+            } else arg._2
             inclLower = Some(true)
           }
           case "valueMostExcl" => {
-            newArgs("valueMost") = arg._2
+            newArgs("valueMost") = if (valueMentionsSorted.isDefined) {
+              Seq(valueMentionsSorted.get.last)
+            } else arg._2
             inclUpper = Some(false)
           }
           case "valueMostIncl" => {
-            newArgs("valueMost") = arg._2
+            newArgs("valueMost") = if (valueMentionsSorted.isDefined) {
+              Seq(valueMentionsSorted.get.last)
+            } else arg._2
             inclUpper = Some(true)
           }
 
@@ -236,9 +261,9 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         }
       }
 
-
       // required for expansion
       val newPaths = mutable.Map[String, Map[Mention, SynPath]]()
+      val tempNewPaths = mutable.Map[String, Map[Mention, SynPath]]()
 
       val oldArgNewArgMap = Map(
         "valueMostIncl" -> "valueMost",
@@ -247,12 +272,40 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         "valueLeastExcl" -> "valueLeast",
         "variable" -> "variable"
       )
-      for (key <- m.paths.keys) {
-        val value = m.paths(key)
-        newPaths(oldArgNewArgMap(key)) = value
+
+
+      println(m.foundBy)
+      val synPaths = m.paths.flatMap(_._2)
+      println("synpaths: " + synPaths.keys.mkString("|"))
+      for (s <- synPaths) {
+        println("path: " + s._1 )
       }
 
+      if (m.paths.nonEmpty) {
+        println("m paths: " + m.paths)
+        println("new args: " + newArgs)
+        for (arg <- newArgs) {
+
+          println("arg 2: " + arg._2.mkString("||"))
+          tempNewPaths +=(arg._1 -> Map(arg._2.head -> synPaths(newArgs(arg._1).head)))
+        }
+
+        for (key <- tempNewPaths.keys) {
+          println("key: " + key)
+          val value = tempNewPaths(key)
+          println("val: " + value.keys.head + " " + value.keys.head.text)
+          newPaths(key) = value
+        }
+      }
+
+
+      println("synpaths: " + newPaths.keys.mkString("|"))
+
       val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
+      val newMen = copyWithArgsAndPaths(m, newArgs.toMap, newPaths.toMap)
+      for (a <- newMen.arguments) {
+        println("==>" + a._1 + " " + a._2.head + " " + a._2.head.text)
+      }
       newMentions.append(copyWithArgsAndPaths(m, newArgs.toMap, newPaths.toMap).withAttachment(att))
     }
     newMentions

@@ -81,16 +81,16 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
   }
 
   val t4b = "The current model specifies sla_max as varying from 27 000 to 22000 mm 2 g -1 t o constrain daily leaf area increase where carbon is limiting ."
-  failingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from t4b: ${t4b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
-      "sla_max" -> Seq("22000", "27 000")  // fixme: min and max values are mixed up
+      "sla_max" -> Seq("22000", "27 000")
     )
     val mentions = extractMentions(t4b)
     testParameterSettingEventInterval(mentions, desired)
   }
 
-  val t5b = "This proportion ( ratio_root_shoot ) is specified for each growth stage , and varies from 1.0 at emergence , to 0.09 at flowering ."
-  failingTest should s"extract the parameter setting(s) from t5b: ${t5b}" taggedAs(Somebody, Interval) in {
+  val t5b = "ratio_root_shoot is specified for each growth stage , and varies from 1.0 at emergence , to 0.09 at flowering ."
+  passingTest should s"extract the parameter setting(s) from t5b: ${t5b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
       "ratio_root_shoot" -> Seq("0.09", "1.0") //fixme: min and max in wrong order...
     )

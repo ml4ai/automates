@@ -83,7 +83,7 @@ rules:
       trigger = [lemma=/vary|lie/]
       variable:Phrase = nsubjpass nmod_of | nsubj | <advcl_as dobj
       valueLeastIncl:Value = nmod_between nummod? | nmod_from
-      valueMostIncl:Value = nmod_between nummod? conj_and | nmod_from nmod
+      valueMostIncl:Value = nmod_between nummod? conj_and | nmod_from nmod | nmod_to
 
   - name: interval_between
     label: IntervalParameterSetting
