@@ -276,19 +276,19 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         return gm.CfResultsInternal(p, 1, tree)
 
     for event in gamma:
-        if event.orig_name == event.int_var:
+        if event.orig_name in event.int_vars:
 
             # Line 2
-            if event.obs_val != event.int_value:
+            if event.obs_val not in event.int_values:
                 print("Violates Axiom of Effectiveness, gamma is inconsistent")
                 tree.call.line = 2
                 tree.call.id_check = True
                 return gm.CfResultsInternal(p, 0, tree)
 
             # Line 3
-            if event.obs_val == event.int_value:
+            if event.obs_val in event.int_values:
                 nxt = cf_ID(g, gamma.remove(event), v, p)
-                tree.children.append(nxt.tree)
+                tree.children.append(deepcopy(nxt.tree))
                 tree.call.line = 3
                 tree.call.id_check = nxt.tree.call.id_check
                 return gm.CfResultsInternal(nxt.p, nxt.p_int, tree)
@@ -307,12 +307,14 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     cg_obs = gm.observed_graph(cg)
     cg_topo = cg_obs.topological_sorting()
     s = gm.c_components(cg, cg_topo)
+    print(s)
     if len(s) > 1:
         tree.call.line = 6
         product_list = []
         id_check_list = []
         for s_element in s:
-            None
+            gamma_new = []
+            nxt = None
 
         # Outer sum
         obs_nodes = cg.vs.select(description=None)["name"]

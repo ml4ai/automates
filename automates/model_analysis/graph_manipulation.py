@@ -267,6 +267,7 @@ def c_components(g, topo):
     """
     unobs_edges = g.es.select(description="U")
     g_unobs = g.subgraph_edges(unobs_edges, delete_vertices=False)
+    # print(g_unobs)  # todo: add edges pointing back to unobserved nodes
     subgraphs = g_unobs.decompose()
     cc = []
     cc_rank = []
