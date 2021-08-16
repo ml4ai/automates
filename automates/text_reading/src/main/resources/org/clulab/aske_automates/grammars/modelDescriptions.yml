@@ -8,25 +8,40 @@ rules:
     label: ModelDescription
     priority: ${priority}
     type: token
-    #    action: modelArguments
     example: "The model also suggests that there might exist a SARS precursor in a large reservoir, prompting for implementation of precautionary measures when the weather cools down."
     pattern: |
-      [tag = /DT/]? (?<model> [chunk = /B-NP/]? [chunk = /I-NP/]* [word = "model"]) [word = "also"]? [lemma = /suggest/] [word = /that/] (?<modelDescr> [word = /there/])
+      (?<model> [word = "model"]) [word = "also"]? [lemma = /suggest/] [word = /that/] (?<modelDescr> [word = /.*/]+)
 
   - name: model_which_is
     label: ModelDescription
     priority: ${priority}
     type: token
-    #    action: modelArguments
     example: "We begin with a brief review on a classical epidemic model, the so called Susceptible-Infected-Removed (SIR) model which is simple and useful when one tries to understand the propagation of many real-life epidemics."
     pattern: |
-      [tag = /DT/]? (?<model> [chunk = /B-NP/]? [chunk = /I-NP/]* [word = "model"]) (?<trigger> [word = "which"] [word = "is"]) (?<modelDescr> [tag = /JJ/])
+      (?<model> [word = "model"]) [word = "which"] [word = "is"] (?<modelDescr> [tag = /JJ/])
 
   - name: modelLimitation
     label: ModelDescription
     priority: ${priority}
     type: token
-    #    action: modelArguments
     example: "we show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
     pattern: |
       @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [word = /.*/]*)
+
+  - name: model_is
+    label: ModelDescription
+    priority: ${priority}
+    type: dependency
+    example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
+    pattern: |
+      trigger = [lemma = "be"]
+      model:Phrase = <cop nsubj
+      modelDescr:Phrase = <cop
+
+#  - name: modelPurpose
+#    label: ModelDescription
+#    priority: ${priority}
+#    type: token
+#    example: "The CHIME (COVID-19 Hospital Impact Model for Epidemics) App is designed to assist hospitals and public health officials understand hospital capacity needs as they relate to the COVID-19 pandemic."
+#    pattern: |
+#      @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [word = /.*/]*)

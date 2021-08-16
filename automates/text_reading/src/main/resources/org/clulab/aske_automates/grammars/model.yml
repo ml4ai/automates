@@ -10,7 +10,7 @@ rules:
     action: modelArguments
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
-      [word=/^DSSAT|^CSM/] | [word=/[A-Z]*/] (?=[word=/[Mm]odel/])
+      [word=/^DSSAT|^CSM|^CHIRPS/] | [word=/[A-Z]*/] (?=[word=/[Mm]odel$/])
 
   - name: model2
     label: Identifier
@@ -19,7 +19,7 @@ rules:
     example: ""
     action: modelArguments
     pattern: |
-      trigger = [word = /[Mm]odel/]
+      trigger = [word = /[Mm]odel$/]
       variable:Identifier = compound
 
   - name: model3
@@ -29,5 +29,14 @@ rules:
     action: modelArguments
     example: ""
     pattern: |
-      trigger = [word = /[Mm]odel/]
+      trigger = [word = /[Mm]odel$/]
       variable:Phrase = compound [word = /[A-Z]*/]
+
+#  - name: full_name_with_parentheses
+#    label: Model
+#    priority: ${priority}
+#    type: token
+#    action: modelArguments
+#    example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
+#    pattern: |
+#      [tag = /DT/] [word = /[A-Z][a-z]+|and/] "(" [word=/[A-Z]{4,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ")" [word = "model"]

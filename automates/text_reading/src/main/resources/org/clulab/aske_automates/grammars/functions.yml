@@ -459,6 +459,7 @@ rules:
       input:Phrase+ = <advcl nsubj
 #      output:Phrase = <advcl aux
 
+  # key not found issue - needs to be fixed
   - name: minus_token_rule # todo: extraction from the dependency rule needs to be filtered out
     label: Function
     priority: ${priority}
@@ -466,4 +467,4 @@ rules:
     action: ${action}
     example: "e.g., the equation ΣEs1 = ΣEs1 - P is interpreted to mean that a new value of ΣEs1 is equal to the previously calculated value of ΣEs1 minus P."
     pattern: |
-      (?<output> [tag = /JJ/]? [tag = /^N/] ([tag = /IN/] [tag = /^N/]+)?) [lemma = "be"] ([word = "equal"] [word = "to"])? [word = "the"] (?<input> [tag = /RB/]? [tag = /VBN/]? [tag = /^N/] ([tag = /IN/] [tag = /^N/]+)?) [word = "minus"] (?<input> [tag = /FW|^N/])
+      (?<output> [tag = /JJ/]? [tag = /^N/] ([tag = /IN/] [tag = /^N/]+)?) [lemma = "be"] ([word = "equal"] [word = "to"])? [word = "the"] (?<input> [tag = /RB/]? [tag = /VBN/]? [tag = /^N/] ([tag = /IN/] [tag = /^N/]+)?) (?<trigger> [word = "minus"]) (?<input> [tag = /FW|^N/])

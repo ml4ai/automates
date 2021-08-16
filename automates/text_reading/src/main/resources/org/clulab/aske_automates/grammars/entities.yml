@@ -81,7 +81,7 @@ rules:
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
-      [word=/^DSSAT|^CSM/]
+      [word=/^DSSAT|^CSM|^CHIRPS/]
 
   - name: identifier_greek
     label: Identifier
@@ -128,6 +128,27 @@ rules:
     pattern: |
       @Identifier "("? @Identifier ")"?
 
+  - name: four_capital_letters
+    label: Model
+    priority: ${priority1}
+    type: token
+    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
+    pattern: |
+      [word=/[A-Z]{4,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ([tag= /CD/]|[word = /[Vv]\d\.\d/])?
+      |
+      [word=/[A-Z]{4,}\d+/]
+      |
+      [word=/[A-Z]{4,}$/] [word = "-"] [word=/[A-Z]+/] ([tag= /CD/])?
+#      |
+#      [word=/[A-Z]{5,}/] [word=/[A-Z][a-z]+/]
+
+  - name: full_name_with_parentheses
+    label: Model
+    priority: ${priority1}
+    type: token
+    example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
+    pattern: |
+      [tag = /DT/] [word = /[A-Z][a-z]+|and/]+ "(" [word=/[A-Z]{4,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ")" [word = "model"]
 
 #  - name: var_greek_and_latin
 #    label: Identifier
