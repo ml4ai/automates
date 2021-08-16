@@ -173,8 +173,8 @@ class LocalTextReadingInterface(TextReadingInterface):
         # all stored in the scripts/model_assembly/example-tr-data folder.
         self.index = {
             "SIR-simple": {
-                "mentions": "scripts/model_assembly/example-tr-data/sir-simple-documents/SIR-simple--mentions.json",
-                "alignment": "scripts/model_assembly/example-tr-data/sir-simple-documents/SIR-simple--alignment.json"
+                "mentions": "tests/data/example-tr-data/sir-simple-documents/SIR-simple--mentions.json",
+                "alignment": "tests/data/example-tr-data/sir-simple-documents/SIR-simple--alignment.json"
             },
             "CHIME-SIR": {
 
