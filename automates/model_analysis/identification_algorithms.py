@@ -257,7 +257,8 @@ def cf_identifiability(g, gamma, delta=None):
     g_obs = gm.observed_graph(g)
     if not g_obs.is_dag():
         raise ValueError("Graph 'G' is not a DAG.")
-    topo = g_obs.topological_sorting()
+    topo_ind = g_obs.topological_sorting()
+    topo = gm.to_names(topo_ind, g_obs)
     if delta is not None:
         return cf_IDC(g, gamma, delta)
     return cf_ID(g, gamma, topo)
@@ -305,7 +306,8 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
     # Line 6
     cg_obs = gm.observed_graph(cg)
-    cg_topo = cg_obs.topological_sorting()
+    cg_topo_ind = cg_obs.topological_sorting()
+    cg_topo = gm.to_names(cg_topo_ind, cg_obs)
     s = gm.c_components(cg, cg_topo)
     print(s)
     if len(s) > 1:

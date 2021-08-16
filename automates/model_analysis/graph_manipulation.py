@@ -127,6 +127,20 @@ def children_unsort(node, g):
     return ch_names
 
 
+def connected_unsort(node, g):
+    """
+    Finds the neighbors (unsorted) of a node
+    :param node: node
+    :param g: graph
+    :return: neighbors of node
+    """
+    con_list = g.neighborhood(node, order=1, mode="all")
+    con_ind = list(set([con for cons in con_list for con in cons]))
+    con_names = to_names(con_ind, g)
+    con_names.remove(node[0])
+    return con_names
+
+
 # def descendents(node, g, topo):
 #     """
 #     Finds all descendants of a node and orders them
@@ -266,8 +280,20 @@ def c_components(g, topo):
     :return: list of c-components (each c-component is a list of nodes)
     """
     unobs_edges = g.es.select(description="U")
-    g_unobs = g.subgraph_edges(unobs_edges, delete_vertices=False)
+    g_unobs = copy.deepcopy(g.subgraph_edges(unobs_edges, delete_vertices=False))
     # print(g_unobs)  # todo: add edges pointing back to unobserved nodes
+
+    unobs_edges_to_add = []
+    if "description" in g.vertex_attributes():
+        for node in g_unobs.vs():
+            if node["description"] == "U":
+                unobs_indx = node.index
+                neighbors = connected_unsort([node["name"]], g_unobs)
+                for neighbor in neighbors:
+                    neighbor_ind = g_unobs.vs.select(name=neighbor)[0].index
+                    unobs_edges_to_add.append((neighbor_ind, unobs_indx))
+        g_unobs.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
+
     subgraphs = g_unobs.decompose()
     cc = []
     cc_rank = []
@@ -279,6 +305,12 @@ def c_components(g, topo):
             rank = rank + topo.index(node)
         cc_rank.append(rank)
     (cc_sorted, _) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1], reverse=True))))
+
+    if "description" in g.vertex_attributes():
+        for component in cc_sorted:
+            for node in component:
+                if g.vs.select(name=node)[0]["description"] == "U":
+                    component.remove(node)
     return cc_sorted
 
 
