@@ -169,9 +169,9 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
                 node_topo_index = v.index(node)
                 cond_set = v[0:node_topo_index]
                 if p.product:
-                    p_prod = gm.parse_joint(p, node, cond_set, v, topo)  # todo: check this
+                    p_prod = gm.parse_joint(p, node, cond_set, v, topo)
                 else:
-                    p_prod = deepcopy(p)  # todo: check this
+                    p_prod = deepcopy(p)
                     p_prod.var = [node]
                     p_prod.cond = cond_set
                 product_list.append(deepcopy(p_prod))
@@ -313,6 +313,13 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         id_check_list = []
         for s_element in s:
             None
+
+        # Outer sum
+        obs_nodes = cg.vs.select(description=None)["name"]
+        nodes_to_remove = []
+        for event in gamma_prime:
+            nodes_to_remove.append(f"{event.orig_name}_{event.int_vars}")
+        summation_set = list(set(obs_nodes)-set(nodes_to_remove))
     return None
 
 
