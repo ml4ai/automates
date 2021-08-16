@@ -317,6 +317,13 @@ def test_for_1():
 
     run_test_case(filepath, prog_name)
 
+def test_for_2():
+    prog_name = "test_for_2.py"
+    folder = "loop"
+
+    filepath = f"{DATA_DIR}/{folder}/{prog_name}"
+
+    run_test_case(filepath, prog_name)
 
 def test_while_1():
     prog_name = "test_while_1.py"

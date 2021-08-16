@@ -8,41 +8,41 @@ def test_execute_sir_simple_mock():
         "start": 0,
         "end": 120.0,
         "step": 30.0,
-        "domain_parameter": "SIR-simple::SIR-simple::sir::0::--::dt::0",
+        "domain_parameter": "P:sir.out.dt",
         "parameters": {
-            "SIR-simple::SIR-simple::sir::0::--::beta::0": 0.5,
-            "SIR-simple::SIR-simple::sir::0::--::s::0": 100000,
-            "SIR-simple::SIR-simple::sir::0::--::i::0": 1,
-            "SIR-simple::SIR-simple::sir::0::--::r::0": 0,
-            "SIR-simple::SIR-simple::sir::0::--::gamma::0": 0.07,
+            "P:sir.in.beta": 0.5,
+            "P:sir.in.S": 100000,
+            "P:sir.in.I": 1,
+            "P:sir.in.R": 0,
+            "P:sir.in.gamma": 0.07,
         },
         "outputs": [
-            "SIR-simple::SIR-simple::sir::0::--::s::1",
-            "SIR-simple::SIR-simple::sir::0::--::i::1",
-            "SIR-simple::SIR-simple::sir::0::--::r::1",
+            "P:sir.out.S",
+            "P:sir.out.I",
+            "P:sir.out.R",
         ],
     }
     result = execute_gromet_experiment_json(input_json)
 
     expected = {
-        "body": {
+        "result": {
             "domain_parameter": [0, 30, 60, 90, 120],
             "values": {
-                "SIR-simple::SIR-simple::sir::0::--::i::1": [
+                "P:sir.out.I": [
                     13.899850001499987,
                     193.17455602717965,
                     2678.622276802565,
                     35981.04345749553,
                     273225.5469052609,
                 ],
-                "SIR-simple::SIR-simple::sir::0::--::r::1": [
+                "P:sir.out.R": [
                     2.1,
                     31.289685003149977,
                     436.9562526602273,
                     6062.063033945615,
                     81622.25429468622,
                 ],
-                "SIR-simple::SIR-simple::sir::0::--::s::1": [
+                "P:sir.out.S": [
                     99985.0001499985,
                     99776.53575896967,
                     96885.4214705372,
@@ -51,7 +51,8 @@ def test_execute_sir_simple_mock():
                 ],
             },
         },
-        "status": 200,
+        "status": "success",
+        "code": 200,
     }
 
     assert expected == result
@@ -86,7 +87,7 @@ def test_execute_chime_sir_mock():
     result = execute_gromet_experiment_json(input_json)
 
     expected = {
-        "body": {
+        "result": {
             "domain_parameter": [0, 30, 60, 90, 120],
             "values": {
                 "CHIME_SIR::CHIME_SIR::main::0::--::e_a::1": [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -113,7 +114,8 @@ def test_execute_chime_sir_mock():
                 ],
             },
         },
-        "status": 200,
+        "status": "success",
+        "code": 200,
     }
 
     assert result == expected
