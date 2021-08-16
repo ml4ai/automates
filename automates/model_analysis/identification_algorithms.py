@@ -140,10 +140,11 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
         id_check_list = []
         for s_element in s:
             nxt = compute_ID(s_element, gm.ts(set(v) - set(s_element), topo), p, g, g_obs, v, topo, gm.TreeNode())
-            product_list.append(nxt.p)
+            product_list.append(nxt.p)  # todo: double check this
             id_check_list.append(nxt.tree.call.id_check)
             tree.children.append(nxt.tree)
         tree.call.id_check = all(id_check_list)
+        print(product_list)
         return gm.ResultsInternal(p=gm.Probability(sumset=gm.ts(list(set(v) - set(y) - set(x)), topo), product=True, \
                                                    children=product_list), tree=tree)
     else:
@@ -169,9 +170,9 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
                 node_topo_index = v.index(node)
                 cond_set = v[0:node_topo_index]
                 if p.product:
-                    p_prod = gm.parse_joint(p, node, cond_set, v, topo)
+                    p_prod = gm.parse_joint(p, node, cond_set, v, topo)  # todo: check this
                 else:
-                    p_prod = deepcopy(p)
+                    p_prod = deepcopy(p)  # todo: check this
                     p_prod.var = [node]
                     p_prod.cond = cond_set
                 product_list.append(p_prod)
@@ -210,9 +211,9 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
             node_topo_index = v.index(node)
             cond_set = v[0:node_topo_index]
             if p.product:
-                p_prod = gm.parse_joint(p, node, cond_set, v, topo)
+                p_prod = gm.parse_joint(p, node, cond_set, v, topo)  # todo: check this
             else:
-                p_prod = deepcopy(p)
+                p_prod = deepcopy(p)  # todo: check this
                 p_prod.var = [node]
                 p_prod.cond = cond_set
             product_list.append(p_prod)
