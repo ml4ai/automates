@@ -44,6 +44,13 @@ def generate_gromet() -> Gromet:
     # ----- Model component definitions -----
 
     variables = [
+
+        # -- sim_sir() Variables --
+
+        # todo
+
+        # -- sir() Variables --
+
         # sir input
         Variable(uid=UidVariable("V:sir.n"),
                  name="n", type=UidType("Integer"),
@@ -54,8 +61,8 @@ def generate_gromet() -> Gromet:
                  metadata=None),
         Variable(uid=UidVariable("V:sir.beta"),
                  name="beta", type=UidType("Float"),
-                 proxy_state=UidPort("P:sir.beta"),
-                 states=[UidPort("P:sir.beta"),
+                 proxy_state=UidPort("P:sir.in.beta"),
+                 states=[UidPort("P:sir.in.beta"),
                          UidWire("W:sir.beta>sir_s_n_exp.beta"),
                          UidPort("P:sir_s_n_exp.beta"),
                          UidWire("W:sir.beta>sir_i_n_exp.beta"),
@@ -63,8 +70,8 @@ def generate_gromet() -> Gromet:
                  metadata=None),
         Variable(uid=UidVariable("V:sir.gamma"),
                  name="gamma", type=UidType("Float"),
-                 proxy_state=UidPort("P:sir.gamma"),
-                 states=[UidPort("P:sir.gamma"),
+                 proxy_state=UidPort("P:sir.in.gamma"),
+                 states=[UidPort("P:sir.in.gamma"),
                          UidWire("W:sir.gamma>sir_i_n_exp.gamma"),
                          UidPort("P:sir_i_n_exp.gamma"),
                          UidWire("W:sir.gamma>sir_r_n_exp.gamma"),
@@ -72,8 +79,8 @@ def generate_gromet() -> Gromet:
                  metadata=None),
         Variable(uid=UidVariable("V:sir.s_in"),
                  name="s", type=UidType("Float"),
-                 proxy_state=UidPort("P:sir.s_in"),
-                 states=[UidPort("P:sir.s_in"),
+                 proxy_state=UidPort("P:sir.in.s"),
+                 states=[UidPort("P:sir.in.s"),
                          UidWire("W:sir.s_in>sir_s_n_exp.s"),
                          UidPort("P:sir_s_n_exp.s"),
                          UidWire("W:sir.s_in>sir_i_n_exp.s"),
@@ -81,8 +88,8 @@ def generate_gromet() -> Gromet:
                  metadata=None),
         Variable(uid=UidVariable("V:sir.i_in"),
                  name="i", type=UidType("Float"),
-                 proxy_state=UidPort("P:sir.i_in"),
-                 states=[UidPort("P:sir.i_in"),
+                 proxy_state=UidPort("P:sir.in.r"),
+                 states=[UidPort("P:sir.in.r"),
                          UidWire("W:sir.i_in>sir_s_n_exp.i"),
                          UidPort("P:sir_s_n_exp.i"),
                          UidWire("W:sir.i_in>sir_i_n_exp.i"),
@@ -92,8 +99,8 @@ def generate_gromet() -> Gromet:
                  metadata=None),
         Variable(uid=UidVariable("V:sir.r_in"),
                  name="r", type=UidType("Float"),
-                 proxy_state=UidPort("P:sir.r_in"),
-                 states=[UidPort("P:sir.r_in"),
+                 proxy_state=UidPort("P:sir.in.r"),
+                 states=[UidPort("P:sir.in.r"),
                          UidWire("W:sir.r_in>sir_r_n_exp.r"),
                          UidPort("P:sir_r_n_exp.r")],
                  metadata=None),
@@ -126,15 +133,6 @@ def generate_gromet() -> Gromet:
                          UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
                          UidPort("P:sir_r_exp.r_n")],
                  metadata=None),
-        # Variable(uid=UidVariable("V:sir.r_n"),
-        #          name="i_n", type=UidType("Float"),
-        #          proxy_state=UidPort("P:sir_r_n_exp.r_n"),
-        #          states=[UidPort("P:sir_r_n_exp.r_n"),
-        #                  UidWire("W:sir_r_n_exp.r_n>sir_scale_exp.r_n"),
-        #                  UidPort("P:sir_scale_exp.r_n"),
-        #                  UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
-        #                  UidPort("P:sir_r_exp.r_n")],
-        #          metadata=None),
         Variable(uid=UidVariable("V:sir.scale"),
                  name="scale", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_scale_exp.scale"),
@@ -153,25 +151,45 @@ def generate_gromet() -> Gromet:
                  proxy_state=UidPort("P:sir_s_exp.s"),
                  states=[UidPort("P:sir_s_exp.s"),
                          UidWire("W:sir_s_exp.s>sir.s_out"),
-                         UidPort("P:sir.s_out")],
+                         UidPort("P:sir.out.s")],
                  metadata=None),
         Variable(uid=UidVariable("V:sir.i_out"),
                  name="i", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_i_exp.i"),
                  states=[UidPort("P:sir_i_exp.i"),
                          UidWire("W:sir_i_exp.i>sir.i_out"),
-                         UidPort("P:sir.i_out")],
+                         UidPort("P:sir.out.i")],
                  metadata=None),
         Variable(uid=UidVariable("V:sir.r_out"),
                  name="r", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_r_exp.r"),
                  states=[UidPort("P:sir_r_exp.r"),
                          UidWire("W:sir_r_exp.r>sir.r_out"),
-                         UidPort("P:sir.r_out")],
+                         UidPort("P:sir.out.r")],
                  metadata=None)
     ]
 
     wires = [
+
+        # -- sim_sir() Wires --
+
+        # todo: Rewire when updating simsir
+        Wire(uid=UidWire("W:simsir.in.s>sir.in.s"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir.in.s"),
+             tgt=UidPort("P:sir.in.s"), ),
+        # todo: Rewire when updating simsir
+        Wire(uid=UidWire("W:sir.out.s>simsir.out.s"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:sir.out.s"),
+             tgt=UidPort("P:simsir.out.s")),
+
+        # -- sir() Wires --
+
         # sir
         Wire(uid=UidWire("W:sir.n>sir_scale_exp.n"),
              type=None,
@@ -183,61 +201,61 @@ def generate_gromet() -> Gromet:
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.beta"),
+             src=UidPort("P:sir.in.beta"),
              tgt=UidPort("P:sir_s_n_exp.beta")),
         Wire(uid=UidWire("W:sir.beta>sir_i_n_exp.beta"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.beta"),
+             src=UidPort("P:sir.in.beta"),
              tgt=UidPort("P:sir_i_n_exp.beta")),
         Wire(uid=UidWire("W:sir.gamma>sir_i_n_exp.gamma"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.gamma"),
+             src=UidPort("P:sir.in.gamma"),
              tgt=UidPort("P:sir_i_n_exp.gamma")),
         Wire(uid=UidWire("W:sir.gamma>sir_r_n_exp.gamma"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.gamma"),
+             src=UidPort("P:sir.in.gamma"),
              tgt=UidPort("P:sir_r_n_exp.gamma")),
         Wire(uid=UidWire("W:sir.s_in>sir_s_n_exp.s"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.s_in"),
+             src=UidPort("P:sir.in.s"),
              tgt=UidPort("P:sir_s_n_exp.s")),
         Wire(uid=UidWire("W:sir.s_in>sir_i_n_exp.s"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.s_in"),
+             src=UidPort("P:sir.in.s"),
              tgt=UidPort("P:sir_i_n_exp.s")),
         Wire(uid=UidWire("W:sir.i_in>sir_s_n_exp.i"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.i_in"),
+             src=UidPort("P:sir.in.r"),
              tgt=UidPort("P:sir_s_n_exp.i")),
         Wire(uid=UidWire("W:sir.i_in>sir_i_n_exp.i"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.i_in"),
+             src=UidPort("P:sir.in.r"),
              tgt=UidPort("P:sir_i_n_exp.i")),
         Wire(uid=UidWire("W:sir.i_in>sir_r_n_exp.i"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.i_in"),
+             src=UidPort("P:sir.in.r"),
              tgt=UidPort("P:sir_r_n_exp.i")),
         Wire(uid=UidWire("W:sir.r_in>sir_r_n_exp.r"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.r_in"),
+             src=UidPort("P:sir.in.r"),
              tgt=UidPort("P:sir_r_n_exp.r")),
         Wire(uid=UidWire("W:sir_s_n_exp.s_n>sir_scale_exp.s_n"),
              type=None,
@@ -300,24 +318,44 @@ def generate_gromet() -> Gromet:
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir_s_exp.s"),
-             tgt=UidPort("P:sir.s_out")),
+             tgt=UidPort("P:sir.out.s")),
 
         Wire(uid=UidWire("W:sir_i_exp.i>sir.i_out"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir_i_exp.i"),
-             tgt=UidPort("P:sir.i_out")),
+             tgt=UidPort("P:sir.out.i")),
 
         Wire(uid=UidWire("W:sir_r_exp.r>sir.r_out"),
              type=None,
              value_type=UidType("Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:sir_r_exp.r"),
-             tgt=UidPort("P:sir.r_out"))
+             tgt=UidPort("P:sir.out.r"))
     ]
 
     ports = [
+
+        # -- sim_sir() Ports --
+
+        # simsir in
+        Port(uid=UidPort("P:simsir.in.s"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="s",
+             value=None, metadata=None),
+        # simsir out
+        Port(uid=UidPort("P:simsir.out.s"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="s",
+             value=None, metadata=None),
+
+        # -- sir() Ports --
+
         # sir in
         Port(uid=UidPort("P:sir.n"),
              box=UidBox("B:sir"),
@@ -325,50 +363,50 @@ def generate_gromet() -> Gromet:
              value_type=UidType("Integer"),
              name="n",
              value=None, metadata=None),
-        Port(uid=UidPort("P:sir.beta"),
+        Port(uid=UidPort("P:sir.in.beta"),
              box=UidBox("B:sir"),
              type=UidType("PortInput"),
              value_type=UidType("Float"),
              name="beta",
              value=None, metadata=None),
-        Port(uid=UidPort("P:sir.gamma"),
+        Port(uid=UidPort("P:sir.in.gamma"),
              box=UidBox("B:sir"),
              type=UidType("PortInput"),
              value_type=UidType("Float"),
              name="gamma",
              value=None, metadata=None),
-        Port(uid=UidPort("P:sir.s_in"),
+        Port(uid=UidPort("P:sir.in.s"),
              box=UidBox("B:sir"),
              type=UidType("PortInput"),
              value_type=UidType("Float"),
              name="s",
              value=None, metadata=None),
-        Port(uid=UidPort("P:sir.i_in"),
+        Port(uid=UidPort("P:sir.in.r"),
              box=UidBox("B:sir"),
              type=UidType("PortInput"),
              value_type=UidType("Float"),
              name="i",
              value=None, metadata=None),
-        Port(uid=UidPort("P:sir.r_in"),
+        Port(uid=UidPort("P:sir.in.r"),
              box=UidBox("B:sir"),
              type=UidType("PortInput"),
              value_type=UidType("Float"),
              name="r",
              value=None, metadata=None),
         # sir out
-        Port(uid=UidPort("P:sir.s_out"),
+        Port(uid=UidPort("P:sir.out.s"),
              box=UidBox("B:sir"),
              type=UidType("PortOutput"),
              value_type=UidType("Float"),
              name="s",
              value=None, metadata=None),
-        Port(uid=UidPort("P:sir.i_out"),
+        Port(uid=UidPort("P:sir.out.i"),
              box=UidBox("B:sir"),
              type=UidType("PortOutput"),
              value_type=UidType("Float"),
              name="i",
              value=None, metadata=None),
-        Port(uid=UidPort("P:sir.r_out"),
+        Port(uid=UidPort("P:sir.out.r"),
              box=UidBox("B:sir"),
              type=UidType("PortOutput"),
              value_type=UidType("Float"),
@@ -559,6 +597,24 @@ def generate_gromet() -> Gromet:
              value=None, metadata=None),
     ]
 
+    # -- sim_sir() Expressions and Function --
+
+    # todo CTM: using as stub
+    simsir = Function(uid=UidBox("B:simsir"),
+                      type=None,
+                      name=UidOp("sim_sir-a"),  # todo
+                      ports=[UidPort("P:simsir.in.s"),
+                             UidPort("P:simsir.out.s")],
+
+                      # contents
+                      wires=[UidWire("W:simsir.in.s>sir.in.s"),  # todo update when updating simsir
+                             UidWire("W:sir.out.s>simsir.out.s")  # todo update when updating simsir
+                             ],
+                      boxes=[UidBox("B:sir")],  # todo: update once outer loop complete
+                      junctions=None,
+
+                      metadata=None)
+
     # -- sir() --
 
     # Expression sir_s_n_exp
@@ -695,14 +751,14 @@ def generate_gromet() -> Gromet:
                    type=None,
                    name=UidOp("sir"),
                    ports=[UidPort("P:sir.n"),
-                          UidPort("P:sir.beta"),
-                          UidPort("P:sir.gamma"),
-                          UidPort("P:sir.s_in"),
-                          UidPort("P:sir.i_in"),
-                          UidPort("P:sir.r_in"),
-                          UidPort("P:sir.s_out"),
-                          UidPort("P:sir.i_out"),
-                          UidPort("P:sir.r_out")],
+                          UidPort("P:sir.in.beta"),
+                          UidPort("P:sir.in.gamma"),
+                          UidPort("P:sir.in.s"),
+                          UidPort("P:sir.in.r"),
+                          UidPort("P:sir.in.r"),
+                          UidPort("P:sir.out.s"),
+                          UidPort("P:sir.out.i"),
+                          UidPort("P:sir.out.r")],
 
                    # contents
                    wires=[UidWire("W:sir.n>sir_scale_exp.n"),
@@ -739,16 +795,17 @@ def generate_gromet() -> Gromet:
 
                    metadata=None)
 
-    boxes = [sir,
+    boxes = [simsir,
+             sir,
              sir_s_n_exp, sir_i_n_exp, sir_r_n_exp,
              sir_scale_exp,
              sir_s_exp, sir_i_exp, sir_r_exp]
 
     _g = Gromet(
-        uid=UidGromet("CHIME_SIR_01"),
-        name="CHIME_SIR_01",
+        uid=UidGromet("CHIME_SIR_01a"),
+        name="CHIME_SIR_01a",
         type=UidType("FunctionNetwork"),
-        root=UidBox("B:sir"),  # TODO Update with latest root
+        root=UidBox("B:simsir"),  # TODO Update with latest root
         types=None,
         literals=None,
         junctions=None,

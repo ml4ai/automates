@@ -43,7 +43,7 @@ def generate_gromet() -> Gromet:
 
     # ----- Model component definitions -----
 
-    variables = [
+    variables_sir = [
         # sir input
         Variable(uid=UidVariable("V:sir.n"),
                  name="n", type=UidType("Integer"),
@@ -126,15 +126,6 @@ def generate_gromet() -> Gromet:
                          UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
                          UidPort("P:sir_r_exp.r_n")],
                  metadata=None),
-        # Variable(uid=UidVariable("V:sir.r_n"),
-        #          name="i_n", type=UidType("Float"),
-        #          proxy_state=UidPort("P:sir_r_n_exp.r_n"),
-        #          states=[UidPort("P:sir_r_n_exp.r_n"),
-        #                  UidWire("W:sir_r_n_exp.r_n>sir_scale_exp.r_n"),
-        #                  UidPort("P:sir_scale_exp.r_n"),
-        #                  UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
-        #                  UidPort("P:sir_r_exp.r_n")],
-        #          metadata=None),
         Variable(uid=UidVariable("V:sir.scale"),
                  name="scale", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_scale_exp.scale"),
@@ -171,7 +162,162 @@ def generate_gromet() -> Gromet:
                  metadata=None)
     ]
 
-    wires = [
+    wires_simsir = [
+
+        # -- sim_sir() Wires --
+
+        # simsire Wires
+        # todo: Rewire when updating simsir
+        Wire(uid=UidWire("W:simsir.in.s>simsir_loop_1_1.in.s"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir.in.s"),
+             tgt=UidPort("P:simsir_loop_1_1.in.s")),
+        Wire(uid=UidWire("W:simsir.in.i>simsir_loop_1_1.in.i"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir.in.i"),
+             tgt=UidPort("P:simsir_loop_1_1.in.i")),
+        Wire(uid=UidWire("W:simsir.in.r>simsir_loop_1_1.in.r"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir.in.r"),
+             tgt=UidPort("P:simsir_loop_1_1.in.r")),
+        Wire(uid=UidWire("W:simsir.in.gamma>simsir_loop_1_1.in.gamma"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir.in.gamma"),
+             tgt=UidPort("P:simsir_loop_1_1.in.gamma")),
+
+        # todo: Rewire when updating simsir
+        Wire(uid=UidWire("W:simsir_loop_1_1.out.s>simsir.out.s"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("PC:simsir_loop_1_1.out.s"),
+             tgt=UidPort("P:simsir.out.s")),
+    ]
+
+    wires_simsir_loop_1_1 = [
+
+        # loop_1_1 Wires <loop control>
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.d_idx>simsir_loop_1_1_cond.in.d_idx"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.d_idx"),
+             tgt=UidPort("P:simsir_loop_1_1_cond.in.d_idx")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.loop_1_1_seq>simsir_loop_1_1_cond.in.loop_1_1_seq"),
+             type=None,
+             value_type=UidType("Sequence"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.loop_1_1_seq"),
+             tgt=UidPort("P:simsir_loop_1_1_cond.in.loop_1_1_seq")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.loop_1_1_i>simsir_loop_1_1_i_exp.in.loop_1_1_i"),
+             type=None,
+             value_type=UidType("Sequence"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.loop_1_1_i"),
+             tgt=UidPort("P:simsir_loop_1_1_i_exp.in.loop_1_1_i")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.loop_1_1_seq>simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_seq"),
+             type=None,
+             value_type=UidType("Sequence"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.loop_1_1_seq"),
+             tgt=UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_seq")),
+        Wire(uid=UidWire("W:simsir_loop_1_1_i_exp.out.loop_1_1_i>simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_i"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1_i_exp.out.loop_1_1_i"),
+             tgt=UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_i")),
+        Wire(uid=UidWire("W:simsir_loop_1_1_i_exp.out.loop_1_1_i>simsir_loop_1_1.out.loop_1_1_i"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1_i_exp.out.loop_1_1_i"),
+             tgt=UidPort("PC:simsir_loop_1_1.out.loop_1_1_i")),
+        Wire(uid=UidWire("W:simsir_loop_1_1_get_d_idx_exp.out.d_idx>simsir_loop_1_1.out.d_idx"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1_get_d_idx_exp.out.d_idx"),
+             tgt=UidPort("PC:simsir_loop_1_1.out.d_idx")),
+
+        # loop_1_1 Wires <body>
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.s>simsir_loop_1_1_call_sir_exp.in.s"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.s"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.s")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.i>simsir_loop_1_1_call_sir_exp.in.i"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.i"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.i")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.r>simsir_loop_1_1_call_sir_exp.in.r"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.r"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.r")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.gamma>simsir_loop_1_1_call_sir_exp.in.gamma"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.gamma"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.gamma")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.beta>simsir_loop_1_1_call_sir_exp.in.beta"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.beta"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.beta")),
+        Wire(uid=UidWire("W:simsir_loop_1_1.in.n>simsir_loop_1_1_call_sir_exp.in.n"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:simsir_loop_1_1.in.n"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.n")),
+
+        Wire(uid=UidWire("W:simsir_loop_1_1_call_sir_exp.out.s>simsir_loop_1_1.out.s"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),
+             tgt=UidPort("PC:simsir_loop_1_1.out.s")),
+        Wire(uid=UidWire("W:simsir_loop_1_1_call_sir_exp.out.i>simsir_loop_1_1.out.i"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.i"),
+             tgt=UidPort("PC:simsir_loop_1_1.out.i")),
+        Wire(uid=UidWire("W:simsir_loop_1_1_call_sir_exp.out.r>simsir_loop_1_1.out.r"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.r"),
+             tgt=UidPort("PC:simsir_loop_1_1.out.r")),
+
+        # todo: Rewire when updating simsir
+        Wire(uid=UidWire("W:simsir_loop_1_1_call_sir_exp.out.s>simsir.out.s"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),  # UidPort("P:sir.s_out"),
+             tgt=UidPort("P:simsir.out.s")),
+    ]
+
+    wires_sir = [
+
+        # -- sir() Wires --
+
         # sir
         Wire(uid=UidWire("W:sir.n>sir_scale_exp.n"),
              type=None,
@@ -317,7 +463,298 @@ def generate_gromet() -> Gromet:
              tgt=UidPort("P:sir.r_out"))
     ]
 
-    ports = [
+    ports_simsir = [
+
+        # -- sim_sir() Ports --
+
+        # simsir in
+        Port(uid=UidPort("P:simsir.in.s"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="s",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir.in.i"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="i",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir.in.r"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="r",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir.in.gamma"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="gamma",
+             value=None, metadata=None),
+        # simsir out
+        Port(uid=UidPort("P:simsir.out.s"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="s",
+             value=None, metadata=None),
+
+    ]
+
+    ports_simsir_loop_1_1 = [
+
+        # simsir_loop_1_1 in <loop control>
+        Port(uid=UidPort("P:simsir_loop_1_1.in.d_idx"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="d_idx",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1.in.loop_1_1_seq"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Sequence"),
+             name="loop_1_1_seq",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1.in.loop_1_1_i"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="loop_1_1_i",
+             value=None, metadata=None),
+        # simsir_loop_1_1 out <loop control>
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.d_idx"),
+                 call=UidPort("P:simsir_loop_1_1.in.d_idx"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="d_idx",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.loop_1_1_seq"),
+                 call=UidPort("P:simsir_loop_1_1.in.loop_1_1_seq"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Sequence"),
+                 name="loop_1_1_seq",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.loop_1_1_i"),
+                 call=UidPort("P:simsir_loop_1_1.in.loop_1_1_i"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="loop_1_1_i",
+                 value=None,
+                 metadata=None),
+
+        # simsir_loop_1_1 in <body>
+        Port(uid=UidPort("P:simsir_loop_1_1.in.s"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="s",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1.in.i"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="i",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1.in.r"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="r",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1.in.n"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="n",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1.in.beta"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="beta",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1.in.gamma"),
+             box=UidBox("B:simsir_loop_1_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="gamma",
+             value=None, metadata=None),
+        # simsir_loop_1_1 out <body>
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.s"),
+                 call=UidPort("P:simsir_loop_1_1.in.s"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="s",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.i"),
+                 call=UidPort("P:simsir_loop_1_1.in.i"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="i",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.r"),
+                 call=UidPort("P:simsir_loop_1_1.in.r"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="r",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.n"),
+                 call=UidPort("P:simsir_loop_1_1.in.n"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="n",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.gamma"),
+                 call=UidPort("P:simsir_loop_1_1.in.gamma"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="gamma",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1.out.beta"),
+                 call=UidPort("P:simsir_loop_1_1.in.beta"),
+                 box=UidBox("B:simsir_loop_1_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="beta",
+                 value=None,
+                 metadata=None),
+
+        # simsir_loop_1_1_cond in
+        Port(uid=UidPort("P:simsir_loop_1_1_cond.in.d_idx"),
+             box=UidBox("B:simsir_loop_1_1_cond"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="d_idx",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1_cond.in.loop_1_1_seq"),
+             box=UidBox("B:simsir_loop_1_1_cond"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="loop_1_1_seq",
+             value=None, metadata=None),
+        # simsir_loop_1_1_cond out
+        Port(uid=UidPort("P:simsir_loop_1_1_cond.out.exit"),
+             box=UidBox("B:simsir_loop_1_1_cond"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Boolean"),
+             name="exit",
+             value=None, metadata=None),
+
+        # simsir_loop_1_1_i_exp in
+        Port(uid=UidPort("P:simsir_loop_1_1_i_exp.in.loop_1_1_i"),
+             box=UidBox("B:simsir_loop_1_1_i_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="loop_1_1_i",
+             value=None, metadata=None),
+        # simsir_loop_1_1_i_exp out
+        Port(uid=UidPort("P:simsir_loop_1_1_i_exp.out.loop_1_1_i"),
+             box=UidBox("B:simsir_loop_1_1_i_exp"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Integer"),
+             name="loop_1_1_i",
+             value=None, metadata=None),
+
+        # simsir_loop_1_1_get_d_idx_exp in
+        Port(uid=UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_seq"),
+             box=UidBox("B:simsir_loop_1_1_get_d_idx_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Sequence"),
+             name="loop_1_1_seq",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_i"),
+             box=UidBox("B:simsir_loop_1_1_get_d_idx_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="loop_1_1_i",
+             value=None, metadata=None),
+        # simsir_loop_1_1_get_d_idx_exp out
+        Port(uid=UidPort("P:simsir_loop_1_1_get_d_idx_exp.out.d_idx"),
+             box=UidBox("B:simsir_loop_1_1_get_d_idx_exp"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Integer"),
+             name="d_idx",
+             value=None, metadata=None),
+
+        # simsir_loop_1_1_call_sir_exp in
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.s"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.s_in"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.i"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.i_in"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.r"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.r_in"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.beta"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.beta"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.gamma"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.gamma"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.n"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.n"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Integer"),
+                 name=None, value=None, metadata=None),
+        # simsir_loop_1_1_call_sir_exp out
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.s_out"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.i"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.i_out"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.r"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.r_out"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+    ]
+
+    ports_sir = [
+
+        # -- sir() Ports --
+
         # sir in
         Port(uid=UidPort("P:sir.n"),
              box=UidBox("B:sir"),
@@ -559,6 +996,159 @@ def generate_gromet() -> Gromet:
              value=None, metadata=None),
     ]
 
+    # -- sim_sir() Expressions and Function --
+
+    # simsir_loop_1_1_call_sir_exp
+    simsir_loop_1_1_call_sir_exp = \
+        BoxCall(uid=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                type=None,
+                name=None,
+                call=UidBox("B:sir"),
+                ports=[UidPort("PC:simsir_loop_1_1_call_sir_exp.in.s"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.i"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.r"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.beta"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.gamma"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.n"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.out.i"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.out.r")
+                       ],
+                metadata=None)
+
+    # simsir_loop_1_1_cond
+    simsir_loop_1_1_cond_e0 = \
+        Expr(call=RefOp(UidOp('len')),
+             args=[UidPort("P:simsir_loop_1_1_cond.in.loop_1_1_seq")])
+    simsir_loop_1_1_cond_e1 = \
+        Expr(call=RefOp(UidOp('lt')),
+             args=[UidPort("P:simsir_loop_1_1_cond.in.d_idx"),
+                   simsir_loop_1_1_cond_e0])
+    simsir_loop_1_1_cond = \
+        Predicate(uid=UidBox("B:simsir_loop_1_1_cond"),
+                  type=None,
+                  name=None,
+                  ports=[UidPort("P:simsir_loop_1_1_cond.in.d_idx"),
+                         UidPort("P:simsir_loop_1_1_cond.in.loop_1_1_seq"),
+                         UidPort("P:simsir_loop_1_1_cond.out.exit")],
+                  tree=simsir_loop_1_1_cond_e1,
+                  metadata=None)
+
+    # simsir_loop_1_1_i_exp
+    simsir_loop_1_1_i_exp_e0 = \
+        Expr(call=RefOp(UidOp('+')),
+             args=[UidPort("P:simsir_loop_1_1_i_exp.in.loop_1_1_i"),
+                   Literal(uid=None, type=UidType("Int"), value=Val("1"),
+                           name=None, metadata=None)])
+    simsir_loop_1_1_i_exp = \
+        Expression(uid=UidBox("B:simsir_loop_1_1_i_exp"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:simsir_loop_1_1_i_exp.in.loop_1_1_i"),
+                          UidPort("P:simsir_loop_1_1_i_exp.out.loop_1_1_i")],
+                   tree=simsir_loop_1_1_i_exp_e0,
+                   metadata=None)
+
+    # simsir_loop_1_1_get_d_idx_exp
+    simsir_loop_1_1_get_d_idx_exp_e0 = \
+        Expr(call=RefOp(UidOp('get')),
+             args=[UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_seq"),
+                   UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_i")])
+    simsir_loop_1_1_get_d_idx_exp = \
+        Expression(uid=UidBox("B:simsir_loop_1_1_get_d_idx_exp"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_seq"),
+                          UidPort("P:simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_i"),
+                          UidPort("P:simsir_loop_1_1_get_d_idx_exp.out.d_idx")],
+                   tree=simsir_loop_1_1_get_d_idx_exp_e0,
+                   metadata=None)
+
+    # simsir_loop_1_1
+    simsir_loop_1_1 = \
+        Loop(uid=UidBox("B:simsir_loop_1_1"),
+             type=None,
+             name=None,
+             ports=[
+                 UidPort("P:simsir_loop_1_1.in.d_idx"),
+                 UidPort("P:simsir_loop_1_1.in.loop_1_1_seq"),
+                 UidPort("P:simsir_loop_1_1.in.loop_1_1_i"),
+                 UidPort("PC:simsir_loop_1_1.out.d_idx"),
+                 UidPort("PC:simsir_loop_1_1.out.loop_1_1_seq"),
+                 UidPort("PC:simsir_loop_1_1.out.loop_1_1_i"),
+
+                 # -- "body" loop inputs
+                 UidPort("P:simsir_loop_1_1.in.s"),
+                 UidPort("P:simsir_loop_1_1.in.i"),
+                 UidPort("P:simsir_loop_1_1.in.r"),
+                 UidPort("P:simsir_loop_1_1.in.n"),
+                 UidPort("P:simsir_loop_1_1.in.gamma"),
+                 UidPort("P:simsir_loop_1_1.in.beta"),
+                 # -- "body" loop outputs
+                 UidPort("PC:simsir_loop_1_1.out.s"),
+                 UidPort("PC:simsir_loop_1_1.out.i"),
+                 UidPort("PC:simsir_loop_1_1.out.r"),
+                 UidPort("PC:simsir_loop_1_1.out.n"),
+                 UidPort("PC:simsir_loop_1_1.out.gamma"),
+                 UidPort("PC:simsir_loop_1_1.out.beta")
+             ],
+
+             exit_condition=UidBox("B:simsir_loop_1_1_cond"),
+
+             # contents
+             wires=[
+                 UidWire("W:simsir_loop_1_1.in.d_idx>simsir_loop_1_1_cond.in.d_idx"),
+                 UidWire("W:simsir_loop_1_1.in.loop_1_1_seq>simsir_loop_1_1_cond.in.loop_1_1_seq"),
+                 UidWire("W:simsir_loop_1_1.in.loop_1_1_i>simsir_loop_1_1_i_exp.in.loop_1_1_i"),
+                 UidWire("W:simsir_loop_1_1.in.loop_1_1_seq>simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_seq"),
+                 UidWire("W:simsir_loop_1_1_i_exp.out.loop_1_1_i>simsir_loop_1_1_get_d_idx_exp.in.loop_1_1_i"),
+                 UidWire("W:simsir_loop_1_1_i_exp.out.loop_1_1_i>simsir_loop_1_1.out.loop_1_1_i"),
+                 UidWire("W:simsir_loop_1_1_get_d_idx_exp.out.d_idx>simsir_loop_1_1.out.d_idx"),
+                 UidWire("W:simsir_loop_1_1.in.n>simsir_loop_1_1_call_sir_exp.in.n"),
+                 UidWire("W:simsir_loop_1_1.in.s>simsir_loop_1_1_call_sir_exp.in.s"),
+                 UidWire("W:simsir_loop_1_1.in.i>simsir_loop_1_1_call_sir_exp.in.i"),
+                 UidWire("W:simsir_loop_1_1.in.r>simsir_loop_1_1_call_sir_exp.in.r"),
+                 UidWire("W:simsir_loop_1_1.in.gamma>simsir_loop_1_1_call_sir_exp.in.gamma"),
+                 UidWire("W:simsir_loop_1_1.in.beta>simsir_loop_1_1_call_sir_exp.in.beta"),
+                 UidWire("W:simsir_loop_1_1_call_sir_exp.out.s>simsir_loop_1_1.out.s"),
+                 UidWire("W:simsir_loop_1_1_call_sir_exp.out.i>simsir_loop_1_1.out.i"),
+                 UidWire("W:simsir_loop_1_1_call_sir_exp.out.r>simsir_loop_1_1.out.r")
+             ],
+             junctions=None,
+             boxes=[
+                 UidBox("B:simsir_loop_1_1_i_exp"),
+                 UidBox("B:simsir_loop_1_1_get_d_idx_exp"),
+                 UidBox("B:simsir_loop_1_1_call_sir_exp")
+             ],
+
+             metadata=None)
+
+    # todo CTM: using as stub
+    simsir = Function(uid=UidBox("B:simsir"),
+                      type=None,
+                      name=UidOp("sim_sir-c"),  # todo
+                      ports=[UidPort("P:simsir.in.s"),
+                             UidPort("P:simsir.in.i"),
+                             UidPort("P:simsir.in.r"),
+                             UidPort("P:simsir.in.gamma"),
+                             # TODO: create P:simsir.in.betas
+                             UidPort("P:simsir.out.s")
+                             ],
+
+                      # contents
+                      wires=[
+                          UidWire("W:simsir.in.s>simsir_loop_1_1.in.s"),  # todo update when adding outer loop_1
+                          UidWire("W:simsir.in.i>simsir_loop_1_1.in.i"),  # todo update when adding outer loop_1
+                          UidWire("W:simsir.in.r>simsir_loop_1_1.in.r"),  # todo update when adding outer loop_1
+                          UidWire("W:simsir.in.gamma>simsir_loop_1_1.in.gamma"),  # todo update when adding outer loop_1
+                          # TODO Create W:simsir.in.betas...
+                          UidWire("W:simsir_loop_1_1.out.s>simsir.out.s"),  # todo update when adding outer loop_1
+                      ],
+                      boxes=[UidBox("B:simsir_loop_1_1")],  # todo: update once outer loop complete
+                      junctions=None,
+
+                      metadata=None)
+
     # -- sir() --
 
     # Expression sir_s_n_exp
@@ -739,16 +1329,26 @@ def generate_gromet() -> Gromet:
 
                    metadata=None)
 
-    boxes = [sir,
+    wires = wires_simsir + wires_simsir_loop_1_1 + wires_sir
+
+    ports = ports_simsir + ports_simsir_loop_1_1 + ports_sir
+
+    boxes = [simsir,
+             simsir_loop_1_1,
+             simsir_loop_1_1_cond, simsir_loop_1_1_i_exp, simsir_loop_1_1_get_d_idx_exp,
+             simsir_loop_1_1_call_sir_exp,
+             sir,
              sir_s_n_exp, sir_i_n_exp, sir_r_n_exp,
              sir_scale_exp,
              sir_s_exp, sir_i_exp, sir_r_exp]
 
+    variables = variables_sir
+
     _g = Gromet(
-        uid=UidGromet("CHIME_SIR_01"),
-        name="CHIME_SIR_01",
+        uid=UidGromet("CHIME_SIR_01c"),
+        name="CHIME_SIR_01c",
         type=UidType("FunctionNetwork"),
-        root=UidBox("B:sir"),  # TODO Update with latest root
+        root=UidBox("B:simsir"),  # TODO Update with latest root
         types=None,
         literals=None,
         junctions=None,

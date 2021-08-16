@@ -12,7 +12,7 @@ def generate_gromet() -> Gromet:
         ModelDescription(uid=UidMetadatum('chime_model_description'),
                          provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
                                                timestamp=get_current_datetime()),
-                         name='CHIME [SIR dynamics only]',
+                         name='CHIME v01 [SIR dynamics only]',
                          description='The CHIME (COVID-19 Hospital Impact Model for Epidemics) App '
                                      'is designed to assist hospitals and public health officials '
                                      'understand hospital capacity needs as they relate to the '
@@ -33,7 +33,7 @@ def generate_gromet() -> Gromet:
                                   UidVariable("V:sir.i_out"),
                                   UidVariable("V:sir.r_in"),
                                   UidVariable("V:sir.r_out")],  # todo update
-                       parameters=[UidVariable("V:sir_n"),
+                       parameters=[UidVariable("V:sir.n"),
                                    UidVariable("V:sir.beta"),
                                    UidVariable("V:sir.gamma")],  # todo update
                        initial_conditions=[UidVariable("V:sir.s_in"),
@@ -45,7 +45,7 @@ def generate_gromet() -> Gromet:
 
     variables = [
         # sir input
-        Variable(uid=UidVariable("V:sir_n"),
+        Variable(uid=UidVariable("V:sir.n"),
                  name="n", type=UidType("Integer"),
                  proxy_state=UidPort("P:sir.n"),
                  states=[UidPort("P:sir.n"),
@@ -118,16 +118,7 @@ def generate_gromet() -> Gromet:
                          UidPort("P:sir_i_exp.i_n")],
                  metadata=None),
         Variable(uid=UidVariable("V:sir.r_n"),
-                 name="i_n", type=UidType("Float"),
-                 proxy_state=UidPort("P:sir_r_n_exp.r_n"),
-                 states=[UidPort("P:sir_r_n_exp.r_n"),
-                         UidWire("W:sir_r_n_exp.r_n>sir_scale_exp.r_n"),
-                         UidPort("P:sir_scale_exp.r_n"),
-                         UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
-                         UidPort("P:sir_r_exp.r_n")],
-                 metadata=None),
-        Variable(uid=UidVariable("V:sir.r_n"),
-                 name="i_n", type=UidType("Float"),
+                 name="r_n", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_r_n_exp.r_n"),
                  states=[UidPort("P:sir_r_n_exp.r_n"),
                          UidWire("W:sir_r_n_exp.r_n>sir_scale_exp.r_n"),
@@ -149,21 +140,21 @@ def generate_gromet() -> Gromet:
 
         # sir output
         Variable(uid=UidVariable("V:sir.s_out"),
-                 name="s_out", type=UidType("Float"),
+                 name="s", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_s_exp.s"),
                  states=[UidPort("P:sir_s_exp.s"),
                          UidWire("W:sir_s_exp.s>sir.s_out"),
                          UidPort("P:sir.s_out")],
                  metadata=None),
         Variable(uid=UidVariable("V:sir.i_out"),
-                 name="i_out", type=UidType("Float"),
+                 name="i", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_i_exp.i"),
                  states=[UidPort("P:sir_i_exp.i"),
                          UidWire("W:sir_i_exp.i>sir.i_out"),
                          UidPort("P:sir.i_out")],
                  metadata=None),
         Variable(uid=UidVariable("V:sir.r_out"),
-                 name="r_out", type=UidType("Float"),
+                 name="r", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_r_exp.r"),
                  states=[UidPort("P:sir_r_exp.r"),
                          UidWire("W:sir_r_exp.r>sir.r_out"),
@@ -596,7 +587,7 @@ def generate_gromet() -> Gromet:
                     UidPort("P:sir_i_n_exp.gamma")])
     # e5 = (+ e3 e4 i)
     e5 = Expr(call=RefOp(UidOp('+')),
-              args=[e3, e4, UidPort("P:sir_i_n_exp.gamma")])
+              args=[e3, e4, UidPort("P:sir_i_n_exp.i")])
     sir_i_n_exp = Expression(uid=UidBox("B:sir_i_n_exp"),
                              type=None,
                              name=None,
@@ -745,8 +736,8 @@ def generate_gromet() -> Gromet:
              sir_s_exp, sir_i_exp, sir_r_exp]
 
     _g = Gromet(
-        uid=UidGromet("CHIME_SIR"),
-        name="CHIME_SIR",
+        uid=UidGromet("CHIME_SIR_01"),
+        name="CHIME_SIR_01",
         type=UidType("FunctionNetwork"),
         root=UidBox("B:sir"),  # TODO Update with latest root
         types=None,
