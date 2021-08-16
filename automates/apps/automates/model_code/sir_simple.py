@@ -1,29 +1,29 @@
 def drive(start, end, step, parameters):
     step_results = {
-        "SIR-simple::SIR-simple::sir::0::--::s::1": list(),
-        "SIR-simple::SIR-simple::sir::0::--::i::1": list(),
-        "SIR-simple::SIR-simple::sir::0::--::r::1": list(),
-        "SIR-simple::SIR-simple::sir::0::--::dt::0": list(),
+        "P:sir.out.S": list(),
+        "P:sir.out.I": list(),
+        "P:sir.out.R": list(),
+        "P:sir.out.dt": list(),
     }
 
-    S = parameters["SIR-simple::SIR-simple::sir::0::--::s::0"]
-    I = parameters["SIR-simple::SIR-simple::sir::0::--::i::0"]
-    R = parameters["SIR-simple::SIR-simple::sir::0::--::r::0"]
+    S = parameters["P:sir.in.S"]
+    I = parameters["P:sir.in.I"]
+    R = parameters["P:sir.in.R"]
 
     for i in range(start, end + 1, step):
         (S, I, R) = sir(
             S,
             I,
             R,
-            parameters["SIR-simple::SIR-simple::sir::0::--::beta::0"],
-            parameters["SIR-simple::SIR-simple::sir::0::--::gamma::0"],
+            parameters["P:sir.in.beta"],
+            parameters["P:sir.in.gamma"],
             step,
         )
 
-        step_results["SIR-simple::SIR-simple::sir::0::--::s::1"].append(S)
-        step_results["SIR-simple::SIR-simple::sir::0::--::i::1"].append(I)
-        step_results["SIR-simple::SIR-simple::sir::0::--::r::1"].append(R)
-        step_results["SIR-simple::SIR-simple::sir::0::--::dt::0"].append(i)
+        step_results["P:sir.out.S"].append(S)
+        step_results["P:sir.out.I"].append(I)
+        step_results["P:sir.out.R"].append(R)
+        step_results["P:sir.out.dt"].append(i)
 
     return step_results
 
