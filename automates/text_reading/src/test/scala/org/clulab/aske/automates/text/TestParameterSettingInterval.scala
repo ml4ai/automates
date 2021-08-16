@@ -92,7 +92,7 @@ class TestParameterSettingEventInterval  extends ExtractionTest {
   val t5b = "ratio_root_shoot is specified for each growth stage , and varies from 1.0 at emergence , to 0.09 at flowering ."
   passingTest should s"extract the parameter setting(s) from t5b: ${t5b}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
-      "ratio_root_shoot" -> Seq("0.09", "1.0") //fixme: min and max in wrong order...
+      "ratio_root_shoot" -> Seq("0.09", "1.0")
     )
     val mentions = extractMentions(t5b)
     testParameterSettingEventInterval(mentions, desired)

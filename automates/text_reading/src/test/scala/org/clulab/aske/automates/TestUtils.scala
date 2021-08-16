@@ -127,7 +127,7 @@ object TestUtils {
       val found = mentions.filter(_ matches eventType)
       found.length should be(desired.size)
 
-      // fixme: assumes there's only one of each variable
+      // note: assumes there's only one of each variable
       val grouped = found.groupBy(_.arguments(arg1Role).head.text)
       // we assume only one variable (arg1) arg!
       for {
