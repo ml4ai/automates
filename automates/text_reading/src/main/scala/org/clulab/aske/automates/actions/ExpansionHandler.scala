@@ -358,9 +358,6 @@ class ExpansionHandler() extends LazyLogging {
     }
     else orig.tokenInterval
 
-    for ((argName, argPathsMap) <- orig.paths) {
-      println("->" + argName + " " + argPathsMap.keys.mkString("||"))
-    }
     val paths = for {
       (argName, argPathsMap) <- orig.paths
       origPath = argPathsMap(orig.arguments(argName).head)

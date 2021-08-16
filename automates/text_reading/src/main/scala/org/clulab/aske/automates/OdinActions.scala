@@ -220,8 +220,6 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         } else None
       } else None
 
-      println("sorted: " + valueMentionsSorted.mkString("||"))
-
       val newArgs = mutable.Map[String, Seq[Mention]]()
       val attachedTo = if (m.arguments.exists(arg => looksLikeAnIdentifier(arg._2, state).nonEmpty)) "variable" else "concept"
       var inclLower: Option[Boolean] = None
@@ -263,50 +261,22 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
       // required for expansion
       val newPaths = mutable.Map[String, Map[Mention, SynPath]]()
-      val tempNewPaths = mutable.Map[String, Map[Mention, SynPath]]()
 
-      val oldArgNewArgMap = Map(
-        "valueMostIncl" -> "valueMost",
-        "valueMostExcl" -> "valueMost",
-        "valueLeastIncl" -> "valueLeast",
-        "valueLeastExcl" -> "valueLeast",
-        "variable" -> "variable"
-      )
-
-
-      println(m.foundBy)
-      val synPaths = m.paths.flatMap(_._2)
-      println("synpaths: " + synPaths.keys.mkString("|"))
-      for (s <- synPaths) {
-        println("path: " + s._1 )
-      }
-
+      // this will only need to be done for events, not relation mentions---relation mentions don't have paths
       if (m.paths.nonEmpty) {
-        println("m paths: " + m.paths)
-        println("new args: " + newArgs)
+        // synpaths for each mention in the picture
+        val synPaths = m.paths.flatMap(_._2)
+        // we have remapped the args to new names already; now will need to update the paths map to have correct new names and the correct synpaths for switched out min/max values
         for (arg <- newArgs) {
-
-          println("arg 2: " + arg._2.mkString("||"))
-          tempNewPaths +=(arg._1 -> Map(arg._2.head -> synPaths(newArgs(arg._1).head)))
-        }
-
-        for (key <- tempNewPaths.keys) {
-          println("key: " + key)
-          val value = tempNewPaths(key)
-          println("val: " + value.keys.head + " " + value.keys.head.text)
-          newPaths(key) = value
+          // for each arg type, get the synpath for its new mention (for now, assume one arg of each type)
+          newPaths +=(arg._1 -> Map(arg._2.head -> synPaths(newArgs(arg._1).head)))
         }
       }
-
-
-      println("synpaths: " + newPaths.keys.mkString("|"))
 
       val att = new ParamSettingIntAttachment(inclLower, inclUpper, attachedTo, "ParamSettingIntervalAtt")
       val newMen = copyWithArgsAndPaths(m, newArgs.toMap, newPaths.toMap)
-      for (a <- newMen.arguments) {
-        println("==>" + a._1 + " " + a._2.head + " " + a._2.head.text)
-      }
-      newMentions.append(copyWithArgsAndPaths(m, newArgs.toMap, newPaths.toMap).withAttachment(att))
+
+      newMentions.append(newMen.withAttachment(att))
     }
     newMentions
   }
