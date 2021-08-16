@@ -124,7 +124,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
     w_len = len(w)
     if w_len != 0:
         nxt = compute_ID(y, gm.ts(list(set(x) | set(w)), topo), p, g, g_obs, v, topo, gm.TreeNode())
-        tree.children.append(nxt.tree)
+        tree.children.append(deepcopy(nxt.tree))
         tree.call.line = 3
         tree.call.id_check = nxt.tree.call.id_check
         tree.call.w = w
@@ -140,11 +140,10 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
         id_check_list = []
         for s_element in s:
             nxt = compute_ID(s_element, gm.ts(set(v) - set(s_element), topo), p, g, g_obs, v, topo, gm.TreeNode())
-            product_list.append(nxt.p)  # todo: double check this
-            id_check_list.append(nxt.tree.call.id_check)
-            tree.children.append(nxt.tree)
+            product_list.append(deepcopy(nxt.p))
+            id_check_list.append(deepcopy(nxt.tree.call.id_check))
+            tree.children.append(deepcopy(nxt.tree))
         tree.call.id_check = all(id_check_list)
-        print(product_list)
         return gm.ResultsInternal(p=gm.Probability(sumset=gm.ts(list(set(v) - set(y) - set(x)), topo), product=True, \
                                                    children=product_list), tree=tree)
     else:
@@ -175,7 +174,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
                     p_prod = deepcopy(p)  # todo: check this
                     p_prod.var = [node]
                     p_prod.cond = cond_set
-                product_list.append(p_prod)
+                product_list.append(deepcopy(p_prod))
             product_list.reverse()
             if s_single_length > 1:
                 prob_new = gm.Probability(sumset=gm.ts(set(s_single) - set(y), topo), product=True, children= \
@@ -216,7 +215,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
                 p_prod = deepcopy(p)  # todo: check this
                 p_prod.var = [node]
                 p_prod.cond = cond_set
-            product_list.append(p_prod)
+            product_list.append(deepcopy(p_prod))
         product_list.reverse()
         x_new = gm.ts(set(x) & set(s_prime), topo)
         if s_prime_length > 1:
@@ -224,7 +223,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
         else:
             p_nxt = product_list[0]
         nxt = compute_ID(y, x_new, p_nxt, g_s_prime, g_s_prime_obs, s_prime, topo, gm.TreeNode())
-        tree.children.append(nxt.tree)
+        tree.children.append(deepcopy(nxt.tree))
         tree.call.id_check = nxt.tree.call.id_check
         return gm.ResultsInternal(p=nxt.p, tree=tree)
 
@@ -242,7 +241,7 @@ def compute_IDC(y, x, z, p, g, g_obs, v, topo, tree):
             tree.call.line = 9
             tree.call.z_prime = node
             nxt = compute_IDC(y, gm.ts(set(x) | set(node), topo), cond, p, g, g_obs, v, topo, gm.TreeNode())
-            tree.children.append(nxt.tree)
+            tree.children.append(deepcopy(nxt.tree))
             tree.call.id_check = nxt.tree.call.id_check
             return gm.ResultsInternal(p=nxt.p, tree=tree)
     nxt = compute_ID(gm.ts(set(y) | set(z), topo), x, p, g, g_obs, v, topo, gm.TreeNode())
