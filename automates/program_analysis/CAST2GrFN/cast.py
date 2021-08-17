@@ -155,6 +155,19 @@ class CAST(object):
         entrypoint = GenericIdentifier.from_str(container_id_to_start_from)
         air["entrypoint"] = container_id_to_start_from
 
+        with open("./test--AIR.json", "w") as f:
+            json.dump(
+                {
+                    "entrypoint": entrypoint,
+                    "containers": air["containers"],
+                    "variables": air["variables"],
+                    "types": [],
+                    "sources": ["test.py"],
+                    "source_comments": {},
+                },
+                f,
+            )
+
         C, V, T, D = dict(), dict(), dict(), dict()
 
         # Create variable definitions
