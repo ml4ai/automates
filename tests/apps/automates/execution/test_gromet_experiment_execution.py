@@ -4,7 +4,7 @@ from automates.apps.automates.execute_driver import execute_gromet_experiment_js
 def test_execute_sir_simple_mock():
     input_json = {
         "command": "simulate-gsl",
-        "definition": {"type": "easel", "source": {"model": '{"name": "SIR-simple"}'}},
+        "definition": {"type": "gromet-fn", "source": '{"name": "SimpleSIR"}'},
         "start": 0,
         "end": 120.0,
         "step": 30.0,
@@ -61,7 +61,7 @@ def test_execute_sir_simple_mock():
 def test_execute_chime_sir_mock():
     input_json = {
         "command": "simulate-gsl",
-        "definition": {"type": "easel", "source": {"model": '{"name": "CHIME-SIR"}'}},
+        "definition": {"type": "gromet-fn", "source": '{"name": "CHIME-SIR"}'},
         "start": 0,
         "end": 120.0,
         "step": 30,
