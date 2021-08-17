@@ -23,6 +23,14 @@ rules:
     pattern: |
       [word = /[A-Za-z]/ ] [word = "-"] [tag = "CD"]
 
+  - name: unit_power
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "to a value of 200 mm 2 per plant"
+    pattern: |
+      [entity = "B-unit"] [tag = "CD"]
+
   - name: number_unit
     label: Unit
     priority: ${priority}
