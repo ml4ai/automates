@@ -158,7 +158,7 @@ class CAST(object):
         with open("./test--AIR.json", "w") as f:
             json.dump(
                 {
-                    "entrypoint": entrypoint,
+                    "entrypoint": container_id_to_start_from,
                     "containers": air["containers"],
                     "variables": air["variables"],
                     "types": [],
