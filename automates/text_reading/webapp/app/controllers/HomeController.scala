@@ -678,7 +678,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val head = relationArgNames.head
     val last = relationArgNames.last
 
-    assert(relationArgNames.length < 3, "More than three args, webapp will need to be updated to handle!")
+    // fixme: this is a temp solution to avoid error caused by the assertion below, but the visualization does not look right
+    if (relationArgNames.length > 2) {
+      logger.warn("More than three args, webapp will need to be updated to handle!")
+    }
+//    assert(relationArgNames.length < 3, "More than three args, webapp will need to be updated to handle!")
     Json.arr(
       s"R$i",
       r.label,

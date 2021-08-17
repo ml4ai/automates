@@ -243,7 +243,7 @@
                                 ],
                                 "type": "float",
                                 "val": {
-                                    "name": "generated_index%",
+                                    "name": "generated_index_0",
                                     "node_type": "Name",
                                     "source_refs": [
                                         {
@@ -290,7 +290,7 @@
                                         {
                                             "node_type": "Subscript",
                                             "slice": {
-                                                "name": "generated_index%",
+                                                "name": "generated_index_0",
                                                 "node_type": "Name",
                                                 "source_refs": [
                                                     {
@@ -397,7 +397,7 @@
                                         ],
                                         "type": "float",
                                         "val": {
-                                            "name": "generated_index%",
+                                            "name": "generated_index_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -414,7 +414,7 @@
                                     "node_type": "Assignment",
                                     "right": {
                                         "left": {
-                                            "name": "generated_index%",
+                                            "name": "generated_index_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -468,7 +468,7 @@
                             ],
                             "expr": {
                                 "left": {
-                                    "name": "generated_index%",
+                                    "name": "generated_index_0",
                                     "node_type": "Name",
                                     "source_refs": [
                                         {
@@ -590,7 +590,7 @@
                                 ],
                                 "type": "float",
                                 "val": {
-                                    "name": "generated_index%",
+                                    "name": "generated_index_0",
                                     "node_type": "Name",
                                     "source_refs": [
                                         {
@@ -744,7 +744,7 @@
                                         ],
                                         "type": "float",
                                         "val": {
-                                            "name": "generated_index%",
+                                            "name": "generated_index_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -761,7 +761,7 @@
                                     "node_type": "Assignment",
                                     "right": {
                                         "left": {
-                                            "name": "generated_index%",
+                                            "name": "generated_index_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -815,7 +815,7 @@
                             ],
                             "expr": {
                                 "left": {
-                                    "name": "generated_index%",
+                                    "name": "generated_index_0",
                                     "node_type": "Name",
                                     "source_refs": [
                                         {
