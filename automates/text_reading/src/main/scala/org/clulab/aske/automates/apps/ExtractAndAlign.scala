@@ -247,7 +247,9 @@ object ExtractAndAlign {
       println("IDENTIFIER: " + identifier)
 
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
-      val textFromAllDescrs = gr._2.map(m => m.arguments("description").head.text).distinct
+      val textFromAllDescrs = gr._2.map(m => getMentionText(m.arguments("description").head)).distinct
+      println("\ndescriptions: ")
+      for (d <- textFromAllDescrs) println(d)
       val terms = gr._2.flatMap(g => getTerms(g)).distinct
       for (t <- terms) println("->" + t)
 
