@@ -334,7 +334,7 @@ rules:
     action: ${paramSetAction}
     pattern: |
       trigger = [lemma="value"]
-      variable:Phrase = nmod_of | compound | <dobj nsubj
+      variable:Phrase = nmod_of | compound
       value:Value = <dobj advcl_to | nmod_of | <nsubj | <nsubjpass xcomp nummod
 
   - name: tilda_value

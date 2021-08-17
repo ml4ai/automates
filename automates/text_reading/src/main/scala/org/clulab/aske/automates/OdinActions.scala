@@ -1299,14 +1299,14 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (tag == "POS") return false
       return (
         word.toLowerCase != word // mixed case or all UPPER
-          |
-          v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
-          |
-          word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
-          |
-          word.length < 3 && word.exists(_.isDigit) && !word.contains("-") && word.replaceAll("\\d|\\s", "").length > 0 //this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
-          |
-          (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
+        |
+        v.entities.exists(ent => ent.contains("B-GreekLetter")) //or is a greek letter
+        |
+        word.length == 1 && (tag.startsWith("NN") | tag == "FW") //or the word is one character long and is a noun or a foreign word (the second part of the constraint helps avoid standalone one-digit numbers, punct, and the article 'a'
+        |
+        word.length < 3 && word.exists(_.isDigit) && !word.contains("-") && word.replaceAll("\\d|\\s", "").length > 0 //this is too specific; trying to get to single-letter identifiers with a subscript (e.g., u2) without getting units like m-2
+        |
+        (word.length < 6 && tag != "CD") //here, we allow words for under 6 char bc we already checked above that they are not among the freq words
         )
     }
 
@@ -1356,12 +1356,12 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       descrMention = m.arguments.getOrElse("description", Seq())
       if (
         descrMention.nonEmpty && //there has to be a description
-          looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
-          descrMention.head.text.length > 4 && //the descr can't be the length of a var
-          !descrMention.head.text.contains("=") &&
-          looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
-          &&
-          descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
+        looksLikeADescr(descrMention, state).nonEmpty && //make sure the descr looks like a descr
+        descrMention.head.text.length > 4 && //the descr can't be the length of a var
+        !descrMention.head.text.contains("=") &&
+        looksLikeAnIdentifier(descrMention, state).isEmpty //makes sure the description is not another variable (or does not look like what could be an identifier)
+        &&
+        descrMention.head.tokenInterval.intersect(variableMention.head.tokenInterval).isEmpty //makes sure the variable and the description don't overlap
         ) || (descrMention.nonEmpty && freqWords.contains(descrMention.head.text)) //the description can be one short, frequent word
     } yield m
   }

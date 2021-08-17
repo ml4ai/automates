@@ -139,11 +139,8 @@ class TestParameterSetting  extends ExtractionTest {
 
 
   val t13a = "If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
-  //passingTest should s"extract the parameter setting(s) from t13a and NOT extract the figure number from t13a: ${t13a}" taggedAs(Somebody, Interval) in {
-  passingTest should s"NOT extract the figure number: ${t13a}" taggedAs(Somebody, Interval) in {
-    val desired = Seq(
-      //"SKc" -> Seq("0.5", "0.7") //todo: how do we extract intervals like this? Masha: made a separate test set for interval parameter settings
-    )
+    passingTest should s"NOT extract the figure number: ${t13a}" taggedAs(Somebody) in {
+    val desired = Seq.empty
     val mentions = extractMentions(t13a)
     testParameterSettingEvent(mentions, desired)
   }
@@ -224,7 +221,7 @@ class TestParameterSetting  extends ExtractionTest {
   val u2a = "It shows that the pasture is not harvested before 1/07/1995 , the harvest frequency is once every 21 days and the harvest residual is 1250 kg / ha ."
   failingTest should s"extract the parameter setting(s) from u2a: ${u2a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "harvest residual" -> Seq("1250") //todo: add this as unit test, too
+      "harvest residual" -> Seq("1250")
     )
     val mentions = extractMentions(u2a)
     testParameterSettingEvent(mentions, desired)
@@ -257,7 +254,6 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
-  // todo: add a units test
   val u5a = "For the purposes of model parameterisation the value of shoot_lag has been assumed to be around 40 o Cd."
   passingTest should s"extract the parameter setting(s) from u5a: ${u5a}" taggedAs(Somebody) in {
     val desired = Seq(
@@ -267,7 +263,6 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
-  //todo: add units test
   val u6a = "This means that at a sowing depth of 4 cm emergence occurs..."
   failingTest should s"extract the parameter setting(s) from u6a: ${u6a}" taggedAs(Somebody) in {
     val desired = Seq(
@@ -323,7 +318,6 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
-  // todo: add unit test
   val u13a = "Root biomass is converted to root length using the parameter specific_root_length ( currently assumed as 60000 mm / g for all species ) ."
   failingTest should s"extract the parameter setting(s) from u13a: ${u13a}" taggedAs(Somebody, Interval) in {
     val desired = Seq(
@@ -343,7 +337,7 @@ class TestParameterSetting  extends ExtractionTest {
   }
 
   val u15a = "It is assumed that leaf expansion growth is reduced when the supply / demand ratio for water is below 1.1 and stops when supply / demand ratio reaches 0.1 ."
-  passingTest should s"extract the parameter setting(s) from u15a: ${u15a}" taggedAs(Somebody, Interval) in {
+  passingTest should s"extract the parameter setting(s) from u15a: ${u15a}" taggedAs(Somebody) in {
     val desired = Seq(
       "supply / demand ratio" -> Seq("0.1")
     )
@@ -351,7 +345,15 @@ class TestParameterSetting  extends ExtractionTest {
     testParameterSettingEvent(mentions, desired)
   }
 
-  //
+  // source unknown
+  val t1d = "If the parameters above are used to simulate the future spread of epidemic we obtain the value of R∞ to be 350."
+  passingTest should s"extract the parameter setting(s) from t1d: ${t1d}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "R∞" -> Seq("350")
+    )
+    val mentions = extractMentions(t1d)
+    testParameterSettingEvent(mentions, desired)
+  }
 
 
 //  val t4b = "The value of RHmax generally exceeds 90% and approaches 100%."

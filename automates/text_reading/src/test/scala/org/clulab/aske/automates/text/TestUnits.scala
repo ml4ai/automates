@@ -85,9 +85,9 @@ class TestUnits extends ExtractionTest {
 
   // supermaas papers
   val t9a = "Figure 2 : Performance of the fababean module ( observed versus simulated grain yield in g / m2 ) against test datasets reported by Turpin et al. ( 2003 ) ."
-  passingTest should s"extract variables and units from t9a: ${t9a}" taggedAs(Somebody) in {
+  failingTest should s"extract variables and units from t9a: ${t9a}" taggedAs(Somebody) in {
     val desired = Seq(
-      "Performance of the fababean module" -> Seq("g / m2")
+      "grain yield" -> Seq("g / m2")
     )
     val mentions = extractMentions(t9a)
     testUnitEvent(mentions, desired)
@@ -110,6 +110,43 @@ class TestUnits extends ExtractionTest {
     val mentions = extractMentions(t11a)
     testUnitEvent(mentions, desired)
   }
+
+  val t12a = "It shows that the pasture is not harvested before 1/07/1995 , the harvest frequency is once every 21 days and the harvest residual is 1250 kg / ha ."
+  failingTest should s"extract variables and units from t12a: ${t12a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "harvest residual" -> Seq("kg / ha")
+    )
+    val mentions = extractMentions(t12a)
+    testUnitEvent(mentions, desired)
+  }
+
+  val t13a = "For the purposes of model parameterisation the value of shoot_lag has been assumed to be around 40 o Cd."
+  failingTest should s"extract variables and units from t13a: ${t13a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "shoot_lag" -> Seq("o Cd")
+    )
+    val mentions = extractMentions(t13a)
+    testUnitEvent(mentions, desired)
+  }
+
+  val t14a = "This means that at a sowing depth of 4 cm emergence occurs..."
+  failingTest should s"extract variables and units from t14a: ${t14a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "sowing depth" -> Seq("cm")
+    )
+    val mentions = extractMentions(t14a)
+    testUnitEvent(mentions, desired)
+  }
+
+  val t15a = "Root biomass is converted to root length using the parameter specific_root_length ( currently assumed as 60000 mm / g for all species ) ."
+  failingTest should s"extract variables and units from t15a: ${t15a}" taggedAs(Somebody) in {
+    val desired = Seq(
+      "specific_root_length" -> Seq("mm / g")
+    )
+    val mentions = extractMentions(t15a)
+    testUnitEvent(mentions, desired)
+  }
+
 }
 
 
