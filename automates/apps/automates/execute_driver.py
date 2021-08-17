@@ -75,8 +75,8 @@ def execute_gromet_experiment_json(experiment_json):
     {
         "command": "simulate-gsl",
         "definition": {
-            "type": "easel",
-            "source": "{ \"model\": \" GroMEt Model String \" }"
+            "type": "gromet-fnet",
+            "source": "{ GroMEt Model String }"
         },
         "start": 0,
         "end": 120.0,
@@ -131,12 +131,12 @@ def execute_gromet_experiment_json(experiment_json):
     domain_parameter = experiment_json["domain_parameter"]
     parameters = experiment_json["parameters"]
     outputs = experiment_json["outputs"]
-    gromet_source_json_str = experiment_json["definition"]["source"]["model"]
+    gromet_source_json_str = experiment_json["definition"]["source"]
     gromet_obj = json.loads(gromet_source_json_str)
     model_name = gromet_obj["name"]
 
     results = {}
-    if model_name == "SIR-simple":
+    if model_name == "SimpleSIR_metadata" or model_name == "SimpleSIR":
         chime_expected_sir_simple_inputs = [
             "P:sir.in.S",
             "P:sir.in.I",
