@@ -1,5 +1,7 @@
 package org.clulab.grounding
+import com.github.blemale.scaffeine.{Cache, LoadingCache, Scaffeine}
 
+import scala.concurrent.duration._
 import java.io.File
 import com.typesafe.config.{Config, ConfigFactory}
 import upickle.default._
@@ -45,6 +47,13 @@ object WikidataGrounder {
   val sparqlDir: String = config[String]("grounding.sparqlDir")
   val stopWords = FileUtils.loadFromOneColumnTSV("src/main/resources/stopWords.tsv")
 //  val currentDir: String = System.getProperty("user.dir")
+  val cache: Cache[String, String] = Scaffeine()
+    .recordStats()
+    .expireAfterWrite(1.hour)
+    .maximumSize(500)
+    .build[String, String]()
+
+
 def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Seq[sparqlWikiResult]] = {
 
   if (terms_with_underscores.nonEmpty) {
@@ -55,6 +64,7 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
     for (term <- terms) {
       val term_list = terms.filter(_==term)
       val result = WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
+      cache.put(term, result)
       val allSparqlWikiResults = new ArrayBuffer[sparqlWikiResult]()
       if (result.nonEmpty) {
         val lineResults = new ArrayBuffer[sparqlWikiResult]()
