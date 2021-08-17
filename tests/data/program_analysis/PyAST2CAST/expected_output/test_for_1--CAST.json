@@ -145,7 +145,7 @@
                                 ],
                                 "type": "float",
                                 "val": {
-                                    "name": "generated_index%",
+                                    "name": "generated_index_0",
                                     "node_type": "Name",
                                     "source_refs": [
                                         {
@@ -163,6 +163,90 @@
                             "right": {
                                 "node_type": "Number",
                                 "number": 0,
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 4,
+                                        "source_file_name": "test_for_1.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 13,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 4,
+                                    "source_file_name": "test_for_1.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 4,
+                                        "source_file_name": "test_for_1.py"
+                                    }
+                                ],
+                                "type": "list",
+                                "val": {
+                                    "name": "generated_list_0",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 13,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 4,
+                                            "source_file_name": "test_for_1.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "arguments": [
+                                    {
+                                        "name": "y",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 14,
+                                                "col_start": 13,
+                                                "node_type": "SourceRef",
+                                                "row_end": 4,
+                                                "row_start": 4,
+                                                "source_file_name": "test_for_1.py"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "func": {
+                                    "name": "list",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 13,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 4,
+                                            "source_file_name": "test_for_1.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
                                 "source_refs": [
                                     {
                                         "col_end": 13,
@@ -220,7 +304,7 @@
                                     "right": {
                                         "node_type": "Subscript",
                                         "slice": {
-                                            "name": "generated_index%",
+                                            "name": "generated_index_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -244,7 +328,7 @@
                                             }
                                         ],
                                         "value": {
-                                            "name": "y",
+                                            "name": "generated_list_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -339,7 +423,7 @@
                                         ],
                                         "type": "float",
                                         "val": {
-                                            "name": "generated_index%",
+                                            "name": "generated_index_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -356,7 +440,7 @@
                                     "node_type": "Assignment",
                                     "right": {
                                         "left": {
-                                            "name": "generated_index%",
+                                            "name": "generated_index_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
@@ -410,7 +494,7 @@
                             ],
                             "expr": {
                                 "left": {
-                                    "name": "generated_index%",
+                                    "name": "generated_index_0",
                                     "node_type": "Name",
                                     "source_refs": [
                                         {
@@ -428,14 +512,14 @@
                                 "right": {
                                     "arguments": [
                                         {
-                                            "name": "y",
+                                            "name": "generated_list_0",
                                             "node_type": "Name",
                                             "source_refs": [
                                                 {
-                                                    "col_end": 14,
-                                                    "col_start": 13,
+                                                    "col_end": 13,
+                                                    "col_start": 4,
                                                     "node_type": "SourceRef",
-                                                    "row_end": 4,
+                                                    "row_end": 5,
                                                     "row_start": 4,
                                                     "source_file_name": "test_for_1.py"
                                                 }
