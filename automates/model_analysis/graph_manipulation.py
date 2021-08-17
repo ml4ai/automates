@@ -309,9 +309,20 @@ def c_components(g, topo):
     if "description" in g.vertex_attributes():
         for component in cc_sorted:
             for node in component:
-                if g.vs.select(name=node)[0]["description"] == "U":
+                node_info = g.vs.select(name=node)[0]
+
+                # Removes unobserved nodes from c_components
+                if node_info["description"] == "U":
                     component.remove(node)
+
+                # Removes nodes fixed by intervention from c_components
+                if node_info["int_vars"] is not None:
+                    if node_info["orig_name"] in node_info["int_vars"]:
+                        component.remove(node)
+            if len(component) == 0:
+                cc_sorted.remove(component)
     return cc_sorted
+
 
 
 def parse_joint(p, v, cond, var, topo):

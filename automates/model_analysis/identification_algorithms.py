@@ -308,6 +308,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     cg_obs = gm.observed_graph(cg)
     cg_topo_ind = cg_obs.topological_sorting()
     cg_topo = gm.to_names(cg_topo_ind, cg_obs)
+    cg_obs_nodes = cg.vs.select(description_ne="U")["name"]
     s = gm.c_components(cg, cg_topo)
     print(s)
     if len(s) > 1:
@@ -315,7 +316,8 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         product_list = []
         id_check_list = []
         for s_element in s:
-            gamma_new = []
+            subscripts = list(set(cg_obs_nodes)-set(s_element))
+            gamma_new = []  # todo: determine what gamma_new should be
             nxt = None
 
         # Outer sum
