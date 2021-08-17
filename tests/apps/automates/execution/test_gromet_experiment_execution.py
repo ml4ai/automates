@@ -8,7 +8,7 @@ def test_execute_sir_simple_mock():
         "start": 0,
         "end": 120.0,
         "step": 30.0,
-        "domain_parameter": "P:sir.out.dt",
+        "domain_parameter": "P:sir.in.dt",
         "parameters": {
             "P:sir.in.beta": 0.5,
             "P:sir.in.S": 100000,
