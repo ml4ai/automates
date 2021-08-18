@@ -1,8 +1,8 @@
 from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod
 from enum import Enum, auto, unique
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, asdict
+from datetime import date, datetime
 from typing import List, Union, Type, Dict
 from time import time
 
@@ -49,26 +49,25 @@ class MetadataType(AutoMATESBaseEnum):
 
     @classmethod
     def get_metadata_class(cls, mtype: MetadataType) -> TypedMetadata:
-        if mtype == cls.GRFN_CREATION:
+        if mtype == MetadataType.GRFN_CREATION:
             return GrFNCreation
-        elif mtype == cls.CODE_SPAN_REFERENCE:
+        elif mtype == MetadataType.CODE_SPAN_REFERENCE:
             return CodeSpanReference
-        elif mtype == cls.CODE_COLLECTION_REFERENCE:
+        elif mtype == MetadataType.CODE_COLLECTION_REFERENCE:
             return CodeCollectionReference
-        elif mtype == cls.DOMAIN:
+        elif mtype == MetadataType.DOMAIN:
             return Domain
-        elif mtype == cls.TEXT_DEFINITION:
+        elif mtype == MetadataType.TEXT_DEFINITION:
             return VariableTextDefinition
-        elif mtype == cls.PARAMETER_SETTING:
+        elif mtype == MetadataType.PARAMETER_SETTING:
             return VariableTextParameter
-        elif mtype == cls.EQUATION_PARAMETER:
+        elif mtype == MetadataType.EQUATION_PARAMETER:
             return VariableEquationParameter
-        elif mtype == cls.TEXT_UNIT:
+        elif mtype == MetadataType.TEXT_UNIT:
             return VariableTextUnit
         else:
             raise MissingEnumError(
-                "Unhandled MetadataType to TypedMetadata conversion "
-                + f"for: {mtype}"
+                "Unhandled MetadataType to TypedMetadata conversion " + f"for: {mtype}"
             )
 
 
@@ -130,20 +129,12 @@ class MeasurementType(AutoMATESBaseEnum):
     @classmethod
     def isa_categorical(cls, item: MeasurementType) -> bool:
         return any(
-            [
-                item == x
-                for x in range(cls.CATEGORICAL.value, cls.NUMERICAL.value)
-            ]
+            [item == x for x in range(cls.CATEGORICAL.value, cls.NUMERICAL.value)]
         )
 
     @classmethod
     def isa_numerical(cls, item: MeasurementType) -> bool:
-        return any(
-            [
-                item == x
-                for x in range(cls.NUMERICAL.value, cls.RATIO.value + 1)
-            ]
-        )
+        return any([item == x for x in range(cls.NUMERICAL.value, cls.RATIO.value + 1)])
 
 
 @unique
@@ -312,10 +303,17 @@ class TypedMetadata(BaseMetadata):
         return ChildMetadataClass.from_data(data)
 
     def to_dict(self):
-        return {
-            "type": str(self.type),
-            "provenance": self.provenance.to_dict(),
-        }
+        def as_dict_enum_factory(data):
+            def convert_value(obj):
+                if isinstance(obj, Enum):
+                    return obj.name
+                elif isinstance(obj, datetime):
+                    return str(obj)
+                return obj
+
+            return dict((k, convert_value(v)) for k, v in data)
+
+        return asdict(self, dict_factory=as_dict_enum_factory)
 
 
 @dataclass
@@ -549,12 +547,6 @@ class VariableEquationParameter(TypedMetadata):
             data["value"],
         )
 
-    def to_dict(self):
-        data = super().to_dict()
-        # TODO
-        # data.update({"name": self.name})
-        return data
-
 
 @dataclass
 class VariableTextDefinition(TypedMetadata):
@@ -571,12 +563,6 @@ class VariableTextDefinition(TypedMetadata):
             data["variable_identifier"],
             data["variable_definition"],
         )
-
-    def to_dict(self):
-        data = super().to_dict()
-        # TODO
-        # data.update({"name": self.name})
-        return data
 
 
 @dataclass
@@ -595,13 +581,6 @@ class VariableTextParameter(TypedMetadata):
             data["value"],
         )
 
-    def to_dict(self):
-        data = super().to_dict()
-        # TODO
-        # data.update({
-        #     "text_extraction": self.name
-        # })
-        return data
 
 @dataclass
 class VariableTextUnit(TypedMetadata):
@@ -616,14 +595,6 @@ class VariableTextUnit(TypedMetadata):
             TextExtraction.from_data(data["text_extraction"]),
             data["unit"],
         )
-
-    def to_dict(self):
-        data = super().to_dict()
-        # TODO
-        # data.update({
-        #     "text_extraction": self.name
-        # })
-        return data
 
 
 @dataclass
@@ -685,9 +656,7 @@ class Domain(TypedMetadata):
         if MeasurementType.isa_categorical(mtype):
             els = [DomainSet.from_data(dom_el) for dom_el in data["elements"]]
         elif MeasurementType.isa_numerical(mtype):
-            els = [
-                DomainInterval.from_data(dom_el) for dom_el in data["elements"]
-            ]
+            els = [DomainInterval.from_data(dom_el) for dom_el in data["elements"]]
         else:
             els = []
         return cls(

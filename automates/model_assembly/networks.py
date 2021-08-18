@@ -131,9 +131,7 @@ class VariableNode(BaseNode):
                     )
                 ]
             elif MeasurementType.isa_numerical(m_type):
-                return [
-                    DomainInterval(-float("inf"), float("inf"), False, False)
-                ]
+                return [DomainInterval(-float("inf"), float("inf"), False, False)]
             else:
                 return []
 
@@ -200,9 +198,7 @@ class VariableNode(BaseNode):
                 if re.match(r"^d[A-Z]", token) is not None:
                     camel_case_tokens.append(token)
                 else:
-                    camel_split = re.split(
-                        r"([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", token
-                    )
+                    camel_split = re.split(r"([A-Z]+|[A-Z]?[a-z]+)(?=[A-Z]|\b)", token)
                     camel_case_tokens.extend(camel_split)
 
         clean_tokens = [t for t in camel_case_tokens if t != ""]
@@ -325,9 +321,7 @@ class BaseFuncNode(ABC):
     @staticmethod
     def create_hyper_graph(hyper_edges: List[HyperEdge]) -> nx.DiGraph:
         output2edge = {
-            out_node: h_edge
-            for h_edge in hyper_edges
-            for out_node in h_edge.outputs
+            out_node: h_edge for h_edge in hyper_edges for out_node in h_edge.outputs
         }
 
         network = nx.DiGraph()
@@ -338,10 +332,7 @@ class BaseFuncNode(ABC):
                 if v_node in output2edge:
                     potential_parents.append(output2edge[v_node])
             network.add_edges_from(
-                [
-                    (parent_func, h_edge)
-                    for parent_func in set(potential_parents)
-                ]
+                [(parent_func, h_edge) for parent_func in set(potential_parents)]
             )
 
         # print(network.nodes)
@@ -411,9 +402,7 @@ class OperationFuncNode(BaseFuncNode):
         metadata = list()
         return cls(
             str(uuid.uuid4()),
-            FunctionIdentifier.from_operator_func(
-                operation, int(uuid.uuid4())
-            ),
+            FunctionIdentifier.from_operator_func(operation, int(uuid.uuid4())),
             FunctionType.OPERATOR,
             [],
             [],
@@ -502,10 +491,7 @@ class ExpressionFuncNode(BaseFuncNode):
         uid2node = {n.uid: n for n in nodes}
         lambda_def = None
         for node in nodes:
-            if (
-                isinstance(node, ExprDefinitionNode)
-                and node.def_type == "LAMBDA"
-            ):
+            if isinstance(node, ExprDefinitionNode) and node.def_type == "LAMBDA":
                 lambda_def = node
                 break
 
@@ -536,9 +522,7 @@ class ExpressionFuncNode(BaseFuncNode):
                 return LiteralFuncNode.from_value_node(expr_node_def)
             elif isinstance(expr_node_def, ExprVariableNode):
                 return None  # Nothing to be done.
-            child_defs = [
-                uid2node[child_id] for child_id in expr_node_def.children
-            ]
+            child_defs = [uid2node[child_id] for child_id in expr_node_def.children]
 
             input_var_nodes = list()
             for child_def in child_defs:
@@ -559,15 +543,11 @@ class ExpressionFuncNode(BaseFuncNode):
                     if child_out_var is not None:
                         input_var_nodes.append(child_out_var)
                 else:
-                    raise TypeError(
-                        f"Unexpected Expr def type: {type(child_def)}"
-                    )
+                    raise TypeError(f"Unexpected Expr def type: {type(child_def)}")
 
             expr_func_node = OperationFuncNode.from_expr_def(expr_node_def)
             output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
-            new_hyper_edge = HyperEdge(
-                expr_func_node, input_var_nodes, [output_var]
-            )
+            new_hyper_edge = HyperEdge(expr_func_node, input_var_nodes, [output_var])
             new_var_nodes.append(output_var)
             new_func_nodes.append(expr_func_node)
             new_hyper_edges.append(new_hyper_edge)
@@ -612,9 +592,7 @@ class BaseConFuncNode(BaseFuncNode):
     ) -> BaseConFuncNode:
         func_id = FunctionIdentifier.from_container_id(container.identifier)
         func_type = FunctionType.from_con(container.__class__.__name__)
-        inputs = BaseFuncNode.get_or_create_vars(
-            container.arguments, AIR, VARS
-        )
+        inputs = BaseFuncNode.get_or_create_vars(container.arguments, AIR, VARS)
         outputs = BaseFuncNode.get_or_create_vars(
             container.updated + container.return_value, AIR, VARS
         )
@@ -626,26 +604,16 @@ class BaseConFuncNode(BaseFuncNode):
                 new_con_id = stmt.callee_container_id
                 con_def = AIR.containers[new_con_id]
                 if isinstance(con_def, LoopContainerDef):
-                    new_func = LoopConFuncNode.from_container(
-                        con_def, AIR, VARS, FUNCS
-                    )
+                    new_func = LoopConFuncNode.from_container(con_def, AIR, VARS, FUNCS)
                 elif isinstance(con_def, FuncContainerDef):
-                    new_func = BaseConFuncNode.from_container(
-                        con_def, AIR, VARS, FUNCS
-                    )
+                    new_func = BaseConFuncNode.from_container(con_def, AIR, VARS, FUNCS)
                 elif isinstance(con_def, CondContainerDef):
-                    new_func = CondConFuncNode.from_container(
-                        con_def, AIR, VARS, FUNCS
-                    )
+                    new_func = CondConFuncNode.from_container(con_def, AIR, VARS, FUNCS)
                 else:
-                    raise TypeError(
-                        f"Unrecognized container type: {type(con_def)}"
-                    )
+                    raise TypeError(f"Unrecognized container type: {type(con_def)}")
             elif isinstance(stmt, LambdaStmtDef):
                 # Create a new Expression type function node definiton
-                new_func = ExpressionFuncNode.from_lambda_stmt(
-                    stmt, AIR, VARS, FUNCS
-                )
+                new_func = ExpressionFuncNode.from_lambda_stmt(stmt, AIR, VARS, FUNCS)
             else:
                 raise TypeError(f"Unrecognized statement type: {type(stmt)}")
             FUNCS[new_func.identifier] = new_func
@@ -698,9 +666,7 @@ class CondConFuncNode(BaseConFuncNode):
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ) -> CondConFuncNode:
-        mock_func_node = BaseConFuncNode.from_container(
-            container, AIR, VARS, FUNCS
-        )
+        mock_func_node = BaseConFuncNode.from_container(container, AIR, VARS, FUNCS)
         return cls(
             uid=mock_func_node.uid,
             identifier=mock_func_node.identifier,
@@ -734,9 +700,7 @@ class LoopConFuncNode(BaseConFuncNode):
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ) -> BaseConFuncNode:
-        mock_func_node = BaseConFuncNode.from_container(
-            container, AIR, VARS, FUNCS
-        )
+        mock_func_node = BaseConFuncNode.from_container(container, AIR, VARS, FUNCS)
         return cls(
             uid=mock_func_node.uid,
             identifier=mock_func_node.identifier,
@@ -871,9 +835,7 @@ class HyperEdge:
         ):
             # Initialize seen exits to an array of False if it does not exist
             if not hasattr(self, "seen_exits"):
-                self.seen_exits = np.full(
-                    self.func_node.np_shape, False, dtype=np.bool
-                )
+                self.seen_exits = np.full(self.func_node.np_shape, False, dtype=np.bool)
 
             # Gather the exit conditions for this execution
             exit_var_values = [
@@ -1621,14 +1583,9 @@ class GroundedFunctionNetwork:
 
         if literals is not None:
             literal_ids = set(
-                [
-                    VariableIdentifier.from_str(var_id)
-                    for var_id in literals.keys()
-                ]
+                [VariableIdentifier.from_str(var_id) for var_id in literals.keys()]
             )
-            lit_id2val = {
-                lit_id: literals[str(lit_id)] for lit_id in literal_ids
-            }
+            lit_id2val = {lit_id: literals[str(lit_id)] for lit_id in literal_ids}
             literal_overrides = [
                 (var_node, lit_id2val[identifier])
                 for identifier, var_node in self.literal_identifier_map.items()
@@ -1658,13 +1615,9 @@ class GroundedFunctionNetwork:
             for s in self.subgraphs
         }
         node_to_subgraph = {n: s for s in self.subgraphs for n in s.nodes}
-        self.root_subgraph(
-            self, subgraph_to_hyper_edges, node_to_subgraph, set()
-        )
+        self.root_subgraph(self, subgraph_to_hyper_edges, node_to_subgraph, set())
         # Return the output
-        return {
-            output.identifier.var_name: output.value for output in self.outputs
-        }
+        return {output.identifier.var_name: output.value for output in self.outputs}
 
     @classmethod
     def from_AIR(cls, AIR: AutoMATES_IR):
@@ -1853,16 +1806,12 @@ class GroundedFunctionNetwork:
 
         initial_funcs = [n for n, d in self.FCG.in_degree() if d == 0]
         func2container = {f: s.uid for s in self.subgraphs for f in s.nodes}
-        initial_funcs_to_subgraph = {
-            n: func2container[n] for n in initial_funcs
-        }
+        initial_funcs_to_subgraph = {n: func2container[n] for n in initial_funcs}
         containers_to_initial_funcs = {s.uid: list() for s in self.subgraphs}
         for k, v in initial_funcs_to_subgraph.items():
             containers_to_initial_funcs[v].append(k)
 
-        def build_function_set_for_container(
-            container, container_initial_funcs
-        ):
+        def build_function_set_for_container(container, container_initial_funcs):
             all_successors = list()
             distances = dict()
             visited_funcs = set()
@@ -1911,16 +1860,12 @@ class GroundedFunctionNetwork:
                 if isinstance(n, LambdaNode)
                 and n.func_type == LambdaType.INTERFACE
                 and all(
-                    [
-                        var_node in container.nodes
-                        for var_node in self.successors(n)
-                    ]
+                    [var_node in container.nodes for var_node in self.successors(n)]
                 )
             ]
             build_function_set_for_container(
                 container.uid,
-                input_interface_funcs
-                + containers_to_initial_funcs[container.uid],
+                input_interface_funcs + containers_to_initial_funcs[container.uid],
             )
 
         return subgraphs_to_func_sets
@@ -1975,9 +1920,7 @@ class GroundedFunctionNetwork:
                         output_var_nodes.extend(succs)
                     output_var_nodes = set(output_var_nodes) - output_nodes
                     var_nodes = output_var_nodes.intersection(subgraph.nodes)
-                    container_subgraph.add_subgraph(
-                        list(var_nodes), rank="same"
-                    )
+                    container_subgraph.add_subgraph(list(var_nodes), rank="same")
 
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
@@ -2007,14 +1950,10 @@ class GroundedFunctionNetwork:
             return [v for v in graph.nodes() if shortname in v]
 
         g1_var_nodes = {
-            shortname(n)
-            for (n, d) in self.nodes(data=True)
-            if d["type"] == "variable"
+            shortname(n) for (n, d) in self.nodes(data=True) if d["type"] == "variable"
         }
         g2_var_nodes = {
-            shortname(n)
-            for (n, d) in G2.nodes(data=True)
-            if d["type"] == "variable"
+            shortname(n) for (n, d) in G2.nodes(data=True) if d["type"] == "variable"
         }
 
         shared_nodes = {
@@ -2029,24 +1968,17 @@ class GroundedFunctionNetwork:
         # Get all paths from shared inputs to shared outputs
         path_inputs = shared_nodes - set(outputs)
         io_pairs = [(inp, self.output_node) for inp in path_inputs]
-        paths = [
-            p for (i, o) in io_pairs for p in all_simple_paths(self, i, o)
-        ]
+        paths = [p for (i, o) in io_pairs for p in all_simple_paths(self, i, o)]
 
         # Get all edges needed to blanket the included nodes
         main_nodes = {node for path in paths for node in path}
-        main_edges = {
-            (n1, n2) for path in paths for n1, n2 in zip(path, path[1:])
-        }
+        main_edges = {(n1, n2) for path in paths for n1, n2 in zip(path, path[1:])}
         blanket_nodes = set()
         add_nodes, add_edges = list(), list()
 
         def place_var_node(var_node):
             prev_funcs = list(self.predecessors(var_node))
-            if (
-                len(prev_funcs) > 0
-                and self.nodes[prev_funcs[0]]["label"] == "L"
-            ):
+            if len(prev_funcs) > 0 and self.nodes[prev_funcs[0]]["label"] == "L":
                 prev_func = prev_funcs[0]
                 add_nodes.extend([var_node, prev_func])
                 add_edges.append((prev_func, var_node))
@@ -2168,9 +2100,7 @@ class GroundedFunctionNetwork:
         # Re-create the hyper-edges/subgraphs using the node lookup list
         S = nx.DiGraph()
 
-        subgraphs = [
-            GrFNSubgraph.from_dict(s, ALL_NODES) for s in data["subgraphs"]
-        ]
+        subgraphs = [GrFNSubgraph.from_dict(s, ALL_NODES) for s in data["subgraphs"]]
         subgraph_dict = {s.uid: s for s in subgraphs}
         subgraph_edges = [
             (subgraph_dict[s.parent], subgraph_dict[s.uid])
@@ -2182,11 +2112,7 @@ class GroundedFunctionNetwork:
 
         H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
 
-        T = (
-            [TypeDef.from_data(t) for t in data["types"]]
-            if "types" in data
-            else []
-        )
+        T = [TypeDef.from_data(t) for t in data["types"]] if "types" in data else []
 
         M = (
             [TypedMetadata.from_data(d) for d in data["metadata"]]
@@ -2238,9 +2164,7 @@ class CAGContainer:
         """
         con_id = CAGContainerIdentifier.from_function_id(func.identifier)
         if parent is not None:
-            parent_id = CAGContainerIdentifier.from_function_id(
-                parent.identifier
-            )
+            parent_id = CAGContainerIdentifier.from_function_id(parent.identifier)
         else:
             parent_id = None
 
@@ -2380,8 +2304,7 @@ class CausalAnalysisGraph:
             "daet_created": self.date_created,
             "nodes": [var.to_dict() for var in self.nodes],
             "edges": [
-                (str(src.identifier), str(dst.identifier))
-                for src, dst in self.edges
+                (str(src.identifier), str(dst.identifier)) for src, dst in self.edges
             ],
             "containers": [con.to_dict() for con in self.containers],
             "metadata": [m.to_dict() for m in self.metadata],
