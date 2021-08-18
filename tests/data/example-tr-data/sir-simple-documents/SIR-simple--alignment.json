@@ -1,2278 +1,3027 @@
 {
   "grounding": {
-    "full_text_equation": [{
-      "uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "S ( t ) = S ( 0 ) e ^ { - R _ { 0 } ( R ( t ) - R ( 0 ) ) / N }"
-    }, {
-      "uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "\\frac { d I } { d t } = \\frac { \\beta I S } { N } - \\gamma I"
-    }, {
-      "uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
-      "content": "R _ { 0 } < \\frac { N } { S ( 0 ) }"
-    }, {
-      "uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "R _ { \\infty } = N - S ( 0 ) e ^ { - R _ { 0 } ( R _ { \\infty } - R ( 0 ) ) / N }"
-    }, {
-      "uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
-      "content": "S ( t ) + I ( t ) + R ( t ) = \\mathrm { C o n s t a n t } = N"
-    }, {
-      "uid": "684b41a5-1ef1-40bb-9829-00171460615f",
-      "content": "R _ { 0 } = \\frac { \\beta } { \\gamma }"
-    }, {
-      "uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
-      "content": "R _ { 0 } > \\frac { N } { S ( 0 ) }"
-    }, {
-      "uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "\\frac { d S } { d t } = - \\frac { \\beta I S } { N }"
-    }, {
-      "uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
-      "content": "\\frac { d I } { d t } ( 0 ) > 0"
-    }, {
-      "uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
-      "content": "\\frac { d R } { d t } = \\gamma I"
-    }, {
-      "uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "\\frac { d I } { d t } = ( R _ { 0 } S / N - 1 ) \\gamma I"
-    }, {
-      "uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
-      "content": "\\frac { d I } { d t } ( 0 ) < 0"
-    }, {
-      "uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "\\frac { d S } { d t } + \\frac { d I } { d t } + \\frac { d R } { d t } = 0"
-    }],
-    "comment": [{
-      "uid": "6b2b8428-57df-4d9f-8ac2-af759e9381e1",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "dt Next inter-event time",
-      "content": "dt       Next inter-event time",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 267,
-          "char_end": 297
-        }]
+    "full_text_equation": [
+      {
+        "uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "S ( t ) = S ( 0 ) e ^ { - R _ { 0 } ( R ( t ) - R ( 0 ) ) / N }"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "dt",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 267,
-            "char_end": 269
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Next inter-event time",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 276,
-            "char_end": 297
-          }]
-        }
-      }]
-    }, {
-      "uid": "4f682801-dcf6-43b9-bd7b-a1ad9f4eb76d",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "dt Next inter-event time",
-      "content": "dt       Next inter-event time",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 30
-        }]
+      {
+        "uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "\\frac { d I } { d t } = \\frac { \\beta I S } { N } - \\gamma I"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "dt",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 2
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Next inter-event time",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 30
-          }]
-        }
-      }]
-    }, {
-      "uid": "faa2ed19-6417-4f65-a082-dc1e99c76f89",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "R Amount of recovered members at the current timestep",
-      "content": "recovered members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 142,
-          "char_end": 183
-        }]
+      {
+        "uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
+        "content": "R _ { 0 } < \\frac { N } { S ( 0 ) }"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "recovered",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 142,
-            "char_end": 151
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 152,
-            "char_end": 183
-          }]
-        }
-      }]
-    }, {
-      "uid": "62722e8f-779a-4064-91ce-f1d1e8c29a8f",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "recovered Increase in recovered at the current timestep",
-      "content": "recovered   Increase in recovered at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 355,
-          "char_end": 412
-        }]
+      {
+        "uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "R _ { \\infty } = N - S ( 0 ) e ^ { - R _ { 0 } ( R _ { \\infty } - R ( 0 ) ) / N }"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "recovered",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 355,
-            "char_end": 364
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Increase in recovered at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 367,
-            "char_end": 412
-          }]
-        }
-      }]
-    }, {
-      "uid": "7d089f5a-d8f4-451f-b0ae-d9c7dad4b411",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "recovered Increase in recovered at the current timestep",
-      "content": "recovered at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 379,
-          "char_end": 412
-        }]
+      {
+        "uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
+        "content": "S ( t ) + I ( t ) + R ( t ) = \\mathrm { C o n s t a n t } = N"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "recovered",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 379,
-            "char_end": 388
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 389,
-            "char_end": 412
-          }]
-        }
-      }]
-    }, {
-      "uid": "9e55f5e6-a04b-4fbc-8374-78887b3dde11",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "R Amount of recovered members at the current timestep",
-      "content": "recovered members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 19,
-          "char_end": 60
-        }]
+      {
+        "uid": "684b41a5-1ef1-40bb-9829-00171460615f",
+        "content": "R _ { 0 } = \\frac { \\beta } { \\gamma }"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "recovered",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 19,
-            "char_end": 28
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 29,
-            "char_end": 60
-          }]
-        }
-      }]
-    }, {
-      "uid": "32d5568e-49d6-4ea2-ba6f-bafb3de6c195",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "recovered Increase in recovered at the current timestep",
-      "content": "recovered at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 24,
-          "char_end": 57
-        }]
+      {
+        "uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
+        "content": "R _ { 0 } > \\frac { N } { S ( 0 ) }"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "recovered",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 24,
-            "char_end": 33
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 34,
-            "char_end": 57
-          }]
-        }
-      }]
-    }, {
-      "uid": "47ee0ec7-0a79-4689-a1e4-af941911e3f3",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "recovered Increase in recovered at the current timestep",
-      "content": "recovered   Increase in recovered at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 57
-        }]
+      {
+        "uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "\\frac { d S } { d t } = - \\frac { \\beta I S } { N }"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "recovered",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 9
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Increase in recovered at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 12,
-            "char_end": 57
-          }]
-        }
-      }]
-    }, {
-      "uid": "b2f818fb-041e-4fed-a56d-81ac88f99099",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "I Amount of infected members at the current timestep",
-      "content": "I        Amount of infected members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 63,
-          "char_end": 122
-        }]
+      {
+        "uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
+        "content": "\\frac { d I } { d t } ( 0 ) > 0"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "I",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 63,
-            "char_end": 64
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Amount of infected members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 72,
-            "char_end": 122
-          }]
-        }
-      }]
-    }, {
-      "uid": "40b6719a-bfb0-41cb-a0a6-365c6ba23bb7",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "I Amount of infected members at the current timestep",
-      "content": "I        Amount of infected members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 59
-        }]
+      {
+        "uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
+        "content": "\\frac { d R } { d t } = \\gamma I"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "I",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 1
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Amount of infected members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 59
-          }]
-        }
-      }]
-    }, {
-      "uid": "3e39200d-e6bd-4bb2-a525-46fc2e3df770",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "I Amount of infected members at the current timestep",
-      "content": "infected members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 82,
-          "char_end": 122
-        }]
+      {
+        "uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "\\frac { d I } { d t } = ( R _ { 0 } S / N - 1 ) \\gamma I"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "infected",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 82,
-            "char_end": 90
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 91,
-            "char_end": 122
-          }]
-        }
-      }]
-    }, {
-      "uid": "994ac19c-85f5-46f2-af9c-22f7dfaf3dac",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "infected Increase in infected at the current timestep",
-      "content": "infected    Increase in infected at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 298,
-          "char_end": 354
-        }]
+      {
+        "uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
+        "content": "\\frac { d I } { d t } ( 0 ) < 0"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "infected",
+      {
+        "uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "\\frac { d S } { d t } + \\frac { d I } { d t } + \\frac { d R } { d t } = 0"
+      }
+    ],
+    "comment": [
+      {
+        "uid": "6b2b8428-57df-4d9f-8ac2-af759e9381e1",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "dt Next inter-event time",
+        "content": "dt       Next inter-event time",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 298,
-            "char_end": 306
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Increase in infected at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 310,
-            "char_end": 354
-          }]
-        }
-      }]
-    }, {
-      "uid": "582a6a13-d2f0-4264-83ad-deebfc8985ad",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "infected Increase in infected at the current timestep",
-      "content": "infected at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 322,
-          "char_end": 354
-        }]
+          "spans": [
+            {
+              "char_begin": 267,
+              "char_end": 297
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "dt",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 267,
+                  "char_end": 269
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Next inter-event time",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 276,
+                  "char_end": 297
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "infected",
+      {
+        "uid": "4f682801-dcf6-43b9-bd7b-a1ad9f4eb76d",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "dt Next inter-event time",
+        "content": "dt       Next inter-event time",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 322,
-            "char_end": 330
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 331,
-            "char_end": 354
-          }]
-        }
-      }]
-    }, {
-      "uid": "7b711b34-80cd-4627-a175-a956d64987a1",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "I Amount of infected members at the current timestep",
-      "content": "infected members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 19,
-          "char_end": 59
-        }]
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 30
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "dt",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 2
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Next inter-event time",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 9,
+                  "char_end": 30
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "infected",
+      {
+        "uid": "faa2ed19-6417-4f65-a082-dc1e99c76f89",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "R Amount of recovered members at the current timestep",
+        "content": "recovered members at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 19,
-            "char_end": 27
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 28,
-            "char_end": 59
-          }]
-        }
-      }]
-    }, {
-      "uid": "524a8541-85a0-4f30-a8cf-57e89e9d7c73",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "infected Increase in infected at the current timestep",
-      "content": "infected at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 24,
-          "char_end": 56
-        }]
+          "spans": [
+            {
+              "char_begin": 142,
+              "char_end": 183
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "recovered",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 142,
+                  "char_end": 151
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 152,
+                  "char_end": 183
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "infected",
+      {
+        "uid": "62722e8f-779a-4064-91ce-f1d1e8c29a8f",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "recovered Increase in recovered at the current timestep",
+        "content": "recovered   Increase in recovered at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 24,
-            "char_end": 32
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 33,
-            "char_end": 56
-          }]
-        }
-      }]
-    }, {
-      "uid": "5f4bf4e8-13d5-405f-b31e-6a1667fba396",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "infected Increase in infected at the current timestep",
-      "content": "infected    Increase in infected at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 56
-        }]
+          "spans": [
+            {
+              "char_begin": 355,
+              "char_end": 412
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "recovered",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 355,
+                  "char_end": 364
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Increase in recovered at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 367,
+                  "char_end": 412
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "infected",
+      {
+        "uid": "7d089f5a-d8f4-451f-b0ae-d9c7dad4b411",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "recovered Increase in recovered at the current timestep",
+        "content": "recovered at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 8
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Increase in infected at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 12,
-            "char_end": 56
-          }]
-        }
-      }]
-    }, {
-      "uid": "f049af1e-2726-46e6-8acd-c6acd4935cd5",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "beta Rate of transmission via contact",
-      "content": "beta     Rate of transmission via contact",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 184,
-          "char_end": 225
-        }]
+          "spans": [
+            {
+              "char_begin": 379,
+              "char_end": 412
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "recovered",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 379,
+                  "char_end": 388
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 389,
+                  "char_end": 412
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "beta",
+      {
+        "uid": "9e55f5e6-a04b-4fbc-8374-78887b3dde11",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "R Amount of recovered members at the current timestep",
+        "content": "recovered members at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 184,
-            "char_end": 188
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Rate of transmission via contact",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 193,
-            "char_end": 225
-          }]
-        }
-      }]
-    }, {
-      "uid": "e68de507-c367-47d4-a8e3-4ef9263602e4",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "beta Rate of transmission via contact",
-      "content": "beta     Rate of transmission via contact",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 41
-        }]
+          "spans": [
+            {
+              "char_begin": 19,
+              "char_end": 60
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "recovered",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 19,
+                  "char_end": 28
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 29,
+                  "char_end": 60
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "beta",
+      {
+        "uid": "32d5568e-49d6-4ea2-ba6f-bafb3de6c195",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "recovered Increase in recovered at the current timestep",
+        "content": "recovered at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 4
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Rate of transmission via contact",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 41
-          }]
-        }
-      }]
-    }, {
-      "uid": "83165851-48b6-493a-a7be-43b7b6311f27",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "gamma Rate of recovery from infection",
-      "content": "gamma    Rate of recovery from infection",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 226,
-          "char_end": 266
-        }]
+          "spans": [
+            {
+              "char_begin": 24,
+              "char_end": 57
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "recovered",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 24,
+                  "char_end": 33
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 34,
+                  "char_end": 57
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "gamma",
+      {
+        "uid": "47ee0ec7-0a79-4689-a1e4-af941911e3f3",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "recovered Increase in recovered at the current timestep",
+        "content": "recovered   Increase in recovered at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 226,
-            "char_end": 231
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Rate of recovery from infection",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 235,
-            "char_end": 266
-          }]
-        }
-      }]
-    }, {
-      "uid": "f7744b4d-9255-46d0-9ee3-55551ad5ba75",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "gamma Rate of recovery from infection",
-      "content": "gamma    Rate of recovery from infection",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 40
-        }]
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 57
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "recovered",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 9
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Increase in recovered at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 12,
+                  "char_end": 57
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "gamma",
+      {
+        "uid": "b2f818fb-041e-4fed-a56d-81ac88f99099",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "I Amount of infected members at the current timestep",
+        "content": "I        Amount of infected members at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 5
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Rate of recovery from infection",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 40
-          }]
-        }
-      }]
-    }, {
-      "uid": "22b7ab2c-446c-42b8-9edb-824840a3ec36",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "R Amount of recovered members at the current timestep",
-      "content": "R        Amount of recovered members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 123,
-          "char_end": 183
-        }]
+          "spans": [
+            {
+              "char_begin": 63,
+              "char_end": 122
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "I",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 63,
+                  "char_end": 64
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Amount of infected members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 72,
+                  "char_end": 122
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "R",
+      {
+        "uid": "40b6719a-bfb0-41cb-a0a6-365c6ba23bb7",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "I Amount of infected members at the current timestep",
+        "content": "I        Amount of infected members at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 123,
-            "char_end": 124
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Amount of recovered members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 132,
-            "char_end": 183
-          }]
-        }
-      }]
-    }, {
-      "uid": "0e24a220-05bd-4acf-89e1-b022f11eacee",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "R Amount of recovered members at the current timestep",
-      "content": "R        Amount of recovered members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 60
-        }]
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 59
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "I",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 1
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Amount of infected members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 9,
+                  "char_end": 59
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "R",
+      {
+        "uid": "3e39200d-e6bd-4bb2-a525-46fc2e3df770",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "I Amount of infected members at the current timestep",
+        "content": "infected members at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 1
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Amount of recovered members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 60
-          }]
-        }
-      }]
-    }, {
-      "uid": "e5bada4e-49a7-47ea-b2d2-ac5c8ada5685",
-      "source": "Simple_SIR; sir-simple$file_head; ",
-      "original_sentence": "S Amount of susceptible members at the current timestep",
-      "content": "S        Amount of susceptible members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 62
-        }]
+          "spans": [
+            {
+              "char_begin": 82,
+              "char_end": 122
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "infected",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 82,
+                  "char_end": 90
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 91,
+                  "char_end": 122
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "S",
+      {
+        "uid": "994ac19c-85f5-46f2-af9c-22f7dfaf3dac",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "infected Increase in infected at the current timestep",
+        "content": "infected    Increase in infected at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 1
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Amount of susceptible members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 62
-          }]
-        }
-      }]
-    }, {
-      "uid": "95bc7ca6-49b4-4c7e-8568-1f88d15ac1f5",
-      "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
-      "original_sentence": "S Amount of susceptible members at the current timestep",
-      "content": "S        Amount of susceptible members at the current timestep",
-      "spans": {
-        "page": null,
-        "block": null,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 62
-        }]
+          "spans": [
+            {
+              "char_begin": 298,
+              "char_end": 354
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "infected",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 298,
+                  "char_end": 306
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Increase in infected at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 310,
+                  "char_end": 354
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "S",
+      {
+        "uid": "582a6a13-d2f0-4264-83ad-deebfc8985ad",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "infected Increase in infected at the current timestep",
+        "content": "infected at the current timestep",
         "spans": {
           "page": null,
           "block": null,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 1
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Amount of susceptible members at the current timestep",
-        "spans": {
-          "page": null,
-          "block": null,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 62
-          }]
-        }
-      }]
-    }],
-    "src": [{
-      "uid": "0d3f8467-16bc-4088-b272-e99d6d58be5a",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::beta::0",
-      "content": "beta",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "995d9357-596c-4368-98c3-1b60261cc1fb",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::I::0",
-      "content": "I",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "0d768775-ff05-4606-945a-480f44ca0b5f",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::RETURN_VAL::0",
-      "content": "RETURN_VAL",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "d89fa10d-e93a-45e6-9afb-d04a738ec705",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::@anonymous::0",
-      "content": "@anonymous",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "b8a1ba0b-f4c4-4797-8922-6a00d1d18308",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::gamma::0",
-      "content": "gamma",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "dc889e5a-21c3-4ef5-a47c-5c72602740cb",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::R::0",
-      "content": "R",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "44bb2f47-875b-4a43-845f-ff985e9e8ae3",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::infected::0",
-      "content": "infected",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "ca73b50a-cc62-4f76-ab44-277e6d08828c",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::dt::0",
-      "content": "dt",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "f04238fa-a14e-48a6-9039-5aa08f139afd",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::recovered::0",
-      "content": "recovered",
-      "model": "Simple_SIR.sir"
-    }, {
-      "uid": "7f635dad-63d6-4807-b351-4f626985c915",
-      "source": "Variable::Simple_SIR::Simple_SIR.sir::S::0",
-      "content": "S",
-      "model": "Simple_SIR.sir"
-    }],
-    "text_var": [{
-      "uid": "eec4c2a6-f5ab-41b5-827d-a92172e1ae01",
-      "source": "unk_text_file",
-      "original_sentence": "Secondly , we note that the dynamics of the infectious class depends on the following ratio : beta ( 6 ) R0 = gamma , the so-called basic reproduction number ( also called basic reproduction ratio ) .",
-      "content": "R0 = γ , the so-called basic reproduction number",
-      "spans": {
-        "page": 2,
-        "block": 2,
-        "spans": [{
-          "char_begin": 98,
-          "char_end": 146
-        }]
+          "spans": [
+            {
+              "char_begin": 322,
+              "char_end": 354
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "infected",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 322,
+                  "char_end": 330
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 331,
+                  "char_end": 354
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "R0",
+      {
+        "uid": "7b711b34-80cd-4627-a175-a956d64987a1",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "I Amount of infected members at the current timestep",
+        "content": "infected members at the current timestep",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 19,
+              "char_end": 59
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "infected",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 19,
+                  "char_end": 27
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 28,
+                  "char_end": 59
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "524a8541-85a0-4f30-a8cf-57e89e9d7c73",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "infected Increase in infected at the current timestep",
+        "content": "infected at the current timestep",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 24,
+              "char_end": 56
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "infected",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 24,
+                  "char_end": 32
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 33,
+                  "char_end": 56
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "5f4bf4e8-13d5-405f-b31e-6a1667fba396",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "infected Increase in infected at the current timestep",
+        "content": "infected    Increase in infected at the current timestep",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 56
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "infected",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 8
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Increase in infected at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 12,
+                  "char_end": 56
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "f049af1e-2726-46e6-8acd-c6acd4935cd5",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "beta Rate of transmission via contact",
+        "content": "beta     Rate of transmission via contact",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 184,
+              "char_end": 225
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "beta",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 184,
+                  "char_end": 188
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Rate of transmission via contact",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 193,
+                  "char_end": 225
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "e68de507-c367-47d4-a8e3-4ef9263602e4",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "beta Rate of transmission via contact",
+        "content": "beta     Rate of transmission via contact",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 41
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "beta",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 4
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Rate of transmission via contact",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 9,
+                  "char_end": 41
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "83165851-48b6-493a-a7be-43b7b6311f27",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "gamma Rate of recovery from infection",
+        "content": "gamma    Rate of recovery from infection",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 226,
+              "char_end": 266
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "gamma",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 226,
+                  "char_end": 231
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Rate of recovery from infection",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 235,
+                  "char_end": 266
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "f7744b4d-9255-46d0-9ee3-55551ad5ba75",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "gamma Rate of recovery from infection",
+        "content": "gamma    Rate of recovery from infection",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 40
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "gamma",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 5
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Rate of recovery from infection",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 9,
+                  "char_end": 40
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "22b7ab2c-446c-42b8-9edb-824840a3ec36",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "R Amount of recovered members at the current timestep",
+        "content": "R        Amount of recovered members at the current timestep",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 123,
+              "char_end": 183
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "R",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 123,
+                  "char_end": 124
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Amount of recovered members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 132,
+                  "char_end": 183
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "0e24a220-05bd-4acf-89e1-b022f11eacee",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "R Amount of recovered members at the current timestep",
+        "content": "R        Amount of recovered members at the current timestep",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 60
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "R",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 1
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Amount of recovered members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 9,
+                  "char_end": 60
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "e5bada4e-49a7-47ea-b2d2-ac5c8ada5685",
+        "source": "Simple_SIR; sir-simple$file_head; ",
+        "original_sentence": "S Amount of susceptible members at the current timestep",
+        "content": "S        Amount of susceptible members at the current timestep",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 62
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "S",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 1
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Amount of susceptible members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 9,
+                  "char_end": 62
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "95bc7ca6-49b4-4c7e-8568-1f88d15ac1f5",
+        "source": "Simple_SIR; @container::SIR-simple::@global::sir; head",
+        "original_sentence": "S Amount of susceptible members at the current timestep",
+        "content": "S        Amount of susceptible members at the current timestep",
+        "spans": {
+          "page": null,
+          "block": null,
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 62
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "S",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 1
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Amount of susceptible members at the current timestep",
+            "spans": {
+              "page": null,
+              "block": null,
+              "spans": [
+                {
+                  "char_begin": 9,
+                  "char_end": 62
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "src": [
+      {
+        "uid": "0d3f8467-16bc-4088-b272-e99d6d58be5a",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::beta::0",
+        "content": "beta",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "995d9357-596c-4368-98c3-1b60261cc1fb",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::I::0",
+        "content": "I",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "0d768775-ff05-4606-945a-480f44ca0b5f",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::RETURN_VAL::0",
+        "content": "RETURN_VAL",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "d89fa10d-e93a-45e6-9afb-d04a738ec705",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::@anonymous::0",
+        "content": "@anonymous",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "b8a1ba0b-f4c4-4797-8922-6a00d1d18308",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::gamma::0",
+        "content": "gamma",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "dc889e5a-21c3-4ef5-a47c-5c72602740cb",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::R::0",
+        "content": "R",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "44bb2f47-875b-4a43-845f-ff985e9e8ae3",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::infected::0",
+        "content": "infected",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "ca73b50a-cc62-4f76-ab44-277e6d08828c",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::dt::0",
+        "content": "dt",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "f04238fa-a14e-48a6-9039-5aa08f139afd",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::recovered::0",
+        "content": "recovered",
+        "model": "Simple_SIR.sir"
+      },
+      {
+        "uid": "7f635dad-63d6-4807-b351-4f626985c915",
+        "source": "Variable::Simple_SIR::Simple_SIR.sir::S::0",
+        "content": "S",
+        "model": "Simple_SIR.sir"
+      }
+    ],
+    "text_var": [
+      {
+        "uid": "eec4c2a6-f5ab-41b5-827d-a92172e1ae01",
+        "source": "unk_text_file",
+        "original_sentence": "Secondly , we note that the dynamics of the infectious class depends on the following ratio : beta ( 6 ) R0 = gamma , the so-called basic reproduction number ( also called basic reproduction ratio ) .",
+        "content": "R0 = γ , the so-called basic reproduction number",
         "spans": {
           "page": 2,
           "block": 2,
-          "spans": [{
-            "char_begin": 98,
-            "char_end": 100
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "so-called basic reproduction number",
-        "spans": {
-          "page": 2,
-          "block": 2,
-          "spans": [{
-            "char_begin": 111,
-            "char_end": 146
-          }]
-        }
-      }]
-    }, {
-      "uid": "3e119f9b-367a-4010-a348-4fd04e2c4a02",
-      "source": "unk_text_file",
-      "original_sentence": "This idea can probably be more readily seen if we say that the typical time between contacts is Tc = beta - 1 , and the typical time until recovery is Tr = gamma - 1 .",
-      "content": "typical time between contacts is Tc",
-      "spans": {
-        "page": 2,
-        "block": 2,
-        "spans": [{
-          "char_begin": 456,
-          "char_end": 491
-        }]
+          "spans": [
+            {
+              "char_begin": 98,
+              "char_end": 146
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "R0",
+            "spans": {
+              "page": 2,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 98,
+                  "char_end": 100
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "so-called basic reproduction number",
+            "spans": {
+              "page": 2,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 111,
+                  "char_end": 146
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "Tc",
+      {
+        "uid": "3e119f9b-367a-4010-a348-4fd04e2c4a02",
+        "source": "unk_text_file",
+        "original_sentence": "This idea can probably be more readily seen if we say that the typical time between contacts is Tc = beta - 1 , and the typical time until recovery is Tr = gamma - 1 .",
+        "content": "typical time between contacts is Tc",
         "spans": {
           "page": 2,
           "block": 2,
-          "spans": [{
-            "char_begin": 489,
-            "char_end": 491
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "typical time between contacts",
-        "spans": {
-          "page": 2,
-          "block": 2,
-          "spans": [{
-            "char_begin": 456,
-            "char_end": 485
-          }]
-        }
-      }]
-    }, {
-      "uid": "25d37c28-b68e-475a-b206-179de6713e86",
-      "source": "unk_text_file",
-      "original_sentence": ", expressing in mathematical terms the constancy of population N .",
-      "content": "population N",
-      "spans": {
-        "page": 1,
-        "block": 2,
-        "spans": [{
-          "char_begin": 52,
-          "char_end": 64
-        }]
+          "spans": [
+            {
+              "char_begin": 456,
+              "char_end": 491
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "Tc",
+            "spans": {
+              "page": 2,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 489,
+                  "char_end": 491
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "typical time between contacts",
+            "spans": {
+              "page": 2,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 456,
+                  "char_end": 485
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "N",
+      {
+        "uid": "25d37c28-b68e-475a-b206-179de6713e86",
+        "source": "unk_text_file",
+        "original_sentence": ", expressing in mathematical terms the constancy of population N .",
+        "content": "population N",
         "spans": {
           "page": 1,
           "block": 2,
-          "spans": [{
-            "char_begin": 63,
-            "char_end": 64
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "population",
-        "spans": {
-          "page": 1,
-          "block": 2,
-          "spans": [{
-            "char_begin": 52,
-            "char_end": 62
-          }]
-        }
-      }]
-    }, {
-      "uid": "f3dbce8c-3d7a-4b3f-978b-28742a5833ff",
-      "source": "unk_text_file",
-      "original_sentence": "This idea can probably be more readily seen if we say that the typical time between contacts is Tc = beta - 1 , and the typical time until recovery is Tr = gamma - 1 .",
-      "content": "typical time until recovery is Tr",
-      "spans": {
-        "page": 2,
-        "block": 2,
-        "spans": [{
-          "char_begin": 507,
-          "char_end": 540
-        }]
+          "spans": [
+            {
+              "char_begin": 52,
+              "char_end": 64
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "N",
+            "spans": {
+              "page": 1,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 63,
+                  "char_end": 64
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "population",
+            "spans": {
+              "page": 1,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 52,
+                  "char_end": 62
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "Tr",
+      {
+        "uid": "f3dbce8c-3d7a-4b3f-978b-28742a5833ff",
+        "source": "unk_text_file",
+        "original_sentence": "This idea can probably be more readily seen if we say that the typical time between contacts is Tc = beta - 1 , and the typical time until recovery is Tr = gamma - 1 .",
+        "content": "typical time until recovery is Tr",
         "spans": {
           "page": 2,
           "block": 2,
-          "spans": [{
-            "char_begin": 538,
-            "char_end": 540
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "typical time until recovery",
-        "spans": {
-          "page": 2,
-          "block": 2,
-          "spans": [{
-            "char_begin": 507,
-            "char_end": 534
-          }]
-        }
-      }]
-    }, {
-      "uid": "24c8aefe-61c4-4d96-a7db-276ca2fbb012",
-      "source": "unk_text_file",
-      "original_sentence": "S ( t ) + I ( t ) + R ( t ) = Constant = N",
-      "content": "R(t) = Constant",
-      "spans": {
-        "page": 1,
-        "block": 11,
-        "spans": [{
-          "char_begin": 14,
-          "char_end": 29
-        }]
+          "spans": [
+            {
+              "char_begin": 507,
+              "char_end": 540
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "Tr",
+            "spans": {
+              "page": 2,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 538,
+                  "char_end": 540
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "typical time until recovery",
+            "spans": {
+              "page": 2,
+              "block": 2,
+              "spans": [
+                {
+                  "char_begin": 507,
+                  "char_end": 534
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "R(t)",
+      {
+        "uid": "24c8aefe-61c4-4d96-a7db-276ca2fbb012",
+        "source": "unk_text_file",
+        "original_sentence": "S ( t ) + I ( t ) + R ( t ) = Constant = N",
+        "content": "R(t) = Constant",
         "spans": {
           "page": 1,
           "block": 11,
-          "spans": [{
-            "char_begin": 14,
-            "char_end": 18
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "Constant",
-        "spans": {
-          "page": 1,
-          "block": 11,
-          "spans": [{
-            "char_begin": 21,
-            "char_end": 29
-          }]
-        }
-      }]
-    }, {
-      "uid": "f87b8b35-9a3a-45c0-9811-a6f3695f2c77",
-      "source": "unk_text_file",
-      "original_sentence": "Where S is the stock of susceptible population , I is the stock of infected , and R is the stock of recovered population .",
-      "content": "I is the stock of infected",
-      "spans": {
-        "page": 1,
-        "block": 7,
-        "spans": [{
-          "char_begin": 50,
-          "char_end": 76
-        }]
+          "spans": [
+            {
+              "char_begin": 14,
+              "char_end": 29
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "R(t)",
+            "spans": {
+              "page": 1,
+              "block": 11,
+              "spans": [
+                {
+                  "char_begin": 14,
+                  "char_end": 18
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "Constant",
+            "spans": {
+              "page": 1,
+              "block": 11,
+              "spans": [
+                {
+                  "char_begin": 21,
+                  "char_end": 29
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "I",
+      {
+        "uid": "f87b8b35-9a3a-45c0-9811-a6f3695f2c77",
+        "source": "unk_text_file",
+        "original_sentence": "Where S is the stock of susceptible population , I is the stock of infected , and R is the stock of recovered population .",
+        "content": "I is the stock of infected",
         "spans": {
           "page": 1,
           "block": 7,
-          "spans": [{
-            "char_begin": 50,
-            "char_end": 51
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "stock of infected",
-        "spans": {
-          "page": 1,
-          "block": 7,
-          "spans": [{
-            "char_begin": 59,
-            "char_end": 76
-          }]
-        }
-      }]
-    }, {
-      "uid": "2f6d5a50-3abe-44e3-9580-e2c1c4fc1a21",
-      "source": "unk_text_file",
-      "original_sentence": "Where S is the stock of susceptible population , I is the stock of infected , and R is the stock of recovered population .",
-      "content": "R is the stock of recovered population",
-      "spans": {
-        "page": 1,
-        "block": 7,
-        "spans": [{
-          "char_begin": 82,
-          "char_end": 120
-        }]
+          "spans": [
+            {
+              "char_begin": 50,
+              "char_end": 76
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "I",
+            "spans": {
+              "page": 1,
+              "block": 7,
+              "spans": [
+                {
+                  "char_begin": 50,
+                  "char_end": 51
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "stock of infected",
+            "spans": {
+              "page": 1,
+              "block": 7,
+              "spans": [
+                {
+                  "char_begin": 59,
+                  "char_end": 76
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "R",
+      {
+        "uid": "2f6d5a50-3abe-44e3-9580-e2c1c4fc1a21",
+        "source": "unk_text_file",
+        "original_sentence": "Where S is the stock of susceptible population , I is the stock of infected , and R is the stock of recovered population .",
+        "content": "R is the stock of recovered population",
         "spans": {
           "page": 1,
           "block": 7,
-          "spans": [{
-            "char_begin": 82,
-            "char_end": 83
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "stock of recovered population",
-        "spans": {
-          "page": 1,
-          "block": 7,
-          "spans": [{
-            "char_begin": 91,
-            "char_end": 120
-          }]
-        }
-      }]
-    }, {
-      "uid": "5f3d16c0-2a0b-492b-a278-1f1915c14627",
-      "source": "unk_text_file",
-      "original_sentence": "Where S is the stock of susceptible population , I is the stock of infected , and R is the stock of recovered population .",
-      "content": "S is the stock of susceptible population",
-      "spans": {
-        "page": 1,
-        "block": 7,
-        "spans": [{
-          "char_begin": 8,
-          "char_end": 48
-        }]
+          "spans": [
+            {
+              "char_begin": 82,
+              "char_end": 120
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "R",
+            "spans": {
+              "page": 1,
+              "block": 7,
+              "spans": [
+                {
+                  "char_begin": 82,
+                  "char_end": 83
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "stock of recovered population",
+            "spans": {
+              "page": 1,
+              "block": 7,
+              "spans": [
+                {
+                  "char_begin": 91,
+                  "char_end": 120
+                }
+              ]
+            }
+          }
+        ]
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "S",
+      {
+        "uid": "5f3d16c0-2a0b-492b-a278-1f1915c14627",
+        "source": "unk_text_file",
+        "original_sentence": "Where S is the stock of susceptible population , I is the stock of infected , and R is the stock of recovered population .",
+        "content": "S is the stock of susceptible population",
         "spans": {
           "page": 1,
           "block": 7,
-          "spans": [{
-            "char_begin": 8,
-            "char_end": 9
-          }]
-        }
-      }, {
-        "name": "description",
-        "text": "stock of susceptible population",
-        "spans": {
-          "page": 1,
-          "block": 7,
-          "spans": [{
-            "char_begin": 17,
-            "char_end": 48
-          }]
-        }
-      }]
-    }],
-    "equation": [{
-      "uid": "f69ef4b1-c1b6-494e-96d8-0983f0a9628f",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "d"
-    }, {
-      "uid": "dbb87f95-f22c-4632-96f0-33f8d4161257",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "S"
-    }, {
-      "uid": "e81a794d-3d77-4eba-be5e-e5a89f80cc3f",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "d"
-    }, {
-      "uid": "4fefae55-f0fa-4f73-bb97-bd3c08b10da3",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "t"
-    }, {
-      "uid": "c60fa379-351c-41d8-91c6-416070b38e3d",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "β"
-    }, {
-      "uid": "a6c3230e-58d1-43d2-a817-ed28c80d0de8",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "I"
-    }, {
-      "uid": "35d094e7-f06f-4a94-a653-b880dfb3baa7",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "S"
-    }, {
-      "uid": "c4170bef-58a5-4531-82c6-47e2efcb9a60",
-      "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
-      "content": "N"
-    }, {
-      "uid": "d2e1fb5a-f5d3-4f76-bb50-d3160aa18fec",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "d"
-    }, {
-      "uid": "1be98563-314b-4924-8d2d-a3271c11b0dd",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "I"
-    }, {
-      "uid": "9de4d328-066c-4cce-b008-2f06283c0225",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "d"
-    }, {
-      "uid": "d9158c31-453b-4ac8-ad82-00be5dedca24",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "t"
-    }, {
-      "uid": "52009402-5f39-4b83-bc02-2c1dce3ca387",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "β"
-    }, {
-      "uid": "0367d60d-1c22-4861-ab70-d64589451a3c",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "I"
-    }, {
-      "uid": "01249a00-ca1c-4692-8245-6072e8644aa5",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "S"
-    }, {
-      "uid": "4f03ab25-ab82-4800-844e-a00c3b3eee9f",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "N"
-    }, {
-      "uid": "9c73f674-6f71-4155-9337-4cb586a63a3b",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "γ"
-    }, {
-      "uid": "11332b01-b400-49cd-80db-53071f423934",
-      "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
-      "content": "I"
-    }, {
-      "uid": "e9a0399c-880e-4fae-8668-bc041c960f3f",
-      "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
-      "content": "d"
-    }, {
-      "uid": "10dddc03-1b2a-4a04-a57e-4991bb43ff07",
-      "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
-      "content": "R"
-    }, {
-      "uid": "a872a287-d1c4-4944-aa91-20dcf628a88f",
-      "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
-      "content": "d"
-    }, {
-      "uid": "78f2a0c9-7619-4150-b0fd-56b42d37284d",
-      "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
-      "content": "t"
-    }, {
-      "uid": "c626db9f-c944-4aca-9532-746a85aaa476",
-      "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
-      "content": "γ"
-    }, {
-      "uid": "1aee3a2b-115f-49c6-9f6b-f61a2182fe6b",
-      "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
-      "content": "I"
-    }, {
-      "uid": "c03046c5-ecb4-4e28-a34d-6e2611f03ddf",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "d"
-    }, {
-      "uid": "4705234b-3ad1-4a4f-b577-ca4bc481732d",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "S"
-    }, {
-      "uid": "0a969065-a2dc-428f-8b90-fd87d7cd3852",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "d"
-    }, {
-      "uid": "c90b4489-200b-40ee-8776-86118d9a77b5",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "t"
-    }, {
-      "uid": "158009ef-b358-4d37-86fa-f18c3e5ed2b6",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "d"
-    }, {
-      "uid": "683a3967-1c26-49aa-a37d-0167c3326d08",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "I"
-    }, {
-      "uid": "9b5e3300-8565-4968-831b-89844fd1d0e3",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "d"
-    }, {
-      "uid": "b19f6caa-bb66-4d8a-954e-7792e837a5f3",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "t"
-    }, {
-      "uid": "577c11be-9110-4c3b-a0de-446ff162e314",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "d"
-    }, {
-      "uid": "eccf2859-fc97-4c73-88a2-19f8608efd39",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "R"
-    }, {
-      "uid": "f0f3108e-3a1b-4b73-93aa-31e4eac9a0b9",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "d"
-    }, {
-      "uid": "26190c4f-5ee2-4ef3-b170-10d59ac9c397",
-      "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
-      "content": "t"
-    }, {
-      "uid": "72800544-783d-4ba1-b090-3dfc3664180a",
-      "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
-      "content": "S(t)"
-    }, {
-      "uid": "c7456c31-013b-452c-b60c-30d9effa87ee",
-      "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
-      "content": "I(t)"
-    }, {
-      "uid": "4c40bc99-82b0-42b4-94aa-6dc94cd26c9f",
-      "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
-      "content": "R(t)"
-    }, {
-      "uid": "cad9c4dc-3c1c-4911-9358-e45e33e210e6",
-      "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
-      "content": "Constant"
-    }, {
-      "uid": "f381efe9-faa7-409a-907d-9cc4117d37f9",
-      "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
-      "content": "N"
-    }, {
-      "uid": "eba2a001-c345-4d63-ba1b-f642e11d20e0",
-      "equation_uid": "684b41a5-1ef1-40bb-9829-00171460615f",
-      "content": "R"
-    }, {
-      "uid": "eff42f56-bff9-4a81-94c5-5a66635b02a6",
-      "equation_uid": "684b41a5-1ef1-40bb-9829-00171460615f",
-      "content": "β"
-    }, {
-      "uid": "8906b3f0-48f1-4b54-a5cc-48387ec41c1d",
-      "equation_uid": "684b41a5-1ef1-40bb-9829-00171460615f",
-      "content": "γ"
-    }, {
-      "uid": "5443ae63-75c9-4cb4-80a9-652f2ba20057",
-      "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "S(t)"
-    }, {
-      "uid": "04b3c9fd-c405-4f30-98db-618563466358",
-      "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "S(0)"
-    }, {
-      "uid": "4d73d94e-f56d-4daf-b82f-32fd51d36eb6",
-      "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "e"
-    }, {
-      "uid": "544faac1-1a60-4dcd-bff4-ec1952c17cb4",
-      "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "R"
-    }, {
-      "uid": "050cb8bf-5ea7-4e55-ae72-8ec193713915",
-      "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "R(t)"
-    }, {
-      "uid": "751b33a4-314c-471f-862f-c4a0c1d6edf7",
-      "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "R(0)"
-    }, {
-      "uid": "06a49b78-05f2-487a-862d-efaaa5abe1e6",
-      "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
-      "content": "N"
-    }, {
-      "uid": "a40a93aa-e246-4537-8575-e58a77b32cd0",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "R"
-    }, {
-      "uid": "8a11d2f0-60c0-4ad6-ad4c-d15992e6683b",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "N"
-    }, {
-      "uid": "643efc17-0370-4b63-9826-4c68c91b6917",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "S(0)"
-    }, {
-      "uid": "8bf7e61e-ccf5-4c23-8fa5-b5ca92d95b9a",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "e"
-    }, {
-      "uid": "a51e5b30-750d-47db-9cba-f290796005fb",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "R"
-    }, {
-      "uid": "c7446a22-4425-4c06-9620-d74797b2fc47",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "R"
-    }, {
-      "uid": "c34fd89e-a325-4c36-bc97-3b7ad55267da",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "R(0)"
-    }, {
-      "uid": "928cbbaf-9d2d-4d56-bb1e-71fb09961b58",
-      "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
-      "content": "N"
-    }, {
-      "uid": "e0d69c86-eed4-49cd-aa57-0ee378cf987e",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "d"
-    }, {
-      "uid": "7def35dd-a2df-49c1-83f4-701140fdbdad",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "I"
-    }, {
-      "uid": "5b967d48-4730-4794-b79b-965bd126b7f9",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "d"
-    }, {
-      "uid": "f1d265a4-5113-454e-a4e8-0e94b07c07f9",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "t"
-    }, {
-      "uid": "95c8cb57-899f-4f2c-949e-8358ebd621a6",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "R"
-    }, {
-      "uid": "e387ce3a-76b2-4735-9119-f203bab9f6fd",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "S"
-    }, {
-      "uid": "b171c639-6e85-4398-a8f4-a7e9ca2cfa6e",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "N"
-    }, {
-      "uid": "76bc71a8-b975-48b1-bee3-4bb0bc4f25ef",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "γ"
-    }, {
-      "uid": "3119469b-0fda-4c15-9cf4-d3abb9f25bd1",
-      "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
-      "content": "I"
-    }, {
-      "uid": "9bbbeb64-8155-4397-9d65-f93f7e64b6de",
-      "equation_uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
-      "content": "R"
-    }, {
-      "uid": "44e338ca-60cf-47a1-b304-ebed0713cb14",
-      "equation_uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
-      "content": "N"
-    }, {
-      "uid": "ed1a275d-d00e-461d-a204-a50ed3a7fc18",
-      "equation_uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
-      "content": "S(0)"
-    }, {
-      "uid": "49b66a47-d426-4a38-abb9-a0ce78a6d092",
-      "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
-      "content": "d"
-    }, {
-      "uid": "081672f1-ddad-4130-9337-defea7eac9a6",
-      "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
-      "content": "I"
-    }, {
-      "uid": "94b7cb0a-2528-4f0c-a157-0e850f390c30",
-      "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
-      "content": "d"
-    }, {
-      "uid": "adb70412-6dfd-40d8-83cb-9d95b8c1996e",
-      "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
-      "content": "t"
-    }, {
-      "uid": "0ac15eac-c429-48eb-8f5f-853a198109d8",
-      "equation_uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
-      "content": "R"
-    }, {
-      "uid": "afb8587f-88d1-4b35-aec3-58a781372d7c",
-      "equation_uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
-      "content": "N"
-    }, {
-      "uid": "b42aa280-4df4-4140-955a-9fae59de6240",
-      "equation_uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
-      "content": "S(0)"
-    }, {
-      "uid": "1edf2ba9-e96f-4e55-950a-cc78fcb630ac",
-      "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
-      "content": "d"
-    }, {
-      "uid": "c5af1026-9ee6-419c-9b74-4b7967edd75a",
-      "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
-      "content": "I"
-    }, {
-      "uid": "ff9b7e0d-0f2f-4cb4-952f-81fff63a9011",
-      "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
-      "content": "d"
-    }, {
-      "uid": "2eefffef-2b0f-4cce-9201-bfbc07356bbc",
-      "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
-      "content": "t"
-    }],
-    "gl_src_var": [{
-      "uid": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2",
-      "content": "dt",
-      "identifier_objects": ["ca73b50a-cc62-4f76-ab44-277e6d08828c"]
-    }, {
-      "uid": "9c7d980e-88dd-42f2-8d98-b849e16070e7",
-      "content": "recovered",
-      "identifier_objects": ["f04238fa-a14e-48a6-9039-5aa08f139afd"]
-    }, {
-      "uid": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a",
-      "content": "RETURN_VAL",
-      "identifier_objects": ["0d768775-ff05-4606-945a-480f44ca0b5f"]
-    }, {
-      "uid": "1c8eb8d5-3941-4abe-8843-112824395074",
-      "content": "I",
-      "identifier_objects": ["995d9357-596c-4368-98c3-1b60261cc1fb"]
-    }, {
-      "uid": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18",
-      "content": "infected",
-      "identifier_objects": ["44bb2f47-875b-4a43-845f-ff985e9e8ae3"]
-    }, {
-      "uid": "4ef7beb6-139e-47bb-aaab-183335bb270a",
-      "content": "beta",
-      "identifier_objects": ["0d3f8467-16bc-4088-b272-e99d6d58be5a"]
-    }, {
-      "uid": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf",
-      "content": "gamma",
-      "identifier_objects": ["b8a1ba0b-f4c4-4797-8922-6a00d1d18308"]
-    }, {
-      "uid": "3d14b66b-94b5-432e-83c3-8087038f3a27",
-      "content": "R",
-      "identifier_objects": ["dc889e5a-21c3-4ef5-a47c-5c72602740cb"]
-    }, {
-      "uid": "27638644-9486-493b-a4b5-12e2e24dd732",
-      "content": "S",
-      "identifier_objects": ["7f635dad-63d6-4807-b351-4f626985c915"]
-    }, {
-      "uid": "90a72bee-8920-431d-bc91-5d6f3555ff0a",
-      "content": "@anonymous",
-      "identifier_objects": ["d89fa10d-e93a-45e6-9afb-d04a738ec705"]
-    }],
-    "gl_eq_var": [{
-      "uid": "7fddb31d-6f5b-411f-9b96-7a7ffef9b262",
-      "content": "e",
-      "identifier_objects": ["4d73d94e-f56d-4daf-b82f-32fd51d36eb6", "8bf7e61e-ccf5-4c23-8fa5-b5ca92d95b9a"]
-    }, {
-      "uid": "62c4dc53-f03e-4bab-9a26-a482033244ea",
-      "content": "Constant",
-      "identifier_objects": ["cad9c4dc-3c1c-4911-9358-e45e33e210e6"]
-    }, {
-      "uid": "eacfe431-7531-4275-b64a-2441008dfab8",
-      "content": "R(0)",
-      "identifier_objects": ["751b33a4-314c-471f-862f-c4a0c1d6edf7", "c34fd89e-a325-4c36-bc97-3b7ad55267da"]
-    }, {
-      "uid": "92eb5420-a525-4afc-ab19-48ec0af7740f",
-      "content": "S(0)",
-      "identifier_objects": ["04b3c9fd-c405-4f30-98db-618563466358", "643efc17-0370-4b63-9826-4c68c91b6917", "ed1a275d-d00e-461d-a204-a50ed3a7fc18", "b42aa280-4df4-4140-955a-9fae59de6240"]
-    }, {
-      "uid": "a6957c89-54fc-4dc4-acab-eba2325e25e4",
-      "content": "N",
-      "identifier_objects": ["c4170bef-58a5-4531-82c6-47e2efcb9a60", "4f03ab25-ab82-4800-844e-a00c3b3eee9f", "f381efe9-faa7-409a-907d-9cc4117d37f9", "06a49b78-05f2-487a-862d-efaaa5abe1e6", "8a11d2f0-60c0-4ad6-ad4c-d15992e6683b", "928cbbaf-9d2d-4d56-bb1e-71fb09961b58", "b171c639-6e85-4398-a8f4-a7e9ca2cfa6e", "44e338ca-60cf-47a1-b304-ebed0713cb14", "afb8587f-88d1-4b35-aec3-58a781372d7c"]
-    }, {
-      "uid": "685def61-39ea-4ec8-a3a4-600a1da8d8de",
-      "content": "t",
-      "identifier_objects": ["4fefae55-f0fa-4f73-bb97-bd3c08b10da3", "d9158c31-453b-4ac8-ad82-00be5dedca24", "78f2a0c9-7619-4150-b0fd-56b42d37284d", "c90b4489-200b-40ee-8776-86118d9a77b5", "b19f6caa-bb66-4d8a-954e-7792e837a5f3", "26190c4f-5ee2-4ef3-b170-10d59ac9c397", "f1d265a4-5113-454e-a4e8-0e94b07c07f9", "adb70412-6dfd-40d8-83cb-9d95b8c1996e", "2eefffef-2b0f-4cce-9201-bfbc07356bbc"]
-    }, {
-      "uid": "d41a0835-c9a6-4529-bd49-e70a0ac170c3",
-      "content": "I(t)",
-      "identifier_objects": ["c7456c31-013b-452c-b60c-30d9effa87ee"]
-    }, {
-      "uid": "3d2e8a73-b179-49a4-93a3-8986d3486fdc",
-      "content": "R(t)",
-      "identifier_objects": ["4c40bc99-82b0-42b4-94aa-6dc94cd26c9f", "050cb8bf-5ea7-4e55-ae72-8ec193713915"]
-    }, {
-      "uid": "6bf0f920-ab37-4854-9b23-d520a1b4d458",
-      "content": "I",
-      "identifier_objects": ["a6c3230e-58d1-43d2-a817-ed28c80d0de8", "1be98563-314b-4924-8d2d-a3271c11b0dd", "0367d60d-1c22-4861-ab70-d64589451a3c", "11332b01-b400-49cd-80db-53071f423934", "1aee3a2b-115f-49c6-9f6b-f61a2182fe6b", "683a3967-1c26-49aa-a37d-0167c3326d08", "7def35dd-a2df-49c1-83f4-701140fdbdad", "3119469b-0fda-4c15-9cf4-d3abb9f25bd1", "081672f1-ddad-4130-9337-defea7eac9a6", "c5af1026-9ee6-419c-9b74-4b7967edd75a"]
-    }, {
-      "uid": "3b6cde9c-0e88-4842-bdcf-05026740f96f",
-      "content": "gamma",
-      "identifier_objects": ["9c73f674-6f71-4155-9337-4cb586a63a3b", "c626db9f-c944-4aca-9532-746a85aaa476", "8906b3f0-48f1-4b54-a5cc-48387ec41c1d", "76bc71a8-b975-48b1-bee3-4bb0bc4f25ef"]
-    }, {
-      "uid": "0e898c07-6922-46b1-8a27-dfaf0a50755e",
-      "content": "S(t)",
-      "identifier_objects": ["72800544-783d-4ba1-b090-3dfc3664180a", "5443ae63-75c9-4cb4-80a9-652f2ba20057"]
-    }, {
-      "uid": "9930c2e9-899c-4162-89c2-f1ec40349a61",
-      "content": "beta",
-      "identifier_objects": ["c60fa379-351c-41d8-91c6-416070b38e3d", "52009402-5f39-4b83-bc02-2c1dce3ca387", "eff42f56-bff9-4a81-94c5-5a66635b02a6"]
-    }, {
-      "uid": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be",
-      "content": "R",
-      "identifier_objects": ["10dddc03-1b2a-4a04-a57e-4991bb43ff07", "eccf2859-fc97-4c73-88a2-19f8608efd39", "eba2a001-c345-4d63-ba1b-f642e11d20e0", "544faac1-1a60-4dcd-bff4-ec1952c17cb4", "a40a93aa-e246-4537-8575-e58a77b32cd0", "a51e5b30-750d-47db-9cba-f290796005fb", "c7446a22-4425-4c06-9620-d74797b2fc47", "95c8cb57-899f-4f2c-949e-8358ebd621a6", "9bbbeb64-8155-4397-9d65-f93f7e64b6de", "0ac15eac-c429-48eb-8f5f-853a198109d8"]
-    }, {
-      "uid": "c009f2c4-a42e-441b-a734-7b8255f0ec1b",
-      "content": "S",
-      "identifier_objects": ["dbb87f95-f22c-4632-96f0-33f8d4161257", "35d094e7-f06f-4a94-a653-b880dfb3baa7", "01249a00-ca1c-4692-8245-6072e8644aa5", "4705234b-3ad1-4a4f-b577-ca4bc481732d", "e387ce3a-76b2-4735-9119-f203bab9f6fd"]
-    }, {
-      "uid": "ea63bb0b-feb7-489b-af9e-8237dd49e7a5",
-      "content": "d",
-      "identifier_objects": ["f69ef4b1-c1b6-494e-96d8-0983f0a9628f", "e81a794d-3d77-4eba-be5e-e5a89f80cc3f", "d2e1fb5a-f5d3-4f76-bb50-d3160aa18fec", "9de4d328-066c-4cce-b008-2f06283c0225", "e9a0399c-880e-4fae-8668-bc041c960f3f", "a872a287-d1c4-4944-aa91-20dcf628a88f", "c03046c5-ecb4-4e28-a34d-6e2611f03ddf", "0a969065-a2dc-428f-8b90-fd87d7cd3852", "158009ef-b358-4d37-86fa-f18c3e5ed2b6", "9b5e3300-8565-4968-831b-89844fd1d0e3", "577c11be-9110-4c3b-a0de-446ff162e314", "f0f3108e-3a1b-4b73-93aa-31e4eac9a0b9", "e0d69c86-eed4-49cd-aa57-0ee378cf987e", "5b967d48-4730-4794-b79b-965bd126b7f9", "49b66a47-d426-4a38-abb9-a0ce78a6d092", "94b7cb0a-2528-4f0c-a157-0e850f390c30", "1edf2ba9-e96f-4e55-950a-cc78fcb630ac", "ff9b7e0d-0f2f-4cb4-952f-81fff63a9011"]
-    }],
-    "int_param_setting_via_idfr": [{
-      "uid": "1a1697f2-f075-4802-98e6-5ffdbc6c465a",
-      "source": "unk_text_file",
-      "original_sentence": "dI ( 0 ) < 0 , dt",
-      "content": "0",
-      "spans": {
-        "page": 3,
-        "block": 4,
-        "spans": [{
-          "char_begin": 0,
-          "char_end": 10
-        }]
+          "spans": [
+            {
+              "char_begin": 8,
+              "char_end": 48
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "S",
+            "spans": {
+              "page": 1,
+              "block": 7,
+              "spans": [
+                {
+                  "char_begin": 8,
+                  "char_end": 9
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "text": "stock of susceptible population",
+            "spans": {
+              "page": 1,
+              "block": 7,
+              "spans": [
+                {
+                  "char_begin": 17,
+                  "char_end": 48
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "equation": [
+      {
+        "uid": "f69ef4b1-c1b6-494e-96d8-0983f0a9628f",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "d"
       },
-      "arguments": [{
-        "name": "identifier",
-        "text": "dI",
+      {
+        "uid": "dbb87f95-f22c-4632-96f0-33f8d4161257",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "S"
+      },
+      {
+        "uid": "e81a794d-3d77-4eba-be5e-e5a89f80cc3f",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "d"
+      },
+      {
+        "uid": "4fefae55-f0fa-4f73-bb97-bd3c08b10da3",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "t"
+      },
+      {
+        "uid": "c60fa379-351c-41d8-91c6-416070b38e3d",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "β"
+      },
+      {
+        "uid": "a6c3230e-58d1-43d2-a817-ed28c80d0de8",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "I"
+      },
+      {
+        "uid": "35d094e7-f06f-4a94-a653-b880dfb3baa7",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "S"
+      },
+      {
+        "uid": "c4170bef-58a5-4531-82c6-47e2efcb9a60",
+        "equation_uid": "de5c2b0c-8fcc-4b0a-ae12-957cc15c246e",
+        "content": "N"
+      },
+      {
+        "uid": "d2e1fb5a-f5d3-4f76-bb50-d3160aa18fec",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "d"
+      },
+      {
+        "uid": "1be98563-314b-4924-8d2d-a3271c11b0dd",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "I"
+      },
+      {
+        "uid": "9de4d328-066c-4cce-b008-2f06283c0225",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "d"
+      },
+      {
+        "uid": "d9158c31-453b-4ac8-ad82-00be5dedca24",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "t"
+      },
+      {
+        "uid": "52009402-5f39-4b83-bc02-2c1dce3ca387",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "β"
+      },
+      {
+        "uid": "0367d60d-1c22-4861-ab70-d64589451a3c",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "I"
+      },
+      {
+        "uid": "01249a00-ca1c-4692-8245-6072e8644aa5",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "S"
+      },
+      {
+        "uid": "4f03ab25-ab82-4800-844e-a00c3b3eee9f",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "N"
+      },
+      {
+        "uid": "9c73f674-6f71-4155-9337-4cb586a63a3b",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "γ"
+      },
+      {
+        "uid": "11332b01-b400-49cd-80db-53071f423934",
+        "equation_uid": "38b5c8cc-2a71-4f4b-8007-649f27a78fd4",
+        "content": "I"
+      },
+      {
+        "uid": "e9a0399c-880e-4fae-8668-bc041c960f3f",
+        "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
+        "content": "d"
+      },
+      {
+        "uid": "10dddc03-1b2a-4a04-a57e-4991bb43ff07",
+        "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
+        "content": "R"
+      },
+      {
+        "uid": "a872a287-d1c4-4944-aa91-20dcf628a88f",
+        "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
+        "content": "d"
+      },
+      {
+        "uid": "78f2a0c9-7619-4150-b0fd-56b42d37284d",
+        "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
+        "content": "t"
+      },
+      {
+        "uid": "c626db9f-c944-4aca-9532-746a85aaa476",
+        "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
+        "content": "γ"
+      },
+      {
+        "uid": "1aee3a2b-115f-49c6-9f6b-f61a2182fe6b",
+        "equation_uid": "28bf9469-7fb1-4eb4-ba53-b20a751e871d",
+        "content": "I"
+      },
+      {
+        "uid": "c03046c5-ecb4-4e28-a34d-6e2611f03ddf",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "d"
+      },
+      {
+        "uid": "4705234b-3ad1-4a4f-b577-ca4bc481732d",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "S"
+      },
+      {
+        "uid": "0a969065-a2dc-428f-8b90-fd87d7cd3852",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "d"
+      },
+      {
+        "uid": "c90b4489-200b-40ee-8776-86118d9a77b5",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "t"
+      },
+      {
+        "uid": "158009ef-b358-4d37-86fa-f18c3e5ed2b6",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "d"
+      },
+      {
+        "uid": "683a3967-1c26-49aa-a37d-0167c3326d08",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "I"
+      },
+      {
+        "uid": "9b5e3300-8565-4968-831b-89844fd1d0e3",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "d"
+      },
+      {
+        "uid": "b19f6caa-bb66-4d8a-954e-7792e837a5f3",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "t"
+      },
+      {
+        "uid": "577c11be-9110-4c3b-a0de-446ff162e314",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "d"
+      },
+      {
+        "uid": "eccf2859-fc97-4c73-88a2-19f8608efd39",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "R"
+      },
+      {
+        "uid": "f0f3108e-3a1b-4b73-93aa-31e4eac9a0b9",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "d"
+      },
+      {
+        "uid": "26190c4f-5ee2-4ef3-b170-10d59ac9c397",
+        "equation_uid": "e6634b79-6f5d-4b76-851e-9b9e023a148c",
+        "content": "t"
+      },
+      {
+        "uid": "72800544-783d-4ba1-b090-3dfc3664180a",
+        "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
+        "content": "S(t)"
+      },
+      {
+        "uid": "c7456c31-013b-452c-b60c-30d9effa87ee",
+        "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
+        "content": "I(t)"
+      },
+      {
+        "uid": "4c40bc99-82b0-42b4-94aa-6dc94cd26c9f",
+        "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
+        "content": "R(t)"
+      },
+      {
+        "uid": "cad9c4dc-3c1c-4911-9358-e45e33e210e6",
+        "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
+        "content": "Constant"
+      },
+      {
+        "uid": "f381efe9-faa7-409a-907d-9cc4117d37f9",
+        "equation_uid": "fc878e69-596e-41a9-9f9f-d7988879e0a5",
+        "content": "N"
+      },
+      {
+        "uid": "eba2a001-c345-4d63-ba1b-f642e11d20e0",
+        "equation_uid": "684b41a5-1ef1-40bb-9829-00171460615f",
+        "content": "R"
+      },
+      {
+        "uid": "eff42f56-bff9-4a81-94c5-5a66635b02a6",
+        "equation_uid": "684b41a5-1ef1-40bb-9829-00171460615f",
+        "content": "β"
+      },
+      {
+        "uid": "8906b3f0-48f1-4b54-a5cc-48387ec41c1d",
+        "equation_uid": "684b41a5-1ef1-40bb-9829-00171460615f",
+        "content": "γ"
+      },
+      {
+        "uid": "5443ae63-75c9-4cb4-80a9-652f2ba20057",
+        "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "S(t)"
+      },
+      {
+        "uid": "04b3c9fd-c405-4f30-98db-618563466358",
+        "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "S(0)"
+      },
+      {
+        "uid": "4d73d94e-f56d-4daf-b82f-32fd51d36eb6",
+        "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "e"
+      },
+      {
+        "uid": "544faac1-1a60-4dcd-bff4-ec1952c17cb4",
+        "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "R"
+      },
+      {
+        "uid": "050cb8bf-5ea7-4e55-ae72-8ec193713915",
+        "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "R(t)"
+      },
+      {
+        "uid": "751b33a4-314c-471f-862f-c4a0c1d6edf7",
+        "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "R(0)"
+      },
+      {
+        "uid": "06a49b78-05f2-487a-862d-efaaa5abe1e6",
+        "equation_uid": "84b85c19-92ce-4469-9c87-866c023aef07",
+        "content": "N"
+      },
+      {
+        "uid": "a40a93aa-e246-4537-8575-e58a77b32cd0",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "R"
+      },
+      {
+        "uid": "8a11d2f0-60c0-4ad6-ad4c-d15992e6683b",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "N"
+      },
+      {
+        "uid": "643efc17-0370-4b63-9826-4c68c91b6917",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "S(0)"
+      },
+      {
+        "uid": "8bf7e61e-ccf5-4c23-8fa5-b5ca92d95b9a",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "e"
+      },
+      {
+        "uid": "a51e5b30-750d-47db-9cba-f290796005fb",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "R"
+      },
+      {
+        "uid": "c7446a22-4425-4c06-9620-d74797b2fc47",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "R"
+      },
+      {
+        "uid": "c34fd89e-a325-4c36-bc97-3b7ad55267da",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "R(0)"
+      },
+      {
+        "uid": "928cbbaf-9d2d-4d56-bb1e-71fb09961b58",
+        "equation_uid": "110e9c08-007a-443c-970c-d464f1443811",
+        "content": "N"
+      },
+      {
+        "uid": "e0d69c86-eed4-49cd-aa57-0ee378cf987e",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "d"
+      },
+      {
+        "uid": "7def35dd-a2df-49c1-83f4-701140fdbdad",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "I"
+      },
+      {
+        "uid": "5b967d48-4730-4794-b79b-965bd126b7f9",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "d"
+      },
+      {
+        "uid": "f1d265a4-5113-454e-a4e8-0e94b07c07f9",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "t"
+      },
+      {
+        "uid": "95c8cb57-899f-4f2c-949e-8358ebd621a6",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "R"
+      },
+      {
+        "uid": "e387ce3a-76b2-4735-9119-f203bab9f6fd",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "S"
+      },
+      {
+        "uid": "b171c639-6e85-4398-a8f4-a7e9ca2cfa6e",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "N"
+      },
+      {
+        "uid": "76bc71a8-b975-48b1-bee3-4bb0bc4f25ef",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "γ"
+      },
+      {
+        "uid": "3119469b-0fda-4c15-9cf4-d3abb9f25bd1",
+        "equation_uid": "04a855ea-b3c9-402b-bc25-b3df553ddac2",
+        "content": "I"
+      },
+      {
+        "uid": "9bbbeb64-8155-4397-9d65-f93f7e64b6de",
+        "equation_uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
+        "content": "R"
+      },
+      {
+        "uid": "44e338ca-60cf-47a1-b304-ebed0713cb14",
+        "equation_uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
+        "content": "N"
+      },
+      {
+        "uid": "ed1a275d-d00e-461d-a204-a50ed3a7fc18",
+        "equation_uid": "6656c889-a9f8-40ef-89ac-df9c7f1c08d2",
+        "content": "S(0)"
+      },
+      {
+        "uid": "49b66a47-d426-4a38-abb9-a0ce78a6d092",
+        "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
+        "content": "d"
+      },
+      {
+        "uid": "081672f1-ddad-4130-9337-defea7eac9a6",
+        "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
+        "content": "I"
+      },
+      {
+        "uid": "94b7cb0a-2528-4f0c-a157-0e850f390c30",
+        "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
+        "content": "d"
+      },
+      {
+        "uid": "adb70412-6dfd-40d8-83cb-9d95b8c1996e",
+        "equation_uid": "3a68af71-b7c5-4f2e-bbfa-1b945a2e7e23",
+        "content": "t"
+      },
+      {
+        "uid": "0ac15eac-c429-48eb-8f5f-853a198109d8",
+        "equation_uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
+        "content": "R"
+      },
+      {
+        "uid": "afb8587f-88d1-4b35-aec3-58a781372d7c",
+        "equation_uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
+        "content": "N"
+      },
+      {
+        "uid": "b42aa280-4df4-4140-955a-9fae59de6240",
+        "equation_uid": "6180f3b6-f66c-4da4-87bd-92142b0a2493",
+        "content": "S(0)"
+      },
+      {
+        "uid": "1edf2ba9-e96f-4e55-950a-cc78fcb630ac",
+        "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
+        "content": "d"
+      },
+      {
+        "uid": "c5af1026-9ee6-419c-9b74-4b7967edd75a",
+        "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
+        "content": "I"
+      },
+      {
+        "uid": "ff9b7e0d-0f2f-4cb4-952f-81fff63a9011",
+        "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
+        "content": "d"
+      },
+      {
+        "uid": "2eefffef-2b0f-4cce-9201-bfbc07356bbc",
+        "equation_uid": "8f7e7c2d-ca35-46db-bcb0-13f588ef35f4",
+        "content": "t"
+      }
+    ],
+    "gl_src_var": [
+      {
+        "uid": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2",
+        "content": "dt",
+        "identifier_objects": [
+          "ca73b50a-cc62-4f76-ab44-277e6d08828c"
+        ]
+      },
+      {
+        "uid": "9c7d980e-88dd-42f2-8d98-b849e16070e7",
+        "content": "recovered",
+        "identifier_objects": [
+          "f04238fa-a14e-48a6-9039-5aa08f139afd"
+        ]
+      },
+      {
+        "uid": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a",
+        "content": "RETURN_VAL",
+        "identifier_objects": [
+          "0d768775-ff05-4606-945a-480f44ca0b5f"
+        ]
+      },
+      {
+        "uid": "1c8eb8d5-3941-4abe-8843-112824395074",
+        "content": "I",
+        "identifier_objects": [
+          "995d9357-596c-4368-98c3-1b60261cc1fb"
+        ]
+      },
+      {
+        "uid": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18",
+        "content": "infected",
+        "identifier_objects": [
+          "44bb2f47-875b-4a43-845f-ff985e9e8ae3"
+        ]
+      },
+      {
+        "uid": "4ef7beb6-139e-47bb-aaab-183335bb270a",
+        "content": "beta",
+        "identifier_objects": [
+          "0d3f8467-16bc-4088-b272-e99d6d58be5a"
+        ]
+      },
+      {
+        "uid": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf",
+        "content": "gamma",
+        "identifier_objects": [
+          "b8a1ba0b-f4c4-4797-8922-6a00d1d18308"
+        ]
+      },
+      {
+        "uid": "3d14b66b-94b5-432e-83c3-8087038f3a27",
+        "content": "R",
+        "identifier_objects": [
+          "dc889e5a-21c3-4ef5-a47c-5c72602740cb"
+        ]
+      },
+      {
+        "uid": "27638644-9486-493b-a4b5-12e2e24dd732",
+        "content": "S",
+        "identifier_objects": [
+          "7f635dad-63d6-4807-b351-4f626985c915"
+        ]
+      },
+      {
+        "uid": "90a72bee-8920-431d-bc91-5d6f3555ff0a",
+        "content": "@anonymous",
+        "identifier_objects": [
+          "d89fa10d-e93a-45e6-9afb-d04a738ec705"
+        ]
+      }
+    ],
+    "gl_eq_var": [
+      {
+        "uid": "7fddb31d-6f5b-411f-9b96-7a7ffef9b262",
+        "content": "e",
+        "identifier_objects": [
+          "4d73d94e-f56d-4daf-b82f-32fd51d36eb6",
+          "8bf7e61e-ccf5-4c23-8fa5-b5ca92d95b9a"
+        ]
+      },
+      {
+        "uid": "62c4dc53-f03e-4bab-9a26-a482033244ea",
+        "content": "Constant",
+        "identifier_objects": [
+          "cad9c4dc-3c1c-4911-9358-e45e33e210e6"
+        ]
+      },
+      {
+        "uid": "eacfe431-7531-4275-b64a-2441008dfab8",
+        "content": "R(0)",
+        "identifier_objects": [
+          "751b33a4-314c-471f-862f-c4a0c1d6edf7",
+          "c34fd89e-a325-4c36-bc97-3b7ad55267da"
+        ]
+      },
+      {
+        "uid": "92eb5420-a525-4afc-ab19-48ec0af7740f",
+        "content": "S(0)",
+        "identifier_objects": [
+          "04b3c9fd-c405-4f30-98db-618563466358",
+          "643efc17-0370-4b63-9826-4c68c91b6917",
+          "ed1a275d-d00e-461d-a204-a50ed3a7fc18",
+          "b42aa280-4df4-4140-955a-9fae59de6240"
+        ]
+      },
+      {
+        "uid": "a6957c89-54fc-4dc4-acab-eba2325e25e4",
+        "content": "N",
+        "identifier_objects": [
+          "c4170bef-58a5-4531-82c6-47e2efcb9a60",
+          "4f03ab25-ab82-4800-844e-a00c3b3eee9f",
+          "f381efe9-faa7-409a-907d-9cc4117d37f9",
+          "06a49b78-05f2-487a-862d-efaaa5abe1e6",
+          "8a11d2f0-60c0-4ad6-ad4c-d15992e6683b",
+          "928cbbaf-9d2d-4d56-bb1e-71fb09961b58",
+          "b171c639-6e85-4398-a8f4-a7e9ca2cfa6e",
+          "44e338ca-60cf-47a1-b304-ebed0713cb14",
+          "afb8587f-88d1-4b35-aec3-58a781372d7c"
+        ]
+      },
+      {
+        "uid": "685def61-39ea-4ec8-a3a4-600a1da8d8de",
+        "content": "t",
+        "identifier_objects": [
+          "4fefae55-f0fa-4f73-bb97-bd3c08b10da3",
+          "d9158c31-453b-4ac8-ad82-00be5dedca24",
+          "78f2a0c9-7619-4150-b0fd-56b42d37284d",
+          "c90b4489-200b-40ee-8776-86118d9a77b5",
+          "b19f6caa-bb66-4d8a-954e-7792e837a5f3",
+          "26190c4f-5ee2-4ef3-b170-10d59ac9c397",
+          "f1d265a4-5113-454e-a4e8-0e94b07c07f9",
+          "adb70412-6dfd-40d8-83cb-9d95b8c1996e",
+          "2eefffef-2b0f-4cce-9201-bfbc07356bbc"
+        ]
+      },
+      {
+        "uid": "d41a0835-c9a6-4529-bd49-e70a0ac170c3",
+        "content": "I(t)",
+        "identifier_objects": [
+          "c7456c31-013b-452c-b60c-30d9effa87ee"
+        ]
+      },
+      {
+        "uid": "3d2e8a73-b179-49a4-93a3-8986d3486fdc",
+        "content": "R(t)",
+        "identifier_objects": [
+          "4c40bc99-82b0-42b4-94aa-6dc94cd26c9f",
+          "050cb8bf-5ea7-4e55-ae72-8ec193713915"
+        ]
+      },
+      {
+        "uid": "6bf0f920-ab37-4854-9b23-d520a1b4d458",
+        "content": "I",
+        "identifier_objects": [
+          "a6c3230e-58d1-43d2-a817-ed28c80d0de8",
+          "1be98563-314b-4924-8d2d-a3271c11b0dd",
+          "0367d60d-1c22-4861-ab70-d64589451a3c",
+          "11332b01-b400-49cd-80db-53071f423934",
+          "1aee3a2b-115f-49c6-9f6b-f61a2182fe6b",
+          "683a3967-1c26-49aa-a37d-0167c3326d08",
+          "7def35dd-a2df-49c1-83f4-701140fdbdad",
+          "3119469b-0fda-4c15-9cf4-d3abb9f25bd1",
+          "081672f1-ddad-4130-9337-defea7eac9a6",
+          "c5af1026-9ee6-419c-9b74-4b7967edd75a"
+        ]
+      },
+      {
+        "uid": "3b6cde9c-0e88-4842-bdcf-05026740f96f",
+        "content": "gamma",
+        "identifier_objects": [
+          "9c73f674-6f71-4155-9337-4cb586a63a3b",
+          "c626db9f-c944-4aca-9532-746a85aaa476",
+          "8906b3f0-48f1-4b54-a5cc-48387ec41c1d",
+          "76bc71a8-b975-48b1-bee3-4bb0bc4f25ef"
+        ]
+      },
+      {
+        "uid": "0e898c07-6922-46b1-8a27-dfaf0a50755e",
+        "content": "S(t)",
+        "identifier_objects": [
+          "72800544-783d-4ba1-b090-3dfc3664180a",
+          "5443ae63-75c9-4cb4-80a9-652f2ba20057"
+        ]
+      },
+      {
+        "uid": "9930c2e9-899c-4162-89c2-f1ec40349a61",
+        "content": "beta",
+        "identifier_objects": [
+          "c60fa379-351c-41d8-91c6-416070b38e3d",
+          "52009402-5f39-4b83-bc02-2c1dce3ca387",
+          "eff42f56-bff9-4a81-94c5-5a66635b02a6"
+        ]
+      },
+      {
+        "uid": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be",
+        "content": "R",
+        "identifier_objects": [
+          "10dddc03-1b2a-4a04-a57e-4991bb43ff07",
+          "eccf2859-fc97-4c73-88a2-19f8608efd39",
+          "eba2a001-c345-4d63-ba1b-f642e11d20e0",
+          "544faac1-1a60-4dcd-bff4-ec1952c17cb4",
+          "a40a93aa-e246-4537-8575-e58a77b32cd0",
+          "a51e5b30-750d-47db-9cba-f290796005fb",
+          "c7446a22-4425-4c06-9620-d74797b2fc47",
+          "95c8cb57-899f-4f2c-949e-8358ebd621a6",
+          "9bbbeb64-8155-4397-9d65-f93f7e64b6de",
+          "0ac15eac-c429-48eb-8f5f-853a198109d8"
+        ]
+      },
+      {
+        "uid": "c009f2c4-a42e-441b-a734-7b8255f0ec1b",
+        "content": "S",
+        "identifier_objects": [
+          "dbb87f95-f22c-4632-96f0-33f8d4161257",
+          "35d094e7-f06f-4a94-a653-b880dfb3baa7",
+          "01249a00-ca1c-4692-8245-6072e8644aa5",
+          "4705234b-3ad1-4a4f-b577-ca4bc481732d",
+          "e387ce3a-76b2-4735-9119-f203bab9f6fd"
+        ]
+      },
+      {
+        "uid": "ea63bb0b-feb7-489b-af9e-8237dd49e7a5",
+        "content": "d",
+        "identifier_objects": [
+          "f69ef4b1-c1b6-494e-96d8-0983f0a9628f",
+          "e81a794d-3d77-4eba-be5e-e5a89f80cc3f",
+          "d2e1fb5a-f5d3-4f76-bb50-d3160aa18fec",
+          "9de4d328-066c-4cce-b008-2f06283c0225",
+          "e9a0399c-880e-4fae-8668-bc041c960f3f",
+          "a872a287-d1c4-4944-aa91-20dcf628a88f",
+          "c03046c5-ecb4-4e28-a34d-6e2611f03ddf",
+          "0a969065-a2dc-428f-8b90-fd87d7cd3852",
+          "158009ef-b358-4d37-86fa-f18c3e5ed2b6",
+          "9b5e3300-8565-4968-831b-89844fd1d0e3",
+          "577c11be-9110-4c3b-a0de-446ff162e314",
+          "f0f3108e-3a1b-4b73-93aa-31e4eac9a0b9",
+          "e0d69c86-eed4-49cd-aa57-0ee378cf987e",
+          "5b967d48-4730-4794-b79b-965bd126b7f9",
+          "49b66a47-d426-4a38-abb9-a0ce78a6d092",
+          "94b7cb0a-2528-4f0c-a157-0e850f390c30",
+          "1edf2ba9-e96f-4e55-950a-cc78fcb630ac",
+          "ff9b7e0d-0f2f-4cb4-952f-81fff63a9011"
+        ]
+      }
+    ],
+    "int_param_setting_via_idfr": [
+      {
+        "uid": "1a1697f2-f075-4802-98e6-5ffdbc6c465a",
+        "source": "unk_text_file",
+        "original_sentence": "dI ( 0 ) < 0 , dt",
+        "content": "0",
         "spans": {
           "page": 3,
           "block": 4,
-          "spans": [{
-            "char_begin": 0,
-            "char_end": 2
-          }]
-        }
-      }, {
-        "name": "parameter_interval",
-        "inclusive_lower": null,
-        "inclusive_upper": false,
-        "lower_bound": null,
-        "upper_bound": 0,
-        "spans": [{
-          "page": 3,
-          "block": 4,
-          "spans": [{
-            "char_begin": 9,
-            "char_end": 10
-          }]
-        }]
-      }]
-    }],
-    "gl_comm": [{
-      "uid": "83715324-db4a-4cc1-9277-3836b84f9ff9",
-      "content": "dt",
-      "identifier_objects": ["6b2b8428-57df-4d9f-8ac2-af759e9381e1", "4f682801-dcf6-43b9-bd7b-a1ad9f4eb76d"],
-      "groundings": null
-    }, {
-      "uid": "51fafd19-26cb-458e-a69f-a2e13e5731d3",
-      "content": "recovered",
-      "identifier_objects": ["faa2ed19-6417-4f65-a082-dc1e99c76f89", "62722e8f-779a-4064-91ce-f1d1e8c29a8f", "7d089f5a-d8f4-451f-b0ae-d9c7dad4b411", "9e55f5e6-a04b-4fbc-8374-78887b3dde11", "32d5568e-49d6-4ea2-ba6f-bafb3de6c195", "47ee0ec7-0a79-4689-a1e4-af941911e3f3"],
-      "groundings": null
-    }, {
-      "uid": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349",
-      "content": "I",
-      "identifier_objects": ["b2f818fb-041e-4fed-a56d-81ac88f99099", "40b6719a-bfb0-41cb-a0a6-365c6ba23bb7"],
-      "groundings": null
-    }, {
-      "uid": "e26c555c-4810-42ff-9e02-5fc5ad2de291",
-      "content": "infected",
-      "identifier_objects": ["3e39200d-e6bd-4bb2-a525-46fc2e3df770", "994ac19c-85f5-46f2-af9c-22f7dfaf3dac", "582a6a13-d2f0-4264-83ad-deebfc8985ad", "7b711b34-80cd-4627-a175-a956d64987a1", "524a8541-85a0-4f30-a8cf-57e89e9d7c73", "5f4bf4e8-13d5-405f-b31e-6a1667fba396"],
-      "groundings": null
-    }, {
-      "uid": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc",
-      "content": "beta",
-      "identifier_objects": ["f049af1e-2726-46e6-8acd-c6acd4935cd5", "e68de507-c367-47d4-a8e3-4ef9263602e4"],
-      "groundings": null
-    }, {
-      "uid": "47414dbf-52f0-4515-bb86-df72eb5cb354",
-      "content": "gamma",
-      "identifier_objects": ["83165851-48b6-493a-a7be-43b7b6311f27", "f7744b4d-9255-46d0-9ee3-55551ad5ba75"],
-      "groundings": null
-    }, {
-      "uid": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d",
-      "content": "R",
-      "identifier_objects": ["22b7ab2c-446c-42b8-9edb-824840a3ec36", "0e24a220-05bd-4acf-89e1-b022f11eacee"],
-      "groundings": null
-    }, {
-      "uid": "69d2d5e5-55d9-485d-ad8a-4575962e9810",
-      "content": "S",
-      "identifier_objects": ["e5bada4e-49a7-47ea-b2d2-ac5c8ada5685", "95bc7ca6-49b4-4c7e-8568-1f88d15ac1f5"],
-      "groundings": null
-    }],
-    "gvar": [{
-      "uid": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4",
-      "content": "R0",
-      "identifier_objects": ["eec4c2a6-f5ab-41b5-827d-a92172e1ae01"],
-      "groundings": null
-    }, {
-      "uid": "0f645320-4289-4e7c-9b84-7d909ede0568",
-      "content": "Tc",
-      "identifier_objects": ["3e119f9b-367a-4010-a348-4fd04e2c4a02"],
-      "groundings": null
-    }, {
-      "uid": "968e22bc-ae8c-4cd9-aafd-b3fa11b657f0",
-      "content": "N",
-      "identifier_objects": ["25d37c28-b68e-475a-b206-179de6713e86"],
-      "groundings": null
-    }, {
-      "uid": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b",
-      "content": "Tr",
-      "identifier_objects": ["f3dbce8c-3d7a-4b3f-978b-28742a5833ff"],
-      "groundings": null
-    }, {
-      "uid": "dba14346-4891-496f-b36c-e6c38e00888c",
-      "content": "R(t)",
-      "identifier_objects": ["24c8aefe-61c4-4d96-a7db-276ca2fbb012"],
-      "groundings": null
-    }, {
-      "uid": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec",
-      "content": "I",
-      "identifier_objects": ["f87b8b35-9a3a-45c0-9811-a6f3695f2c77"],
-      "groundings": null
-    }, {
-      "uid": "792d8e39-b798-4b10-b93c-291de64d03e8",
-      "content": "R",
-      "identifier_objects": ["2f6d5a50-3abe-44e3-9580-e2c1c4fc1a21"],
-      "groundings": null
-    }, {
-      "uid": "53b835b2-7360-4b29-ae71-b4e802df3b48",
-      "content": "S",
-      "identifier_objects": ["5f3d16c0-2a0b-492b-a278-1f1915c14627"],
-      "groundings": null
-    }],
-    "links": [{
-      "element_1": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2::dt",
-      "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2::dt",
-      "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "link_type": "source_to_comment",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2::dt",
-      "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "link_type": "source_to_comment",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "4ef7beb6-139e-47bb-aaab-183335bb270a::beta",
-      "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "4ef7beb6-139e-47bb-aaab-183335bb270a::beta",
-      "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "link_type": "source_to_comment",
-      "score": 0.25
-    }, {
-      "element_1": "4ef7beb6-139e-47bb-aaab-183335bb270a::beta",
-      "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "link_type": "source_to_comment",
-      "score": 0.2
-    }, {
-      "element_1": "9c7d980e-88dd-42f2-8d98-b849e16070e7::recovered",
-      "element_2": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "9c7d980e-88dd-42f2-8d98-b849e16070e7::recovered",
-      "element_2": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "link_type": "source_to_comment",
-      "score": 0.125
-    }, {
-      "element_1": "9c7d980e-88dd-42f2-8d98-b849e16070e7::recovered",
-      "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "link_type": "source_to_comment",
-      "score": 0.1111111111111111
-    }, {
-      "element_1": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf::gamma",
-      "element_2": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf::gamma",
-      "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "link_type": "source_to_comment",
-      "score": 0.2
-    }, {
-      "element_1": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf::gamma",
-      "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "link_type": "source_to_comment",
-      "score": 0.16666666666666666
-    }, {
-      "element_1": "90a72bee-8920-431d-bc91-5d6f3555ff0a::@anonymous",
-      "element_2": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
-      "link_type": "source_to_comment",
-      "score": 0.1111111111111111
-    }, {
-      "element_1": "90a72bee-8920-431d-bc91-5d6f3555ff0a::@anonymous",
-      "element_2": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "link_type": "source_to_comment",
-      "score": 0.1
-    }, {
-      "element_1": "90a72bee-8920-431d-bc91-5d6f3555ff0a::@anonymous",
-      "element_2": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "link_type": "source_to_comment",
-      "score": 0.1
-    }, {
-      "element_1": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a::RETURN_VAL",
-      "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "link_type": "source_to_comment",
-      "score": 0.125
-    }, {
-      "element_1": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a::RETURN_VAL",
-      "element_2": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "link_type": "source_to_comment",
-      "score": 0.1111111111111111
-    }, {
-      "element_1": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a::RETURN_VAL",
-      "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "link_type": "source_to_comment",
-      "score": 0.1
-    }, {
-      "element_1": "3d14b66b-94b5-432e-83c3-8087038f3a27::R",
-      "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "3d14b66b-94b5-432e-83c3-8087038f3a27::R",
-      "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "link_type": "source_to_comment",
-      "score": 0.5
-    }, {
-      "element_1": "3d14b66b-94b5-432e-83c3-8087038f3a27::R",
-      "element_2": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "link_type": "source_to_comment",
-      "score": 0.5
-    }, {
-      "element_1": "1c8eb8d5-3941-4abe-8843-112824395074::I",
-      "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "1c8eb8d5-3941-4abe-8843-112824395074::I",
-      "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "link_type": "source_to_comment",
-      "score": 0.5
-    }, {
-      "element_1": "1c8eb8d5-3941-4abe-8843-112824395074::I",
-      "element_2": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "link_type": "source_to_comment",
-      "score": 0.5
-    }, {
-      "element_1": "27638644-9486-493b-a4b5-12e2e24dd732::S",
-      "element_2": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "27638644-9486-493b-a4b5-12e2e24dd732::S",
-      "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "link_type": "source_to_comment",
-      "score": 0.5
-    }, {
-      "element_1": "27638644-9486-493b-a4b5-12e2e24dd732::S",
-      "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "link_type": "source_to_comment",
-      "score": 0.5
-    }, {
-      "element_1": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18::infected",
-      "element_2": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "link_type": "source_to_comment",
-      "score": 1
-    }, {
-      "element_1": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18::infected",
-      "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "link_type": "source_to_comment",
-      "score": 0.14285714285714285
-    }, {
-      "element_1": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18::infected",
-      "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "link_type": "source_to_comment",
-      "score": 0.125
-    }, {
-      "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.7158874361550902
-    }, {
-      "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.6564183861382866
-    }, {
-      "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.2926252410346097
-    }, {
-      "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.2738094178184607
-    }, {
-      "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.203848039585175
-    }, {
-      "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.5616110853734466
-    }, {
-      "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.5418134539068153
-    }, {
-      "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.5311856162629904
-    }, {
-      "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.514356308374646
-    }, {
-      "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.346294706904848
-    }, {
-      "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.3959647243733024
-    }, {
-      "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.285298061422153
-    }, {
-      "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.2847438538378908
-    }, {
-      "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.2816517389279296
-    }, {
-      "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.250920044939109
-    }, {
-      "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.4464318759006054
-    }, {
-      "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.420135832055012
-    }, {
-      "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.3896776072593862
-    }, {
-      "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.2965790327391453
-    }, {
-      "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.2870485576379471
-    }, {
-      "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.4249474955723593
-    }, {
-      "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.4236792173257558
-    }, {
-      "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.3931972778099482
-    }, {
-      "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.278961908633683
-    }, {
-      "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.2785781478135096
-    }, {
-      "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.4118787179443169
-    }, {
-      "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.4046700117750197
-    }, {
-      "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.3972842523236826
-    }, {
-      "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.2766507276158623
-    }, {
-      "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.2756889924451051
-    }, {
-      "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.3740959363807472
-    }, {
-      "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.2945500293917336
-    }, {
-      "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.281254736920021
-    }, {
-      "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.275743411375073
-    }, {
-      "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.25267988021439
-    }, {
-      "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "comment_to_gvar",
-      "score": 1.477201310910858
-    }, {
-      "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "comment_to_gvar",
-      "score": 1.4589893978390345
-    }, {
-      "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "comment_to_gvar",
-      "score": 1.4440851495698335
-    }, {
-      "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "link_type": "comment_to_gvar",
-      "score": 1.3545531906198298
-    }, {
-      "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
-      "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "link_type": "comment_to_gvar",
-      "score": 1.2484079434188762
-    }, {
-      "element_1": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be::R",
-      "element_2": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
-      "link_type": "equation_to_gvar",
-      "score": 1.5
-    }, {
-      "element_1": "eacfe431-7531-4275-b64a-2441008dfab8::R(0)",
-      "element_2": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
-      "link_type": "equation_to_gvar",
-      "score": 1
-    }, {
-      "element_1": "3d2e8a73-b179-49a4-93a3-8986d3486fdc::R(t)",
-      "element_2": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
-      "link_type": "equation_to_gvar",
-      "score": 0.75
-    }, {
-      "element_1": "6bf0f920-ab37-4854-9b23-d520a1b4d458::I",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "equation_to_gvar",
-      "score": 3
-    }, {
-      "element_1": "d41a0835-c9a6-4529-bd49-e70a0ac170c3::I(t)",
-      "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "link_type": "equation_to_gvar",
-      "score": 0.75
-    }, {
-      "element_1": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be::R",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "equation_to_gvar",
-      "score": 3
-    }, {
-      "element_1": "eacfe431-7531-4275-b64a-2441008dfab8::R(0)",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "equation_to_gvar",
-      "score": 0.75
-    }, {
-      "element_1": "3d2e8a73-b179-49a4-93a3-8986d3486fdc::R(t)",
-      "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "link_type": "equation_to_gvar",
-      "score": 0.75
-    }, {
-      "element_1": "a6957c89-54fc-4dc4-acab-eba2325e25e4::N",
-      "element_2": "968e22bc-ae8c-4cd9-aafd-b3fa11b657f0::N",
-      "link_type": "equation_to_gvar",
-      "score": 3
-    }, {
-      "element_1": "c009f2c4-a42e-441b-a734-7b8255f0ec1b::S",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "equation_to_gvar",
-      "score": 3
-    }, {
-      "element_1": "92eb5420-a525-4afc-ab19-48ec0af7740f::S(0)",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "equation_to_gvar",
-      "score": 0.75
-    }, {
-      "element_1": "0e898c07-6922-46b1-8a27-dfaf0a50755e::S(t)",
-      "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "link_type": "equation_to_gvar",
-      "score": 0.75
-    }, {
-      "element_1": "3d2e8a73-b179-49a4-93a3-8986d3486fdc::R(t)",
-      "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
-      "link_type": "equation_to_gvar",
-      "score": 3
-    }, {
-      "element_1": "eacfe431-7531-4275-b64a-2441008dfab8::R(0)",
-      "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
-      "link_type": "equation_to_gvar",
-      "score": 1.5
-    }, {
-      "element_1": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be::R",
-      "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
-      "link_type": "equation_to_gvar",
-      "score": 0.75
-    }, {
-      "element_1": "d41a0835-c9a6-4529-bd49-e70a0ac170c3::I(t)",
-      "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
-      "link_type": "equation_to_gvar",
-      "score": 0.5
-    }, {
-      "element_1": "0e898c07-6922-46b1-8a27-dfaf0a50755e::S(t)",
-      "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
-      "link_type": "equation_to_gvar",
-      "score": 0.5
-    }, {
-      "element_1": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.5
-    }, {
-      "element_1": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "968e22bc-ae8c-4cd9-aafd-b3fa11b657f0::N",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.3333333333333333
-    }, {
-      "element_1": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
-      "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
-      "link_type": "gvar_to_interval_param_setting_via_idfr",
-      "score": 0.2
-    }]
+          "spans": [
+            {
+              "char_begin": 0,
+              "char_end": 10
+            }
+          ]
+        },
+        "arguments": [
+          {
+            "name": "identifier",
+            "text": "dI",
+            "spans": {
+              "page": 3,
+              "block": 4,
+              "spans": [
+                {
+                  "char_begin": 0,
+                  "char_end": 2
+                }
+              ]
+            }
+          },
+          {
+            "name": "parameter_interval",
+            "inclusive_lower": null,
+            "inclusive_upper": false,
+            "lower_bound": null,
+            "upper_bound": 0,
+            "spans": [
+              {
+                "page": 3,
+                "block": 4,
+                "spans": [
+                  {
+                    "char_begin": 9,
+                    "char_end": 10
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "gl_comm": [
+      {
+        "uid": "83715324-db4a-4cc1-9277-3836b84f9ff9",
+        "content": "dt",
+        "identifier_objects": [
+          "6b2b8428-57df-4d9f-8ac2-af759e9381e1",
+          "4f682801-dcf6-43b9-bd7b-a1ad9f4eb76d"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "51fafd19-26cb-458e-a69f-a2e13e5731d3",
+        "content": "recovered",
+        "identifier_objects": [
+          "faa2ed19-6417-4f65-a082-dc1e99c76f89",
+          "62722e8f-779a-4064-91ce-f1d1e8c29a8f",
+          "7d089f5a-d8f4-451f-b0ae-d9c7dad4b411",
+          "9e55f5e6-a04b-4fbc-8374-78887b3dde11",
+          "32d5568e-49d6-4ea2-ba6f-bafb3de6c195",
+          "47ee0ec7-0a79-4689-a1e4-af941911e3f3"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349",
+        "content": "I",
+        "identifier_objects": [
+          "b2f818fb-041e-4fed-a56d-81ac88f99099",
+          "40b6719a-bfb0-41cb-a0a6-365c6ba23bb7"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "e26c555c-4810-42ff-9e02-5fc5ad2de291",
+        "content": "infected",
+        "identifier_objects": [
+          "3e39200d-e6bd-4bb2-a525-46fc2e3df770",
+          "994ac19c-85f5-46f2-af9c-22f7dfaf3dac",
+          "582a6a13-d2f0-4264-83ad-deebfc8985ad",
+          "7b711b34-80cd-4627-a175-a956d64987a1",
+          "524a8541-85a0-4f30-a8cf-57e89e9d7c73",
+          "5f4bf4e8-13d5-405f-b31e-6a1667fba396"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc",
+        "content": "beta",
+        "identifier_objects": [
+          "f049af1e-2726-46e6-8acd-c6acd4935cd5",
+          "e68de507-c367-47d4-a8e3-4ef9263602e4"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "47414dbf-52f0-4515-bb86-df72eb5cb354",
+        "content": "gamma",
+        "identifier_objects": [
+          "83165851-48b6-493a-a7be-43b7b6311f27",
+          "f7744b4d-9255-46d0-9ee3-55551ad5ba75"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d",
+        "content": "R",
+        "identifier_objects": [
+          "22b7ab2c-446c-42b8-9edb-824840a3ec36",
+          "0e24a220-05bd-4acf-89e1-b022f11eacee"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "69d2d5e5-55d9-485d-ad8a-4575962e9810",
+        "content": "S",
+        "identifier_objects": [
+          "e5bada4e-49a7-47ea-b2d2-ac5c8ada5685",
+          "95bc7ca6-49b4-4c7e-8568-1f88d15ac1f5"
+        ],
+        "groundings": null
+      }
+    ],
+    "gvar": [
+      {
+        "uid": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4",
+        "content": "R0",
+        "identifier_objects": [
+          "eec4c2a6-f5ab-41b5-827d-a92172e1ae01"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "0f645320-4289-4e7c-9b84-7d909ede0568",
+        "content": "Tc",
+        "identifier_objects": [
+          "3e119f9b-367a-4010-a348-4fd04e2c4a02"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "968e22bc-ae8c-4cd9-aafd-b3fa11b657f0",
+        "content": "N",
+        "identifier_objects": [
+          "25d37c28-b68e-475a-b206-179de6713e86"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b",
+        "content": "Tr",
+        "identifier_objects": [
+          "f3dbce8c-3d7a-4b3f-978b-28742a5833ff"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "dba14346-4891-496f-b36c-e6c38e00888c",
+        "content": "R(t)",
+        "identifier_objects": [
+          "24c8aefe-61c4-4d96-a7db-276ca2fbb012"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec",
+        "content": "I",
+        "identifier_objects": [
+          "f87b8b35-9a3a-45c0-9811-a6f3695f2c77"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "792d8e39-b798-4b10-b93c-291de64d03e8",
+        "content": "R",
+        "identifier_objects": [
+          "2f6d5a50-3abe-44e3-9580-e2c1c4fc1a21"
+        ],
+        "groundings": null
+      },
+      {
+        "uid": "53b835b2-7360-4b29-ae71-b4e802df3b48",
+        "content": "S",
+        "identifier_objects": [
+          "5f3d16c0-2a0b-492b-a278-1f1915c14627"
+        ],
+        "groundings": null
+      }
+    ],
+    "links": [
+      {
+        "element_1": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2::dt",
+        "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2::dt",
+        "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "link_type": "source_to_comment",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "a0f1f81c-732f-47d6-9dd3-5b5134aac2a2::dt",
+        "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "link_type": "source_to_comment",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "4ef7beb6-139e-47bb-aaab-183335bb270a::beta",
+        "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "4ef7beb6-139e-47bb-aaab-183335bb270a::beta",
+        "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "link_type": "source_to_comment",
+        "score": 0.25
+      },
+      {
+        "element_1": "4ef7beb6-139e-47bb-aaab-183335bb270a::beta",
+        "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "link_type": "source_to_comment",
+        "score": 0.2
+      },
+      {
+        "element_1": "9c7d980e-88dd-42f2-8d98-b849e16070e7::recovered",
+        "element_2": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "9c7d980e-88dd-42f2-8d98-b849e16070e7::recovered",
+        "element_2": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "link_type": "source_to_comment",
+        "score": 0.125
+      },
+      {
+        "element_1": "9c7d980e-88dd-42f2-8d98-b849e16070e7::recovered",
+        "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "link_type": "source_to_comment",
+        "score": 0.1111111111111111
+      },
+      {
+        "element_1": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf::gamma",
+        "element_2": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf::gamma",
+        "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "link_type": "source_to_comment",
+        "score": 0.2
+      },
+      {
+        "element_1": "7fda7c4b-8f36-4a21-a8aa-2827b5409abf::gamma",
+        "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "link_type": "source_to_comment",
+        "score": 0.16666666666666666
+      },
+      {
+        "element_1": "90a72bee-8920-431d-bc91-5d6f3555ff0a::@anonymous",
+        "element_2": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
+        "link_type": "source_to_comment",
+        "score": 0.1111111111111111
+      },
+      {
+        "element_1": "90a72bee-8920-431d-bc91-5d6f3555ff0a::@anonymous",
+        "element_2": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "link_type": "source_to_comment",
+        "score": 0.1
+      },
+      {
+        "element_1": "90a72bee-8920-431d-bc91-5d6f3555ff0a::@anonymous",
+        "element_2": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "link_type": "source_to_comment",
+        "score": 0.1
+      },
+      {
+        "element_1": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a::RETURN_VAL",
+        "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "link_type": "source_to_comment",
+        "score": 0.125
+      },
+      {
+        "element_1": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a::RETURN_VAL",
+        "element_2": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "link_type": "source_to_comment",
+        "score": 0.1111111111111111
+      },
+      {
+        "element_1": "e8e4d2af-6fe4-4cd5-abc1-fac83b93547a::RETURN_VAL",
+        "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "link_type": "source_to_comment",
+        "score": 0.1
+      },
+      {
+        "element_1": "3d14b66b-94b5-432e-83c3-8087038f3a27::R",
+        "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "3d14b66b-94b5-432e-83c3-8087038f3a27::R",
+        "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "link_type": "source_to_comment",
+        "score": 0.5
+      },
+      {
+        "element_1": "3d14b66b-94b5-432e-83c3-8087038f3a27::R",
+        "element_2": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "link_type": "source_to_comment",
+        "score": 0.5
+      },
+      {
+        "element_1": "1c8eb8d5-3941-4abe-8843-112824395074::I",
+        "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "1c8eb8d5-3941-4abe-8843-112824395074::I",
+        "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "link_type": "source_to_comment",
+        "score": 0.5
+      },
+      {
+        "element_1": "1c8eb8d5-3941-4abe-8843-112824395074::I",
+        "element_2": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "link_type": "source_to_comment",
+        "score": 0.5
+      },
+      {
+        "element_1": "27638644-9486-493b-a4b5-12e2e24dd732::S",
+        "element_2": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "27638644-9486-493b-a4b5-12e2e24dd732::S",
+        "element_2": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "link_type": "source_to_comment",
+        "score": 0.5
+      },
+      {
+        "element_1": "27638644-9486-493b-a4b5-12e2e24dd732::S",
+        "element_2": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "link_type": "source_to_comment",
+        "score": 0.5
+      },
+      {
+        "element_1": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18::infected",
+        "element_2": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "link_type": "source_to_comment",
+        "score": 1
+      },
+      {
+        "element_1": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18::infected",
+        "element_2": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "link_type": "source_to_comment",
+        "score": 0.14285714285714285
+      },
+      {
+        "element_1": "a8016ec8-f207-4eb2-8bc1-3a8e5081cf18::infected",
+        "element_2": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "link_type": "source_to_comment",
+        "score": 0.125
+      },
+      {
+        "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.7158874361550902
+      },
+      {
+        "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.6564183861382866
+      },
+      {
+        "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.2926252410346097
+      },
+      {
+        "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.2738094178184607
+      },
+      {
+        "element_1": "83715324-db4a-4cc1-9277-3836b84f9ff9::dt",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.203848039585175
+      },
+      {
+        "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.5616110853734466
+      },
+      {
+        "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.5418134539068153
+      },
+      {
+        "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.5311856162629904
+      },
+      {
+        "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.514356308374646
+      },
+      {
+        "element_1": "47414dbf-52f0-4515-bb86-df72eb5cb354::gamma",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.346294706904848
+      },
+      {
+        "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.3959647243733024
+      },
+      {
+        "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.285298061422153
+      },
+      {
+        "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.2847438538378908
+      },
+      {
+        "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.2816517389279296
+      },
+      {
+        "element_1": "51fafd19-26cb-458e-a69f-a2e13e5731d3::recovered",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.250920044939109
+      },
+      {
+        "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.4464318759006054
+      },
+      {
+        "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.420135832055012
+      },
+      {
+        "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.3896776072593862
+      },
+      {
+        "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.2965790327391453
+      },
+      {
+        "element_1": "d080304a-6e88-4f4c-aba4-f5a3a4862e2d::R",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.2870485576379471
+      },
+      {
+        "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.4249474955723593
+      },
+      {
+        "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.4236792173257558
+      },
+      {
+        "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.3931972778099482
+      },
+      {
+        "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.278961908633683
+      },
+      {
+        "element_1": "95e78b71-fa92-4f8e-bda8-4fcc5fc5f349::I",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.2785781478135096
+      },
+      {
+        "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.4118787179443169
+      },
+      {
+        "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.4046700117750197
+      },
+      {
+        "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.3972842523236826
+      },
+      {
+        "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.2766507276158623
+      },
+      {
+        "element_1": "69d2d5e5-55d9-485d-ad8a-4575962e9810::S",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.2756889924451051
+      },
+      {
+        "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.3740959363807472
+      },
+      {
+        "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.2945500293917336
+      },
+      {
+        "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.281254736920021
+      },
+      {
+        "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.275743411375073
+      },
+      {
+        "element_1": "e26c555c-4810-42ff-9e02-5fc5ad2de291::infected",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.25267988021439
+      },
+      {
+        "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "comment_to_gvar",
+        "score": 1.477201310910858
+      },
+      {
+        "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "comment_to_gvar",
+        "score": 1.4589893978390345
+      },
+      {
+        "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "comment_to_gvar",
+        "score": 1.4440851495698335
+      },
+      {
+        "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "element_2": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "link_type": "comment_to_gvar",
+        "score": 1.3545531906198298
+      },
+      {
+        "element_1": "fa0e3649-b7b7-4e9f-9347-ed747614bbfc::beta",
+        "element_2": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "link_type": "comment_to_gvar",
+        "score": 1.2484079434188762
+      },
+      {
+        "element_1": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be::R",
+        "element_2": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
+        "link_type": "equation_to_gvar",
+        "score": 1.5
+      },
+      {
+        "element_1": "eacfe431-7531-4275-b64a-2441008dfab8::R(0)",
+        "element_2": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
+        "link_type": "equation_to_gvar",
+        "score": 1
+      },
+      {
+        "element_1": "3d2e8a73-b179-49a4-93a3-8986d3486fdc::R(t)",
+        "element_2": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
+        "link_type": "equation_to_gvar",
+        "score": 0.75
+      },
+      {
+        "element_1": "6bf0f920-ab37-4854-9b23-d520a1b4d458::I",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "equation_to_gvar",
+        "score": 3
+      },
+      {
+        "element_1": "d41a0835-c9a6-4529-bd49-e70a0ac170c3::I(t)",
+        "element_2": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "link_type": "equation_to_gvar",
+        "score": 0.75
+      },
+      {
+        "element_1": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be::R",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "equation_to_gvar",
+        "score": 3
+      },
+      {
+        "element_1": "eacfe431-7531-4275-b64a-2441008dfab8::R(0)",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "equation_to_gvar",
+        "score": 0.75
+      },
+      {
+        "element_1": "3d2e8a73-b179-49a4-93a3-8986d3486fdc::R(t)",
+        "element_2": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "link_type": "equation_to_gvar",
+        "score": 0.75
+      },
+      {
+        "element_1": "a6957c89-54fc-4dc4-acab-eba2325e25e4::N",
+        "element_2": "968e22bc-ae8c-4cd9-aafd-b3fa11b657f0::N",
+        "link_type": "equation_to_gvar",
+        "score": 3
+      },
+      {
+        "element_1": "c009f2c4-a42e-441b-a734-7b8255f0ec1b::S",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "equation_to_gvar",
+        "score": 3
+      },
+      {
+        "element_1": "92eb5420-a525-4afc-ab19-48ec0af7740f::S(0)",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "equation_to_gvar",
+        "score": 0.75
+      },
+      {
+        "element_1": "0e898c07-6922-46b1-8a27-dfaf0a50755e::S(t)",
+        "element_2": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "link_type": "equation_to_gvar",
+        "score": 0.75
+      },
+      {
+        "element_1": "3d2e8a73-b179-49a4-93a3-8986d3486fdc::R(t)",
+        "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
+        "link_type": "equation_to_gvar",
+        "score": 3
+      },
+      {
+        "element_1": "eacfe431-7531-4275-b64a-2441008dfab8::R(0)",
+        "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
+        "link_type": "equation_to_gvar",
+        "score": 1.5
+      },
+      {
+        "element_1": "3fa18dc7-0daa-47b9-bac2-09a8b80d35be::R",
+        "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
+        "link_type": "equation_to_gvar",
+        "score": 0.75
+      },
+      {
+        "element_1": "d41a0835-c9a6-4529-bd49-e70a0ac170c3::I(t)",
+        "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
+        "link_type": "equation_to_gvar",
+        "score": 0.5
+      },
+      {
+        "element_1": "0e898c07-6922-46b1-8a27-dfaf0a50755e::S(t)",
+        "element_2": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
+        "link_type": "equation_to_gvar",
+        "score": 0.5
+      },
+      {
+        "element_1": "431bb5e7-d985-47b6-a8e6-59b341a7f6a4::R0",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "b8b73dcf-25b4-47fb-bdc6-ff53b1ea8cec::I",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.5
+      },
+      {
+        "element_1": "0f645320-4289-4e7c-9b84-7d909ede0568::Tc",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "792d8e39-b798-4b10-b93c-291de64d03e8::R",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "968e22bc-ae8c-4cd9-aafd-b3fa11b657f0::N",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "53b835b2-7360-4b29-ae71-b4e802df3b48::S",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "3d1e9f92-3229-4b67-aa2a-73ea08a6698b::Tr",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.3333333333333333
+      },
+      {
+        "element_1": "dba14346-4891-496f-b36c-e6c38e00888c::R(t)",
+        "element_2": "1a1697f2-f075-4802-98e6-5ffdbc6c465a::0",
+        "link_type": "gvar_to_interval_param_setting_via_idfr",
+        "score": 0.2
+      }
+    ]
   }
 }
