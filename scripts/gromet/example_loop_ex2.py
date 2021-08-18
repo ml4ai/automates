@@ -116,8 +116,8 @@ def generate_gromet() -> Gromet:
         Variable(uid=UidVariable('V:loop_1.e'),
                  name='e',
                  type=UidType('Integer'),
-                 proxy_state=UidPort('P:loop_1.in.i'),
-                 states=[UidPort('P:loop_1.in.i'),
+                 proxy_state=UidPort('P:loop_1.in.e'),
+                 states=[UidPort('P:loop_1.in.e'),
                          UidWire('W:loop_1.loop_1_cond.e'),
                          UidPort('P:loop_1_cond.in.e')],
                  metadata=None)
@@ -129,7 +129,7 @@ def generate_gromet() -> Gromet:
              value_type=UidType('Integer'),
              name=None, value=None, metadata=None,
              src=UidJunction('J:loop_ex2.e'),
-             tgt=UidPort('P:loop_1.in.i')),
+             tgt=UidPort('P:loop_1.in.e')),
 
         Wire(uid=UidWire('W:loop_1.loop_1_cond.e'),
              type=None,
