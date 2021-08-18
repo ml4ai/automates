@@ -12,7 +12,7 @@ def generate_gromet() -> Gromet:
         ModelDescription(uid=UidMetadatum('chime_model_description'),
                          provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
                                                timestamp=get_current_datetime()),
-                         name='CHIME [SIR dynamics only]',
+                         name='CHIME v01 [SIR dynamics only]',
                          description='The CHIME (COVID-19 Hospital Impact Model for Epidemics) App '
                                      'is designed to assist hospitals and public health officials '
                                      'understand hospital capacity needs as they relate to the '
@@ -126,15 +126,6 @@ def generate_gromet() -> Gromet:
                          UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
                          UidPort("P:sir_r_exp.r_n")],
                  metadata=None),
-        # Variable(uid=UidVariable("V:sir.r_n"),
-        #          name="i_n", type=UidType("Float"),
-        #          proxy_state=UidPort("P:sir_r_n_exp.r_n"),
-        #          states=[UidPort("P:sir_r_n_exp.r_n"),
-        #                  UidWire("W:sir_r_n_exp.r_n>sir_scale_exp.r_n"),
-        #                  UidPort("P:sir_scale_exp.r_n"),
-        #                  UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
-        #                  UidPort("P:sir_r_exp.r_n")],
-        #          metadata=None),
         Variable(uid=UidVariable("V:sir.scale"),
                  name="scale", type=UidType("Float"),
                  proxy_state=UidPort("P:sir_scale_exp.scale"),
@@ -596,7 +587,7 @@ def generate_gromet() -> Gromet:
                     UidPort("P:sir_i_n_exp.gamma")])
     # e5 = (+ e3 e4 i)
     e5 = Expr(call=RefOp(UidOp('+')),
-              args=[e3, e4, UidPort("P:sir_i_n_exp.gamma")])
+              args=[e3, e4, UidPort("P:sir_i_n_exp.i")])
     sir_i_n_exp = Expression(uid=UidBox("B:sir_i_n_exp"),
                              type=None,
                              name=None,
@@ -745,8 +736,8 @@ def generate_gromet() -> Gromet:
              sir_s_exp, sir_i_exp, sir_r_exp]
 
     _g = Gromet(
-        uid=UidGromet("CHIME_SIR"),
-        name="CHIME_SIR",
+        uid=UidGromet("CHIME_SIR_01"),
+        name="CHIME_SIR_01",
         type=UidType("FunctionNetwork"),
         root=UidBox("B:sir"),  # TODO Update with latest root
         types=None,

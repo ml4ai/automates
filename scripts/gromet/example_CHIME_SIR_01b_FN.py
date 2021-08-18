@@ -167,18 +167,26 @@ def generate_gromet() -> Gromet:
         # -- sim_sir() Wires --
 
         # todo: Rewire when updating simsir
-        Wire(uid=UidWire("W:simsir.in.s>sir.s_in"),
+        Wire(uid=UidWire("W:simsir.in.s>simsir_loop_1_1_call_sir_exp.in.s"),  # UidWire("W:simsir.in.s>sir.s_in"),
              type=None,
-             value_type=UidType("Integer"),
+             value_type=UidType("Float"),
              name=None, value=None, metadata=None,
              src=UidPort("P:simsir.in.s"),
-             tgt=UidPort("P:sir.s_in") ),
-        # todo: Rewire when updating simsir
-        Wire(uid=UidWire("W:sir.s_out>simsir.out.s"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.s"),  # UidPort("P:sir.s_in")
+             ),
+        Wire(uid=UidWire("W:simsir.in.i>simsir_loop_1_1_call_sir_exp.in.i"),
              type=None,
-             value_type=UidType("Integer"),
+             value_type=UidType("Float"),
              name=None, value=None, metadata=None,
-             src=UidPort("P:sir.s_out"),
+             src=UidPort("P:simsir.in.i"),
+             tgt=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.i"),
+             ),
+        # todo: Rewire when updating simsir
+        Wire(uid=UidWire("W:simsir_loop_1_1_call_sir_exp.out.s>simsir.out.s"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),  # UidPort("P:sir.s_out"),
              tgt=UidPort("P:simsir.out.s")),
 
         # -- sir() Wires --
@@ -339,6 +347,12 @@ def generate_gromet() -> Gromet:
              value_type=UidType("Float"),
              name="s",
              value=None, metadata=None),
+        Port(uid=UidPort("P:simsir.in.i"),
+             box=UidBox("B:simsir"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="i",
+             value=None, metadata=None),
         # simsir out
         Port(uid=UidPort("P:simsir.out.s"),
              box=UidBox("B:simsir"),
@@ -346,6 +360,64 @@ def generate_gromet() -> Gromet:
              value_type=UidType("Float"),
              name="s",
              value=None, metadata=None),
+
+        # todo add other "B:simsir_loop_1_1_call_sir_exp" PortCalls
+        # simsir_loop_1_1_call_sir_exp in
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.s"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.s_in"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.i"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.i_in"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.r"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.r_in"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.beta"),
+                 box=UidBox("Bcall:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.beta"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.gamma"),
+                 box=UidBox("Bcall:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.gamma"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.in.n"),
+                 box=UidBox("Bcall:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.n"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Integer"),
+                 name=None, value=None, metadata=None),
+        # simsir_loop_1_1_call_sir_exp out
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),
+                 box=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.s_out"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.i"),
+                 box=UidBox("Bcall:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.i_out"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
+        PortCall(uid=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.r"),
+                 box=UidBox("Bcall:simsir_loop_1_1_call_sir_exp"),
+                 call=UidPort("P:sir.r_out"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name=None, value=None, metadata=None),
 
         # -- sir() Ports --
 
@@ -592,18 +664,38 @@ def generate_gromet() -> Gromet:
 
     # -- sim_sir() Expressions and Function --
 
+    # simsir_loop_1_1_call_sir_exp
+    simsir_loop_1_1_call_sir_exp = \
+        BoxCall(uid=UidBox("B:simsir_loop_1_1_call_sir_exp"),
+                type=None,
+                name=None,
+                call=UidBox("B:sir"),
+                ports=[UidPort("PC:simsir_loop_1_1_call_sir_exp.in.s"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.i"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.r"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.beta"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.gamma"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.in.n"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.out.i"),
+                       UidPort("PC:simsir_loop_1_1_call_sir_exp.out.r")
+                       ],
+                metadata=None)
+
     # todo CTM: using as stub
     simsir = Function(uid=UidBox("B:simsir"),
                       type=None,
-                      name=UidOp("sim_sir-a"),  # todo
+                      name=UidOp("sim_sir-b"),  # todo
                       ports=[UidPort("P:simsir.in.s"),
+                             UidPort("P:simsir.in.i"),
                              UidPort("P:simsir.out.s")],
 
                       # contents
-                      wires=[UidWire("W:simsir.in.s>sir.s_in"),  # todo update when updating simsir
-                             UidWire("W:sir.s_out>simsir.out.s"),  # todo update when updating simsir
+                      wires=[UidWire("W:simsir.in.s>simsir_loop_1_1_call_sir_exp.in.s"),  # UidWire("W:simsir.in.s>sir.s_in"),  # todo update when updating simsir
+                             UidWire("W:simsir.in.i>simsir_loop_1_1_call_sir_exp.in.i"),
+                             UidWire("W:simsir_loop_1_1_call_sir_exp.out.s>simsir.out.s"),  # UidWire("W:sir.s_out>simsir.out.s"),  # todo update when updating simsir
                              ],
-                      boxes=[UidBox("B:sir")],  # todo: update once outer loop complete
+                      boxes=[UidBox("B:simsir_loop_1_1_call_sir_exp")],  # todo: update once outer loop complete
                       junctions=None,
 
                       metadata=None)
@@ -789,14 +881,15 @@ def generate_gromet() -> Gromet:
                    metadata=None)
 
     boxes = [simsir,
+             simsir_loop_1_1_call_sir_exp,
              sir,
              sir_s_n_exp, sir_i_n_exp, sir_r_n_exp,
              sir_scale_exp,
              sir_s_exp, sir_i_exp, sir_r_exp]
 
     _g = Gromet(
-        uid=UidGromet("CHIME_SIR_01a"),
-        name="CHIME_SIR_01a",
+        uid=UidGromet("CHIME_SIR_01b"),
+        name="CHIME_SIR_01b",
         type=UidType("FunctionNetwork"),
         root=UidBox("B:simsir"),  # TODO Update with latest root
         types=None,
