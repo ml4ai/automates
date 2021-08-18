@@ -160,12 +160,17 @@ class TextReadingLinker:
             if isinstance(param, ParameterSettingNode)
         ]
 
+        selected_parameter_setting = max(
+            parameter_settings, key=lambda unit: L.edges[gvar, unit]["weight"]
+        )
+
         return [
             {
-                "value": param.content,
-                "text_extraction": self.build_text_extraction(param.text_extraction),
+                "value": selected_parameter_setting.content,
+                "text_extraction": self.build_text_extraction(
+                    selected_parameter_setting.text_extraction
+                ),
             }
-            for param in parameter_settings
         ]
 
     def build_equation_groundings(self, gvar: GVarNode, L):
