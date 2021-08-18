@@ -308,15 +308,36 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     cg_obs = gm.observed_graph(cg)
     cg_topo_ind = cg_obs.topological_sorting()
     cg_topo = gm.to_names(cg_topo_ind, cg_obs)
-    cg_obs_nodes = cg.vs.select(description_ne="U")["name"]
     s = gm.c_components(cg, cg_topo)
-    print(s)
+    cg_obs_nodes = [node for component in s for node in component]
     if len(s) > 1:
         tree.call.line = 6
         product_list = []
         id_check_list = []
         for s_element in s:
-            subscripts = list(set(cg_obs_nodes)-set(s_element))
+            s_el_orig_names = []
+            for node in s_element:
+                s_el_orig_names.append(cg.vs.select(name=node)[0]["orig_name"])
+
+            # Observed variables, with those mentioned in c-component removed
+            subscript_variables = list(set(cg_obs_nodes)-set(s_element))
+            subscript_orig_vars = []
+            for var in subscript_variables:
+                subscript_orig_vars.append(cg.vs.select(name=var)[0]["orig_name"])
+
+            # Subscripts should be in ancestors of nodes in c-component
+            for orig_var in subscript_orig_vars:
+                if orig_var not in gm.ancestors_unsort(s_el_orig_names, g):
+                    subscript_orig_vars.remove(orig_var)
+
+            # Subscripts should not be redundant (should not be ancestors of one-another)
+            for orig_var in subscript_orig_vars:
+                if orig_var in gm.ancestors_unsort(list(set(subscript_orig_vars)-orig_var)):
+                    subscript_orig_vars.remove(orig_var)
+
+            nxt_gamma = []
+
+
             gamma_new = []  # todo: determine what gamma_new should be
             nxt = None
 
