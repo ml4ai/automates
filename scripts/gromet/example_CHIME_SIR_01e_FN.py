@@ -282,6 +282,72 @@ def generate_gromet() -> Gromet:
              src=UidPort("P:main_loop_1_p_idx_exp.out.p_idx"),
              tgt=UidPort("PC:main_loop_1.out.p_idx")),
 
+        Wire(uid=UidWire("W:main_loop_1.in.p_idx>main_loop_1_dtime_exp.in.p_idx"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_loop_1.in.p_idx"),
+             tgt=UidPort("P:main_loop_1_dtime_exp.in.p_idx")),
+
+        Wire(uid=UidWire("W:main_loop_1_dtime_exp.out.doubling_time>main_loop_1_call_growth_rate_exp.in.doubling_time"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_loop_1_dtime_exp.out.doubling_time"),
+             tgt=UidPort("PC:main_loop_1_call_growth_rate_exp.in.doubling_time")),
+
+        # -- called functions
+
+        # TODO: replace with Conditional
+        Wire(uid=UidWire("W:get_growth_rate.in.doubling_time>get_growth_rate.out.growth_rate"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_growth_rate.in.doubling_time"),
+             tgt=UidPort("P:get_growth_rate.out.growth_rate")),
+
+        Wire(uid=UidWire("W:get_beta.in.intrinsic_growth_rate>get_beta_updated_growth_rate_expr.in.intrinsic_growth_rate"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_beta.in.intrinsic_growth_rate"),
+             tgt=UidPort("P:get_beta_updated_growth_rate_expr.in.intrinsic_growth_rate")),
+        Wire(uid=UidWire("W:get_beta.in.gamma>get_beta_updated_growth_rate_expr.in.gamma"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_beta.in.gamma"),
+             tgt=UidPort("P:get_beta_updated_growth_rate_expr.in.gamma")),
+        Wire(uid=UidWire("W:get_beta_updated_growth_rate_expr.out.updated_growth_rate>get_beta_betas_exp.in.updated_growth_rate"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_beta_updated_growth_rate_expr.out.updated_growth_rate"),
+             tgt=UidPort("P:get_beta_betas_exp.in.updated_growth_rate")),
+        Wire(uid=UidWire("W:get_beta.in.susceptible>get_beta_betas_exp.in.susceptible"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_beta.in.susceptible"),
+             tgt=UidPort("P:get_beta_betas_exp.in.susceptible")),
+        Wire(uid=UidWire("W:get_beta.in.relative_contact_rate>get_beta_inv_contact_rate_exp.in.relative_contact_rate"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_beta.in.relative_contact_rate"),
+             tgt=UidPort("P:get_beta_inv_contact_rate_exp.in.relative_contact_rate")),
+        Wire(uid=UidWire("W:get_beta_inv_contact_rate_exp.out.inv_contact_rate>get_beta_betas_exp.in.inv_contact_rate"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_beta_inv_contact_rate_exp.out.inv_contact_rate"),
+             tgt=UidPort("P:get_beta_betas_exp.in.inv_contact_rate")),
+        Wire(uid=UidWire("W:get_beta_betas_exp.out.beta>get_beta.out.beta"),
+             type=None,
+             value_type=UidType("Float"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:get_beta_betas_exp.out.beta"),
+             tgt=UidPort("P:get_beta.out.beta")),
     ]
 
     wires_simsir = [
@@ -1054,6 +1120,152 @@ def generate_gromet() -> Gromet:
              name="p_idx",
              value=None, metadata=None),
 
+        # main_loop_1_dtime_exp in
+        Port(uid=UidPort("P:main_loop_1_dtime_exp.in.p_idx"),
+             box=UidBox("B:main_loop_1_dtime_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="p_idx",
+             value=None, metadata=None),
+        # main_loop_1_dtime_exp out
+        Port(uid=UidPort("P:main_loop_1_dtime_exp.out.doubling_time"),
+             box=UidBox("B:main_loop_1_dtime_exp"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="doubling_time",
+             value=None, metadata=None),
+
+        # main_loop_1_call_growth_rate_exp in
+        PortCall(uid=UidPort("PC:main_loop_1_call_growth_rate_exp.in.doubling_time"),
+                 call=UidPort("P:get_growth_rate.in.doubling_time"),
+                 box=UidBox("B:main_loop_1_call_growth_rate_exp"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name="doubling_time",
+                 value=None,
+                 metadata=None),
+        # main_loop_1_call_growth_rate_exp out
+        PortCall(uid=UidPort("PC:main_loop_1_call_growth_rate_exp.out.growth_rate"),
+                 call=UidPort("P:get_growth_rate.out.growth_rate"),
+                 box=UidBox("B:main_loop_1_call_growth_rate_exp"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name="growth_rate",
+                 value=None,
+                 metadata=None),
+
+        # -- called functions
+
+        # get_growth_rate in
+        Port(uid=UidPort("P:get_growth_rate.in.doubling_time"),
+             box=UidBox("B:get_growth_rate"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="doubling_time",
+             value=None, metadata=None),
+        # get_growth_rate out
+        Port(uid=UidPort("P:get_growth_rate.out.growth_rate"),
+             box=UidBox("B:get_growth_rate"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="growth_rate",
+             value=None, metadata=None),
+
+        # get_beta in
+        Port(uid=UidPort("P:get_beta.in.intrinsic_growth_rate"),
+             box=UidBox("B:get_beta"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="intrinsic_growth_rate",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:get_beta.in.gamma"),
+             box=UidBox("B:get_beta"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="gamma",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:get_beta.in.susceptible"),
+             box=UidBox("B:get_beta"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="susceptible",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:get_beta.in.relative_contact_rate"),
+             box=UidBox("B:get_beta"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="relative_contact_rate",
+             value=None, metadata=None),
+        # get_beta out
+        Port(uid=UidPort("P:get_beta.out.beta"),
+             box=UidBox("B:get_beta"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="beta",
+             value=None, metadata=None),
+
+        # get_beta_updated_growth_rate_expr in
+        Port(uid=UidPort("P:get_beta_updated_growth_rate_expr.in.intrinsic_growth_rate"),
+             box=UidBox("B:get_beta_updated_growth_rate_expr"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="intrinsic_growth_rate",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:get_beta_updated_growth_rate_expr.in.gamma"),
+             box=UidBox("B:get_beta_updated_growth_rate_expr"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="gamma",
+             value=None, metadata=None),
+        # get_beta_updated_growth_rate_expr out
+        Port(uid=UidPort("P:get_beta_updated_growth_rate_expr.out.updated_growth_rate"),
+             box=UidBox("B:get_beta_updated_growth_rate_expr"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="updated_growth_rate",
+             value=None, metadata=None),
+
+        # get_beta_inv_contact_rate_exp in
+        Port(uid=UidPort("P:get_beta_inv_contact_rate_exp.in.relative_contact_rate"),
+             box=UidBox("B:get_beta_inv_contact_rate_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="relative_contact_rate",
+             value=None, metadata=None),
+        # get_beta_inv_contact_rate_exp out
+        Port(uid=UidPort("P:get_beta_inv_contact_rate_exp.out.inv_contact_rate"),
+             box=UidBox("B:get_beta_inv_contact_rate_exp"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="inv_contact_rate",
+             value=None, metadata=None),
+
+        # get_beta_betas_exp in
+        Port(uid=UidPort("P:get_beta_betas_exp.in.updated_growth_rate"),
+             box=UidBox("B:get_beta_betas_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="updated_growth_rate",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:get_beta_betas_exp.in.susceptible"),
+             box=UidBox("B:get_beta_betas_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="susceptible",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:get_beta_betas_exp.in.inv_contact_rate"),
+             box=UidBox("B:get_beta_betas_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="inv_contact_rate",
+             value=None, metadata=None),
+        # get_beta_betas_exp out
+        Port(uid=UidPort("P:get_beta_betas_exp.out.beta"),
+             box=UidBox("B:get_beta_betas_exp"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="beta",
+             value=None, metadata=None),
     ]
 
     ports_simsir = [
@@ -2698,6 +2910,7 @@ def generate_gromet() -> Gromet:
                     UidPort("PC:main_call_simsir.out.r_n"),
                 ],
                 metadata=None)
+
     # main_gamma_exp
     main_gamma_exp_e0 = \
         Expr(call=RefOp(UidOp('/')),
@@ -2779,6 +2992,148 @@ def generate_gromet() -> Gromet:
                    tree=main_loop_1_p_idx_exp_e0,
                    metadata=None)
 
+    # -- main_loop_1 body
+
+    # get_growth_rate
+    get_growth_rate = \
+        Function(uid=UidBox("B:get_growth_rate"),
+                 type=None,
+                 name=UidOp("get_growth_rate"),
+                 ports=[
+                     UidPort("P:get_growth_rate.in.doubling_time"),
+                     UidPort("P:get_growth_rate.out.growth_rate"),
+                 ],
+
+                 # contents
+                 junctions=None,
+                 wires=[
+                     UidWire("W:get_growth_rate.in.doubling_time>get_growth_rate.out.growth_rate")
+                 ],
+                 boxes=None,
+
+                 metadata=None)
+
+    # main_loop_1_call_growth_rate_exp
+    main_loop_1_call_growth_rate_exp = \
+        BoxCall(uid=UidBox("B:main_loop_1_call_growth_rate_exp"),
+                type=None,
+                name=None,
+                call=UidBox("B:get_growth_rate"),
+                ports=[
+                    UidPort("PC:main_loop_1_call_growth_rate_exp.in.doubling_time"),
+                    UidPort("PC:main_loop_1_call_growth_rate_exp.out.growth_rate")
+                ],
+                metadata=None)
+
+    # main_loop_1_dtime_exp
+    main_loop_1_dtime_exp_e0 = \
+        Expr(call=RefOp(UidOp('+')),
+             args=[UidPort("P:main_loop_1_dtime_exp.in.p_idx"),
+                   Literal(uid=None,
+                           type=UidType('Float'),
+                           value=Val('1.0'),
+                           name=None, metadata=None)])
+    main_loop_1_dtime_exp_e1 = \
+        Expr(call=RefOp(UidOp('*')),
+             args=[main_loop_1_dtime_exp_e0,
+                   Literal(uid=None,
+                           type=UidType('Float'),
+                           value=Val('5.0'),
+                           name=None, metadata=None)])
+    main_loop_1_dtime_exp = \
+        Expression(uid=UidBox("B:main_loop_1_dtime_exp"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:main_loop_1_dtime_exp.in.p_idx"),
+                          UidPort("P:main_loop_1_dtime_exp.out.doubling_time")],
+                   tree=main_loop_1_dtime_exp_e1,
+                   metadata=None)
+
+    # -- get_beta
+
+    # get_beta_updated_growth_rate_expr
+    get_beta_updated_growth_rate_expr_e0 = \
+        Expr(call=RefOp(UidOp('+')),
+             args=[UidPort("P:get_beta_updated_growth_rate_expr.in.intrinsic_growth_rate"),
+                   UidPort("P:get_beta_updated_growth_rate_expr.in.gamma"),])
+    get_beta_updated_growth_rate_expr = \
+        Expression(uid=UidBox("B:get_beta_updated_growth_rate_expr"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:get_beta_updated_growth_rate_expr.in.intrinsic_growth_rate"),
+                          UidPort("P:get_beta_updated_growth_rate_expr.in.gamma"),
+                          UidPort("P:get_beta_updated_growth_rate_expr.out.updated_growth_rate"),],
+                   tree=get_beta_updated_growth_rate_expr_e0,
+                   metadata=None)
+
+    # get_beta_inv_contact_rate_exp
+    get_beta_inv_contact_rate_exp_e0 = \
+        Expr(call=RefOp(UidOp('-')),
+             args=[Literal(uid=None,
+                           type=UidType('Float'),
+                           value=Val('1.0'),
+                           name=None, metadata=None),
+                   UidPort("P:get_beta_inv_contact_rate_exp.in.relative_contact_rate")])
+    get_beta_inv_contact_rate_exp = \
+        Expression(uid=UidBox("B:get_beta_inv_contact_rate_exp"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:get_beta_inv_contact_rate_exp.in.relative_contact_rate"),
+                          UidPort("P:get_beta_inv_contact_rate_exp.out.inv_contact_rate")],
+                   tree=get_beta_inv_contact_rate_exp_e0,
+                   metadata=None)
+
+    # get_beta_betas_exp
+    get_beta_betas_exp_e0 = \
+        Expr(call=RefOp(UidOp('/')),
+             args=[UidPort("P:get_beta_betas_exp.in.updated_growth_rate"),
+                   UidPort("P:get_beta_betas_exp.in.susceptible")])
+    get_beta_betas_exp_e1 = \
+        Expr(call=RefOp(UidOp('*')),
+             args=[get_beta_betas_exp_e0,
+                   UidPort("P:get_beta_betas_exp.in.inv_contact_rate")])
+    get_beta_betas_exp = \
+        Expression(uid=UidBox("B:get_beta_betas_exp"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:get_beta_betas_exp.in.updated_growth_rate"),
+                          UidPort("P:get_beta_betas_exp.in.susceptible"),
+                          UidPort("P:get_beta_betas_exp.in.inv_contact_rate"),
+                          UidPort("P:get_beta_betas_exp.out.beta")],
+                   tree=get_beta_betas_exp_e1,
+                   metadata=None)
+
+    get_beta = \
+        Function(uid=UidBox("B:get_beta"),
+                 type=None,
+                 name=UidOp("get_beta"),
+                 ports=[
+                     UidPort("P:get_beta.in.intrinsic_growth_rate"),
+                     UidPort("P:get_beta.in.gamma"),
+                     UidPort("P:get_beta.in.susceptible"),
+                     UidPort("P:get_beta.in.relative_contact_rate"),
+                     UidPort("P:get_beta.out.beta")
+                 ],
+
+                 # contents
+                 junctions=None,
+                 wires=[
+                     UidWire("W:get_beta.in.intrinsic_growth_rate>get_beta_updated_growth_rate_expr.in.intrinsic_growth_rate"),
+                     UidWire("W:get_beta.in.gamma>get_beta_updated_growth_rate_expr.in.gamma"),
+                     UidWire("W:get_beta_updated_growth_rate_expr.out.updated_growth_rate>get_beta_betas_exp.in.updated_growth_rate"),
+                     UidWire("W:get_beta.in.susceptible>get_beta_betas_exp.in.susceptible"),
+                     UidWire("W:get_beta.in.relative_contact_rate>get_beta_inv_contact_rate_exp.in.relative_contact_rate"),
+                     UidWire("W:get_beta_inv_contact_rate_exp.out.inv_contact_rate>get_beta_betas_exp.in.inv_contact_rate"),
+                     UidWire("W:get_beta_betas_exp.out.beta>get_beta.out.beta")
+                 ],
+                 boxes=[
+                     UidBox("B:get_beta_updated_growth_rate_expr"),
+                     UidBox("B:get_beta_inv_contact_rate_exp"),
+                     UidBox("B:get_beta_betas_exp")
+                 ],
+
+                 metadata=None)
+
     main_loop_1 = \
         Loop(uid=UidBox("B:main_loop_1"),
              type=None,
@@ -2804,11 +3159,22 @@ def generate_gromet() -> Gromet:
                  UidWire("W:main_loop_1.in.p_idx>main_loop_1_p_idx_exp.in.p_idx"),
                  UidWire("W:main_loop_1_p_idx_exp.out.p_idx>main_loop_1.out.p_idx"),
                  # main_loop_1 body
+                 UidWire("W:main_loop_1.in.p_idx>main_loop_1_dtime_exp.in.p_idx"),
+                 UidWire("W:main_loop_1_dtime_exp.out.doubling_time>main_loop_1_call_growth_rate_exp.in.doubling_time"),
+
              ],
              boxes=[
                  # control
                  UidBox("B:main_loop_1_p_idx_exp"),
                  # body
+                 UidBox("B:main_loop_1_dtime_exp"),
+                 UidBox("B:main_loop_1_call_growth_rate_exp"),
+
+                 UidBox("B:get_beta"), # TODO !!! TEMPORARY !!! remove once call_get_beta is in
+
+                 # todo main_loop_1_call_get_beta
+                 # todo main_loop_1_pbetas_exp
+                 # todo main_loop_1_pdays_exp
              ],
 
              metadata=None)
@@ -2863,7 +3229,12 @@ def generate_gromet() -> Gromet:
     boxes = [main,
              main_gamma_exp, main_pbetas_seq, main_pdays_seq,
              main_loop_1, main_loop_1_cond, main_loop_1_p_idx_exp,
+             main_loop_1_dtime_exp, main_loop_1_call_growth_rate_exp,
              main_call_simsir,
+
+             get_growth_rate,
+             get_beta,
+             get_beta_updated_growth_rate_expr, get_beta_inv_contact_rate_exp, get_beta_betas_exp,
 
              simsir,
              simsir_n_exp,
