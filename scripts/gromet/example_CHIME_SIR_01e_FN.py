@@ -12,7 +12,7 @@ def generate_gromet() -> Gromet:
         ModelDescription(uid=UidMetadatum('chime_model_description'),
                          provenance=Provenance(method=MetadatumMethod('Manual_claytonm@az'),
                                                timestamp=get_current_datetime()),
-                         name='CHIME v01d [SIR dynamics + loop_1_1 + loop_1 + sim_sir]',
+                         name='CHIME v01e [SIR dynamics + loop_1_1 + loop_1 + sim_sir + main]',
                          description='The CHIME (COVID-19 Hospital Impact Model for Epidemics) App '
                                      'is designed to assist hospitals and public health officials '
                                      'understand hospital capacity needs as they relate to the '
@@ -160,6 +160,128 @@ def generate_gromet() -> Gromet:
                          UidWire("W:sir_r_exp.r>sir.r_out"),
                          UidPort("P:sir.r_out")],
                  metadata=None)
+    ]
+
+    wires_main = [
+
+        # main <body>
+
+        Wire(uid=UidWire("W:main.s_n>main_call_simsir.in.s_n"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidJunction("J:main.s_n"),
+             tgt=UidPort("PC:main_call_simsir.in.s_n")),
+        Wire(uid=UidWire("W:main.i_n>main_call_simsir.in.i_n"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidJunction("J:main.i_n"),
+             tgt=UidPort("PC:main_call_simsir.in.i_n")),
+        Wire(uid=UidWire("W:main.r_n>main_call_simsir.in.r_n"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidJunction("J:main.r_n"),
+             tgt=UidPort("PC:main_call_simsir.in.r_n")),
+
+        # TODO Wire
+        # UidPort("PC:main_loop_1.out.policys_betas")  # todo create
+        # UidPort("PC:main_call_simsir.in.betas")
+
+        Wire(uid=UidWire("W:main.infections_days>main_gamma_exp.in.infections_days"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidJunction("J:main.infections_days"),
+             tgt=UidPort("P:main_gamma_exp.in.infections_days"),),
+
+        Wire(uid=UidWire("W:main_gamma_exp.out.gamma>main_call_simsir.in.gamma"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_gamma_exp.out.gamma"),
+             tgt=UidPort("PC:main_call_simsir.in.gamma")),
+
+        # TODO Wire
+        # UidPort("P:main_gamma_exp.out.gamma")
+        # UidPort("P:main_loop_1.in.gamma")  # todo create
+
+        Wire(uid=UidWire("W:main.N_p>main_call_simsir.in.N_p"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("J:main.N_p"),
+             tgt=UidPort("PC:main_call_simsir.in.N_p")),
+        Wire(uid=UidWire("W:main.N_p>main_pbetas_seq.in.size"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("J:main.N_p"),
+             tgt=UidPort("P:main_pbetas_seq.in.size")),
+        Wire(uid=UidWire("W:main.N_p>main_pdays_seq.in.size"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("J:main.N_p"),
+             tgt=UidPort("P:main_pdays_seq.in.size")),
+        Wire(uid=UidWire("W:main.p_idx>main_loop_1.in.p_idx"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidJunction("J:main.p_idx"),
+             tgt=UidPort("P:main_loop_1.in.p_idx")),
+        Wire(uid=UidWire("W:main.N_p>main_loop_1.in.N_p"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("J:main.N_p"),
+             tgt=UidPort("P:main_loop_1.in.N_p")),
+
+        # TODO Wire
+        # UidPort("P:main_pbetas_seq.out.policys_betas"),
+        # UidPort("P:main_loop_1.in.policys_betas")  # todo create
+
+        # TODO Wire
+        # UidPort("P:main_pdays_seq.out.policy_days")
+        # UidPort("P:main_loop_1.in.policy_days")  # todo create
+
+        Wire(uid=UidWire("W:main_pdays_seq.out.policy_days>main_call_simsir.in.days"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_pdays_seq.out.policy_days"),
+             tgt=UidPort("PC:main_call_simsir.in.days")),
+
+    ]
+
+    wires_main_loop_1 = [
+
+        Wire(uid=UidWire("W:main_loop_1.in.p_idx>main_loop_1_cond.in.p_idx"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_loop_1.in.p_idx"),
+             tgt=UidPort("P:main_loop_1_cond.in.p_idx")),
+        Wire(uid=UidWire("W:main_loop_1.in.N_p>main_loop_1_cond.in.N_p"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_loop_1.in.N_p"),
+             tgt=UidPort("P:main_loop_1_cond.in.N_p")),
+        Wire(uid=UidWire("W:main_loop_1.in.p_idx>main_loop_1_p_idx_exp.in.p_idx"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_loop_1.in.p_idx"),
+             tgt=UidPort("P:main_loop_1_p_idx_exp.in.p_idx")),
+        Wire(uid=UidWire("W:main_loop_1_p_idx_exp.out.p_idx>main_loop_1.out.p_idx"),
+             type=None,
+             value_type=UidType("Integer"),
+             name=None, value=None, metadata=None,
+             src=UidPort("P:main_loop_1_p_idx_exp.out.p_idx"),
+             tgt=UidPort("PC:main_loop_1.out.p_idx")),
+
     ]
 
     wires_simsir = [
@@ -555,12 +677,12 @@ def generate_gromet() -> Gromet:
              tgt=UidPort("PC:simsir_loop_1_1.out.r")),
 
         # todo: Rewire when updating simsir
-        Wire(uid=UidWire("W:simsir_loop_1_1_call_sir_exp.out.s>simsir.out.s"),
-             type=None,
-             value_type=UidType("Float"),
-             name=None, value=None, metadata=None,
-             src=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),  # UidPort("P:sir.s_out"),
-             tgt=UidPort("P:simsir.out.s")),
+        # Wire(uid=UidWire("W:simsir_loop_1_1_call_sir_exp.out.s>simsir.out.s"),
+        #      type=None,
+        #      value_type=UidType("Float"),
+        #      name=None, value=None, metadata=None,
+        #      src=UidPort("PC:simsir_loop_1_1_call_sir_exp.out.s"),  # UidPort("P:sir.s_out"),
+        #      tgt=UidPort("P:simsir.out.s")),
     ]
 
     wires_sir = [
@@ -710,6 +832,228 @@ def generate_gromet() -> Gromet:
              name=None, value=None, metadata=None,
              src=UidPort("P:sir_r_exp.r"),
              tgt=UidPort("P:sir.r_out"))
+    ]
+
+    ports_main = [
+
+        # main_gamma_exp in
+        Port(uid=UidPort("P:main_gamma_exp.in.infections_days"),
+             box=UidBox("B:main_gamma_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Float"),
+             name="infections_days",
+             value=None, metadata=None),
+        # main_gamma_exp out
+        Port(uid=UidPort("P:main_gamma_exp.out.gamma"),
+             box=UidBox("B:main_gamma_exp"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Float"),
+             name="gamma",
+             value=None, metadata=None),
+
+        # main_pbetas_seq in
+        Port(uid=UidPort("P:main_pbetas_seq.in.fill"),
+             box=UidBox("B:main_pbetas_seq"),
+             type=UidType("PortInput"),
+             value_type=UidType("Any"),
+             name="fill",
+             value=Literal(uid=None,
+                           type=UidType('Float'),
+                           value=Val('0.0'),
+                           name=None, metadata=None),
+             metadata=None),
+        Port(uid=UidPort("P:main_pbetas_seq.in.size"),
+             box=UidBox("B:main_pbetas_seq"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="size",
+             value=None, metadata=None),
+        # main_pbetas_seq out
+        Port(uid=UidPort("P:main_pbetas_seq.out.policys_betas"),
+             box=UidBox("B:main_pbetas_seq"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Sequence"),
+             name="policys_betas",
+             value=None, metadata=None),
+
+        # main_pdays_seq in
+        Port(uid=UidPort("P:main_pdays_seq.in.fill"),
+             box=UidBox("B:main_pdays_seq"),
+             type=UidType("PortInput"),
+             value_type=UidType("Any"),
+             name="fill",
+             value=Literal(uid=None,
+                           type=UidType('Integer'),
+                           value=Val('0'),
+                           name=None, metadata=None),
+             metadata=None),
+        Port(uid=UidPort("P:main_pdays_seq.in.size"),
+             box=UidBox("B:main_pdays_seq"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="size",
+             value=None, metadata=None),
+        # main_pdays_seq out
+        Port(uid=UidPort("P:main_pdays_seq.out.policy_days"),
+             box=UidBox("B:main_pdays_seq"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Sequence"),
+             name="policy_days",
+             value=None, metadata=None),
+
+        # main_call_simsir in
+        PortCall(uid=UidPort("PC:main_call_simsir.in.s_n"),
+                 call=UidPort("P:simsir.in.s"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name="s_n",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.in.i_n"),
+                 call=UidPort("P:simsir.in.i"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name="i_n",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.in.r_n"),
+                 call=UidPort("P:simsir.in.r"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name="r_n",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.in.betas"),
+                 call=UidPort("P:simsir.in.betas"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Sequence"),
+                 name="betas",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.in.gamma"),
+                 call=UidPort("P:simsir.in.gamma"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Float"),
+                 name="gamma",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.in.days"),
+                 call=UidPort("P:simsir.in.days"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Sequence"),
+                 name="days",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.in.N_p"),
+                 call=UidPort("P:simsir.in.N_p"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortInput"),
+                 value_type=UidType("Integer"),
+                 name="N_p",
+                 value=None,
+                 metadata=None),
+        # main_call_simsir out
+        PortCall(uid=UidPort("PC:main_call_simsir.out.s_n"),
+                 call=UidPort("P:simsir.out.s"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name="s_n",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.out.i_n"),
+                 call=UidPort("P:simsir.out.i"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name="i_n",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_call_simsir.out.r_n"),
+                 call=UidPort("P:simsir.out.r"),
+                 box=UidBox("B:main_call_simsir"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Float"),
+                 name="r_n",
+                 value=None,
+                 metadata=None),
+    ]
+
+    ports_main_loop_1 = [
+
+        # main_loop_1 in
+        Port(uid=UidPort("P:main_loop_1.in.p_idx"),
+             box=UidBox("B:main_loop_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="p_idx",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:main_loop_1.in.N_p"),
+             box=UidBox("B:main_loop_1"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="N_p",
+             value=None, metadata=None),
+        # main_loop_1 out
+        PortCall(uid=UidPort("PC:main_loop_1.out.p_idx"),
+                 call=UidPort("P:main_loop_1.in.p_idx"),
+                 box=UidBox("B:main_loop_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="p_idx",
+                 value=None,
+                 metadata=None),
+        PortCall(uid=UidPort("PC:main_loop_1.out.N_p"),
+                 call=UidPort("P:main_loop_1.in.N_p"),
+                 box=UidBox("B:main_loop_1"),
+                 type=UidType("PortOutput"),
+                 value_type=UidType("Integer"),
+                 name="N_p",
+                 value=None,
+                 metadata=None),
+
+        # main_loop_1_cond in
+        Port(uid=UidPort("P:main_loop_1_cond.in.p_idx"),
+             box=UidBox("B:main_loop_1_cond"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="p_idx",
+             value=None, metadata=None),
+        Port(uid=UidPort("P:main_loop_1_cond.in.N_p"),
+             box=UidBox("B:main_loop_1_cond"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="N_p",
+             value=None, metadata=None),
+        # main_loop_1_cond out
+        Port(uid=UidPort("P:main_loop_1_cond.out.exit"),
+             box=UidBox("B:main_loop_1_cond"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Boolean"),
+             name="Exit",
+             value=None, metadata=None),
+
+        # main_loop_1_p_idx_exp in
+        Port(uid=UidPort("P:main_loop_1_p_idx_exp.in.p_idx"),
+             box=UidBox("B:main_loop_1_p_idx_exp"),
+             type=UidType("PortInput"),
+             value_type=UidType("Integer"),
+             name="N_p",
+             value=None, metadata=None),
+        # main_loop_1_p_idx_exp out
+        Port(uid=UidPort("P:main_loop_1_p_idx_exp.out.p_idx"),
+             box=UidBox("B:main_loop_1_p_idx_exp"),
+             type=UidType("PortOutput"),
+             value_type=UidType("Integer"),
+             name="p_idx",
+             value=None, metadata=None),
+
     ]
 
     ports_simsir = [
@@ -1624,6 +1968,81 @@ def generate_gromet() -> Gromet:
              value=None, metadata=None),
     ]
 
+    junctions_main = [
+        Junction(uid=UidJunction("J:main.s_n"),
+                 name='s_n',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Integer'),
+                               value=Val('1000'),
+                               name=None, metadata=None),
+                 value_type=UidType('Integer'),
+                 metadata=None),
+        Junction(uid=UidJunction("J:main.i_n"),
+                 name='i_n',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Integer'),
+                               value=Val('1'),
+                               name=None, metadata=None),
+                 value_type=UidType('Integer'),
+                 metadata=None),
+        Junction(uid=UidJunction("J:main.r_n"),
+                 name='r_n',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Integer'),
+                               value=Val('1'),
+                               name=None, metadata=None),
+                 value_type=UidType('Integer'),
+                 metadata=None),
+        Junction(uid=UidJunction("J:main.N_p"),
+                 name='N_p',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Integer'),
+                               value=Val('3'),
+                               name=None, metadata=None),
+                 value_type=UidType('Integer'),
+                 metadata=None),
+        Junction(uid=UidJunction("J:main.infections_days"),
+                 name='infections_days',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Float'),
+                               value=Val('14.0'),
+                               name=None, metadata=None),
+                 value_type=UidType('Float'),
+                 metadata=None),
+        Junction(uid=UidJunction("J:main.relative_contact_rate"),
+                 name='relative_contact_rate',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Float'),
+                               value=Val('0.05'),
+                               name=None, metadata=None),
+                 value_type=UidType('Float'),
+                 metadata=None),
+        Junction(uid=UidJunction("J:main.n_days"),
+                 name='n_days',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Integer'),
+                               value=Val('20'),
+                               name=None, metadata=None),
+                 value_type=UidType('Integer'),
+                 metadata=None),
+        Junction(uid=UidJunction("J:main.p_idx"),
+                 name='p_idx',
+                 type=None,
+                 value=Literal(uid=None,
+                               type=UidType('Integer'),
+                               value=Val('1000'),
+                               name=None, metadata=None),
+                 value_type=UidType('Integer'),
+                 metadata=None),
+    ]
+
     junctions_simsir = [
         Junction(uid=UidJunction("J:simsir.loop_1_i"),
                  name='loop_1_i',
@@ -2032,7 +2451,7 @@ def generate_gromet() -> Gromet:
     simsir = \
         Function(uid=UidBox("B:simsir"),
                  type=None,
-                 name=UidOp("sim_sir-d"),  # todo
+                 name=UidOp("sim_sir"),  # todo
                  ports=[
                      UidPort("P:simsir.in.s"),
                      UidPort("P:simsir.in.i"),
@@ -2209,61 +2628,244 @@ def generate_gromet() -> Gromet:
                            metadata=None)
 
     # Function sir
-    sir = Function(uid=UidBox("B:sir"),
+    sir = \
+        Function(uid=UidBox("B:sir"),
+                 type=None,
+                 name=UidOp("sir"),
+                 ports=[UidPort("P:sir.n"),
+                        UidPort("P:sir.beta"),
+                        UidPort("P:sir.gamma"),
+                        UidPort("P:sir.s_in"),
+                        UidPort("P:sir.i_in"),
+                        UidPort("P:sir.r_in"),
+                        UidPort("P:sir.s_out"),
+                        UidPort("P:sir.i_out"),
+                        UidPort("P:sir.r_out")],
+
+                 # contents
+                 wires=[UidWire("W:sir.n>sir_scale_exp.n"),
+                        UidWire("W:sir.beta>sir_s_n_exp.beta"),
+                        UidWire("W:sir.beta>sir_i_n_exp.beta"),
+                        UidWire("W:sir.gamma>sir_i_n_exp.gamma"),
+                        UidWire("W:sir.gamma>sir_r_n_exp.gamma"),
+                        UidWire("W:sir.s_in>sir_s_n_exp.s"),
+                        UidWire("W:sir.s_in>sir_i_n_exp.s"),
+                        UidWire("W:sir.i_in>sir_s_n_exp.i"),
+                        UidWire("W:sir.i_in>sir_i_n_exp.i"),
+                        UidWire("W:sir.i_in>sir_r_n_exp.i"),
+                        UidWire("W:sir.r_in>sir_r_n_exp.r"),
+                        UidWire("W:sir_s_n_exp.s_n>sir_scale_exp.s_n"),
+                        UidWire("W:sir_s_n_exp.s_n>sir_s_exp.s_n"),
+                        UidWire("W:sir_i_n_exp.i_n>sir_scale_exp.i_n"),
+                        UidWire("W:sir_i_n_exp.i_n>sir_i_exp.i_n"),
+                        UidWire("W:sir_r_n_exp.r_n>sir_scale_exp.r_n"),
+                        UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
+                        UidWire("W:sir_scale_exp.scale>sir_s_exp.scale"),
+                        UidWire("W:sir_scale_exp.scale>sir_i_exp.scale"),
+                        UidWire("W:sir_scale_exp.scale>sir_r_exp.scale"),
+                        UidWire("W:sir_s_exp.s>sir.s_out"),
+                        UidWire("W:sir_i_exp.i>sir.i_out"),
+                        UidWire("W:sir_r_exp.r>sir.r_out")],
+                 boxes=[UidBox("B:sir_s_n_exp"),
+                        UidBox("B:sir_i_n_exp"),
+                        UidBox("B:sir_r_n_exp"),
+                        UidBox("B:sir_scale_exp"),
+                        UidBox("B:sir_s_exp"),
+                        UidBox("B:sir_i_exp"),
+                        UidBox("B:sir_r_exp")],
+                 junctions=None,
+
+                 metadata=None)
+
+    # -- main() --
+
+    # main_call_simsir
+    main_call_simsir = \
+        BoxCall(uid=UidBox("B:main_call_simsir"),
+                type=None,
+                name=None,
+                call=UidBox("B:simsir"),
+                ports=[
+                    UidPort("PC:main_call_simsir.in.s_n"),
+                    UidPort("PC:main_call_simsir.in.i_n"),
+                    UidPort("PC:main_call_simsir.in.r_n"),
+                    UidPort("PC:main_call_simsir.in.betas"),
+                    UidPort("PC:main_call_simsir.in.gamma"),
+                    UidPort("PC:main_call_simsir.in.days"),
+                    UidPort("PC:main_call_simsir.in.N_p"),
+                    UidPort("PC:main_call_simsir.out.s_n"),
+                    UidPort("PC:main_call_simsir.out.i_n"),
+                    UidPort("PC:main_call_simsir.out.r_n"),
+                ],
+                metadata=None)
+    # main_gamma_exp
+    main_gamma_exp_e0 = \
+        Expr(call=RefOp(UidOp('/')),
+             args=[Literal(uid=None,
+                           type=UidType('Float'),
+                           value=Val('1.0'),
+                           name=None, metadata=None),
+                   UidPort("P:main_gamma_exp.in.infections_days")])
+    main_gamma_exp = \
+        Expression(uid=UidBox("B:main_gamma_exp"),
                    type=None,
-                   name=UidOp("sir"),
-                   ports=[UidPort("P:sir.n"),
-                          UidPort("P:sir.beta"),
-                          UidPort("P:sir.gamma"),
-                          UidPort("P:sir.s_in"),
-                          UidPort("P:sir.i_in"),
-                          UidPort("P:sir.r_in"),
-                          UidPort("P:sir.s_out"),
-                          UidPort("P:sir.i_out"),
-                          UidPort("P:sir.r_out")],
-
-                   # contents
-                   wires=[UidWire("W:sir.n>sir_scale_exp.n"),
-                          UidWire("W:sir.beta>sir_s_n_exp.beta"),
-                          UidWire("W:sir.beta>sir_i_n_exp.beta"),
-                          UidWire("W:sir.gamma>sir_i_n_exp.gamma"),
-                          UidWire("W:sir.gamma>sir_r_n_exp.gamma"),
-                          UidWire("W:sir.s_in>sir_s_n_exp.s"),
-                          UidWire("W:sir.s_in>sir_i_n_exp.s"),
-                          UidWire("W:sir.i_in>sir_s_n_exp.i"),
-                          UidWire("W:sir.i_in>sir_i_n_exp.i"),
-                          UidWire("W:sir.i_in>sir_r_n_exp.i"),
-                          UidWire("W:sir.r_in>sir_r_n_exp.r"),
-                          UidWire("W:sir_s_n_exp.s_n>sir_scale_exp.s_n"),
-                          UidWire("W:sir_s_n_exp.s_n>sir_s_exp.s_n"),
-                          UidWire("W:sir_i_n_exp.i_n>sir_scale_exp.i_n"),
-                          UidWire("W:sir_i_n_exp.i_n>sir_i_exp.i_n"),
-                          UidWire("W:sir_r_n_exp.r_n>sir_scale_exp.r_n"),
-                          UidWire("W:sir_r_n_exp.r_n>sir_r_exp.r_n"),
-                          UidWire("W:sir_scale_exp.scale>sir_s_exp.scale"),
-                          UidWire("W:sir_scale_exp.scale>sir_i_exp.scale"),
-                          UidWire("W:sir_scale_exp.scale>sir_r_exp.scale"),
-                          UidWire("W:sir_s_exp.s>sir.s_out"),
-                          UidWire("W:sir_i_exp.i>sir.i_out"),
-                          UidWire("W:sir_r_exp.r>sir.r_out")],
-                   boxes=[UidBox("B:sir_s_n_exp"),
-                          UidBox("B:sir_i_n_exp"),
-                          UidBox("B:sir_r_n_exp"),
-                          UidBox("B:sir_scale_exp"),
-                          UidBox("B:sir_s_exp"),
-                          UidBox("B:sir_i_exp"),
-                          UidBox("B:sir_r_exp")],
-                   junctions=None,
-
+                   name=None,
+                   ports=[UidPort("P:main_gamma_exp.in.infections_days"),
+                          UidPort("P:main_gamma_exp.out.gamma")],
+                   tree=main_gamma_exp_e0,
                    metadata=None)
 
-    wires = wires_simsir + wires_simsir_loop_1 + wires_simsir_loop_1_1 + wires_sir
+    # main_pbetas_seq
+    main_pbetas_seq_e0 = \
+        Expr(call=RefOp(UidOp('init_seq')),
+             args=[UidPort("P:main_pbetas_seq.in.fill"),
+                   UidPort("P:main_pbetas_seq.in.size")])
+    main_pbetas_seq = \
+        Expression(uid=UidBox("B:main_pbetas_seq"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:main_pbetas_seq.in.fill"),
+                          UidPort("P:main_pbetas_seq.in.size"),
+                          UidPort("P:main_pbetas_seq.out.policys_betas")],
+                   tree=main_pbetas_seq_e0,
+                   metadata=None)
 
-    ports = ports_simsir + ports_simsir_loop_1 + ports_simsir_loop_1_1 + ports_sir
+    # main_pdays_seq
+    main_pdays_seq_e0 = \
+        Expr(call=RefOp(UidOp('init_seq')),
+             args=[UidPort("P:main_pdays_seq.in.fill"),
+                   UidPort("P:main_pdays_seq.in.size")])
+    main_pdays_seq = \
+        Expression(uid=UidBox("B:main_pdays_seq"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:main_pdays_seq.in.fill"),
+                          UidPort("P:main_pdays_seq.in.size"),
+                          UidPort("P:main_pdays_seq.out.policy_days")],
+                   tree=main_pdays_seq_e0,
+                   metadata=None)
 
-    junctions = junctions_simsir + junctions_simsir_loop_1
+    # -- main_loop_1
 
-    boxes = [simsir,
+    # main_loop_1_cond
+    main_loop_1_cond_e0 = \
+        Expr(call=RefOp(UidOp('geq')),
+             args=[UidPort("P:main_loop_1_cond.in.p_idx"),
+                   UidPort("P:main_loop_1_cond.in.N_p")])
+    main_loop_1_cond = \
+        Predicate(uid=UidBox("B:main_loop_1_cond"),
+                  type=None,
+                  name=None,
+                  ports=[UidPort("P:main_loop_1_cond.in.p_idx"),
+                         UidPort("P:main_loop_1_cond.in.N_p"),
+                         UidPort("P:main_loop_1_cond.out.exit")],
+                  tree=main_loop_1_cond_e0,
+                  metadata=None)
+
+    # main_loop_1_p_idx_exp
+    main_loop_1_p_idx_exp_e0 = \
+        Expr(call=RefOp(UidOp('+')),
+             args=[UidPort("P:main_loop_1_p_idx_exp.in.p_idx"),
+                   Literal(uid=None,
+                           type=UidType('Integer'),
+                           value=Val('1'),
+                           name=None, metadata=None)])
+    main_loop_1_p_idx_exp = \
+        Expression(uid=UidBox("B:main_loop_1_p_idx_exp"),
+                   type=None,
+                   name=None,
+                   ports=[UidPort("P:main_loop_1_p_idx_exp.in.p_idx"),
+                          UidPort("P:main_loop_1_p_idx_exp.out.p_idx")],
+                   tree=main_loop_1_p_idx_exp_e0,
+                   metadata=None)
+
+    main_loop_1 = \
+        Loop(uid=UidBox("B:main_loop_1"),
+             type=None,
+             name=None,
+             ports=[
+                 # -- "control" loop ports
+                 UidPort("P:main_loop_1.in.p_idx"),
+                 UidPort("P:main_loop_1.in.N_p"),
+                 UidPort("PC:main_loop_1.out.p_idx"),
+                 UidPort("PC:main_loop_1.out.N_p"),
+                 # -- "body" loop inputs
+                 # -- "body" loop outputs
+             ],
+
+             exit_condition=UidBox("B:main_loop_1_cond"),
+
+             # contents
+             junctions=None,
+             wires=[
+                 # main_loop_1 control
+                 UidWire("W:main_loop_1.in.p_idx>main_loop_1_cond.in.p_idx"),
+                 UidWire("W:main_loop_1.in.N_p>main_loop_1_cond.in.N_p"),
+                 UidWire("W:main_loop_1.in.p_idx>main_loop_1_p_idx_exp.in.p_idx"),
+                 UidWire("W:main_loop_1_p_idx_exp.out.p_idx>main_loop_1.out.p_idx"),
+                 # main_loop_1 body
+             ],
+             boxes=[
+                 # control
+                 UidBox("B:main_loop_1_p_idx_exp"),
+                 # body
+             ],
+
+             metadata=None)
+
+    main = \
+        Function(uid=UidBox("B:main"),
+                 type=None,
+                 name=UidOp("main"),
+                 ports=[],
+
+                 # contents
+                 junctions=[
+                     UidJunction("J:main.s_n"),
+                     UidJunction("J:main.i_n"),
+                     UidJunction("J:main.r_n"),
+                     UidJunction("J:main.N_p"),
+                     UidJunction("J:main.infections_days"),
+                     UidJunction("J:main.relative_contact_rate"),
+                     UidJunction("J:main.n_days"),
+                     UidJunction("J:main.p_idx")
+                 ],
+                 wires=[
+                     UidWire("W:main.s_n>main_call_simsir.in.s_n"),
+                     UidWire("W:main.i_n>main_call_simsir.in.i_n"),
+                     UidWire("W:main.r_n>main_call_simsir.in.r_n"),
+                     UidWire("W:main_gamma_exp.out.gamma>main_call_simsir.in.gamma"),
+                     UidWire("W:main_pdays_seq.out.policy_days>main_call_simsir.in.days"),
+                     UidWire("W:main.N_p>main_call_simsir.in.N_p"),
+                     UidWire("W:main.N_p>main_pbetas_seq.in.size"),
+                     UidWire("W:main.N_p>main_pdays_seq.in.size"),
+                     UidWire("W:main.N_p>main_loop_1.in.N_p"),
+                     UidWire("W:main.p_idx>main_loop_1.in.p_idx"),
+                     UidWire("W:main.infections_days>main_gamma_exp.in.infections_days"),
+
+                 ],
+                 boxes=[
+                     UidBox("B:main_gamma_exp"),
+                     UidBox("B:main_pbetas_seq"),
+                     UidBox("B:main_pdays_seq"),
+                     UidBox("B:main_loop_1"),
+                     UidBox("B:main_call_simsir")
+                 ],
+
+                 metadata=None)
+
+    wires = wires_main + wires_main_loop_1 + wires_simsir + wires_simsir_loop_1 + wires_simsir_loop_1_1 + wires_sir
+
+    ports = ports_main + ports_main_loop_1 + ports_simsir + ports_simsir_loop_1 + ports_simsir_loop_1_1 + ports_sir
+
+    junctions = junctions_main + junctions_simsir + junctions_simsir_loop_1
+
+    boxes = [main,
+             main_gamma_exp, main_pbetas_seq, main_pdays_seq,
+             main_loop_1, main_loop_1_cond, main_loop_1_p_idx_exp,
+             main_call_simsir,
+
+             simsir,
              simsir_n_exp,
              simsir_loop_1_range_init_exp, simsir_loop_1_get_p_idx_init_exp,
 
@@ -2284,10 +2886,10 @@ def generate_gromet() -> Gromet:
     variables = variables_sir
 
     _g = Gromet(
-        uid=UidGromet("CHIME_SIR_01d"),
-        name="CHIME_SIR_01d",
+        uid=UidGromet("CHIME_SIR_01e"),
+        name="CHIME_SIR_01e",
         type=UidType("FunctionNetwork"),
-        root=UidBox("B:simsir"),  # TODO Update with latest root
+        root=UidBox("B:main"),  # TODO Update with latest root
         types=None,
         literals=None,
         junctions=junctions,
