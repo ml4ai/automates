@@ -41,6 +41,7 @@ class MetadataType(AutoMATESBaseEnum):
     DOMAIN = auto()
     PARAMETER_SETTING = auto()
     EQUATION_PARAMETER = auto()
+    TEXT_UNIT = auto()
 
     @classmethod
     def from_str(cls, data: str):
@@ -62,6 +63,8 @@ class MetadataType(AutoMATESBaseEnum):
             return VariableTextParameter
         elif mtype == cls.EQUATION_PARAMETER:
             return VariableEquationParameter
+        elif mtype == cls.TEXT_UNIT:
+            return VariableTextUnit
         else:
             raise MissingEnumError(
                 "Unhandled MetadataType to TypedMetadata conversion "
@@ -590,6 +593,28 @@ class VariableTextParameter(TypedMetadata):
             TextExtraction.from_data(data["text_extraction"]),
             data["variable_identifier"],
             data["value"],
+        )
+
+    def to_dict(self):
+        data = super().to_dict()
+        # TODO
+        # data.update({
+        #     "text_extraction": self.name
+        # })
+        return data
+
+@dataclass
+class VariableTextUnit(TypedMetadata):
+    text_extraction: TextExtraction
+    unit: str
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableTextUnit:
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_data(data["text_extraction"]),
+            data["unit"],
         )
 
     def to_dict(self):

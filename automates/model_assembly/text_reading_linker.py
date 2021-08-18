@@ -73,6 +73,14 @@ class TextReadingLinker:
                     "value": equation_parameter["value"]
                 }))
 
+            for text_unit in grounding["text_unit"]:
+                vars_to_metadata[var].append(TypedMetadata.from_data({
+                    "type": "TEXT_UNIT",
+                    "provenance": provenance,
+                    "unit_extraction": text_unit["span"],
+                    "variable_identifier": grounding["gvar"],
+                    "unit": text_unit["content"]
+                }))
         return vars_to_metadata
 
     def build_text_extraction(self, text_extraction):
@@ -90,6 +98,21 @@ class TextReadingLinker:
     def build_text_definition(self, gvar: GVarNode):
         return [
             {
+                "variable_def": text_var.content,
+                "text_extraction": self.build_text_extraction(text_var.text_extraction)
+            }
+            for text_var in gvar.text_vars
+        ]
+    
+    def build_text_unit(self, gvar: GVarNode):
+       # text_unit_settings = [
+           # text_unit 
+          #  for text_unit in L.successors(gvar) 
+         #   if isinstance(text_unit, UnitNode)
+        #] 
+
+        return [
+             {
                 "variable_def": text_var.content,
                 "text_extraction": self.build_text_extraction(text_var.text_extraction)
             }
@@ -157,7 +180,8 @@ class TextReadingLinker:
                             "gvar": gvar.content, 
                             "equation_parameter": self.build_equation_groundings(gvar, L),
                             "parameter_setting": self.build_parameter_setting(gvar, L),
-                            "text_definition": self.build_text_definition(gvar)
+                            "text_definition": self.build_text_definition(gvar),
+                            "text_unit": self.build_text_unit(gvar) # might have to pass L 
                         }
 
         return grfn_var_to_groundings

@@ -22,8 +22,34 @@ class LinkNode(ABC):
     def from_dict(data: dict, element_type: str, grounding_information: dict):
         if element_type == "source":
             return CodeVarNode(data["uid"], data["content"], data["source"])
-        elif element_type == "comment":
-            return CommSpanNode(data["uid"], data["content"], data["source"])
+        elif element_type == "gl_src_var":
+            src_vars = list()
+            for src_var_uid in data["identifier_objects"]:
+                src_var_data = [
+                    src_var 
+                    for src_var in grounding_information["src"]
+                    if src_var_uid == src_var["uid"]
+                ][0]
+                src_vars.append(CodeVarNode(
+                    src_var_data["uid"],
+                    src_var_data["content"],
+                    src_var_data["source"]
+                ))
+            return GCodeVarNode(data["uid"], data["content"], tuple(src_vars))
+        elif element_type == "gl_comm":
+            comm_vars = list()
+            for comm_var_uid in data["identifier_objects"]:
+                comm_var_data = [
+                    comm_var 
+                    for comm_var in grounding_information["comment"]
+                    if comm_var_uid == comm_var["uid"]
+                ][0]
+                comm_vars.append(CommSpanNode(
+                    comm_var_data["uid"],
+                    comm_var_data["content"],
+                    comm_var_data["source"]
+                ))
+            return GCommSpanNode(data["uid"], data["content"], tuple(comm_vars))
         elif element_type == "equation":                    
             equation = None
             equation_index = -1
@@ -142,6 +168,36 @@ class CodeVarNode(LinkNode):
         return basename
 
     def get_table_rows(self, L: DiGraph) -> list:
+        gcode_var_span_nodes = [
+            n for n in L.predecessors(self) if isinstance(n, GCodeVarNode)
+        ]
+
+        rows = list()
+        for gcode_var_node in gcode_var_span_nodes:
+            w_vc = L.edges[gcode_var_node, self]["weight"]
+            for r in gcode_var_node.get_table_rows(L):
+                scores = [val for key,val in r.items() if key.endswith("_score") and val is not None]
+                w_row = min(w_vc, *scores)
+                r.update({"vc_score": w_vc, "link_score": w_row})
+                rows.append(r)
+
+        return rows
+
+@dataclass(repr=False, frozen=True)
+class GCodeVarNode(LinkNode):
+    source: str
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return self.content
+
+    def get_varname(self) -> str:
+        (_, _, _, basename, _) = self.content.split("::")
+        return basename
+
+    def get_table_rows(self, L: DiGraph) -> list:
         comm_span_nodes = [
             n for n in L.predecessors(self) if isinstance(n, CommSpanNode)
         ]
@@ -204,6 +260,44 @@ class GVarNode(LinkNode):
 
 @dataclass(repr=False, frozen=True)
 class CommSpanNode(LinkNode):
+    source: str
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        tokens = self.content.strip().split()
+        if len(tokens) <= 4:
+            return " ".join(tokens)
+
+        new_content = ""
+        while len(tokens) > 4:
+            new_content += "\n" + " ".join(tokens[:4])
+            tokens = tokens[4:]
+        new_content += "\n" + " ".join(tokens)
+        return new_content
+
+    def get_comment_location(self):
+        (filename, sub_name, place) = self.source.split("; ")
+        filename = filename[: filename.rfind(".f")]
+        return f"{filename}::{sub_name}${place}"
+
+    def get_table_rows(self, L: DiGraph) -> list:
+        gvar_nodes = [
+            n for n in L.predecessors(self) if isinstance(n, GCommSpanNode)
+        ]
+
+        rows = list()
+        for gvar_node in gvar_nodes:
+            w_ct = L.edges[gvar_node, self]["weight"]
+            for r in gvar_node.get_table_rows(L):
+                r.update({"comm": str(self).replace('\n', ' '), "ct_score": w_ct})
+                rows.append(r)
+
+        return rows
+
+@dataclass(repr=False, frozen=True)
+class GCommSpanNode(LinkNode):
     source: str
 
     def __repr__(self):
@@ -305,8 +399,16 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         G.add_node(node, color="darkviolet")
 
     @add_link_node.register
+    def _(node: GCodeVarNode):
+        G.add_node(node, color="violet")
+
+    @add_link_node.register
     def _(node: CommSpanNode):
         G.add_node(node, color="lightskyblue")
+
+    @add_link_node.register
+    def _(node: GCommSpanNode):
+        G.add_node(node, color="blue")
 
     @add_link_node.register
     def _(node: EqnVarNode):
@@ -337,7 +439,17 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         add_link_node(n1)
         add_link_node(n2)
 
-        if isinstance(n2, CommSpanNode):
+        if isinstance(n2, GCodeVarNode):
+            G.add_edge(n2, n1, weight=score)
+        else:
+            report_bad_link(n1, n2)
+
+    @add_link.register
+    def _(n1: GCodeVarNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, GCommSpanNode):
             G.add_edge(n2, n1, weight=score)
         else:
             report_bad_link(n1, n2)
@@ -347,7 +459,19 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         add_link_node(n1)
         add_link_node(n2)
 
-        if isinstance(n2, CodeVarNode):
+        if isinstance(n2, GCommSpanNode):
+            G.add_edge(n1, n2, weight=score)
+        #elif isinstance(n2, GVarNode):
+        #    G.add_edge(n2, n1, weight=score)
+        else:
+            report_bad_link(n1, n2)
+
+    @add_link.register
+    def _(n1: GCommSpanNode, n2, score):
+        add_link_node(n1)
+        add_link_node(n2)
+
+        if isinstance(n2, CommSpanNode):
             G.add_edge(n1, n2, weight=score)
         elif isinstance(n2, GVarNode):
             G.add_edge(n2, n1, weight=score)
@@ -398,11 +522,17 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
         # Element ids are structured like: <uid>::<name>. We want just the uid.
         uid = element.split("::")[0]
         # Go to its item type and gets its data information
-        node_data = [
-            item
-            for item in grounding_information[type]
-            if item["uid"] == uid
-        ][0]
+        try:
+            node_data = [
+                item
+                for item in grounding_information[type]
+                if item["uid"] == uid
+            ][0]
+        except IndexError as e:
+            print(element)
+            print(type)
+            
+
 
         return LinkNode.from_dict(node_data, type, grounding_information)
 
@@ -414,7 +544,10 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
             return "parameter_setting_via_idfr"
         elif found_type == "interval_param_setting_via_idfr":
             return "int_param_setting_via_idfr"
-
+        elif found_type == "source":
+            return "gl_src_var"
+        elif found_type == "comment":
+            return "gl_comm"
         elif found_type == "unit_via_cpcpt":
             return "unit_via_cncpt"
         return found_type
