@@ -116,6 +116,8 @@ class LinkNode(ABC):
         elif (
             element_type == "parameter_setting_via_idfr"
             or element_type == "int_param_setting_via_idfr"
+            or element_type == "parameter_setting_via_cncpt"
+            or element_type == "int_param_setting_via_cncpt"
         ):
             return ParameterSettingNode(
                 data["uid"],
@@ -132,7 +134,18 @@ class LinkNode(ABC):
                 ),
             )
         elif element_type == "unit_via_idfr" or element_type == "unit_via_cncpt":
-            return UnitNode(data["uid"], data["content"])
+            return UnitNode(
+                data["uid"],
+                data["content"],
+                TextExtraction(
+                    data["spans"]["page"],
+                    data["spans"]["block"],
+                    tuple(
+                        Span(s["char_begin"], s["char_end"])
+                        for s in data["spans"]["spans"]
+                    ),
+                ),
+            )
         else:
             raise ValueError(f"Unrecognized link element type: {element_type}")
 
@@ -167,6 +180,8 @@ class ParameterSettingNode(LinkNode):
 
 @dataclass(repr=False, frozen=True)
 class UnitNode(LinkNode):
+    text_extraction: TextExtraction
+
     def get_table_rows(self, link_graph: DiGraph) -> list:
         return None
 
@@ -586,6 +601,10 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
             return "parameter_setting_via_idfr"
         elif found_type == "interval_param_setting_via_idfr":
             return "int_param_setting_via_idfr"
+        elif found_type == "param_setting_via_cpcpt":
+            return "parameter_setting_via_cncpt"
+        elif found_type == "interval_param_setting_via_cpcpt":
+            return "int_param_setting_via_cncpt"
         elif found_type == "source":
             return "gl_src_var"
         elif found_type == "equation":

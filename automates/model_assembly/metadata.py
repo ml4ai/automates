@@ -592,7 +592,7 @@ class VariableTextUnit(TypedMetadata):
         return cls(
             data["type"],
             data["provenance"],
-            TextExtraction.from_data(data["text_extraction"]),
+            TextExtraction.from_data(data["unit_extraction"]),
             data["unit"],
         )
 

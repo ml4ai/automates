@@ -107,9 +107,9 @@ class TextReadingLinker:
                         {
                             "type": "TEXT_UNIT",
                             "provenance": provenance,
-                            "unit_extraction": text_unit["span"],
+                            "unit_extraction": text_unit["unit_extraction"],
                             "variable_identifier": grounding["gvar"],
-                            "unit": text_unit["content"],
+                            "unit": text_unit["unit"],
                         }
                     )
                 )
@@ -133,7 +133,6 @@ class TextReadingLinker:
         ]
 
     def build_text_unit(self, gvar: GVarNode, L):
-        return []
 
         text_unit_settings = [
             text_unit
@@ -141,12 +140,17 @@ class TextReadingLinker:
             if isinstance(text_unit, UnitNode)
         ]
 
+        selected_text_unit = max(
+            text_unit_settings, key=lambda unit: L.edges[gvar, unit]["weight"]
+        )
+
         return [
             {
-                "variable_def": text_var.content,
-                "text_extraction": self.build_text_extraction(text_var.text_extraction),
+                "unit": selected_text_unit.content,
+                "unit_extraction": self.build_text_extraction(
+                    selected_text_unit.text_extraction
+                ),
             }
-            for text_var in text_unit_settings
         ]
 
     def build_parameter_setting(self, gvar: GVarNode, L):
