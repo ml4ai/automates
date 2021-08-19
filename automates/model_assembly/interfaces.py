@@ -9,13 +9,13 @@ import requests
 class TextReadingInterface(ABC):
     # TODO I dislike how these methods take file paths to read from and then
     # pass that information to TR app. However, sometimes the TR app requires
-    # the path to files in its payload (this is really bad and needs to be 
+    # the path to files in its payload (this is really bad and needs to be
     # changed). Eventually should move away from this model.
 
     @abstractmethod
     def extract_mentions(self, doc_path: str, out_path: str) -> dict:
         pass
-    
+
     @abstractmethod
     def get_link_hypotheses(
         self,
@@ -30,8 +30,8 @@ class TextReadingInterface(ABC):
     def ground_to_SVO(self, mentions_path: str) -> dict:
         pass
 
-class TextReadingAppInterface(TextReadingInterface):
 
+class TextReadingAppInterface(TextReadingInterface):
     def __init__(self, addr):
         self.webservice = addr
 
@@ -66,15 +66,14 @@ class TextReadingAppInterface(TextReadingInterface):
             print(f"HTTP {res} for /json_doc_to_mentions on {doc_path}")
 
         else:
-            raise ValueError(f"Unknown input document extension in file {doc_path} (pdf or json expected)")
+            raise ValueError(
+                f"Unknown input document extension in file {doc_path} (pdf or json expected)"
+            )
 
         return json.load(open(out_path, "r"))
 
-    def get_grfn_link_hypothesis(self,
-        mentions_path: str,
-        eqns_path: str,
-        grfn_path: str,
-        comments_path: str
+    def get_grfn_link_hypothesis(
+        self, mentions_path: str, eqns_path: str, grfn_path: str, comments_path: str
     ) -> dict:
         if not grfn_path.endswith(".json"):
             raise ValueError("/align expects GrFN to be a JSON file")
@@ -88,14 +87,16 @@ class TextReadingAppInterface(TextReadingInterface):
         )
         variable_names = [{"name": var_name} for var_name in unique_var_names]
 
-        return self.get_link_hypotheses(mentions_path, eqns_path, comments_path, variable_names)
+        return self.get_link_hypotheses(
+            mentions_path, eqns_path, comments_path, variable_names
+        )
 
     def get_link_hypotheses(
         self,
         mentions_path: str,
         eqns_path: str,
         comments_path: str,
-        variable_names: list
+        variable_names: list,
     ) -> dict:
         if not os.path.isfile(mentions_path):
             raise RuntimeError(f"Mentions not found: {mentions_path}")
@@ -149,9 +150,7 @@ class TextReadingAppInterface(TextReadingInterface):
             raise RuntimeError(f"Mentions file not found: {mentions_path}")
 
         if not mentions_path.endswith(".json"):
-            raise ValueError(
-                "/groundMentionsToSVO expects mentions to be a JSON file"
-            )
+            raise ValueError("/groundMentionsToSVO expects mentions to be a JSON file")
 
         res = requests.post(
             f"{self.webservice}/groundMentionsToSVO",
@@ -162,6 +161,7 @@ class TextReadingAppInterface(TextReadingInterface):
         print(f"HTTP {res} for /groundMentionsToSVO on {mentions_path}")
         json_dict = res.json()
         return json_dict
+
 
 class LocalTextReadingInterface(TextReadingInterface):
     name: str
@@ -174,11 +174,13 @@ class LocalTextReadingInterface(TextReadingInterface):
         self.index = {
             "SIR-simple": {
                 "mentions": "tests/data/example-tr-data/sir-simple-documents/SIR-simple--mentions.json",
-                "alignment": "tests/data/example-tr-data/sir-simple-documents/SIR-simple--alignment.json"
+                "alignment": "tests/data/example-tr-data/sir-simple-documents/SIR-simple--alignment.json",
             },
             "CHIME-SIR": {
-
-            }
+                # TODO mentions file doesnt actually have data in it, just mocked
+                "mentions": "tests/data/example-tr-data/chime-sir/CHIME-SIR--mentions.json",
+                "alignment": "tests/data/example-tr-data/chime-sir/CHIME-SIR--alignment.json",
+            },
         }
 
     def extract_mentions(self, doc_path: str, out_path: str) -> dict:
@@ -192,7 +194,7 @@ class LocalTextReadingInterface(TextReadingInterface):
         else:
             # TODO
             raise Exception(f"Error: Unable to find local TR data for {self.name}")
-    
+
     def get_link_hypotheses(
         self,
         mentions_path: str,
@@ -208,7 +210,7 @@ class LocalTextReadingInterface(TextReadingInterface):
 
     def ground_to_SVO(self, mentions_path: str) -> dict:
         pass
-    
+
 
 class EquationReadingInterface:
     # TODO: define this for interface to EqDec and Cosmos equation-detection

@@ -14,7 +14,7 @@ from .identifiers import (
     LambdaStmtIdentifier,
     CallStmtIdentifier,
 )
-from .metadata import (
+from automates.model_assembly.metadata import (
     TypedMetadata,
     GrFNCreation,
     CodeCollectionReference,
@@ -179,9 +179,7 @@ class TypeFieldDef:
     metadata: List[TypedMetadata]
 
     def __str__(self):
-        return (
-            f"(TypeField Def)\n{self.name}, {self.type}\n{self.source_ref}\n"
-        )
+        return f"(TypeField Def)\n{self.name}, {self.type}\n{self.source_ref}\n"
 
     @classmethod
     def from_air_json(cls, data: dict, file_uid: str) -> TypeFieldDef:
@@ -239,10 +237,7 @@ class TypeDef(BaseDef):
             TypeIdentifier.from_air_json(data),
             metadata,
             data["metatype"],
-            [
-                TypeFieldDef.from_air_json(d, data["file_uid"])
-                for d in data["fields"]
-            ],
+            [TypeFieldDef.from_air_json(d, data["file_uid"]) for d in data["fields"]],
         )
 
     @classmethod
@@ -297,12 +292,10 @@ class ContainerDef(BaseDef):
         identifier = ContainerIdentifier.from_name_str(data["name"])
         file_reference = data["file_uid"] if "file_uid" in data else ""
         arguments = [
-            VariableIdentifier.from_name_str(var_str)
-            for var_str in data["arguments"]
+            VariableIdentifier.from_name_str(var_str) for var_str in data["arguments"]
         ]
         updated = [
-            VariableIdentifier.from_name_str(var_str)
-            for var_str in data["updated"]
+            VariableIdentifier.from_name_str(var_str) for var_str in data["updated"]
         ]
         returns = [
             VariableIdentifier.from_name_str(var_str)
@@ -447,9 +440,7 @@ class StmtDef(BaseDef):
             )
         ]
         con_id = data["p_con_id"]
-        inputs = [
-            VariableIdentifier.from_name_str(iname) for iname in data["input"]
-        ]
+        inputs = [VariableIdentifier.from_name_str(iname) for iname in data["input"]]
         outputs = [
             VariableIdentifier.from_name_str(oname)
             for oname in (data["output"] + data["updated"])
@@ -473,9 +464,7 @@ class StmtDef(BaseDef):
         elif func_type == "container":
             identifier = CallStmtIdentifier.from_air_json(func_data)
             callee_id = ContainerIdentifier.from_name_str(func_data["name"])
-            return CallStmtDef(
-                identifier, metadata, con_id, inputs, outputs, callee_id
-            )
+            return CallStmtDef(identifier, metadata, con_id, inputs, outputs, callee_id)
         else:
             raise ValueError(f"Unrecognized statement type: {func_type}")
 
