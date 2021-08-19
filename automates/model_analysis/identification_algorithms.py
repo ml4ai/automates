@@ -335,11 +335,21 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                 if orig_var in gm.ancestors_unsort(list(set(subscript_orig_vars)-orig_var)):
                     subscript_orig_vars.remove(orig_var)
 
+            s_el_info = cg.vs.select(name_in=s_element)
             nxt_gamma = []
-
-
-            gamma_new = []  # todo: determine what gamma_new should be
-            nxt = None
+            for node in s_el_info:
+                int_vars = node["int_vars"]
+                int_values = node["int_values"]
+                for subscript in subscript_orig_vars:
+                    if subscript not in int_vars:
+                        int_vars.append(subscript)
+                        int_values.append(None)  # todo: unsure about this
+                nxt_gamma.append(gm.CF(node["orig_name"], node["obs_val"], int_vars, int_values))
+            nxt = cf_ID(g, nxt_gamma, v)
+            product_list.append(deepcopy(nxt.p))
+            id_check_list.append(deepcopy(nxt.tree.call.id_check))
+            tree.children.append(deepcopy(nxt.tree))
+        tree.call.id_check = all(id_check_list)
 
         # Outer sum
         obs_nodes = cg.vs.select(description=None)["name"]
@@ -347,6 +357,12 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         for event in gamma_prime:
             nodes_to_remove.append(f"{event.orig_name}_{event.int_vars}")
         summation_set = list(set(obs_nodes)-set(nodes_to_remove))
+        return gm.CfResultsInternal(p=gm.Probability(sumset=summation_set, product=True, children=product_list),
+                                    tree=tree)
+
+    # Line 7
+    
+
     return None
 
 
