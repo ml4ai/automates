@@ -9,9 +9,6 @@ import os
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.model_assembly.interfaces import TextReadingInterface
 from automates.model_assembly.linking import (
-    CodeVarNode,
-    CommSpanNode,
-    EqnVarNode,
     GCodeVarNode,
     GCommSpanNode,
     GEqnVarNode,
@@ -19,7 +16,6 @@ from automates.model_assembly.linking import (
     ParameterSettingNode,
     UnitNode,
     build_link_graph,
-    extract_link_tables,
 )
 from automates.model_assembly.metadata import (
     TypedMetadata,

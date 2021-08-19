@@ -499,16 +499,6 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
     def add_link(n1, n2, score):
         raise ValueError(f"Inappropriate node type: {type(n1)}")
 
-    # @add_link.register
-    # def _(n1: CodeVarNode, n2, score):
-    #     add_link_node(n1)
-    #     add_link_node(n2)
-
-    #     if isinstance(n2, GCodeVarNode):
-    #         G.add_edge(n2, n1, weight=score)
-    #     else:
-    #         report_bad_link(n1, n2)
-
     @add_link.register
     def _(n1: GCodeVarNode, n2, score):
         add_link_node(n1)
