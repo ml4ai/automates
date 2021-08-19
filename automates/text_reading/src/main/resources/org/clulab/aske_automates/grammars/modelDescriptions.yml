@@ -2,46 +2,143 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 
 rules:
 
-# This rule is not complete. Description part needs to be adjusted.
+## TODO: coreferencing (the model, our model, this, it...) needs to be addressed.
+## TODO: expansionHandler needs to be adjusted to fit these cases.
 
+# This rule is not complete. Description part needs to be adjusted.
   - name: model_suggests
-    label: ModelDescription
+    label: ModelDescr
     priority: ${priority}
     type: token
     example: "The model also suggests that there might exist a SARS precursor in a large reservoir, prompting for implementation of precautionary measures when the weather cools down."
     pattern: |
-      (?<model> [word = "model"]) [word = "also"]? [lemma = /suggest/] [word = /that/] (?<modelDescr> [word = /.*/]+)
+      (?<model> [word = "model"]) [word = "also"]? [lemma = /suggest|/] [word = /that/] (?<modelDescr> [word = /.*/]+) "."
 
-  - name: model_which_is
-    label: ModelDescription
-    priority: ${priority}
-    type: token
-    example: "We begin with a brief review on a classical epidemic model, the so called Susceptible-Infected-Removed (SIR) model which is simple and useful when one tries to understand the propagation of many real-life epidemics."
-    pattern: |
-      (?<model> [word = "model"]) [word = "which"] [word = "is"] (?<modelDescr> [tag = /JJ/])
-
-  - name: modelLimitation
-    label: ModelDescription
+  - name: model_cannot
+    label: ModelDescr
     priority: ${priority}
     type: token
     example: "we show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
     pattern: |
-      @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [word = /.*/]*)
+      @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [chunk = /B-VP/] (${PP+NP} [tag = /VBN/] ${PP+NP} [word = "where"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/|word = "spread"])?)
 
-  - name: model_is
-    label: ModelDescription
+  - name: model_limitation
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
+    pattern: |
+      trigger = [lemma = "limitation"] (?= "of")
+      model:Model = nmod_of
+      modelDescr:Phrase = <nsubj
+
+  - name: model_not_verb
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
+    pattern: |
+      trigger = [word = "not"] (?= [lemma = /hold/])
+      model:Phrase = <neg nsubj
+      modelDescr:Phrase = <neg
+
+  - name: model_cop
+    label: ModelDescr
     priority: ${priority}
     type: dependency
     example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
     pattern: |
       trigger = [lemma = "be"]
-      model:Phrase = <cop nsubj
+      model:Model = <cop nsubj
       modelDescr:Phrase = <cop
 
-#  - name: modelPurpose
-#    label: ModelDescription
-#    priority: ${priority}
-#    type: token
-#    example: "The CHIME (COVID-19 Hospital Impact Model for Epidemics) App is designed to assist hospitals and public health officials understand hospital capacity needs as they relate to the COVID-19 pandemic."
-#    pattern: |
-#      @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [word = /.*/]*)
+  - name: model_predict
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
+    pattern: |
+      trigger = [lemma = "predict"]
+      model:Phrase = <acl_to <dobj nsubj | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj
+      modelDescr:Phrase = dobj
+
+    # how do we know if "This" is referencing to a model?
+  - name: model_allows_for
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "This allows for more realistic simulation of the soil water profile and application of excess irrigation for leaching salts."
+    pattern: |
+      trigger = [lemma = "allow"]
+      model:Phrase = nsubj (nmod_in)?
+      modelDescr:Phrase+ = nmod_for
+
+  - name: model_contributes_to
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "It also contributes to understanding complex ecosystems as well as water availability, water quality, climate change, and agricultural production issues across the world"
+    pattern: |
+      trigger = [lemma = "contribute"]
+      model:Phrase = nsubj
+      modelDescr:Phrase+ = advcl_to
+
+  - name: model_capability
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "QSWAT has added capabilities of merging small subbasins and has static and dynamic visualizations of outputs."
+    pattern: |
+      trigger = [lemma = "capability"]
+      model:Model = <dobj? nsubj
+      modelDescr:Phrase+ = acl_of | acl_to
+
+  - name: model_can_verb
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "QSWAT can also show the total, daily, monthly orannual means, maxima and minima for reach and subbasin out-puts."
+    pattern: |
+      trigger = [lemma = "can"]
+      model:Phrase = <aux nsubj
+      modelDescr:Phrase+ = <aux
+
+  - name: model_useful_to
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "Our model would then be useful to enforce proper precautionary measures immediately."
+    pattern: |
+      trigger = [lemma = "useful"] (?= "to")
+      model:Phrase = nsubj
+      modelDescr:Phrase+ = xcomp
+
+  - name: model_consist_of
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "A high-resolution SWAT model, consisting of sub-field level hydrologic response units, was applied to Lake Champlain’s Missisquoi Bay Watershed, located along the United States–Canadian border."
+    pattern: |
+      trigger = [lemma = "consist"] (?= "of")
+      model:Phrase = <acl
+      modelDescr:Phrase = nmod_of
+
+  - name: modelPurpose
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
+    pattern: |
+      trigger = [word = "developed"] (?=[word = /^to$|^for$/])
+      model:Model = nsubjpass | <acl nsubj
+      modelDescr:Phrase+ = xcomp
+
+  - name: modelLanguageInfo
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
+    pattern: |
+      trigger = [word = "written"] (?=[word = /^in$/])
+      model:Model = nsubjpass
+      modelDescr:Phrase+ = nmod_in

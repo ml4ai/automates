@@ -22,12 +22,14 @@ class ExpansionHandler() extends LazyLogging {
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
-    val (functions, other) = mentions.partition(_.label == "Function")
+    val (functions, nonFunctions) = mentions.partition(_.label == "Function")
+    val (modelDescrs, other) = nonFunctions.partition(_.label == "ModelDescr")
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
+    val modelDescr_res = modelDescrs.flatMap(expandArgs(_, state, validArgs, expansionType = "modelDescr"))
     val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))
 
     // Useful for debug
-    function_res ++ other_res
+    function_res ++ modelDescr_res ++ other_res
   }
 
   def expandArgs(mention: Mention, state: State, validArgs: List[String], expansionType: String): Seq[Mention] = {
@@ -284,11 +286,13 @@ class ExpansionHandler() extends LazyLogging {
     val validOutgoingSet = expansionType match {
       case "standard" => VALID_OUTGOING
       case "function" => VALID_OUTGOING_FUNCTION
+      case "modelDescr" => VALID_OUTGOING_MODELDESCR
       case _ => ???
     }
     val invalidOutgoingSet = expansionType match {
       case "standard" => INVALID_OUTGOING
       case "function" => INVALID_OUTGOING_FUNCTION
+      case "modelDescr" => INVALID_OUTGOING_MODELDESCR
       case _ => ???
     }
 //    println("valid outgoing"+expansionType+" "+validOutgoingSet.mkString("|"))
@@ -309,6 +313,7 @@ class ExpansionHandler() extends LazyLogging {
     val validIncomingSet = expansionType match {
       case "standard" => VALID_INCOMING
       case "function" => VALID_INCOMING_FUNCTION
+      case "modelDescr" => VALID_INCOMING_MODELDESCR
       case _ => ???
     }
     validIncomingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
@@ -334,6 +339,7 @@ class ExpansionHandler() extends LazyLogging {
       val incomingSet = expansionType match {
         case "standard" => INVALID_INCOMING
         case "function" => INVALID_INCOMING_FUNCTION
+        case "modelDescr" => INVALID_INCOMING_MODELDESCR
         case _ => ???
       }
       incomingDependencies(tokenIdx).forall(pair => ! incomingSet.exists(pattern => pattern.findFirstIn(pair._2).nonEmpty))
@@ -558,6 +564,60 @@ object ExpansionHandler {
     "nmod_under".r,
 //    "nmod_in".r
 //    "aux".r
+  )
+
+  val INVALID_OUTGOING_MODELDESCR = Set[scala.util.matching.Regex](
+    "acl:relcl".r,
+    "acl_until".r,
+    "advcl_to".r,
+    "advcl_if".r,
+    "^advcl_because".r,
+//    "advmod".r,
+    "^case".r,
+    "^cc$".r,
+    "ccomp".r,
+    //    "compound".r,
+//    "^conj".r,
+    "cop".r,
+    "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
+    "nmod_at".r,
+    "nmod_through".r,
+    "^nmod_as".r,
+    "^nmod_because".r,
+    "^nmod_due_to".r,
+    "^nmod_except".r,
+    "^nmod_given".r,
+    "^nmod_since".r,
+    "^nmod_without$".r,
+//    "nmod_in".r,
+    //    "nmod_by".r,
+    //    "nummod".r,
+    "^nsubj".r,
+    "^punct".r,
+    "^ref$".r,
+    "appos".r,
+//    "xcomp".r,
+    //    "amod".r
+  )
+
+  val INVALID_INCOMING_MODELDESCR = Set[scala.util.matching.Regex](
+    "cop".r,
+    "punct".r
+  )
+
+  // regexes describing valid outgoing dependencies
+  val VALID_OUTGOING_MODELDESCR = Set[scala.util.matching.Regex](
+    ".+".r
+  )
+
+  val VALID_INCOMING_MODELDESCR = Set[scala.util.matching.Regex](
+    "acl:relcl".r,
+    "^nmod_for".r,
+    "nmod_at".r,
+    //    "^nmod_of".r,
+    "nmod_under".r,
+  //    "nmod_in".r
+  //    "aux".r
   )
 
   def apply() = new ExpansionHandler()

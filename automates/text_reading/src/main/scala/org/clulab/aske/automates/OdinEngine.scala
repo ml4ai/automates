@@ -90,11 +90,12 @@ class OdinEngine(
     // post-process the mentions with untangleConj and combineFunction
     val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
 
-    val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
+    val (functionMentions, nonFunctions) = nonDescrMens.partition(_.label.contains("Function"))
+    val (modelDescrs, other) = nonFunctions.partition(_.label == "ModelDescr")
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled)).toVector
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled ++ modelDescrs)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -138,7 +139,7 @@ object OdinEngine {
 
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
-  val MODEL_DESCRIPTION_LABEL: String = "ModelDescription"
+  val MODEL_DESCRIPTION_LABEL: String = "ModelDescr"
   val CONJ_DESCRIPTION_LABEL: String = "ConjDescription"
   val CONJ_DESCRIPTION_TYPE2_LABEL: String = "ConjDescriptionType2"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"

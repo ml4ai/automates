@@ -36,9 +36,9 @@ rules:
       priority: 8
       action: unitActionFlow
 
-  - import: "org/clulab/aske_automates/grammars/model.yml"
-    vars:
-      priority: 9
+#  - import: "org/clulab/aske_automates/grammars/model.yml"
+#    vars:
+#      priority: 9
 
   - import: "org/clulab/aske_automates/grammars/context.yml"
     vars:
@@ -49,11 +49,11 @@ rules:
       action: functionActionFlow
       priority: 9
 
-  - import: "org/clulab/aske_automates/grammars/modelDescriptions.yml"
+  - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"
     vars:
       priority: 10
 
-  - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"
+  - import: "org/clulab/aske_automates/grammars/modelDescriptions.yml"
     vars:
       priority: 10
 

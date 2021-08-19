@@ -32,14 +32,16 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val expandedIdentifiers = keepLongestIdentifier(identifiers)
 
       val (descriptions, other) = (expandedIdentifiers ++ non_identifiers).partition(m => m.label.contains("Description"))
-      val (functions, nonExpandable) = other.partition(m => m.label.contains("Function"))
+      val (functions, nonFunctions) = other.partition(m => m.label.contains("Function"))
+      val (modelDescrs, nonExpandable) = nonFunctions.partition(m => m.label == "ModelDescr")
 
       val expandedDescriptions = expansionHandler.get.expandArguments(descriptions, state, validArgs)
       val expandedFunction = expansionHandler.get.expandArguments(functions, state, List("input", "output"))
+      val expandedModelDescrs = expansionHandler.get.expandArguments(modelDescrs, state, List("modelDescr"))
       val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
       // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
-      keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ nonExpandable
+      keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedModelDescrs ++ nonExpandable
 //      allDescrs ++ other
 
     } else {
@@ -793,7 +795,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val mentionsDisplayOnlyArgs = for {
       m <- mentions
       arg <- m.arguments.values.flatten
-    } yield copyWithLabel(arg, "ModelDescription")
+    } yield copyWithLabel(arg, "ModelDescr")
 
     mentionsDisplayOnlyArgs
   }
