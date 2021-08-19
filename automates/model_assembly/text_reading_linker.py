@@ -140,6 +140,9 @@ class TextReadingLinker:
             if isinstance(text_unit, UnitNode)
         ]
 
+        if len(text_unit_settings) == 0:
+            return []
+
         selected_text_unit = max(
             text_unit_settings, key=lambda unit: L.edges[gvar, unit]["weight"]
         )
@@ -160,6 +163,9 @@ class TextReadingLinker:
             if isinstance(param, ParameterSettingNode)
         ]
 
+        if len(parameter_settings) == 0:
+            return []
+
         selected_parameter_setting = max(
             parameter_settings, key=lambda unit: L.edges[gvar, unit]["weight"]
         )
@@ -177,6 +183,7 @@ class TextReadingLinker:
         equation_vars = [
             param for param in L.predecessors(gvar) if isinstance(param, GEqnVarNode)
         ]
+
         if len(equation_vars) == 0:
             return []
 
