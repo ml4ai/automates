@@ -15,6 +15,13 @@ rules:
       # note: last rule added to deal with the cases like "Hong Kong"
       #todo: can we add parens in avoid without making it invisible in rules?
 
+  - name: simple-np-with-slash
+    label: Phrase
+    priority: 2
+    type: token
+    pattern: |
+      @Phrase "/" @Phrase
+
   - name: single_VP # note: edited the pattern to include single lower case VPs as well. changing pattern didn't break more rules, but needs to check if this cause any errors.
     label: Phrase
     priority: 1

@@ -22,7 +22,11 @@ class ExpansionHandler() extends LazyLogging {
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
-    val (functions, other) = mentions.partition(_.label == "Function")
+
+    // until there's evidence to the contrary, assume concepts  in parameter settings should expand in the same way as they do in functions
+    // use `contains` and not `=` for param settings to take care of both Parameter Settings and Interval Parameter Settings
+    val (functions, other) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
+
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
     val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))
 
@@ -353,6 +357,7 @@ class ExpansionHandler() extends LazyLogging {
       getNewTokenInterval(allIntervals)
     }
     else orig.tokenInterval
+
     val paths = for {
       (argName, argPathsMap) <- orig.paths
       origPath = argPathsMap(orig.arguments(argName).head)
