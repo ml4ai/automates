@@ -125,7 +125,7 @@ class CAST(object):
         A.node_attr.update({"fontname": "Menlo"})
         return A
 
-    def to_GrFN(self):
+    def to_air_dict(self):
         c2a_visitor = CASTToAIRVisitor(self.nodes, self.cast_source_language)
         air = c2a_visitor.to_air()
 
@@ -152,21 +152,12 @@ class CAST(object):
             # TODO
             raise Exception("Error: Unable to find root container to build GrFN.")
 
-        entrypoint = GenericIdentifier.from_str(container_id_to_start_from)
         air["entrypoint"] = container_id_to_start_from
 
-        with open("./test--AIR.json", "w") as f:
-            json.dump(
-                {
-                    "entrypoint": container_id_to_start_from,
-                    "containers": air["containers"],
-                    "variables": air["variables"],
-                    "types": [],
-                    "sources": ["test.py"],
-                    "source_comments": {},
-                },
-                f,
-            )
+        return air
+
+    def to_AIR(self):
+        air = self.to_air_dict()
 
         C, V, T, D = dict(), dict(), dict(), dict()
 
@@ -188,8 +179,10 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        air = AutoMATES_IR(entrypoint, C, V, T, [], [], [])
+        return AutoMATES_IR(GenericIdentifier.from_str(air["entrypoint"]), C, V, T, [], [], [])
 
+    def to_GrFN(self):
+        air = self.to_AIR()
         grfn = GroundedFunctionNetwork.from_AIR(air)
         return grfn
 
