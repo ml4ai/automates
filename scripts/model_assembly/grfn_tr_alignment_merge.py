@@ -30,7 +30,7 @@ def main(args):
         },
     )
 
-    grfn_file = air_filepath.replace("AIR.json", "GrFN.json")
+    grfn_file = air_filepath.replace("--AIR.json", "_with_metadata--GrFN3.json")
     GrFN.to_json_file(grfn_file)
 
 

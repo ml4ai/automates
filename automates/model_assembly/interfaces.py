@@ -176,7 +176,7 @@ class LocalTextReadingInterface(TextReadingInterface):
                 "mentions": "tests/data/example-tr-data/sir-simple-documents/SIR-simple--mentions.json",
                 "alignment": "tests/data/example-tr-data/sir-simple-documents/SIR-simple--alignment.json",
             },
-            "CHIME-SIR": {
+            "CHIME_SIR": {
                 # TODO mentions file doesnt actually have data in it, just mocked
                 "mentions": "tests/data/example-tr-data/chime-sir/CHIME-SIR--mentions.json",
                 "alignment": "tests/data/example-tr-data/chime-sir/CHIME-SIR--alignment.json",
