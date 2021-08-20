@@ -4,7 +4,7 @@ import json
 from automates.model_assembly.networks import GroundedFunctionNetwork, VariableNode
 import automates.apps.automates.model_code.chime_sir as chime
 import automates.apps.automates.model_code.sir_simple as sir_simple
-
+import automates.apps.automates.model_code.chime_sviivr as chime_plus
 
 def parse_execution_inputs(inputs):
     execution_inputs = {i["variable_identifier"]: np.array(i["value"]) for i in inputs}
@@ -156,15 +156,38 @@ def execute_gromet_experiment_json(experiment_json):
 
     elif model_name == "CHIME-SIR":
         expected_sir_simple_inputs = []
-        results = run_model_experiment(
-            model_name,
-            start,
-            end,
-            step,
-            expected_sir_simple_inputs,
-            parameters,
-            chime.drive,
-        )
+        try:
+            results = run_model_experiment(
+                model_name,
+                start,
+                end,
+                step,
+                expected_sir_simple_inputs,
+                parameters,
+                chime.drive,
+            )
+        except:
+            return {
+                "status": 500,
+                "message": f'Error: Encountered issue while executing experiment "{model_name}".',
+            }
+    elif model_name == "CHIME_SVIIvR":
+        expected_sir_simple_inputs = []
+        try:
+            results = run_model_experiment(
+                model_name,
+                start,
+                end,
+                step,
+                expected_sir_simple_inputs,
+                parameters,
+                chime_plus.drive,
+            )
+        except:
+            return {
+                "status": 500,
+                "message": f'Error: Encountered issue while executing experiment "{model_name}".',
+            }
     else:
         results = {
             "status": "failure",
