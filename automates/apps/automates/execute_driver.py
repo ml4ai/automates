@@ -173,21 +173,21 @@ def execute_gromet_experiment_json(experiment_json):
             }
     elif model_name == "CHIME_SVIIvR":
         expected_sir_simple_inputs = []
-        #try:
-        results = run_model_experiment(
-            model_name,
-            start,
-            end,
-            step,
-            expected_sir_simple_inputs,
-            parameters,
-            chime_plus.drive,
-        )
-        #except:
-         #   return {
-          #      "status": 500,
-           #     "message": f'Error: Encountered issue while executing experiment "{model_name}".',
-           # }
+        try:
+            results = run_model_experiment(
+                model_name,
+                start,
+                end,
+                step,
+                expected_sir_simple_inputs,
+                parameters,
+                chime_plus.drive,
+            )
+        except:
+            return {
+                "status": 500,
+                "message": f'Error: Encountered issue while executing experiment "{model_name}".',
+            }
     else:
         results = {
             "status": "failure",

@@ -307,7 +307,6 @@ def drive(start, end, step, parameters):
 
     def process_time_step_results(result_arr):
         stepped_results = []
-        #for i in range(len(result_arr)):
         for i in range(start, end + 1, step):
             stepped_results.append(result_arr[i])
         return stepped_results
