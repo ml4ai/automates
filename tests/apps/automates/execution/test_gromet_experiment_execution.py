@@ -65,24 +65,17 @@ def test_execute_chime_sir_mock():
         "start": 0,
         "end": 120.0,
         "step": 30,
-        "domain_parameter": "CHIME_SIR::CHIME_SIR::main::0::--::n_days::0",
+        "domain_parameter": "J:main.n_days",
         "parameters": {
-            "CHIME_SIR::CHIME_SIR::main::0::--::growth_rate::0": 0.0,
-            "CHIME_SIR::CHIME_SIR::main::0::--::beta::0": 0.0,
-            "CHIME_SIR::CHIME_SIR::main::0::--::i_day::0": 17.0,
-            "CHIME_SIR::CHIME_SIR::main::0::--::N_p::0": 3,
-            "CHIME_SIR::CHIME_SIR::main::0::--::infections_days::0": 14.0,
-            "CHIME_SIR::CHIME_SIR::main::0::--::relative_contact_rate::0": 0.05,
-            "CHIME_SIR::CHIME_SIR::main::0::--::s_n::0": 200,
-            "CHIME_SIR::CHIME_SIR::main::0::--::i_n::0": 1,
-            "CHIME_SIR::CHIME_SIR::main::0::--::r_n::0": 1,
+            "J:main.i_day": 17.0,
+            "J:main.N_p": 3,
+            "J:main.infections_days": 14.0,
+            "J:main.relative_contact_rate": 0.05,
+            "J:main.s_n": 200,
+            "J:main.i_n": 1,
+            "J:main.r_n": 1,
         },
-        "outputs": [
-            "CHIME_SIR::CHIME_SIR::main::0::--::s_a::1",
-            "CHIME_SIR::CHIME_SIR::main::0::--::i_a::1",
-            "CHIME_SIR::CHIME_SIR::main::0::--::e_a::1",
-            "CHIME_SIR::CHIME_SIR::main::0::--::r_a::1",
-        ],
+        "outputs": ["P:main.out.S", "P:main.out.I", "P:main.out.E", "P:main.out.R"],
     }
     result = execute_gromet_experiment_json(input_json)
 
@@ -90,22 +83,22 @@ def test_execute_chime_sir_mock():
         "result": {
             "domain_parameter": [0, 30, 60, 90, 120],
             "values": {
-                "CHIME_SIR::CHIME_SIR::main::0::--::e_a::1": [0.0, 0.0, 0.0, 0.0, 0.0],
-                "CHIME_SIR::CHIME_SIR::main::0::--::i_a::1": [
+                "P:main.out.E": [0.0, 0.0, 0.0, 0.0, 0.0],
+                "P:main.out.I": [
                     0.0,
                     0.8933233135653156,
                     0.7806198884453974,
                     0.6712711762750359,
                     0.5693715755370689,
                 ],
-                "CHIME_SIR::CHIME_SIR::main::0::--::r_a::1": [
+                "P:main.out.R": [
                     0.0,
                     2.965680650912271,
                     4.763081925816063,
                     6.3215644582752715,
                     7.652866183157096,
                 ],
-                "CHIME_SIR::CHIME_SIR::main::0::--::s_a::1": [
+                "P:main.out.S": [
                     0.0,
                     198.14099603552242,
                     196.45629818573855,
