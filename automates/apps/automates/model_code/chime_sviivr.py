@@ -1,6 +1,3 @@
-from csv import DictWriter, QUOTE_NONNUMERIC
-
-
 ### =============================================================================
 ### NOTATIONAL CONVENTIONS:
 ###   Comments starting with single hash - '#' - are "normal" comments
@@ -324,17 +321,3 @@ def drive(start, end, step, parameters):
         ),
     }
 
-
-    #outfile = sys.argv[1]
-    #out_data = list()
-    #keys = ['d', 's', 'v', 'i', 'i_v', 'r', 'e']
-    #data_tuples = zip(d_a, s_a, v_a, i_a, i_v_a, r_a, e_a)
-    #for dat in data_tuples:
-     #   out_data.append(
-      #      dict(zip(keys, dat))
-      #  )
-
-    #with open(outfile, 'w') as csvfile:
-     #   writer = DictWriter(csvfile, fieldnames=keys, quoting=QUOTE_NONNUMERIC)
-      #  writer.writeheader()
-       # writer.writerows(out_data)
