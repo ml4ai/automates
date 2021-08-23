@@ -32,9 +32,29 @@ object CosmosJsonProcessor {
     CosmosDocument(cosmosObjects)
   }
 
+  def addSpaces(string: String): String = {
+    val funcWords = Seq("by", "and", "if", "of")
+//    println("STRING: " + string)
+//    var newString = string
+//    for (fw <- funcWords) {
+////      val regex = f"\b${fw}"//(?=[A-Z])"
+////      println("regex: " + regex)
+//      newString.replaceAll(f"\b${fw}", f"${fw} ")
+////      println(f"updated with $fw: $newString")
+//
+//    }
+    val newString = string.replaceAll(" (where|by|and|if|of)", " $1 ").replaceAll("  ", " ")
+//    println("updated: " + newString)
+    newString
+
+  }
+
   def mkCosmosObject(json: ujson.Js, blockIdx: Int): CosmosObject = {
     val pdfName = json.obj.get("pdf_name").map(_.str)
-    val content = org.apache.commons.text.StringEscapeUtils.unescapeJava(json("content").str)
+    // the apache conversion might not be necessary
+    val content = addSpaces(org.apache.commons.text.StringEscapeUtils.unescapeJava(json("content").str))
+//    println("\n\ncontent1 " + json("content").str)
+//    println("\ncontent2 " + content)
     val pageNum = json("page_num").num.toInt
     val cls = json("postprocess_cls").str
     val postprocessScore = json("postprocess_score").num

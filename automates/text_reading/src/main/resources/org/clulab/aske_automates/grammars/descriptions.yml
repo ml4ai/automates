@@ -73,7 +73,7 @@ rules:
     pattern: |
       (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Identifier (?! [chunk = I-NP])
       |
-      (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [chunk = "I-NP" & !tag = /NNS|NNP|-LRB-|CC/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
+      (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [chunk = "I-NP" & !tag = /JJ|NNS|NNP|-LRB-|CC|CD/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
 
   - name: real_appos
     label: Description

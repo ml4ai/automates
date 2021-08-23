@@ -323,8 +323,8 @@ object AlignmentJsonUtils {
       ujson.Obj(
         "uid" -> randomUUID.toString,
         "source" -> varName,
-        "content" -> split(2),
-        "model" -> split(0)
+        "content" -> split.takeRight(2).head,
+        "model" -> split.takeRight(3).head
       )
     }
   }

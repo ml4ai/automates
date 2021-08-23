@@ -229,7 +229,7 @@ rules:
     action: ${paramSetAction}
     example: "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from DSSAT-CSM version 4.5 for Arizona conditions."
     pattern: |
-      /(?i)with/ (an|a|the) @variable:Identifier of @value:Value
+      /(?i)with/? (an|a|the) @variable:Identifier of @value:Value
 
   - name: var-noun_of2
     label: ParameterSetting
@@ -324,7 +324,7 @@ rules:
     example: "At planting time, the model takes a soil sample and applies up to 15 kg/ha of N fertilizer if needed."
     action: ${paramSetAction}
     pattern: |
-      @value:Value [word=/\w*/]{,4} of @variable:Phrase
+      @value:Value [word=/\w*/]{,4} of (variable:Phrase [!tag = "CD"])
 
   - name: value_of
     label: ParameterSetting

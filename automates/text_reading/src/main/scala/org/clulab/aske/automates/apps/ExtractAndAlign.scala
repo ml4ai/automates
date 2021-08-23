@@ -30,6 +30,7 @@ import upickle.default.write
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
 case class AlignmentArguments(json: Value, identifierNames: Option[Seq[String]], identifierShortNames: Option[Seq[String]], commentDescriptionMentions: Option[Seq[Mention]], descriptionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], intervalParameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]], wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]])
 
@@ -71,10 +72,10 @@ object ExtractAndAlign {
 
   // These are temporary thresholds - to be set
   val allLinkTypes = ujson.Obj("direct" -> ujson.Obj(
-    GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> 0.5,
-    GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> 0.5,
-    GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> 0.5,
-    GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> 0.5,
+    GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> 1.0,
+    GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> 1.5,
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> 1.0,
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> 2.0,
     GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER -> 0.5,
     GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> 0.5,
     EQN_TO_GLOBAL_VAR -> 0.5,
@@ -131,6 +132,8 @@ object ExtractAndAlign {
   val w2v = new Word2Vec(vectors, None)
 
   lazy val grounder = WikidataGrounder
+
+  def parseDouble(s: String): Option[Double] = Try { s.toDouble }.toOption
 
   def groundMentions(
                       grfn: Value,
@@ -244,14 +247,19 @@ object ExtractAndAlign {
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
       val identifier = gr._1//AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap); for now, don't convert: text vars are already symbols and comments shouldnt be converted except for during alignment
-      println("IDENTIFIER: " + identifier)
+      val identifierComponents = if (identifier.contains("_")) {
+        if (!identifier.split("_").map(_.length).contains(1)) {
+          identifier.split("_").filter(_.length > 1).toSeq
+        } else Seq.empty
+      } else Seq.empty
+//      println("IDENTIFIER: " + identifier)
 
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
-      val textFromAllDescrs = gr._2.map(m => getMentionText(m.arguments("description").head)).distinct
-      println("\ndescriptions: ")
-      for (d <- textFromAllDescrs) println(d)
+      val textFromAllDescrs = gr._2.map(m => getMentionText(m.arguments("description").head)).distinct ++ identifierComponents
+//      println("\ndescriptions: ")
+//      for (d <- textFromAllDescrs) println(d)
       val terms = gr._2.flatMap(g => getTerms(g)).distinct
-      for (t <- terms) println("->" + t)
+//      for (t <- terms) println("->" + t)
 
 //      val groundings = grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, 3)
       // todo: need to also have a check for whether or not we want to ground to wikidata
@@ -486,13 +494,13 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get)
+        alignments(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER).num)
       }
       // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get)
+        alignments(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT).num)
       }
     }
 
@@ -515,14 +523,14 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get)
+        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER).num)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get)
+        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT).num)
       }
 
     }
@@ -635,6 +643,7 @@ object ExtractAndAlign {
   }
 
   def makeIntParamSettingObj(mention: Mention, paramSetAttJson: Value, page: Int, block: Int): ujson.Obj = {
+    println("MENTION: " + mention.text + " " + mention.arguments.mkString("|"))
     val lowerBound = paramSetAttJson("inclusiveLower")
     val upperBound = paramSetAttJson("inclusiveUpper")
     val toReturn = ujson.Obj(
@@ -656,7 +665,13 @@ object ExtractAndAlign {
     }
     if (menArgs.exists(arg => arg._1 == "valueMost")) {
       val valMostMen = menArgs("valueMost").head
-      toReturn("upper_bound") = valMostMen.text.toDouble
+//      val valMostMenDoubled = valMostMen.text.toDouble// if (parseDouble(valMostMen.text).isDefined) valMostMen.text.toDouble else valMostMen.text
+      if (parseDouble(valMostMen.text).isDefined) {
+        toReturn("upper_bound") =  valMostMen.text.toDouble
+      } else {
+        toReturn("upper_bound") =  valMostMen.text
+      }
+
       spans.append(makeLocationObj(valMostMen, Some(page), Some(block)))
 
     }

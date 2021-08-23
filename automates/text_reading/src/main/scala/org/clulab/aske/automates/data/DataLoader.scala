@@ -66,7 +66,7 @@ class CosmosJsonDataLoader extends DataLoader {
     */
   def loadFile(f: File): Seq[String] = {
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
-    cosmosDoc.cosmosOjects.filter(section => (section.cls.getOrElse("") != "Figure" && section.cls.getOrElse("") != "Table" )).map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)
+    cosmosDoc.cosmosOjects.filter(section => (section.cls.getOrElse("") != "Figure" && section.cls.getOrElse("") != "Table" ) && section.cls.getOrElse("") != "Reference text"  && section.cls.getOrElse("") != "Page Footer").map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get) // for some papers, also  && section.cls.getOrElse("") != "Equation" and && section.cls.getOrElse("") != "Section Header"
   }
   override val extension: String = "json"
 }

@@ -99,7 +99,7 @@ class TextReadingInterface:
                 "variables": variables,
                 "comments": json.load(open(comments_path, "r")),
             },
-            "toggles": {"groundToSVO": False, "groundToWiki": True, "saveWikiGroundings": True, "appendToGrFN": False},
+            "toggles": {"groundToSVO": False, "groundToWiki": False, "saveWikiGroundings": False, "appendToGrFN": False},
             "arguments": {"maxSVOgroundingsPerVar": 5},
             "wikidata": wikidata_path
         }

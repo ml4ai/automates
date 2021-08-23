@@ -176,9 +176,23 @@ rules:
     pattern: |
       (?<= [word="'"]) [word="s"]
 
-  - name: "in addition"
+  - name: "in_addition"
     label: Avoid
     priority: 2
     type: token
     pattern: |
       (?<= [lemma="in"]) [word="addition"]
+
+  - name: "Git"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      [lemma=/[Gg]it|github/]
+
+  - name: "re-verb"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      "(" "re" ")" (?=[tag = /^V/])

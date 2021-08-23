@@ -15,6 +15,7 @@ def main():
     parquet_files = os.listdir(parquet_file_folder)
 
     for filename in tqdm(parquet_files, desc="Converting parquets"):
+        print("filename: ", filename)
         if filename.endswith(".parquet"):
             parquet_filepath = os.path.join(parquet_file_folder, filename)
             parquet_df = pd.read_parquet(parquet_filepath)
@@ -31,6 +32,7 @@ def main():
                 for row_idx, datum in row_data.items():
                     row_idx_num = int(row_idx)
                     row_order_parquet_data[row_idx_num][field_key] = datum
+
 
             if filename == "documents.parquet":
                 # Sorts the content sections by page number and then by
@@ -110,7 +112,7 @@ def main():
                     )
                     json.dump(pdf_data, open(pdf_json_data_path, "w"))
 
-            if filename != "documents.parquet":
+            if filename.endswith("parquet"):
                 parquet_json_filepath = parquet_filepath.replace(
                     ".parquet", ".json"
                 )

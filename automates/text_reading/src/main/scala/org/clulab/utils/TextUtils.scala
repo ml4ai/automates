@@ -1,10 +1,10 @@
 package org.clulab.utils
 
 import java.io.IOException
-
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.odin.Mention
 import org.clulab.aske.automates.apps._
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -13,6 +13,7 @@ import scala.collection.mutable.ArrayBuffer
 object TextUtils {
   /**stores methods related to text mention extraction*/
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  lazy val proc = new FastNLPProcessor()
 
 def getMentionText(mention: Mention): String = {
 
@@ -32,10 +33,12 @@ def getMentionText(mention: Mention): String = {
       textPieces.append(fullDocText.slice(offset._1, offset._2).mkString(""))
     }
 
-   textPieces.mkString(" ")
+    textPieces.mkString(" ")
+   //proc.annotate(textPieces.mkString(" ")).sentences.head.lemmas.get.map(_.toLowerCase).mkString(" ")
 
   } else {
     mention.text
+    //mention.lemmas.get.mkString(" ")
   }
 }
 
