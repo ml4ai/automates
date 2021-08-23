@@ -154,7 +154,7 @@ def execute_gromet_experiment_json(experiment_json):
             sir_simple.drive,
         )
 
-    elif model_name == "CHIME-SIR":
+    elif model_name == "CHIME-SIR" or model_name == "CHIME_SIR_Base":
         expected_sir_simple_inputs = []
         try:
             results = run_model_experiment(
