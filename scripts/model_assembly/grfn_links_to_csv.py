@@ -36,9 +36,9 @@ def main():
             link_writer.writerow(
                 [
                     "Link Score",
-                    "Var-Comm Score",
-                    "Comm-GVar Score",
-                    "GVar-Eqn Score",
+                    "GlobalCodeVar-GlobalComm Score",
+                    "GlobalComm-GlobalVar Score",
+                    "GlobalVar-GlobalEqn Score",
                     "Comment Span",
                     "Text Mention(s) List",
                     "Equation Symbol",

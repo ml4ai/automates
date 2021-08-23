@@ -247,7 +247,7 @@ class GCodeVarNode(LinkNode):
 
     def get_table_rows(self, L: DiGraph) -> list:
         comm_span_nodes = [
-            n for n in L.predecessors(self) if isinstance(n, CommSpanNode)
+            n for n in L.predecessors(self) if isinstance(n, GCommSpanNode)
         ]
 
         rows = list()
@@ -297,7 +297,7 @@ class GVarNode(LinkNode):
         text_vars = [t_var for t_var in self.text_vars]
         txt = [n.content for n in text_vars]
 
-        eqn_span_nodes = [n for n in L.predecessors(self) if isinstance(n, EqnVarNode)]
+        eqn_span_nodes = [n for n in L.predecessors(self) if isinstance(n, GEqnVarNode)]
 
         rows = list()
         for eqn_span in eqn_span_nodes:
@@ -516,8 +516,6 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
 
         if isinstance(n2, GCommSpanNode):
             G.add_edge(n1, n2, weight=score)
-        # elif isinstance(n2, GVarNode):
-        #    G.add_edge(n2, n1, weight=score)
         else:
             report_bad_link(n1, n2)
 
@@ -621,7 +619,7 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
 
 
 def extract_link_tables(L: DiGraph) -> dict:
-    var_nodes = [n for n in L.nodes if isinstance(n, CodeVarNode)]
+    var_nodes = [n for n in L.nodes if isinstance(n, GCodeVarNode)]
 
     tables = dict()
     for var_node in var_nodes:
