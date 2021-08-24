@@ -134,12 +134,12 @@ def check_gromet_var_grfn_var_match(gromet, grfn_var_id_map):
                     for grfn_var_id in grfn_var_id_map.keys():
                         (
                             _,
-                            grfn_ns,
+                            _,
                             grfn_scope,
                             grfn_name,
                             grfn_ver,
                         ) = grfn_var_id.split("::")
-                        grfn_scope_without_namespace = grfn_scope[len(f"{grfn_ns}.") :]
+                        grfn_scope_without_namespace = grfn_scope.split(".", 1)[1]
 
                         if (
                             gromet_scope_corrected.lower()
@@ -148,8 +148,6 @@ def check_gromet_var_grfn_var_match(gromet, grfn_var_id_map):
                             and gromet_ver_corrected == int(grfn_ver)
                         ):
                             # print(f"Match! {var_obj['uid']},{grfn_var_id}")
-                            if len(grfn_var_id_map[grfn_var_id]["metadata"]) == 0:
-                                print("     no metadata")
                             var_obj["metadata"] = grfn_var_id_map[grfn_var_id][
                                 "metadata"
                             ]
