@@ -53,6 +53,7 @@ from .identifiers import (
     CAGContainerIdentifier,
 )
 from .metadata import (
+    EquationExtraction,
     TypedMetadata,
     ProvenanceData,
     MeasurementType,
@@ -2158,11 +2159,30 @@ class GroundedFunctionNetwork:
         :raises ExceptionName: Why the exception is raised.
 
         """
+
+        def extract_func_identifier(id):
+            pieces = id.split("::")
+            return pieces[1], pieces[2], pieces[3]
+
         data = json.load(open(json_path, "r"))
 
-        # Re-create variable and function nodes from their JSON descriptions
-        V = {v["uid"]: VariableNode.from_dict(v) for v in data["variables"]}
-        F = {f["uid"]: LambdaNode.from_dict(f) for f in data["functions"]}
+        #F = {FunctionIdentifier(f["uid"]) : BaseFuncNode.from_data(f) for f in data["functions"]}
+        F = dict()
+        for f in data["functions"]:
+            namespace,scope,name = extract_func_identifier(f["indentifier"])
+            F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=0)] = BaseFuncNode.from_data(f,F)
+
+        V = {VariableIdentifier(v["uid"]) : VariableNode.from_dict(v) for v in data["variables"]}
+        O = {ObjectIdentifier(o["uid"]) : ObjectDef.from_dict(o) for o in data["objects"]}
+        T = {TypeIdentifier(t["uid"]) : TypeDef.from_data(t) for t in data["types"]}
+        M = [TypedMetadata.from_data(m) for m in data["metadata"]]
+
+        namespace,scope,name = extract_func_identifier(data["entry_point"])
+
+        return cls(data["uid"], 
+        GrFNIdentifier(namespace=namespace,scope=scope,name=name), 
+        FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=0), 
+        F, V, O, T, M)
 
         # Add all of the function and variable nodes to a new DiGraph
         G = nx.DiGraph()
