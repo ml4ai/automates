@@ -742,7 +742,6 @@ class HasContents:
 
             func = edge.func_node
 
-            # if all vars in live
             live_var_names = set(live_vars.keys())
             if all([i.identifier.name in live_var_names for i in edge.inputs]):
                 visited.add(edge)
@@ -778,7 +777,6 @@ class HasContents:
                 # queue and prevent infinite loop
                 edge_queue.append(edge)
 
-        # wire_across_funcs(initial_edges)
         for ovar_id in func.output_variables:
             (origin_func, origin_var) = live_vars[ovar_id.name]
             new_wire = Wire.from_caller_callee(
@@ -817,6 +815,7 @@ class HasContents:
                         )
                     new_junc = Junction.from_var_node_and_lit_func(out_var, l_func)
                     junctions.append(new_junc)
+
         return wires, variables, junctions
 
     @staticmethod
@@ -957,6 +956,8 @@ class Expression(Box):  # BoxDirected
 
     @classmethod
     def from_func_node(cls, func: ExpressionFuncNode):
+        # if len(func.input_variables) == 0:
+        #     return Junction.from_var_node_and_lit_func()
         return cls(
             uid=UidExpression(Box.build_uid(func.identifier, "Expression")),
             type=UidType("Expression"),
@@ -1245,6 +1246,10 @@ class Loop(Box, HasContents):  # BoxDirected
             )
         ][0]
 
+        # TODO can clean up below such that the three decision node removals
+        # share the same code
+        # --------------- Remove first input decision -----------------
+
         outputs_to_input_map = {
             output: input
             for (output, input) in zip(
@@ -1253,10 +1258,11 @@ class Loop(Box, HasContents):  # BoxDirected
         }
         preds = hyper_graph.predecessors(input_decision_edge)
         for pred_edge in list(preds):
-            edges = hyper_graph.edges(pred_edge)
             in_edges = hyper_graph.in_edges(pred_edge)
             out_edges = hyper_graph.out_edges(pred_edge)
+
             hyper_graph.remove_node(pred_edge)
+
             for idx, input in enumerate(pred_edge.inputs):
                 if input in outputs_to_input_map:
                     pred_edge.inputs[idx] = outputs_to_input_map[input]
@@ -1270,8 +1276,11 @@ class Loop(Box, HasContents):  # BoxDirected
                 hyper_graph.add_edge(pred_edge, tgt)
 
         hyper_graph.remove_node(input_decision_edge)
+        func.hyper_edges = [
+            edge for edge in func.hyper_edges if edge != input_decision_edge
+        ]
 
-        # --------------------------------
+        # --------------- Remove last output decision -----------------
 
         succs = hyper_graph.successors(output_decision_edge)
         for succ_edge in list(succs):
@@ -1292,8 +1301,41 @@ class Loop(Box, HasContents):  # BoxDirected
                 hyper_graph.add_edge(succ_edge, tgt)
 
         hyper_graph.remove_node(output_decision_edge)
+        func.hyper_edges = [
+            edge for edge in func.hyper_edges if edge != output_decision_edge
+        ]
 
-        # hyper_graph.remove_node(condition_decision_edge)
+        # --------------- Remove conditional inverting "exit" decision -----------------
+
+        # Update the condition node to calculate the not of the condition and
+        # output "exit"
+        cond_succs = hyper_graph.predecessors(condition_decision_edge)
+
+        # A conditional decision node should only have one successor, the hyper
+        # edge calculating the cond var
+        conditional_hyper_edge = list(cond_succs)[0]
+        in_edges = hyper_graph.in_edges(conditional_hyper_edge)
+        out_edges = hyper_graph.out_edges(conditional_hyper_edge)
+        hyper_graph.remove_node(conditional_hyper_edge)
+
+        conditional_hyper_edge.outputs = condition_decision_edge.outputs
+        # conditional_hyper_edge.outputs = []
+        conditional_hyper_edge.func_node.output_variables = [
+            s.identifier for s in conditional_hyper_edge.outputs
+        ]
+
+        # TODO this does nothing currently
+        hyper_graph.add_node(conditional_hyper_edge)
+        for src, _ in in_edges:
+            hyper_graph.add_edge(src, conditional_hyper_edge)
+
+        for _, tgt in out_edges:
+            hyper_graph.add_edge(conditional_hyper_edge, tgt)
+
+        hyper_graph.remove_node(condition_decision_edge)
+        func.hyper_edges = [
+            edge for edge in func.hyper_edges if edge != condition_decision_edge
+        ]
 
     @classmethod
     def from_func_node(cls, func: LoopConFuncNode):
@@ -1407,7 +1449,12 @@ class Gromet(TypedGrometElm):
         (literals, junctions, ports, wires, boxes, variables) = [
             list() for _ in range(6)
         ]
-        for func_node in G.functions.values():
+        # Sort functions by containers then expressions
+        functions = list(G.functions.values())
+        functions.sort(
+            key=lambda v: -1 if isinstance(v, (LoopConFuncNode, CondConFuncNode)) else 1
+        )
+        for func_node in functions:
             (
                 nlits,
                 njuncs,
@@ -1424,7 +1471,7 @@ class Gromet(TypedGrometElm):
             variables.extend(nvars)
 
         gromet_type = UidType("GroMEt")
-        gromet_name = G.identifier.name
+        gromet_name = ".".join(G.identifier.name.split(".")[:-1])
         gromet_metdata = G.metadata
         gromet_id = UidGromet(str(uuid.uuid4()))
 
@@ -1485,7 +1532,7 @@ class Gromet(TypedGrometElm):
                 raise Exception(f"Error: Unknown op type: {type(op)}")
             graph.add_node(expr_node_id, label=label)
 
-            arg_res = (None, dict())
+            children_nodes = dict()
             op_count += 1
             for arg in tree.args:
                 if isinstance(arg, str):
@@ -1493,12 +1540,21 @@ class Gromet(TypedGrometElm):
                 elif isinstance(arg, Expr):
                     arg_res = parse_expr_tree(box_uid, arg, op_count)
                     graph.add_edge(arg_res[0], expr_node_id)
+                    children_nodes.update(arg_res[1])
                     op_count = arg_res[2]
                 else:
                     # TODO better exception
                     raise Exception(f"Error: Unknown Expr arg type: {type(arg)}")
 
-            return (expr_node_id, {expr_node_id: None, **arg_res[1]}, op_count)
+            return (expr_node_id, {expr_node_id: None, **children_nodes}, op_count)
+
+        def add_port_node(port):
+            graph.add_node(
+                port.uid,
+                # label=f"{port.type}: {port.name}",
+                label=f"{port.type}: {port.uid}",
+                shape="box",
+            )
 
         def parse_box(box):
             box_to_sub_boxes = dict()
@@ -1506,16 +1562,18 @@ class Gromet(TypedGrometElm):
                 return dict()
 
             visited_boxes.add(box.uid)
+            box_to_sub_boxes[box.uid] = dict()
 
             if isinstance(box, (Function, Loop, Conditional)):
-                graph.add_node(box.uid)
-                box_to_sub_boxes[box.uid] = dict()
                 for child_box_uid in box.boxes:
                     child_box = get_box_with_uid(child_box_uid)
                     box_to_sub_boxes[box.uid].update(parse_box(child_box))
+
                 for port_uid in box.ports:
-                    graph.add_node(port_uid)
-                    box_to_sub_boxes.update({port_uid: None})
+                    port = get_port_with_uid(port_uid)
+                    add_port_node(port)
+                    box_to_sub_boxes[box.uid].update({port_uid: None})
+
                 for wire_uid in box.wires:
                     wire = get_wire_with_uid(wire_uid)
                     graph.add_edges_from([(wire.src, wire.tgt)])
@@ -1523,7 +1581,7 @@ class Gromet(TypedGrometElm):
                 output_ports = list()
                 for port_uid in box.ports:
                     port = get_port_with_uid(port_uid)
-                    graph.add_node(port_uid, label=f"{port.type}: {port.name}")
+                    add_port_node(port)
                     box_to_sub_boxes.update({port_uid: None})
                     if port.type == "PortOutput":
                         output_ports.append(port.uid)
@@ -1531,7 +1589,7 @@ class Gromet(TypedGrometElm):
                 # TODO this is here because some trees are null??
                 if box.tree != None:
                     expr_res = parse_expr_tree(box.uid, box.tree)
-                    box_to_sub_boxes.update(expr_res[1])
+                    box_to_sub_boxes[box.uid].update(expr_res[1])
                     for p_uid in output_ports:
                         graph.add_edge(list(expr_res[1].keys())[0], p_uid)
 
@@ -1555,14 +1613,13 @@ class Gromet(TypedGrometElm):
                 return [res for res_list in children_lists for res in res_list] + [uid]
 
         def build_agraph(parent, uid, children):
-            box = get_box_with_uid(uid)
             nodes = list()
             color = "black"
-            # Should be an expression box in this condition
+            # Should be an internal node to an expression box in this condition
             if children == None:
                 nodes = [n for n in graph.nodes if n == uid]
                 nodes.extend(gather_children_nodes(uid, children))
-                color = "green"
+                color = "pink"
             else:
                 box = get_box_with_uid(uid)
                 nodes.extend([n for n in graph.nodes if n == uid])
@@ -1570,10 +1627,16 @@ class Gromet(TypedGrometElm):
                 if isinstance(box, Loop):
                     color = "blue"
                 elif isinstance(box, Conditional):
-                    color = "orange"
+                    color = "pink"
                 elif isinstance(box, BoxCall):
-                    color = "blue"
-                print(f"Found children {gather_children_nodes(uid, children)}")
+                    color = "orange"
+                elif isinstance(box, Expression):
+                    color = "purple"
+                    if "condition" in box.name:
+                        color = "pink"
+                elif isinstance(box, Expression):
+                    color = "green"
+
                 nodes.extend(gather_children_nodes(uid, children))
                 new_sub = parent.add_subgraph(
                     nodes,
