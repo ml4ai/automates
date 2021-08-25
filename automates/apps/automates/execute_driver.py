@@ -6,6 +6,7 @@ import automates.apps.automates.model_code.chime_sir as chime
 import automates.apps.automates.model_code.sir_simple as sir_simple
 import automates.apps.automates.model_code.chime_sviivr as chime_plus
 
+
 def parse_execution_inputs(inputs):
     execution_inputs = {i["variable_identifier"]: np.array(i["value"]) for i in inputs}
     return execution_inputs
