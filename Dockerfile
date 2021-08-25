@@ -20,7 +20,10 @@ RUN apt-get -y --no-install-recommends install python3-dev python3-pip python3-v
 RUN wget www.scala-lang.org/files/archive/scala-2.13.0.deb
 RUN dpkg -i scala*.deb
 RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
+
+RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list
+RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | tee /etc/apt/sources.list.d/sbt_old.list
+RUN curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | apt-key add
 RUN apt-get update && apt-get -y --no-install-recommends install sbt
 
 # Add dependencies needed to compile GCC for use in PA pipeline
