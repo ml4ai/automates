@@ -181,6 +181,11 @@ class LocalTextReadingInterface(TextReadingInterface):
                 "mentions": "tests/data/example-tr-data/chime-sir/CHIME-SIR--mentions.json",
                 "alignment": "tests/data/example-tr-data/chime-sir/CHIME-SIR--alignment.json",
             },
+            "CHIME_SVIIvR": {
+                # TODO mentions file doesnt actually have data in it, just mocked
+                "mentions": "tests/data/example-tr-data/chime-sviivr/CHIME-SVIIvR--mentions.json",
+                "alignment": "tests/data/example-tr-data/chime-sviivr/CHIME_SVIIvR--GrFN3--alignment.json",
+            },
         }
 
     def extract_mentions(self, doc_path: str, out_path: str) -> dict:
