@@ -221,8 +221,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def cosmos_json_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data)
+
     println("_>>" + pathJson)
     val jsonPath = pathJson("pathToCosmosJson").str
+    val fileName = new File(jsonPath).getName.replace("--COSMOS-data.json", ".pdf")
     println(">>>" + jsonPath)
     logger.info(s"Extracting mentions from $jsonPath")
 
@@ -231,11 +233,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val loader = new CosmosJsonDataLoader
     val textsAndLocations = loader.loadFile(jsonPath)
     val texts = textsAndLocations.map(_.split("::").head)
+
+    // todo: get the source doc name from the cosmos doc and place it in locations
+    // then can sort texts by src doc and then extract mentions for each group with the file name passed based on the one we got in location
+
     val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
 
     println("started extracting")
     // extract mentions form each text block
-    val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(jsonPath)))
+    val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(fileName)))
 
     // store location information from cosmos as an attachment for each mention
     val menWInd = mentions.zipWithIndex

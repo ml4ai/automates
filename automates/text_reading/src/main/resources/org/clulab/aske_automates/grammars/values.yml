@@ -27,7 +27,7 @@ rules:
     type: token
     example: "63 million of cats"
     pattern: |
-      @Value @Value
+      @Value ","? @Value
 
 
 

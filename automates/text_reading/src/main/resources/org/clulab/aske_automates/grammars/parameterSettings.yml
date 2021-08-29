@@ -46,8 +46,8 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     action: ${paramSetAction}
     pattern: |
-      trigger = [lemma='=']
-      variable:Identifier = <amod
+      trigger = [lemma="="]
+      variable:Identifier = <amod | nsubj [!tag="CD"]
       value:Value = dep
 
 
@@ -58,7 +58,9 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0, We therefore assume that S(0) = 6.8 – 0.5 = 6.3 million."
     action: ${paramSetAction}
     pattern: |
-      (@variable:Identifier|@variable:Phrase [!tag="CD"]) (?<trigger> [word="="]) @value:Value
+      @variable:Identifier (?<trigger> [word="="]) @value:Value
+      |
+      (@variable:Phrase [!tag="CD"]) (?<trigger> [word="="]) @value:Value
 #      (@variable:Identifier|@variable:Phrase [!tag=/CD|VBZ/ & !lemma = "be"]) (?<trigger> [word="="]) @value:Value
 
 

@@ -41,6 +41,7 @@ object AutomatesJSONSerializer {
     val menType = mentionComponents("type").str
     val attachments = new ArrayBuffer[Attachment]
 
+
     if (mentionComponents.obj.contains("attachments")) {
       val attObjArray = mentionComponents("attachments").arr
       for (ao <- attObjArray) {
@@ -192,6 +193,7 @@ object AutomatesJSONSerializer {
     val sentences = docComponents("sentences").arr.map(toSentence(_)).toArray
     val doc = Document(sentences)
     doc.text = Some(docComponents("text").str)
+    doc.id = Some(docComponents("id").str)
     doc
   }
 

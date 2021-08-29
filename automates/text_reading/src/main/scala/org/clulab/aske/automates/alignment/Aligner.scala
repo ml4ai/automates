@@ -153,16 +153,16 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
     // keep for debugging align scores
     for ((src, i) <- srcTexts.zipWithIndex) {
       for ((dst, j) <- dstTexts.zipWithIndex) {
-        println("++++")
-        println(src.mkString(""))
-        println(dst.mkString(""))
+//        println("++++")
+//        println(src.mkString(""))
+//        println(dst.mkString(""))
         val embScore = compare(src, dst, false)// + (1.0 / (editDistance(src, dst) + 1.0)))
-        println("-> emb score: " + embScore)
+//        println("-> emb score: " + embScore)
         val distScore = (10.0 / (editDistance(src, dst) + 1.0))
 //        println("matches normalized: " + numberOfExactMatchNormalized)
         val overallScore = embScore + distScore
-        println("-> edit dist score: " + distScore)
-        println("-> overall: " + overallScore )
+//        println("-> edit dist score: " + distScore)
+//        println("-> overall: " + overallScore )
       }
     }
 

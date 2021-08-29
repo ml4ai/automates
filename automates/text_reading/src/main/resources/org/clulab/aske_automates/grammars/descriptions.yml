@@ -311,6 +311,25 @@ rules:
     pattern: |
       [word=/a|an|the/] (?<description> [tag=/JJ|VBN/] [tag=/^N/] ) @variable:Identifier (?![tag=/^N/])
 
+  - name: at_rate
+    label: Description
+    priority: ${priority}
+    type: token
+    example: ""
+    action: ${action}
+    pattern: |
+      (?<description> @Phrase [tag = /^VB/] [word = /.*/]{,5} "at" "rate") @variable:Identifier
+      |
+      (?<description> @Phrase [word = /.*/]{,5} "at" "rate") @variable:Identifier
+
+  - name: at_rate_with_verb
+    label: Description
+    priority: ${priority}
+    type: token
+    example: ""
+    action: ${action}
+    pattern: |
+      (?<description> [tag = /^VB/] [word = /.*/]{,5} "at" "a"? [word = /\w*/]?  "rate") @variable:Identifier
 
   - name: identifier_ellipsis_descr
     label: Description
@@ -330,6 +349,18 @@ rules:
     action: ${action}
     pattern: |
       @variable:Identifier [word = ","] (@description: Phrase ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","] (?! [word = "and"])
+
+  - name: identifier_def_ideal_table
+    label: Description
+    priority: ${priority}
+    type: dependency
+    example: ""
+    action: ${action}
+    pattern: |
+      trigger = [lemma=/[Pp]opulation/]
+      description:Phrase = nmod_of
+      variable:Identifier = compound
+
 
   - name: descr_is_identifier_equal
     label: Description

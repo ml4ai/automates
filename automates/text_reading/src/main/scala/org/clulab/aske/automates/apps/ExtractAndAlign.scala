@@ -76,8 +76,8 @@ object ExtractAndAlign {
     GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> 1.5,
     GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> 1.0,
     GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> 2.0,
-    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER -> 0.5,
-    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> 0.5,
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER -> 1.0,
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> 2.0,
     EQN_TO_GLOBAL_VAR -> 0.5,
     COMMENT_TO_GLOBAL_VAR -> 0.5),
     "indirect" -> ujson.Obj(
@@ -545,14 +545,14 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get)
+        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER).num)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get)
+        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT).num)
       }
 
     }
