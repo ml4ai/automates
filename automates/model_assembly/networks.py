@@ -243,13 +243,18 @@ class VariableNode(BaseNode):
 
     @classmethod
     def from_dict(cls, data: dict):
+        if len(data["identifier"].split("::")) == 5:
+            var_id =  VariableIdentifier.from_name_str(data["identifier"])   
+        else:
+            var_id =  VariableIdentifier.from_str(data["identifier"])   
+
         return cls(
-            data["uid"],
-            VariableIdentifier.from_str(data["identifier"]),
-            data["object_ref"] if "object_ref" in data else "",
-            [TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
+            uid=data["uid"],
+            identifier=var_id,
+            metadata=[TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
             if "metadata" in data
             else [],
+            object_ref=data["object_ref"] if "object_ref" in data else "",
         )
 
     def to_dict(self) -> dict:
@@ -2162,26 +2167,35 @@ class GroundedFunctionNetwork:
 
         def extract_func_identifier(id):
             pieces = id.split("::")
-            return pieces[1], pieces[2], pieces[3]
+            print(pieces)
+            if len(pieces) > 4:
+                return pieces[-4], pieces[-3], pieces[-2], pieces[-1]
+            else:
+                return pieces[1], pieces[2], pieces[3]
 
         data = json.load(open(json_path, "r"))
 
         #F = {FunctionIdentifier(f["uid"]) : BaseFuncNode.from_data(f) for f in data["functions"]}
         F = dict()
         for f in data["functions"]:
-            namespace,scope,name = extract_func_identifier(f["indentifier"])
-            F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=0)] = BaseFuncNode.from_data(f,F)
+            namespace,scope,name,idx = extract_func_identifier(f["identifier"])
+            F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = BaseFuncNode.from_data(f,F)
 
-        V = {VariableIdentifier(v["uid"]) : VariableNode.from_dict(v) for v in data["variables"]}
+        V = dict()
+        for v in data["variables"]:
+            namespace,scope,name,idx = extract_func_identifier(v["identifier"])
+            V[VariableIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = VariableNode.from_dict(v)
+
         O = {ObjectIdentifier(o["uid"]) : ObjectDef.from_dict(o) for o in data["objects"]}
         T = {TypeIdentifier(t["uid"]) : TypeDef.from_data(t) for t in data["types"]}
         M = [TypedMetadata.from_data(m) for m in data["metadata"]]
 
-        namespace,scope,name = extract_func_identifier(data["entry_point"])
+        grfn_ns,grfn_scope,grfn_name = extract_func_identifier(data["identifier"])
+        fn_ns,fn_scope,fn_name,fn_idx = extract_func_identifier(data["entry_point"])
 
         return cls(data["uid"], 
-        GrFNIdentifier(namespace=namespace,scope=scope,name=name), 
-        FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=0), 
+        GrFNIdentifier(namespace=grfn_ns,scope=grfn_scope,name=grfn_name), 
+        FunctionIdentifier(namespace=fn_ns,scope=fn_scope,name=fn_name,index=int(fn_idx)), 
         F, V, O, T, M)
 
         # Add all of the function and variable nodes to a new DiGraph
