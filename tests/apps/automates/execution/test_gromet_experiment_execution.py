@@ -112,3 +112,83 @@ def test_execute_chime_sir_mock():
     }
 
     assert result == expected
+
+
+def test_execute_chime_sviivr_mock():
+    input_json = {
+        "command": "simulate-gsl",
+        "definition": {"type": "gromet-fn", "source": '{"name": "CHIME_SVIIvR"}'},
+        "start": 0,
+        "end": 120.0,
+        "step": 30,
+        "domain_parameter": "J:main.n_days",
+        "parameters": {
+            "J:main.i_day": 17.0,
+            "J:main.N_p": 20,
+            "J:main.infectious_days_unvaccinated": 14,
+            "J:main.infectious_days_vaccinated": 10,
+            "J:main.vaccination_rate": 0.02,
+            "J:main.vaccine_efficacy": 0.85,
+            "J:main.relative_contact_rate": 0.45,
+            "J:main.s_n": 1000,
+            "J:main.v_n": 0,
+            "J:main.i_n": 1,
+            "J:main.i_v_n": 0,
+            "J:main.r_n": 0,
+        },
+        "outputs": [
+            "P:main.out.S",
+            "P:main.out.E",
+            "P:main.out.I",
+            "P:main.out.R",
+            "P:main.out.V",
+        ],
+    }
+    result = execute_gromet_experiment_json(input_json)
+
+    expected = {
+        "code": 200,
+        "result": {
+            "domain_parameter": [0, 30, 60, 90, 120],
+            "values": {
+                "P:main.out.E": [
+                    1,
+                    73.95817522828585,
+                    299.4813761732133,
+                    382.57161098064415,
+                    0.0,
+                ],
+                "P:main.out.I": [
+                    1,
+                    40.77946378271174,
+                    69.45877436716297,
+                    19.550333583051962,
+                    3.369246624335182,
+                ],
+                "P:main.out.R": [
+                    0,
+                    29.69380194651054,
+                    211.0451150975806,
+                    352.2147278757421,
+                    391.94368106215154,
+                ],
+                "P:main.out.S": [
+                    1000,
+                    487.999750917069,
+                    137.4377460493456,
+                    45.93570973719449,
+                    21.97584305388535,
+                ],
+                "P:main.out.V": [
+                    0,
+                    439.04207385464514,
+                    564.0808777774411,
+                    572.4926792821614,
+                    580.8429534496793,
+                ],
+            },
+        },
+        "status": "success",
+    }
+
+    assert result == expected
