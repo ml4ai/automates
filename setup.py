@@ -1,13 +1,11 @@
 """ setuptools-based setup module. """
 
 import os
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 import re
 import sys
 import platform
 from subprocess import check_call, check_output
-
-from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
