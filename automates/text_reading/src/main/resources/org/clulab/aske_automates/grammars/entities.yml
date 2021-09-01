@@ -151,22 +151,40 @@ rules:
       [tag = /DT/] ("so" "called")? [word = /[A-Z][a-z]+|and|-/]+ "(" [word=/[A-Z]{3,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ")" [word = "model"]
 
   # moved below two rules from model.yml file.
-#  - name: capital_model
-#    label: Model
-#    priority: ${priority1}
-#    type: token
-#    example: ""
-#    pattern: |
-#      [word=/[A-Z]+/] (?=[word=/[Mm]odel$/])
+  - name: capital_model
+    label: Model
+    priority: ${priority1}
+    type: token
+    action: modelArguments
+    example: ""
+    pattern: |
+      [word=/[A-Z]+/] (?=[word=/[Mm]odel$/])
 
   - name: model_compound
     label: Model
     priority: ${priority1}
     type: dependency
+    action: modelArguments
     example: ""
     pattern: |
       trigger = [word = /[Mm]odel$/]
-      variable:Phrase = compound
+      variable:Phrase = compound | amod
+
+  - name: the/this_model
+    label: Model
+    priority: ${priority1}
+    type: token
+    example: ""
+    pattern: |
+      [tag = /DT/] [tag = /JJ/]? [word=/model$/]
+
+  - name: our_model
+    label: Model
+    priority: ${priority1}
+    type: token
+    example: ""
+    pattern: |
+      [word = /[Oo]ur/] [tag = /JJ/]? [word=/model$/]
 
 #  - name: var_greek_and_latin
 #    label: Identifier

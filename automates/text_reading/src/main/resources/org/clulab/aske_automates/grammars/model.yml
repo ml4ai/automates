@@ -7,7 +7,7 @@ rules:
     label: Model
     priority: ${priority}
     type: token
-#    action: modelArguments
+    action: modelArguments
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
       [word=/^DSSAT|^CSM|^CHIRPS/] | [word=/[A-Z]*/] (?=[word=/[Mm]odel$/])
@@ -17,7 +17,7 @@ rules:
     priority: ${priority}
     type: dependency
     example: ""
-#    action: modelArguments
+    action: modelArguments
     pattern: |
       trigger = [word = /[Mm]odel$/]
       variable:Identifier = compound

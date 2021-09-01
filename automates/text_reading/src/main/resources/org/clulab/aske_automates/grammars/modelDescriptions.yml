@@ -12,7 +12,7 @@ rules:
     type: token
     example: "The model also suggests that there might exist a SARS precursor in a large reservoir, prompting for implementation of precautionary measures when the weather cools down."
     pattern: |
-      (?<model> [word = "model"]) [word = "also"]? [lemma = /suggest|/] [word = /that/] (?<modelDescr> [word = /.*/]+) "."
+      @model:Model [word = "also"]? [lemma = /suggest|/] [word = /that/] (?<modelDescr> [word = /.*/]+) "."
 
   - name: model_cannot
     label: ModelDescr
@@ -39,7 +39,7 @@ rules:
     example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
     pattern: |
       trigger = [word = "not"] (?= [lemma = /hold/])
-      model:Phrase = <neg nsubj
+      model:Model = <neg nsubj
       modelDescr:Phrase = <neg
 
   - name: model_cop
@@ -59,7 +59,7 @@ rules:
     example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
     pattern: |
       trigger = [lemma = "predict"]
-      model:Phrase = <acl_to <dobj nsubj | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj
+      model:Model = <acl_to <dobj nsubj | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj
       modelDescr:Phrase = dobj
 
     # how do we know if "This" is referencing to a model?
@@ -70,7 +70,7 @@ rules:
     example: "This allows for more realistic simulation of the soil water profile and application of excess irrigation for leaching salts."
     pattern: |
       trigger = [lemma = "allow"]
-      model:Phrase = nsubj (nmod_in)?
+      model:Model = nsubj (nmod_in)?
       modelDescr:Phrase+ = nmod_for
 
   - name: model_contributes_to
@@ -80,7 +80,7 @@ rules:
     example: "It also contributes to understanding complex ecosystems as well as water availability, water quality, climate change, and agricultural production issues across the world"
     pattern: |
       trigger = [lemma = "contribute"]
-      model:Phrase = nsubj
+      model:Model = nsubj
       modelDescr:Phrase+ = advcl_to
 
   - name: model_capability
@@ -100,7 +100,7 @@ rules:
     example: "QSWAT can also show the total, daily, monthly orannual means, maxima and minima for reach and subbasin out-puts."
     pattern: |
       trigger = [lemma = "can"]
-      model:Phrase = <aux nsubj
+      model:Model = <aux nsubj
       modelDescr:Phrase+ = <aux
 
   - name: model_useful_to
@@ -110,7 +110,7 @@ rules:
     example: "Our model would then be useful to enforce proper precautionary measures immediately."
     pattern: |
       trigger = [lemma = "useful"] (?= "to")
-      model:Phrase = nsubj
+      model:Model = nsubj
       modelDescr:Phrase+ = xcomp
 
   - name: model_consist_of
@@ -120,7 +120,7 @@ rules:
     example: "A high-resolution SWAT model, consisting of sub-field level hydrologic response units, was applied to Lake Champlain’s Missisquoi Bay Watershed, located along the United States–Canadian border."
     pattern: |
       trigger = [lemma = "consist"] (?= "of")
-      model:Phrase = <acl
+      model:Model = <acl
       modelDescr:Phrase = nmod_of
 
   - name: modelPurpose
