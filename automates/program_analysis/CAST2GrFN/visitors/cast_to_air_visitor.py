@@ -240,7 +240,7 @@ class CASTToAIRVisitor(CASTVisitor):
             right_side_var = [v for v in right_res[-1].input_variables][0]
             tuple_name = right_side_var.identifier_information.name
             for idx, v in enumerate(left_res[-1].input_variables):
-                self.visit(
+                tuple_item_assignment_result = self.visit(
                     Assignment(
                         left=Var(val=Name(name=v.identifier_information.name)),
                         right=Subscript(
@@ -259,7 +259,7 @@ class CASTToAIRVisitor(CASTVisitor):
                             C2AIdentifierType.LAMBDA,
                         ),
                         [right_side_var],
-                        [v],
+                        tuple_item_assignment_result[-1].output_variables,
                         [],
                         C2ALambdaType.ASSIGN,
                         source_ref,

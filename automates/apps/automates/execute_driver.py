@@ -4,6 +4,7 @@ import json
 from automates.model_assembly.networks import GroundedFunctionNetwork, VariableNode
 import automates.apps.automates.model_code.chime_sir as chime
 import automates.apps.automates.model_code.sir_simple as sir_simple
+import automates.apps.automates.model_code.chime_sviivr as chime_plus
 
 
 def parse_execution_inputs(inputs):
@@ -46,7 +47,7 @@ def execute_grfn_json(grfn_json, input_json, outputs_json):
     return results
 
 
-def collect_unknown_experiment_inputs(expected, given):
+def collect_keys_not_in_dict(expected, given):
     found_unknown_keys = list()
     for input in expected:
         if input not in given:
@@ -57,12 +58,11 @@ def collect_unknown_experiment_inputs(expected, given):
 def run_model_experiment(
     name, start, end, step, expected_parameters, parameters, drive_fn
 ):
-    found_unknown_keys = collect_unknown_experiment_inputs(
-        expected_parameters, parameters
-    )
+    found_unknown_keys = collect_keys_not_in_dict(expected_parameters, parameters)
     if len(found_unknown_keys) > 0:
         return {
             "code": 400,
+            "status": "failure",
             "error": f"Did not find expected parameters {found_unknown_keys} for model {name}.",
         }
 
@@ -76,8 +76,8 @@ def execute_gromet_experiment_json(experiment_json):
     {
         "command": "simulate-gsl",
         "definition": {
-            "type": "easel",
-            "source": "{ \"model\": \" GroMEt Model String \" }"
+            "type": "gromet-fnet",
+            "source": "{ GroMEt Model String }"
         },
         "start": 0,
         "end": 120.0,
@@ -132,36 +132,30 @@ def execute_gromet_experiment_json(experiment_json):
     domain_parameter = experiment_json["domain_parameter"]
     parameters = experiment_json["parameters"]
     outputs = experiment_json["outputs"]
-    gromet_source_json_str = experiment_json["definition"]["source"]["model"]
+    gromet_source_json_str = experiment_json["definition"]["source"]
     gromet_obj = json.loads(gromet_source_json_str)
     model_name = gromet_obj["name"]
 
     results = {}
-    if model_name == "SIR-simple":
-        expected_sir_simple_inputs = [
-            "SIR-simple::SIR-simple::sir::0::--::s::0",
-            "SIR-simple::SIR-simple::sir::0::--::i::0",
-            "SIR-simple::SIR-simple::sir::0::--::r::0",
-            "SIR-simple::SIR-simple::sir::0::--::beta::0",
-            "SIR-simple::SIR-simple::sir::0::--::gamma::0",
+    if model_name == "SimpleSIR_metadata" or model_name == "SimpleSIR":
+        chime_expected_sir_simple_inputs = [
+            "P:sir.in.S",
+            "P:sir.in.I",
+            "P:sir.in.R",
+            "P:sir.in.beta",
+            "P:sir.in.gamma",
         ]
-        try:
-            results = run_model_experiment(
-                model_name,
-                start,
-                end,
-                step,
-                expected_sir_simple_inputs,
-                parameters,
-                sir_simple.drive,
-            )
-        except:
-            return {
-                "status": 500,
-                "message": f'Error: Encountered issue while executing experiment "{model_name}".',
-            }
+        results = run_model_experiment(
+            model_name,
+            start,
+            end,
+            step,
+            chime_expected_sir_simple_inputs,
+            parameters,
+            sir_simple.drive,
+        )
 
-    elif model_name == "CHIME-SIR":
+    elif model_name == "CHIME-SIR" or model_name == "CHIME_SIR_Base":
         expected_sir_simple_inputs = []
         try:
             results = run_model_experiment(
@@ -178,16 +172,51 @@ def execute_gromet_experiment_json(experiment_json):
                 "status": 500,
                 "message": f'Error: Encountered issue while executing experiment "{model_name}".',
             }
+    elif model_name == "CHIME_SVIIvR":
+        expected_sir_simple_inputs = []
+        try:
+            results = run_model_experiment(
+                model_name,
+                start,
+                end,
+                step,
+                expected_sir_simple_inputs,
+                parameters,
+                chime_plus.drive,
+            )
+        except:
+            return {
+                "status": 500,
+                "message": f'Error: Encountered issue while executing experiment "{model_name}".',
+            }
     else:
-        return {
+        results = {
+            "status": "failure",
             "code": 400,
-            "message": f'Unable to run model experiment for "{model_name}".',
+            "message": f'Unable to run model experiment for "{model_name}": Unknown model name.',
+        }
+
+    if "status" in results and results["status"] == "failure":
+        return results
+    elif domain_parameter not in results:
+        return {
+            "status": "failure",
+            "code": 400,
+            "message": f'Unknown domain parameter for "{model_name}": "{domain_parameter}".',
+        }
+    elif any([k not in results for k in outputs]):
+        unknown_outputs = [k for k in outputs if k not in results]
+        return {
+            "status": "failure",
+            "code": 400,
+            "message": f'Unknown output variables for "{model_name}": "{unknown_outputs}".',
         }
 
     return {
-        "status": 200,
-        "body": {
+        "result": {
             "values": {k: v for k, v in results.items() if k in outputs},
             "domain_parameter": results[domain_parameter],
         },
+        "status": "success",
+        "code": 200,
     }

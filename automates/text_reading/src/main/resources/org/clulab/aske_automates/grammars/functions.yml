@@ -25,7 +25,7 @@ rules:
     pattern: |
       trigger = [word = /${functionTrigger2}/] (?= "of")
       input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos | nmod_in appos
-      output:Phrase = (csubj|<nmod_to)? nsubj | <nmod_as (<acl | nsubjpass | dobj)? | <nsubj ccomp nummod | <dep
+      output:Phrase = (csubj|<nmod_to|<dobj)? nsubj | <nmod_as (<acl | nsubjpass | dobj)? | <nsubj ccomp nummod | <dep
 
   - name: trigger3 # estimate, calculate, compute, determine, predict is the trigger for this rule
     label: Function
@@ -35,7 +35,7 @@ rules:
     example: "G for monthly periods in MJ m-2 d-1 is estimated from the change in mean monthly air temperature"
     pattern: |
       trigger = [lemma = /${functionTrigger3}/]
-      input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj | nmod_for nmod_on nmod_of | <amod nmod_of | nmod_according_to
+      input:Phrase+ = dobj? nmod_from conj_and? | xcomp dobj | advcl_based_on | nsubj:xsubj (<nsubjpass nmod_in nmod_with)? | nmod_for nmod_on nmod_of | <amod nmod_of | nmod_according_to
       output:Phrase = nsubjpass conj_or? | dobj | <amod <nmod_from nsubjpass | <acl | ccomp nsubj
 
   - name: trigger4_of_to # ratio, fraction is the trigger for this rule
@@ -49,6 +49,17 @@ rules:
       input:Phrase+ = nmod_of conj_versus? | nmod_at? nmod_to
       output:Phrase = nsubj | <nmod_as (dobj |<acl nsubj) | nsubj acl_to dobj | <nsubj | <nsubjpass nmod_as
 
+  - name: percentage_of_compared_to # needs to see if this rule can be incorporated into the above rule
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "An estimate of this value can be to use the percentage of beds in your hospital compared to the total beds in your region."
+    pattern: |
+      trigger = [word = "percentage"] (?= "of")
+      input:Phrase+ = nmod_of | <dobj advcl_compared_to
+      output:Phrase = <dobj nsubj:xsubj
+
   - name: trigger5_by_Ving # potential pattern
     label: Function
     priority: ${priority}
@@ -58,7 +69,7 @@ rules:
     pattern: |
       trigger = (?<= [lemma = /${functionTrigger5}/] [word = "by"]) [word = /.*/ & tag = /VBG/]
       input:Phrase+ = dobj | nmod_by
-      output:Phrase = <advcl_by nsubjpass | <acl
+      output:Phrase = <advcl_by nsubjpass | <acl | nsubjpass
 
   - name: difference_between
     label: Function
@@ -235,6 +246,18 @@ rules:
     pattern: |
       trigger = (?<! "not") [lemma = /affect|limit/]
       input:Phrase+ = <acl <nsubj | nsubj
+      output:Phrase = dobj
+
+  # note: need to see if this rule can be incorporated with the above rule.
+  - name: determine
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "The model's parameters, β and γ , determine the severity of the epidemic."
+    pattern: |
+      trigger = (?<! "not") [lemma = /determine/]
+      input:Phrase+ = nsubj appos
       output:Phrase = dobj
 
   - name: related_or_referred_to
