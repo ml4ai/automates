@@ -13,7 +13,7 @@ simple_sir.vs["name"] = simple_sir_names
 visual_style_simple_sir = {"vertex_label": simple_sir.vs["name"], "vertex_size": 10}
 
 # Following Line of code is an optional graph layout. It may be helpful, but is harder to read
-# visual_style_simple_sir["layout"] = simple_sir.layout("rt", mode="all", root=[0, 1, 2])
+visual_style_simple_sir["layout"] = simple_sir.layout("rt", mode="all", root=[0, 1, 2])
 fig, ax = plt.subplots()
 igraph.plot(simple_sir, target=ax, **visual_style_simple_sir)
 # plt.show()
@@ -33,13 +33,13 @@ igraph.plot(chime_sir, target=ax, **visual_style_chime_sir)
 Y = ["s2", "i2", "r2"]
 X = ["s"]
 Z = ["i", "r"]
-# p = ia.identifiability(y=Y, x=X, z=Z, g=simple_sir)
+p = ia.identifiability(y=Y, x=X, z=Z, g=simple_sir)
 
 
 # For spot-checking cf_identifiability
-gamma = [gm.CF("Y", "y", ["X"], ["x"]), gm.CF("X", "x_prime"), gm.CF("Z", "z", ["D"], ["d"]), gm.CF("D", "d")]
-g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
-g.vs["name"] = ["X", "W", "Y", "D", "Z"]
-g.es["description"] = ["O", "O", "O", "O", "U", "U"]
-ia.cf_identifiability(g, gamma)
+# gamma = [gm.CF("Y", "y", ["X"], ["x"]), gm.CF("X", "x_prime"), gm.CF("Z", "z", ["D"], ["d"]), gm.CF("D", "d")]
+# g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
+# g.vs["name"] = ["X", "W", "Y", "D", "Z"]
+# g.es["description"] = ["O", "O", "O", "O", "U", "U"]
+# ia.cf_identifiability(g, gamma)
 

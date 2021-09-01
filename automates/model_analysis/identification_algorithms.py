@@ -342,7 +342,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                 int_values = node["int_values"]
                 for subscript in subscript_orig_vars:
                     if subscript not in int_vars:
-                        int_vars.append(subscript)
+                        int_vars.append(subscript)  # todo: unsure about this
                         int_values.append(None)  # todo: unsure about this
                 nxt_gamma.append(gm.CF(node["orig_name"], node["obs_val"], int_vars, int_values))
             nxt = cf_ID(g, nxt_gamma, v)
@@ -361,7 +361,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                                     tree=tree)
 
     # Line 7
-    
+
 
     return None
 
