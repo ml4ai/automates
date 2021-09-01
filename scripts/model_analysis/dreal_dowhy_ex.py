@@ -50,3 +50,5 @@ print(result)
 # f_sat2= And(-3 <= x, x <= 3, -3 <= y, y <= 3, my_function == 0)
 # result = CheckSatisfiability(f_sat2, 0.001)
 # print(result)
+
+# DoWhy Examples
