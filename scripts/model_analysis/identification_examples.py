@@ -30,16 +30,19 @@ fig, ax = plt.subplots()
 igraph.plot(chime_sir, target=ax, **visual_style_chime_sir)
 # plt.show()
 
-Y = ["s2", "i2", "r2"]
-X = ["s"]
-Z = ["i", "r"]
+Y = ["i2"]
+X = ["beta"]
+Z = ["inf"]
 p = ia.identifiability(y=Y, x=X, z=Z, g=simple_sir)
+print(p)
 
 
-# For spot-checking cf_identifiability
-# gamma = [gm.CF("Y", "y", ["X"], ["x"]), gm.CF("X", "x_prime"), gm.CF("Z", "z", ["D"], ["d"]), gm.CF("D", "d")]
-# g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
-# g.vs["name"] = ["X", "W", "Y", "D", "Z"]
-# g.es["description"] = ["O", "O", "O", "O", "U", "U"]
-# ia.cf_identifiability(g, gamma)
-
+# Adding confounding to simple SIR:
+conf_sir_edges = [[0, 6], [0, 8], [1, 6], [1, 7], [1, 9], [2, 6], [2, 10], [3, 6], [4, 7], [5, 6], [5, 7],
+                    [6, 8], [6, 9], [7, 9], [7, 10], [3, 9], [9, 3]]
+conf_sir_names = ['s', 'i', 'r', 'beta', 'gamma', 'dt', 'inf', 'rec', 's2', 'i2', 'r2']
+conf_sir = igraph.Graph(edges=conf_sir_edges, directed=True)
+conf_sir.vs["name"] = conf_sir_names
+conf_sir.es["description"] = ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "U", "U"]
+p = ia.identifiability(y=Y, x=X, z=Z, g=conf_sir)
+print(p)
