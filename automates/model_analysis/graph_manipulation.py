@@ -93,7 +93,6 @@ def ancestors_unsort(node, g):
     :param g: graph
     :return: Ancestors of nodes
     """
-    print("first argument:", node)
     an_list = g.neighborhood(node, order=g.vcount(), mode="in")
     an_ind = list(set([a for ans in an_list for a in ans]))
     an_names = to_names(an_ind, g)
@@ -416,10 +415,6 @@ def d_sep(g, x, y, z):
         return (stack, stack_names, stack_size, stack_top)
 
     an_z = ancestors_unsort(z, g)
-    print("x:", x)
-    print("y:", y)
-    print("z:", z)
-    print("xyz:", list(set(x) | set(y) | set(z)))
     an_xyz = ancestors_unsort(list(set(x) | set(y) | set(z)), g)
     stack_top = len(x)
     stack_size = max(stack_top, 64)

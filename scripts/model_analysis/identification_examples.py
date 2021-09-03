@@ -32,7 +32,7 @@ igraph.plot(chime_sir, target=ax, **visual_style_chime_sir)
 
 Y = ["i2"]
 X = ["beta"]
-Z = ["inf"]
+Z = ["s", "i", "r"]
 p = ia.identifiability(y=Y, x=X, z=Z, g=simple_sir)
 print(p)
 
