@@ -41,6 +41,7 @@ DATA_DIR = "tests/data/program_analysis/PyAST2CAST"
 def dump_cast(C):
     print(C.to_json_str())
 
+
 def run_test_case(filepath, prog_name):
     file_handle = open(filepath)
     file_list = file_handle.readlines()
@@ -55,10 +56,12 @@ def run_test_case(filepath, prog_name):
     test_C = convert.visit(ast.parse(file_contents))
     test_C.source_refs = [SourceRef(prog_name, None, None, 1, line_count)]
 
-    out_cast = cast.CAST([test_C])
+    out_cast = cast.CAST([test_C], cast_source_language="python")
     to_compare = out_cast.to_json_object()
 
-    raw_json = json.load(open(f"{DATA_DIR}/expected_output/{prog_name.split('.')[0]}--CAST.json","r"))
+    raw_json = json.load(
+        open(f"{DATA_DIR}/expected_output/{prog_name.split('.')[0]}--CAST.json", "r")
+    )
 
     assert raw_json == to_compare
 
@@ -98,6 +101,7 @@ def test_call_1():
 
     run_test_case(filepath, prog_name)
 
+
 def test_ext_slice_1():
     prog_name = "test_ext_slice_1.py"
     folder = "expression"
@@ -106,6 +110,7 @@ def test_ext_slice_1():
 
     run_test_case(filepath, prog_name)
 
+
 def test_increment_1():
     prog_name = "test_increment_1.py"
     folder = "expression"
@@ -113,6 +118,7 @@ def test_increment_1():
     filepath = f"{DATA_DIR}/{folder}/{prog_name}"
 
     run_test_case(filepath, prog_name)
+
 
 def test_list_1():
     prog_name = "test_list_1.py"
@@ -130,6 +136,7 @@ def test_list_2():
     filepath = f"{DATA_DIR}/{folder}/{prog_name}"
 
     run_test_case(filepath, prog_name)
+
 
 def test_name_1():
     prog_name = "test_name_1.py"
@@ -183,7 +190,6 @@ def test_assign_3():
     filepath = f"{DATA_DIR}/{folder}/{prog_name}"
 
     run_test_case(filepath, prog_name)
-
 
 
 def test_assign_4():
@@ -257,6 +263,7 @@ def test_if_3():
 
     run_test_case(filepath, prog_name)
 
+
 def test_if_4():
     prog_name = "test_if_4.py"
     folder = "if"
@@ -264,6 +271,7 @@ def test_if_4():
     filepath = f"{DATA_DIR}/{folder}/{prog_name}"
 
     run_test_case(filepath, prog_name)
+
 
 def test_if_5():
     prog_name = "test_if_5.py"
@@ -273,6 +281,7 @@ def test_if_5():
 
     run_test_case(filepath, prog_name)
 
+
 def test_import_1():
     prog_name = "test_import_1.py"
     folder = "import"
@@ -280,6 +289,7 @@ def test_import_1():
     filepath = f"{DATA_DIR}/{folder}/{prog_name}"
 
     run_test_case(filepath, prog_name)
+
 
 def test_import_2():
     prog_name = "test_import_2.py"
@@ -289,6 +299,7 @@ def test_import_2():
 
     run_test_case(filepath, prog_name)
 
+
 def test_import_3():
     prog_name = "test_import_3.py"
     folder = "import"
@@ -297,8 +308,17 @@ def test_import_3():
 
     run_test_case(filepath, prog_name)
 
+
 def test_for_1():
     prog_name = "test_for_1.py"
+    folder = "loop"
+
+    filepath = f"{DATA_DIR}/{folder}/{prog_name}"
+
+    run_test_case(filepath, prog_name)
+
+def test_for_2():
+    prog_name = "test_for_2.py"
     folder = "loop"
 
     filepath = f"{DATA_DIR}/{folder}/{prog_name}"
