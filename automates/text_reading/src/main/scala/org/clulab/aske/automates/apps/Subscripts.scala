@@ -11,6 +11,7 @@ import org.clulab.utils.{FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
 import org.json4s.jackson.JsonMethods._
+import com.github.tomtung.latex2unicode._
 
 /**
   * App used to extract mentions from files in a directory and produce the desired output format (i.e., serialized
@@ -59,6 +60,11 @@ val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
 //            if (!t.startsWith("""\""")) {
 //              println("t: " + t)
 ////      pw.write(t)
+//      for (j <- t.split("\n")) {
+//        println("j: " + j)
+//        println("k: " + LaTeX2Unicode.convert(j.replace("\\", "\\\\")))
+//        pw.write(LaTeX2Unicode.convert(j.replace("\\", "\\\\")))
+//      }
       for (j <- t.replace("\\rm ", "").replaceAll("(<|>|\\.)", " $1 ").split("\n")) {
         if (!(j.startsWith("\\begin") || j.startsWith("\\end") ||j.startsWith("\\include") || j.startsWith("\\userpackage") ||j.startsWith("%"))) {
 //          println(">>" + j)
@@ -69,7 +75,7 @@ val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
 //              println("i: " + i)
               if (i.contains("_") || i.contains("^")) {
                 // process subscripts and superscripts
-                val withSubscr = AlignmentBaseline.render(AlignmentBaseline.replaceWordWithGreek(i.replace("_", " ").replace("^", " "), AlignmentBaseline.word2greekDict.toMap), AlignmentBaseline.pdfalignDir).split(" |,")
+                val withSubscr = LaTeX2Unicode.convert(AlignmentBaseline.replaceWordWithGreek(i.replace("_", " ").replace("^", " "), AlignmentBaseline.word2greekDict.toMap).replace("\\", "\\\\")).split(" |,")
                 pw.write(withSubscr.head.trim + "\t" + "O" + "\n")
                 if (withSubscr.tail.nonEmpty) {
                   pw.write(withSubscr.tail.head.trim + "\t" + "B" + "\n")
@@ -90,7 +96,7 @@ val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
 //                    println("jjj: " + i)
                     val replaceGreek = AlignmentBaseline.replaceWordWithGreek(i, AlignmentBaseline.word2greekDict.toMap)
 //                    println("repl: " + replaceGreek)
-                    val toWrite = AlignmentBaseline.render(replaceGreek, AlignmentBaseline.pdfalignDir)
+                    val toWrite = LaTeX2Unicode.convert(replaceGreek.replace("\\", "\\\\"))
 //                    println(toWrite)
                     pw.write(toWrite.trim + "\t" + "O" + "\n")
                   }
@@ -99,50 +105,6 @@ val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
 
               }
 
-                                    //              if (i.contains("_")) {
-                                    //                println("i: " + i)
-                                    ////                println("ATT: " +"\n" + AlignmentBaseline.render(AlignmentBaseline.replaceWordWithGreek(i.replace("_", " "), AlignmentBaseline.word2greekDict.toMap), AlignmentBaseline.pdfalignDir))
-                                    //                val withSubscr = AlignmentBaseline.render(AlignmentBaseline.replaceWordWithGreek(i.replace("_", " "), AlignmentBaseline.word2greekDict.toMap), AlignmentBaseline.pdfalignDir).split(" |,")
-                                    ////                pw.write("MASHA")
-                                    //                pw.write(withSubscr.head.trim + "\t" + "O" + "\n")
-//                                                    if (withSubscr.tail.nonEmpty) {
-//                                                      pw.write(withSubscr.tail.head + "\t" + "B" + "\n")
-//                                                      for (k <- withSubscr.tail.tail) {
-//                                                        pw.write(k.trim + "\t" + "I" + "\n")
-//                                                      }
-//                                                    }
-                                    //
-                                    //
-                                    //              } else {
-                                    ////                println("HERE")
-                                    ////                pw.write("MASHA1")
-                                    //
-//                                                    if (!i.contains("\\")) {
-//                                                      println("i: " + i)
-//                                                      pw.write(AlignmentBaseline.replaceWordWithGreek(i, AlignmentBaseline.word2greekDict.toMap).trim  + "\t" + "O" + "\n")
-//                                                    } else {
-                                    //                  val toWrite = AlignmentBaseline.render(AlignmentBaseline.replaceWordWithGreek(i, AlignmentBaseline.word2greekDict.toMap), AlignmentBaseline.pdfalignDir)
-                                    ////                  println(toWrite.trim + "<<")
-                                    //                  println("k: " + i)
-                                    //                  pw.write(toWrite.trim + "\t" + "O" + "\n")
-                                    //                }
-                                    //              }
-                                    //
-                                    //
-                                    //            } else {
-                                    //              println("99")
-                                    //            }
-                                    //
-                                    //          }
-                                    ////          println("i: " + i)
-                                    //          //          println("orig: " + i)
-                                    //          //          println("ATT: " + i + "\n" + AlignmentBaseline.render(AlignmentBaseline.replaceWordWithGreek(i.replace("_", " "), AlignmentBaseline.word2greekDict.toMap), AlignmentBaseline.pdfalignDir))
-                                    //          //          //        if (i.contains("_")) println("ATT: " + i + "\n" + AlignmentBaseline.render(AlignmentBaseline.replaceWordWithGreek(i.replace("_", " "), AlignmentBaseline.word2greekDict.toMap), AlignmentBaseline.pdfalignDir))
-                                    //          //        }
-                                    //
-                                    //        } else {
-                                    //          println("stars with //")
-                                    //        }
             }
           }
         }
