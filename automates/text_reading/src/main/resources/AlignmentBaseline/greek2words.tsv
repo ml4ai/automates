@@ -4,8 +4,8 @@
 δ	delta
 ε	epsilon
 ζ	zêta
-η	êta
-θ	thêta
+η	eta
+θ	theta
 ι	iota
 κ	kappa
 λ	lambda
@@ -46,3 +46,6 @@
 Χ	Chi
 Ψ	Psi
 Ω	Omega
+∞	infty
+*	\star
+⊙	\odot

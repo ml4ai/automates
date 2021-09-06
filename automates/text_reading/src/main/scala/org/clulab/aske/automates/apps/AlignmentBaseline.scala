@@ -462,6 +462,8 @@ class AlignmentBaseline() {
     process.!!
   }
 
+
+
   def getFrags(formula: String, pdfalignDir: String): String = {
     val command = Seq("python", s"$pdfalignDir/align_latex/tokenize_and_fragment.py", "get_fragments", formula.trim)
     val process = Process(command, new File(s"$pdfalignDir/align_latex"))
@@ -539,8 +541,11 @@ object AlignmentBaseline {
   }
 
   def render(formula: String, pdfalignDir: String): String = {
+    println("trying to render")
     val command = Seq("python", s"$pdfalignDir/align_latex/normalize.py", "render", formula.trim)
+    println("after creating command")
     val process = Process(command, new File(s"$pdfalignDir/align_latex"))
+    println("after process: " + process.!!)
     process.!!
   }
 
@@ -556,7 +561,7 @@ object AlignmentBaseline {
       val escaped = """\""" + k
       if (identifierName.contains(escaped)) {
         toReturn = toReturn.replace(escaped, word2greekDict(k))
-      } else if (identifierName.contains(k)) {
+      } else if (identifierName==k) {
         toReturn = toReturn.replace(identifierName, word2greekDict(k))
       }
     }

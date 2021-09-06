@@ -34,6 +34,18 @@ class ExpansionHandler() extends LazyLogging {
     function_res ++ other_res
   }
 
+  def isLanguage(string: String): Boolean = {
+    val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+    val sentLength: Double = string.length
+    val normalChars: Double = string.filter(c => valid contains c).length
+    val proportion = normalChars / sentLength
+    val threshold = 0.8 // fixme: tune
+    //    println(s"$proportion --> ${mention.sentenceObj.getSentenceText}")
+    if (proportion > threshold) {
+      true
+    } else false
+  }
+
   def expandArgs(mention: Mention, state: State, validArgs: List[String], expansionType: String): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
     val sentLength: Double = mention.sentenceObj.getSentenceText.length
