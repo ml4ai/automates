@@ -221,11 +221,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def cosmos_json_to_mentions: Action[AnyContent] = Action { request =>
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data)
-
-    println("_>>" + pathJson)
     val jsonPath = pathJson("pathToCosmosJson").str
     val fileName = new File(jsonPath).getName.replace("--COSMOS-data.json", ".pdf")
-    println(">>>" + jsonPath)
     logger.info(s"Extracting mentions from $jsonPath")
 
     // cosmos stores information about each block on each pdf page

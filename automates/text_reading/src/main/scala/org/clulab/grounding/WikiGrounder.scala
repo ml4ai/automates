@@ -1,7 +1,5 @@
 package org.clulab.grounding
-//import com.github.blemale.scaffeine.{Cache, LoadingCache, Scaffeine}
 
-import scala.concurrent.duration._
 import java.io.File
 import com.typesafe.config.{Config, ConfigFactory}
 import upickle.default._
@@ -27,7 +25,6 @@ case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel:
 
 object sparqlWikiResult {
   implicit val rw: ReadWriter[sparqlWikiResult] = macroRW
-
 }
 
 case class WikiGrounding(variable: String, groundings: Seq[sparqlWikiResult])

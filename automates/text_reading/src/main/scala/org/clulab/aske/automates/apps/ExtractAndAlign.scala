@@ -242,8 +242,6 @@ object ExtractAndAlign {
 
     val groupedVars = descrMentions.groupBy(_.arguments("variable").head.text.replace(".", ""))
     val allGlobalVars = new ArrayBuffer[GlobalVariable]()
-
-
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
       val identifier = gr._1//AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap); for now, don't convert: text vars are already symbols and comments shouldnt be converted except for during alignment
@@ -256,15 +254,8 @@ object ExtractAndAlign {
 
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
       val textFromAllDescrs = gr._2.map(m => getMentionText(m.arguments("description").head)).distinct ++ identifierComponents
-//      println("\ndescriptions: ")
-//      for (d <- textFromAllDescrs) println(d)
       val terms = gr._2.flatMap(g => getTerms(g)).distinct
-//      for (t <- terms) println("->" + t)
-
-//      val groundings = grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, 3)
-      // todo: need to also have a check for whether or not we want to ground to wikidata
       val groundings = if (groundToWiki) {
-
         // if there are no existing wikigroundings, ground
         if (!wikigroundings.isDefined || wikigroundings.get.isEmpty) {
           grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, numOfWikiGroundings)
@@ -277,25 +268,11 @@ object ExtractAndAlign {
           }
         }
       } else None
-
-//      if (groundings.nonEmpty) {
-//        for (gr <- groundings.get) {
-//
-//
-//            println(">>" + gr)
-//          }
-//        }
-
-
       val glVar = GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs, groundings)
       allGlobalVars.append(glVar)
-
     }
-
     allGlobalVars
   }
-
-
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
     textVarLinkElementString + "::" + update
@@ -643,7 +620,6 @@ object ExtractAndAlign {
   }
 
   def makeIntParamSettingObj(mention: Mention, paramSetAttJson: Value, page: Int, block: Int): ujson.Obj = {
-    println("MENTION: " + mention.text + " " + mention.arguments.mkString("|"))
     val lowerBound = paramSetAttJson("inclusiveLower")
     val upperBound = paramSetAttJson("inclusiveUpper")
     val toReturn = ujson.Obj(
@@ -665,15 +641,12 @@ object ExtractAndAlign {
     }
     if (menArgs.exists(arg => arg._1 == "valueMost")) {
       val valMostMen = menArgs("valueMost").head
-//      val valMostMenDoubled = valMostMen.text.toDouble// if (parseDouble(valMostMen.text).isDefined) valMostMen.text.toDouble else valMostMen.text
       if (parseDouble(valMostMen.text).isDefined) {
         toReturn("upper_bound") =  valMostMen.text.toDouble
       } else {
         toReturn("upper_bound") =  valMostMen.text
       }
-
       spans.append(makeLocationObj(valMostMen, Some(page), Some(block)))
-
     }
     toReturn("spans") = spans
     toReturn

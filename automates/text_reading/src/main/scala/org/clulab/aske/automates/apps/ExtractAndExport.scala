@@ -34,8 +34,8 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
-  val inputDir: String = "/Users/alexeeva/Desktop/automates-related/augustDemoPrep/simple-SIR/paper/toExtract"
-  val outputDir: String = "/Users/alexeeva/Desktop/automates-related/augustDemoPrep/simple-SIR/paper/toExtract"
+  val inputDir: String = ""
+  val outputDir: String = ""
   val inputType = config[String]("apps.inputType")
   // if using science parse doc, uncomment next line and...
   //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
@@ -49,7 +49,7 @@ object ExtractAndExport extends App {
 //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
 //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
-  files.foreach { file =>
+  files.par.foreach { file =>
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
     // 2. Get the input file contents

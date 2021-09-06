@@ -54,7 +54,6 @@ rules:
     pattern: |
       [chunk='B-VP' & word = /[A-Z]/]
 
-
 #  - name: simple-vp
 #    label: Phrase
 #    priority: 1

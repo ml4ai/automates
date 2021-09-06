@@ -151,20 +151,20 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String], useBigrams: Boolean): Seq[Alignment] = {
 
     // keep for debugging align scores
-    for ((src, i) <- srcTexts.zipWithIndex) {
-      for ((dst, j) <- dstTexts.zipWithIndex) {
-//        println("++++")
-//        println(src.mkString(""))
-//        println(dst.mkString(""))
-        val embScore = compare(src, dst, false)// + (1.0 / (editDistance(src, dst) + 1.0)))
-//        println("-> emb score: " + embScore)
-        val distScore = (10.0 / (editDistance(src, dst) + 1.0))
-//        println("matches normalized: " + numberOfExactMatchNormalized)
-        val overallScore = embScore + distScore
-//        println("-> edit dist score: " + distScore)
-//        println("-> overall: " + overallScore )
-      }
-    }
+//    for ((src, i) <- srcTexts.zipWithIndex) {
+//      for ((dst, j) <- dstTexts.zipWithIndex) {
+////        println("++++")
+////        println(src.mkString(""))
+////        println(dst.mkString(""))
+//        val embScore = compare(src, dst, false)// + (1.0 / (editDistance(src, dst) + 1.0)))
+////        println("-> emb score: " + embScore)
+//        val distScore = (10.0 / (editDistance(src, dst) + 1.0))
+////        println("matches normalized: " + numberOfExactMatchNormalized)
+//        val overallScore = embScore + distScore
+////        println("-> edit dist score: " + distScore)
+////        println("-> overall: " + overallScore )
+//      }
+//    }
 
     // fixme: for now, edit distance is disabled---it was dragging the score down because string compared (multiple descriptions from texts and one comment description) ended up being of very different lengths for some global vars
     val exhaustiveScores = for {
@@ -178,23 +178,13 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
 
   def numberOfExactMatchNormalized(src: Seq[String], dst: Seq[String]): Double = {
 // normalized by len of longest string?
-//    val srcList = src.split(" ")
-//    val dstList = dst.split(" ")
     var matches = 0
     for (s <- src) {
-//      if (src.contains("time")) {
-//        println("source: " + src.mkString("||"))
-//        println("=> " + s + " [" + dst.mkString("|") + "]")
-//      }
-
       if (dst.contains(s)) {
         matches += 1
       }
     }
-//    if (src.contains("time")) {
-//      println(">>" + matches + " " + matches.toDouble/math.max(src.length, dst.length))
-//    }
-//
+    // tunable multiplier
     1.5 * matches.toDouble/math.max(src.length, dst.length)
   }
 
@@ -222,7 +212,6 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
 
     val dstTextsToCompare = if (useBigrams) {
       val bigrams = getBigrams(dstTokens)
-//      for (b <- bigrams) println(b)
       dstTokens ++ bigrams
     } else {
       dstTokens
