@@ -309,10 +309,9 @@ object TestUtils {
           // which element in this link type we want to check
           val whichLink = whereIsNotGlobalVar(linkType)
 
-
           // element 1 of this link (eq gl var) should be E
           desired.split("::") should contain (topScoredLink(whichLink).str.split("::").last)
-          topScoredLink("score").num > threshold shouldBe true
+          topScoredLink("score").num >= threshold shouldBe true
         }
       } else {
         val failingMessage = if (status=="failingNegative") {

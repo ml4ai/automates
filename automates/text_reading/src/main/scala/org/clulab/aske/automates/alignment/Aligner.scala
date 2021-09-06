@@ -274,7 +274,6 @@ object Aligner {
   }
 
   def topKBySrc(alignments: Seq[Alignment], k: Int, scoreThreshold: Double = 0.0, debug: Boolean = false): Seq[Seq[Alignment]] = {
-    println("THRESHOLD: " + scoreThreshold)
     def debugPrint(debug: Boolean, srcIdx: Int, alignments: Seq[Alignment]) {
       if (debug) println(s"srcIdx: ${srcIdx}, alignments: ${alignments}")
     }

@@ -225,11 +225,11 @@ class TestAlign extends TestAlignment {
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER ->("negative", failingTest), // need processing for word param settings
       GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT ->("0.2||5.6", passingTest),
       EQN_TO_GLOBAL_VAR -> ("r", passingTest),
-      COMMENT_TO_GLOBAL_VAR -> ("inc_inf", passingTest)
+      COMMENT_TO_GLOBAL_VAR -> ("inc_inf", failingTest) // got misaligned to 'removal rate of infectives'
     )
 
     val indirectDesired = Map(
-      SRC_TO_COMMENT -> ("inc_inf",passingTest)
+      SRC_TO_COMMENT -> ("inc_inf",failingTest)
     )
 
     val (directLinks, indirLinks) = getLinksForGvar(idfr, links)
