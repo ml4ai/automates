@@ -38,7 +38,7 @@ functionTrigger3: "estimate|calculate|compute|determine|predict|obtain|deduce"
 
 functionTrigger4: "^ratio$|fraction"
 
-functionTrigger5: "predict|estimate|calculate|obtain"
+functionTrigger5: "predict|estimate|calculate|obtain|find"
 
 functionTrigger6: "lower"
 

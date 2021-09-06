@@ -3,7 +3,7 @@ def drive(start, end, step, parameters):
         "P:sir.out.S": list(),
         "P:sir.out.I": list(),
         "P:sir.out.R": list(),
-        "P:sir.out.dt": list(),
+        "P:sir.in.dt": list(),
     }
 
     S = parameters["P:sir.in.S"]
@@ -23,7 +23,7 @@ def drive(start, end, step, parameters):
         step_results["P:sir.out.S"].append(S)
         step_results["P:sir.out.I"].append(I)
         step_results["P:sir.out.R"].append(R)
-        step_results["P:sir.out.dt"].append(i)
+        step_results["P:sir.in.dt"].append(i)
 
     return step_results
 

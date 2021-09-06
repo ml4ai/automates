@@ -4,6 +4,7 @@ import json
 from automates.model_assembly.networks import GroundedFunctionNetwork, VariableNode
 import automates.apps.automates.model_code.chime_sir as chime
 import automates.apps.automates.model_code.sir_simple as sir_simple
+import automates.apps.automates.model_code.chime_sviivr as chime_plus
 
 
 def parse_execution_inputs(inputs):
@@ -75,8 +76,8 @@ def execute_gromet_experiment_json(experiment_json):
     {
         "command": "simulate-gsl",
         "definition": {
-            "type": "easel",
-            "source": "{ \"model\": \" GroMEt Model String \" }"
+            "type": "gromet-fnet",
+            "source": "{ GroMEt Model String }"
         },
         "start": 0,
         "end": 120.0,
@@ -131,12 +132,12 @@ def execute_gromet_experiment_json(experiment_json):
     domain_parameter = experiment_json["domain_parameter"]
     parameters = experiment_json["parameters"]
     outputs = experiment_json["outputs"]
-    gromet_source_json_str = experiment_json["definition"]["source"]["model"]
+    gromet_source_json_str = experiment_json["definition"]["source"]
     gromet_obj = json.loads(gromet_source_json_str)
     model_name = gromet_obj["name"]
 
     results = {}
-    if model_name == "SIR-simple":
+    if model_name == "SimpleSIR_metadata" or model_name == "SimpleSIR":
         chime_expected_sir_simple_inputs = [
             "P:sir.in.S",
             "P:sir.in.I",
@@ -154,17 +155,40 @@ def execute_gromet_experiment_json(experiment_json):
             sir_simple.drive,
         )
 
-    elif model_name == "CHIME-SIR":
+    elif model_name == "CHIME-SIR" or model_name == "CHIME_SIR_Base":
         expected_sir_simple_inputs = []
-        results = run_model_experiment(
-            model_name,
-            start,
-            end,
-            step,
-            expected_sir_simple_inputs,
-            parameters,
-            chime.drive,
-        )
+        try:
+            results = run_model_experiment(
+                model_name,
+                start,
+                end,
+                step,
+                expected_sir_simple_inputs,
+                parameters,
+                chime.drive,
+            )
+        except:
+            return {
+                "status": 500,
+                "message": f'Error: Encountered issue while executing experiment "{model_name}".',
+            }
+    elif model_name == "CHIME_SVIIvR":
+        expected_sir_simple_inputs = []
+        try:
+            results = run_model_experiment(
+                model_name,
+                start,
+                end,
+                step,
+                expected_sir_simple_inputs,
+                parameters,
+                chime_plus.drive,
+            )
+        except:
+            return {
+                "status": 500,
+                "message": f'Error: Encountered issue while executing experiment "{model_name}".',
+            }
     else:
         results = {
             "status": "failure",
