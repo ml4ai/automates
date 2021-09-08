@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 
 OPERATION_NUM = -1
+ANON_VAR_NUM = -1
 
 
 @dataclass(frozen=True)
@@ -229,7 +230,9 @@ class VariableIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_anonymous(cls, namespace: str, scope: str):
-        return cls(namespace, scope, "@anonymous", -1)
+        global ANON_VAR_NUM
+        ANON_VAR_NUM += 1
+        return cls(namespace, scope, "@anonymous", ANON_VAR_NUM)
 
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):
@@ -262,7 +265,7 @@ class VariableIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_str(cls, var_str: str):
-        (ns, sc, nm, idx) = var_str.split("::")
+        (_, ns, sc, nm, idx) = var_str.split("::")
         return cls(ns, sc, nm, int(idx))
 
     @classmethod

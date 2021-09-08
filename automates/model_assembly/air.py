@@ -14,7 +14,7 @@ from .identifiers import (
     LambdaStmtIdentifier,
     CallStmtIdentifier,
 )
-from .metadata import (
+from automates.model_assembly.metadata import (
     TypedMetadata,
     GrFNCreation,
     CodeCollectionReference,
@@ -33,6 +33,20 @@ class AutoMATES_IR:
     documentation: Dict[str, dict]
     metadata: List[TypedMetadata]
 
+    def to_json(self):
+        json_dict = {
+            "entrypoint": self.entrypoint,
+            "containers": self.containers,
+            "variables": self.variables,
+            "types": self.type_definitions,
+            "objects": self.objects,
+            "documentation": self.documentation,
+            "metadata": self.metadata,
+        }
+
+        with open("test.json", "w") as f:
+            json.dump(json_dict, f)
+
     @classmethod
     def from_air_json(cls, data: dict) -> AutoMATES_IR:
         C, V, O, D = dict(), dict(), dict(), dict()
@@ -45,6 +59,10 @@ class AutoMATES_IR:
             GrFNCreation.from_name(first_file_name[:name_ending_idx]),
             code_refs,
         ]
+        if "sources" in data:
+            code_refs = CodeCollectionReference.from_sources(data["sources"])
+            code_file_uid = code_refs.files[0].uid
+            M.append(code_refs)
 
         T = dict()
         for type_data in data["types"]:

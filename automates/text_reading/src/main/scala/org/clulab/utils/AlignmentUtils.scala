@@ -1,11 +1,10 @@
 package org.clulab.utils
 
 import java.io.File
-
 import ai.lum.common.FileUtils._
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.ExtractAndAlign.{getCommentDescriptionMentions, hasRequiredArgs, hasUnitArg}
-import org.clulab.aske.automates.apps.{ExtractAndAlign, alignmentArguments}
+import org.clulab.aske.automates.apps.{AlignmentArguments, AlignmentBaseline, AutomatesExporter, ExtractAndAlign}
 import org.clulab.aske.automates.grfn.GrFNParser
 import org.clulab.aske.automates.grfn.GrFNParser.{mkCommentTextElement, parseCommentText}
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
@@ -15,6 +14,7 @@ import org.clulab.processors.Document
 import ujson.{Obj, Value}
 import ujson.json4s._
 
+import java.util.UUID.randomUUID
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -24,8 +24,12 @@ object AlignmentJsonUtils {
 
   case class GlobalVariable(id: String, identifier: String, textVarObjStrings: Seq[String], textFromAllDescrs: Seq[String])
 
+  case class GlobalEquationVariable(id: String, identifier: String, eqVarObjStrings: Seq[String])
+
+  case class GlobalSrcVariable(id: String, identifier: String, srcVarObjStrings: Seq[String])
+
   /**get arguments for the aligner depending on what data are provided**/
-  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): alignmentArguments = {
+  def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, serializerName: String): AlignmentArguments = {
 
     val jsonObj = json.obj
     // load text mentions
@@ -43,9 +47,7 @@ object AlignmentJsonUtils {
         ).to(Json4sJson)
         JSONSerializer.toMentions(jvalueMentions)
       }
-
       Some(textMentions)
-
     } else None
 
 
@@ -86,7 +88,6 @@ object AlignmentJsonUtils {
       Some(ExtractAndAlign.processEquations(equations))
     } else None
 
-//    for (item <- equationChunksAndSource.get) println(item._1 + " | " + item._2)
     val identifierNames = if (jsonObj.contains("source_code")) {
       Some(json("source_code").obj("variables").arr.map(_.obj("name").str))
     } else None
@@ -95,18 +96,43 @@ object AlignmentJsonUtils {
       var shortNames = GrFNParser.getVariableShortNames(identifierNames.get)
       Some(shortNames)
     } else None
-    // source code comments
 
+    // source code comments
     val source = if (identifierNames.isDefined) {
       Some(getSourceFromSrcIdentifiers(identifierNames.get))
     } else None
 
     val commentDescriptionMentions = if (jsonObj.contains("source_code")) {
 
-      val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
-      Some(getCommentDescriptionMentions(localCommentReader, json, identifierShortNames, source)
-        .filter(m => hasRequiredArgs(m, "description")))
+      if (jsonObj.contains("comment_mentions")) {
+        println("ATTENTION: using previously extracted comment mentions")
+        val mentionsPath = json("comment_mentions").str
+        val mentionsFile = new File(mentionsPath)
+        val textMentions =  if (serializerName == "AutomatesJSONSerializer") {
+          val ujsonOfMenFile = ujson.read(mentionsFile)
+          AutomatesJSONSerializer.toMentions(ujsonOfMenFile)
+        } else {
+          val ujsonMentions = ujson.read(mentionsFile.readString())
+          //transform the mentions into json4s format, used by mention serializer
+          val jvalueMentions = upickle.default.transform(
+            ujsonMentions
+          ).to(Json4sJson)
+          JSONSerializer.toMentions(jvalueMentions)
+        }
+
+        Some(textMentions)
+      } else {
+        val localCommentReader = OdinEngine.fromConfigSectionAndGrFN("CommentEngine", jsonPath)
+        Some(getCommentDescriptionMentions(localCommentReader, json, identifierShortNames, source)
+          .filter(m => hasRequiredArgs(m, "description")))
+      }
+
     } else None
+
+    // uncomment and add outfile path to serialize comment mentions
+    // val outputFile = ""
+//    val exporter = AutomatesExporter(outputFile)
+//    exporter.export(commentDescriptionMentions.get)
 
 
     //deserialize svo groundings if a) grounding svo and b) if svo groundings have been provided in the input
@@ -119,7 +145,7 @@ object AlignmentJsonUtils {
 
 
 
-    alignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
+    AlignmentArguments(json, identifierNames, identifierShortNames, commentDescriptionMentions, descriptionMentions, parameterSettingMentions, intervalParameterSettingMentions, unitMentions, equationChunksAndSource, svoGroundings)
   }
 
   def getVariables(json: Value): Seq[String] = json("source_code")
@@ -166,6 +192,77 @@ object AlignmentJsonUtils {
 
     // Parse the comment texts
     commentTextObjects.map(parseCommentText(_))
+  }
+
+  /* Methods for getting global variables */
+  def mkGlobalEqVarLinkElement(glv: GlobalEquationVariable): String = {
+    ujson.Obj(
+      "uid" -> glv.id,
+      "content" -> glv.identifier,
+      "identifier_objects" -> glv.eqVarObjStrings
+    ).toString()
+  }
+
+  def mkGlobalSrcVarLinkElement(glv: GlobalSrcVariable): String = {
+    ujson.Obj(
+      "uid" -> glv.id,
+      "content" -> glv.identifier,
+      "identifier_objects" -> glv.srcVarObjStrings
+    ).toString()
+
+  }
+
+  def mkGlobalVarLinkElement(glv: GlobalVariable): String = {
+    ujson.Obj(
+      "uid" -> glv.id,
+      "content" -> glv.identifier,
+      "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)
+    ).toString()
+  }
+
+  def getGlobalSrcVars(srcVars: Seq[Value]): Seq[GlobalSrcVariable] = {
+    val groupedVars = srcVars.groupBy(_.obj("content").str)
+    val allGlobalVars = new ArrayBuffer[GlobalSrcVariable]()
+    for (gr <- groupedVars) {
+      val glVarID = randomUUID().toString()
+      val identifier = gr._1
+      val srcVarObjs = gr._2.map(_.obj("uid").str)
+      val glVar = new GlobalSrcVariable(glVarID, identifier, srcVarObjs)
+      allGlobalVars.append(glVar)
+    }
+    allGlobalVars
+  }
+
+  def getSrcLinkElements(srcVars: Seq[String]): Seq[Value] = {
+    srcVars.map { varName =>
+      val split = varName.split("::")
+      ujson.Obj(
+        "uid" -> randomUUID.toString,
+        "source" -> varName,
+        "content" -> split(2),
+        "model" -> split(0)
+      )
+    }
+  }
+
+
+  def getGlobalEqVars(equationLinkElements: Seq[Value]): Seq[GlobalEquationVariable] = {
+
+
+    val groupedVars = equationLinkElements.groupBy(_.obj("content").str)
+    val allEqGlobalVars = new ArrayBuffer[GlobalEquationVariable]()
+    for (gr <- groupedVars) {
+      val glVarID = randomUUID().toString()
+
+      val identifier = AlignmentBaseline.replaceGreekWithWord(gr._1, AlignmentBaseline.greek2wordDict.toMap).replace("\\\\", "")
+      // the commented out part is for debugging
+      val eqLinkElementObjs = gr._2.map(le => le.obj("uid").str) // + "::" + le.obj("content").str)
+      val glVar = new GlobalEquationVariable(glVarID, identifier, eqLinkElementObjs)
+      allEqGlobalVars.append(glVar)
+
+    }
+
+    allEqGlobalVars
   }
 
 }

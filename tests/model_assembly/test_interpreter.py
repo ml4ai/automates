@@ -94,7 +94,7 @@ def test_pet_files():
     }
     outputs = G(values)
     res = outputs["eo"][0]
-    assert res == np.float(1.3980657068634232)
+    assert round(res, 6) == np.float(1.398066)
 
     G.to_json_file("tmp/ASCE_GrFN.json")
     G2 = GroundedFunctionNetwork.from_json("tmp/ASCE_GrFN.json")

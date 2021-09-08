@@ -1,8 +1,9 @@
 package org.clulab.aske.automates.grfn
 
 import ai.lum.common.FileUtils._
-import java.io.File
+import org.clulab.aske.automates.apps.ExtractAndAlign.{GLOBAL_VAR_TO_UNIT_VIA_CONCEPT, GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER}
 
+import java.io.File
 import org.clulab.grounding.{SVOGrounding, sparqlResult}
 import org.clulab.processors.Document
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -221,6 +222,7 @@ def mkTextVarLinkElement(uid: String, source: String, originalSentence: String, 
     val el2Id = el2json("uid").str
 
     val hypothesis = if (debug) {
+
   //todo: make sure all elements have a content field if possible or make it optional here
       val el1text = el1json("content").str
       val el2text = el2json("content").str

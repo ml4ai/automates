@@ -1,19 +1,16 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Set, Any, Tuple, NoReturn
+from typing import List, Dict, Iterable, Any, Tuple
 from abc import ABC, abstractmethod, abstractclassmethod
-from functools import singledispatch
 from dataclasses import dataclass
 from datetime import datetime
-from itertools import product
 from copy import deepcopy
 
 import inspect
 import json
 import ast
 import re
-import os
-import sys
 
+import pygraphviz as pgv
 import networkx as nx
 import numpy as np
 from networkx.algorithms.simple_paths import all_simple_paths
@@ -118,7 +115,7 @@ class VariableNode(BaseNode):
         return self.uid == other.uid
 
     def __str__(self):
-        return str(self.identifier)
+        return f"{str(self.identifier)}::{str(self.uid)}"
 
     @classmethod
     def from_definition(cls, var_def: VariableDef):
@@ -172,7 +169,7 @@ class VariableNode(BaseNode):
         return str(self.identifier)
 
     def get_kwargs(self):
-        is_exit = self.identifier.var_name == "EXIT"
+        is_exit = self.identifier.name == "EXIT"
         return {
             "color": "crimson",
             "fontcolor": "white" if is_exit else "black",
@@ -235,23 +232,24 @@ class VariableNode(BaseNode):
         return label
 
     def get_label(self):
-        node_label = self.get_node_label(self.identifier.var_name)
+        if self.identifier.name == "@anonymous":
+            return "--"
+        node_label = self.get_node_label(self.identifier.name)
         return node_label
-
-    # def get_label(self):
-    #     return self.identifier.var_name
 
     @classmethod
     def from_dict(cls, data: dict):
         if len(data["identifier"].split("::")) == 5:
-            var_id =  VariableIdentifier.from_name_str(data["identifier"])   
+            var_id = VariableIdentifier.from_name_str(data["identifier"])
         else:
-            var_id =  VariableIdentifier.from_str(data["identifier"])   
+            var_id = VariableIdentifier.from_str(data["identifier"])
 
         return cls(
             uid=data["uid"],
             identifier=var_id,
-            metadata=[TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
+            metadata=[
+                TypedMetadata.from_data(mdict) for mdict in data["metadata"]
+            ]
             if "metadata" in data
             else [],
             object_ref=data["object_ref"] if "object_ref" in data else "",
@@ -280,11 +278,35 @@ class BaseFuncNode(ABC):
     hyper_graph: nx.DiGraph
     metadata: List[TypedMetadata]
 
+    def __str__(self) -> str:
+        return str(self.identifier)
+
     def __eq__(self, other: BaseFuncNode) -> bool:
         return self.identifier == other.identifier
 
     def __hash__(self):
         return hash(self.identifier)
+
+    def get_kwargs(self):
+        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
+
+    def get_label(self):
+        return self.type.shortname().upper()
+
+    @staticmethod
+    def get_border_color(func_node):
+        if isinstance(func_node, LoopConFuncNode):
+            return "navyblue"
+        elif isinstance(func_node, CondConFuncNode):
+            return "orange"
+        elif isinstance(func_node, BaseConFuncNode):
+            return "forestgreen"
+        elif isinstance(func_node, ExpressionFuncNode):
+            return "pink"
+        elif isinstance(func_node, OperationFuncNode):
+            return "black"
+        else:
+            return "red"
 
     # @staticmethod
     # def from_container(
@@ -332,7 +354,6 @@ class BaseFuncNode(ABC):
             hyper_graph,
             [TypedMetadata.from_data(m_def) for m_def in data["metadata"]],
         )
-
 
     @staticmethod
     def create_hyper_graph(hyper_edges: List[HyperEdge]) -> nx.DiGraph:
@@ -443,6 +464,12 @@ class OperationFuncNode(BaseFuncNode):
         data.update({"identifier": str(self.identifier)})
         return data
 
+    def get_kwargs(self):
+        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
+
+    def get_label(self):
+        return self.identifier.name
+
 
 @dataclass(repr=False)
 class ExpressionFuncNode(BaseFuncNode):
@@ -482,7 +509,9 @@ class ExpressionFuncNode(BaseFuncNode):
             new_funcs,
             h_edges,
             # h_graph,
-        ) = cls.create_expr_node_hypergraph(nodes, inputs, outputs)
+        ) = cls.create_expr_node_hypergraph(
+            nodes, inputs, outputs, statement.identifier
+        )
         h_graph = BaseFuncNode.create_hyper_graph(h_edges)
 
         VARS.update({v.identifier: v for v in new_vars})
@@ -506,10 +535,12 @@ class ExpressionFuncNode(BaseFuncNode):
         nodes: List[ExprAbstractNode],
         input_vars: List[VariableNode],
         output_vars: List[VariableNode],
+        statement_id: LambdaStmtDef,
     ):
-        out_id = output_vars[0].identifier
+        expr_output_var = output_vars[0]  # assumes we have a single output
+        out_id = expr_output_var.identifier
         cur_nsp = out_id.namespace
-        cur_scp = out_id.scope
+        cur_scp = f"{out_id.scope}.{'.'.join(statement_id.name.split('::'))}"
 
         uid2node = {n.uid: n for n in nodes}
         lambda_def = None
@@ -545,9 +576,18 @@ class ExpressionFuncNode(BaseFuncNode):
                     list of new hyper edges
             """
             if isinstance(expr_node_def, ExprValueNode):
-                return LiteralFuncNode.from_value_node(expr_node_def)
+                expr_func_node = LiteralFuncNode.from_value_node(expr_node_def)
+                output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
+                new_hyper_edge = HyperEdge(expr_func_node, [], [output_var])
+                new_var_nodes.append(output_var)
+                new_func_nodes.append(expr_func_node)
+                new_hyper_edges.append(new_hyper_edge)
+                return
             elif isinstance(expr_node_def, ExprVariableNode):
-                return None  # Nothing to be done.
+                if expr_node_def.identifier in arg2var:
+                    return arg2var[expr_node_def.identifier]
+                else:
+                    return VariableNode.from_expr_def(cur_nsp, cur_scp)
             child_defs = [
                 uid2node[child_id] for child_id in expr_node_def.children
             ]
@@ -588,7 +628,29 @@ class ExpressionFuncNode(BaseFuncNode):
             return output_var
 
         ret_child = [uid2node[uid] for uid in ret_def.children][0]
-        convert_to_hyperedge(ret_child)
+        # print(statement_id, ret_child)
+        # if isinstance(ret_child, ExprVariableNode):
+        #     print(
+        #     ret_child.identifier,
+        #     [uid2node[cid] for cid in ret_child.children],
+        # )
+        # else:
+        #     print(
+        #         ret_child.operator,
+        #         [uid2node[cid] for cid in ret_child.children],
+        #     )
+        ret_child_inputs = [
+            convert_to_hyperedge(uid2node[child_id])
+            for child_id in ret_child.children
+        ]
+        expr_func_node = OperationFuncNode.from_expr_def(ret_child)
+        new_hyper_edge = HyperEdge(
+            expr_func_node, ret_child_inputs, [expr_output_var]
+        )
+        new_var_nodes.append(expr_output_var)
+        new_func_nodes.append(expr_func_node)
+        new_hyper_edges.append(new_hyper_edge)
+        # convert_to_hyperedge(ret_child)
         return (
             new_var_nodes,
             new_func_nodes,
@@ -869,16 +931,19 @@ class HyperEdge:
     outputs: List[VariableNode]
 
     def __call__(self):
-        result = self.func_node(
-            *[
-                var.value if var.value is not None else var.input_value
-                for var in self.inputs
-            ]
-        )
+        inputs = [
+            var.value
+            if var.value is not None
+            else var.input_value
+            if var.input_value is not None
+            else [None]
+            for var in self.inputs
+        ]
+        result = self.func_node(*inputs)
         # If we are in the exit decision hyper edge and in vectorized execution
         if (
             self.func_node.func_type == LambdaType.DECISION
-            and any([o.identifier.var_name == "EXIT" for o in self.inputs])
+            and any([o.identifier.name == "EXIT" for o in self.inputs])
             and self.func_node.np_shape != (1,)
         ):
             # Initialize seen exits to an array of False if it does not exist
@@ -889,17 +954,21 @@ class HyperEdge:
 
             # Gather the exit conditions for this execution
             exit_var_values = [
-                o for o in self.inputs if o.identifier.var_name == "EXIT"
+                o for o in self.inputs if o.identifier.name == "EXIT"
             ][0].value
 
             # For each output value, update output nodes with new value that
             # just exited, otherwise keep existing value
-            for i, out_val in enumerate(result):
+            for res_index, out_val in enumerate(result):
+                if self.outputs[res_index].value is None:
+                    self.outputs[res_index].value = np.full(
+                        out_val.shape, np.NaN
+                    )
                 # If we have seen an exit before at a given position, keep the
                 # existing value, otherwise update.
-                self.outputs[i].value = np.where(
-                    self.seen_exits, np.copy(self.outputs[i].value), out_val
-                )
+                for j, _ in enumerate(self.outputs[res_index].value):
+                    if self.seen_exits[j]:
+                        self.outputs[res_index].value[j] = out_val[j]
 
             # Update seen_exits with any vectorized positions that may have
             # exited during this execution
@@ -1475,8 +1544,9 @@ class GroundedFunctionNetwork:
             if not found_var:
                 self.remove_node(var_node)
                 del_indices.append(idx)
-        for idx in del_indices:
-            del self.variables[idx]
+
+        for idx, del_idx in enumerate(del_indices):
+            del self.variables[del_idx - idx]
 
     # def __init__(
     #     self,
@@ -1592,7 +1662,10 @@ class GroundedFunctionNetwork:
         return f"{self.label}\n{size_str}"
 
     def __call__(
-        self, inputs: Dict[str, Any], literals: Dict[str, Any] = None
+        self,
+        inputs: Dict[str, Any],
+        literals: Dict[str, Any] = None,
+        desired_outputs: List[str] = None,
     ) -> Iterable[Any]:
         """Executes the GrFN over a particular set of inputs and returns the
         result.
@@ -1604,6 +1677,10 @@ class GroundedFunctionNetwork:
             literals: Input set where keys are the identifier strings of
             variable nodes in the GrFN that inherit directly from a literal
             node and each key points to a set of input values (or just one)
+            desired_outputs: A list of variable names to customize the
+            desired variable nodes whose values we should output after
+            execution. Will find the max version var node in the root container
+            for each name given and return their values.
 
         Returns:
             A set of outputs from executing the GrFN, one for every set of
@@ -1615,19 +1692,27 @@ class GroundedFunctionNetwork:
             self.input_identifier_map[VariableIdentifier.from_str(n)]: v
             for n, v in inputs.items()
         }
-        # Set input values
+
+        # Check if vectorized input is given and configure the numpy shape
+        for input_node in [n for n in self.inputs if n in full_inputs]:
+            value = full_inputs[input_node]
+            if isinstance(value, np.ndarray):
+                if self.np_shape != value.shape and self.np_shape != (1,):
+                    raise GrFNExecutionException(
+                        f"Error: Given two vectorized inputs with different shapes: '{value.shape}' and '{self.np_shape}'"
+                    )
+                self.np_shape = value.shape
+
+        # Set the values of input var nodes given in the inputs dict
         for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
             # TODO: need to find a way to incorporate a 32/64 bit check here
-            if isinstance(value, float):
-                value = np.array([value], dtype=np.float64)
-            if isinstance(value, int):
-                value = np.array([value], dtype=np.int64)
-            elif isinstance(value, list):
-                value = np.array(value)
-                self.np_shape = value.shape
-            elif isinstance(value, np.ndarray):
-                self.np_shape = value.shape
+            if isinstance(value, (float, np.float64)):
+                value = np.full(self.np_shape, value, dtype=np.float64)
+            if isinstance(value, (int, np.int64)):
+                value = np.full(self.np_shape, value, dtype=np.int64)
+            elif isinstance(value, (dict, list)):
+                value = np.array([value] * self.np_shape[0])
 
             input_node.input_value = value
 
@@ -1675,7 +1760,7 @@ class GroundedFunctionNetwork:
         )
         # Return the output
         return {
-            output.identifier.var_name: output.value for output in self.outputs
+            output.identifier.name: output.value for output in self.outputs
         }
 
     @classmethod
@@ -1880,6 +1965,8 @@ class GroundedFunctionNetwork:
             visited_funcs = set()
 
             def find_distances(func, dist, path=[]):
+                if func.func_type == LambdaType.OPERATOR:
+                    return
                 new_successors = list()
                 func_container = func2container[func]
                 if func_container == container:
@@ -1937,10 +2024,152 @@ class GroundedFunctionNetwork:
 
         return subgraphs_to_func_sets
 
-    def to_AGraph(self):
+    def to_AGraph(self, expand_expressions=False):
+        """Export to a PyGraphviz AGraph object."""
+        N = pgv.AGraph(directed=True)
+        # subgraphs = list()
+        FUNCS = self.functions
+        VARS = self.variables
+
+        def build_network_and_subgraphs(
+            func_node: BaseFuncNode,
+            parent_inputs: Dict[VariableIdentifier, VariableNode],
+            parent_subgraph: pgv.AGraph,
+        ) -> Dict[VariableIdentifier, VariableNode]:
+
+            out_vars = {
+                v_id: VARS[v_id] for v_id in func_node.output_variables
+            }
+
+            # Can't use basenames because cond nodes will have mult vars with the same basename
+            if len(parent_inputs) == 0:
+                live_vars = dict()
+                in_vars = dict()
+            else:
+                in_vars = {
+                    v_id: parent_inputs[i]
+                    for i, v_id in enumerate(func_node.input_variables)
+                }
+                live_vars = deepcopy(in_vars)
+            all_sub_nodes = list()
+            cur_subgraph = parent_subgraph.add_subgraph(
+                [],
+                name=f"cluster_{str(func_node.identifier)}",
+                label=func_node.identifier.name,
+                style="bold, rounded",
+                rankdir="TB",
+                color=BaseFuncNode.get_border_color(func_node),
+            )
+
+            def add_input_output_nodes(f_node, i_nodes, o_nodes):
+                all_sub_nodes.append(f_node)
+                N.add_node(f_node, **(f_node.get_kwargs()))
+                for ivar_node in i_nodes:
+                    if ivar_node.identifier in live_vars:
+                        ivar_node = live_vars[ivar_node.identifier]
+                    N.add_node(ivar_node, **(ivar_node.get_kwargs()))
+                    N.add_edge(ivar_node, f_node)
+
+                for ovar_node in o_nodes:
+                    if ovar_node.identifier in live_vars:
+                        ovar_node = live_vars[ovar_node.identifier]
+                    N.add_node(ovar_node, **(ovar_node.get_kwargs()))
+                    N.add_edge(f_node, ovar_node)
+
+                all_sub_nodes.extend(
+                    [n for n in i_nodes if n.identifier not in in_vars]
+                )
+                all_sub_nodes.extend(
+                    [n for n in o_nodes if n.identifier not in out_vars]
+                )
+
+            for h_edge in func_node.hyper_edges:
+                new_func = h_edge.func_node
+                if isinstance(new_func, BaseConFuncNode):
+                    sub_nodes = build_network_and_subgraphs(
+                        new_func, h_edge.inputs, cur_subgraph
+                    )
+                    all_sub_nodes.extend(sub_nodes)
+                    named_callee_outputs = {
+                        var_id.name: VARS[var_id]
+                        for var_id in new_func.output_variables
+                    }
+                    live_vars.update(
+                        {
+                            var.identifier: named_callee_outputs[
+                                var.identifier.name
+                            ]
+                            for var in h_edge.outputs
+                        }
+                    )
+                elif isinstance(new_func, ExpressionFuncNode):
+                    # Set this up to expand when requested
+                    if expand_expressions:
+                        sub_nodes = build_network_and_subgraphs(
+                            new_func, h_edge.inputs, cur_subgraph
+                        )
+                        all_sub_nodes.extend(sub_nodes)
+                        named_callee_outputs = {
+                            var_id.name: VARS[var_id]
+                            for var_id in new_func.output_variables
+                        }
+                        live_vars.update(
+                            {v.identifier: v for v in h_edge.inputs}
+                        )
+                        live_vars.update(
+                            {
+                                var.identifier: named_callee_outputs[
+                                    var.identifier.name
+                                ]
+                                for var in h_edge.outputs
+                            }
+                        )
+                    else:
+                        add_input_output_nodes(
+                            new_func, h_edge.inputs, h_edge.outputs
+                        )
+                elif isinstance(new_func, OperationFuncNode):
+                    add_input_output_nodes(
+                        new_func, h_edge.inputs, h_edge.outputs
+                    )
+                else:
+                    raise TypeError(
+                        f"Unrecognized function type during GrFN3 AGraph generation: {type(new_func)}"
+                    )
+
+            print(func_node, len(all_sub_nodes))
+            if len(parent_inputs) == 0:
+                all_sub_nodes += list(live_vars.values())
+            # N.add_subgraph(
+            #     all_sub_nodes,
+            #     name=f"cluster_{str(func_node.identifier)}",
+            #     label=func_node.identifier.name,
+            #     style="bold, rounded",
+            #     rankdir="TB",
+            #     color=BaseFuncNode.get_border_color(func_node),
+            # )
+            cur_subgraph.add_nodes_from(all_sub_nodes)
+            return all_sub_nodes
+
+        build_network_and_subgraphs(FUNCS[self.entry_point], [], N)
+        N.graph_attr.update(
+            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+        )
+        N.node_attr.update({"fontname": "Menlo"})
+        print(len(list(N.nodes())))
+        return N
+
+    def to_AGraph__old(self):
         """Export to a PyGraphviz AGraph object."""
         var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
-        input_nodes = set([v for v in var_nodes if self.in_degree(v) == 0])
+        input_nodes = []
+        for v in var_nodes:
+            if self.in_degree(v) == 0 or (
+                len(list(self.predecessors(v))) == 1
+                and list(self.predecessors(v))[0].func_type
+                == LambdaType.LITERAL
+            ):
+                input_nodes.append(v)
         output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
 
         A = nx.nx_agraph.to_agraph(self)
@@ -1971,7 +2200,10 @@ class GroundedFunctionNetwork:
             )
 
             input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
-            container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+            # container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+            container_subgraph.add_subgraph(
+                [v.uid for v in input_var_nodes], rank="same"
+            )
 
             for new_subgraph in self.subgraphs.successors(subgraph):
                 populate_subgraph(new_subgraph, container_subgraph)
@@ -1980,19 +2212,56 @@ class GroundedFunctionNetwork:
                 for func_set in func_sets:
                     func_set = list(func_set.intersection(set(subgraph.nodes)))
 
-                    container_subgraph.add_subgraph(func_set, rank="same")
+                    container_subgraph.add_subgraph(
+                        func_set,
+                    )
                     output_var_nodes = list()
                     for func_node in func_set:
                         succs = list(self.successors(func_node))
                         output_var_nodes.extend(succs)
                     output_var_nodes = set(output_var_nodes) - output_nodes
                     var_nodes = output_var_nodes.intersection(subgraph.nodes)
+
                     container_subgraph.add_subgraph(
-                        list(var_nodes), rank="same"
+                        [v.uid for v in var_nodes],
                     )
 
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
+
+        # TODO this code helps with the layout of the graph. However, it assumes
+        # all var nodes start at -1 and are consecutive. This is currently not
+        # the case, so it creates random hanging var nodes if run. Fix this.
+
+        # unique_var_names = {
+        #     "::".join(n.name.split("::")[:-1])
+        #     for n in A.nodes()
+        #     if len(n.name.split("::")) > 2
+        # }
+        # for name in unique_var_names:
+        #     max_var_version = max(
+        #         [
+        #             int(n.name.split("::")[-1])
+        #             for n in A.nodes()
+        #             if n.name.startswith(name)
+        #         ]
+        #     )
+        #     min_var_version = min(
+        #         [
+        #             int(n.name.split("::")[-1])
+        #             for n in A.nodes()
+        #             if n.name.startswith(name)
+        #         ]
+        #     )
+        #     for i in range(min_var_version, max_var_version):
+        #         e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
+        #         e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
+        #         e.attr["color"] = "invis"
+
+        # for agraph_node in [
+        #     a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
+        # ]:
+        #     agraph_node.attr["rank"] = "max"
 
         return A
 
@@ -2115,8 +2384,8 @@ class GroundedFunctionNetwork:
         F.add_edges_from(main_edges)
         return F
 
-    def to_json(self) -> str:
-        """Outputs the contents of this GrFN to a JSON object string.
+    def to_dict(self) -> Dict:
+        """Outputs the contents of this GrFN to a dict object.
 
         :return: Description of returned object.
         :rtype: type
@@ -2148,6 +2417,14 @@ class GroundedFunctionNetwork:
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
+    def to_json(self) -> str:
+        """Outputs the contents of this GrFN to a JSON object string.
+
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+        """
+        data = self.to_dict()
         return json.dumps(data)
 
     def to_json_file(self, json_path) -> None:
@@ -2176,44 +2453,146 @@ class GroundedFunctionNetwork:
         data = json.load(open(json_path, "r"))
 
         F = dict()
-        HE = dict() 
+        HE = dict()
         for f in data["functions"]:
-            namespace,scope,name,idx = extract_func_identifier(f["identifier"])
+            namespace, scope, name, idx = extract_func_identifier(
+                f["identifier"]
+            )
             if f["type"] == "decision":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             elif f["type"] == "pack":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             elif f["type"] == "operator":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             elif f["type"] == "literal":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             elif f["type"] == "assign":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             elif f["type"] == "container":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             elif f["type"] == "condition":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             elif f["type"] == "iterable":
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = ExpressionFuncNode.from_data(f)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
             else:
-                F[FunctionIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = BaseFuncNode.from_data(f,F)
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = BaseFuncNode.from_data(f, F)
 
         V = dict()
         for v in data["variables"]:
-            namespace,scope,name,idx = extract_func_identifier(v["identifier"])
-            V[VariableIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = VariableNode.from_dict(v)
+            namespace, scope, name, idx = extract_func_identifier(
+                v["identifier"]
+            )
+            V[
+                VariableIdentifier(
+                    namespace=namespace, scope=scope, name=name, index=int(idx)
+                )
+            ] = VariableNode.from_dict(v)
 
-        O = dict() 
+        O = dict()
         T = dict()
         M = [TypedMetadata.from_data(m) for m in data["metadata"]]
 
-        grfn_ns,grfn_scope,grfn_name = extract_func_identifier(data["identifier"])
-        fn_ns,fn_scope,fn_name,fn_idx = extract_func_identifier(data["entry_point"])
+        grfn_ns, grfn_scope, grfn_name = extract_func_identifier(
+            data["identifier"]
+        )
+        fn_ns, fn_scope, fn_name, fn_idx = extract_func_identifier(
+            data["entry_point"]
+        )
 
-        return cls(data["uid"], 
-        GrFNIdentifier(namespace=grfn_ns,scope=grfn_scope,name=grfn_name), 
-        FunctionIdentifier(namespace=fn_ns,scope=fn_scope,name=fn_name,index=int(fn_idx)), 
-        F, V, O, T, M)
+        return cls(
+            data["uid"],
+            GrFNIdentifier(
+                namespace=grfn_ns, scope=grfn_scope, name=grfn_name
+            ),
+            FunctionIdentifier(
+                namespace=fn_ns,
+                scope=fn_scope,
+                name=fn_name,
+                index=int(fn_idx),
+            ),
+            F,
+            V,
+            O,
+            T,
+            M,
+        )
+
+    @classmethod
+    def from_json(cls, json_path):
+        """Short summary.
+
+        :param type cls: Description of parameter `cls`.
+        :param type json_path: Description of parameter `json_path`.
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+
+        """
+        data = json.load(open(json_path, "r"))
+        return cls.from_dict(data)
 
 
 # =============================================================================

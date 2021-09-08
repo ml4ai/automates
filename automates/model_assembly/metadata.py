@@ -1,8 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod
+from copy import deepcopy
 from enum import Enum, auto, unique
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, asdict
+from datetime import date, datetime
 from typing import List, Union, Type, Dict
 from time import time
 
@@ -41,6 +42,8 @@ class MetadataType(AutoMATESBaseEnum):
     DOMAIN = auto()
     PARAMETER_SETTING = auto()
     EQUATION_PARAMETER = auto()
+    TEXT_UNIT = auto()
+    FROM_SOURCE = auto()
 
     @classmethod
     def from_str(cls, data: str):
@@ -48,20 +51,24 @@ class MetadataType(AutoMATESBaseEnum):
 
     @classmethod
     def get_metadata_class(cls, mtype: MetadataType) -> TypedMetadata:
-        if mtype == cls.GRFN_CREATION:
+        if mtype == MetadataType.GRFN_CREATION:
             return GrFNCreation
-        elif mtype == cls.CODE_SPAN_REFERENCE:
+        elif mtype == MetadataType.CODE_SPAN_REFERENCE:
             return CodeSpanReference
-        elif mtype == cls.CODE_COLLECTION_REFERENCE:
+        elif mtype == MetadataType.CODE_COLLECTION_REFERENCE:
             return CodeCollectionReference
-        elif mtype == cls.DOMAIN:
+        elif mtype == MetadataType.DOMAIN:
             return Domain
-        elif mtype == cls.TEXT_DEFINITION:
+        elif mtype == MetadataType.TEXT_DEFINITION:
             return VariableTextDefinition
-        elif mtype == cls.PARAMETER_SETTING:
+        elif mtype == MetadataType.PARAMETER_SETTING:
             return VariableTextParameter
-        elif mtype == cls.EQUATION_PARAMETER:
+        elif mtype == MetadataType.EQUATION_PARAMETER:
             return VariableEquationParameter
+        elif mtype == MetadataType.TEXT_UNIT:
+            return VariableTextUnit
+        elif mtype == cls.FROM_SOURCE:
+            return VariableFromSource
         else:
             raise MissingEnumError(
                 "Unhandled MetadataType to TypedMetadata conversion "
@@ -302,6 +309,7 @@ class TypedMetadata(BaseMetadata):
 
     @abstractclassmethod
     def from_data(cls, data):
+        data = deepcopy(data)
         mtype = MetadataType.from_str(data["type"])
         provenance = ProvenanceData.from_data(data["provenance"])
         ChildMetadataClass = MetadataType.get_metadata_class(mtype)
@@ -309,10 +317,17 @@ class TypedMetadata(BaseMetadata):
         return ChildMetadataClass.from_data(data)
 
     def to_dict(self):
-        return {
-            "type": str(self.type),
-            "provenance": self.provenance.to_dict(),
-        }
+        def as_dict_enum_factory(data):
+            def convert_value(obj):
+                if isinstance(obj, Enum):
+                    return obj.name
+                elif isinstance(obj, datetime):
+                    return str(obj)
+                return obj
+
+            return dict((k, convert_value(v)) for k, v in data)
+
+        return asdict(self, dict_factory=as_dict_enum_factory)
 
 
 @dataclass
@@ -445,6 +460,63 @@ class CodeSpanReference(TypedMetadata):
         return data
 
 
+@unique
+class VariableCreationReason(AutoMATESBaseEnum):
+    UNKNOWN = auto()
+    LOOP_ITERATION = auto()
+    TUPLE_DECONSTRUCTION = auto()
+    INLINE_EXPRESSION_EXPANSION = auto()
+    INLINE_CALL_RESULT = auto()
+    COMPLEX_RETURN_EXPR = auto()
+    CONDITION_RESULT = auto()
+    LOOP_EXIT_VAR = auto()
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def from_str(cls, data: str):
+        return super().from_str(cls, data)
+
+
+@dataclass
+class VariableFromSource(TypedMetadata):
+    from_source: bool
+    creation_reason: VariableCreationReason
+
+    @classmethod
+    def from_air_data(cls, data: dict) -> VariableFromSource:
+        return cls(
+            MetadataType.FROM_SOURCE,
+            ProvenanceData(
+                MetadataMethod.PROGRAM_ANALYSIS_PIPELINE,
+                ProvenanceData.get_dt_timestamp(),
+            ),
+            CodeSpanType.from_str(data["code_type"]),
+            data["file_uid"],
+            CodeSpan.from_source_ref(data["source_ref"]),
+        )
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableFromSource:
+        return cls(
+            data["type"],
+            data["provenance"],
+            bool(data["from_source"]),
+            VariableCreationReason.from_str(data["creation_reason"]),
+        )
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update(
+            {
+                "from_source": str(self.from_source),
+                "creation_reason": str(self.creation_reason),
+            }
+        )
+        return data
+
+
 @dataclass
 class GrFNCreation(TypedMetadata):
     name: str
@@ -546,12 +618,6 @@ class VariableEquationParameter(TypedMetadata):
             data["value"],
         )
 
-    def to_dict(self):
-        data = super().to_dict()
-        # TODO
-        # data.update({"name": self.name})
-        return data
-
 
 @dataclass
 class VariableTextDefinition(TypedMetadata):
@@ -568,12 +634,6 @@ class VariableTextDefinition(TypedMetadata):
             data["variable_identifier"],
             data["variable_definition"],
         )
-
-    def to_dict(self):
-        data = super().to_dict()
-        # TODO
-        # data.update({"name": self.name})
-        return data
 
 
 @dataclass
@@ -592,13 +652,20 @@ class VariableTextParameter(TypedMetadata):
             data["value"],
         )
 
-    def to_dict(self):
-        data = super().to_dict()
-        # TODO
-        # data.update({
-        #     "text_extraction": self.name
-        # })
-        return data
+
+@dataclass
+class VariableTextUnit(TypedMetadata):
+    text_extraction: TextExtraction
+    unit: str
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableTextUnit:
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_data(data["unit_extraction"]),
+            data["unit"],
+        )
 
 
 @dataclass

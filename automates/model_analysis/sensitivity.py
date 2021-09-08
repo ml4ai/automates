@@ -1,6 +1,10 @@
 from numbers import Number
 from copy import deepcopy
 from uuid import uuid4
+from pprint import pprint
+import functools
+import operator
+
 import json
 import inspect
 import re
@@ -16,7 +20,11 @@ from automates.model_assembly.networks import GroundedFunctionNetwork
 from .utils import timeit
 
 
-class InputError(Exception):
+class SensitivityAnalysisInputError(Exception):
+    pass
+
+
+class SensitivityAnalysisExecutionError(Exception):
     pass
 
 
@@ -117,6 +125,76 @@ class SensitivityIndices(object):
             json.dump(self.to_dict(), f)
 
 
+class SADependentVariable(object):
+
+    name: str
+    # Ordered list of variable names defining inputs to calculate this
+    # variables value
+    inputs: list
+    # Callable that computes this variables value given its inputs
+    expr: callable
+
+    def __init__(self, name: str, inputs: list, expr: callable):
+        self.name = name
+        self.inputs = inputs
+        self.expr = expr
+
+    def can_compute_with_inputs(self, known_inputs: dict):
+        return set(self.inputs).issubset(known_inputs.keys())
+
+    def compute(self, known_inputs: dict):
+        if self.can_compute_with_inputs(known_inputs):
+            input_vals = [known_inputs[v] for v in self.inputs]
+            # TODO handle the case where we depend on a constant value and a
+            # bounded or vectorized np.array input
+            if any([isinstance(inputs, type(np.array)) for inputs in input_vals]):
+                return np.array([self.expr(*inputs) for inputs in zip(*input_vals)])
+            else:
+                return self.expr(*input_vals)
+
+        return None
+
+
+class SAExecutionEnvironment(object):
+
+    # The grfn in which SA is taking place
+    grfn: GroundedFunctionNetwork
+    # Ordered list of SADependentVariable. The order indicates the order of
+    # computing their values such that newly computed dependent vars could be
+    # passed into the next ones for computation.
+    dependent_variables: list
+    # Dictionary of constant val variables going from their name to value
+    constant_variables: dict
+    # List of output variable names we care about from the grfn
+    outputs: list
+
+    def __init__(
+        self,
+        grfn: GroundedFunctionNetwork,
+        dependent_variables: list,
+        constant_variables: dict,
+        outputs: list,
+    ):
+        self.grfn = grfn
+        self.dependent_variables = dependent_variables
+        self.constant_variables = constant_variables
+        self.outputs = outputs
+
+    def __call__(self, input: dict):
+        known_inputs = {**self.constant_variables, **input}
+
+        # Compute the dependent variable values
+        for v in self.dependent_variables:
+            if v.can_compute_with_inputs(known_inputs):
+                known_inputs[v.name] = v.compute(known_inputs)
+            else:
+                raise SensitivityAnalysisExecutionError(
+                    f"Error: Unable to gather inputs needed to compute dependent variable {v.name}"
+                )
+
+        return self.grfn(known_inputs, desired_outputs=self.outputs)
+
+
 class SensitivityAnalyzer(object):
     def __init__(self):
         pass
@@ -130,6 +208,7 @@ class SensitivityAnalyzer(object):
         under sensitivity analysis
         """
 
+        # Not sure we need to perform this "conversion" beyond checking len 0
         def convert_bounds(bound):
             num_bounds = len(bound)
             if num_bounds == 0:
@@ -145,13 +224,93 @@ class SensitivityAnalyzer(object):
             else:
                 return [0, 1]
 
-        input_vars = [str(ivar) for ivar in GrFN.input_identifier_map.keys()]
         return {
-            "num_vars": len(input_vars),
-            "names": input_vars,
-            "bounds": [convert_bounds(B[var]) for var in input_vars],
+            "num_vars": len(B),
+            "names": [k for k in B.keys()],
+            "bounds": [convert_bounds(v) for v in B.values()],
         }
 
+    @classmethod
+    def check_and_build_dependents_list(cls, initial_inputs: set, dependent_vars: list):
+        """
+        Takes a list of initial input variable names and a list of dependent variables
+        that require some input to be computed. This method will compute if there
+        is an ordering of the dependent variables such that you can compute them
+        all successfully without some missing information. If so, it returns this
+        ordering of the dependent vars. Otherwise, it raises an exception.
+
+        Args:
+            initial_inputs (set): Set of names of the initial input vars
+            dependent_vars (list): List of dependent vars where we are checking computability
+
+        Raises:
+            SensitivityAnalysisExecutionError: If we deteremine dependent var
+                computability is impossible
+
+        Returns:
+            list: The list of dependent vars ordered in the correct execution path
+        """
+        dependent_computation_order = [
+            v for v in dependent_vars if all([n in initial_inputs for n in v.inputs])
+        ]
+        current_input_set = initial_inputs.union(
+            {v.name for v in dependent_computation_order}
+        )
+
+        remaining_dependents = [
+            v
+            for v in dependent_vars
+            if not all([n in initial_inputs for n in v.inputs])
+        ]
+
+        while len(remaining_dependents) != 0:
+            newly_computabe = [
+                v
+                for v in remaining_dependents
+                if all([name in current_input_set for name in v.inputs])
+            ]
+
+            if len(newly_computabe) == 0:
+                raise SensitivityAnalysisExecutionError(
+                    f"Error: unable to compute input sets for dependent variables '{[v.name for v in remaining_dependents]}'"
+                )
+
+            newly_computable_names = [v.name for v in newly_computabe]
+            remaining_dependents = [
+                v for v in remaining_dependents if v.name not in newly_computable_names
+            ]
+            current_input_set = current_input_set.union(set(newly_computable_names))
+            dependent_computation_order.extend(newly_computabe)
+
+        return dependent_computation_order
+
+    @classmethod
+    def build_execution(cls, G: GroundedFunctionNetwork, B: dict, I: dict, O: list):
+        bounded_input_names = set(B.keys())
+        input_keys = set(I.keys())
+
+        # matching_keys = input_keys.intersection(bounded_input_names)
+        # if len(matching_keys) > 0:
+        #     raise SensitivityAnalysisInputError(
+        #         f"Error: Provided keys as both bounded and normal input: {matching_keys}"
+        #     )
+
+        expected = B
+        dependents = []
+        constants = {}
+        for k, v in I.items():
+            if isinstance(v, SADependentVariable):
+                dependents.append(v)
+            else:
+                constants[k] = v
+
+        ordered_dependents = cls.check_and_build_dependents_list(
+            set(expected).union(set(constants.keys())), dependents
+        )
+
+        return SAExecutionEnvironment(G, ordered_dependents, constants, O)
+
+    # TODO Remove timeit decorators
     @staticmethod
     @timeit
     def __run_analysis(analyzer, *args, **kwargs):
@@ -162,9 +321,9 @@ class SensitivityAnalyzer(object):
     def __run_sampling(sampler, *args, **kwargs):
         return sampler(*args, **kwargs)
 
-    @staticmethod
+    @classmethod
     @timeit
-    def __execute_CG(CG, samples, problem, C, V, *args, **kwargs):
+    def __execute_CG(cls, execution_env, samples, problem, C, V, *args, **kwargs):
         def create_input_vector(name, vector, var_types=None):
             if var_types is None:
                 return vector
@@ -179,29 +338,28 @@ class SensitivityAnalyzer(object):
             else:
                 raise ValueError(f"Unrecognized value type: {type_info[0]}")
 
-        def reals_to_bools(samples):
-            return np.where(samples >= 0.5, True, False)
-
-        def reals_to_strs(samples, str_options):
-            num_strs = len(str_options)
-            return np.choose((samples * num_strs).astype(np.int64), num_strs)
-
         # Create vectors of sample inputs to run through the model
-        vectorized_sample_list = np.split(samples, samples.shape[1], axis=1)
+        # vectorized_sample_list = np.split(samples, samples.shape[1], axis=1)
+        vectorized_sample_list = np.transpose(samples)
         vectorized_input_samples = {
             name: create_input_vector(name, vector, var_types=V)
             for name, vector in zip(problem["names"], vectorized_sample_list)
         }
 
-        outputs = CG(vectorized_input_samples)
+        outputs = execution_env(vectorized_input_samples)
+
+        def parse_output(o):
+            if isinstance(o, np.ndarray) and len(o.shape) > 1:
+                return np.transpose(outputs["tma"])
+            return [np.array(o)]
+
         ordered_output_vectors = [
-            outputs[name.var_name] for name in CG.output_names
+            list_outputs
+            for output in outputs.values()
+            for list_outputs in parse_output(output)
         ]
 
-        Y = np.concatenate(
-            [y.reshape((1, y.shape[0])) for y in ordered_output_vectors]
-        )
-        return Y
+        return ordered_output_vectors
 
     @classmethod
     def Si_from_Sobol(
@@ -209,6 +367,8 @@ class SensitivityAnalyzer(object):
         N: int,
         G: GroundedFunctionNetwork,
         B: dict,
+        I: dict,
+        O: list = None,
         C: dict = None,
         V: dict = None,
         calc_2nd: bool = True,
@@ -222,6 +382,8 @@ class SensitivityAnalyzer(object):
             N: The number of samples to analyze when generating Si
             G: The GroundedFunctionNetwork to analyze
             B: A dictionary of bound information for the inputs of G
+            I: A dictionary of initial input values for non-bounded inputs
+            O: A list of output var names that we can optionally give for SA
             C: A dictionary of cover values for use when G is a FIB
             V: A dictionary of GrFN input variable types
             calc_2nd: A boolean that determines whether to include S2 indices
@@ -239,14 +401,15 @@ class SensitivityAnalyzer(object):
             seed=seed,
         )
 
-        (Y, exec_time) = cls.__execute_CG(G, samples, prob_def, C, V)
+        exec_env = cls.build_execution(G, B, I, O)
+        (Y, exec_time) = cls.__execute_CG(exec_env, samples, prob_def, C, V)
 
         results = list()
         for y in Y:
             (S, analyze_time) = cls.__run_analysis(
                 sobol.analyze,
                 prob_def,
-                y,
+                np.hstack(y),
                 calc_second_order=True,
                 num_resamples=100,
                 conf_level=0.95,
@@ -265,6 +428,7 @@ class SensitivityAnalyzer(object):
         N: int,
         G: GroundedFunctionNetwork,
         B: dict,
+        I: dict,
         C: dict = None,
         V: dict = None,
         M: int = 4,
@@ -303,6 +467,7 @@ class SensitivityAnalyzer(object):
         N: int,
         G: GroundedFunctionNetwork,
         B: dict,
+        I: dict,
         C: dict = None,
         V: dict = None,
         M: int = 10,
@@ -363,9 +528,7 @@ def ISA(
     ]
     PBAR = tqdm(total=sum([3 ** i for i in range(max_iterations)]))
 
-    def __add_max_var_node(
-        max_var: str, max_s1_val: float, S1_scores: list
-    ) -> str:
+    def __add_max_var_node(max_var: str, max_s1_val: float, S1_scores: list) -> str:
         node_id = uuid4()
         clr_idx = round(max_s1_val * 10)
         MAX_GRAPH.add_node(
@@ -469,9 +632,7 @@ def ISA(
             edge_label = f"[{l_b:.2f}, {u_b:.2f}]"
         else:
             edge_label = ""
-        MAX_GRAPH.add_edge(
-            parent_id, max_var_id, label=edge_label, object=cur_bounds
-        )
+        MAX_GRAPH.add_edge(parent_id, max_var_id, label=edge_label, object=cur_bounds)
 
         # Stop recursion with max iterations
         if pass_number == max_iterations:
@@ -491,9 +652,7 @@ def ISA(
                 interval_points.append(val)
         interval_points.sort()
         bound_breaks = __get_var_bound_breaks(interval_points)
-        new_bound_sets = __get_new_bound_sets(
-            bound_breaks, max_var, cur_bounds
-        )
+        new_bound_sets = __get_new_bound_sets(bound_breaks, max_var, cur_bounds)
 
         for new_bounds in new_bound_sets:
             PBAR.update(1)
@@ -505,9 +664,7 @@ def ISA(
             )
 
     root_id = str(uuid4())
-    root_label = "\n".join(
-        [f"{v}: [{b[0]}, {b[1]}]" for v, b in bounds.items()]
-    )
+    root_label = "\n".join([f"{v}: [{b[0]}, {b[1]}]" for v, b in bounds.items()])
 
     MAX_GRAPH.add_node(root_id, shape="rectangle", label=root_label)
     __iterate_with_bounds(bounds, root_id, 1)

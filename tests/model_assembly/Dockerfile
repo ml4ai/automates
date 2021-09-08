@@ -8,6 +8,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 RUN apt-get update && \
     apt-get -y --no-install-recommends install apt-utils
+RUN apt-get update --fix-missing
 
 # Use individual commands to prevent excess time usage when re-building
 RUN apt-get -y --no-install-recommends install curl wget gnupg2 git 

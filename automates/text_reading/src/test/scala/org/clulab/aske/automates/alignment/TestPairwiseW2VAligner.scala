@@ -1,6 +1,7 @@
 package org.clulab.aske.automates.alignment
 
-import com.typesafe.config.ConfigFactory
+import ai.lum.common.ConfigUtils._
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import org.clulab.aske.automates.TestUtils
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.odin.{RelationMention, TextBoundMention}
@@ -14,8 +15,11 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TestPairwiseW2VAligner extends FlatSpec with Matchers {
 
-  val w2v = new Word2Vec(Sourcer.sourceFromResource("/vectors.txt"), None)
-  lazy val proc = TestUtils.newOdinSystem(ConfigFactory.load("/test.conf")).proc
+  val config: Config = ConfigFactory.load("test.conf")
+  val vectors: String = config[String]("alignment.w2vPath")
+  val w2v = new Word2Vec(Sourcer.sourceFromResource(vectors), None)
+
+  lazy val proc = TestUtils.newOdinSystem(ConfigFactory.load("test.conf")).proc
 
   val srcTexts = Seq(
     "I have a cat",
@@ -28,8 +32,7 @@ class TestPairwiseW2VAligner extends FlatSpec with Matchers {
   )
 
   val aligner = new PairwiseW2VAligner(w2v, Set("variable", "description"))
-  val mapping = aligner.alignTexts(srcTexts, dstTexts)
-  println(mapping)
+  val mapping = aligner.alignTexts(srcTexts, dstTexts, useBigrams = true)
 
   it should "generate exhaustive alignemnts" in {
     mapping.length should be (4)
@@ -58,5 +61,27 @@ class TestPairwiseW2VAligner extends FlatSpec with Matchers {
     Aligner.getRelevantText(rm, aligner.relevantArgs) should be ("TEMPMIN minimum temperature")
   }
 
+  it should "have the correct alignment for 'maximum surplus storage capacity'" in {
+
+    val srcTexts = Seq(
+      "quantity sold in global trade",
+      "price elasticity of global demand",
+      "expected future production price constant",
+      "maximum surplus storage capacity"
+    )
+
+    val dstTexts = Seq(
+      "maximum storage level",
+      "consumer-side storage level",
+      "quantity sold to the consumer side",
+      "world price"
+    )
+
+    val alignment = aligner.alignTexts(srcTexts, dstTexts, useBigrams = true)
+    val topK = Aligner.topKBySrc(alignment, 1)
+    val onlyTarget = topK.filter(alSet => srcTexts(alSet.head.src) == "maximum surplus storage capacity")
+    dstTexts(onlyTarget.head.head.dst) shouldEqual "maximum storage level"
+
+  }
 
 }

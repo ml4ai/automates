@@ -78,7 +78,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [entity="DATE"]
+     (?=[tag = /IN/]) [entity="DATE"]
 
   - name: "ie"
     label: Avoid
@@ -92,7 +92,9 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [entity=/PERSON|ORGANIZATION|LOCATION/]{2,3}
+      [entity=/PERSON|ORGANIZATION/]{2,4} #note: adjusted {2,3} -> {2,4} to account for more cases. Can we adjust the number to {3,4}? (i.e. Mainland China, Hong Kong not captured as a phrase due to this rule)
+      |
+      [chunk = /B-NP/ & entity= /PERSON/] [chunk = /I-NP/ & word = /[A-Z]/]{1,2}
 
   - name: "person_2authors"
     label: Avoid
@@ -100,6 +102,8 @@ rules:
     type: token
     pattern: |
       [entity="PERSON"] [word="and"] [entity="PERSON"]
+      |
+      [word = /[A-Z][a-z]+-?[a-z]*/ & tag = /^NN/] [word = ","] [word = /[A-Z][a-z]+-?[a-z]*/ & tag = /^NN/] [word = ","] [word = "et"] [word = "al."]
       
   - name: "person_titles"
     label: Avoid
@@ -128,7 +132,7 @@ rules:
     priority: 2
     type: token
     pattern: |
-      [word = /\b(etc|ETC)\b|et cetera/]
+      [word = /\b(etc|ETC|etc\.|ETC\.)\b|et cetera/]
 
   - name: "email"
     label: Avoid
@@ -171,3 +175,10 @@ rules:
     type: token
     pattern: |
       (?<= [word="'"]) [word="s"]
+
+  - name: "in addition"
+    label: Avoid
+    priority: 2
+    type: token
+    pattern: |
+      (?<= [lemma="in"]) [word="addition"]

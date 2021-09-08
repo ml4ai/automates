@@ -10,37 +10,16 @@ import ast
 import json
 import argparse
 
-import networkx as nx
-from tqdm import tqdm
-
 from automates.model_assembly.networks import GroundedFunctionNetwork
-from automates.model_assembly.expression_visitor import (
-    ExpressionVisitor,
-    nodes2DiGraph,
-    ExprVariableNode,
-    ExprDefinitionNode,
+from automates.model_assembly.expression_trees.expression_walker import (
+    expr_trees_from_grfn,
 )
 
 
 def main(args):
     grfn_file = args.grfn_file
     G = GroundedFunctionNetwork.from_json(grfn_file)
-    func2hyperedge = {edge.lambda_fn.uid: edge for edge in G.hyper_edges}
-    visitor = ExpressionVisitor()
-    func_node_graphs = list()
-    for func_node in tqdm(G.lambdas, desc="Converting Lambdas"):
-        node_uid = func_node.uid
-        expr_tree = ast.parse(func_node.func_str)
-        visitor.visit(expr_tree)
-
-        nodes = visitor.get_nodes()
-        add_grfn_uids(nodes, func2hyperedge, node_uid)
-        nodes2AGraph(node_uid, nodes)
-
-        node_dicts = [n.to_dict() for n in nodes]
-        curr_func_node = {"func_node_uid": node_uid, "nodes": node_dicts}
-        func_node_graphs.append(curr_func_node)
-
+    func_node_graphs = expr_trees_from_grfn(G, generate_agraph=True)
     outfile_name = grfn_file.replace("--GrFN.json", "--expr-trees.json")
     json.dump(func_node_graphs, open(outfile_name, "w"))
 

@@ -4,29 +4,25 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigValueFactory
 import org.clulab.odin.{ExtractorEngine, Mention, State}
-import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.processors.{Document, Processor}
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.aske.automates.entities.{EntityFinder, GazetteerEntityFinder, GrobidEntityFinder, RuleBasedEntityFinder, StringMatchEntityFinder}
-import org.clulab.sequences.LexiconNER
+import org.clulab.aske.automates.entities.{EntityFinder,StringMatchEntityFinder}
 import org.clulab.utils.{DocumentFilter, FileUtils, FilterByLength, PassThroughFilter}
 import org.slf4j.LoggerFactory
 import ai.lum.common.ConfigUtils._
-import org.clulab.aske.automates.actions.ExpansionHandler
-import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, PassThroughPreprocessor, Preprocessor}
-
-import scala.io.Source
+import org.clulab.aske.automates.data.{EdgeCaseParagraphPreprocessor, LightPreprocessor, PassThroughPreprocessor, Preprocessor}
 
 
 class OdinEngine(
-  val proc: Processor,
-  masterRulesPath: String,
-  taxonomyPath: String,
-  var entityFinders: Seq[EntityFinder],
-  enableExpansion: Boolean,
-  validArgs: List[String],
-  freqWords: Array[String],
-  filterType: Option[String],
-  enablePreprocessor: Boolean) {
+                  val proc: Processor,
+                  masterRulesPath: String,
+                  taxonomyPath: String,
+                  var entityFinders: Seq[EntityFinder],
+                  enableExpansion: Boolean,
+                  validArgs: List[String],
+                  freqWords: Array[String],
+                  filterType: Option[String],
+                  preprocessorType: String) {
 
   val documentFilter: DocumentFilter = filterType match {
     case None => PassThroughFilter()
@@ -34,9 +30,10 @@ class OdinEngine(
     case _ => throw new NotImplementedError(s"Invalid DocumentFilter type specified: $filterType")
   }
 
-  val edgeCaseFilter: Preprocessor = enablePreprocessor match {
-    case false => PassThroughPreprocessor()
-    case true => EdgeCaseParagraphPreprocessor()
+  val edgeCaseFilter: Preprocessor = preprocessorType match {
+    case "Light" => LightPreprocessor()
+    case "EdgeCase" => EdgeCaseParagraphPreprocessor()
+    case "PassThrough" => PassThroughPreprocessor()
   }
 
   class LoadableAttributes(
@@ -84,11 +81,18 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
-    //println(s"In extractFrom() -- res : ${res.map(m => m.text).mkString(",\t")}")
-    val (descriptionMentions, other) = events.partition(_.label.contains("Description"))
 
+    // process context attachments to the initially extracted mentions
+    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
+    val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
+    val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
+
+    // post-process the mentions with untangleConj and combineFunction
+    val (descriptionMentions, nonDescrMens) = (mensWithContextAttachment ++ nonContexts).partition(_.label.contains("Description"))
+    val (functionMentions, other) = nonDescrMens.partition(_.label.contains("Function"))
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
-    (loadableAttributes.actions.keepLongest(other) ++ untangled).toVector
+    val combining = loadableAttributes.actions.combineFunction(functionMentions)
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {
@@ -132,6 +136,8 @@ object OdinEngine {
 
   // Mention labels
   val DESCRIPTION_LABEL: String = "Description"
+  val CONJ_DESCRIPTION_LABEL: String = "ConjDescription"
+  val CONJ_DESCRIPTION_TYPE2_LABEL: String = "ConjDescriptionType2"
   val INTERVAL_PARAMETER_SETTING_LABEL: String = "IntervalParameterSetting"
   val PARAMETER_SETTING_LABEL: String = "ParameterSetting"
   val VALUE_LABEL: String = "Value"
@@ -140,6 +146,8 @@ object OdinEngine {
   val UNIT_LABEL: String = "UnitRelation"
   val MODEL_LABEL: String = "Model"
   val FUNCTION_LABEL: String = "Function"
+  val CONTEXT_LABEL: String = "Context"
+  val CONTEXT_EVENT_LABEL: String = "ContextEvent"
   // Mention argument types
   val VARIABLE_ARG: String = "variable"
   val VALUE_LEAST_ARG: String = "valueLeast"
@@ -149,7 +157,8 @@ object OdinEngine {
   val UNIT_ARG: String = "unit"
   val FUNCTION_INPUT_ARG: String = "input"
   val FUNCTION_OUTPUT_ARG: String = "output"
-
+  val CONTEXT_ARG: String = "context"
+  val CONTEXT_EVENT_ARG: String = "event"
 
   val logger = LoggerFactory.getLogger(this.getClass())
   // Used by LexiconNER
@@ -164,10 +173,11 @@ object OdinEngine {
 //    // The config with the main settings
 //    val odinConfig: Config = config[Config]("TextEngine")
 
+
     // document filter: used to clean the input ahead of time
     // fixme: should maybe be moved?
     val filterType = odinConfig.get[String]("documentFilter")
-    val enablePreprocessor = odinConfig.get[Boolean](path = "EdgeCaseParagraphPreprocessor").getOrElse(false)
+    val preprocessorType = odinConfig.get[String](path = "preprocessorType").getOrElse("PassThrough")
 
     // Odin Grammars
     val masterRulesPath: String = odinConfig[String]("masterRulesPath")
@@ -194,7 +204,7 @@ object OdinEngine {
     val enableExpansion: Boolean = odinConfig[Boolean]("enableExpansion")
     val freqWords = FileUtils.loadFromOneColumnTSV(odinConfig[String]("freqWordsPath"))
 
-    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, validArgs, freqWords, filterType, enablePreprocessor)
+    new OdinEngine(proc, masterRulesPath, taxonomyPath, entityFinders, enableExpansion, validArgs, freqWords, filterType, preprocessorType)
   }
 
 }
