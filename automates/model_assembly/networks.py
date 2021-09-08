@@ -2203,8 +2203,8 @@ class GroundedFunctionNetwork:
             namespace,scope,name,idx = extract_func_identifier(v["identifier"])
             V[VariableIdentifier(namespace=namespace,scope=scope,name=name,index=int(idx))] = VariableNode.from_dict(v)
 
-        O = {ObjectIdentifier(o["uid"]) : ObjectDef.from_dict(o) for o in data["objects"]}
-        T = {TypeIdentifier(t["uid"]) : TypeDef.from_data(t) for t in data["types"]}
+        O = dict() 
+        T = dict()
         M = [TypedMetadata.from_data(m) for m in data["metadata"]]
 
         grfn_ns,grfn_scope,grfn_name = extract_func_identifier(data["identifier"])
