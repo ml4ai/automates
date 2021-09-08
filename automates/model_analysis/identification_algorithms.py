@@ -361,6 +361,19 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                                     tree=tree)
 
     # Line 7
+    else:
+        s_single = s[0]
+
+        # Line 8
+        sub = []
+        ev = []
+        for node in s_single:
+            for int_val in node["int_values"]:
+                sub.append(int_val)
+            ev.append(node["obs_val"])
+        if len(set(sub)-set(ev)) != 0:
+            raise ValueError("Fail, line 8")
+
 
 
     return None
