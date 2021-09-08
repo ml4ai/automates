@@ -34,7 +34,7 @@ object CosmosJsonProcessor {
 
   def mkCosmosObject(json: ujson.Js, blockIdx: Int): CosmosObject = {
     val pdfName = json.obj.get("pdf_name").map(_.str)
-    val content = json("content").str
+    val content = org.apache.commons.text.StringEscapeUtils.unescapeJava(json("content").str)
     val pageNum = json("page_num").num.toInt
     val cls = json("postprocess_cls").str
     val postprocessScore = json("postprocess_score").num

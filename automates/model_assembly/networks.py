@@ -114,7 +114,7 @@ class VariableNode(BaseNode):
         return self.uid == other.uid
 
     def __str__(self):
-        return str(self.identifier)
+        return f"{str(self.identifier)}::{str(self.uid)}"
 
     @classmethod
     def from_definition(cls, var_def: VariableDef):
@@ -241,10 +241,10 @@ class VariableNode(BaseNode):
         return cls(
             data["uid"],
             VariableIdentifier.from_str(data["identifier"]),
-            data["object_ref"] if "object_ref" in data else "",
             [TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
             if "metadata" in data
             else [],
+            data["object_ref"] if "object_ref" in data else "",
         )
 
     def to_dict(self) -> dict:
@@ -923,12 +923,15 @@ class HyperEdge:
     outputs: List[VariableNode]
 
     def __call__(self):
-        result = self.func_node(
-            *[
-                var.value if var.value is not None else var.input_value
-                for var in self.inputs
-            ]
-        )
+        inputs = [
+            var.value
+            if var.value is not None
+            else var.input_value
+            if var.input_value is not None
+            else [None]
+            for var in self.inputs
+        ]
+        result = self.func_node(*inputs)
         # If we are in the exit decision hyper edge and in vectorized execution
         if (
             self.func_node.func_type == LambdaType.DECISION
@@ -948,12 +951,16 @@ class HyperEdge:
 
             # For each output value, update output nodes with new value that
             # just exited, otherwise keep existing value
-            for i, out_val in enumerate(result):
+            for res_index, out_val in enumerate(result):
+                if self.outputs[res_index].value is None:
+                    self.outputs[res_index].value = np.full(
+                        out_val.shape, np.NaN
+                    )
                 # If we have seen an exit before at a given position, keep the
                 # existing value, otherwise update.
-                self.outputs[i].value = np.where(
-                    self.seen_exits, np.copy(self.outputs[i].value), out_val
-                )
+                for j, _ in enumerate(self.outputs[res_index].value):
+                    if self.seen_exits[j]:
+                        self.outputs[res_index].value[j] = out_val[j]
 
             # Update seen_exits with any vectorized positions that may have
             # exited during this execution
@@ -1529,8 +1536,9 @@ class GroundedFunctionNetwork:
             if not found_var:
                 self.remove_node(var_node)
                 del_indices.append(idx)
-        for idx in del_indices:
-            del self.variables[idx]
+
+        for idx, del_idx in enumerate(del_indices):
+            del self.variables[del_idx - idx]
 
     # def __init__(
     #     self,
@@ -1646,7 +1654,10 @@ class GroundedFunctionNetwork:
         return f"{self.label}\n{size_str}"
 
     def __call__(
-        self, inputs: Dict[str, Any], literals: Dict[str, Any] = None
+        self,
+        inputs: Dict[str, Any],
+        literals: Dict[str, Any] = None,
+        desired_outputs: List[str] = None,
     ) -> Iterable[Any]:
         """Executes the GrFN over a particular set of inputs and returns the
         result.
@@ -1658,6 +1669,10 @@ class GroundedFunctionNetwork:
             literals: Input set where keys are the identifier strings of
             variable nodes in the GrFN that inherit directly from a literal
             node and each key points to a set of input values (or just one)
+            desired_outputs: A list of variable names to customize the
+            desired variable nodes whose values we should output after
+            execution. Will find the max version var node in the root container
+            for each name given and return their values.
 
         Returns:
             A set of outputs from executing the GrFN, one for every set of
@@ -1669,19 +1684,27 @@ class GroundedFunctionNetwork:
             self.input_identifier_map[VariableIdentifier.from_str(n)]: v
             for n, v in inputs.items()
         }
-        # Set input values
+
+        # Check if vectorized input is given and configure the numpy shape
+        for input_node in [n for n in self.inputs if n in full_inputs]:
+            value = full_inputs[input_node]
+            if isinstance(value, np.ndarray):
+                if self.np_shape != value.shape and self.np_shape != (1,):
+                    raise GrFNExecutionException(
+                        f"Error: Given two vectorized inputs with different shapes: '{value.shape}' and '{self.np_shape}'"
+                    )
+                self.np_shape = value.shape
+
+        # Set the values of input var nodes given in the inputs dict
         for input_node in [n for n in self.inputs if n in full_inputs]:
             value = full_inputs[input_node]
             # TODO: need to find a way to incorporate a 32/64 bit check here
-            if isinstance(value, float):
-                value = np.array([value], dtype=np.float64)
-            if isinstance(value, int):
-                value = np.array([value], dtype=np.int64)
-            elif isinstance(value, list):
-                value = np.array(value)
-                self.np_shape = value.shape
-            elif isinstance(value, np.ndarray):
-                self.np_shape = value.shape
+            if isinstance(value, (float, np.float64)):
+                value = np.full(self.np_shape, value, dtype=np.float64)
+            if isinstance(value, (int, np.int64)):
+                value = np.full(self.np_shape, value, dtype=np.int64)
+            elif isinstance(value, (dict, list)):
+                value = np.array([value] * self.np_shape[0])
 
             input_node.input_value = value
 
@@ -1934,6 +1957,8 @@ class GroundedFunctionNetwork:
             visited_funcs = set()
 
             def find_distances(func, dist, path=[]):
+                if func.func_type == LambdaType.OPERATOR:
+                    return
                 new_successors = list()
                 func_container = func2container[func]
                 if func_container == container:
@@ -2129,7 +2154,14 @@ class GroundedFunctionNetwork:
     def to_AGraph__old(self):
         """Export to a PyGraphviz AGraph object."""
         var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
-        input_nodes = set([v for v in var_nodes if self.in_degree(v) == 0])
+        input_nodes = []
+        for v in var_nodes:
+            if self.in_degree(v) == 0 or (
+                len(list(self.predecessors(v))) == 1
+                and list(self.predecessors(v))[0].func_type
+                == LambdaType.LITERAL
+            ):
+                input_nodes.append(v)
         output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
 
         A = nx.nx_agraph.to_agraph(self)
@@ -2160,7 +2192,10 @@ class GroundedFunctionNetwork:
             )
 
             input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
-            container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+            # container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+            container_subgraph.add_subgraph(
+                [v.uid for v in input_var_nodes], rank="same"
+            )
 
             for new_subgraph in self.subgraphs.successors(subgraph):
                 populate_subgraph(new_subgraph, container_subgraph)
@@ -2169,19 +2204,56 @@ class GroundedFunctionNetwork:
                 for func_set in func_sets:
                     func_set = list(func_set.intersection(set(subgraph.nodes)))
 
-                    container_subgraph.add_subgraph(func_set, rank="same")
+                    container_subgraph.add_subgraph(
+                        func_set,
+                    )
                     output_var_nodes = list()
                     for func_node in func_set:
                         succs = list(self.successors(func_node))
                         output_var_nodes.extend(succs)
                     output_var_nodes = set(output_var_nodes) - output_nodes
                     var_nodes = output_var_nodes.intersection(subgraph.nodes)
+
                     container_subgraph.add_subgraph(
-                        list(var_nodes), rank="same"
+                        [v.uid for v in var_nodes],
                     )
 
         root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
         populate_subgraph(root_subgraph, A)
+
+        # TODO this code helps with the layout of the graph. However, it assumes
+        # all var nodes start at -1 and are consecutive. This is currently not
+        # the case, so it creates random hanging var nodes if run. Fix this.
+
+        # unique_var_names = {
+        #     "::".join(n.name.split("::")[:-1])
+        #     for n in A.nodes()
+        #     if len(n.name.split("::")) > 2
+        # }
+        # for name in unique_var_names:
+        #     max_var_version = max(
+        #         [
+        #             int(n.name.split("::")[-1])
+        #             for n in A.nodes()
+        #             if n.name.startswith(name)
+        #         ]
+        #     )
+        #     min_var_version = min(
+        #         [
+        #             int(n.name.split("::")[-1])
+        #             for n in A.nodes()
+        #             if n.name.startswith(name)
+        #         ]
+        #     )
+        #     for i in range(min_var_version, max_var_version):
+        #         e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
+        #         e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
+        #         e.attr["color"] = "invis"
+
+        # for agraph_node in [
+        #     a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
+        # ]:
+        #     agraph_node.attr["rank"] = "max"
 
         return A
 
@@ -2304,8 +2376,8 @@ class GroundedFunctionNetwork:
         F.add_edges_from(main_edges)
         return F
 
-    def to_json(self) -> str:
-        """Outputs the contents of this GrFN to a JSON object string.
+    def to_dict(self) -> Dict:
+        """Outputs the contents of this GrFN to a dict object.
 
         :return: Description of returned object.
         :rtype: type
@@ -2337,6 +2409,14 @@ class GroundedFunctionNetwork:
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
+    def to_json(self) -> str:
+        """Outputs the contents of this GrFN to a JSON object string.
+
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+        """
+        data = self.to_dict()
         return json.dumps(data)
 
     def to_json_file(self, json_path) -> None:
@@ -2344,18 +2424,7 @@ class GroundedFunctionNetwork:
             outfile.write(self.to_json())
 
     @classmethod
-    def from_json(cls, json_path):
-        """Short summary.
-
-        :param type cls: Description of parameter `cls`.
-        :param type json_path: Description of parameter `json_path`.
-        :return: Description of returned object.
-        :rtype: type
-        :raises ExceptionName: Why the exception is raised.
-
-        """
-        data = json.load(open(json_path, "r"))
-
+    def from_dict(cls, data):
         # Re-create variable and function nodes from their JSON descriptions
         V = {v["uid"]: VariableNode.from_dict(v) for v in data["variables"]}
         F = {f["uid"]: LambdaNode.from_dict(f) for f in data["functions"]}
@@ -2408,6 +2477,20 @@ class GroundedFunctionNetwork:
             entry_point = ""
         identifier = BaseIdentifier.from_str(entry_point)
         return cls(data["uid"], identifier, data["timestamp"], G, H, S, T, M)
+
+    @classmethod
+    def from_json(cls, json_path):
+        """Short summary.
+
+        :param type cls: Description of parameter `cls`.
+        :param type json_path: Description of parameter `json_path`.
+        :return: Description of returned object.
+        :rtype: type
+        :raises ExceptionName: Why the exception is raised.
+
+        """
+        data = json.load(open(json_path, "r"))
+        return cls.from_dict(data)
 
 
 # =============================================================================

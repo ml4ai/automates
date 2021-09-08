@@ -1,0 +1,491 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [
+                        {
+                            "node_type": "ModelReturn",
+                            "source_refs": [
+                                {
+                                    "col_end": 20,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 2,
+                                    "row_start": 2,
+                                    "source_file_name": "test_assign_5.py"
+                                }
+                            ],
+                            "value": {
+                                "node_type": "Tuple",
+                                "source_refs": [
+                                    {
+                                        "col_end": 20,
+                                        "col_start": 11,
+                                        "node_type": "SourceRef",
+                                        "row_end": 2,
+                                        "row_start": 2,
+                                        "source_file_name": "test_assign_5.py"
+                                    }
+                                ],
+                                "values": [
+                                    {
+                                        "name": "x",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 13,
+                                                "col_start": 12,
+                                                "node_type": "SourceRef",
+                                                "row_end": 2,
+                                                "row_start": 2,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "y",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 15,
+                                                "col_start": 14,
+                                                "node_type": "SourceRef",
+                                                "row_end": 2,
+                                                "row_start": 2,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "left": {
+                                            "name": "x",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 17,
+                                                    "col_start": 16,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 2,
+                                                    "row_start": 2,
+                                                    "source_file_name": "test_assign_5.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "BinaryOp",
+                                        "op": "Add",
+                                        "right": {
+                                            "name": "y",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 19,
+                                                    "col_start": 18,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 2,
+                                                    "row_start": 2,
+                                                    "source_file_name": "test_assign_5.py"
+                                                }
+                                            ]
+                                        },
+                                        "source_refs": [
+                                            {
+                                                "col_end": 19,
+                                                "col_start": 16,
+                                                "node_type": "SourceRef",
+                                                "row_end": 2,
+                                                "row_start": 2,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "func_args": [
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 11,
+                                    "col_start": 10,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "test_assign_5.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 11,
+                                        "col_start": 10,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "test_assign_5.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 13,
+                                    "col_start": 12,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "test_assign_5.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "y",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 12,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "test_assign_5.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "adder",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 20,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 2,
+                            "row_start": 1,
+                            "source_file_name": "test_assign_5.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Tuple",
+                                "source_refs": [
+                                    {
+                                        "col_end": 11,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "test_assign_5.py"
+                                    }
+                                ],
+                                "values": [
+                                    {
+                                        "node_type": "Var",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 6,
+                                                "col_start": 5,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ],
+                                        "type": "float",
+                                        "val": {
+                                            "name": "a",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 6,
+                                                    "col_start": 5,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 5,
+                                                    "row_start": 5,
+                                                    "source_file_name": "test_assign_5.py"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "node_type": "Var",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 8,
+                                                "col_start": 7,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ],
+                                        "type": "float",
+                                        "val": {
+                                            "name": "b",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 8,
+                                                    "col_start": 7,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 5,
+                                                    "row_start": 5,
+                                                    "source_file_name": "test_assign_5.py"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "node_type": "Var",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 10,
+                                                "col_start": 9,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ],
+                                        "type": "float",
+                                        "val": {
+                                            "name": "c",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 10,
+                                                    "col_start": 9,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 5,
+                                                    "row_start": 5,
+                                                    "source_file_name": "test_assign_5.py"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "arguments": [
+                                    {
+                                        "node_type": "Number",
+                                        "number": 1,
+                                        "source_refs": [
+                                            {
+                                                "col_end": 21,
+                                                "col_start": 20,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "node_type": "Number",
+                                        "number": 2,
+                                        "source_refs": [
+                                            {
+                                                "col_end": 23,
+                                                "col_start": 22,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "func": {
+                                    "name": "adder",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 24,
+                                            "col_start": 14,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 5,
+                                            "source_file_name": "test_assign_5.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
+                                "source_refs": [
+                                    {
+                                        "col_end": 24,
+                                        "col_start": 14,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "test_assign_5.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 24,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 5,
+                                    "source_file_name": "test_assign_5.py"
+                                }
+                            ]
+                        },
+                        {
+                            "expr": {
+                                "arguments": [
+                                    {
+                                        "left": {
+                                            "node_type": "String",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 14,
+                                                    "col_start": 10,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 6,
+                                                    "row_start": 6,
+                                                    "source_file_name": "test_assign_5.py"
+                                                }
+                                            ],
+                                            "string": "a "
+                                        },
+                                        "node_type": "BinaryOp",
+                                        "op": "Add",
+                                        "right": {
+                                            "arguments": [
+                                                {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 21,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "test_assign_5.py"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "func": {
+                                                "name": "str",
+                                                "node_type": "Name",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 23,
+                                                        "col_start": 17,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 6,
+                                                        "row_start": 6,
+                                                        "source_file_name": "test_assign_5.py"
+                                                    }
+                                                ]
+                                            },
+                                            "node_type": "Call",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 23,
+                                                    "col_start": 17,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 6,
+                                                    "row_start": 6,
+                                                    "source_file_name": "test_assign_5.py"
+                                                }
+                                            ]
+                                        },
+                                        "source_refs": [
+                                            {
+                                                "col_end": 23,
+                                                "col_start": 10,
+                                                "node_type": "SourceRef",
+                                                "row_end": 6,
+                                                "row_start": 6,
+                                                "source_file_name": "test_assign_5.py"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "func": {
+                                    "name": "print",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 24,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 6,
+                                            "row_start": 6,
+                                            "source_file_name": "test_assign_5.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
+                                "source_refs": [
+                                    {
+                                        "col_end": 24,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 6,
+                                        "row_start": 6,
+                                        "source_file_name": "test_assign_5.py"
+                                    }
+                                ]
+                            },
+                            "node_type": "Expr",
+                            "source_refs": [
+                                {
+                                    "col_end": 24,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 6,
+                                    "row_start": 6,
+                                    "source_file_name": "test_assign_5.py"
+                                }
+                            ]
+                        }
+                    ],
+                    "func_args": [],
+                    "name": "main",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 24,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 6,
+                            "row_start": 4,
+                            "source_file_name": "test_assign_5.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "test_assign_5",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": 6,
+                    "row_start": 1,
+                    "source_file_name": "test_assign_5.py"
+                }
+            ]
+        }
+    ]
+}

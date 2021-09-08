@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod
+from copy import deepcopy
 from enum import Enum, auto, unique
 from dataclasses import dataclass, asdict
 from datetime import date, datetime
@@ -42,6 +43,7 @@ class MetadataType(AutoMATESBaseEnum):
     PARAMETER_SETTING = auto()
     EQUATION_PARAMETER = auto()
     TEXT_UNIT = auto()
+    FROM_SOURCE = auto()
 
     @classmethod
     def from_str(cls, data: str):
@@ -65,9 +67,12 @@ class MetadataType(AutoMATESBaseEnum):
             return VariableEquationParameter
         elif mtype == MetadataType.TEXT_UNIT:
             return VariableTextUnit
+        elif mtype == cls.FROM_SOURCE:
+            return VariableFromSource
         else:
             raise MissingEnumError(
-                "Unhandled MetadataType to TypedMetadata conversion " + f"for: {mtype}"
+                "Unhandled MetadataType to TypedMetadata conversion "
+                + f"for: {mtype}"
             )
 
 
@@ -129,12 +134,20 @@ class MeasurementType(AutoMATESBaseEnum):
     @classmethod
     def isa_categorical(cls, item: MeasurementType) -> bool:
         return any(
-            [item == x for x in range(cls.CATEGORICAL.value, cls.NUMERICAL.value)]
+            [
+                item == x
+                for x in range(cls.CATEGORICAL.value, cls.NUMERICAL.value)
+            ]
         )
 
     @classmethod
     def isa_numerical(cls, item: MeasurementType) -> bool:
-        return any([item == x for x in range(cls.NUMERICAL.value, cls.RATIO.value + 1)])
+        return any(
+            [
+                item == x
+                for x in range(cls.NUMERICAL.value, cls.RATIO.value + 1)
+            ]
+        )
 
 
 @unique
@@ -296,6 +309,7 @@ class TypedMetadata(BaseMetadata):
 
     @abstractclassmethod
     def from_data(cls, data):
+        data = deepcopy(data)
         mtype = MetadataType.from_str(data["type"])
         provenance = ProvenanceData.from_data(data["provenance"])
         ChildMetadataClass = MetadataType.get_metadata_class(mtype)
@@ -441,6 +455,63 @@ class CodeSpanReference(TypedMetadata):
                 "code_type": str(self.code_type),
                 "code_file_reference_uid": self.code_file_reference_uid,
                 "code_span": self.code_span.to_dict(),
+            }
+        )
+        return data
+
+
+@unique
+class VariableCreationReason(AutoMATESBaseEnum):
+    UNKNOWN = auto()
+    LOOP_ITERATION = auto()
+    TUPLE_DECONSTRUCTION = auto()
+    INLINE_EXPRESSION_EXPANSION = auto()
+    INLINE_CALL_RESULT = auto()
+    COMPLEX_RETURN_EXPR = auto()
+    CONDITION_RESULT = auto()
+    LOOP_EXIT_VAR = auto()
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def from_str(cls, data: str):
+        return super().from_str(cls, data)
+
+
+@dataclass
+class VariableFromSource(TypedMetadata):
+    from_source: bool
+    creation_reason: VariableCreationReason
+
+    @classmethod
+    def from_air_data(cls, data: dict) -> VariableFromSource:
+        return cls(
+            MetadataType.FROM_SOURCE,
+            ProvenanceData(
+                MetadataMethod.PROGRAM_ANALYSIS_PIPELINE,
+                ProvenanceData.get_dt_timestamp(),
+            ),
+            CodeSpanType.from_str(data["code_type"]),
+            data["file_uid"],
+            CodeSpan.from_source_ref(data["source_ref"]),
+        )
+
+    @classmethod
+    def from_data(cls, data: dict) -> VariableFromSource:
+        return cls(
+            data["type"],
+            data["provenance"],
+            bool(data["from_source"]),
+            VariableCreationReason.from_str(data["creation_reason"]),
+        )
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update(
+            {
+                "from_source": str(self.from_source),
+                "creation_reason": str(self.creation_reason),
             }
         )
         return data
@@ -656,7 +727,9 @@ class Domain(TypedMetadata):
         if MeasurementType.isa_categorical(mtype):
             els = [DomainSet.from_data(dom_el) for dom_el in data["elements"]]
         elif MeasurementType.isa_numerical(mtype):
-            els = [DomainInterval.from_data(dom_el) for dom_el in data["elements"]]
+            els = [
+                DomainInterval.from_data(dom_el) for dom_el in data["elements"]
+            ]
         else:
             els = []
         return cls(

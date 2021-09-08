@@ -1,0 +1,151 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [],
+                    "func_args": [],
+                    "name": "foo",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 8,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 3,
+                            "row_start": 2,
+                            "source_file_name": "test_function_1.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [],
+                    "func_args": [],
+                    "name": "bar",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 8,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 6,
+                            "row_start": 5,
+                            "source_file_name": "test_function_1.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [
+                        {
+                            "expr": {
+                                "arguments": [],
+                                "func": {
+                                    "name": "foo",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 9,
+                                            "row_start": 9,
+                                            "source_file_name": "test_function_1.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
+                                "source_refs": [
+                                    {
+                                        "col_end": 9,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 9,
+                                        "row_start": 9,
+                                        "source_file_name": "test_function_1.py"
+                                    }
+                                ]
+                            },
+                            "node_type": "Expr",
+                            "source_refs": [
+                                {
+                                    "col_end": 9,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 9,
+                                    "row_start": 9,
+                                    "source_file_name": "test_function_1.py"
+                                }
+                            ]
+                        },
+                        {
+                            "expr": {
+                                "arguments": [],
+                                "func": {
+                                    "name": "bar",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 10,
+                                            "row_start": 10,
+                                            "source_file_name": "test_function_1.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
+                                "source_refs": [
+                                    {
+                                        "col_end": 9,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 10,
+                                        "row_start": 10,
+                                        "source_file_name": "test_function_1.py"
+                                    }
+                                ]
+                            },
+                            "node_type": "Expr",
+                            "source_refs": [
+                                {
+                                    "col_end": 9,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 10,
+                                    "row_start": 10,
+                                    "source_file_name": "test_function_1.py"
+                                }
+                            ]
+                        }
+                    ],
+                    "func_args": [],
+                    "name": "main",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 9,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 10,
+                            "row_start": 8,
+                            "source_file_name": "test_function_1.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "test_function_1",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": 10,
+                    "row_start": 1,
+                    "source_file_name": "test_function_1.py"
+                }
+            ]
+        }
+    ]
+}

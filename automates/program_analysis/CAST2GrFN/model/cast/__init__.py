@@ -22,6 +22,7 @@ from automates.program_analysis.CAST2GrFN.model.cast.binary_op import BinaryOp
 from automates.program_analysis.CAST2GrFN.model.cast.binary_operator import (
     BinaryOperator,
 )
+from automates.program_analysis.CAST2GrFN.model.cast.boolean import Boolean
 from automates.program_analysis.CAST2GrFN.model.cast.call import Call
 from automates.program_analysis.CAST2GrFN.model.cast.class_def import ClassDef
 from automates.program_analysis.CAST2GrFN.model.cast.dict import Dict
@@ -37,7 +38,9 @@ from automates.program_analysis.CAST2GrFN.model.cast.module import Module
 from automates.program_analysis.CAST2GrFN.model.cast.name import Name
 from automates.program_analysis.CAST2GrFN.model.cast.number import Number
 from automates.program_analysis.CAST2GrFN.model.cast.set import Set
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from automates.program_analysis.CAST2GrFN.model.cast.string import String
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
 from automates.program_analysis.CAST2GrFN.model.cast.subscript import Subscript
 from automates.program_analysis.CAST2GrFN.model.cast.tuple import Tuple
 from automates.program_analysis.CAST2GrFN.model.cast.unary_op import UnaryOp
