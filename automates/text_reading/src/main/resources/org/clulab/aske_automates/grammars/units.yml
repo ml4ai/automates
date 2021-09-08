@@ -9,7 +9,7 @@ rules:
     example: "The (average) daily net radiation expressed in megajoules per square metre per day (MJ m-2 day-1) is required.
     Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
     pattern: |
-      (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word=/-LRB-|\(/]) @unit:Phrase (?=[word=/-RRB-|\)/])
+      (?<= [word=/.*/] [word = "per"] [word=/.*/]+ [word=/-LRB-|\(/]) @unit:Phrase (?=[word=/-RRB-|\)/]) | [word=/.*/] [word = "per"] [word=/.*/]
       #Doesn't work for this [%/(dS m-1)]
       #helps with non-standard units
       #todo: soil layer thickness ($z, m)
@@ -22,6 +22,14 @@ rules:
     Wind speed is given in metres per second (m s-1) or kilometres per day (km day-1)."
     pattern: |
       [word = /[A-Za-z]/ ] [word = "-"] [tag = "CD"]
+
+  - name: unit_power
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "to a value of 200 mm 2 per plant"
+    pattern: |
+      [entity = "B-unit"] [tag = "CD"]
 
   - name: number_unit
     label: Unit
@@ -43,6 +51,23 @@ rules:
     pattern: |
       (?<= [tag = "CD"]) [entity="DURATION"]
 
+  - name: person
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "For example, if we take the total initial population, S(0) = 6.8 millions (e.g. the case of Hong Kong) and an initial infected class of I(0) = 10 persons, together with a = 2/3 and r = 9.788 x 10-8, then R∞ is about 5,000."
+    pattern: |
+      (?<= [entity = "NUMBER"]) [lemma="person"]
+
+  - name: money
+    label: Unit
+    priority: ${priority}
+    type: token
+    example: "where TAR is the total accumulated cost of repairs in $, PP is the purchase price in $, and rci, rc2, and rc3 are repair cost coefficients (American Society of Agricultural Engineers, 1971)."
+    pattern: |
+      [lemma="$"]
+      #note: more monetary units can be added under this rule.
+
   - name: unit_from_fragments
     label: Unit
     priority: ${priority}
@@ -63,6 +88,7 @@ rules:
       [chunk = /B-NP|I-NP/ & !tag = "CD" & !tag = "-LRB-" & !word = ","]* [word = "/"]? [entity = /(?i)unit/] [word = "/"]? [chunk = /I-NP/ & !tag = "-RRB-"]*
       #a unit is a concept that overlaps with a unit (excludes parentheses, which means this pattern does not work for `[%/(dS m-1)]` )
       #the !tag="CD" part helps ensure the value is not included in the unit
+      #note: excluded the tag "CC" from the first phrase of words.
 
 
   - name: unit_from_fragments3

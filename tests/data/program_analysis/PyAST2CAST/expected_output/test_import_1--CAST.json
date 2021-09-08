@@ -1,0 +1,204 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [],
+                    "name": "sys",
+                    "node_type": "Module",
+                    "source_refs": [
+                        {
+                            "col_end": 10,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 2,
+                            "row_start": 2,
+                            "source_file_name": "test_import_1.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "test_import_1.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "x",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 5,
+                                            "source_file_name": "test_import_1.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "arguments": [
+                                    {
+                                        "attr": {
+                                            "name": "argv",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 20,
+                                                    "col_start": 12,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 5,
+                                                    "row_start": 5,
+                                                    "source_file_name": "test_import_1.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Attribute",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 20,
+                                                "col_start": 12,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "test_import_1.py"
+                                            }
+                                        ],
+                                        "value": {
+                                            "name": "sys",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 15,
+                                                    "col_start": 12,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 5,
+                                                    "row_start": 5,
+                                                    "source_file_name": "test_import_1.py"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "func": {
+                                    "name": "len",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 21,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 5,
+                                            "source_file_name": "test_import_1.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
+                                "source_refs": [
+                                    {
+                                        "col_end": 21,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "test_import_1.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 21,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 5,
+                                    "source_file_name": "test_import_1.py"
+                                }
+                            ]
+                        }
+                    ],
+                    "func_args": [],
+                    "name": "main",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 21,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 5,
+                            "row_start": 4,
+                            "source_file_name": "test_import_1.py"
+                        }
+                    ]
+                },
+                {
+                    "expr": {
+                        "arguments": [],
+                        "func": {
+                            "name": "main",
+                            "node_type": "Name",
+                            "source_refs": [
+                                {
+                                    "col_end": 6,
+                                    "col_start": 0,
+                                    "node_type": "SourceRef",
+                                    "row_end": 7,
+                                    "row_start": 7,
+                                    "source_file_name": "test_import_1.py"
+                                }
+                            ]
+                        },
+                        "node_type": "Call",
+                        "source_refs": [
+                            {
+                                "col_end": 6,
+                                "col_start": 0,
+                                "node_type": "SourceRef",
+                                "row_end": 7,
+                                "row_start": 7,
+                                "source_file_name": "test_import_1.py"
+                            }
+                        ]
+                    },
+                    "node_type": "Expr",
+                    "source_refs": [
+                        {
+                            "col_end": 6,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 7,
+                            "row_start": 7,
+                            "source_file_name": "test_import_1.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "test_import_1",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": 7,
+                    "row_start": 1,
+                    "source_file_name": "test_import_1.py"
+                }
+            ]
+        }
+    ]
+}

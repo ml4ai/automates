@@ -1,0 +1,1241 @@
+{
+  "uid": "7f1e4cea-c6b2-4a5c-a612-889083e38773",
+  "identifier": "@container::SARS-COV1-SEIRP-model::@global::sars_seirp",
+  "date_created": "2020-10-15",
+  "hyper_edges": [{
+      "inputs": [
+        "4dfe319a-bc21-40b0-a632-f4bed7fefd72",
+        "201b8c4a-c617-46b8-9932-45d0d03c2f5a",
+        "774b4756-a4c2-40cf-8f61-715fb7e1c044",
+        "d27e720d-4cfc-439d-892e-b951419f20d9"
+      ],
+      "function": "cb453b87-b92b-4700-89a0-87f9392cd280",
+      "outputs": [
+        "b8968987-dec2-42da-b82a-413185023238",
+        "589e2fc8-5f83-48df-be9f-e3e87c2b3eea",
+        "09370dad-45db-47c0-af97-755177318e3a",
+        "186cc003-0bf8-4f92-9b1e-0e55a1bbff78"
+      ]
+    },
+    {
+      "inputs": [
+        "589e2fc8-5f83-48df-be9f-e3e87c2b3eea"
+      ],
+      "function": "e66c69ae-3892-4369-a840-8997c548a78b",
+      "outputs": [
+        "03818916-1d43-44bc-891a-3e46b89dcdb0"
+      ]
+    },
+    {
+      "inputs": [
+        "03818916-1d43-44bc-891a-3e46b89dcdb0"
+      ],
+      "function": "091a2256-a2ef-4d92-a15f-b1116c1c2f9a",
+      "outputs": [
+        "96a451fd-55c5-41c0-9bcb-88f848df7a7f"
+      ]
+    },
+    {
+      "inputs": [
+        "96a451fd-55c5-41c0-9bcb-88f848df7a7f"
+      ],
+      "function": "b0a4c6d6-202b-418c-ac36-db9d583cf679",
+      "outputs": [
+        "e0183aa9-8551-498d-8b04-65df0194b8e2"
+      ]
+    },
+    {
+      "inputs": [],
+      "function": "5fddcf54-80be-4602-91c9-e8c6db31d722",
+      "outputs": [
+        "556c66c2-bd9b-4922-a7f9-00cbbc3899b1"
+      ]
+    },
+    {
+      "inputs": [
+        "96a451fd-55c5-41c0-9bcb-88f848df7a7f"
+      ],
+      "function": "99e85282-c238-44f8-882e-32956bea8789",
+      "outputs": [
+        "97a475b6-46fe-4f8f-8229-d1562c36965d"
+      ]
+    },
+    {
+      "inputs": [
+        "e0183aa9-8551-498d-8b04-65df0194b8e2",
+        "556c66c2-bd9b-4922-a7f9-00cbbc3899b1",
+        "97a475b6-46fe-4f8f-8229-d1562c36965d"
+      ],
+      "function": "abd8e192-f647-4297-a349-9b8dc837cc8c",
+      "outputs": [
+        "2fdea103-e10b-4f6b-9797-4dbbbfd78897"
+      ]
+    },
+    {
+      "inputs": [
+        "2fdea103-e10b-4f6b-9797-4dbbbfd78897"
+      ],
+      "function": "c4104213-dca3-465a-b054-7dd0d2e02393",
+      "outputs": [
+        "b9462236-3f1b-4f3e-9944-539df1c3e424"
+      ]
+    },
+    {
+      "inputs": [
+        "b9462236-3f1b-4f3e-9944-539df1c3e424"
+      ],
+      "function": "2a4439c2-400d-462a-ac46-bce65c81b211",
+      "outputs": [
+        "ddfacda9-4b69-4579-bb36-e665dd864884"
+      ]
+    },
+    {
+      "inputs": [
+        "186cc003-0bf8-4f92-9b1e-0e55a1bbff78"
+      ],
+      "function": "9b3938f0-027e-4407-bdfb-dfaaae92dc86",
+      "outputs": [
+        "c5371330-49a5-447f-950f-8596010a2690"
+      ]
+    },
+    {
+      "inputs": [
+        "ddfacda9-4b69-4579-bb36-e665dd864884",
+        "b8968987-dec2-42da-b82a-413185023238"
+      ],
+      "function": "ca00025a-29ed-4802-aea9-e8b97e9a72b2",
+      "outputs": [
+        "2776d72b-8f10-44e9-9a34-257aedf7bfc8"
+      ]
+    },
+    {
+      "inputs": [
+        "2776d72b-8f10-44e9-9a34-257aedf7bfc8",
+        "09370dad-45db-47c0-af97-755177318e3a",
+        "c5371330-49a5-447f-950f-8596010a2690"
+      ],
+      "function": "e4429f94-e4b4-4f46-842f-e55f39ccd574",
+      "outputs": [
+        "3d977113-9aed-44f0-bded-17061808729e"
+      ]
+    },
+    {
+      "inputs": [
+        "3d977113-9aed-44f0-bded-17061808729e"
+      ],
+      "function": "8a6b4971-8fc3-4a05-9b7e-b93e743c28f0",
+      "outputs": [
+        "1f365da0-6fdc-4c81-85bc-24dd30f71abf"
+      ]
+    },
+    {
+      "inputs": [
+        "1f365da0-6fdc-4c81-85bc-24dd30f71abf",
+        "774b4756-a4c2-40cf-8f61-715fb7e1c044",
+        "495f05af-8ad2-4ddd-91db-c44a1df49c36"
+      ],
+      "function": "7477b67a-2f24-47f8-b565-13ba2adc7029",
+      "outputs": [
+        "c225ea46-11f2-442c-8321-8858ddd83d08"
+      ]
+    },
+    {
+      "inputs": [
+        "1f365da0-6fdc-4c81-85bc-24dd30f71abf",
+        "774b4756-a4c2-40cf-8f61-715fb7e1c044",
+        "495f05af-8ad2-4ddd-91db-c44a1df49c36",
+        "4dfe319a-bc21-40b0-a632-f4bed7fefd72"
+      ],
+      "function": "f5ec3d6b-45f1-4bab-9cba-601c98e0a2f6",
+      "outputs": [
+        "5fa06846-c1a1-4bf0-8312-4857093338c5"
+      ]
+    },
+    {
+      "inputs": [
+        "4dfe319a-bc21-40b0-a632-f4bed7fefd72",
+        "495f05af-8ad2-4ddd-91db-c44a1df49c36",
+        "b1602445-effe-400a-90b9-df39757b7b58"
+      ],
+      "function": "f46333bb-319f-4511-84c3-bf0993c4fdf6",
+      "outputs": [
+        "b82fbb88-82ef-424b-b393-e17e1bbb6b58"
+      ]
+    },
+    {
+      "inputs": [
+        "a6070f76-31c5-481d-8605-0437219f636f",
+        "c225ea46-11f2-442c-8321-8858ddd83d08",
+        "5fa06846-c1a1-4bf0-8312-4857093338c5",
+        "b82fbb88-82ef-424b-b393-e17e1bbb6b58"
+      ],
+      "function": "25953641-a1c9-44ee-a29a-055171c43606",
+      "outputs": [
+        "722c8f06-f42f-442e-9c12-5d457f352827"
+      ]
+    },
+    {
+      "inputs": [
+        "c225ea46-11f2-442c-8321-8858ddd83d08",
+        "722c8f06-f42f-442e-9c12-5d457f352827"
+      ],
+      "function": "5b585877-16a1-4883-a8b8-2162391e72fc",
+      "outputs": [
+        "01890fba-c7ab-40f7-b875-40dfb9f0cecc"
+      ]
+    },
+    {
+      "inputs": [
+        "5fa06846-c1a1-4bf0-8312-4857093338c5",
+        "722c8f06-f42f-442e-9c12-5d457f352827"
+      ],
+      "function": "d581593d-1104-4d7e-9599-75ce69dadeef",
+      "outputs": [
+        "7eff80e1-468f-4c7b-bbaa-99c48e31af3d"
+      ]
+    },
+    {
+      "inputs": [
+        "b82fbb88-82ef-424b-b393-e17e1bbb6b58",
+        "722c8f06-f42f-442e-9c12-5d457f352827"
+      ],
+      "function": "f17ca48b-d78e-4f22-af23-1e5d16a31764",
+      "outputs": [
+        "93fab7b4-982a-4e46-9c7a-1be3981683f2"
+      ]
+    },
+    {
+      "inputs": ["2134d695-a8dd-4e99-905b-f4081554c6cb", "7c9e8cdf-c9dd-482e-893d-f84ed149558a", "50ab0e63-ba5c-450e-84da-3dc848d4a973"],
+      "function": "bbea5f33-3e75-447d-8d71-892c10f9b1c5",
+      "outputs": ["45f32e68-1244-44bb-90bc-e483111728bd"]
+    }, {
+      "inputs": ["4bbc3580-7315-4d7a-bd42-1e3d868979ac", "2e2a0ce1-38b2-4001-954d-5cb1a5c1d0be"],
+      "function": "71633d79-dd10-4dfa-8b2d-a7426c2f0009",
+      "outputs": ["6da2c6ad-0018-4712-ab47-a53c4f0290e5"]
+    }, {
+      "inputs": ["b71a7f6c-1672-4b8b-8114-84134e04236e", "7c9e8cdf-c9dd-482e-893d-f84ed149558a", "9480cca2-b174-438a-8145-e01015c5cd96"],
+      "function": "a04e18c7-a5de-455d-b4eb-44a046778e54",
+      "outputs": ["0427b5f1-8cc5-4622-baf3-15b9a4e461f8"]
+    }, {
+      "inputs": ["d63dea9b-05d1-40f4-898c-0e42fa7981c0", "50ab0e63-ba5c-450e-84da-3dc848d4a973"],
+      "function": "3febd186-9b9e-4ab4-82fb-1f7e765728fe",
+      "outputs": ["8961734f-10a2-4d7c-be8d-678b95703f7d"]
+    }, {
+      "inputs": ["b05d07f4-819c-41c9-94ed-d554bee3f8e2", "9480cca2-b174-438a-8145-e01015c5cd96"],
+      "function": "91177e79-f7ed-4981-912e-f37c465f3af2",
+      "outputs": ["e692dbb4-6d22-402b-ba54-9fabd78f4584"]
+    }, {
+      "inputs": ["45f32e68-1244-44bb-90bc-e483111728bd", "0427b5f1-8cc5-4622-baf3-15b9a4e461f8"],
+      "function": "2144b272-9084-4220-b254-e08ec246a57b",
+      "outputs": ["1512e363-1bd1-4acb-9bc2-46e2df5d163d"]
+    }, {
+      "inputs": ["45f32e68-1244-44bb-90bc-e483111728bd", "6da2c6ad-0018-4712-ab47-a53c4f0290e5"],
+      "function": "09c33c6f-0c27-4eb9-be2a-4d63f24f74c3",
+      "outputs": ["a87cf119-abb3-47ac-b836-4abf6afe8c9d"]
+    }, {
+      "inputs": ["6da2c6ad-0018-4712-ab47-a53c4f0290e5", "8961734f-10a2-4d7c-be8d-678b95703f7d"],
+      "function": "765c7322-7d68-40e6-a56f-d364f2a0fcdd",
+      "outputs": ["acbf2fc1-2bbd-45d7-a5fe-6bc44b5eeb26"]
+    }, {
+      "inputs": ["8961734f-10a2-4d7c-be8d-678b95703f7d"],
+      "function": "ce9ef864-9b6c-4d4b-a020-3b326ac1673a",
+      "outputs": ["e3a3c19c-955b-4388-85af-dec4bbef19df"]
+    }, {
+      "inputs": ["0427b5f1-8cc5-4622-baf3-15b9a4e461f8", "e692dbb4-6d22-402b-ba54-9fabd78f4584"],
+      "function": "b1f81b85-cb33-450c-b09a-d2311322becc",
+      "outputs": ["d2f1c1e3-6e2c-47c9-85b2-e0212ec33575"]
+    }, {
+      "inputs": ["e692dbb4-6d22-402b-ba54-9fabd78f4584"],
+      "function": "d6f535de-c428-4962-aa93-fc53ec7c2719",
+      "outputs": ["68074a0a-c070-4747-a603-dfbe72f916be"]
+    }
+  ],
+  "variables": [{
+      "uid": "774b4756-a4c2-40cf-8f61-715fb7e1c044",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::s_c::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent1_Interval(4, 7)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "S",
+          "text_definition": "Susceptible"
+        }]
+      }]
+    },
+    {
+      "uid": "495f05af-8ad2-4ddd-91db-c44a1df49c36",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::i_c::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent0_Interval(20, 24)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "I",
+          "text_definition": "Infected"
+        }]
+      }]
+    },
+    {
+      "uid": "b1602445-effe-400a-90b9-df39757b7b58",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::r_c::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent0_Interval(26, 30)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "R",
+          "text_definition": "Recovered"
+        }]
+      }]
+    },
+    {
+      "uid": "201b8c4a-c617-46b8-9932-45d0d03c2f5a",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::doubling_time::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(6, 8)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "T_d",
+          "text_definition": "doubling time",
+          "parameter_interval": [
+            7,
+            10
+          ]
+        }]
+      }]
+    },
+    {
+      "uid": "d27e720d-4cfc-439d-892e-b951419f20d9",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::relative_contact_rate::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "4dfe319a-bc21-40b0-a632-f4bed7fefd72",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::gamma::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent1_Interval(2, 7)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "γ",
+          "text_definition": "gamma"
+        }]
+      }]
+    },
+    {
+      "uid": "a6070f76-31c5-481d-8605-0437219f636f",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::n::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "b8968987-dec2-42da-b82a-413185023238",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::gamma::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent1_Interval(2, 7)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "γ",
+          "text_definition": "gamma"
+        }]
+      }]
+    },
+    {
+      "uid": "589e2fc8-5f83-48df-be9f-e3e87c2b3eea",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::doubling_time::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(6, 8)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "T_d",
+          "text_definition": "doubling time",
+          "parameter_interval": [
+            7,
+            10
+          ]
+        }]
+      }]
+    },
+    {
+      "uid": "09370dad-45db-47c0-af97-755177318e3a",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::s_c::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent1_Interval(4, 7)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "S",
+          "text_definition": "Susceptible"
+        }]
+      }]
+    },
+    {
+      "uid": "186cc003-0bf8-4f92-9b1e-0e55a1bbff78",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::relative_contact_rate::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "03818916-1d43-44bc-891a-3e46b89dcdb0",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_growth_rate::doubling_time::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(6, 8)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "T_d",
+          "text_definition": "doubling time",
+          "parameter_interval": [
+            7,
+            10
+          ]
+        }]
+      }]
+    },
+    {
+      "uid": "96a451fd-55c5-41c0-9bcb-88f848df7a7f",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_growth_rate.IF_0::doubling_time::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(6, 8)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "T_d",
+          "text_definition": "doubling time",
+          "parameter_interval": [
+            7,
+            10
+          ]
+        }]
+      }]
+    },
+    {
+      "uid": "e0183aa9-8551-498d-8b04-65df0194b8e2",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_growth_rate.IF_0::COND_0_0::0",
+      "type": "boolean",
+      "kind": "binary",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "556c66c2-bd9b-4922-a7f9-00cbbc3899b1",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_growth_rate.IF_0::growth_rate::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(3, 6)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "g",
+          "text_definition": "early-phase rate of growth"
+        }]
+      }]
+    },
+    {
+      "uid": "97a475b6-46fe-4f8f-8229-d1562c36965d",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_growth_rate.IF_0::growth_rate::1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(3, 6)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "g",
+          "text_definition": "early-phase rate of growth"
+        }]
+      }]
+    },
+    {
+      "uid": "2fdea103-e10b-4f6b-9797-4dbbbfd78897",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_growth_rate.IF_0::growth_rate::2",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(3, 6)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "g",
+          "text_definition": "early-phase rate of growth"
+        }]
+      }]
+    },
+    {
+      "uid": "b9462236-3f1b-4f3e-9944-539df1c3e424",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_growth_rate::growth_rate::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(3, 6)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "g",
+          "text_definition": "early-phase rate of growth"
+        }]
+      }]
+    },
+    {
+      "uid": "ddfacda9-4b69-4579-bb36-e665dd864884",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::growth_rate::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent25_Interval(3, 6)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "g",
+          "text_definition": "early-phase rate of growth"
+        }]
+      }]
+    },
+    {
+      "uid": "c5371330-49a5-447f-950f-8596010a2690",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::inv_contact_rate::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "2776d72b-8f10-44e9-9a34-257aedf7bfc8",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::updated_growth_rate::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "3d977113-9aed-44f0-bded-17061808729e",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::get_beta::beta::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent8_Interval(6, 8)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "β",
+          "text_definition": "effective contact rate"
+        }]
+      }]
+    },
+    {
+      "uid": "1f365da0-6fdc-4c81-85bc-24dd30f71abf",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::beta::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent8_Interval(6, 8)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "β",
+          "text_definition": "effective contact rate"
+        }]
+      }]
+    },
+    {
+      "uid": "c225ea46-11f2-442c-8321-8858ddd83d08",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::s_n::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "5fa06846-c1a1-4bf0-8312-4857093338c5",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::i_n::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "b82fbb88-82ef-424b-b393-e17e1bbb6b58",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::r_n::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "722c8f06-f42f-442e-9c12-5d457f352827",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::scale::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    },
+    {
+      "uid": "01890fba-c7ab-40f7-b875-40dfb9f0cecc",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::s_c::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent1_Interval(4, 7)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "S",
+          "text_definition": "Susceptible"
+        }]
+      }]
+    },
+    {
+      "uid": "7eff80e1-468f-4c7b-bbaa-99c48e31af3d",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::i_c::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent0_Interval(20, 24)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "I",
+          "text_definition": "Infected"
+        }]
+      }]
+    },
+    {
+      "uid": "93fab7b4-982a-4e46-9c7a-1be3981683f2",
+      "reference": "",
+      "identifier": "CHIME-SIR-model::sir::r_c::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))",
+      "metadata": [{
+        "type": "textual-variable-definition",
+        "provenance": {
+          "method": "AutoMATES-link-assembly",
+          "timestamp": "2020-09-24::15:23:17",
+          "sources": [{
+            "document_source": "2020-08-04-CHIME-documentation.pdf",
+            "document_location": "ASKE-E/integration-wg/CHIME-SIR-model/",
+            "text_location": "sent0_Interval(26, 30)"
+          }]
+        },
+        "attributes": [{
+          "text_identifier": "R",
+          "text_definition": "Recovered"
+        }]
+      }]
+    },
+    {
+      "uid": "7c9e8cdf-c9dd-482e-893d-f84ed149558a",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::s_t::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "2e2a0ce1-38b2-4001-954d-5cb1a5c1d0be",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::ea_t::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "50ab0e63-ba5c-450e-84da-3dc848d4a973",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::ia_t::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "9480cca2-b174-438a-8145-e01015c5cd96",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::ib_t::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "2134d695-a8dd-4e99-905b-f4081554c6cb",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::t_a::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "b71a7f6c-1672-4b8b-8114-84134e04236e",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::t_b::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "4bbc3580-7315-4d7a-bd42-1e3d868979ac",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::et_a::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "d63dea9b-05d1-40f4-898c-0e42fa7981c0",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::r_a::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "b05d07f4-819c-41c9-94ed-d554bee3f8e2",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::r_b::-1",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "45f32e68-1244-44bb-90bc-e483111728bd",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::inc_exp_a::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "6da2c6ad-0018-4712-ab47-a53c4f0290e5",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::inc_inf_a::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "0427b5f1-8cc5-4622-baf3-15b9a4e461f8",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::inc_inf_b::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "8961734f-10a2-4d7c-be8d-678b95703f7d",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::inc_rec_a::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "e692dbb4-6d22-402b-ba54-9fabd78f4584",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::inc_rec_b::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "1512e363-1bd1-4acb-9bc2-46e2df5d163d",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::dsdt::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "a87cf119-abb3-47ac-b836-4abf6afe8c9d",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::deadt::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "acbf2fc1-2bbd-45d7-a5fe-6bc44b5eeb26",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::diadt::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "e3a3c19c-955b-4388-85af-dec4bbef19df",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::dradt::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "d2f1c1e3-6e2c-47c9-85b2-e0212ec33575",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::dibdt::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }, {
+      "uid": "68074a0a-c070-4747-a603-dfbe72f916be",
+      "reference": "",
+      "identifier": "SARS-COV1-SEIRP-model::sars_seirp::drbdt::0",
+      "type": "float",
+      "kind": "continuous",
+      "domain": "(and (> v -infty) (< v infty))"
+    }
+  ],
+  "functions": [{
+      "uid": "cb453b87-b92b-4700-89a0-87f9392cd280",
+      "reference": "",
+      "type": "PASS",
+      "lambda": "lambda gamma,doubling_time,s_c,relative_contact_rate:(gamma,doubling_time,s_c,relative_contact_rate)"
+    },
+    {
+      "uid": "e66c69ae-3892-4369-a840-8997c548a78b",
+      "reference": "",
+      "type": "PASS",
+      "lambda": "lambda doubling_time:(doubling_time)"
+    },
+    {
+      "uid": "091a2256-a2ef-4d92-a15f-b1116c1c2f9a",
+      "reference": "",
+      "type": "PASS",
+      "lambda": "lambda doubling_time:(doubling_time)"
+    },
+    {
+      "uid": "b0a4c6d6-202b-418c-ac36-db9d583cf679",
+      "reference": "",
+      "type": "CONDITION",
+      "lambda": "lambda doubling_time:(doubling_time == 0.0)"
+    },
+    {
+      "uid": "5fddcf54-80be-4602-91c9-e8c6db31d722",
+      "reference": "",
+      "type": "LITERAL",
+      "lambda": "lambda :0.0"
+    },
+    {
+      "uid": "99e85282-c238-44f8-882e-32956bea8789",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda doubling_time:((2.0**(1.0/doubling_time))-1.0)"
+    },
+    {
+      "uid": "abd8e192-f647-4297-a349-9b8dc837cc8c",
+      "reference": "",
+      "type": "DECISION",
+      "lambda": "lambda COND_0,growth_0,growth_1:np.where(COND_0,growth_0,growth_1)"
+    },
+    {
+      "uid": "c4104213-dca3-465a-b054-7dd0d2e02393",
+      "reference": "",
+      "type": "PASS",
+      "lambda": "lambda growth_rate:(growth_rate)"
+    },
+    {
+      "uid": "2a4439c2-400d-462a-ac46-bce65c81b211",
+      "reference": "",
+      "type": "PASS",
+      "lambda": "lambda growth_rate:(growth_rate)"
+    },
+    {
+      "uid": "9b3938f0-027e-4407-bdfb-dfaaae92dc86",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda relative_contact_rate:(1.0-relative_contact_rate)"
+    },
+    {
+      "uid": "ca00025a-29ed-4802-aea9-e8b97e9a72b2",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda growth_rate,gamma:(growth_rate+gamma)"
+    },
+    {
+      "uid": "e4429f94-e4b4-4f46-842f-e55f39ccd574",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda updated_growth_rate,s_c,inv_contact_rate:((updated_growth_rate/s_c)*inv_contact_rate)"
+    },
+    {
+      "uid": "8a6b4971-8fc3-4a05-9b7e-b93e743c28f0",
+      "reference": "",
+      "type": "PASS",
+      "lambda": "lambda beta:(beta)"
+    },
+    {
+      "uid": "7477b67a-2f24-47f8-b565-13ba2adc7029",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda beta,s_c,i_c:(-(((beta*s_c)*i_c))+s_c)"
+    },
+    {
+      "uid": "f5ec3d6b-45f1-4bab-9cba-601c98e0a2f6",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda beta,s_c,i_c,gamma:((((beta*s_c)*i_c)-(gamma*i_c))+i_c)"
+    },
+    {
+      "uid": "f46333bb-319f-4511-84c3-bf0993c4fdf6",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda gamma,i_c,r_c:((gamma*i_c)+r_c)"
+    },
+    {
+      "uid": "25953641-a1c9-44ee-a29a-055171c43606",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda n,s_n,i_n,r_n:(n/((s_n+i_n)+r_n))"
+    },
+    {
+      "uid": "5b585877-16a1-4883-a8b8-2162391e72fc",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda s_n,scale:(s_n*scale)"
+    },
+    {
+      "uid": "d581593d-1104-4d7e-9599-75ce69dadeef",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda i_n,scale:(i_n*scale)"
+    },
+    {
+      "uid": "f17ca48b-d78e-4f22-af23-1e5d16a31764",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda r_n,scale:(r_n*scale)"
+    }, {
+      "uid": "bbea5f33-3e75-447d-8d71-892c10f9b1c5",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda t_a,s_t,ia_t:((t_a*s_t)*ia_t)"
+    }, {
+      "uid": "71633d79-dd10-4dfa-8b2d-a7426c2f0009",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda et_a,ea_t:(et_a*ea_t)"
+    }, {
+      "uid": "a04e18c7-a5de-455d-b4eb-44a046778e54",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda t_b,s_t,ib_t:((t_b*s_t)*ib_t)"
+    }, {
+      "uid": "3febd186-9b9e-4ab4-82fb-1f7e765728fe",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda r_a,ia_t:(r_a*ia_t)"
+    }, {
+      "uid": "91177e79-f7ed-4981-912e-f37c465f3af2",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda r_b,ib_t:(r_b*ib_t)"
+    }, {
+      "uid": "2144b272-9084-4220-b254-e08ec246a57b",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda inc_exp_a,inc_inf_b:(-(inc_exp_a)-inc_inf_b)"
+    }, {
+      "uid": "09c33c6f-0c27-4eb9-be2a-4d63f24f74c3",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda inc_exp_a,inc_inf_a:(inc_exp_a-inc_inf_a)"
+    }, {
+      "uid": "765c7322-7d68-40e6-a56f-d364f2a0fcdd",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda inc_inf_a,inc_rec_a:(inc_inf_a-inc_rec_a)"
+    }, {
+      "uid": "ce9ef864-9b6c-4d4b-a020-3b326ac1673a",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda inc_rec_a:inc_rec_a"
+    }, {
+      "uid": "b1f81b85-cb33-450c-b09a-d2311322becc",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda inc_inf_b,inc_rec_b:(inc_inf_b-inc_rec_b)"
+    }, {
+      "uid": "d6f535de-c428-4962-aa93-fc53ec7c2719",
+      "reference": "",
+      "type": "ASSIGN",
+      "lambda": "lambda inc_rec_b:inc_rec_b"
+    }
+  ],
+  "subgraphs": [{
+      "namespace": "CHIME-SIR-model",
+      "scope": "get_growth_rate",
+      "basename": "get_growth_rate.IF_0",
+      "occurrence_num": 0,
+      "type": "CondContainer",
+      "nodes": [
+        "091a2256-a2ef-4d92-a15f-b1116c1c2f9a",
+        "96a451fd-55c5-41c0-9bcb-88f848df7a7f",
+        "b0a4c6d6-202b-418c-ac36-db9d583cf679",
+        "e0183aa9-8551-498d-8b04-65df0194b8e2",
+        "5fddcf54-80be-4602-91c9-e8c6db31d722",
+        "556c66c2-bd9b-4922-a7f9-00cbbc3899b1",
+        "99e85282-c238-44f8-882e-32956bea8789",
+        "97a475b6-46fe-4f8f-8229-d1562c36965d",
+        "abd8e192-f647-4297-a349-9b8dc837cc8c",
+        "2fdea103-e10b-4f6b-9797-4dbbbfd78897",
+        "c4104213-dca3-465a-b054-7dd0d2e02393"
+      ]
+    },
+    {
+      "namespace": "CHIME-SIR-model",
+      "scope": "@global",
+      "basename": "get_growth_rate",
+      "occurrence_num": 0,
+      "type": "FuncContainer",
+      "nodes": [
+        "e66c69ae-3892-4369-a840-8997c548a78b",
+        "03818916-1d43-44bc-891a-3e46b89dcdb0",
+        "b9462236-3f1b-4f3e-9944-539df1c3e424",
+        "2a4439c2-400d-462a-ac46-bce65c81b211"
+      ]
+    },
+    {
+      "namespace": "CHIME-SIR-model",
+      "scope": "@global",
+      "basename": "get_beta",
+      "occurrence_num": 0,
+      "type": "FuncContainer",
+      "nodes": [
+        "cb453b87-b92b-4700-89a0-87f9392cd280",
+        "b8968987-dec2-42da-b82a-413185023238",
+        "589e2fc8-5f83-48df-be9f-e3e87c2b3eea",
+        "09370dad-45db-47c0-af97-755177318e3a",
+        "186cc003-0bf8-4f92-9b1e-0e55a1bbff78",
+        "ddfacda9-4b69-4579-bb36-e665dd864884",
+        "9b3938f0-027e-4407-bdfb-dfaaae92dc86",
+        "c5371330-49a5-447f-950f-8596010a2690",
+        "ca00025a-29ed-4802-aea9-e8b97e9a72b2",
+        "2776d72b-8f10-44e9-9a34-257aedf7bfc8",
+        "e4429f94-e4b4-4f46-842f-e55f39ccd574",
+        "3d977113-9aed-44f0-bded-17061808729e",
+        "8a6b4971-8fc3-4a05-9b7e-b93e743c28f0"
+      ]
+    },
+    {
+      "namespace": "CHIME-SIR-model",
+      "scope": "@global",
+      "basename": "sir",
+      "occurrence_num": 0,
+      "type": "FuncContainer",
+      "nodes": [
+        "774b4756-a4c2-40cf-8f61-715fb7e1c044",
+        "495f05af-8ad2-4ddd-91db-c44a1df49c36",
+        "b1602445-effe-400a-90b9-df39757b7b58",
+        "201b8c4a-c617-46b8-9932-45d0d03c2f5a",
+        "d27e720d-4cfc-439d-892e-b951419f20d9",
+        "4dfe319a-bc21-40b0-a632-f4bed7fefd72",
+        "a6070f76-31c5-481d-8605-0437219f636f",
+        "1f365da0-6fdc-4c81-85bc-24dd30f71abf",
+        "7477b67a-2f24-47f8-b565-13ba2adc7029",
+        "c225ea46-11f2-442c-8321-8858ddd83d08",
+        "f5ec3d6b-45f1-4bab-9cba-601c98e0a2f6",
+        "5fa06846-c1a1-4bf0-8312-4857093338c5",
+        "f46333bb-319f-4511-84c3-bf0993c4fdf6",
+        "b82fbb88-82ef-424b-b393-e17e1bbb6b58",
+        "25953641-a1c9-44ee-a29a-055171c43606",
+        "722c8f06-f42f-442e-9c12-5d457f352827",
+        "5b585877-16a1-4883-a8b8-2162391e72fc",
+        "01890fba-c7ab-40f7-b875-40dfb9f0cecc",
+        "d581593d-1104-4d7e-9599-75ce69dadeef",
+        "7eff80e1-468f-4c7b-bbaa-99c48e31af3d",
+        "f17ca48b-d78e-4f22-af23-1e5d16a31764",
+        "93fab7b4-982a-4e46-9c7a-1be3981683f2"
+      ]
+    }, {
+      "namespace": "SARS-COV1-SEIRP-model",
+      "scope": "@global",
+      "basename": "sars_seirp",
+      "occurrence_num": 0,
+      "type": "FuncContainer",
+      "nodes": ["7c9e8cdf-c9dd-482e-893d-f84ed149558a", "2e2a0ce1-38b2-4001-954d-5cb1a5c1d0be", "50ab0e63-ba5c-450e-84da-3dc848d4a973", "9480cca2-b174-438a-8145-e01015c5cd96", "2134d695-a8dd-4e99-905b-f4081554c6cb", "b71a7f6c-1672-4b8b-8114-84134e04236e", "4bbc3580-7315-4d7a-bd42-1e3d868979ac", "d63dea9b-05d1-40f4-898c-0e42fa7981c0", "b05d07f4-819c-41c9-94ed-d554bee3f8e2", "bbea5f33-3e75-447d-8d71-892c10f9b1c5", "45f32e68-1244-44bb-90bc-e483111728bd", "71633d79-dd10-4dfa-8b2d-a7426c2f0009", "6da2c6ad-0018-4712-ab47-a53c4f0290e5", "a04e18c7-a5de-455d-b4eb-44a046778e54", "0427b5f1-8cc5-4622-baf3-15b9a4e461f8", "3febd186-9b9e-4ab4-82fb-1f7e765728fe", "8961734f-10a2-4d7c-be8d-678b95703f7d", "91177e79-f7ed-4981-912e-f37c465f3af2", "e692dbb4-6d22-402b-ba54-9fabd78f4584", "2144b272-9084-4220-b254-e08ec246a57b", "1512e363-1bd1-4acb-9bc2-46e2df5d163d", "09c33c6f-0c27-4eb9-be2a-4d63f24f74c3", "a87cf119-abb3-47ac-b836-4abf6afe8c9d", "765c7322-7d68-40e6-a56f-d364f2a0fcdd", "acbf2fc1-2bbd-45d7-a5fe-6bc44b5eeb26", "ce9ef864-9b6c-4d4b-a020-3b326ac1673a", "e3a3c19c-955b-4388-85af-dec4bbef19df", "b1f81b85-cb33-450c-b09a-d2311322becc", "d2f1c1e3-6e2c-47c9-85b2-e0212ec33575", "d6f535de-c428-4962-aa93-fc53ec7c2719", "68074a0a-c070-4747-a603-dfbe72f916be"]
+    }
+  ]
+}

@@ -1,13 +1,11 @@
 """ setuptools-based setup module. """
 
 import os
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 import re
 import sys
 import platform
 from subprocess import check_call, check_output
-
-from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
@@ -58,7 +56,7 @@ setup(
         "matplotlib==3.3.4",
         "networkx==2.5",
         "nltk==3.4.5",
-        "notebook==6.1.5",
+        "notebook==6.4.1",
         "numpy==1.20.0",
         "pandas==1.2.2",
         "plotly==4.5.4",
