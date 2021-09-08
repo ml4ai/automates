@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 
 OPERATION_NUM = -1
+ANON_VAR_NUM = -1
 
 
 @dataclass(frozen=True)
@@ -134,7 +135,9 @@ class CAGContainerIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_function_id(cls, func_id: FileIdentifier):
-        return cls(func_id.namespace, func_id.scope, func_id.name, func_id.index)
+        return cls(
+            func_id.namespace, func_id.scope, func_id.name, func_id.index
+        )
 
     @classmethod
     def from_name_str(cls, name: str) -> ContainerIdentifier:
@@ -154,7 +157,9 @@ class FunctionIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_lambda_stmt_id(cls, stmt_id: LambdaStmtIdentifier):
-        return cls(stmt_id.namespace, stmt_id.scope, stmt_id.name, stmt_id.index)
+        return cls(
+            stmt_id.namespace, stmt_id.scope, stmt_id.name, stmt_id.index
+        )
 
     @classmethod
     def from_operator_func(cls, operation: str, uid: int):
@@ -225,7 +230,9 @@ class VariableIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_anonymous(cls, namespace: str, scope: str):
-        return cls(namespace, scope, "@anonymous", -1)
+        global ANON_VAR_NUM
+        ANON_VAR_NUM += 1
+        return cls(namespace, scope, "@anonymous", ANON_VAR_NUM)
 
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):
@@ -251,7 +258,9 @@ class VariableIdentifier(IndexedIdentifier):
         elif len(elements) == 5:
             (_, ns, sc, vn, ix) = elements
         else:
-            raise ValueError(f"Unrecognized variable identifier formation for: {name}")
+            raise ValueError(
+                f"Unrecognized variable identifier formation for: {name}"
+            )
         return cls(ns, sc, vn, int(ix))
 
     @classmethod
