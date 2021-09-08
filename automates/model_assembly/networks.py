@@ -50,6 +50,7 @@ from .identifiers import (
     CAGContainerIdentifier,
 )
 from .metadata import (
+    EquationExtraction,
     TypedMetadata,
     ProvenanceData,
     MeasurementType,
@@ -238,13 +239,20 @@ class VariableNode(BaseNode):
 
     @classmethod
     def from_dict(cls, data: dict):
+        if len(data["identifier"].split("::")) == 5:
+            var_id = VariableIdentifier.from_name_str(data["identifier"])
+        else:
+            var_id = VariableIdentifier.from_str(data["identifier"])
+
         return cls(
-            data["uid"],
-            VariableIdentifier.from_str(data["identifier"]),
-            [TypedMetadata.from_data(mdict) for mdict in data["metadata"]]
+            uid=data["uid"],
+            identifier=var_id,
+            metadata=[
+                TypedMetadata.from_data(mdict) for mdict in data["metadata"]
+            ]
             if "metadata" in data
             else [],
-            data["object_ref"] if "object_ref" in data else "",
+            object_ref=data["object_ref"] if "object_ref" in data else "",
         )
 
     def to_dict(self) -> dict:
@@ -2424,59 +2432,153 @@ class GroundedFunctionNetwork:
             outfile.write(self.to_json())
 
     @classmethod
-    def from_dict(cls, data):
-        # Re-create variable and function nodes from their JSON descriptions
-        V = {v["uid"]: VariableNode.from_dict(v) for v in data["variables"]}
-        F = {f["uid"]: LambdaNode.from_dict(f) for f in data["functions"]}
+    def from_json(cls, json_path):
+        """Load a GrFN 3.0 JSON file and reconstruct the GrFN from it.
+        As it stand, the function reconstruction doesn't work correctly.
 
-        # Add all of the function and variable nodes to a new DiGraph
-        G = nx.DiGraph()
-        ALL_NODES = {**V, **F}
-        for grfn_node in ALL_NODES.values():
-            G.add_node(grfn_node, **(grfn_node.get_kwargs()))
+        :param type cls: This instance of GrFN 3.0
+        :param type json_path: Path to a GrFN 3.0 JSON file
+        :return: A reconstructed GrFN 3.0 object
+        :rtype: GroundedFunctionNetwork object
 
-        # Re-create the hyper-edges/subgraphs using the node lookup list
-        S = nx.DiGraph()
+        """
 
-        subgraphs = [
-            GrFNSubgraph.from_dict(s, ALL_NODES) for s in data["subgraphs"]
-        ]
-        subgraph_dict = {s.uid: s for s in subgraphs}
-        subgraph_edges = [
-            (subgraph_dict[s.parent], subgraph_dict[s.uid])
-            for s in subgraphs
-            if s.parent is not None
-        ]
-        S.add_nodes_from(subgraphs)
-        S.add_edges_from(subgraph_edges)
+        def extract_func_identifier(id):
+            pieces = id.split("::")
+            if len(pieces) > 4:
+                return pieces[-4], pieces[-3], pieces[-2], pieces[-1]
+            else:
+                return pieces[1], pieces[2], pieces[3]
 
-        H = [HyperEdge.from_dict(h, ALL_NODES) for h in data["hyper_edges"]]
+        data = json.load(open(json_path, "r"))
 
-        T = (
-            [TypeDef.from_data(t) for t in data["types"]]
-            if "types" in data
-            else []
+        F = dict()
+        HE = dict()
+        for f in data["functions"]:
+            namespace, scope, name, idx = extract_func_identifier(
+                f["identifier"]
+            )
+            if f["type"] == "decision":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            elif f["type"] == "pack":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            elif f["type"] == "operator":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            elif f["type"] == "literal":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            elif f["type"] == "assign":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            elif f["type"] == "container":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            elif f["type"] == "condition":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            elif f["type"] == "iterable":
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = ExpressionFuncNode.from_data(f)
+            else:
+                F[
+                    FunctionIdentifier(
+                        namespace=namespace,
+                        scope=scope,
+                        name=name,
+                        index=int(idx),
+                    )
+                ] = BaseFuncNode.from_data(f, F)
+
+        V = dict()
+        for v in data["variables"]:
+            namespace, scope, name, idx = extract_func_identifier(
+                v["identifier"]
+            )
+            V[
+                VariableIdentifier(
+                    namespace=namespace, scope=scope, name=name, index=int(idx)
+                )
+            ] = VariableNode.from_dict(v)
+
+        O = dict()
+        T = dict()
+        M = [TypedMetadata.from_data(m) for m in data["metadata"]]
+
+        grfn_ns, grfn_scope, grfn_name = extract_func_identifier(
+            data["identifier"]
+        )
+        fn_ns, fn_scope, fn_name, fn_idx = extract_func_identifier(
+            data["entry_point"]
         )
 
-        M = (
-            [TypedMetadata.from_data(d) for d in data["metadata"]]
-            if "metadata" in data
-            else []
+        return cls(
+            data["uid"],
+            GrFNIdentifier(
+                namespace=grfn_ns, scope=grfn_scope, name=grfn_name
+            ),
+            FunctionIdentifier(
+                namespace=fn_ns,
+                scope=fn_scope,
+                name=fn_name,
+                index=int(fn_idx),
+            ),
+            F,
+            V,
+            O,
+            T,
+            M,
         )
-
-        # Add edges to the new DiGraph using the re-created hyper-edge objects
-        for edge in H:
-            G.add_edges_from([(var, edge.lambda_fn) for var in edge.inputs])
-            G.add_edges_from([(edge.lambda_fn, var) for var in edge.outputs])
-
-        if "entry_point" in data:
-            entry_point = data["entry_point"]
-        elif "identifier" in data:
-            entry_point = data["identifier"]
-        else:
-            entry_point = ""
-        identifier = BaseIdentifier.from_str(entry_point)
-        return cls(data["uid"], identifier, data["timestamp"], G, H, S, T, M)
 
     @classmethod
     def from_json(cls, json_path):
