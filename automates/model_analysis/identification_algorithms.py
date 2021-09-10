@@ -386,4 +386,16 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
 
 def cf_IDC(g, gamma, delta):
+    # Line 1
+    if cf_ID(g, delta) == 0:
+        return "Undefined"
+
+    # Line 2
+    (g_prime, cf_conj_prime) = gm.make_cg(g, gamma+delta)
+
+    # Line 3
+    if cf_conj_prime == "Inconsistent":
+        return 0
+
+    # Line 4
     return None
