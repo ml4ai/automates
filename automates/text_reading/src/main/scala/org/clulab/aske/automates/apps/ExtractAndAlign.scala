@@ -131,7 +131,7 @@ object ExtractAndAlign {
   val vectors: String = config[String]("alignment.w2vPath")
   val w2v = new Word2Vec(vectors, None)
 
-  lazy val grounder = WikidataGrounder
+//  lazy val grounder = WikidataGrounder
 
   def parseDouble(s: String): Option[Double] = Try { s.toDouble }.toOption
 
@@ -258,7 +258,7 @@ object ExtractAndAlign {
       val groundings = if (groundToWiki) {
         // if there are no existing wikigroundings, ground
         if (!wikigroundings.isDefined || wikigroundings.get.isEmpty) {
-          grounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, numOfWikiGroundings)
+          WikidataGrounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, numOfWikiGroundings)
         } else {
           // if there are previously extracted groundings, find grounding for the identifier
           if (wikigroundings.get.contains(identifier)) {
@@ -1088,126 +1088,147 @@ object ExtractAndAlign {
     n_open == 0
   }
 
-//  def main(args: Array[String]): Unit = {
-//    val toAlign = Seq("Comment", "Text", "Equation")
-//    val groundToSVO = true //load from config
-//    val maxSVOgroundingsPerVar = 5 //load from config
-//    val config: Config = ConfigFactory.load()
-//    val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
-//    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
-//    val loadMentions = config[Boolean]("apps.loadMentions")
-//    val appendToGrFN = config[Boolean]("apps.appendToGrFN")
-//    val serializerName = config[String]("apps.serializerName")
-//
-//    // =============================================
-//    //                 DATA LOADING
-//    // =============================================
-//
-//    // Instantiate the text reader
-//    val textConfig: Config = config[Config]("TextEngine")
-//    val textReader = OdinEngine.fromConfig(textConfig)
-//
-//    // Instantiate the comment reader
-//    val localCommentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
-//    // todo: future readers
-//    //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
-//    //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
-//    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> localCommentReader))
-//
-//    // Load a GrFN
-//    val grfnPath: String = config[String]("apps.grfnFile")
-//    val grfnFile = new File(grfnPath)
-//    val grfn = ujson.read(grfnFile.readString())
-//
-//    val source = if (grfn.obj.get("source").isDefined) {
-//      Some(grfn.obj("source").arr.mkString(";"))
-//    } else None
-//    // Get source identifiers
-//    val identifierNames = Some(GrFNParser.getVariables(grfn))
-//    val variableShortNames = Some(GrFNParser.getVariableShortNames(identifierNames.get))
-//
-//    // Get comment descriptions
-//    val commentDescriptionMentions = getCommentDescriptionMentions(localCommentReader, grfn, variableShortNames, source)
-//      .filter(m => hasRequiredArgs(m, "description"))
-//
-//    val allUsedTextMentions = if (loadMentions) {
-//      val mentionsFile = new File(config[String]("apps.mentionsFile"))
-//      (JSONSerializer.toMentions(mentionsFile).filter(_.label matches "Description"),
-//        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "ParameterSetting"),
-//        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "IntervalParameterSetting"),
-//        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "UnitRelation"))
-//    } else {
-//      val inputDir = config[String]("apps.inputDirectory")
-//      val inputType = config[String]("apps.inputType")
-//      val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
-//      val files = FileUtils.findFiles(inputDir, dataLoader.extension)
-//      getTextMentions(textReader, dataLoader, textRouter, files)
-//
-//    }
-//    val textDescriptionMentions = allUsedTextMentions._1
-//    val parameterSettingMentions = allUsedTextMentions._2
-//    val intervalParameterSettingMentions = allUsedTextMentions._3
-//    val unitMentions = allUsedTextMentions._4
-//
-//    logger.info(s"Extracted ${textDescriptionMentions.length} descriptions from text")
-//
-//    // Load equations and "extract" variables/chunks (using heuristics)
-//    val equationFile: String = config[String]("apps.predictedEquations")
-//    val equationChunksAndSource = Some(loadEquations(equationFile))
-//
-//    // Make an alignment handler which handles all types of alignment being used
-//    val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
-//
-//    // Ground the extracted text mentions, the comments, and the equation variables to the grfn variables
-//    val groundedGrfn = groundMentions(
-//      grfn: Value,
-//      identifierNames,
-//      variableShortNames,
-//      Some(textDescriptionMentions),
-//      Some(parameterSettingMentions),
-//      Some(intervalParameterSettingMentions),
-//      Some(unitMentions),
-//      Some(commentDescriptionMentions),
-//      equationChunksAndSource,
-//      None, //not passing svo groundings from grfn
-//      wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]],
-//      groundToSVO: Boolean,
-//      maxSVOgroundingsPerVar: Int,
-//      alignmentHandler,
-//      Some(numAlignments),
-//      Some(numAlignments),
-//      scoreThreshold,
-//      appendToGrFN,
-//      debug = false
-//      )
-//
-//
-//    // Export
-//    val outputDir = config[String]("apps.outputDirectory")
-//    val grfnBaseName = new File(grfnPath).getBaseName()
-//    val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_groundings.json")
-//    ujson.writeTo(groundedGrfn, grfnWriter)
-//    grfnWriter.close()
-//
-//
-//
-////For debugging:
-////        topKCommentToText.foreach { aa =>
-////          println("====================================================================")
-////          println(s"              SRC VAR: ${commentDescriptionMentions(aa.head.src).arguments("variable").head.text}")
-////          println("====================================================================")
-////          aa.foreach { topK =>
-////            val v1Text = commentDescriptionMentions(topK.src).text
-////            val v2Text = textDescriptionMentions(topK.dst).text
-////            println(s"aligned variable (comment): ${commentDescriptionMentions(topK.src).arguments("variable").head.text} ${commentDescriptionMentions(topK.src).arguments("variable").head.foundBy}")
-////            println(s"aligned variable (text): ${textDescriptionMentions(topK.dst).arguments("variable").head.text}")
-////            println(s"comment: ${v1Text}")
-////            println(s"text: ${v2Text}")
-////              println(s"text: ${v2Text} ${textDescriptionMentions(topK.dst).label} ${textDescriptionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
-////            println(s"score: ${topK.score}\n")
-////          }
-////        }
-//  }
+  def main(args: Array[String]): Unit = {
+    val toAlign = Seq("Comment", "Text", "Equation")
+
+    val config: Config = ConfigFactory.load()
+    val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
+    val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
+    val loadMentions = config[Boolean]("apps.loadMentions")
+    val appendToGrFN = config[Boolean]("apps.appendToGrFN")
+    val serializerName = config[String]("apps.serializerName")
+    val groundToSVO = config[Boolean]("apps.groundToSVO")
+    val maxSVOgroundingsPerVar = config[Int]("apps.maxSVOgroundingsPerVar")
+    val groundToWiki = config[Boolean]("apps.groundToWiki")
+    val numOfWikiGroundings = config[Int]("apps.numOfWikiGroundings")
+    val saveWikiGroundings = config[Boolean]("apps.saveWikiGroundingsDefault")
+    val pathToWikiGroundings = config[String]("apps.pathToWikiGroundings")
+
+    // =============================================
+    //                 DATA LOADING
+    // =============================================
+
+    // Instantiate the text reader
+    val textConfig: Config = config[Config]("TextEngine")
+    val textReader = OdinEngine.fromConfig(textConfig)
+
+    // Instantiate the comment reader
+    val localCommentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
+    // todo: future readers
+    //    val glossaryReader = OdinEngine.fromConfig(config[Config]("GlossaryEngine"))
+    //    val tocReader = OdinEngine.fromConfig(config[Config]("TableOfContentsEngine"))
+    val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> textReader, TextRouter.COMMENT_ENGINE -> localCommentReader))
+
+    // Load a GrFN
+    val grfnPath: String = config[String]("apps.grfnFile")
+    val grfnFile = new File(grfnPath)
+    val grfn = ujson.read(grfnFile.readString())
+
+    val source = if (grfn.obj.get("source").isDefined) {
+      Some(grfn.obj("source").arr.mkString(";"))
+    } else None
+    // Get source identifiers
+    val identifierNames = Some(GrFNParser.getVariables(grfn))
+    val variableShortNames = Some(GrFNParser.getVariableShortNames(identifierNames.get))
+
+    // Get comment descriptions
+    val commentDescriptionMentions = getCommentDescriptionMentions(localCommentReader, grfn, variableShortNames, source)
+      .filter(m => hasRequiredArgs(m, "description"))
+
+    val allUsedTextMentions = if (loadMentions) {
+      val mentionsFile = new File(config[String]("apps.mentionsFile"))
+      (JSONSerializer.toMentions(mentionsFile).filter(_.label matches "Description"),
+        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "ParameterSetting"),
+        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "IntervalParameterSetting"),
+        JSONSerializer.toMentions(mentionsFile).filter(_.label matches "UnitRelation"))
+    } else {
+      val inputDir = config[String]("apps.inputDirectory")
+      val inputType = config[String]("apps.inputType")
+      val dataLoader = DataLoader.selectLoader(inputType) // txt, json (from science parse), pdf supported
+      val files = FileUtils.findFiles(inputDir, dataLoader.extension)
+      getTextMentions(textReader, dataLoader, textRouter, files)
+
+    }
+    val textDescriptionMentions = allUsedTextMentions._1
+    val parameterSettingMentions = allUsedTextMentions._2
+    val intervalParameterSettingMentions = allUsedTextMentions._3
+    val unitMentions = allUsedTextMentions._4
+
+    logger.info(s"Extracted ${textDescriptionMentions.length} descriptions from text")
+
+    // load wikigroundings if available
+    val wikigroundings = if (groundToWiki) {
+      if (new File(pathToWikiGroundings.toString).canRead) {
+        val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings.toString))
+        val groundingMap = mutable.Map[String, Seq[sparqlWikiResult]]()
+        for (item <- groundingsAsUjson("wikiGroundings").arr) {
+          val identString = item.obj("variable").str
+          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("subClassOf").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
+          groundingMap(identString) = groundings
+        }
+        Some(groundingMap.toMap)
+      } else None
+
+    } else None
+    // Load equations and "extract" variables/chunks (using heuristics)
+    val equationFile: String = config[String]("apps.predictedEquations")
+    val equationChunksAndSource = Some(loadEquations(equationFile))
+
+    // Make an alignment handler which handles all types of alignment being used
+    val alignmentHandler = new AlignmentHandler(config[Config]("alignment"))
+
+    // Ground the extracted text mentions, the comments, and the equation variables to the grfn variables
+    val groundedGrfn = groundMentions(
+      grfn: Value,
+      identifierNames,
+      variableShortNames,
+      Some(textDescriptionMentions),
+      Some(parameterSettingMentions),
+      Some(intervalParameterSettingMentions),
+      Some(unitMentions),
+      Some(commentDescriptionMentions),
+      equationChunksAndSource,
+      None, //not passing svo groundings from grfn
+      wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]],
+      groundToSVO: Boolean,
+      groundToWiki: Boolean,
+      saveWikiGroundings: Boolean,
+      maxSVOgroundingsPerVar: Int,
+      alignmentHandler,
+      Some(numAlignments),
+      Some(numAlignments),
+      scoreThreshold,
+      appendToGrFN,
+      debug = false
+      )
+
+
+    // Export
+    val outputDir = config[String]("apps.outputDirectory")
+    val grfnBaseName = new File(grfnPath).getBaseName()
+    val grfnWriter = new PrintWriter(s"$outputDir/${grfnBaseName}_with_groundings.json")
+    ujson.writeTo(groundedGrfn, grfnWriter)
+    grfnWriter.close()
+
+
+
+//For debugging:
+//        topKCommentToText.foreach { aa =>
+//          println("====================================================================")
+//          println(s"              SRC VAR: ${commentDescriptionMentions(aa.head.src).arguments("variable").head.text}")
+//          println("====================================================================")
+//          aa.foreach { topK =>
+//            val v1Text = commentDescriptionMentions(topK.src).text
+//            val v2Text = textDescriptionMentions(topK.dst).text
+//            println(s"aligned variable (comment): ${commentDescriptionMentions(topK.src).arguments("variable").head.text} ${commentDescriptionMentions(topK.src).arguments("variable").head.foundBy}")
+//            println(s"aligned variable (text): ${textDescriptionMentions(topK.dst).arguments("variable").head.text}")
+//            println(s"comment: ${v1Text}")
+//            println(s"text: ${v2Text}")
+//              println(s"text: ${v2Text} ${textDescriptionMentions(topK.dst).label} ${textDescriptionMentions(topK.dst).foundBy}") //printing out the label and the foundBy helps debug rules
+//            println(s"score: ${topK.score}\n")
+//          }
+//        }
+  }
 
 
 }

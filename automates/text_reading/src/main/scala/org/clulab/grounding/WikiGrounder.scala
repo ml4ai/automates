@@ -10,9 +10,12 @@ import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.Process
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import org.clulab.aske.automates.apps.ExtractAndAlign
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.utils.FileUtils
+
+import scala.concurrent.duration.DurationInt
 
 // todo before pr: figure out paths when deserializing (add path to groundings in the payload and read them during arg reading)
 //todo: pass the python query file from configs
@@ -44,11 +47,12 @@ object WikidataGrounder {
   val sparqlDir: String = config[String]("grounding.sparqlDir")
   val stopWords = FileUtils.loadFromOneColumnTSV("src/main/resources/stopWords.tsv")
 //  val currentDir: String = System.getProperty("user.dir")
-//  val cache: Cache[String, String] = Scaffeine()
-//    .recordStats()
-//    .expireAfterWrite(1.hour)
-//    .maximumSize(500)
-//    .build[String, String]()
+
+  val cache: Cache[String, String] = Scaffeine()
+    .recordStats()
+    .expireAfterWrite(1.hour)
+    .maximumSize(500)
+    .build[String, String]()
 
 
 def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Seq[sparqlWikiResult]] = {
@@ -59,15 +63,31 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
 
     for (term <- terms) {
+
+      println("term: " + term)
       val term_list = terms.filter(_==term)
-      val result = WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
-//      cache.put(term, result)
+      println(cache.getIfPresent(term) +"<<<<")
+      var result = "-1"
+//      val result = try {
+//        cache.getIfPresent(term).get
+//      } catch {
+//        case e: Any => WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
+//      }
+//      println("result: " + result)
+      if (cache.getIfPresent(term).isDefined) {
+        println(cache.getIfPresent(term).get + "<<<<")
+        result = cache.getIfPresent(term).get
+      } else {
+        println(WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir) + "<==")
+        result = WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
+      }
+      cache.put(term, result)
       val allSparqlWikiResults = new ArrayBuffer[sparqlWikiResult]()
       if (result.nonEmpty) {
         val lineResults = new ArrayBuffer[sparqlWikiResult]()
         val resultLines = result.split("\n")
-        println("TERM: " + term)
-        println(">>" + resultLines.mkString("\n"))
+//        println("TERM: " + term)
+//        println(">>" + resultLines.mkString("\n"))
         for (line <- resultLines) {
 //          println("line: "+ line)
           val splitLine = line.trim().split("\t")
@@ -83,16 +103,16 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
           val subClassOf = Some(splitLine(5))
           //          println("alt label: "+ altLabel)
           val textWordList = (sentence ++ term_list ++ List(variable)).distinct.filter(w => !stopWords.contains(w))
-          println("text: " + textWordList.mkString("::"))
+//          println("text: " + textWordList.mkString("::"))
           val wikidataWordList = conceptDescription.getOrElse("").split(" ") ++ altLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ").filter(_.length > 0) :+ conceptLabel.toLowerCase()
-          println("wiki: " + wikidataWordList.mkString("::"))
+//          println("wiki: " + wikidataWordList.mkString("::"))
 
           val score = editDistanceNormalized(conceptLabel, term) + editDistanceNormalized(textWordList.mkString(" "),  wikidataWordList.mkString(" ")) + w2v.maxSimilarity(textWordList,  wikidataWordList) + wordOverlap(textWordList, wikidataWordList)
 //          val score = w2v.avgSimilarity(textWordList,  wikidataWordList)
 //          println("score: " + score)
 //          print("score components: " + editDistanceNormalized(conceptLabel, term) + " " + editDistanceNormalized(textWordList.mkString(" "),  wikidataWordList.mkString(" ")) + " " + w2v.avgSimilarity(textWordList,  wikidataWordList) + " "+ w2v.maxSimilarity(textWordList,  wikidataWordList) + " " + wordOverlap(textWordList, wikidataWordList)  + "\n")
           val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, subClassOf, Some(score), "wikidata")
-          println("line result: ", lineResult)
+//          println("line result: ", lineResult)
           lineResults += lineResult
 
         }
@@ -128,7 +148,7 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
 
       } else println("Result empty")
-      println("\nallSparqlWikiResults inside the loop : " + allSparqlWikiResults + "\n")
+//      println("\nallSparqlWikiResults inside the loop : " + allSparqlWikiResults + "\n")
 
       resultsFromAllTerms ++= allSparqlWikiResults
 
