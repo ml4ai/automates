@@ -64,7 +64,7 @@ rules:
     action: ${action}
     example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
     pattern: |
-      trigger = [lemma = "predict"]
+      trigger = [lemma = /predict|understand|investigate/]
       model:Model = <acl_to <dobj nsubj | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj
       modelDescr:Phrase = dobj
 
@@ -77,8 +77,8 @@ rules:
     example: "This allows for more realistic simulation of the soil water profile and application of excess irrigation for leaching salts."
     pattern: |
       trigger = [lemma = "allow"]
-      model:Model = nsubj (nmod_in)?
-      modelDescr:Phrase+ = nmod_for
+      model:Phrase = nsubj (nmod_in)?
+      modelDescr:Phrase+ = nmod_for | dobj
 
   - name: model_contributes_to
     label: ModelDescr
@@ -142,9 +142,9 @@ rules:
     action: ${action}
     example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
     pattern: |
-      trigger = [word = "developed"] (?=[word = /^to$|^for$/])
+      trigger = [word = /developed|designed/] (?=[word = /^to$|^for$/])
       model:Model = nsubjpass | <acl nsubj
-      modelDescr:Phrase+ = xcomp
+      modelDescr:Phrase = xcomp
 
   - name: modelLanguageInfo
     label: ModelDescr
@@ -153,7 +153,7 @@ rules:
     action: ${action}
     example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
     pattern: |
-      trigger = [word = "written"] (?=[word = /^in$/])
+      trigger = [word = /written|implemented/] (?=[word = /^in$/])
       model:Model = nsubjpass
       modelDescr:Phrase+ = nmod_in
 
@@ -162,8 +162,19 @@ rules:
     priority: ${priority}
     type: dependency
     action: ${action}
-    example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
+    example: "Our model also offers an opportunity to further decompose the different contributions to annual price variability."
     pattern: |
-      trigger = [lemma = "offer"]
+      trigger = [lemma = /offer|provide/]
       model:Model = nsubj (compound)?
       modelDescr:Phrase = dobj
+
+  - name: modelCharacteristic
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "A main characteristic of our model is that the supply function refers not only to current production, but includes supply from storage."
+    pattern: |
+      trigger = [word = "characteristic"]
+      model:Model = nmod_of
+      modelDescr:Phrase+ = <nsubj ccomp

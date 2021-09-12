@@ -620,6 +620,7 @@ object ExpansionHandler {
     "nmod_at".r,
     //    "^nmod_of".r,
     "nmod_under".r,
+    "nsubj:xsubj".r,
   //    "nmod_in".r
   //    "aux".r
   )

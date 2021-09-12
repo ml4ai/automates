@@ -149,7 +149,15 @@ rules:
     type: token
     example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
     pattern: |
-      [tag = /DT/] ("so" "called")? [word = /[A-Z][a-z]+|and|-/]+ "(" [word=/[A-Z]{3,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ")" [word = "model"]
+      [tag = /DT/] ("so" "called")? [word = /[A-Z][a-z]+|and|-/]+ "(" [word=/[A-Z]{3,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ")" [word = "model"]?
+
+  - name: simple/standard_model
+    label: Model
+    priority: ${priority1}
+    type: token
+    example: "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection) which can be considered as a variant of the standard SIR."
+    pattern: |
+      [word = /simple|standard/] [word = /[A-Z]{3,}/]
 
   # moved below two rules from model.yml file.
   - name: capital_model
