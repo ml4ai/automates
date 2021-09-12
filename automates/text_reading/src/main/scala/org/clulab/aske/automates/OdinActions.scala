@@ -9,6 +9,7 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.attachments.{ContextAttachment, DiscontinuousCharOffsetAttachment, FunctionAttachment, ParamSetAttachment, ParamSettingIntAttachment, UnitAttachment}
+import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Interval
 
@@ -49,7 +50,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       val (conjDescrType2, otherDescrs) = expandedDescriptions.partition(_.label.contains("Type2"))
       // only keep type 2 conj definitions that do not have definition arg overlap AFTER expansion
       val allDescrs = noDescrOverlap(conjDescrType2) ++ otherDescrs
-      
+
       resolveCoref(keepOneWithSameSpanAfterExpansion(allDescrs) ++ expandedFunction ++ expandedParamSettings ++ expandedModelDescrs ++ nonExpandable)
       //      allDescrs ++ other
 
@@ -358,6 +359,61 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     val (withIt, woIt) = mentions.partition(m => m.arguments.contains("variable") && m.arguments("variable").head.text == "it")
     val resolved: Seq[Mention] = withIt.map(m => replaceIt(m))
     resolved ++ woIt
+  }
+
+  def resolveModelCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val (models, nonModels) = mentions.partition(m => m.label == "ModelDescr")
+//    println(models.head.arguments.head._1)
+    val (theModel, modelNames) = models.partition(m => m.arguments.contains("model") && m.arguments("model").head.foundBy == "the/this_model")
+    val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m))
+    (resolved ++ modelNames ++ nonModels).distinct
+//    mentions
+  }
+
+  def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Mention = {
+    val previousModelInterval = returnPreviousModelInt(mentions, origModel)
+    val previousModelSntnce = returnPreviousModelSntnce(mentions, origModel)
+
+    if (previousModelInterval.nonEmpty){
+      val newModelArg = new TextBoundMention(
+        origModel.arguments("model").head.labels,
+        previousModelInterval,
+        previousModelSntnce,
+        origModel.document,
+        origModel.keep,
+        "resolving_coref",
+        Set.empty
+      )
+      val newArgs = mutable.Map[String, Seq[Mention]]()
+      for (arg <- origModel.arguments){
+        if (arg._1 == "model") {
+          newArgs += (arg._1 -> Seq(newModelArg))
+        } else {
+          newArgs += (arg._1 -> origModel.arguments(arg._1))
+        }
+      }
+      copyWithArgs(origModel, newArgs.toMap)
+    } else origModel
+  }
+
+  def returnPreviousModelInt(mentions: Seq[Mention], origModel: Mention): Interval = {
+    val (models, nonModels) = mentions.partition(m => m.label == "Model")
+    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val previousModels = modelNames.filter(_.sentence < origModel.sentence)
+    if (previousModels.nonEmpty) {
+      val selectedModel = previousModels.maxBy(_.sentence)
+      selectedModel.tokenInterval
+    } else origModel.arguments("model").head.tokenInterval
+  }
+
+  def returnPreviousModelSntnce(mentions: Seq[Mention], origModel: Mention): Int = {
+    val (models, nonModels) = mentions.partition(m => m.label == "Model")
+    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val previousModels = modelNames.filter(_.sentence < origModel.sentence)
+    if (previousModels.nonEmpty) {
+      val selectedModel = previousModels.maxBy(_.sentence)
+      selectedModel.sentence
+    } else origModel.sentence
   }
 
   def processFunctions(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
@@ -1057,8 +1113,24 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
           newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
         }
         val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
-        val newFunctions = copyWithArgs(f, newArgs)
+        val sentences = new ArrayBuffer[Int]
+        sentences.append(f.sentence)
+        sentences.append(menToAttach.sentence)
+        val newFunctions = new CrossSentenceEventMention(
+          menToAttach.labels,
+          menToAttach.tokenInterval, // tokenInterval is only for the first sentence
+          menToAttach.asInstanceOf[EventMention].trigger,
+          newArgs,
+          menToAttach.paths, // path is off
+          sentences,
+          menToAttach.document,
+          menToAttach.keep,
+          menToAttach.foundBy,
+          menToAttach.attachments
+        )
         toReturn.append(newFunctions)
+        println("here!:" + f.sentence + menToAttach.sentence)
+        println("here: " + sentences)
       } else toReturn.append(f)
     }
     toReturn ++ other ++ complete
@@ -1169,6 +1241,21 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         }
         newMentions ++= phraseOutputMen
       } else newMentions ++= group._2
+    }
+    newMentions
+  }
+
+  def filterModelDescrs(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val newMentions = new ArrayBuffer[Mention]
+    val groupByModelInt = mentions.groupBy(_.arguments("model").head.tokenInterval)
+    for (m <- groupByModelInt) {
+      val groupByDescrInt = m._2.groupBy(_.arguments("modelDescr").head.tokenInterval)
+      for (d <- groupByDescrInt) {
+        val groupByTrigInt = d._2.groupBy(_.asInstanceOf[EventMention].trigger.tokenInterval)
+        for (t <- groupByTrigInt) {
+          newMentions.append(t._2.head)
+        }
+      }
     }
     newMentions
   }

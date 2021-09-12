@@ -25,7 +25,7 @@ class ExpansionHandler() extends LazyLogging {
 
     // until there's evidence to the contrary, assume concepts  in parameter settings should expand in the same way as they do in functions
     // use `contains` and not `=` for param settings to take care of both Parameter Settings and Interval Parameter Settings
-    val (functions, nonFunctions) = mentions.partition(_.label == "Function" || m.label.contains("ParameterSetting"))
+    val (functions, nonFunctions) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
     val (modelDescrs, other) = nonFunctions.partition(_.label == "ModelDescr")
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
     val modelDescr_res = modelDescrs.flatMap(expandArgs(_, state, validArgs, expansionType = "modelDescr"))

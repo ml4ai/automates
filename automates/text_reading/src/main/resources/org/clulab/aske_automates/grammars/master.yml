@@ -56,6 +56,7 @@ rules:
 
   - import: "org/clulab/aske_automates/grammars/modelDescriptions.yml"
     vars:
+      action: filterModelDescrs
       priority: 10
 
 #  - import: "org/clulab/aske_automates/grammars/template.yml"

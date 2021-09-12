@@ -81,9 +81,10 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
+    val modelCorefResolve = loadableAttributes.actions.resolveModelCoref(events)
 
     // process context attachments to the initially extracted mentions
-    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(events)
+    val newEventsWithContexts = loadableAttributes.actions.makeNewMensWithContexts(modelCorefResolve)
     val (contextEvents, nonContexts) = newEventsWithContexts.partition(_.label.contains("ContextEvent"))
     val mensWithContextAttachment = loadableAttributes.actions.processRuleBasedContextEvent(contextEvents)
 

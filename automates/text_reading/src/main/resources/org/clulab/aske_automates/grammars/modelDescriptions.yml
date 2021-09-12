@@ -10,14 +10,16 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: token
+    action: ${action}
     example: "The model also suggests that there might exist a SARS precursor in a large reservoir, prompting for implementation of precautionary measures when the weather cools down."
     pattern: |
-      @model:Model [word = "also"]? [lemma = /suggest|/] [word = /that/] (?<modelDescr> [word = /.*/]+) "."
+      @model:Model [word = "also"]? (?<trigger> [lemma = /suggest/]) [word = /that/] (?<modelDescr> [word = /.*/]+) "."
 
   - name: model_cannot
     label: ModelDescr
     priority: ${priority}
     type: token
+    action: ${action}
     example: "we show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
     pattern: |
       @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [chunk = /B-VP/] (${PP+NP} [tag = /VBN/] ${PP+NP} [word = "where"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/|word = "spread"])?)
@@ -26,6 +28,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
     pattern: |
       trigger = [lemma = "limitation"] (?= "of")
@@ -36,6 +39,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
     pattern: |
       trigger = [word = "not"] (?= [lemma = /hold/])
@@ -46,6 +50,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
     pattern: |
       trigger = [lemma = "be"]
@@ -56,6 +61,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
     pattern: |
       trigger = [lemma = "predict"]
@@ -67,6 +73,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "This allows for more realistic simulation of the soil water profile and application of excess irrigation for leaching salts."
     pattern: |
       trigger = [lemma = "allow"]
@@ -77,6 +84,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "It also contributes to understanding complex ecosystems as well as water availability, water quality, climate change, and agricultural production issues across the world"
     pattern: |
       trigger = [lemma = "contribute"]
@@ -87,6 +95,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "QSWAT has added capabilities of merging small subbasins and has static and dynamic visualizations of outputs."
     pattern: |
       trigger = [lemma = "capability"]
@@ -97,6 +106,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "QSWAT can also show the total, daily, monthly orannual means, maxima and minima for reach and subbasin out-puts."
     pattern: |
       trigger = [lemma = "can"]
@@ -107,6 +117,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "Our model would then be useful to enforce proper precautionary measures immediately."
     pattern: |
       trigger = [lemma = "useful"] (?= "to")
@@ -117,6 +128,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "A high-resolution SWAT model, consisting of sub-field level hydrologic response units, was applied to Lake Champlain’s Missisquoi Bay Watershed, located along the United States–Canadian border."
     pattern: |
       trigger = [lemma = "consist"] (?= "of")
@@ -127,6 +139,7 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
     pattern: |
       trigger = [word = "developed"] (?=[word = /^to$|^for$/])
@@ -137,8 +150,20 @@ rules:
     label: ModelDescr
     priority: ${priority}
     type: dependency
+    action: ${action}
     example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
     pattern: |
       trigger = [word = "written"] (?=[word = /^in$/])
       model:Model = nsubjpass
       modelDescr:Phrase+ = nmod_in
+
+  - name: modelOffers
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
+    pattern: |
+      trigger = [lemma = "offer"]
+      model:Model = nsubj (compound)?
+      modelDescr:Phrase = dobj
