@@ -129,17 +129,17 @@ rules:
     pattern: |
       @Identifier "("? @Identifier ")"?
 
-  - name: four_capital_letters
+  - name: three_capital_letters
     label: Model
     priority: ${priority1}
     type: token
     example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
     pattern: |
-      [word=/[A-Z]{4,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ([tag= /CD/]|[word = /[Vv]\d\.\d/])?
+      [word=/[A-Z]{3,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ([tag= /CD/]|[word = /[Vv]\d\.\d/])?
       |
-      [word=/[A-Z]{4,}\d+/]
+      [word=/[A-Z]{3,}\d+/]
       |
-      [word=/[A-Z]{4,}$/] [word = "-"] [word=/[A-Z]+/] ([tag= /CD/])?
+      [word=/[A-Z]{3,}$/] [word = "-"] [word=/[A-Z]+/] ([tag= /CD/])?
 #      |
 #      [word=/[A-Z]{5,}/] [word=/[A-Z][a-z]+/]
 

@@ -64,8 +64,8 @@ rules:
     action: ${action}
     example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
     pattern: |
-      trigger = [lemma = /predict|understand|investigate/]
-      model:Model = <acl_to <dobj nsubj | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj
+      trigger = [lemma = /predict|understand|investigate|examine/]
+      model:Model = <acl_to <dobj nsubj | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
       modelDescr:Phrase = dobj
 
     # how do we know if "This" is referencing to a model?
@@ -77,8 +77,8 @@ rules:
     example: "This allows for more realistic simulation of the soil water profile and application of excess irrigation for leaching salts."
     pattern: |
       trigger = [lemma = "allow"]
-      model:Phrase = nsubj (nmod_in)?
-      modelDescr:Phrase+ = nmod_for | dobj
+      model:Model = nsubj (nmod_in | nmod_of)?
+      modelDescr:Phrase+ = nmod_for | dobj | xcomp ccomp
 
   - name: model_contributes_to
     label: ModelDescr
