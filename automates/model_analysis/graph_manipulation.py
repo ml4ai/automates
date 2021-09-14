@@ -71,6 +71,32 @@ def ts(nodes, topo_order):  # topo must be a list of names
     return [n for n in topo_order if n in node_set]
 
 
+def to_names(indices, g):
+    """
+    converts vertex indices indices to vertex names
+    :param indices: list of indices
+    :param g: graph (with named nodes)
+    :return: list of vertex names
+    """
+    name_list = g.vs["name"]
+    name_sorted = [name_list[i] for i in indices]
+    return name_sorted
+
+
+def find_related_nodes_of(nodes, g, mode, order=1,  topo=None):
+    """
+    Finds all related nodes of a set by "mode" and optionally sorts them in topological order
+    :param nodes: a list of nodes
+    :param g: iGraph graph
+    :param mode:    "in" to return ancestors of nodes,
+                    "out" to return descendants of nodes,
+                    "all" to return all connected nodes
+    :param order: the maximum number of steps to take from nodes
+    :param topo: topological order in which the return should be sorted
+    :return: the (optionally ordered) related nodes
+    """
+
+
 def ancestors(node, g, topo):
     """
     Finds all ancestors of a node and orders them
@@ -327,18 +353,6 @@ def parse_joint(p, v, cond, var, topo):
     else:
         p_new = copy.deepcopy(p_num)
     return p_new
-
-
-def to_names(indices, g):
-    """
-    converts vertex indices indices to vertex names
-    :param indices: list of indices
-    :param g: graph (with named nodes)
-    :return: list of vertex names
-    """
-    name_list = g.vs["name"]
-    name_sorted = [name_list[i] for i in indices]
-    return name_sorted
 
 
 def wrap_d_sep(g, x, y, z):
