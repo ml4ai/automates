@@ -12,6 +12,7 @@
 """
 func_map = {
     "c": {},
+    "python": {},
     "fortran": {
         "__builtin_max": {"grfn_implementation": "max"},
         "__builtin_sqrtf": {"grfn_implementation": "sqrt"},
@@ -33,7 +34,9 @@ class UnknownLanguageBuiltinExcepetion(Exception):
 
 def is_in_language_map(language):
     if language not in func_map:
-        raise Exception(f"Error: Unknown language in builtins map: {language}")
+        raise UnsupportedLanguageExcepetion(
+            f"Error: Unknown language in builtins map: {language}"
+        )
 
 
 def is_builtin_func(language, name):

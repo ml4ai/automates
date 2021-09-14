@@ -157,6 +157,16 @@ class CAST(object):
             )
 
         air["entrypoint"] = container_id_to_start_from
+        air["metadata"] = []
+        air["types"] = []
+        air["source_comments"] = {}
+
+        air["sources"] = [
+            source_ref.source_file_name
+            for m in self.nodes
+            if isinstance(m, Module)
+            for source_ref in m.source_refs
+        ]
 
         return air
 

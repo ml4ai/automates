@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Dict
 from pathlib import Path
+import json
 
 from .identifiers import (
     BaseIdentifier,
@@ -33,7 +34,7 @@ class AutoMATES_IR:
     documentation: Dict[str, dict]
     metadata: List[TypedMetadata]
 
-    def to_json(self):
+    def to_json(self, filepath: str):
         json_dict = {
             "entrypoint": self.entrypoint,
             "containers": self.containers,
@@ -44,7 +45,7 @@ class AutoMATES_IR:
             "metadata": self.metadata,
         }
 
-        with open("test.json", "w") as f:
+        with open(filepath, "w") as f:
             json.dump(json_dict, f)
 
     @classmethod

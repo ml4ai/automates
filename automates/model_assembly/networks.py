@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Dict, Iterable, Any, Tuple
 from abc import ABC, abstractmethod, abstractclassmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from copy import deepcopy
 
@@ -17,7 +17,7 @@ from networkx.algorithms.simple_paths import all_simple_paths
 from pygraphviz import AGraph
 
 from .sandbox import load_lambda_function
-from .expression_visitor import (
+from .expression_trees.expression_visitor import (
     ExpressionVisitor,
     ExprAbstractNode,
     ExprOperatorNode,
@@ -109,13 +109,17 @@ class VariableNode(BaseNode):
     input_value: Any = None
 
     def __hash__(self):
-        return hash(self.uid)
+        return hash((self.uid, self.identifier))
 
     def __eq__(self, other) -> bool:
-        return self.uid == other.uid
+        return (
+            isinstance(other, VariableNode)
+            and self.uid == other.uid
+            and self.identifier == other.identifier
+        )
 
     def __str__(self):
-        return f"{str(self.identifier)}::{str(self.uid)}"
+        return self.identifier
 
     @classmethod
     def from_definition(cls, var_def: VariableDef):
@@ -161,12 +165,6 @@ class VariableNode(BaseNode):
     def from_expr_def(cls, expr_namespace, expr_scope):
         var_id = VariableIdentifier.from_anonymous(expr_namespace, expr_scope)
         return cls(BaseNode.create_node_id(), var_id, [])
-
-    def get_fullname(self):
-        return f"{self.name}\n({self.index})"
-
-    def get_name(self):
-        return str(self.identifier)
 
     def get_kwargs(self):
         is_exit = self.identifier.name == "EXIT"
@@ -239,19 +237,15 @@ class VariableNode(BaseNode):
 
     @classmethod
     def from_dict(cls, data: dict):
-        if len(data["identifier"].split("::")) == 5:
-            var_id = VariableIdentifier.from_name_str(data["identifier"])
+        if "metadata" in data:
+            mdata = [TypedMetadata.from_data(m) for m in data["metadata"]]
         else:
-            var_id = VariableIdentifier.from_str(data["identifier"])
+            mdata = list()
 
         return cls(
             uid=data["uid"],
-            identifier=var_id,
-            metadata=[
-                TypedMetadata.from_data(mdict) for mdict in data["metadata"]
-            ]
-            if "metadata" in data
-            else [],
+            identifier=VariableIdentifier.from_str(data["identifier"]),
+            metadata=mdata,
             object_ref=data["object_ref"] if "object_ref" in data else "",
         )
 
@@ -282,7 +276,13 @@ class BaseFuncNode(ABC):
         return str(self.identifier)
 
     def __eq__(self, other: BaseFuncNode) -> bool:
-        return self.identifier == other.identifier
+        return (
+            isinstance(other, BaseFuncNode)
+            and self.identifier == other.identifier
+            and self.type == other.type
+            and self.input_variables == other.input_variables
+            and self.output_variables == other.output_variables
+        )
 
     def __hash__(self):
         return hash(self.identifier)
@@ -358,26 +358,20 @@ class BaseFuncNode(ABC):
     @staticmethod
     def create_hyper_graph(hyper_edges: List[HyperEdge]) -> nx.DiGraph:
         output2edge = {
-            out_node: h_edge
-            for h_edge in hyper_edges
-            for out_node in h_edge.outputs
+            o_id: edge for edge in hyper_edges for o_id in edge.output_ids
         }
 
         network = nx.DiGraph()
-        for h_edge in hyper_edges:
-            network.add_node(h_edge)
+        for edge in hyper_edges:
+            network.add_node(edge)
             potential_parents = list()
-            for v_node in h_edge.inputs:
-                if v_node in output2edge:
-                    potential_parents.append(output2edge[v_node])
+            for var_id in edge.input_ids:
+                if var_id in output2edge:
+                    potential_parents.append(output2edge[var_id])
             network.add_edges_from(
-                [
-                    (parent_func, h_edge)
-                    for parent_func in set(potential_parents)
-                ]
+                [(parent_edge, edge) for parent_edge in set(potential_parents)]
             )
 
-        # print(network.nodes)
         return network
 
     @staticmethod
@@ -397,13 +391,13 @@ class BaseFuncNode(ABC):
     def to_dict(self) -> Dict[str, Any]:
         return {
             "uid": self.uid,
-            "identifier": str(self.identifier),
+            "identifier": self.identifier,
             "type": str(self.type),
             "input_variables": [str(v_id) for v_id in self.input_variables],
             "output_variables": [str(v_id) for v_id in self.output_variables],
             "expression": None,
             "exit": None,
-            "hyper_edges": [h.to_dict() for h in self.hyper_edges],
+            "hyper_edges": self.hyper_edges,
             "metadata": [m.to_dict() for m in self.metadata],
         }
 
@@ -475,6 +469,14 @@ class OperationFuncNode(BaseFuncNode):
 class ExpressionFuncNode(BaseFuncNode):
     expression: str
     executable: callable
+
+    def __eq__(self, other: BaseFuncNode):
+        if (
+            not isinstance(other, ExpressionFuncNode)
+            or self.exit != other.exit
+        ):
+            return False
+        return super().__eq__(other)
 
     def __hash__(self):
         return super().__hash__()
@@ -559,9 +561,8 @@ class ExpressionFuncNode(BaseFuncNode):
         new_func_nodes = list()
         new_var_nodes = list()
         new_hyper_edges = list()
-        # hyper_graph = nx.DiGraph()
 
-        def convert_to_hyperedge(expr_node_def):
+        def convert_to_hyperedge(expr_node_def: ExprAbstractNode):
             """
             Args:
                 node_def (BaseExprNode): The current node to convert to a func node and a hyperedge. Should be added to he hypergraph as a node. Needs to have edges added from all child nodes to this node.
@@ -578,7 +579,9 @@ class ExpressionFuncNode(BaseFuncNode):
             if isinstance(expr_node_def, ExprValueNode):
                 expr_func_node = LiteralFuncNode.from_value_node(expr_node_def)
                 output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
-                new_hyper_edge = HyperEdge(expr_func_node, [], [output_var])
+                new_hyper_edge = HyperEdge(
+                    expr_func_node.identifier, [], [output_var.identifier]
+                )
                 new_var_nodes.append(output_var)
                 new_func_nodes.append(expr_func_node)
                 new_hyper_edges.append(new_hyper_edge)
@@ -617,8 +620,11 @@ class ExpressionFuncNode(BaseFuncNode):
 
             expr_func_node = OperationFuncNode.from_expr_def(expr_node_def)
             output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
+            input_var_ids = [v.identifier for v in input_var_nodes]
             new_hyper_edge = HyperEdge(
-                expr_func_node, input_var_nodes, [output_var]
+                expr_func_node.identifier,
+                input_var_ids,
+                [output_var.identifier],
             )
             new_var_nodes.append(output_var)
             new_func_nodes.append(expr_func_node)
@@ -644,8 +650,11 @@ class ExpressionFuncNode(BaseFuncNode):
             for child_id in ret_child.children
         ]
         expr_func_node = OperationFuncNode.from_expr_def(ret_child)
+        ret_child_input_ids = [v.identifier for v in ret_child_inputs]
         new_hyper_edge = HyperEdge(
-            expr_func_node, ret_child_inputs, [expr_output_var]
+            expr_func_node.identifier,
+            ret_child_input_ids,
+            [expr_output_var.identifier],
         )
         new_var_nodes.append(expr_output_var)
         new_func_nodes.append(expr_func_node)
@@ -672,6 +681,11 @@ class ExpressionFuncNode(BaseFuncNode):
 @dataclass(repr=False, frozen=False)
 class BaseConFuncNode(BaseFuncNode):
     exit: FunctionIdentifier
+
+    def __eq__(self, other: BaseFuncNode):
+        if not isinstance(other, BaseConFuncNode) or self.exit != other.exit:
+            return False
+        return super().__eq__(other)
 
     def __hash__(self):
         return super().__hash__()
@@ -725,9 +739,9 @@ class BaseConFuncNode(BaseFuncNode):
             FUNCS[new_func.identifier] = new_func
             hyper_edges.append(
                 HyperEdge(
-                    new_func,
-                    [VARS[v_id] for v_id in new_func.input_variables],
-                    [VARS[v_id] for v_id in new_func.output_variables],
+                    new_func.identifier,
+                    [v_id for v_id in new_func.input_variables],
+                    [v_id for v_id in new_func.output_variables],
                 )
             )
 
@@ -735,8 +749,8 @@ class BaseConFuncNode(BaseFuncNode):
         metadata = container.metadata
         exit_id = None
         for edge in hyper_edges:
-            first_output = edge.outputs[0]
-            if first_output.identifier.name == "EXIT":
+            first_output = edge.output_ids[0]
+            if first_output.name == "EXIT":
                 exit_id = first_output
         return cls(
             str(uuid.uuid4()),
@@ -926,36 +940,42 @@ class LoopConFuncNode(BaseConFuncNode):
 
 @dataclass
 class HyperEdge:
-    func_node: BaseFuncNode
-    inputs: List[VariableNode]
-    outputs: List[VariableNode]
+    func_id: FunctionIdentifier
+    input_ids: List[VariableIdentifier]
+    output_ids: List[VariableIdentifier]
 
-    def __call__(self):
+    def __call__(
+        self,
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+        VARS: Dict[VariableIdentifier, VariableNode],
+    ) -> None:
+        # TODO: update this code to get execution working
+        func_node = FUNCS[self.func_id]
+        input_vars = [VARS[v_id] for v_id in self.input_ids]
         inputs = [
             var.value
             if var.value is not None
             else var.input_value
             if var.input_value is not None
             else [None]
-            for var in self.inputs
+            for var in input_vars
         ]
-        result = self.func_node(*inputs)
+        result = func_node(*inputs)
         # If we are in the exit decision hyper edge and in vectorized execution
         if (
-            self.func_node.func_type == LambdaType.DECISION
-            and any([o.identifier.name == "EXIT" for o in self.inputs])
-            and self.func_node.np_shape != (1,)
+            func_node.func_type == LambdaType.DECISION
+            and any([o.name == "EXIT" for o in self.input_ids])
+            and func_node.np_shape != (1,)
         ):
             # Initialize seen exits to an array of False if it does not exist
             if not hasattr(self, "seen_exits"):
                 self.seen_exits = np.full(
-                    self.func_node.np_shape, False, dtype=np.bool
+                    func_node.np_shape, False, dtype=np.bool
                 )
 
             # Gather the exit conditions for this execution
-            exit_var_values = [
-                o for o in self.inputs if o.identifier.name == "EXIT"
-            ][0].value
+            exit_var_id = [o for o in self.input_ids if o.name == "EXIT"][0]
+            exit_var_value = VARS[exit_var_id]
 
             # For each output value, update output nodes with new value that
             # just exited, otherwise keep existing value
@@ -972,13 +992,13 @@ class HyperEdge:
 
             # Update seen_exits with any vectorized positions that may have
             # exited during this execution
-            self.seen_exits = np.copy(self.seen_exits) | exit_var_values
+            self.seen_exits = np.copy(self.seen_exits) | exit_var_value
 
         else:
             for i, out_val in enumerate(result):
-                variable = self.outputs[i]
+                variable = VARS[self.output_ids[i]]
                 if (
-                    self.func_node.func_type == LambdaType.LITERAL
+                    func_node.func_type == LambdaType.LITERAL
                     and variable.input_value is not None
                 ):
                     variable.value = variable.input_value
@@ -987,34 +1007,30 @@ class HyperEdge:
 
     def __eq__(self, other) -> bool:
         return (
-            self.func_node == other.func_node
-            and all([i1 == i2 for i1, i2 in zip(self.inputs, other.inputs)])
-            and all([o1 == o2 for o1, o2 in zip(self.outputs, other.outputs)])
+            self.func_id == other.func_id
+            and all(
+                [i1 == i2 for i1, i2 in zip(self.input_ids, other.input_ids)]
+            )
+            and all(
+                [o1 == o2 for o1, o2 in zip(self.output_ids, other.output_ids)]
+            )
         )
 
     def __hash__(self):
         return hash(
-            (
-                self.func_node.identifier,
-                tuple([inp.uid for inp in self.inputs]),
-                tuple([out.uid for out in self.outputs]),
-            )
+            (self.func_id, tuple(self.input_ids), tuple(self.output_ids))
         )
 
     @classmethod
-    def from_dict(cls, data: dict, all_nodes: Dict[str, BaseNode]):
+    def from_dict(cls, data: dict):
         return cls(
-            all_nodes[data["function"]],
-            [all_nodes[n_id] for n_id in data["inputs"]],
-            [all_nodes[n_id] for n_id in data["outputs"]],
+            FunctionIdentifier.from_str(data["func_id"]),
+            [VariableIdentifier.from_str(v_id) for v_id in data["input_ids"]],
+            [VariableIdentifier.from_str(v_id) for v_id in data["output_ids"]],
         )
 
     def to_dict(self) -> dict:
-        return {
-            "inputs": [str(n.identifier) for n in self.inputs],
-            "function": str(self.func_node.identifier),
-            "outputs": [str(n.identifier) for n in self.outputs],
-        }
+        return asdict(self)
 
 
 # @dataclass(repr=False)
@@ -1647,10 +1663,14 @@ class GroundedFunctionNetwork:
 
     def __eq__(self, other) -> bool:
         return (
-            set(self.hyper_edges) == set(other.hyper_edges)
-            and set(self.subgraphs) == set(other.subgraphs)
-            and set(self.inputs) == set(other.inputs)
-            and set(self.outputs) == set(other.outputs)
+            self.uid == other.uid
+            and self.identifier == other.identifier
+            and self.entry_point == other.entry_point
+            and set(self.functions) == set(other.functions)
+            and set(self.variables) == set(other.variables)
+            and set(self.objects) == set(other.objects)
+            and set(self.types) == set(other.types)
+            and set(self.metadata) == set(other.metadata)
         )
 
     def __str__(self):
@@ -2033,24 +2053,22 @@ class GroundedFunctionNetwork:
 
         def build_network_and_subgraphs(
             func_node: BaseFuncNode,
-            parent_inputs: Dict[VariableIdentifier, VariableNode],
+            parent_inputs: List[VariableIdentifier],
             parent_subgraph: pgv.AGraph,
-        ) -> Dict[VariableIdentifier, VariableNode]:
+        ) -> List[VariableIdentifier]:
 
-            out_vars = {
-                v_id: VARS[v_id] for v_id in func_node.output_variables
-            }
+            in_vars = set(func_node.input_variables)
+            out_vars = set(func_node.output_variables)
 
             # Can't use basenames because cond nodes will have mult vars with the same basename
-            if len(parent_inputs) == 0:
-                live_vars = dict()
-                in_vars = dict()
-            else:
-                in_vars = {
+            if len(parent_inputs) > 0:
+                live_vars = {
                     v_id: parent_inputs[i]
                     for i, v_id in enumerate(func_node.input_variables)
                 }
-                live_vars = deepcopy(in_vars)
+            else:
+                live_vars = dict()
+
             all_sub_nodes = list()
             cur_subgraph = parent_subgraph.add_subgraph(
                 [],
@@ -2061,93 +2079,94 @@ class GroundedFunctionNetwork:
                 color=BaseFuncNode.get_border_color(func_node),
             )
 
-            def add_input_output_nodes(f_node, i_nodes, o_nodes):
-                all_sub_nodes.append(f_node)
-                N.add_node(f_node, **(f_node.get_kwargs()))
-                for ivar_node in i_nodes:
-                    if ivar_node.identifier in live_vars:
-                        ivar_node = live_vars[ivar_node.identifier]
-                    N.add_node(ivar_node, **(ivar_node.get_kwargs()))
-                    N.add_edge(ivar_node, f_node)
+            def add_input_output_nodes(
+                f_node: BaseFuncNode,
+                i_vars: List[VariableIdentifier],
+                o_vars: List[VariableIdentifier],
+            ) -> None:
+                func_id = f_node.identifier
+                all_sub_nodes.append(func_id)
+                N.add_node(func_id, **(f_node.get_kwargs()))
+                for ivar_id in i_vars:
+                    if ivar_id in live_vars:
+                        ivar_id = live_vars[ivar_id]
+                    ivar_node = VARS[ivar_id]
+                    N.add_node(ivar_id, **(ivar_node.get_kwargs()))
+                    N.add_edge(ivar_id, func_id)
 
-                for ovar_node in o_nodes:
-                    if ovar_node.identifier in live_vars:
-                        ovar_node = live_vars[ovar_node.identifier]
-                    N.add_node(ovar_node, **(ovar_node.get_kwargs()))
-                    N.add_edge(f_node, ovar_node)
+                for ovar_id in o_vars:
+                    if ovar_id in live_vars:
+                        ovar_id = live_vars[ovar_id]
+                    ovar_node = VARS[ovar_id]
+                    N.add_node(ovar_id, **(ovar_node.get_kwargs()))
+                    N.add_edge(func_id, ovar_id)
 
                 all_sub_nodes.extend(
-                    [n for n in i_nodes if n.identifier not in in_vars]
+                    [v_id for v_id in i_vars if v_id not in in_vars]
                 )
                 all_sub_nodes.extend(
-                    [n for n in o_nodes if n.identifier not in out_vars]
+                    [v_id for v_id in o_vars if v_id not in out_vars]
                 )
 
             for h_edge in func_node.hyper_edges:
-                new_func = h_edge.func_node
+                new_func = FUNCS[h_edge.func_id]
                 if isinstance(new_func, BaseConFuncNode):
                     sub_nodes = build_network_and_subgraphs(
-                        new_func, h_edge.inputs, cur_subgraph
+                        new_func, h_edge.input_ids, cur_subgraph
                     )
                     all_sub_nodes.extend(sub_nodes)
                     named_callee_outputs = {
-                        var_id.name: VARS[var_id]
+                        var_id.name: var_id
                         for var_id in new_func.output_variables
                     }
                     live_vars.update(
                         {
-                            var.identifier: named_callee_outputs[
-                                var.identifier.name
-                            ]
-                            for var in h_edge.outputs
+                            var_id: named_callee_outputs[var_id.name]
+                            for var_id in h_edge.output_ids
                         }
                     )
                 elif isinstance(new_func, ExpressionFuncNode):
                     # Set this up to expand when requested
                     if expand_expressions:
                         sub_nodes = build_network_and_subgraphs(
-                            new_func, h_edge.inputs, cur_subgraph
+                            new_func, h_edge.input_ids, cur_subgraph
                         )
                         all_sub_nodes.extend(sub_nodes)
                         named_callee_outputs = {
-                            var_id.name: VARS[var_id]
+                            var_id.name: var_id
                             for var_id in new_func.output_variables
                         }
                         live_vars.update(
-                            {v.identifier: v for v in h_edge.inputs}
+                            {v_id: v_id for v_id in h_edge.input_ids}
                         )
                         live_vars.update(
                             {
-                                var.identifier: named_callee_outputs[
-                                    var.identifier.name
-                                ]
-                                for var in h_edge.outputs
+                                var_id: named_callee_outputs[var_id.name]
+                                for var_id in h_edge.output_ids
                             }
                         )
                     else:
                         add_input_output_nodes(
-                            new_func, h_edge.inputs, h_edge.outputs
+                            new_func, h_edge.input_ids, h_edge.output_ids
                         )
                 elif isinstance(new_func, OperationFuncNode):
                     add_input_output_nodes(
-                        new_func, h_edge.inputs, h_edge.outputs
+                        new_func, h_edge.input_ids, h_edge.output_ids
                     )
                 else:
                     raise TypeError(
                         f"Unrecognized function type during GrFN3 AGraph generation: {type(new_func)}"
                     )
 
-            print(func_node, len(all_sub_nodes))
+            # Add internal nodes to ConFuncNode types
+            if not isinstance(func_node, ExpressionFuncNode):
+                all_sub_nodes.extend(list(live_vars.values()))
+            
+            # Add input/output nodes inside the root level BaseFuncNodes
             if len(parent_inputs) == 0:
-                all_sub_nodes += list(live_vars.values())
-            # N.add_subgraph(
-            #     all_sub_nodes,
-            #     name=f"cluster_{str(func_node.identifier)}",
-            #     label=func_node.identifier.name,
-            #     style="bold, rounded",
-            #     rankdir="TB",
-            #     color=BaseFuncNode.get_border_color(func_node),
-            # )
+                all_sub_nodes.extend(func_node.input_variables)
+                all_sub_nodes.extend(func_node.output_variables)
+
             cur_subgraph.add_nodes_from(all_sub_nodes)
             return all_sub_nodes
 
@@ -2156,7 +2175,6 @@ class GroundedFunctionNetwork:
             {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
         )
         N.node_attr.update({"fontname": "Menlo"})
-        print(len(list(N.nodes())))
         return N
 
     def to_AGraph__old(self):

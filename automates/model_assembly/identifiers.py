@@ -14,6 +14,7 @@ class BaseIdentifier(ABC):
 
     @staticmethod
     def from_str(data: str):
+        # TODO: this is outdated and needs to be changed/removed
         components = data.split("::")
         type_str = components[0]
         if type_str == "@container":
@@ -34,9 +35,9 @@ class BaseIdentifier(ABC):
     def is_global_scope(self):
         return self.scope == "@global"
 
-    @abstractmethod
-    def __hash__(self):
-        return NotImplemented
+    # @abstractmethod
+    # def __hash__(self):
+    #     return NotImplemented
 
     @abstractmethod
     def __str__(self):
@@ -54,8 +55,8 @@ class NamedIdentifier(BaseIdentifier):
     def __str__(self):
         return f"{self.namespace}::{self.scope}::{self.name}"
 
-    def __hash__(self):
-        return hash((self.namespace, self.scope, self.name))
+    # def __hash__(self):
+    #     return hash((self.namespace, self.scope, self.name))
 
 
 @dataclass(frozen=True)
@@ -69,8 +70,13 @@ class IndexedIdentifier(NamedIdentifier):
     def __str__(self):
         return f"{super().__str__()}::{self.index}"
 
-    def __hash__(self):
-        return hash((super().__hash__(), (self.index,)))
+    # def __hash__(self):
+    #     return hash((super().__hash__(), (self.index,)))
+
+    @staticmethod
+    def from_str(data: str):
+        (_, ns, sc, nm, idx) = data.split("::")
+        return (ns, sc, nm, int(idx))
 
 
 @dataclass(frozen=True)
@@ -167,6 +173,10 @@ class FunctionIdentifier(IndexedIdentifier):
         OPERATION_NUM += 1
         return cls("@builtin", "@global", operation, OPERATION_NUM)
 
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
+
 
 @dataclass(frozen=True)
 class TypeIdentifier(NamedIdentifier):
@@ -179,6 +189,10 @@ class TypeIdentifier(NamedIdentifier):
         sc = data["scope"] if "scope" in data else "@global"
         return cls(ns, sc, data["name"])
 
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
+
 
 @dataclass(frozen=True)
 class ObjectIdentifier(NamedIdentifier):
@@ -190,6 +204,10 @@ class ObjectIdentifier(NamedIdentifier):
         ns = data["namespace"] if "namespace" in data else "@global"
         sc = data["scope"] if "scope" in data else "@global"
         return cls(ns, sc, data["name"])
+
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
 
 
 @dataclass(frozen=True)
@@ -222,8 +240,8 @@ class LambdaStmtIdentifier(IndexedIdentifier):
 
 @dataclass(frozen=True)
 class VariableIdentifier(IndexedIdentifier):
-    def __hash__(self):
-        return super().__hash__()
+    # def __hash__(self):
+    #     return super().__hash__()
 
     def __str__(self):
         return f"Variable::{super().__str__()}"
@@ -264,21 +282,20 @@ class VariableIdentifier(IndexedIdentifier):
         return cls(ns, sc, vn, int(ix))
 
     @classmethod
-    def from_str(cls, var_str: str):
-        (_, ns, sc, nm, idx) = var_str.split("::")
-        return cls(ns, sc, nm, int(idx))
-
-    @classmethod
     def from_air_json(cls, data: dict):
         return cls.from_name_str(data["name"])
+
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
 
 
 @dataclass(frozen=True)
 class AIRVariableIdentifier(IndexedIdentifier):
     container: ContainerIdentifier
 
-    def __hash__(self):
-        return hash((super().__hash__(), self.container.__hash__()))
+    # def __hash__(self):
+    #     return hash((super().__hash__(), self.container.__hash__()))
 
     def __str__(self):
         return f"Variable::{super().__str__()}\t{ {str(self.container)} }"
@@ -311,8 +328,8 @@ class AIRVariableIdentifier(IndexedIdentifier):
 class NetworkVariableIdentifier(IndexedIdentifier):
     function_id: FunctionIdentifier
 
-    def __hash__(self):
-        return hash(super().__hash__(), self.function_id.__hash__())
+    # def __hash__(self):
+    #     return hash(super().__hash__(), self.function_id.__hash__())
 
     def __str__(self):
         return f"Variable::{super().__str__()}\t{ {str(self.function_id)} }"
