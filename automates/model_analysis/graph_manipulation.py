@@ -365,8 +365,8 @@ def d_sep(g, x, y, z):
             stack_top = stack_add
         return (stack, stack_names, stack_size, stack_top)
 
-    an_z = find_related_nodes_of(z, g, "max")
-    an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g, "max")
+    an_z = find_related_nodes_of(z, g, "in", order="max")
+    an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g,"in", order="max")
     stack_top = len(x)
     stack_size = max(stack_top, 64)
     stack = [False] * stack_size

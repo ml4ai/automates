@@ -99,7 +99,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
         tree.call.id_check = True
         tree.root = deepcopy(p)
         return gm.ResultsInternal(p=p, tree=tree)
-    an = gm.find_related_nodes_of(y, g_obs, "in", topo=topo)
+    an = gm.find_related_nodes_of(y, g_obs, "in", order="max", topo=topo)
 
     # Line 2
     if len(set(v) - set(an)) != 0:
@@ -119,7 +119,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
     # Line 3
     g_xbar_elist = gm.eselect(x, g)
     g_xbar = g.subgraph_edges(g_xbar_elist, delete_vertices=False)
-    an_xbar = gm.find_related_nodes_of(y, gm.observed_graph(g_xbar), "in", topo=topo)
+    an_xbar = gm.find_related_nodes_of(y, gm.observed_graph(g_xbar), "in", order="max", topo=topo)
     w = gm.ts(list(set(v) - set(x) - set(an_xbar)), topo)
     w_len = len(w)
     if w_len != 0:
