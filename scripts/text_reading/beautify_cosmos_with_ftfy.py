@@ -27,7 +27,6 @@ for input_file in os.listdir(input_dir):
 
 
         # the json file where the output must be stored
-        # out_file = open("/Users/alexeeva/Desktop/testing_ftfy/tryExtracting/LPJmL_LPJmL4 – a dynamic global vegetation model with managed land – Part 1 Model description--COSMOS-data---OUT.json", "w")
         out_file_path = os.path.join(output_dir, input_file.replace("--COSMOS-data.json", "--pretty--COSMOS-data.json"))
         print("out file path: " + out_file_path)
         out_file = open(out_file_path, "w")

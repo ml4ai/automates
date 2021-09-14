@@ -131,8 +131,6 @@ object ExtractAndAlign {
   val vectors: String = config[String]("alignment.w2vPath")
   val w2v = new Word2Vec(vectors, None)
 
-//  lazy val grounder = WikidataGrounder
-
   def parseDouble(s: String): Option[Double] = Try { s.toDouble }.toOption
 
   def groundMentions(

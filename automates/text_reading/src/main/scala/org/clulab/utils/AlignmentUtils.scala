@@ -44,15 +44,9 @@ object AlignmentJsonUtils {
   /**get arguments for the aligner depending on what data are provided**/
   def getArgsForAlignment(jsonPath: String, json: Value, groundToSVO: Boolean, groundToWiki: Boolean, serializerName: String): AlignmentArguments = {
 
-
-//    println(groundingsAsUjson + " <<<")
-//    val contains = true // just a temp val to later be switched to whether or not the payload contains the groundings
     val wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]] = if (groundToWiki) {
       val pathToWikiGroundings = json("wikidata").str
-      println("PATH TO WIKI: " + pathToWikiGroundings)//"/Users/alexeeva/Repos/automates/scripts/model_assembly/SIR-simple--mentions-with-grounding_time_grounded_correctly.json"
 
-      //case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], score: Option[Double], source: String = "Wikidata")
-      //      if (jsonObj.contains("SVOgroundings")) {
       // load if exist; none otherwise
       if (pathToWikiGroundings != "None") {
         val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings))
@@ -254,8 +248,6 @@ object AlignmentJsonUtils {
       "search_term" -> grounding.searchTerm,
       "concept_ID" -> grounding.conceptID,
       "concept_label" -> grounding.conceptLabel,
-//      "concept_description" -> grounding.conceptDescription.get ,
-//      "score" -> grounding.score.get,
       "source" -> grounding.source
     )
 
@@ -283,7 +275,7 @@ object AlignmentJsonUtils {
       toReturn("score") = ujson.Null
     }
 
-    toReturn//.toString()
+    toReturn
 
   }
 
@@ -291,8 +283,7 @@ object AlignmentJsonUtils {
     val toReturn = ujson.Obj(
       "uid" -> glv.id,
       "content" -> glv.identifier,
-      "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)//,
-//      "groundings" -> groundings
+      "identifier_objects" -> glv.textVarObjStrings.map(obj => ujson.read(obj).obj("uid").str)
     )
 
     if (glv.groundings.isDefined) {

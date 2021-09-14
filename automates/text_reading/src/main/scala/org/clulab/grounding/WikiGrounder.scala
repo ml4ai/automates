@@ -4,7 +4,7 @@ import java.io.File
 import com.typesafe.config.{Config, ConfigFactory}
 import upickle.default._
 import org.apache.commons.text.similarity.LevenshteinDistance
-import org.clulab.odin.{Attachment, Mention, SynPath}
+import org.clulab.odin.Mention
 
 import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.Process
@@ -16,11 +16,6 @@ import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.utils.FileUtils
 
 import scala.concurrent.duration.DurationInt
-
-// todo before pr: figure out paths when deserializing (add path to groundings in the payload and read them during arg reading)
-//todo: pass the python query file from configs
-//todo: document in wiki
-// todo: return only groundings over threshold
 
 // alt labels should be a seq of strings, not a string: alternativeLabel
 case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], subClassOf: Option[String], score: Option[Double], source: String = "Wikidata")
@@ -56,31 +51,21 @@ object WikidataGrounder {
 
 def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Seq[sparqlWikiResult]] = {
 
-  val cacheFilePath: String = config[String]("grounding.WikiCacheFilePath") //"masha-cache.json"
+  val cacheFilePath: String = config[String]("grounding.WikiCacheFilePath")
   val file = new File(cacheFilePath)
   val fileCache = if (file.exists()) {
-
     ujson.read(file)
   } else ujson.Obj()
 
-//  println("FIRST file cache: " + fileCache)
   if (terms_with_underscores.nonEmpty) {
     val terms = terms_with_underscores.map(_.replace("_", " "))
     val resultsFromAllTerms = new ArrayBuffer[sparqlWikiResult]()
 
-
     for (term <- terms) {
-
-      println("term: " + term)
       val term_list = terms.filter(_==term)
       println(cache.getIfPresent(term) +"<<<<")
-      var result = new ArrayBuffer[String]()
-//      val result = try {
-//        cache.getIfPresent(term).get
-//      } catch {
-//        case e: Any => WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
-//      }
-//      println("result: " + result)
+      val result = new ArrayBuffer[String]()
+
       if (fileCache.obj.contains(term) && fileCache.obj(term).str.nonEmpty) {
        result.append(fileCache.obj(term).str)
       } else if (cache.getIfPresent(term).isDefined) {
@@ -96,33 +81,19 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
       if (result.head.nonEmpty) {
         val lineResults = new ArrayBuffer[sparqlWikiResult]()
         val resultLines = result.head.split("\n")
-//        println("TERM: " + term)
-//        println(">>" + resultLines.mkString("\n"))
         for (line <- resultLines) {
-//          println("line: "+ line)
           val splitLine = line.trim().split("\t")
-
-//          println("split line: "+ splitLine.mkString("|"))
           val conceptId = splitLine(1)
-//          println("concept id: "+ conceptId)
           val conceptLabel = splitLine(2)
-//          println("concept label: "+ conceptLabel)
           val conceptDescription = Some(splitLine(3))
-//          println("conc descr: "+ conceptDescription)
           val altLabel =  Some(splitLine(4))
           val subClassOf = Some(splitLine(5))
-          //          println("alt label: "+ altLabel)
           val textWordList = (sentence ++ term_list ++ List(variable)).distinct.filter(w => !stopWords.contains(w))
-//          println("text: " + textWordList.mkString("::"))
           val wikidataWordList = conceptDescription.getOrElse("").split(" ") ++ altLabel.getOrElse("").replace(", ", " ").replace("\\(|\\)", "").split(" ").filter(_.length > 0) :+ conceptLabel.toLowerCase()
-//          println("wiki: " + wikidataWordList.mkString("::"))
 
           val score = editDistanceNormalized(conceptLabel, term) + editDistanceNormalized(textWordList.mkString(" "),  wikidataWordList.mkString(" ")) + w2v.maxSimilarity(textWordList,  wikidataWordList) + wordOverlap(textWordList, wikidataWordList)
-//          val score = w2v.avgSimilarity(textWordList,  wikidataWordList)
-//          println("score: " + score)
-//          print("score components: " + editDistanceNormalized(conceptLabel, term) + " " + editDistanceNormalized(textWordList.mkString(" "),  wikidataWordList.mkString(" ")) + " " + w2v.avgSimilarity(textWordList,  wikidataWordList) + " "+ w2v.maxSimilarity(textWordList,  wikidataWordList) + " " + wordOverlap(textWordList, wikidataWordList)  + "\n")
+
           val lineResult = new sparqlWikiResult(term, conceptId, conceptLabel, conceptDescription, altLabel, subClassOf, Some(score), "wikidata")
-//          println("line result: ", lineResult)
           lineResults += lineResult
 
         }
@@ -131,7 +102,6 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
         val grouped = lineResults.groupBy(_.conceptID)
         val newLineResults = new ArrayBuffer[sparqlWikiResult]()
         for (g <- grouped) {
-//          println("start group")
           if (g._2.length > 1) {
 
             val allClassOf = Some(g._2.map(_.subClassOf.getOrElse("NA")).mkString(","))
@@ -142,32 +112,21 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
 
         val allLabels = newLineResults.map(res => res.conceptLabel)
-//                println("all labels: " + allLabels.mkString("|"))
         val duplicates = allLabels.groupBy(identity).collect { case (x, ys) if ys.lengthCompare(1) > 0 => x }.toList
-        //
-//         for (d <- duplicates) println("dup: " + d)
-        //
         val (uniqueLabelResLines, nonUniqLabelResLines) = newLineResults.partition(res => !duplicates.contains(res.conceptLabel))
-        //
         allSparqlWikiResults ++= uniqueLabelResLines
         //out of the items with the same label, e.g., crop (grown and harvested plant or animal product) vs. crop (hairstyle), choose the one with the highest score based on similarity of the wikidata description and alternative label to the sentence and search term the search term from
-//        println("non unique: " + nonUniqLabelResLines.sortBy(_.score).reverse)
         if (nonUniqLabelResLines.nonEmpty) {
           allSparqlWikiResults += nonUniqLabelResLines.maxBy(_.score)
         }
 
-
-      } else println("Result empty")
-//      println("\nallSparqlWikiResults inside the loop : " + allSparqlWikiResults + "\n")
-
+      }
       resultsFromAllTerms ++= allSparqlWikiResults
-//      println("FILE CACHE: " + fileCache)
+      // update `cache` file
       exporter.export(ujson.write(fileCache), cacheFilePath.replace(".json", ""))
     }
 
-
     Some(getTopKWiki(resultsFromAllTerms.toList.distinct.sortBy(_.score).reverse, k))
-
 
   } else None
 

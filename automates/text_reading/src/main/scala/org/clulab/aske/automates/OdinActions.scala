@@ -1446,7 +1446,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.75
       if (descrText.words.exists(_.length > 1))
       // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
-      // fixme: there's a chance this does not work
       if (descrText.tags.get.exists(t => t.startsWith("N") || t == "VBN") || descrText.words.exists(w => capitalized(w)))
       if singleCapitalWord.findFirstIn(descrText.text).isEmpty
       if !descrText.text.startsWith(")")

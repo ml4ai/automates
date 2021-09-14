@@ -34,11 +34,8 @@ def getMentionText(mention: Mention): String = {
     }
 
     textPieces.mkString(" ")
-   //proc.annotate(textPieces.mkString(" ")).sentences.head.lemmas.get.map(_.toLowerCase).mkString(" ")
-
   } else {
     mention.text
-    //mention.lemmas.get.mkString(" ")
   }
 }
 

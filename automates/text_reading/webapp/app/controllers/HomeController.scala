@@ -107,22 +107,19 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   // -------------------------------------------
 
   def groundMentionsToWikidata: Action[AnyContent] = Action { request =>
-
     // writes a json file with groundings associated with identifier strings
 
     val data = request.body.asJson.get.toString()
-    println("DATA: " + data)
     val json = ujson.read(data)
 
-      val mentionsPath = json("mentions").str
-      val mentionsFile = new File(mentionsPath)
+    val mentionsPath = json("mentions").str
+    val mentionsFile = new File(mentionsPath)
 
-      val ujsonOfMenFile = ujson.read(mentionsFile)
-      val defMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile).filter(m => m.label contains "Description")
-      val glVars = WikidataGrounder.mentionsToGlobalVarsWithWikidataGroundings(defMentions)
+    val ujsonOfMenFile = ujson.read(mentionsFile)
+    val defMentions = AutomatesJSONSerializer.toMentions(ujsonOfMenFile).filter(m => m.label contains "Description")
+    val glVars = WikidataGrounder.mentionsToGlobalVarsWithWikidataGroundings(defMentions)
 
-
-      Ok(glVars).as(JSON)
+    Ok(glVars).as(JSON)
 
   }
 
@@ -222,7 +219,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val data = request.body.asJson.get.toString()
     val pathJson = ujson.read(data)
     val jsonPath = pathJson("pathToCosmosJson").str
-    val fileName = new File(jsonPath).getName.replace("--COSMOS-data.json", ".pdf")
     logger.info(s"Extracting mentions from $jsonPath")
 
     // cosmos stores information about each block on each pdf page
@@ -230,10 +226,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val loader = new CosmosJsonDataLoader
     val textsAndLocations = loader.loadFile(jsonPath)
     val texts = textsAndLocations.map(_.split("<::>").slice(0,2).mkString("<::>"))
-
-    // todo: get the source doc name from the cosmos doc and place it in locations
-    // then can sort texts by src doc and then extract mentions for each group with the file name passed based on the one we got in location
-
     val locations = textsAndLocations.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
 
     println("started extracting")
