@@ -11,7 +11,7 @@ import scala.sys.process.Process
 import upickle.default.{ReadWriter, macroRW}
 import ai.lum.common.ConfigUtils._
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import org.clulab.aske.automates.apps.ExtractAndAlign
+import org.clulab.aske.automates.apps.{ExtractAndAlign, JSONDocExporter}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.utils.FileUtils
 
@@ -47,6 +47,7 @@ object WikidataGrounder {
   val sparqlDir: String = config[String]("grounding.sparqlDir")
   val stopWords = FileUtils.loadFromOneColumnTSV("src/main/resources/stopWords.tsv")
 //  val currentDir: String = System.getProperty("user.dir")
+  val exporter = JSONDocExporter()
 
   val cache: Cache[String, String] = Scaffeine()
     .recordStats()
@@ -57,6 +58,14 @@ object WikidataGrounder {
 
 def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Seq[sparqlWikiResult]] = {
 
+  val pathName = "masha-cache.json"
+  val file = new File(pathName)
+  val fileCache = if (file.exists()) {
+
+    ujson.read(file)
+  } else ujson.Obj()
+
+//  println("FIRST file cache: " + fileCache)
   if (terms_with_underscores.nonEmpty) {
     val terms = terms_with_underscores.map(_.replace("_", " "))
     val resultsFromAllTerms = new ArrayBuffer[sparqlWikiResult]()
@@ -74,14 +83,19 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 //        case e: Any => WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
 //      }
 //      println("result: " + result)
-      if (cache.getIfPresent(term).isDefined) {
+      if (fileCache.obj.contains(term)) {
+       result = fileCache.obj(term).str
+        // todo: try to reground if result is empty
+      } else if (cache.getIfPresent(term).isDefined) {
         println(cache.getIfPresent(term).get + "<<<<")
         result = cache.getIfPresent(term).get
       } else {
         println(WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir) + "<==")
         result = WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
       }
+      fileCache(term) = result
       cache.put(term, result)
+
       val allSparqlWikiResults = new ArrayBuffer[sparqlWikiResult]()
       if (result.nonEmpty) {
         val lineResults = new ArrayBuffer[sparqlWikiResult]()
@@ -151,8 +165,10 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 //      println("\nallSparqlWikiResults inside the loop : " + allSparqlWikiResults + "\n")
 
       resultsFromAllTerms ++= allSparqlWikiResults
-
+//      println("FILE CACHE: " + fileCache)
+      exporter.export(ujson.write(fileCache), pathName.replace(".json", ""))
     }
+
 
     Some(getTopKWiki(resultsFromAllTerms.toList.distinct.sortBy(_.score).reverse, k))
 
