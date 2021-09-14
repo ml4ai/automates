@@ -83,7 +83,7 @@ def to_names(indices, g):
     return name_sorted
 
 
-def find_related_nodes_of(nodes, g, mode, order=1,  topo=None):
+def find_related_nodes_of(nodes, g, mode, order=1,  topo=None, exclude_orig=False):
     """
     Finds all related nodes of a set by "mode" and optionally sorts them in topological order
     :param nodes: a list of nodes
@@ -91,93 +91,40 @@ def find_related_nodes_of(nodes, g, mode, order=1,  topo=None):
     :param mode:    "in" to return ancestors of nodes,
                     "out" to return descendants of nodes,
                     "all" to return all connected nodes
-    :param order: the maximum number of steps to take from nodes
+    :param order:   for int, the maximum number of steps to take from nodes
+                    for "max", will find all
     :param topo: topological order in which the return should be sorted
+    :param exclude_orig: if True, the nodes in "nodes" will be removed from the return
     :return: the (optionally ordered) related nodes
     """
+    # Check that mode is specified correctly
+    if mode not in ["in", "out", "all"]:
+        raise ValueError('Invalid mode specified, select from: "in", "out", or "all"')
 
+    # Check that order is specified correctly, and compute g.vcount() if necessary
+    if type(order) == int:
+        order_to_pass = order
+    elif order == "max":
+        order_to_pass = g.vcount()
+    else:
+        raise ValueError('Invalid order specified, specify an integer or "max"')
 
-def ancestors(node, g, topo):
-    """
-    Finds all ancestors of a node and orders them
-    :param node: node (indicated by its index)
-    :param g: graph
-    :param topo: topological ordering
-    :return: Ancestors of node in topological ordering topo
-    """
-    an_list = g.neighborhood(node, order=g.vcount(), mode="in")
-    an_ind = list(set([a for ans in an_list for a in ans]))
-    an_names = to_names(an_ind, g)
-    an = ts(an_names, topo)
-    return an
+    # Find the correct nodes
+    related_list = g.neighborhood(nodes, order=order_to_pass, mode=mode)
+    related_ind = list(set([node for related_nodes in related_list for node in related_nodes]))
+    related_names = to_names(related_ind, g)
 
+    # Remove the original nodes, if desired
+    if exclude_orig:
+        for node in nodes:
+            related_names.remove(node)
 
-def ancestors_unsort(node, g):
-    """
-    Finds all ancestors of a node without the need for a topological ordering
-    :param node: set of nodes of which to find ancestors
-    :param g: graph
-    :return: Ancestors of nodes
-    """
-    an_list = g.neighborhood(node, order=g.vcount(), mode="in")
-    an_ind = list(set([a for ans in an_list for a in ans]))
-    an_names = to_names(an_ind, g)
-    return an_names
+    # Sort nodes into specified topological order, if desired
+    if topo is not None:
+        related_names_sorted = ts(related_names, topo)
+        return related_names_sorted
+    return related_names
 
-
-def parents_unsort(node, g_obs):
-    """
-    Finds the parents (unsorted) of a node
-    :param node: node
-    :param g_obs: graph
-    :return: parents of node
-    """
-    pa_list = g_obs.neighborhood(node, order=1, mode="in")
-    pa_ind = list(set([p for pas in pa_list for p in pas]))
-    pa_names = to_names(pa_ind, g_obs)
-    return pa_names
-
-
-def children_unsort(node, g):
-    """
-    Finds the children (unsorted) of a node
-    :param node: node
-    :param g: graph
-    :return: children of node
-    """
-    ch_list = g.neighborhood(node, order=1, mode="out")
-    ch_ind = list(set([c for chs in ch_list for c in chs]))
-    ch_names = to_names(ch_ind, g)
-    return ch_names
-
-
-# def descendents(node, g, topo):
-#     """
-#     Finds all descendants of a node and orders them
-#     :param node: node (indicated by its index)
-#     :param g: graph
-#     :param topo: topological ordering
-#     :return: Descendants of node in topological ordering topo
-#     """
-#     des_list = g.neighborhood(node, order=g.vcount(), mode="out")
-#     des_ind = list(set([d for des in des_list for d in des]))
-#     des_names = to_names(des_ind, g)
-#     des = ts(des_names, topo)
-#     return des
-#
-#
-# def connected(node, g, topo):
-#     """
-#     Finds all neighbors of a node and orders them (all connected nodes)
-#     :param node: node (indicated by its index)
-#     :param g: graph
-#     :param topo: topological ordering
-#     :return: Neighbors of node in topological ordering topo
-#     """
-#     con_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="all")).flat)
-#     con_names = to_names(con_ind, g)
-#     con = ts(con_names, topo)
-#     return con
 #
 #
 # # Assume "O" and "U" are specified in "description" attribute
