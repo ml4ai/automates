@@ -229,16 +229,16 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // for each block, we load the text (content) and the location of the text (page_num and block order/index on the page)
     val loader = new CosmosJsonDataLoader
     val textsAndLocations = loader.loadFile(jsonPath)
-    val texts = textsAndLocations.map(_.split("::").head)
+    val texts = textsAndLocations.map(_.split("<::>").slice(0,2).mkString("<::>"))
 
     // todo: get the source doc name from the cosmos doc and place it in locations
     // then can sort texts by src doc and then extract mentions for each group with the file name passed based on the one we got in location
 
-    val locations = textsAndLocations.map(_.split("::").tail.mkString("::")) //location = pageNum::blockIdx
+    val locations = textsAndLocations.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
 
     println("started extracting")
     // extract mentions form each text block
-    val mentions = texts.map(t => ieSystem.extractFromText(t, keepText = true, filename = Some(fileName)))
+    val mentions = texts.map(t => ieSystem.extractFromText(t.split("<::>").head, keepText = true, Some(t.split("<::>").last)))
 
     // store location information from cosmos as an attachment for each mention
     val menWInd = mentions.zipWithIndex
@@ -247,7 +247,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       // get page and block index for each block; cosmos location information will be the same for all the mentions within one block
       val menInTextBlocks = tuple._1
       val id = tuple._2
-      val location = locations(id).split("::").map(_.replace(":","").toDouble.toInt)
+      val location = locations(id).split("<::>").map(_.toDouble.toInt)
       val pageNum = location.head
       val blockIdx = location.last
 

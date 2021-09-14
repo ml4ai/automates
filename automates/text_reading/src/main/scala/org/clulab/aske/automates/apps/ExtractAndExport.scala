@@ -57,7 +57,7 @@ object ExtractAndExport extends App {
     val texts = dataLoader.loadFile(file)
     // 3. Extract causal mentions from the texts
     // todo: here I am choosing to pass each text/section through separately -- this may result in a difficult coref problem
-    val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
+    val mentions = texts.flatMap(t => reader.extractFromText(t.split("<::>").head, filename = Some(file.getName)))
     //The version of mention that includes routing between text vs. comment
 //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
 //    for (m <- mentions) {

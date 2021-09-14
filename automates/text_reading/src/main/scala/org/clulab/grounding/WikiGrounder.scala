@@ -21,8 +21,7 @@ import scala.concurrent.duration.DurationInt
 //todo: pass the python query file from configs
 //todo: document in wiki
 // todo: return only groundings over threshold
-// lower priority now
-// todo: cache results to avoid regrounding what we already know
+
 // alt labels should be a seq of strings, not a string: alternativeLabel
 case class sparqlWikiResult(searchTerm: String, conceptID: String, conceptLabel: String, conceptDescription: Option[String], alternativeLabel: Option[String], subClassOf: Option[String], score: Option[Double], source: String = "Wikidata")
 
@@ -46,7 +45,6 @@ object WikidataGrounder {
   val config: Config = ConfigFactory.load()
   val sparqlDir: String = config[String]("grounding.sparqlDir")
   val stopWords = FileUtils.loadFromOneColumnTSV("src/main/resources/stopWords.tsv")
-//  val currentDir: String = System.getProperty("user.dir")
   val exporter = JSONDocExporter()
 
   val cache: Cache[String, String] = Scaffeine()
@@ -58,8 +56,8 @@ object WikidataGrounder {
 
 def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[String], sentence: Seq[String], w2v: Word2Vec, k: Int): Option[Seq[sparqlWikiResult]] = {
 
-  val pathName = "masha-cache.json"
-  val file = new File(pathName)
+  val cacheFilePath: String = config[String]("grounding.WikiCacheFilePath") //"masha-cache.json"
+  val file = new File(cacheFilePath)
   val fileCache = if (file.exists()) {
 
     ujson.read(file)
@@ -76,30 +74,28 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
       println("term: " + term)
       val term_list = terms.filter(_==term)
       println(cache.getIfPresent(term) +"<<<<")
-      var result = "-1"
+      var result = new ArrayBuffer[String]()
 //      val result = try {
 //        cache.getIfPresent(term).get
 //      } catch {
 //        case e: Any => WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
 //      }
 //      println("result: " + result)
-      if (fileCache.obj.contains(term)) {
-       result = fileCache.obj(term).str
-        // todo: try to reground if result is empty
+      if (fileCache.obj.contains(term) && fileCache.obj(term).str.nonEmpty) {
+       result.append(fileCache.obj(term).str)
       } else if (cache.getIfPresent(term).isDefined) {
-        println(cache.getIfPresent(term).get + "<<<<")
-        result = cache.getIfPresent(term).get
+        result.append(cache.getIfPresent(term).get)
       } else {
         println(WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir) + "<==")
-        result = WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir)
+        result.append(WikidataGrounder.runSparqlQuery(term, WikidataGrounder.sparqlDir))
       }
-      fileCache(term) = result
-      cache.put(term, result)
+      fileCache(term) = result.head
+      cache.put(term, result.head)
 
       val allSparqlWikiResults = new ArrayBuffer[sparqlWikiResult]()
-      if (result.nonEmpty) {
+      if (result.head.nonEmpty) {
         val lineResults = new ArrayBuffer[sparqlWikiResult]()
-        val resultLines = result.split("\n")
+        val resultLines = result.head.split("\n")
 //        println("TERM: " + term)
 //        println(">>" + resultLines.mkString("\n"))
         for (line <- resultLines) {
@@ -166,7 +162,7 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
       resultsFromAllTerms ++= allSparqlWikiResults
 //      println("FILE CACHE: " + fileCache)
-      exporter.export(ujson.write(fileCache), pathName.replace(".json", ""))
+      exporter.export(ujson.write(fileCache), cacheFilePath.replace(".json", ""))
     }
 
 
