@@ -341,10 +341,12 @@ def d_sep(g, x, y, z):
         n_vis_pa = 0
         n_vis_ch = 0
         if include_pa:
-            visitable_parents = list((set(parents_unsort([el_name], g)) - {el_name}) & set(an_xyz))
+            parents_unsort = find_related_nodes_of([el_name], g, "in")
+            visitable_parents = list((set(parents_unsort) - {el_name}) & set(an_xyz))
             n_vis_pa = len(visitable_parents)
         if include_ch:
-            visitable_children = list((set(children_unsort([el_name], g)) - {el_name}) & set(an_xyz))
+            children_unsort = find_related_nodes_of([el_name], g, "out")
+            visitable_children = list((set(children_unsort) - {el_name}) & set(an_xyz))
             n_vis_ch = len(visitable_children)
         if n_vis_pa + n_vis_ch > 0:
             while n_vis_pa + n_vis_ch + stack_top > stack_size:
@@ -363,8 +365,8 @@ def d_sep(g, x, y, z):
             stack_top = stack_add
         return (stack, stack_names, stack_size, stack_top)
 
-    an_z = ancestors_unsort(z, g)
-    an_xyz = ancestors_unsort(list(set(x) | set(y) | set(z)), g)
+    an_z = find_related_nodes_of(z, g, "max")
+    an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g, "max")
     stack_top = len(x)
     stack_size = max(stack_top, 64)
     stack = [False] * stack_size
