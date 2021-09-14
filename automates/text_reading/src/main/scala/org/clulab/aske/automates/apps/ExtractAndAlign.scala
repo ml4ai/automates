@@ -167,7 +167,6 @@ object ExtractAndAlign {
       val groundings = SeqOfWikiGroundings(allGlobalVars.map(gv => WikiGrounding(gv.identifier, gv.groundings.getOrElse(Seq.empty))))
       val asString = write(groundings, indent = 4)
       val exporter = JSONDocExporter()
-      // todo: should be getting doc id from descr mentions, but doesn't see it
       val fileName = if (descriptionMentions.isDefined && descriptionMentions.get.nonEmpty) descriptionMentions.get.head.document.id.getOrElse("unknown_document") else "unknown_document"
       exporter.export(asString, fileName.replace(".json", "").concat("-wikidata-groundings"))
     }
