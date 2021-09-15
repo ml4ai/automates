@@ -10,7 +10,7 @@ rules:
 #    action: ${action}
     example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and on the stability, if this height is not low enough."
     pattern: |
-      @event:Function [word = ","]? ([chunk = /B-SBAR|B-PP/]|[word = "so"] [word = "long"] [word = "as"]|[word = "when"])? @context:Context
+      @event:Function [word = ","]? [chunk = /B-ADV/]? ([chunk = /B-SBAR|B-PP/]|[word = "so"] [word = "long"] [word = "as"]|[word = "when"])? @context:Context
       |
       @context:Context [word = ","]? [word = "then"]? [tag = /DT/]? @event:Function
 

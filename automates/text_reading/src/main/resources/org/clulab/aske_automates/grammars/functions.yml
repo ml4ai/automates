@@ -230,14 +230,14 @@ rules:
       input:Phrase+ = nmod_by
       output:Phrase = <acl
 
-  - name: affect_or_limit
+  - name: affect_limit_influence
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "The only factors affecting ETo are climatic parameters..."
     pattern: |
-      trigger = (?<! "not") [lemma = "affect"]|[lemma = "limit"]
+      trigger = (?<! "not") [lemma = /affect|limit|influence/]
       input:Phrase+ = <acl <nsubj | nsubj
       output:Phrase = dobj
 
@@ -294,7 +294,7 @@ rules:
     example: "In the Adelanto soil, the evaporation rate began to decline below the approximate Eo of 8 mm/day when the cumulative evaporation reached about 12 mm."
     pattern: |
       trigger = [lemma = /decline|drop|decrease/]
-      input:Phrase+ = nsubj:xsubj | nsubj
+      input:Phrase+ = nsubj:xsubj | nsubj | dobj
 
     # note: this rule doesn't capture the pattern correctly. "below" is not captured as an input because it is not labeled as a concept.
 
@@ -363,6 +363,17 @@ rules:
       trigger = [word = /mean|average/]
       input:Phrase+ = <compound | <amod
       output:Phrase = <nsubj | <amod nsubj
+
+  - name: result_in
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "move speeds below 100km/day result in significantly higher validation errors."
+    pattern: |
+      trigger = [lemma = /result/] (?= "in")
+      input:Phrase+ = nmod_in
+      output:Phrase = nsubj
 
   # function rules allowing for partial extraction
 
@@ -464,6 +475,17 @@ rules:
       trigger = (?<= [lemma = "reduce"] [word = "when"]) [word = /.*/]+
       input:Phrase+ = <advcl nsubj
 #      output:Phrase = <advcl aux
+
+  - name: input_lessen # needs to see if this rule is a viable one
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "the average relative difference for these runs persistently lessens respectively from 0.615 to 0.499 over the simulation period and the refinement of the South Sudan model as we incorporated additional details."
+    pattern: |
+      trigger = [lemma = "lessen"]
+      input:Phrase+ = nsubj
+  #     output:Phrase = <advcl aux
 
   - name: minus_token_rule # todo: extraction from the dependency rule needs to be filtered out
     label: Function

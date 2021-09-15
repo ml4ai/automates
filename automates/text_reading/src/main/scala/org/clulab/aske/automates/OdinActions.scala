@@ -841,7 +841,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
+    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq()).nonEmpty && m.arguments.getOrElse("output", Seq()).nonEmpty)
     val toReturn = new ArrayBuffer[Mention]()
     for (f <- fragment) {
       val newInputs = new ArrayBuffer[Mention]()
@@ -866,7 +866,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
   def filterFunctionArgs(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = new ArrayBuffer[Mention]()
     val (functions, other) = mentions.partition(_.label == "Function")
-    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
+    val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq()).nonEmpty && m.arguments.getOrElse("output", Seq()).nonEmpty)
     for (c <- complete) {
       val newInputs = c.arguments("input").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && !m.tags.get.head.contains("VB"))
       val newOutputs = c.arguments("output").filter(m => !m.label.contains("Unit") && !m.text.contains("self") && !m.tags.get.head.contains("VB"))
@@ -878,7 +878,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
     }
     for (f <- fragment) {
       if (f.arguments.contains("input")) {
-        val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
+        val inputFilter = f.arguments("input").filter(!_.label.contains("Unit") && f.arguments.values.head.head.tags.get.head != "PRP" && !f.tags.get.head.contains("VB"))
         if (inputFilter.nonEmpty) {
           val newInputs = Map("input" -> inputFilter, "output" -> Seq())
           val newInputMens = copyWithArgs(f, newInputs)
@@ -895,6 +895,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
       }
     }
     toReturn ++ other
+//    mentions
   }
 
   def filterInputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
