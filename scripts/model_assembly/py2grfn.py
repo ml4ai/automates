@@ -1,10 +1,7 @@
 import os
-import re
-import sys
 import ast
 import json
 
-# import astpp
 import argparse
 
 from automates.program_analysis.PyAST2CAST import py_ast_to_cast
@@ -18,32 +15,43 @@ def main(args):
     CAST = convert2CAST(args)
     AIR = CAST2AIR(args, CAST)
 
+    print("Translating AIR to GrFN3")
     GrFN = GroundedFunctionNetwork.from_AIR(AIR)
 
     if args.gen_grfn_json:
+        print("Outputting GrFN3 JSON")
         grfn_file = args.python_filepath.replace(".py", "--GrFN3.json")
         GrFN.to_json_file(grfn_file)
 
+        if args.grfn_json_eq:
+            print("Loading from GrFN3 JSON")
+            saved_GrFN = GroundedFunctionNetwork.from_json(grfn_file)
+            print("Comparing constructed GrFN3 to JSON loaded GrFN3")
+            assert GrFN == saved_GrFN
+            print("GrFNs are identical!")
+
     if args.gen_grfn_pdf:
+        print("Outputting GrFN3 PDF visualization")
         A = GrFN.to_AGraph(expand_expressions=False)
         grfn_file = args.python_filepath.replace(".py", "--GrFN3.pdf")
         A.draw(grfn_file, prog="dot")
 
     if args.gen_full_grfn_pdf:
+        print("Outputting expanded GrFN3 PDF visualization")
         Ae = GrFN.to_AGraph(expand_expressions=True)
         grfn_file = args.python_filepath.replace(".py", "--GrFN3_expanded.pdf")
         Ae.draw(grfn_file, prog="dot")
 
+    print("Done.")
+
 
 def convert2CAST(args):
+    print("Translating Python to CAST")
     # Open Python file as a giant string
-    # pyfile_path = args.python_filepath
     file_contents = list()
     with open(args.python_filepath, "r") as infile:
         file_contents = infile.read()
-    # file_handle = open(pyfile_path)
-    # file_contents = file_handle.read()
-    # file_handle.close()
+
     file_name = args.python_filepath.split("/")[-1]
 
     # Count the number of lines in the file
@@ -53,11 +61,6 @@ def convert2CAST(args):
 
     # Create a PyASTToCAST Object
     convert = py_ast_to_cast.PyASTToCAST(file_name)
-
-    # Additional option to allow us to view the PyAST
-    # using the astpp module
-    # if args.ast_pretty_print:
-    #     astpp.parseprint(file_contents)
 
     # 'Root' the current working directory so that it's where the
     # Source file we're generating CAST for is (for Import statements)
@@ -71,8 +74,8 @@ def convert2CAST(args):
     out_cast = cast.CAST([C], "python")
     os.chdir(old_path)
 
-    # Then, print CAST as JSON
     if args.gen_cast_json:
+        print("Outputting CAST JSON")
         cast_filename = args.python_filepath.replace(".py", "--CAST.json")
         json.dump(
             out_cast.to_json_object(),
@@ -80,14 +83,17 @@ def convert2CAST(args):
             sort_keys=True,
             indent=4,
         )
+
     return out_cast
 
 
 def CAST2AIR(args, CAST):
+    print("Translating CAST to AIR")
     air_dict = CAST.to_air_dict()
     AIR = AutoMATES_IR.from_air_json(air_dict)
 
     if args.gen_air_json:
+        print("Outputting AIR JSON")
         air_json_file = args.python_filepath.replace(".py", "--AIR.json")
         AIR.to_json(air_json_file)
     return AIR
@@ -128,6 +134,12 @@ if __name__ == "__main__":
         dest="gen_full_grfn_pdf",
         action="store_true",
         help="Setting this flag will generate an expanded GrFN PDF visualization for the Python input file",
+    )
+    parser.add_argument(
+        "-gjeq",
+        dest="grfn_json_eq",
+        action="store_true",
+        help="Setting this flag will check whether the saved and reloaded GrFN from JSON is equivalent to the created GrFN",
     )
     parser.add_argument(
         "-astpp",

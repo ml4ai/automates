@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod
+from automates.program_analysis.CAST2GrFN.model.cast.boolean import Boolean
 from copy import deepcopy
 from enum import Enum, auto, unique
 from dataclasses import dataclass, asdict
@@ -216,6 +217,17 @@ class FunctionType(AutoMATESBaseEnum):
     @classmethod
     def from_str(cls, data: str):
         return super().from_str(cls, data)
+
+    @classmethod
+    def is_expression_type(cls, type_str: str) -> Boolean:
+        return cls.from_str(type_str) in [
+            cls.ASSIGN,
+            cls.DECISION,
+            cls.CONDITION,
+            cls.INTERFACE,
+            cls.EXTRACT,
+            cls.PACK,
+        ]
 
 
 @unique

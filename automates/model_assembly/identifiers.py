@@ -1,9 +1,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from automates.model_assembly.expression_trees.expression_visitor import (
+    ExprValueNode,
+)
 from dataclasses import dataclass
 
 
 OPERATION_NUM = -1
+LITERAL_NUM = -1
 ANON_VAR_NUM = -1
 
 
@@ -86,7 +90,7 @@ class AIRIdentifier(NamedIdentifier):
 
     @classmethod
     def from_filename(cls, filename: str):
-        return cls("", "", filename)
+        return cls("@global", "@global", filename)
 
 
 @dataclass(frozen=True)
@@ -111,6 +115,11 @@ class GrFNIdentifier(NamedIdentifier):
     @classmethod
     def from_air_id(cls, air_id: AIRIdentifier):
         return cls(air_id.namespace, air_id.scope, air_id.name)
+
+    @classmethod
+    def from_str(cls, data: str):
+        (_, ns, sc, nm) = data.split("::")
+        return cls(ns, sc, nm)
 
 
 @dataclass(frozen=True)
@@ -168,7 +177,13 @@ class FunctionIdentifier(IndexedIdentifier):
         )
 
     @classmethod
-    def from_operator_func(cls, operation: str, uid: int):
+    def from_literal_def(cls, ns: str, sc: str) -> FunctionIdentifier:
+        global LITERAL_NUM
+        LITERAL_NUM += 1
+        return cls(ns, sc, "@literal", LITERAL_NUM)
+
+    @classmethod
+    def from_operator_func(cls, operation: str):
         global OPERATION_NUM
         OPERATION_NUM += 1
         return cls("@builtin", "@global", operation, OPERATION_NUM)
@@ -235,14 +250,11 @@ class LambdaStmtIdentifier(IndexedIdentifier):
     @classmethod
     def from_air_json(cls, data: dict) -> LambdaStmtIdentifier:
         (ns, sc, exp_type, name, idx) = data["name"].split("__")
-        return cls(ns, sc, f"{exp_type}::{name}", int(idx))
+        return cls(ns, sc, f"{exp_type}.{name}", int(idx))
 
 
 @dataclass(frozen=True)
 class VariableIdentifier(IndexedIdentifier):
-    # def __hash__(self):
-    #     return super().__hash__()
-
     def __str__(self):
         return f"Variable::{super().__str__()}"
 

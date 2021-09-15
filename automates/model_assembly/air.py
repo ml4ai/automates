@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from pathlib import Path
 import json
 
@@ -36,13 +36,16 @@ class AutoMATES_IR:
 
     def to_json(self, filepath: str):
         json_dict = {
-            "entrypoint": self.entrypoint,
-            "containers": self.containers,
-            "variables": self.variables,
-            "types": self.type_definitions,
-            "objects": self.objects,
+            "identifier": str(self.identifier),
+            "entrypoint": str(self.entrypoint),
+            "containers": [con.to_dict() for con in self.containers.values()],
+            "variables": [var.to_dict() for var in self.variables.values()],
+            "types": [
+                tdef.to_dict() for tdef in self.type_definitions.values()
+            ],
+            "objects": [obj.to_dict() for obj in self.objects.values()],
             "documentation": self.documentation,
-            "metadata": self.metadata,
+            "metadata": [mdef.to_dict() for mdef in self.metadata],
         }
 
         with open(filepath, "w") as f:
@@ -151,7 +154,13 @@ class BaseDef(ABC):
                 list(data["source_refs"]),
             )
         else:
-            return TypeDef.from_data(data)
+            return TypeDef.from_dict(data)
+
+    def to_dict(self):
+        return {
+            "identifier": str(self.identifier),
+            "metadata": [mdef.to_dict() for mdef in self.metadata],
+        }
 
 
 @dataclass(frozen=True)
@@ -188,6 +197,15 @@ class VariableDef(BaseDef):
             metadata,
             data["domain"]["name"],
             data["domain_constraint"],
+        )
+
+    def to_dict(self):
+        return dict(
+            **(super().to_dict()),
+            **{
+                "domain_name": self.domain_name,
+                "domain_constraint": self.domain_constraint,
+            },
         )
 
 
@@ -228,7 +246,7 @@ class TypeFieldDef:
     def to_dict(self) -> dict:
         return {
             "name": self.name,
-            "type": self.type,
+            "type": str(self.type),
             "metadata": [d.to_dict() for d in self.metadata],
         }
 
@@ -265,30 +283,38 @@ class TypeDef(BaseDef):
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> TypeDef:
+    def from_dict(cls, data: dict) -> TypeDef:
         metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
         return cls(
-            "",
-            "",
-            data["name"],
+            TypeIdentifier.from_str(data["identifier"]),
+            metadata,
             data["metatype"],
             [TypeFieldDef.from_data(d) for d in data["fields"]],
-            metadata,
         )
 
+    @classmethod
+    def from_dict_with_id(cls, data: dict) -> Tuple[TypeIdentifier, TypeDef]:
+        type_def = cls.from_dict(data)
+        return type_def.identifier, type_def
+
     def to_dict(self) -> dict:
-        return {
-            "name": self.name,
-            "metatype": self.metatype,
-            "fields": [fdef.to_dict() for fdef in self.fields],
-            "metadata": [d.to_dict() for d in self.metadata],
-        }
+        return dict(
+            **(super().to_dict()),
+            **{
+                "metatype": self.metatype,
+                "fields": [fdef.to_dict() for fdef in self.fields],
+            },
+        )
 
 
 @dataclass(frozen=True)
 class FieldValue:
     name: str
     value: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> FieldValue:
+        return cls(data["name"], data["value"])
 
 
 @dataclass(frozen=True)
@@ -301,6 +327,23 @@ class ObjectDef(BaseDef):
         type_id = self.type
         num_values = len(self.field_values)
         return f"(Object Def)\n{type_id=}, {num_values=}\n{base_str}\n"
+
+    @classmethod
+    def from_dict(cls, data: dict) -> ObjectDef:
+        return cls(
+            identifier=ObjectIdentifier.from_str(data["identifier"]),
+            metadata=[],
+            type=TypeIdentifier.from_str(data["type"]),
+            field_values=[
+                FieldValue.from_dict(d) for d in data["field_values"]
+            ],
+        )
+
+    def to_dict(self) -> dict:
+        return dict(
+            **(super().to_dict()),
+            **{"type": str(self.type), "field_values": self.field_values},
+        )
 
 
 @dataclass(frozen=True)
@@ -420,6 +463,18 @@ class ContainerDef(BaseDef):
         else:
             raise ValueError(f"Unrecognized container type value: {con_type}")
 
+    def to_dict(self) -> dict:
+        return dict(
+            **(super().to_dict()),
+            **{
+                "arguments": [str(v_id) for v_id in self.arguments],
+                "updated": [str(v_id) for v_id in self.updated],
+                "return_value": [str(v_id) for v_id in self.return_value],
+                "variables": [str(v_id) for v_id in self.variables],
+                "statements": [stmt.to_dict() for stmt in self.statements],
+            },
+        )
+
 
 @dataclass(frozen=True)
 class CondContainerDef(ContainerDef):
@@ -428,6 +483,9 @@ class CondContainerDef(ContainerDef):
     def __str__(self):
         base_str = super().__str__()
         return f"(COND Con Def)\n{base_str}\n"
+
+    def to_dict(self) -> dict:
+        return dict(**(super().to_dict()), **{"repeat": self.repeat})
 
 
 @dataclass(frozen=True)
@@ -438,6 +496,9 @@ class FuncContainerDef(ContainerDef):
         base_str = super().__str__()
         return f"(FUNC Con Def)\n{base_str}\n"
 
+    def to_dict(self) -> dict:
+        return dict(**(super().to_dict()), **{"repeat": self.repeat})
+
 
 @dataclass(frozen=True)
 class LoopContainerDef(ContainerDef):
@@ -446,6 +507,9 @@ class LoopContainerDef(ContainerDef):
     def __str__(self):
         base_str = super().__str__()
         return f"(Loop Con Def)\t{self.identifier.con_name}\n{base_str}\n"
+
+    def to_dict(self) -> dict:
+        return dict(**(super().to_dict()), **{"repeat": self.repeat})
 
 
 @dataclass(frozen=True)
@@ -505,49 +569,36 @@ class StmtDef(BaseDef):
         num_outputs = len(self.outputs)
         return f"{con_id=}, {num_inputs=}, {num_outputs=}\n{base_str}"
 
+    def to_dict(self) -> dict:
+        return dict(
+            **(super().to_dict()),
+            **{
+                "container_id": str(self.container_id),
+                "inputs": [str(v_id) for v_id in self.inputs],
+                "outputs": [str(v_id) for v_id in self.outputs],
+            },
+        )
+
 
 @dataclass(frozen=True)
 class CallStmtDef(StmtDef):
     callee_container_id: ContainerIdentifier
-    # def __init__(self, stmt: dict, con: ContainerDef, file_ref: str):
-    #     super().__init__(stmt, con)
-    #     self.call_id = BaseIdentifier.from_str(stmt["function"]["name"])
-    #     src_ref = stmt["source_ref"] if "source_ref" in stmt else ""
-    #     code_span_data = {
-    #         "source_ref": src_ref,
-    #         "file_uid": file_ref,
-    #         "code_type": "block",
-    #     }
-    #     self.metadata = [CodeSpanReference.from_air_json(code_span_data)]
 
     def __str__(self):
         base_str = super().__str__()
         return f"(Call Stmt Def)\n{base_str}\n"
+
+    def to_dict(self) -> dict:
+        return dict(
+            **(super().to_dict()),
+            **{"callee_container_id": str(self.callee_container_id)},
+        )
 
 
 @dataclass(frozen=True)
 class LambdaStmtDef(StmtDef):
     expression: str
     expr_type: str
-
-    # def __init__(self, stmt: dict, con: ContainerDef, file_ref: str):
-    #     super().__init__(stmt, con)
-    #     # NOTE Want to use the form below eventually
-    #     # type_str = stmt["function"]["lambda_type"]
-
-    #     type_str = self.type_str_from_name(stmt["function"]["name"])
-
-    #     # NOTE: we shouldn't need this since we will use UUIDs
-    #     # self.lambda_node_name = f"{self.parent.name}::" + self.name
-    #     self.type = LambdaType.get_lambda_type(type_str, len(self.inputs))
-    #     self.func_str = stmt["function"]["code"]
-    #     src_ref = stmt["source_ref"] if "source_ref" in stmt else ""
-    #     code_span_data = {
-    #         "source_ref": src_ref,
-    #         "file_uid": file_ref,
-    #         "code_type": "block",
-    #     }
-    #     self.metadata = [CodeSpanReference.from_air_json(code_span_data)]
 
     def __str__(self):
         base_str = super().__str__()
@@ -557,17 +608,9 @@ class LambdaStmtDef(StmtDef):
     def get_type_str(name: str) -> str:
         (_, _, type_str, _, _) = name.split("__")
         return type_str
-        # if re.search(r"__assign__", name) is not None:
-        #     return "assign"
-        # elif re.search(r"__condition__", name) is not None:
-        #     return "condition"
-        # elif re.search(r"__decision__", name) is not None:
-        #     return "decision"
-        # elif re.search(r"__pack__", name) is not None:
-        #     return "pack"
-        # elif re.search(r"__extract__", name) is not None:
-        #     return "extract"
-        # else:
-        #     raise ValueError(
-        #         f"No recognized lambda type found from name string: {name}"
-        #     )
+    
+    def to_dict(self) -> dict:
+        return dict(
+            **(super().to_dict()),
+            **{"expression": self.expression, "expr_type": self.expr_type},
+        )

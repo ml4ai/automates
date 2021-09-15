@@ -8,7 +8,10 @@ from pygraphviz import AGraph
 from pprint import pprint
 
 from automates.utils.misc import uuid
-from automates.model_assembly.identifiers import FunctionIdentifier, VariableIdentifier
+from automates.model_assembly.identifiers import (
+    FunctionIdentifier,
+    VariableIdentifier,
+)
 from automates.model_assembly.networks import (
     GroundedFunctionNetwork,
     BaseFuncNode,
@@ -410,7 +413,9 @@ class Junction(Valued):
         cls, var_node: VariableNode, lit_func: LiteralFuncNode
     ):
         var_id = var_node.identifier
-        var_name = f"Junction::{var_id.namespacee}::{var_id.scope}::{var_id.name}"
+        var_name = (
+            f"Junction::{var_id.namespacee}::{var_id.scope}::{var_id.name}"
+        )
         return cls(
             type=UidType("Junction"),
             name=var_name,
@@ -465,7 +470,9 @@ class Port(Valued):
         box: Box,
         port_dir: str,
     ):
-        port_uid = Port.uid_from_var_and_func(var_node.identifier, func_node.identifier)
+        port_uid = Port.uid_from_var_and_func(
+            var_node.identifier, func_node.identifier
+        )
         return cls(
             type=UidType(f"Port{port_dir}"),
             name=var_node.identifier.name,
@@ -496,7 +503,9 @@ class PortCall(Port):
         box: Box,
         port_dir: str,
     ):
-        uid = Port.uid_from_var_and_func(var_node.identifier, func_node.identifier)
+        uid = Port.uid_from_var_and_func(
+            var_node.identifier, func_node.identifier
+        )
         return cls(
             type=UidType(f"PortCall::{port_dir}"),
             name=f"PortCall::{var_node.identifier.name}",
@@ -590,7 +599,9 @@ class Box(TypedGrometElm):
             W.extend(func_box.wires)
             func_box.wires = [w.uid for w in func_box.wires]
             for var in box_vars:
-                var.metadata = VARS[VariableIdentifier.from_str(var.uid)].metadata
+                var.metadata = VARS[
+                    VariableIdentifier.from_str(var.uid)
+                ].metadata
         elif isinstance(func, LiteralFuncNode):
             L.append(Literal.from_func_node(func))
             return (L, J, P, W, B, V)  # Nothing else to do here
@@ -603,7 +614,9 @@ class Box(TypedGrometElm):
             W.extend(func_box.wires)
             func_box.wires = [w.uid for w in func_box.wires]
             for var in box_vars:
-                var.metadata = VARS[VariableIdentifier.from_str(var.uid)].metadata
+                var.metadata = VARS[
+                    VariableIdentifier.from_str(var.uid)
+                ].metadata
 
             V.extend(box_vars)
         else:
@@ -612,12 +625,12 @@ class Box(TypedGrometElm):
         B.append(func_box)
         box_ports = [
             Port.from_var_and_box(VARS[var_id], func, func_box, "Input")
-            for var_id in func.input_variables
+            for var_id in func.input_ids
         ]
         box_ports.extend(
             [
                 Port.from_var_and_box(VARS[var_id], func, func_box, "Output")
-                for var_id in func.output_variables
+                for var_id in func.output_ids
             ]
         )
         P.extend(box_ports)
@@ -628,7 +641,9 @@ class Box(TypedGrometElm):
         if isinstance(func, ExpressionFuncNode):
             return UidExpression(Box.build_uid(func.identifier, "Expression"))
         elif isinstance(func, CondConFuncNode):
-            return UidConditional(Box.build_uid(func.identifier, "Conditional"))
+            return UidConditional(
+                Box.build_uid(func.identifier, "Conditional")
+            )
         elif isinstance(func, LoopConFuncNode):
             return UidLoop(Box.build_uid(func.identifier, "Loop"))
         elif isinstance(func, BaseConFuncNode):
@@ -670,7 +685,7 @@ class Box(TypedGrometElm):
     def get_ports(func: BaseConFuncNode) -> List[PortUid]:
         return [
             Port.uid_from_var_and_func(var_id, func.identifier)
-            for var_id in func.input_variables + func.output_variables
+            for var_id in func.input_ids + func.output_ids
         ]
 
 
@@ -686,7 +701,7 @@ class BoxCall(Box):
     def from_func_node(cls, func: BaseConFuncNode):
         box_ports = [
             Port.uid_from_var_and_func(var_id, func.identifier)
-            for var_id in func.input_variables + func.output_variables
+            for var_id in func.input_ids + func.output_ids
         ]
 
         return cls(
@@ -725,13 +740,16 @@ class HasContents:
         variables = dict()
 
         live_vars = {
-            ivar_id.name: (func.identifier, ivar_id) for ivar_id in func.input_variables
+            ivar_id.name: (func.identifier, ivar_id)
+            for ivar_id in func.input_ids
         }
         live_var_names = set(live_vars.keys())
         initial_edges = [
             h_edge
             for h_edge in hyper_graph
-            if all([i.identifier.name in live_var_names for i in h_edge.inputs])
+            if all(
+                [i.identifier.name in live_var_names for i in h_edge.inputs]
+            )
         ]
 
         edge_queue = initial_edges
@@ -749,7 +767,7 @@ class HasContents:
                     if succ not in visited:
                         edge_queue.append(succ)
 
-                for ivar_id in func.input_variables:
+                for ivar_id in func.input_ids:
                     origin_func, origin_var = live_vars[ivar_id.name]
                     new_wire = Wire.from_caller_callee(
                         origin_func,
@@ -767,7 +785,7 @@ class HasContents:
                     else:
                         variables[origin_var] = new_var_vals
                     wires.append(new_wire)
-                for ovar_id in func.output_variables:
+                for ovar_id in func.output_ids:
                     live_vars[ovar_id.name] = (
                         func.identifier,
                         ovar_id,
@@ -777,7 +795,7 @@ class HasContents:
                 # queue and prevent infinite loop
                 edge_queue.append(edge)
 
-        for ovar_id in func.output_variables:
+        for ovar_id in func.output_ids:
             (origin_func, origin_var) = live_vars[ovar_id.name]
             new_wire = Wire.from_caller_callee(
                 origin_func, origin_var, func.identifier, ovar_id
@@ -813,7 +831,9 @@ class HasContents:
                         raise RuntimeError(
                             f"No literal node found for {out_var.identifier} under function: {func.identifier}"
                         )
-                    new_junc = Junction.from_var_node_and_lit_func(out_var, l_func)
+                    new_junc = Junction.from_var_node_and_lit_func(
+                        out_var, l_func
+                    )
                     junctions.append(new_junc)
 
         return wires, variables, junctions
@@ -876,7 +896,8 @@ class Function(Box, HasContents):  # BoxDirected
     def from_func_node(cls, func: BaseConFuncNode):
         wires, var_dict, juncs = HasContents.wires_from_hyper_graph(func)
         box_vars = [
-            Variable.from_id_and_elements(v_id, els) for v_id, els in var_dict.items()
+            Variable.from_id_and_elements(v_id, els)
+            for v_id, els in var_dict.items()
         ]
         boxes = HasContents.box_ids_from_hyper_edges(func.hyper_edges)
 
@@ -928,7 +949,9 @@ class Expr(GrometElm):
             if len(preds) == 0:
                 call = RefOp.from_operation_node(func_node)
                 args = [
-                    Port.uid_from_var_and_func(var_node.identifier, func.identifier)
+                    Port.uid_from_var_and_func(
+                        var_node.identifier, func.identifier
+                    )
                     for var_node in cur_edge.inputs
                 ]
                 return cls(call, args)
@@ -956,7 +979,7 @@ class Expression(Box):  # BoxDirected
 
     @classmethod
     def from_func_node(cls, func: ExpressionFuncNode):
-        # if len(func.input_variables) == 0:
+        # if len(func.input_ids) == 0:
         #     return Junction.from_var_node_and_lit_func()
         return cls(
             uid=UidExpression(Box.build_uid(func.identifier, "Expression")),
@@ -1086,9 +1109,10 @@ class Conditional(Box):  # BoxDirected
         decision_node = func.decision_node
 
         id2func = {
-            edge.func_node.identifier: edge.func_node for edge in func.hyper_edges
+            edge.func_node.identifier: edge.func_node
+            for edge in func.hyper_edges
         }
-        input_vars = decision_node.input_variables
+        input_vars = decision_node.input_ids
         new_branch = []
         for v, var_id in enumerate(input_vars):
             if "COND" in var_id.name:
@@ -1120,7 +1144,9 @@ class Conditional(Box):  # BoxDirected
                             )
                             new_branch.append(body_id)
                         elif isinstance(func_node, LoopConFuncNode):
-                            body_id = UidLoop(Box.build_uid(func.identifier, "Loop"))
+                            body_id = UidLoop(
+                                Box.build_uid(func.identifier, "Loop")
+                            )
                             new_branch.append(body_id)
                         else:
                             raise TypeError(
@@ -1219,7 +1245,7 @@ class Loop(Box, HasContents):  # BoxDirected
             if all(
                 [
                     input_id in [v.identifier for v in edge.inputs]
-                    for input_id in func.input_variables
+                    for input_id in func.input_ids
                 ]
             )
         ][0]
@@ -1241,7 +1267,7 @@ class Loop(Box, HasContents):  # BoxDirected
             if all(
                 [
                     input_id in [v.identifier for v in edge.outputs]
-                    for input_id in func.output_variables
+                    for input_id in func.output_ids
                 ]
             )
         ][0]
@@ -1320,7 +1346,7 @@ class Loop(Box, HasContents):  # BoxDirected
 
         conditional_hyper_edge.outputs = condition_decision_edge.outputs
         # conditional_hyper_edge.outputs = []
-        conditional_hyper_edge.func_node.output_variables = [
+        conditional_hyper_edge.func_node.output_ids = [
             s.identifier for s in conditional_hyper_edge.outputs
         ]
 
@@ -1334,7 +1360,9 @@ class Loop(Box, HasContents):  # BoxDirected
 
         hyper_graph.remove_node(condition_decision_edge)
         func.hyper_edges = [
-            edge for edge in func.hyper_edges if edge != condition_decision_edge
+            edge
+            for edge in func.hyper_edges
+            if edge != condition_decision_edge
         ]
 
     @classmethod
@@ -1343,7 +1371,8 @@ class Loop(Box, HasContents):  # BoxDirected
 
         wires, var_dict, juncs = HasContents.wires_from_hyper_graph(func)
         box_vars = [
-            Variable.from_id_and_elements(v_id, els) for v_id, els in var_dict.items()
+            Variable.from_id_and_elements(v_id, els)
+            for v_id, els in var_dict.items()
         ]
         boxes = HasContents.box_ids_from_hyper_edges(func.hyper_edges)
 
@@ -1452,7 +1481,9 @@ class Gromet(TypedGrometElm):
         # Sort functions by containers then expressions
         functions = list(G.functions.values())
         functions.sort(
-            key=lambda v: -1 if isinstance(v, (LoopConFuncNode, CondConFuncNode)) else 1
+            key=lambda v: -1
+            if isinstance(v, (LoopConFuncNode, CondConFuncNode))
+            else 1
         )
         for func_node in functions:
             (
@@ -1475,9 +1506,9 @@ class Gromet(TypedGrometElm):
         gromet_metdata = G.metadata
         gromet_id = UidGromet(str(uuid.uuid4()))
 
-        root_con_func_node = [v for k, v in G.functions.items() if k == G.entry_point][
-            0
-        ]
+        root_con_func_node = [
+            v for k, v in G.functions.items() if k == G.entry_point
+        ][0]
         root_uid = Box.uid_from_func_node(root_con_func_node)
 
         gromet_types = []
@@ -1544,9 +1575,15 @@ class Gromet(TypedGrometElm):
                     op_count = arg_res[2]
                 else:
                     # TODO better exception
-                    raise Exception(f"Error: Unknown Expr arg type: {type(arg)}")
+                    raise Exception(
+                        f"Error: Unknown Expr arg type: {type(arg)}"
+                    )
 
-            return (expr_node_id, {expr_node_id: None, **children_nodes}, op_count)
+            return (
+                expr_node_id,
+                {expr_node_id: None, **children_nodes},
+                op_count,
+            )
 
         def add_port_node(port):
             graph.add_node(
@@ -1609,8 +1646,12 @@ class Gromet(TypedGrometElm):
             if items == None:
                 return [uid]
             else:
-                children_lists = [gather_children_nodes(k, v) for k, v in items.items()]
-                return [res for res_list in children_lists for res in res_list] + [uid]
+                children_lists = [
+                    gather_children_nodes(k, v) for k, v in items.items()
+                ]
+                return [
+                    res for res_list in children_lists for res in res_list
+                ] + [uid]
 
         def build_agraph(parent, uid, children):
             nodes = list()

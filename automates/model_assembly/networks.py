@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Any, Tuple
+from typing import List, Dict, Iterable, Any, Tuple, Union
 from abc import ABC, abstractmethod, abstractclassmethod
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime
 from copy import deepcopy
 
@@ -40,6 +40,7 @@ from .air import (
 )
 from .identifiers import (
     BaseIdentifier,
+    NamedIdentifier,
     GrFNIdentifier,
     ContainerIdentifier,
     FunctionIdentifier,
@@ -80,12 +81,20 @@ class GrFNExecutionException(Exception):
 @dataclass(repr=False, frozen=False)
 class BaseNode(ABC):
     uid: str
+    identifier: NamedIdentifier
+    metadata: List[TypedMetadata]
+
+    def __eq__(self, other):
+        return self.uid == other.uid and self.identifier == other.identifier
+
+    def __hash__(self):
+        return hash((self.uid, self.identifier))
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return self.uid
+        return str(self.identifier)
 
     @staticmethod
     def create_node_id() -> str:
@@ -99,27 +108,25 @@ class BaseNode(ABC):
     def get_label(self):
         return NotImplemented
 
+    def data_to_dict(self) -> Dict[str, Any]:
+        return {
+            "uid": self.uid,
+            "identifier": str(self.identifier),
+            "metadata": [m.to_dict() for m in self.metadata],
+        }
+
 
 @dataclass(repr=False, frozen=False)
 class VariableNode(BaseNode):
-    identifier: VariableIdentifier
-    metadata: List[TypedMetadata]
     object_ref: str = None
     value: Any = None
     input_value: Any = None
 
-    def __hash__(self):
-        return hash((self.uid, self.identifier))
-
     def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, VariableNode)
-            and self.uid == other.uid
-            and self.identifier == other.identifier
-        )
+        return isinstance(other, VariableNode) and super().__eq__(other)
 
-    def __str__(self):
-        return self.identifier
+    def __hash__(self):
+        return super().__hash__()
 
     @classmethod
     def from_definition(cls, var_def: VariableDef):
@@ -154,8 +161,11 @@ class VariableNode(BaseNode):
             m_type,
             create_domain_elements(),
         )
-        metadata = [dom] + var_def.metadata
-        return cls(BaseNode.create_node_id(), var_def.identifier, metadata)
+        return cls(
+            uid=BaseNode.create_node_id(),
+            identifier=var_def.identifier,
+            metadata=[dom] + var_def.metadata,
+        )
 
     @classmethod
     def from_identifier(cls, idt: VariableIdentifier):
@@ -165,6 +175,31 @@ class VariableNode(BaseNode):
     def from_expr_def(cls, expr_namespace, expr_scope):
         var_id = VariableIdentifier.from_anonymous(expr_namespace, expr_scope)
         return cls(BaseNode.create_node_id(), var_id, [])
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        if "metadata" in data:
+            mdata = [TypedMetadata.from_data(m) for m in data["metadata"]]
+        else:
+            mdata = list()
+
+        return cls(
+            uid=data["uid"],
+            identifier=VariableIdentifier.from_str(data["identifier"]),
+            metadata=mdata,
+            object_ref=data["object_ref"] if "object_ref" in data else "",
+        )
+
+    @classmethod
+    def from_dict_with_id(
+        cls, data: dict
+    ) -> Tuple[VariableIdentifier, VariableNode]:
+        var_node = cls.from_dict(data)
+        return var_node.identifier, var_node
+
+    def to_dict(self) -> dict:
+        parent_attr_data = super().data_to_dict()
+        return dict(**(parent_attr_data), **{"object_ref": self.object_ref})
 
     def get_kwargs(self):
         is_exit = self.identifier.name == "EXIT"
@@ -235,66 +270,87 @@ class VariableNode(BaseNode):
         node_label = self.get_node_label(self.identifier.name)
         return node_label
 
-    @classmethod
-    def from_dict(cls, data: dict):
-        if "metadata" in data:
-            mdata = [TypedMetadata.from_data(m) for m in data["metadata"]]
-        else:
-            mdata = list()
-
-        return cls(
-            uid=data["uid"],
-            identifier=VariableIdentifier.from_str(data["identifier"]),
-            metadata=mdata,
-            object_ref=data["object_ref"] if "object_ref" in data else "",
-        )
-
-    def to_dict(self) -> dict:
-        return {
-            "uid": self.uid,
-            "identifier": str(self.identifier),
-            "object_ref": self.object_ref,
-            "metadata": [m.to_dict() for m in self.metadata],
-        }
-
     def add_metadata(self, metadata):
         self.metadata.append(metadata)
 
 
-@dataclass(repr=False)
-class BaseFuncNode(ABC):
-    uid: str
-    identifier: FunctionIdentifier
+@dataclass(frozen=False)
+class BaseFuncNode(BaseNode):
     type: FunctionType
-    input_variables: List[VariableIdentifier]
-    output_variables: List[VariableIdentifier]
-    hyper_edges: List[HyperEdge]
-    hyper_graph: nx.DiGraph
-    metadata: List[TypedMetadata]
-
-    def __str__(self) -> str:
-        return str(self.identifier)
+    input_ids: List[VariableIdentifier]
+    output_ids: List[VariableIdentifier]
 
     def __eq__(self, other: BaseFuncNode) -> bool:
         return (
             isinstance(other, BaseFuncNode)
-            and self.identifier == other.identifier
+            and super().__eq__(other)
             and self.type == other.type
-            and self.input_variables == other.input_variables
-            and self.output_variables == other.output_variables
+            and self.input_ids == other.input_ids
+            and self.output_ids == other.output_ids
         )
 
     def __hash__(self):
-        return hash(self.identifier)
-
-    def get_kwargs(self):
-        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
-
-    def get_label(self):
-        return self.type.shortname().upper()
+        return super().__hash__()
 
     @staticmethod
-    def get_border_color(func_node):
+    def add_or_create_vars(
+        ids: List[VariableIdentifier],
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+    ) -> List[VariableNode]:
+        def get_or_create_var(v: VariableIdentifier) -> VariableNode:
+            if v not in VARS:
+                VARS[v] = VariableNode.from_definition(AIR.variables[v])
+            return VARS[v].identifier
+
+        return [get_or_create_var(v_id) for v_id in ids]
+
+    @staticmethod
+    def from_dict(data: dict) -> BaseFuncNode:
+        func_type = data["type"]
+        if func_type == "literal":
+            return LiteralFuncNode.from_dict(data)
+        elif func_type == "operator":
+            return OperationFuncNode.from_dict(data)
+        elif FunctionType.is_expression_type(func_type):
+            return ExpressionFuncNode.from_dict(data)
+        elif func_type == "container":
+            return BaseConFuncNode.from_dict(data)
+        elif func_type == "iterable":
+            return LoopConFuncNode.from_dict(data)
+        elif func_type == "conditional":
+            return CondConFuncNode.from_dict(data)
+        else:
+            raise TypeError(
+                f"Unexpected function type during JSON load: {func_type}"
+            )
+
+    @classmethod
+    def from_dict_with_id(
+        cls, data: dict
+    ) -> Tuple[FunctionIdentifier, BaseFuncNode]:
+        func_node = cls.from_dict(data)
+        return func_node.identifier, func_node
+
+    @staticmethod
+    def get_base_data(data: dict) -> dict:
+        return {
+            "uid": data["uid"],
+            "identifier": FunctionIdentifier.from_str(data["identifier"]),
+            "metadata": [
+                TypedMetadata.from_data(m_def) for m_def in data["metadata"]
+            ],
+            "type": FunctionType.from_str(data["type"]),
+            "input_ids": [
+                VariableIdentifier.from_str(v) for v in data["input_ids"]
+            ],
+            "output_ids": [
+                VariableIdentifier.from_str(v) for v in data["output_ids"]
+            ],
+        }
+
+    @staticmethod
+    def get_border_color(func_node: BaseFuncNode) -> str:
         if isinstance(func_node, LoopConFuncNode):
             return "navyblue"
         elif isinstance(func_node, CondConFuncNode):
@@ -303,60 +359,146 @@ class BaseFuncNode(ABC):
             return "forestgreen"
         elif isinstance(func_node, ExpressionFuncNode):
             return "pink"
-        elif isinstance(func_node, OperationFuncNode):
+        elif isinstance(func_node, (LiteralFuncNode, OperationFuncNode)):
             return "black"
         else:
             return "red"
 
-    # @staticmethod
-    # def from_container(
-    #     container: ContainerDef,
-    #     # CONS: Dict[ContainerIdentifier, ContainerDef],
-    #     VARS: Dict[VariableIdentifier, VariableNode],
-    #     # FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
-    # ):
-    #     # NOTE: this method should only be called from FuncNodes that are
-    #     # derived from container definitions in AIR JSON
-    #     func_uid = str(uuid.uuid4())
-    #     func_type = FunctionType.from_con(container.__class__.__name__)
-    #     inputs = [
-    #         VARS[var_id]
-    #         if var_id in VARS
-    #         else VariableNode.from_identifier(var_id)
-    #         for var_id in container.arguments
-    #     ]
-    #     outputs = [
-    #         VARS[var_id]
-    #         if var_id in VARS
-    #         else VariableNode.from_identifier(var_id)
-    #         for var_id in container.updated + container.returns
-    #     ]
-    #     return (func_uid, func_type, inputs, outputs)
+    def get_kwargs(self):
+        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
 
-    @abstractclassmethod
-    def from_data(
+    def get_label(self):
+        return self.type.shortname().upper()
+
+    def data_to_dict(self) -> dict:
+        return dict(
+            **(super().data_to_dict()),
+            **{
+                "type": str(self.type),
+                "input_ids": [str(v_id) for v_id in self.input_ids],
+                "output_ids": [str(v_id) for v_id in self.output_ids],
+            },
+        )
+
+
+@dataclass
+class LiteralFuncNode(BaseFuncNode):
+    value: Any
+
+    def __eq__(self, other: LiteralFuncNode) -> bool:
+        return isinstance(other, LiteralFuncNode) and super().__eq__(other)
+
+    def __hash__(self):
+        return super().__hash__()
+
+    @classmethod
+    def from_value_and_var(
+        cls, node: ExprValueNode, out_var_id: VariableIdentifier
+    ) -> LiteralFuncNode:
+        return cls(
+            uid=BaseNode.create_node_id(),
+            identifier=FunctionIdentifier.from_literal_def(
+                out_var_id.namespace, out_var_id.scope
+            ),
+            type=FunctionType.LITERAL,
+            input_ids=[],
+            output_ids=[out_var_id],
+            metadata=[],
+            value=node.value,
+        )
+
+    @classmethod
+    def from_dict(cls, data: dict) -> LiteralFuncNode:
+        return cls(**(super().get_base_data(data)), value=data["value"])
+
+    # NOTE: need the two functions below to override the normal FuncNode
+    # get_label() function and allow the literal value to be printed as the
+    # node label
+    def get_kwargs(self) -> dict:
+        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
+
+    def get_label(self) -> str:
+        return self.value
+
+    def to_dict(self) -> dict:
+        return dict(**(super().data_to_dict()), **{"value": self.value})
+
+
+@dataclass
+class OperationFuncNode(BaseFuncNode):
+    def __eq__(self, other: OperationFuncNode) -> bool:
+        return isinstance(other, OperationFuncNode) and super().__eq__(other)
+
+    def __hash__(self):
+        return super().__hash__()
+
+    @classmethod
+    def from_expr_def_and_vars(
         cls,
-        data: Dict[str, Any],
-        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
-    ):
-        hyper_edges = [
-            HyperEdge.from_dict(h_def, FUNCS) for h_def in data["hyper_edges"]
-        ]
-        hyper_graph = cls.create_hyper_graph(hyper_edges)
+        expr_def: ExprAbstractNode,
+        input_var_ids: List[VariableIdentifier],
+        output_id: VariableIdentifier,
+    ) -> OperationFuncNode:
+        operation = None
+        if isinstance(expr_def, ExprDefinitionNode):
+            operation = expr_def.def_type
+        elif isinstance(expr_def, ExprOperatorNode):
+            operation = expr_def.operator
+        else:
+            raise TypeError(f"Unrecognized expr node type: {type(expr_def)}")
 
-        return (
-            data["uid"],
-            data["identifier"],
-            FunctionType.from_str(data["type"]),
-            data["input_variables"],
-            data["output_variables"],
-            hyper_edges,
-            hyper_graph,
-            [TypedMetadata.from_data(m_def) for m_def in data["metadata"]],
+        return cls(
+            uid=BaseNode.create_node_id(),
+            identifier=FunctionIdentifier.from_operator_func(operation),
+            type=FunctionType.OPERATOR,
+            metadata=[],
+            input_ids=input_var_ids,
+            output_ids=[output_id],
+        )
+
+    @classmethod
+    def from_dict(cls, data: dict) -> OperationFuncNode:
+        return cls(**(super().get_base_data(data)))
+
+    # @classmethod
+    # def from_data(cls, data: Dict[str, Any]):
+    #     return cls(*(super().get_base_data(data)), data["identifier"])
+
+    def to_dict(self) -> dict:
+        return super().data_to_dict()
+
+    # NOTE: need the two functions below to override the normal FuncNode
+    # get_label() function and allow the operation name to be printed as the
+    # node label
+    def get_kwargs(self) -> dict:
+        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
+
+    def get_label(self) -> str:
+        return self.identifier.name
+
+
+@dataclass
+class StructuredFuncNode(BaseFuncNode):
+    hyper_edges: List[HyperEdge]
+    hyper_graph: nx.DiGraph
+
+    @classmethod
+    def get_base_data(cls, data: dict) -> dict:
+        h_edges = cls.hyper_edges_from_dicts(data["hyper_edges"])
+        h_graph = cls.build_hyper_graph(h_edges)
+        return dict(
+            **(super().get_base_data(data)),
+            **{"hyper_edges": h_edges, "hyper_graph": h_graph},
         )
 
     @staticmethod
-    def create_hyper_graph(hyper_edges: List[HyperEdge]) -> nx.DiGraph:
+    def hyper_edges_from_dicts(
+        hyper_dicts: List[Dict[str, Union[str, List[str]]]]
+    ) -> List[HyperEdge]:
+        return [HyperEdge.from_dict(hyper_dict) for hyper_dict in hyper_dicts]
+
+    @staticmethod
+    def build_hyper_graph(hyper_edges: List[HyperEdge]) -> nx.DiGraph:
         output2edge = {
             o_id: edge for edge in hyper_edges for o_id in edge.output_ids
         }
@@ -374,112 +516,46 @@ class BaseFuncNode(ABC):
 
         return network
 
-    @staticmethod
-    def get_or_create_vars(
-        ids: List[VariableIdentifier],
-        AIR: AutoMATES_IR,
-        VARS: Dict[VariableIdentifier, VariableNode],
-    ) -> List[VariableNode]:
-        def get_or_create_var(v: VariableIdentifier) -> VariableNode:
-            if v not in VARS:
-                VARS[v] = VariableNode.from_definition(AIR.variables[v])
-            return VARS[v]
-
-        return [get_or_create_var(v_id) for v_id in ids]
-
-    @abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "uid": self.uid,
-            "identifier": self.identifier,
-            "type": str(self.type),
-            "input_variables": [str(v_id) for v_id in self.input_variables],
-            "output_variables": [str(v_id) for v_id in self.output_variables],
-            "expression": None,
-            "exit": None,
-            "hyper_edges": self.hyper_edges,
-            "metadata": [m.to_dict() for m in self.metadata],
-        }
-
-
-# TODO: Some class hierarchy changes need to be made because literals shouldn't have inputs, hyper-edges, or a hypergraph and I'm not even sold on them needing to be unique. Maybe we should think about that?
-@dataclass(repr=False)
-class LiteralFuncNode:
-    identifier: str
-    type: FunctionType
-    value: Any
-
-    def __eq__(self, other: LiteralFuncNode) -> bool:
-        return self.identifier == other.identifier
-
-    def __hash__(self):
-        return hash(self.identifier)
-
-    @classmethod
-    def from_value_node(cls, node: ExprValueNode):
-        return cls(uuid.uuid4(), FunctionType.LITERAL, node.value)
-
-
-@dataclass(repr=False)
-class OperationFuncNode(BaseFuncNode):
-    def __hash__(self):
-        return super().__hash__()
-
-    @classmethod
-    def from_expr_def(cls, expr_def):
-        operation = None
-        if isinstance(expr_def, ExprDefinitionNode):
-            operation = expr_def.def_type
-        elif isinstance(expr_def, ExprOperatorNode):
-            operation = expr_def.operator
-        else:
-            raise TypeError(f"Unrecognized expr node type: {type(expr_def)}")
-
-        metadata = list()
-        return cls(
-            str(uuid.uuid4()),
-            FunctionIdentifier.from_operator_func(
-                operation, int(uuid.uuid4())
-            ),
-            FunctionType.OPERATOR,
-            [],
-            [],
-            [],
-            None,
-            metadata,
+    def data_to_dict(self) -> dict:
+        return dict(
+            **(super().data_to_dict()),
+            **{"hyper_edges": [h.to_dict() for h in self.hyper_edges]},
         )
 
-    @classmethod
-    def from_data(cls, data: Dict[str, Any]):
-        return cls(*(super().from_data(data)), data["identifier"])
-
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update({"identifier": str(self.identifier)})
-        return data
-
-    def get_kwargs(self):
-        return {"shape": "rectangle", "padding": 10, "label": self.get_label()}
-
-    def get_label(self):
-        return self.identifier.name
-
 
 @dataclass(repr=False)
-class ExpressionFuncNode(BaseFuncNode):
+class ExpressionFuncNode(StructuredFuncNode):
     expression: str
     executable: callable
 
-    def __eq__(self, other: BaseFuncNode):
-        if (
-            not isinstance(other, ExpressionFuncNode)
-            or self.exit != other.exit
-        ):
-            return False
-        return super().__eq__(other)
+    def __eq__(self, other: BaseFuncNode) -> bool:
+        return (
+            isinstance(other, ExpressionFuncNode)
+            and super().__eq__(other)
+            and self.expression == other.expression
+        )
 
     def __hash__(self):
         return super().__hash__()
+
+    # @classmethod
+    # def from_data(cls, data: Dict[str, Any]):
+    #     base_values = super().from_data(data)
+    #     expr = data["expression"]
+    #     return cls(*base_values, expr, load_lambda_function(expr))
+
+    @classmethod
+    def from_dict(cls, data: dict) -> ExpressionFuncNode:
+        expr = data["expression"]
+        return cls(
+            **(super().get_base_data(data)),
+            expression=expr,
+            executable=load_lambda_function(expr),
+        )
+
+    def to_dict(self) -> dict:
+        parent_attr_data = super().data_to_dict()
+        return dict(**(parent_attr_data), **{"expression": self.expression})
 
     @classmethod
     def from_lambda_stmt(
@@ -488,61 +564,57 @@ class ExpressionFuncNode(BaseFuncNode):
         AIR: AutoMATES_IR,
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
-    ):
-        inputs = BaseFuncNode.get_or_create_vars(statement.inputs, AIR, VARS)
-        outputs = BaseFuncNode.get_or_create_vars(statement.outputs, AIR, VARS)
-
-        # add_lambda_node(stmt.type, stmt.func_str, stmt.metadata)
-        func_id = FunctionIdentifier.from_lambda_stmt_id(statement.identifier)
+    ) -> ExpressionFuncNode:
+        input_ids = BaseFuncNode.add_or_create_vars(
+            statement.inputs, AIR, VARS
+        )
+        output_ids = BaseFuncNode.add_or_create_vars(
+            statement.outputs, AIR, VARS
+        )
         expr = statement.expression
         executable = load_lambda_function(expr)
-        expr_type = FunctionType.get_lambda_type(
-            statement.expr_type, len(inspect.signature(executable).parameters)
-        )
-        mdata = statement.metadata
 
         visitor = ExpressionVisitor()
         expr_tree = ast.parse(expr)
         visitor.visit(expr_tree)
         nodes = visitor.get_nodes()
 
-        (
-            new_vars,
-            new_funcs,
-            h_edges,
-            # h_graph,
-        ) = cls.create_expr_node_hypergraph(
-            nodes, inputs, outputs, statement.identifier
+        (new_vars, new_funcs, h_edges,) = cls.create_expr_node_hypergraph(
+            nodes, input_ids, output_ids, statement.identifier
         )
-        h_graph = BaseFuncNode.create_hyper_graph(h_edges)
 
         VARS.update({v.identifier: v for v in new_vars})
         FUNCS.update({f.identifier: f for f in new_funcs})
 
         return cls(
-            str(uuid.uuid4()),
-            func_id,
-            expr_type,
-            [i.identifier for i in inputs],
-            [o.identifier for o in outputs],
-            h_edges,
-            h_graph,
-            mdata,
-            expr,
-            executable,
+            uid=BaseNode.create_node_id(),
+            identifier=FunctionIdentifier.from_lambda_stmt_id(
+                statement.identifier
+            ),
+            metadata=statement.metadata,
+            type=FunctionType.get_lambda_type(
+                statement.expr_type,
+                len(inspect.signature(executable).parameters),
+            ),
+            input_ids=input_ids,
+            output_ids=output_ids,
+            hyper_edges=h_edges,
+            hyper_graph=StructuredFuncNode.build_hyper_graph(h_edges),
+            expression=expr,
+            executable=executable,
         )
 
     @staticmethod
     def create_expr_node_hypergraph(
         nodes: List[ExprAbstractNode],
-        input_vars: List[VariableNode],
-        output_vars: List[VariableNode],
+        input_var_ids: List[VariableIdentifier],
+        output_var_ids: List[VariableIdentifier],
         statement_id: LambdaStmtDef,
-    ):
-        expr_output_var = output_vars[0]  # assumes we have a single output
-        out_id = expr_output_var.identifier
-        cur_nsp = out_id.namespace
-        cur_scp = f"{out_id.scope}.{'.'.join(statement_id.name.split('::'))}"
+    ) -> Tuple[List[VariableNode], List[BaseFuncNode], List[HyperEdge]]:
+        # assumes we have a single output
+        expr_output_var_id = output_var_ids[0]
+        cur_nsp = expr_output_var_id.namespace
+        cur_scp = f"{expr_output_var_id.scope}.{statement_id.name}"
 
         uid2node = {n.uid: n for n in nodes}
         lambda_def = None
@@ -556,13 +628,17 @@ class ExpressionFuncNode(BaseFuncNode):
 
         (args_def, ret_def) = [uid2node[uid] for uid in lambda_def.children]
         arg_names = [uid2node[uid].identifier for uid in args_def.children]
-        arg2var = {aname: ivar for aname, ivar in zip(arg_names, input_vars)}
+        arg2var = {
+            aname: ivar for aname, ivar in zip(arg_names, input_var_ids)
+        }
 
         new_func_nodes = list()
         new_var_nodes = list()
         new_hyper_edges = list()
 
-        def convert_to_hyperedge(expr_node_def: ExprAbstractNode):
+        def convert_to_hyperedge(
+            expr_node_def: ExprAbstractNode,
+        ) -> VariableIdentifier:
             """
             Args:
                 node_def (BaseExprNode): The current node to convert to a func node and a hyperedge. Should be added to he hypergraph as a node. Needs to have edges added from all child nodes to this node.
@@ -571,143 +647,109 @@ class ExpressionFuncNode(BaseFuncNode):
                 TypeError: If some children are not defined ExprNodes
 
             Returns:
-                Tuple:
-                    list of new func nodes,
-                    list of new variable nodes,
-                    list of new hyper edges
+                a Variable node output of the hyper edge for the current expr tree node definition
             """
             if isinstance(expr_node_def, ExprValueNode):
-                expr_func_node = LiteralFuncNode.from_value_node(expr_node_def)
                 output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
+                expr_func_node = LiteralFuncNode.from_value_and_var(
+                    expr_node_def, output_var.identifier
+                )
+
                 new_hyper_edge = HyperEdge(
                     expr_func_node.identifier, [], [output_var.identifier]
                 )
                 new_var_nodes.append(output_var)
                 new_func_nodes.append(expr_func_node)
                 new_hyper_edges.append(new_hyper_edge)
-                return
+                return output_var.identifier
             elif isinstance(expr_node_def, ExprVariableNode):
                 if expr_node_def.identifier in arg2var:
                     return arg2var[expr_node_def.identifier]
                 else:
-                    return VariableNode.from_expr_def(cur_nsp, cur_scp)
+                    output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
+                    new_var_nodes.append(output_var)
+                    return output_var.identifier
             child_defs = [
                 uid2node[child_id] for child_id in expr_node_def.children
             ]
 
-            input_var_nodes = list()
+            input_var_ids = list()
             for child_def in child_defs:
                 if isinstance(child_def, ExprVariableNode):
                     if child_def.identifier in arg2var:
-                        external_var = arg2var[child_def.identifier]
-                        input_var_nodes.append(external_var)
+                        external_var_id = arg2var[child_def.identifier]
+                        input_var_ids.append(external_var_id)
                     else:
                         new_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
                         new_var_nodes.append(new_var)
-                        input_var_nodes.append(new_var)
+                        input_var_ids.append(new_var.identifier)
                 elif isinstance(child_def, ExprValueNode):
                     pass  # No function to create with this node type
                 elif isinstance(child_def, ExprOperatorNode) or isinstance(
                     child_def, ExprDefinitionNode
                 ):
-                    child_out_var = convert_to_hyperedge(child_def)
-                    if child_out_var is not None:
-                        input_var_nodes.append(child_out_var)
+                    child_out_var_id = convert_to_hyperedge(child_def)
+                    if child_out_var_id is not None:
+                        input_var_ids.append(child_out_var_id)
                 else:
                     raise TypeError(
                         f"Unexpected Expr def type: {type(child_def)}"
                     )
 
-            expr_func_node = OperationFuncNode.from_expr_def(expr_node_def)
             output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
-            input_var_ids = [v.identifier for v in input_var_nodes]
+            output_var_id = output_var.identifier
+            expr_func_node = OperationFuncNode.from_expr_def_and_vars(
+                expr_node_def, input_var_ids, output_var_id
+            )
             new_hyper_edge = HyperEdge(
                 expr_func_node.identifier,
                 input_var_ids,
-                [output_var.identifier],
+                [output_var_id],
             )
             new_var_nodes.append(output_var)
             new_func_nodes.append(expr_func_node)
             new_hyper_edges.append(new_hyper_edge)
-            # hyper_graph.add_node(new_hyper_edge)
 
-            return output_var
+            return output_var_id
 
         ret_child = [uid2node[uid] for uid in ret_def.children][0]
-        # print(statement_id, ret_child)
-        # if isinstance(ret_child, ExprVariableNode):
-        #     print(
-        #     ret_child.identifier,
-        #     [uid2node[cid] for cid in ret_child.children],
-        # )
-        # else:
-        #     print(
-        #         ret_child.operator,
-        #         [uid2node[cid] for cid in ret_child.children],
-        #     )
-        ret_child_inputs = [
+        ret_child_input_ids = [
             convert_to_hyperedge(uid2node[child_id])
             for child_id in ret_child.children
         ]
-        expr_func_node = OperationFuncNode.from_expr_def(ret_child)
-        ret_child_input_ids = [v.identifier for v in ret_child_inputs]
+        expr_func_node = OperationFuncNode.from_expr_def_and_vars(
+            ret_child, ret_child_input_ids, expr_output_var_id
+        )
         new_hyper_edge = HyperEdge(
             expr_func_node.identifier,
             ret_child_input_ids,
-            [expr_output_var.identifier],
+            [expr_output_var_id],
         )
-        new_var_nodes.append(expr_output_var)
         new_func_nodes.append(expr_func_node)
         new_hyper_edges.append(new_hyper_edge)
-        # convert_to_hyperedge(ret_child)
         return (
             new_var_nodes,
             new_func_nodes,
             new_hyper_edges,
         )
 
-    @classmethod
-    def from_data(cls, data: Dict[str, Any]):
-        base_values = super().from_data(data)
-        expr = data["expression"]
-        return cls(*base_values, expr, load_lambda_function(expr))
 
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update({"expression": self.expression})
-        return data
-
-
-@dataclass(repr=False, frozen=False)
-class BaseConFuncNode(BaseFuncNode):
-    exit: FunctionIdentifier
-
+@dataclass(frozen=False)
+class BaseConFuncNode(StructuredFuncNode):
     def __eq__(self, other: BaseFuncNode):
-        if not isinstance(other, BaseConFuncNode) or self.exit != other.exit:
-            return False
-        return super().__eq__(other)
+        return isinstance(other, BaseConFuncNode) and super().__eq__(other)
 
     def __hash__(self):
         return super().__hash__()
 
-    @classmethod
-    def from_container(
-        cls,
+    @staticmethod
+    def data_from_container(
         container: ContainerDef,
         AIR: AutoMATES_IR,
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
-    ) -> BaseConFuncNode:
-        func_id = FunctionIdentifier.from_container_id(container.identifier)
-        func_type = FunctionType.from_con(container.__class__.__name__)
-        inputs = BaseFuncNode.get_or_create_vars(
-            container.arguments, AIR, VARS
-        )
-        outputs = BaseFuncNode.get_or_create_vars(
-            container.updated + container.return_value, AIR, VARS
-        )
-
-        hyper_edges = list()
+    ) -> dict:
+        h_edges = list()
         for stmt in container.statements:
             if isinstance(stmt, CallStmtDef):
                 # Create a new Container type function node defintion
@@ -736,83 +778,36 @@ class BaseConFuncNode(BaseFuncNode):
                 )
             else:
                 raise TypeError(f"Unrecognized statement type: {type(stmt)}")
-            FUNCS[new_func.identifier] = new_func
-            hyper_edges.append(
-                HyperEdge(
-                    new_func.identifier,
-                    [v_id for v_id in new_func.input_variables],
-                    [v_id for v_id in new_func.output_variables],
-                )
-            )
+            func_id = new_func.identifier
+            FUNCS[func_id] = new_func
+            h_edges.append(HyperEdge(func_id, stmt.inputs, stmt.outputs))
 
-        hyper_graph = BaseFuncNode.create_hyper_graph(hyper_edges)
-        metadata = container.metadata
-        exit_id = None
-        for edge in hyper_edges:
-            first_output = edge.output_ids[0]
-            if first_output.name == "EXIT":
-                exit_id = first_output
-        return cls(
-            str(uuid.uuid4()),
-            func_id,
-            func_type,
-            [i.identifier for i in inputs],
-            [o.identifier for o in outputs],
-            hyper_edges,
-            hyper_graph,
-            metadata,
-            exit=exit_id,
-        )
+        # for edge in hyper_edges:
+        #     first_output = edge.output_ids[0]
+        #     if first_output.name == "EXIT":
+        #         exit_id = first_output
 
-    @classmethod
-    def from_data(cls, data: Dict[str, Any]):
-        return cls(*(super().from_data(data)), data["identifier"])
-
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update({"identifier": str(self.identifier)})
-        return data
-
-
-@dataclass(repr=False, frozen=False)
-class CondConFuncNode(BaseConFuncNode):
-    decision_node: ExpressionFuncNode
+        all_outputs = container.updated + container.return_value
+        return {
+            "uid": BaseNode.create_node_id(),
+            "identifier": FunctionIdentifier.from_container_id(
+                container.identifier
+            ),
+            "metadata": container.metadata,
+            "type": FunctionType.from_con(container.__class__.__name__),
+            "input_ids": BaseFuncNode.add_or_create_vars(
+                container.arguments, AIR, VARS
+            ),
+            "output_ids": BaseFuncNode.add_or_create_vars(
+                all_outputs, AIR, VARS
+            ),
+            "hyper_edges": h_edges,
+            "hyper_graph": StructuredFuncNode.build_hyper_graph(h_edges),
+        }
 
     @classmethod
-    def from_container(
-        cls,
-        container: ContainerDef,
-        AIR: AutoMATES_IR,
-        VARS: Dict[VariableIdentifier, VariableNode],
-        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
-    ) -> CondConFuncNode:
-        mock_func_node = BaseConFuncNode.from_container(
-            container, AIR, VARS, FUNCS
-        )
-        return cls(
-            uid=mock_func_node.uid,
-            identifier=mock_func_node.identifier,
-            type=mock_func_node.type,
-            input_variables=mock_func_node.input_variables,
-            output_variables=mock_func_node.output_variables,
-            hyper_edges=mock_func_node.hyper_edges,
-            hyper_graph=mock_func_node.hyper_graph,
-            metadata=mock_func_node.metadata,
-            exit=mock_func_node.exit,
-            decision_node=cls.find_decision_node(mock_func_node),
-        )
-
-    @staticmethod
-    def find_decision_node(base_func: BaseConFuncNode):
-        for edge in base_func.hyper_edges:
-            if edge.func_node.type == FunctionType.DECISION:
-                return edge.func_node
-        return None
-
-
-@dataclass(repr=False, frozen=False)
-class LoopConFuncNode(BaseConFuncNode):
-    exit_condition: ExpressionFuncNode
+    def from_dict(cls, data: dict) -> BaseConFuncNode:
+        return cls(**(super().get_base_data(data)))
 
     @classmethod
     def from_container(
@@ -822,29 +817,126 @@ class LoopConFuncNode(BaseConFuncNode):
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ) -> BaseConFuncNode:
-        mock_func_node = BaseConFuncNode.from_container(
+        return cls(**(cls.data_from_container(container, AIR, VARS, FUNCS)))
+
+    # @classmethod
+    # def from_data(cls, data: Dict[str, Any]):
+    #     return cls(*(super().from_data(data)), data["identifier"])
+
+    def to_dict(self) -> dict:
+        return super().data_to_dict()
+
+
+@dataclass(frozen=False)
+class CondConFuncNode(BaseConFuncNode):
+    decision_func: FunctionIdentifier
+
+    def __eq__(self, other: BaseFuncNode):
+        return (
+            isinstance(other, CondConFuncNode)
+            and super().__eq__(other)
+            and self.decision_func == other.decision_func
+        )
+
+    def __hash__(self):
+        return super().__hash__()
+
+    @classmethod
+    def from_container(
+        cls,
+        container: ContainerDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> CondConFuncNode:
+        con_node_data = BaseConFuncNode.data_from_container(
             container, AIR, VARS, FUNCS
         )
+        hyper_edges = con_node_data["hyper_edges"]
         return cls(
-            uid=mock_func_node.uid,
-            identifier=mock_func_node.identifier,
-            type=mock_func_node.type,
-            input_variables=mock_func_node.input_variables,
-            output_variables=mock_func_node.output_variables,
-            hyper_edges=mock_func_node.hyper_edges,
-            hyper_graph=mock_func_node.hyper_graph,
-            metadata=mock_func_node.metadata,
-            exit=mock_func_node.exit,
-            exit_condition=cls.find_condition_node(mock_func_node),
+            **con_node_data,
+            decision_func=cls.find_decision_node(hyper_edges, FUNCS),
+        )
+
+    @classmethod
+    def from_dict(cls, data: dict) -> CondConFuncNode:
+        return cls(
+            **(super().get_base_data(data)),
+            decision_func=FunctionIdentifier.from_str(data["decision_func"]),
+        )
+
+    def to_dict(self) -> dict:
+        return dict(
+            **(super().data_to_dict()),
+            **{"decision_func": str(self.decision_func)},
         )
 
     @staticmethod
-    def find_condition_node(base_func: BaseConFuncNode):
+    def find_decision_node(
+        edges: List[HyperEdge],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> ExpressionFuncNode:
+        for edge in edges:
+            func_node = FUNCS[edge.func_id]
+            if func_node.type == FunctionType.DECISION:
+                return edge.func_id
+        return None
+
+
+@dataclass(frozen=False)
+class LoopConFuncNode(BaseConFuncNode):
+    exit_var: VariableIdentifier
+
+    def __eq__(self, other: BaseFuncNode):
+        return (
+            isinstance(other, LoopConFuncNode)
+            and super().__eq__(other)
+            and self.exit_var == other.exit_var
+        )
+
+    def __hash__(self):
+        return super().__hash__()
+
+    @classmethod
+    def from_container(
+        cls,
+        container: ContainerDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> LoopConFuncNode:
+        con_node_data = BaseConFuncNode.data_from_container(
+            container, AIR, VARS, FUNCS
+        )
+        hyper_edges = con_node_data["hyper_edges"]
+        return cls(
+            **con_node_data,
+            exit_var=cls.find_condition_node(hyper_edges, FUNCS),
+        )
+
+    @classmethod
+    def from_dict(cls, data: dict) -> LoopConFuncNode:
+        return cls(
+            **(super().get_base_data(data)),
+            exit_var=VariableIdentifier.from_str(data["exit_var"]),
+        )
+
+    def to_dict(self) -> dict:
+        return dict(
+            **(super().data_to_dict()), **{"exit_var": str(self.exit_var)}
+        )
+
+    @staticmethod
+    def find_condition_node(
+        edges: List[HyperEdge],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> VariableIdentifier:
         # NOTE: If there is more than one condition node then this will find whichever is the first in the list of hyper-edges. Extend this function once we have GrFNs that have more than a single condition node in a ConditionalContainerDef
-        for h_edge in base_func.hyper_edges:
-            func = h_edge.func_node
+        for edge in edges:
+            func = FUNCS[edge.func_id]
             if func.type == FunctionType.CONDITION:
-                return func
+                # NOTE: asssuming that <condition> expression functions always have exactly one output variable node
+                return edge.output_ids[0]
         return None
 
 
@@ -944,6 +1036,22 @@ class HyperEdge:
     input_ids: List[VariableIdentifier]
     output_ids: List[VariableIdentifier]
 
+    def __eq__(self, other) -> bool:
+        return (
+            self.func_id == other.func_id
+            and all(
+                [i1 == i2 for i1, i2 in zip(self.input_ids, other.input_ids)]
+            )
+            and all(
+                [o1 == o2 for o1, o2 in zip(self.output_ids, other.output_ids)]
+            )
+        )
+
+    def __hash__(self):
+        return hash(
+            (self.func_id, tuple(self.input_ids), tuple(self.output_ids))
+        )
+
     def __call__(
         self,
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
@@ -1005,22 +1113,6 @@ class HyperEdge:
                 else:
                     variable.value = out_val
 
-    def __eq__(self, other) -> bool:
-        return (
-            self.func_id == other.func_id
-            and all(
-                [i1 == i2 for i1, i2 in zip(self.input_ids, other.input_ids)]
-            )
-            and all(
-                [o1 == o2 for o1, o2 in zip(self.output_ids, other.output_ids)]
-            )
-        )
-
-    def __hash__(self):
-        return hash(
-            (self.func_id, tuple(self.input_ids), tuple(self.output_ids))
-        )
-
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
@@ -1030,7 +1122,11 @@ class HyperEdge:
         )
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        return {
+            "func_id": str(self.func_id),
+            "input_ids": [str(v_id) for v_id in self.input_ids],
+            "output_ids": [str(v_id) for v_id in self.output_ids],
+        }
 
 
 # @dataclass(repr=False)
@@ -1539,8 +1635,7 @@ class GroundedFunctionNetwork:
         self.name = self.identifier.name
         self.label = f"{self.name} ({self.namespace}.{self.scope})"
 
-        # NOTE: removing detached variables from GrFN
-        # self.__remove_detatched_vars()
+        self.__remove_detatched_vars()
 
         # TODO: call expression function vectorization at some point in time on
         # load
@@ -1551,14 +1646,20 @@ class GroundedFunctionNetwork:
 
     def __remove_detatched_vars(self):
         del_indices = list()
-        for idx, var_node in enumerate(self.variables):
+        for idx, var_id in enumerate(self.variables.keys()):
             found_var = False
-            for edge in self.hyper_edges:
-                if var_node in edge.inputs or var_node in edge.outputs:
-                    found_var = True
+            for func_node in self.functions.values():
+                if hasattr(func_node, "hyper_edges"):
+                    for edge in func_node.hyper_edges:
+                        if (
+                            var_id in edge.input_ids
+                            or var_id in edge.output_ids
+                        ):
+                            found_var = True
+                            break
+                if found_var:
                     break
             if not found_var:
-                self.remove_node(var_node)
                 del_indices.append(idx)
 
         for idx, del_idx in enumerate(del_indices):
@@ -1670,7 +1771,6 @@ class GroundedFunctionNetwork:
             and set(self.variables) == set(other.variables)
             and set(self.objects) == set(other.objects)
             and set(self.types) == set(other.types)
-            and set(self.metadata) == set(other.metadata)
         )
 
     def __str__(self):
@@ -2057,14 +2157,14 @@ class GroundedFunctionNetwork:
             parent_subgraph: pgv.AGraph,
         ) -> List[VariableIdentifier]:
 
-            in_vars = set(func_node.input_variables)
-            out_vars = set(func_node.output_variables)
+            in_vars = set(func_node.input_ids)
+            out_vars = set(func_node.output_ids)
 
             # Can't use basenames because cond nodes will have mult vars with the same basename
             if len(parent_inputs) > 0:
                 live_vars = {
                     v_id: parent_inputs[i]
-                    for i, v_id in enumerate(func_node.input_variables)
+                    for i, v_id in enumerate(func_node.input_ids)
                 }
             else:
                 live_vars = dict()
@@ -2116,8 +2216,7 @@ class GroundedFunctionNetwork:
                     )
                     all_sub_nodes.extend(sub_nodes)
                     named_callee_outputs = {
-                        var_id.name: var_id
-                        for var_id in new_func.output_variables
+                        var_id.name: var_id for var_id in new_func.output_ids
                     }
                     live_vars.update(
                         {
@@ -2134,7 +2233,7 @@ class GroundedFunctionNetwork:
                         all_sub_nodes.extend(sub_nodes)
                         named_callee_outputs = {
                             var_id.name: var_id
-                            for var_id in new_func.output_variables
+                            for var_id in new_func.output_ids
                         }
                         live_vars.update(
                             {v_id: v_id for v_id in h_edge.input_ids}
@@ -2161,11 +2260,11 @@ class GroundedFunctionNetwork:
             # Add internal nodes to ConFuncNode types
             if not isinstance(func_node, ExpressionFuncNode):
                 all_sub_nodes.extend(list(live_vars.values()))
-            
+
             # Add input/output nodes inside the root level BaseFuncNodes
             if len(parent_inputs) == 0:
-                all_sub_nodes.extend(func_node.input_variables)
-                all_sub_nodes.extend(func_node.output_variables)
+                all_sub_nodes.extend(func_node.input_ids)
+                all_sub_nodes.extend(func_node.output_ids)
 
             cur_subgraph.add_nodes_from(all_sub_nodes)
             return all_sub_nodes
@@ -2402,29 +2501,14 @@ class GroundedFunctionNetwork:
         F.add_edges_from(main_edges)
         return F
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Outputs the contents of this GrFN to a dict object.
 
         :return: Description of returned object.
         :rtype: type
         :raises ExceptionName: Why the exception is raised.
         """
-        # subgraph_funcs = [sgraph.to_dict() for sgraph in self.subgraphs]
-        # lambda_funcs = [func.to_dict() for func in self.lambdas]
-        # visitor = ExpressionVisitor()
-        # expr_node_lists = [
-        #     visitor.visit(ast.parse(lm_node.func_str))
-        #     for lm_node in self.lambdas
-        # ]
-        # operator_nodes = list()
-        # for expr_nodes_obj in expr_node_lists:
-        #     expr_nodes = expr_nodes_obj.nodes
-        #     for expr_node in expr_nodes:
-        #         if isinstance(expr_node, ExprOperatorNode):
-        #             new_op_func = dict()
-
-        # operator_func_defs = []
-        data = {
+        return {
             "uid": self.uid,
             "identifier": str(self.identifier),
             "entry_point": str(self.entry_point),
@@ -2450,167 +2534,41 @@ class GroundedFunctionNetwork:
             outfile.write(self.to_json())
 
     @classmethod
-    def from_json(cls, json_path):
-        """Load a GrFN 3.0 JSON file and reconstruct the GrFN from it.
-        As it stand, the function reconstruction doesn't work correctly.
+    def from_dict(cls, data: dict) -> GroundedFunctionNetwork:
+        """Creates a grounded function network from a dictionary of GrFN data.
 
-        :param type cls: This instance of GrFN 3.0
-        :param type json_path: Path to a GrFN 3.0 JSON file
-        :return: A reconstructed GrFN 3.0 object
-        :rtype: GroundedFunctionNetwork object
+        Args:
+            data (dict): a dictionary containing keys for each attribute of a GroundedFunctionNetwork
 
+        Returns:
+            GroundedFunctionNetwork: an instance of this class.
         """
-
-        def extract_func_identifier(id):
-            pieces = id.split("::")
-            if len(pieces) > 4:
-                return pieces[-4], pieces[-3], pieces[-2], pieces[-1]
-            else:
-                return pieces[1], pieces[2], pieces[3]
-
-        data = json.load(open(json_path, "r"))
-
-        F = dict()
-        HE = dict()
-        for f in data["functions"]:
-            namespace, scope, name, idx = extract_func_identifier(
-                f["identifier"]
-            )
-            if f["type"] == "decision":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            elif f["type"] == "pack":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            elif f["type"] == "operator":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            elif f["type"] == "literal":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            elif f["type"] == "assign":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            elif f["type"] == "container":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            elif f["type"] == "condition":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            elif f["type"] == "iterable":
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = ExpressionFuncNode.from_data(f)
-            else:
-                F[
-                    FunctionIdentifier(
-                        namespace=namespace,
-                        scope=scope,
-                        name=name,
-                        index=int(idx),
-                    )
-                ] = BaseFuncNode.from_data(f, F)
-
-        V = dict()
-        for v in data["variables"]:
-            namespace, scope, name, idx = extract_func_identifier(
-                v["identifier"]
-            )
-            V[
-                VariableIdentifier(
-                    namespace=namespace, scope=scope, name=name, index=int(idx)
-                )
-            ] = VariableNode.from_dict(v)
-
-        O = dict()
-        T = dict()
-        M = [TypedMetadata.from_data(m) for m in data["metadata"]]
-
-        grfn_ns, grfn_scope, grfn_name = extract_func_identifier(
-            data["identifier"]
-        )
-        fn_ns, fn_scope, fn_name, fn_idx = extract_func_identifier(
-            data["entry_point"]
-        )
-
         return cls(
-            data["uid"],
-            GrFNIdentifier(
-                namespace=grfn_ns, scope=grfn_scope, name=grfn_name
+            uid=data["uid"],
+            identifier=GrFNIdentifier.from_str(data["identifier"]),
+            entry_point=FunctionIdentifier.from_str(data["entry_point"]),
+            functions=dict(
+                BaseFuncNode.from_dict_with_id(d) for d in data["functions"]
             ),
-            FunctionIdentifier(
-                namespace=fn_ns,
-                scope=fn_scope,
-                name=fn_name,
-                index=int(fn_idx),
+            variables=dict(
+                VariableNode.from_dict_with_id(d) for d in data["variables"]
             ),
-            F,
-            V,
-            O,
-            T,
-            M,
+            objects=dict(),
+            types=list(),
+            metadata=[TypedMetadata.from_data(m) for m in data["metadata"]],
         )
 
     @classmethod
-    def from_json(cls, json_path):
-        """Short summary.
+    def from_json(cls, json_path: str) -> GroundedFunctionNetwork:
+        """Creates a grounded function network from a GrFN JSON file.
 
-        :param type cls: Description of parameter `cls`.
-        :param type json_path: Description of parameter `json_path`.
-        :return: Description of returned object.
-        :rtype: type
-        :raises ExceptionName: Why the exception is raised.
+        Args:
+            json_path (str): a full path to a GrFN JSON file
 
+        Returns:
+            GroundedFunctionNetwork: an instance of this class.
         """
-        data = json.load(open(json_path, "r"))
-        return cls.from_dict(data)
+        return cls.from_dict(json.load(open(json_path, "r")))
 
 
 # =============================================================================
