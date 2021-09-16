@@ -6,13 +6,17 @@ import automates.apps.automates.model_code.chime_sir as chime
 import automates.apps.automates.model_code.sir_simple as sir_simple
 import automates.apps.automates.model_code.chime_sviivr as chime_plus
 
+
 def parse_execution_inputs(inputs):
     execution_inputs = {i["variable_identifier"]: np.array(i["value"]) for i in inputs}
     return execution_inputs
 
 
 def parse_execution_results(results):
-    return [{"variable_name": k, "results": v.tolist()} for k, v in results.items()]
+    return [
+        {"variable_name": k, "results": v if isinstance(v, list) else v.tolist()}
+        for k, v in results.items()
+    ]
 
 
 def gather_additional_outputs(outputs, GrFN):
