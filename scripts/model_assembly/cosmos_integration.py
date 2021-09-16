@@ -33,7 +33,7 @@ def main():
                     row_idx_num = int(row_idx)
                     row_order_parquet_data[row_idx_num][field_key] = datum
 
-            main_doc_re = r"documents[_a-zA-Z0-9]*\.parquet"
+            main_doc_re = r"documents_[a-zA-Z0-9]*\.parquet"
             if re.match(main_doc_re, filename) is not None:
             # if filename == "documents.parquet":
                 # Sorts the content sections by page number and then by
