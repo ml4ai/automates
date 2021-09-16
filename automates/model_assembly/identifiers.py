@@ -149,7 +149,7 @@ class CAGContainerIdentifier(IndexedIdentifier):
         return f"CAGContainer::{super().__str__()}"
 
     @classmethod
-    def from_function_id(cls, func_id: FileIdentifier):
+    def from_function_id(cls, func_id: FunctionIdentifier):
         return cls(
             func_id.namespace, func_id.scope, func_id.name, func_id.index
         )
