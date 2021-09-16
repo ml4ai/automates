@@ -608,7 +608,7 @@ class LambdaStmtDef(StmtDef):
     def get_type_str(name: str) -> str:
         (_, _, type_str, _, _) = name.split("__")
         return type_str
-    
+
     def to_dict(self) -> dict:
         return dict(
             **(super().to_dict()),

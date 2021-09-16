@@ -392,6 +392,43 @@ class LiteralFuncNode(BaseFuncNode):
         return super().__hash__()
 
     @classmethod
+    def from_lambda_stmt(
+        cls,
+        stmt: LambdaStatementDef,
+        AIR: AutoMATES_IR,
+        VARS: Dict[VariableIdentifier, VariableNode],
+        FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
+    ) -> LiteralFuncNode:
+        out_var_ids = BaseFuncNode.add_or_create_vars(stmt.outputs, AIR, VARS)
+        literal_out_var_id = out_var_ids[0]
+
+        visitor = ExpressionVisitor()
+        expr_tree = ast.parse(stmt.expression)
+        visitor.visit(expr_tree)
+        nodes = visitor.get_nodes()
+
+        uid2node = {n.uid: n for n in nodes}
+        lambda_def = None
+        for node in nodes:
+            if (
+                isinstance(node, ExprDefinitionNode)
+                and node.def_type == "LAMBDA"
+            ):
+                lambda_def = node
+                break
+
+        (_, return_def) = [uid2node[uid] for uid in lambda_def.children]
+        return_child = [uid2node[uid] for uid in return_def.children][0]
+        if isinstance(return_child, ExprValueNode):
+            new_node = cls.from_value_and_var(return_child, literal_out_var_id)
+            FUNCS[new_node.identifier] = new_node
+            return new_node
+        else:
+            raise TypeError(
+                f"Unexpected expr node of type {type(return_child)} during literal func node construction from lambda stmt."
+            )
+
+    @classmethod
     def from_value_and_var(
         cls, node: ExprValueNode, out_var_id: VariableIdentifier
     ) -> LiteralFuncNode:
@@ -717,9 +754,14 @@ class ExpressionFuncNode(StructuredFuncNode):
             convert_to_hyperedge(uid2node[child_id])
             for child_id in ret_child.children
         ]
-        expr_func_node = OperationFuncNode.from_expr_def_and_vars(
-            ret_child, ret_child_input_ids, expr_output_var_id
-        )
+        if isinstance(ret_child, ExprValueNode):
+            expr_func_node = LiteralFuncNode.from_value_and_var(
+                ret_child, expr_output_var_id
+            )
+        else:
+            expr_func_node = OperationFuncNode.from_expr_def_and_vars(
+                ret_child, ret_child_input_ids, expr_output_var_id
+            )
         new_hyper_edge = HyperEdge(
             expr_func_node.identifier,
             ret_child_input_ids,
@@ -773,9 +815,14 @@ class BaseConFuncNode(StructuredFuncNode):
                     )
             elif isinstance(stmt, LambdaStmtDef):
                 # Create a new Expression type function node definiton
-                new_func = ExpressionFuncNode.from_lambda_stmt(
-                    stmt, AIR, VARS, FUNCS
-                )
+                if len(stmt.inputs) == 0:
+                    new_func = LiteralFuncNode.from_lambda_stmt(
+                        stmt, AIR, VARS, FUNCS
+                    )
+                else:
+                    new_func = ExpressionFuncNode.from_lambda_stmt(
+                        stmt, AIR, VARS, FUNCS
+                    )
             else:
                 raise TypeError(f"Unrecognized statement type: {type(stmt)}")
             func_id = new_func.identifier
@@ -2249,6 +2296,10 @@ class GroundedFunctionNetwork:
                             new_func, h_edge.input_ids, h_edge.output_ids
                         )
                 elif isinstance(new_func, OperationFuncNode):
+                    add_input_output_nodes(
+                        new_func, h_edge.input_ids, h_edge.output_ids
+                    )
+                elif isinstance(new_func, LiteralFuncNode):
                     add_input_output_nodes(
                         new_func, h_edge.input_ids, h_edge.output_ids
                     )
