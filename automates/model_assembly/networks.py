@@ -394,7 +394,7 @@ class LiteralFuncNode(BaseFuncNode):
     @classmethod
     def from_lambda_stmt(
         cls,
-        stmt: LambdaStatementDef,
+        stmt: LambdaStmtDef,
         AIR: AutoMATES_IR,
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
@@ -2100,101 +2100,100 @@ class GroundedFunctionNetwork:
         #         var_id = output_node.identifier
         #         live_variables[var_id] = output_node
 
-    def to_FCG(self):
-        G = nx.DiGraph()
-        func_to_func_edges = [
-            (func_node, node)
-            for node in self.nodes
-            if isinstance(node, LambdaNode)
-            for var_node in self.predecessors(node)
-            for func_node in self.predecessors(var_node)
-        ]
-        G.add_edges_from(func_to_func_edges)
-        return G
+    # def to_FCG(self):
+    #     G = nx.DiGraph()
+    #     func_to_func_edges = [
+    #         (func_node, node)
+    #         for node in self.nodes
+    #         if isinstance(node, LambdaNode)
+    #         for var_node in self.predecessors(node)
+    #         for func_node in self.predecessors(var_node)
+    #     ]
+    #     G.add_edges_from(func_to_func_edges)
+    #     return G
 
-    def build_function_sets(self):
-        subgraphs_to_func_sets = {s.uid: list() for s in self.subgraphs}
+    # def build_function_sets(self):
+    #     subgraphs_to_func_sets = {s.uid: list() for s in self.subgraphs}
 
-        initial_funcs = [n for n, d in self.FCG.in_degree() if d == 0]
-        func2container = {f: s.uid for s in self.subgraphs for f in s.nodes}
-        initial_funcs_to_subgraph = {
-            n: func2container[n] for n in initial_funcs
-        }
-        containers_to_initial_funcs = {s.uid: list() for s in self.subgraphs}
-        for k, v in initial_funcs_to_subgraph.items():
-            containers_to_initial_funcs[v].append(k)
+    #     initial_funcs = [n for n, d in self.FCG.in_degree() if d == 0]
+    #     func2container = {f: s.uid for s in self.subgraphs for f in s.nodes}
+    #     initial_funcs_to_subgraph = {
+    #         n: func2container[n] for n in initial_funcs
+    #     }
+    #     containers_to_initial_funcs = {s.uid: list() for s in self.subgraphs}
+    #     for k, v in initial_funcs_to_subgraph.items():
+    #         containers_to_initial_funcs[v].append(k)
 
-        def build_function_set_for_container(
-            container, container_initial_funcs
-        ):
-            all_successors = list()
-            distances = dict()
-            visited_funcs = set()
+    #     def build_function_set_for_container(
+    #         container, container_initial_funcs
+    #     ):
+    #         all_successors = list()
+    #         distances = dict()
+    #         visited_funcs = set()
 
-            def find_distances(func, dist, path=[]):
-                if func.func_type == LambdaType.OPERATOR:
-                    return
-                new_successors = list()
-                func_container = func2container[func]
-                if func_container == container:
-                    distances[func] = (
-                        max(dist, distances[func])
-                        if func in distances and func not in path
-                        else dist
-                    )
-                    if func not in visited_funcs:
-                        new_successors.extend(self.FCG.successors(func))
-                        visited_funcs.add(func)
+    #         def find_distances(func, dist, path=[]):
+    #             if func.func_type == LambdaType.OPERATOR:
+    #                 return
+    #             new_successors = list()
+    #             func_container = func2container[func]
+    #             if func_container == container:
+    #                 distances[func] = (
+    #                     max(dist, distances[func])
+    #                     if func in distances and func not in path
+    #                     else dist
+    #                 )
+    #                 if func not in visited_funcs:
+    #                     new_successors.extend(self.FCG.successors(func))
+    #                     visited_funcs.add(func)
 
-                if len(new_successors) > 0:
-                    all_successors.extend(new_successors)
-                    for f in new_successors:
-                        find_distances(f, dist + 1, path=(path + [func]))
+    #             if len(new_successors) > 0:
+    #                 all_successors.extend(new_successors)
+    #                 for f in new_successors:
+    #                     find_distances(f, dist + 1, path=(path + [func]))
 
-            for f in container_initial_funcs:
-                find_distances(f, 0)
+    #         for f in container_initial_funcs:
+    #             find_distances(f, 0)
 
-            call_sets = dict()
+    #         call_sets = dict()
 
-            for func_node, call_dist in distances.items():
-                if call_dist in call_sets:
-                    call_sets[call_dist].add(func_node)
-                else:
-                    call_sets[call_dist] = {func_node}
+    #         for func_node, call_dist in distances.items():
+    #             if call_dist in call_sets:
+    #                 call_sets[call_dist].add(func_node)
+    #             else:
+    #                 call_sets[call_dist] = {func_node}
 
-            function_set_dists = sorted(
-                call_sets.items(), key=lambda t: (t[0], len(t[1]))
-            )
+    #         function_set_dists = sorted(
+    #             call_sets.items(), key=lambda t: (t[0], len(t[1]))
+    #         )
 
-            subgraphs_to_func_sets[container] = [
-                func_set for _, func_set in function_set_dists
-            ]
+    #         subgraphs_to_func_sets[container] = [
+    #             func_set for _, func_set in function_set_dists
+    #         ]
 
-        for container in self.subgraphs:
-            input_interface_funcs = [
-                n
-                for n in container.nodes
-                if isinstance(n, LambdaNode)
-                and n.func_type == LambdaType.INTERFACE
-                and all(
-                    [
-                        var_node in container.nodes
-                        for var_node in self.successors(n)
-                    ]
-                )
-            ]
-            build_function_set_for_container(
-                container.uid,
-                input_interface_funcs
-                + containers_to_initial_funcs[container.uid],
-            )
+    #     for container in self.subgraphs:
+    #         input_interface_funcs = [
+    #             n
+    #             for n in container.nodes
+    #             if isinstance(n, LambdaNode)
+    #             and n.func_type == LambdaType.INTERFACE
+    #             and all(
+    #                 [
+    #                     var_node in container.nodes
+    #                     for var_node in self.successors(n)
+    #                 ]
+    #             )
+    #         ]
+    #         build_function_set_for_container(
+    #             container.uid,
+    #             input_interface_funcs
+    #             + containers_to_initial_funcs[container.uid],
+    #         )
 
-        return subgraphs_to_func_sets
+    #     return subgraphs_to_func_sets
 
     def to_AGraph(self, expand_expressions=False):
         """Export to a PyGraphviz AGraph object."""
         N = pgv.AGraph(directed=True)
-        # subgraphs = list()
         FUNCS = self.functions
         VARS = self.variables
 
@@ -2327,75 +2326,75 @@ class GroundedFunctionNetwork:
         N.node_attr.update({"fontname": "Menlo"})
         return N
 
-    def to_AGraph__old(self):
-        """Export to a PyGraphviz AGraph object."""
-        var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
-        input_nodes = []
-        for v in var_nodes:
-            if self.in_degree(v) == 0 or (
-                len(list(self.predecessors(v))) == 1
-                and list(self.predecessors(v))[0].func_type
-                == LambdaType.LITERAL
-            ):
-                input_nodes.append(v)
-        output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
+    # def to_AGraph__old(self):
+    #     """Export to a PyGraphviz AGraph object."""
+    #     var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
+    #     input_nodes = []
+    #     for v in var_nodes:
+    #         if self.in_degree(v) == 0 or (
+    #             len(list(self.predecessors(v))) == 1
+    #             and list(self.predecessors(v))[0].func_type
+    #             == LambdaType.LITERAL
+    #         ):
+    #             input_nodes.append(v)
+    #     output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
 
-        A = nx.nx_agraph.to_agraph(self)
-        A.graph_attr.update(
-            {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
-        )
-        A.node_attr.update({"fontname": "Menlo"})
+    #     A = nx.nx_agraph.to_agraph(self)
+    #     A.graph_attr.update(
+    #         {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
+    #     )
+    #     A.node_attr.update({"fontname": "Menlo"})
 
-        # A.add_subgraph(input_nodes, rank="same")
-        # A.add_subgraph(output_nodes, rank="same")
+    #     # A.add_subgraph(input_nodes, rank="same")
+    #     # A.add_subgraph(output_nodes, rank="same")
 
-        def get_subgraph_nodes(subgraph: GrFNSubgraph):
-            return subgraph.nodes + [
-                node
-                for child_graph in self.subgraphs.successors(subgraph)
-                for node in get_subgraph_nodes(child_graph)
-            ]
+    #     def get_subgraph_nodes(subgraph: GrFNSubgraph):
+    #         return subgraph.nodes + [
+    #             node
+    #             for child_graph in self.subgraphs.successors(subgraph)
+    #             for node in get_subgraph_nodes(child_graph)
+    #         ]
 
-        def populate_subgraph(subgraph: GrFNSubgraph, parent: AGraph):
-            all_sub_nodes = get_subgraph_nodes(subgraph)
-            container_subgraph = parent.add_subgraph(
-                all_sub_nodes,
-                name=f"cluster_{str(subgraph)}",
-                label=subgraph.basename,
-                style="bold, rounded",
-                rankdir="TB",
-                color=subgraph.border_color,
-            )
+    #     def populate_subgraph(subgraph: GrFNSubgraph, parent: AGraph):
+    #         all_sub_nodes = get_subgraph_nodes(subgraph)
+    #         container_subgraph = parent.add_subgraph(
+    #             all_sub_nodes,
+    #             name=f"cluster_{str(subgraph)}",
+    #             label=subgraph.basename,
+    #             style="bold, rounded",
+    #             rankdir="TB",
+    #             color=subgraph.border_color,
+    #         )
 
-            input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
-            # container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
-            container_subgraph.add_subgraph(
-                [v.uid for v in input_var_nodes], rank="same"
-            )
+    #         input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
+    #         # container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
+    #         container_subgraph.add_subgraph(
+    #             [v.uid for v in input_var_nodes], rank="same"
+    #         )
 
-            for new_subgraph in self.subgraphs.successors(subgraph):
-                populate_subgraph(new_subgraph, container_subgraph)
+    #         for new_subgraph in self.subgraphs.successors(subgraph):
+    #             populate_subgraph(new_subgraph, container_subgraph)
 
-            for _, func_sets in self.function_sets.items():
-                for func_set in func_sets:
-                    func_set = list(func_set.intersection(set(subgraph.nodes)))
+    #         for _, func_sets in self.function_sets.items():
+    #             for func_set in func_sets:
+    #                 func_set = list(func_set.intersection(set(subgraph.nodes)))
 
-                    container_subgraph.add_subgraph(
-                        func_set,
-                    )
-                    output_var_nodes = list()
-                    for func_node in func_set:
-                        succs = list(self.successors(func_node))
-                        output_var_nodes.extend(succs)
-                    output_var_nodes = set(output_var_nodes) - output_nodes
-                    var_nodes = output_var_nodes.intersection(subgraph.nodes)
+    #                 container_subgraph.add_subgraph(
+    #                     func_set,
+    #                 )
+    #                 output_var_nodes = list()
+    #                 for func_node in func_set:
+    #                     succs = list(self.successors(func_node))
+    #                     output_var_nodes.extend(succs)
+    #                 output_var_nodes = set(output_var_nodes) - output_nodes
+    #                 var_nodes = output_var_nodes.intersection(subgraph.nodes)
 
-                    container_subgraph.add_subgraph(
-                        [v.uid for v in var_nodes],
-                    )
+    #                 container_subgraph.add_subgraph(
+    #                     [v.uid for v in var_nodes],
+    #                 )
 
-        root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
-        populate_subgraph(root_subgraph, A)
+    #     root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
+    #     populate_subgraph(root_subgraph, A)
 
         # TODO this code helps with the layout of the graph. However, it assumes
         # all var nodes start at -1 and are consecutive. This is currently not
@@ -2431,7 +2430,7 @@ class GroundedFunctionNetwork:
         # ]:
         #     agraph_node.attr["rank"] = "max"
 
-        return A
+        # return A
 
     def to_FIB(self, G2):
         """Creates a ForwardInfluenceBlanket object representing the
