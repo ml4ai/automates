@@ -1,0 +1,75 @@
+{
+    "uid": "a7b8ae0f-344c-c8aa-9e71-9fcdec95809d",
+    "identifier": "GrFN::@global::@global::literal_3.py",
+    "entry_point": "Function::literal_3::literal_3::hitch_hikers_num::0",
+    "variables": [],
+    "functions": [
+        {
+            "uid": "42180961-e33b-5641-338f-bca2ae06ad93",
+            "identifier": "Function::literal_3::literal_3::hitch_hikers_num::0",
+            "metadata": [
+                {
+                    "type": "CODE_SPAN_REFERENCE",
+                    "provenance": {
+                        "method": "PROGRAM_ANALYSIS_PIPELINE",
+                        "timestamp": "2021-09-16 09:33:52.483355"
+                    },
+                    "code_type": "block",
+                    "code_file_reference_uid": "0efc3ac2-4b07-ad66-362a-4c561dc93f50",
+                    "code_span": {
+                        "line_begin": 1,
+                        "line_end": 2,
+                        "col_begin": 0,
+                        "col_end": 13
+                    }
+                }
+            ],
+            "type": "container",
+            "input_ids": [],
+            "output_ids": [],
+            "hyper_edges": []
+        }
+    ],
+    "types": [],
+    "objects": [],
+    "metadata": [
+        {
+            "type": "GRFN_CREATION",
+            "provenance": {
+                "method": "MODEL_ASSEMBLY_PIPELINE",
+                "timestamp": "2021-09-16 09:33:52.483324"
+            },
+            "name": "literal_3"
+        },
+        {
+            "type": "CODE_COLLECTION_REFERENCE",
+            "provenance": {
+                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                "timestamp": "2021-09-16 09:33:52.483276"
+            },
+            "global_reference_uid": "471e64aa-e8b8-df5c-b5e0-c91240a5dd64",
+            "files": [
+                {
+                    "uid": "1afe53c7-df4a-5b0d-dd4e-4d7be389fbc9",
+                    "name": "literal_3.py",
+                    "path": ""
+                }
+            ]
+        },
+        {
+            "type": "CODE_COLLECTION_REFERENCE",
+            "provenance": {
+                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                "timestamp": "2021-09-16 09:33:52.483329"
+            },
+            "global_reference_uid": "c351320b-0397-e6b9-6fe8-62966a8a6e1f",
+            "files": [
+                {
+                    "uid": "0efc3ac2-4b07-ad66-362a-4c561dc93f50",
+                    "name": "literal_3.py",
+                    "path": ""
+                }
+            ]
+        }
+    ]
+}

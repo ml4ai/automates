@@ -1,0 +1,336 @@
+{
+    "identifier": "AIR::@global::@global::literal_multi_types.py",
+    "entrypoint": "Container::literal_multi_types::literal_multi_types::multi_type_literals",
+    "containers": [
+        {
+            "identifier": "Container::literal_multi_types::literal_multi_types::multi_type_literals",
+            "metadata": [
+                {
+                    "type": "CODE_SPAN_REFERENCE",
+                    "provenance": {
+                        "method": "PROGRAM_ANALYSIS_PIPELINE",
+                        "timestamp": "2021-09-16 10:50:13.122253"
+                    },
+                    "code_type": "block",
+                    "code_file_reference_uid": "65d813e2-d046-9bc7-8579-17fa5ed36a99",
+                    "code_span": {
+                        "line_begin": 1,
+                        "line_end": 6,
+                        "col_begin": 0,
+                        "col_end": 26
+                    }
+                }
+            ],
+            "arguments": [],
+            "updated": [],
+            "return_value": [
+                "Variable::literal_multi_types::literal_multi_types.multi_type_literals::RETURN_VAL::-1"
+            ],
+            "variables": [
+                "Variable::literal_multi_types::literal_multi_types.multi_type_literals::pi::-1",
+                "Variable::literal_multi_types::literal_multi_types.multi_type_literals::fb::-1",
+                "Variable::literal_multi_types::literal_multi_types.multi_type_literals::RETURN_VAL::-1",
+                "Variable::literal_multi_types::literal_multi_types.multi_type_literals::num::-1",
+                "Variable::literal_multi_types::literal_multi_types.multi_type_literals::tb::-1"
+            ],
+            "statements": [
+                {
+                    "identifier": "LambdaStmt::literal_multi_types::literal_multi_types.multi_type_literals::assign.fb::-1",
+                    "metadata": [
+                        {
+                            "type": "CODE_SPAN_REFERENCE",
+                            "provenance": {
+                                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                                "timestamp": "2021-09-16 10:50:13.122077"
+                            },
+                            "code_type": "block",
+                            "code_file_reference_uid": "65d813e2-d046-9bc7-8579-17fa5ed36a99",
+                            "code_span": {
+                                "line_begin": 2,
+                                "line_end": 2,
+                                "col_begin": 4,
+                                "col_end": 19
+                            }
+                        }
+                    ],
+                    "container_id": "Container::literal_multi_types::literal_multi_types::multi_type_literals",
+                    "inputs": [],
+                    "outputs": [
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::fb::-1"
+                    ],
+                    "expression": "lambda : fizzbuzz",
+                    "expr_type": "assign"
+                },
+                {
+                    "identifier": "LambdaStmt::literal_multi_types::literal_multi_types.multi_type_literals::assign.pi::-1",
+                    "metadata": [
+                        {
+                            "type": "CODE_SPAN_REFERENCE",
+                            "provenance": {
+                                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                                "timestamp": "2021-09-16 10:50:13.122128"
+                            },
+                            "code_type": "block",
+                            "code_file_reference_uid": "65d813e2-d046-9bc7-8579-17fa5ed36a99",
+                            "code_span": {
+                                "line_begin": 3,
+                                "line_end": 3,
+                                "col_begin": 4,
+                                "col_end": 13
+                            }
+                        }
+                    ],
+                    "container_id": "Container::literal_multi_types::literal_multi_types::multi_type_literals",
+                    "inputs": [],
+                    "outputs": [
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::pi::-1"
+                    ],
+                    "expression": "lambda : 3.14",
+                    "expr_type": "assign"
+                },
+                {
+                    "identifier": "LambdaStmt::literal_multi_types::literal_multi_types.multi_type_literals::assign.num::-1",
+                    "metadata": [
+                        {
+                            "type": "CODE_SPAN_REFERENCE",
+                            "provenance": {
+                                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                                "timestamp": "2021-09-16 10:50:13.122155"
+                            },
+                            "code_type": "block",
+                            "code_file_reference_uid": "65d813e2-d046-9bc7-8579-17fa5ed36a99",
+                            "code_span": {
+                                "line_begin": 4,
+                                "line_end": 4,
+                                "col_begin": 4,
+                                "col_end": 12
+                            }
+                        }
+                    ],
+                    "container_id": "Container::literal_multi_types::literal_multi_types::multi_type_literals",
+                    "inputs": [],
+                    "outputs": [
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::num::-1"
+                    ],
+                    "expression": "lambda : 42",
+                    "expr_type": "assign"
+                },
+                {
+                    "identifier": "LambdaStmt::literal_multi_types::literal_multi_types.multi_type_literals::assign.tb::-1",
+                    "metadata": [
+                        {
+                            "type": "CODE_SPAN_REFERENCE",
+                            "provenance": {
+                                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                                "timestamp": "2021-09-16 10:50:13.122189"
+                            },
+                            "code_type": "block",
+                            "code_file_reference_uid": "65d813e2-d046-9bc7-8579-17fa5ed36a99",
+                            "code_span": {
+                                "line_begin": 5,
+                                "line_end": 5,
+                                "col_begin": 4,
+                                "col_end": 13
+                            }
+                        }
+                    ],
+                    "container_id": "Container::literal_multi_types::literal_multi_types::multi_type_literals",
+                    "inputs": [],
+                    "outputs": [
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::tb::-1"
+                    ],
+                    "expression": "lambda : True",
+                    "expr_type": "assign"
+                },
+                {
+                    "identifier": "LambdaStmt::literal_multi_types::literal_multi_types.multi_type_literals::assign.RETURN_VAL::-1",
+                    "metadata": [
+                        {
+                            "type": "CODE_SPAN_REFERENCE",
+                            "provenance": {
+                                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                                "timestamp": "2021-09-16 10:50:13.122216"
+                            },
+                            "code_type": "block",
+                            "code_file_reference_uid": "65d813e2-d046-9bc7-8579-17fa5ed36a99",
+                            "code_span": {
+                                "line_begin": 6,
+                                "line_end": 6,
+                                "col_begin": 4,
+                                "col_end": 26
+                            }
+                        }
+                    ],
+                    "container_id": "Container::literal_multi_types::literal_multi_types::multi_type_literals",
+                    "inputs": [
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::num::-1",
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::pi::-1",
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::tb::-1",
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::fb::-1"
+                    ],
+                    "outputs": [
+                        "Variable::literal_multi_types::literal_multi_types.multi_type_literals::RETURN_VAL::-1"
+                    ],
+                    "expression": "lambda num,pi,tb,fb: (num,pi,tb,fb)",
+                    "expr_type": "assign"
+                }
+            ],
+            "repeat": false
+        }
+    ],
+    "variables": [
+        {
+            "identifier": "Variable::literal_multi_types::literal_multi_types.multi_type_literals::fb::-1",
+            "metadata": [
+                {
+                    "type": "CODE_SPAN_REFERENCE",
+                    "provenance": {
+                        "method": "PROGRAM_ANALYSIS_PIPELINE",
+                        "timestamp": "2021-09-16 10:50:13.121934"
+                    },
+                    "code_type": "identifier",
+                    "code_file_reference_uid": "",
+                    "code_span": {
+                        "line_begin": 2,
+                        "line_end": 2,
+                        "col_begin": 4,
+                        "col_end": 19
+                    }
+                }
+            ],
+            "domain_name": "float",
+            "domain_constraint": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "identifier": "Variable::literal_multi_types::literal_multi_types.multi_type_literals::pi::-1",
+            "metadata": [
+                {
+                    "type": "CODE_SPAN_REFERENCE",
+                    "provenance": {
+                        "method": "PROGRAM_ANALYSIS_PIPELINE",
+                        "timestamp": "2021-09-16 10:50:13.121976"
+                    },
+                    "code_type": "identifier",
+                    "code_file_reference_uid": "",
+                    "code_span": {
+                        "line_begin": 3,
+                        "line_end": 3,
+                        "col_begin": 4,
+                        "col_end": 13
+                    }
+                }
+            ],
+            "domain_name": "float",
+            "domain_constraint": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "identifier": "Variable::literal_multi_types::literal_multi_types.multi_type_literals::num::-1",
+            "metadata": [
+                {
+                    "type": "CODE_SPAN_REFERENCE",
+                    "provenance": {
+                        "method": "PROGRAM_ANALYSIS_PIPELINE",
+                        "timestamp": "2021-09-16 10:50:13.122001"
+                    },
+                    "code_type": "identifier",
+                    "code_file_reference_uid": "",
+                    "code_span": {
+                        "line_begin": 4,
+                        "line_end": 4,
+                        "col_begin": 4,
+                        "col_end": 12
+                    }
+                }
+            ],
+            "domain_name": "float",
+            "domain_constraint": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "identifier": "Variable::literal_multi_types::literal_multi_types.multi_type_literals::tb::-1",
+            "metadata": [
+                {
+                    "type": "CODE_SPAN_REFERENCE",
+                    "provenance": {
+                        "method": "PROGRAM_ANALYSIS_PIPELINE",
+                        "timestamp": "2021-09-16 10:50:13.122022"
+                    },
+                    "code_type": "identifier",
+                    "code_file_reference_uid": "",
+                    "code_span": {
+                        "line_begin": 5,
+                        "line_end": 5,
+                        "col_begin": 4,
+                        "col_end": 13
+                    }
+                }
+            ],
+            "domain_name": "float",
+            "domain_constraint": "(and (> v -infty) (< v infty))"
+        },
+        {
+            "identifier": "Variable::literal_multi_types::literal_multi_types.multi_type_literals::RETURN_VAL::-1",
+            "metadata": [
+                {
+                    "type": "CODE_SPAN_REFERENCE",
+                    "provenance": {
+                        "method": "PROGRAM_ANALYSIS_PIPELINE",
+                        "timestamp": "2021-09-16 10:50:13.122041"
+                    },
+                    "code_type": "identifier",
+                    "code_file_reference_uid": "",
+                    "code_span": {
+                        "line_begin": 6,
+                        "line_end": 6,
+                        "col_begin": 4,
+                        "col_end": 26
+                    }
+                }
+            ],
+            "domain_name": "Unknown",
+            "domain_constraint": "(and (> v -infty) (< v infty))"
+        }
+    ],
+    "types": [],
+    "objects": [],
+    "documentation": {},
+    "metadata": [
+        {
+            "type": "GRFN_CREATION",
+            "provenance": {
+                "method": "MODEL_ASSEMBLY_PIPELINE",
+                "timestamp": "2021-09-16 10:50:13.121862"
+            },
+            "name": "literal_multi_types"
+        },
+        {
+            "type": "CODE_COLLECTION_REFERENCE",
+            "provenance": {
+                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                "timestamp": "2021-09-16 10:50:13.121768"
+            },
+            "global_reference_uid": "a96be950-cb15-d5f8-4528-de0917e9e275",
+            "files": [
+                {
+                    "uid": "55e068ce-7e95-6b5c-3a73-2ebde92ab796",
+                    "name": "literal_multi_types.py",
+                    "path": ""
+                }
+            ]
+        },
+        {
+            "type": "CODE_COLLECTION_REFERENCE",
+            "provenance": {
+                "method": "PROGRAM_ANALYSIS_PIPELINE",
+                "timestamp": "2021-09-16 10:50:13.121876"
+            },
+            "global_reference_uid": "e21ee451-e4c6-4365-7a4b-d5a407e76161",
+            "files": [
+                {
+                    "uid": "65d813e2-d046-9bc7-8579-17fa5ed36a99",
+                    "name": "literal_multi_types.py",
+                    "path": ""
+                }
+            ]
+        }
+    ]
+}

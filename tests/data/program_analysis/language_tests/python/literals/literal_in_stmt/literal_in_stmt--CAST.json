@@ -1,0 +1,180 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 2,
+                                        "row_start": 2,
+                                        "source_file_name": "literal_1.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "x1",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 2,
+                                            "row_start": 2,
+                                            "source_file_name": "literal_1.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "x",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 10,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 2,
+                                            "row_start": 2,
+                                            "source_file_name": "literal_1.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Add",
+                                "right": {
+                                    "node_type": "Number",
+                                    "number": 1,
+                                    "source_refs": [
+                                        {
+                                            "col_end": 14,
+                                            "col_start": 13,
+                                            "node_type": "SourceRef",
+                                            "row_end": 2,
+                                            "row_start": 2,
+                                            "source_file_name": "literal_1.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 14,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 2,
+                                        "row_start": 2,
+                                        "source_file_name": "literal_1.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 14,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 2,
+                                    "row_start": 2,
+                                    "source_file_name": "literal_1.py"
+                                }
+                            ]
+                        },
+                        {
+                            "node_type": "ModelReturn",
+                            "source_refs": [
+                                {
+                                    "col_end": 13,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 3,
+                                    "row_start": 3,
+                                    "source_file_name": "literal_1.py"
+                                }
+                            ],
+                            "value": {
+                                "name": "x1",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 11,
+                                        "node_type": "SourceRef",
+                                        "row_end": 3,
+                                        "row_start": 3,
+                                        "source_file_name": "literal_1.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "func_args": [
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 15,
+                                    "col_start": 14,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "literal_1.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 15,
+                                        "col_start": 14,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "literal_1.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "increment",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 13,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 3,
+                            "row_start": 1,
+                            "source_file_name": "literal_1.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "literal_1",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": [
+                        "def increment(x):\n",
+                        "    x1 = x + 1\n",
+                        "    return x1\n"
+                    ],
+                    "row_start": 1,
+                    "source_file_name": "literal_1.py"
+                }
+            ]
+        }
+    ]
+}
