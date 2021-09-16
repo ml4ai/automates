@@ -1710,7 +1710,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 [],
                 C2ALambdaType.UNKNOWN,
                 C2ASourceRef("", None, None, None, None),
-                str(node.string),
+                f'"{str(node.string)}"',
                 node,
             )
         ]
