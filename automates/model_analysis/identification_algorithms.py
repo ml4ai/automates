@@ -267,10 +267,15 @@ def cf_identifiability(g, gamma, delta=None, steps=False, stop_on_noid=True):
         algo ="cf_ID"
 
     res_tree = res.tree
+    if len(res.p_message) > 0:
+        if res.p_int is not None:
+            res_prob = f"{res.p_message}, probability is {res}"
+        else:
+            res_prob = res.p_message
+    else:
+        res_prob = gm.get_expression(res.p)
     if res.tree.call.id_check:
-        res_prob = None  # todo: write this
         output = gm.Results(query={"gamma": gamma, "delta": delta}, algorithm=algo, p=res_prob, tree=res_tree)
-
         if steps:
             return output
         return output.p
