@@ -783,8 +783,9 @@ class ResultsInternal:
 @dataclass(unsafe_hash=True)
 class CfResultsInternal:
     p: Probability = Probability()
-    p_int: int = None
     tree: CfTreeNode = CfTreeNode()
+    p_int: int = None
+    p_message: str = ""
 
 
 @dataclass(unsafe_hash=True)

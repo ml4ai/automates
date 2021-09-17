@@ -81,9 +81,6 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
     :return: P(y | do(x)) if y is identifiable or failure.
                 Note that the output needs to be read by get_expression
     """
-    to = None
-    frm = None
-    description = None
     tree = gm.TreeNode()
     if (len(p.var) == 0) and (not (p.product or p.fraction)):
         p = gm.Probability(var=v)
@@ -251,17 +248,39 @@ def compute_IDC(y, x, z, p, g, g_obs, v, topo, tree):
     return gm.ResultsInternal(p=nxt.p, tree=tree)
 
 
-def cf_identifiability(g, gamma, delta=None):
+def cf_identifiability(g, gamma, delta=None, steps=False, stop_on_noid=True):
     if "description" not in g.edge_attributes():
         g.es["description"] = numpy.repeat("O", len(g.es))
+
     g_obs = gm.observed_graph(g)
     if not g_obs.is_dag():
         raise ValueError("Graph 'G' is not a DAG.")
+
     topo_ind = g_obs.topological_sorting()
     topo = gm.to_names(topo_ind, g_obs)
+
     if delta is not None:
-        return cf_IDC(g, gamma, delta)
-    return cf_ID(g, gamma, topo)
+        res = cf_IDC(g, gamma, delta)
+        algo = "cf_IDC"
+    else:
+        res = cf_ID(g, gamma, topo)
+        algo ="cf_ID"
+
+    res_tree = res.tree
+    if res.tree.call.id_check:
+        res_prob = None  # todo: write this
+        output = gm.Results(query={"gamma": gamma, "delta": delta}, algorithm=algo, p=res_prob, tree=res_tree)
+
+        if steps:
+            return output
+        return output.p
+    else:
+        if stop_on_noid:
+            raise gm.IDANotIdentifiable("Not Identifiable")
+        output = gm.Results(query={"gamma": gamma, "delta": delta}, algorithm=algo, p="", tree=res_tree)
+        if steps:
+            return output
+        return output.p
 
 
 def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
@@ -271,20 +290,18 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
     # Line 1
     if len(gamma) == 0:
-        print("gamma is empty")
         tree.call.line = 1
         tree.call.id_check = True
-        return gm.CfResultsInternal(p, 1, tree)
+        return gm.CfResultsInternal(p, tree, 1, "gamma is empty")
 
     for event in gamma:
         if event.orig_name in event.int_vars:
 
             # Line 2
             if event.obs_val not in event.int_values:
-                print("Violates Axiom of Effectiveness, gamma is inconsistent")
                 tree.call.line = 2
                 tree.call.id_check = True
-                return gm.CfResultsInternal(p, 0, tree)
+                return gm.CfResultsInternal(p, tree, 0, "Violates Axiom of Effectiveness, gamma is inconsistent")
 
             # Line 3
             if event.obs_val in event.int_values:
@@ -292,17 +309,16 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                 tree.children.append(deepcopy(nxt.tree))
                 tree.call.line = 3
                 tree.call.id_check = nxt.tree.call.id_check
-                return gm.CfResultsInternal(nxt.p, nxt.p_int, tree)
+                return gm.CfResultsInternal(nxt.p, tree, nxt.p_int, nxt.p_message)
 
     # Line 4
     (cg, gamma_prime) = gm.make_cg(g, gamma)
 
     # Line 5
     if gamma_prime == "Inconsistent":
-        print("gamma_prime is inconsistent")
         tree.call.line = 5
         tree.call.id_check = True
-        return gm.CfResultsInternal(p, 0, tree)
+        return gm.CfResultsInternal(p, tree, 0, "gamma_prime is inconsistent")
 
     # Line 6
     cg_obs = gm.observed_graph(cg)
@@ -372,17 +388,21 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                 sub.append(int_val)
             ev.append(node["obs_val"])
         if len(set(sub)-set(ev)) != 0:
-            raise ValueError("Fail, line 8")
+            tree.call.line = 8
+            tree.call.id_check = False
+            return gm.CfResultsInternal(tree=tree, p_message="counterfactual contains an inconsistent value assignment")
 
         # Line 9
         else:
+            tree.call.line = 9
+            tree.call.id_check = True
             new_x = []
             var = []
             for node in s_single:
                 for int_var in node["int_vars"]:
                     new_x.append(int_var)
                 var.append(node["orig_name"])
-            return gm.Probability(var=var, subscript=new_x)
+            return gm.CfResultsInternal(gm.Probability(var=var, subscript=new_x), tree)
 
 
 def cf_IDC(g, gamma, delta):
