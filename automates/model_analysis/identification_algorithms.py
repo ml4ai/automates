@@ -405,23 +405,30 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
             return gm.CfResultsInternal(gm.Probability(var=var, subscript=new_x), tree)
 
 
-def cf_IDC(g, gamma, delta):
+def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line numbers have 10 added
+    g_obs = gm.observed_graph(g)
+    topo_ind = g_obs.topological_sorting()
+    topo = gm.to_names(topo_ind, g_obs)
+    tree.call = gm.CfCall(gamma=gamma, delta=delta, g=g, line=10, id_check=False)
     for cf in gamma:
         cf.cond = "gamma"
     for cf in delta:
         cf.cond = "delta"
 
     # Line 1
-    if cf_ID(g, delta) == 0:  # todo: make sure cf_ID() can return 0
-        raise ValueError("Undefined: delta is inconsistent")
+    if cf_ID(g, delta, topo).p_int == 0:
+        tree.call.line = 11
+        tree.call.id_check = False
+        return gm.CfResultsInternal(tree=tree, p_message="Undefined: delta is inconsistent")
 
     # Line 2
     (g_prime, cf_conj_prime) = gm.make_cg(g, gamma+delta)
 
     # Line 3
     if cf_conj_prime == "Inconsistent":
-        print("Counterfactual is Inconsistent")
-        return 0
+        tree.call.line = 13
+        tree.call.id_check = True
+        return gm.CfResultsInternal(tree=tree, p_int=0, p_message="Counterfactual is Inconsistent")
 
     # Line 4
     gamma_prime_names = []
@@ -450,12 +457,18 @@ def cf_IDC(g, gamma, delta):
                     new_cf.int_values.append(cf.obs_val)
                     gamma_prime_y.append(new_cf)
             delta_prime.remove(cf)
-            return cf_IDC(g, gamma_prime_y, delta_prime)
+
+            tree.call.line = 14
+            nxt = cf_IDC(g, gamma_prime_y, delta_prime)
+            tree.children.append(deepcopy(nxt.tree))
+            tree.call.id_check = nxt.tree.call.id_check
+            return gm.CfResultsInternal(nxt.p, tree, nxt.p_int, nxt.p_message)
 
     # Line 5
-    g_obs = gm.observed_graph(g)
-    topo_ind = g_obs.topological_sorting()
-    topo = gm.to_names(topo_ind, g_obs)
+    tree.call.line = 15
     num = cf_ID(g, cf_conj_prime, topo)
     den = cf_ID(g, delta, topo)  # todo: unsure about this
-    return gm.Probability(fraction=True, num=num, den=den)
+    tree.children.append(deepcopy(num.tree))
+    tree.children.append(deepcopy(den.tree))
+    tree.call.id_check = num.tree.call.id_check and den.tree.call.id_check
+    return gm.CfResultsInternal(p=gm.Probability(fraction=True, num=num.p, den=den.p))
