@@ -432,5 +432,10 @@ def cf_IDC(g, gamma, delta):
             delta_prime.remove(cf)
             return cf_IDC(g, gamma_prime_y, delta_prime)
 
-
-    return None
+    # Line 5
+    g_obs = gm.observed_graph(g)
+    topo_ind = g_obs.topological_sorting()
+    topo = gm.to_names(topo_ind, g_obs)
+    num = cf_ID(g, cf_conj_prime, topo)
+    den = cf_ID(g, delta, topo)  # todo: unsure about this
+    return gm.Probability(fraction=True, num=num, den=den)
