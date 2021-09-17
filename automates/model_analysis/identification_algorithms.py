@@ -382,7 +382,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                 for int_var in node["int_vars"]:
                     new_x.append(int_var)
                 var.append(node["orig_name"])
-            return None  # todo: P_{new_x} (var)
+            return gm.Probability(var=var, subscript=new_x)
 
 
 def cf_IDC(g, gamma, delta):

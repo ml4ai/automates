@@ -725,6 +725,7 @@ class Probability:
     weight: list = field(default_factory=list)
     num: Probability = None
     den: Probability = None
+    subscript: list = field(default_factory=list)
 
 
 @dataclass(unsafe_hash=True)
