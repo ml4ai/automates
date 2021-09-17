@@ -1,7 +1,7 @@
 import pytest
 import igraph
 import automates.model_analysis.graph_manipulation as gm
-from automates.model_analysis.identification_algorithms import identifiability
+from automates.model_analysis.identification_algorithms import identifiability, cf_identifiability
 
 
 def test_identifiability():
@@ -106,3 +106,17 @@ def test_make_cg_multi_intervention():
     gamma_prime_exp = [gm.CF("Y", "y", ["X", "Z"], ["x", "z"]), gm.CF("X", "x_prime")]
 
     assert cg.isomorphic(cg_exp) and (gamma_prime == gamma_prime_exp)
+
+
+# def test_cf_identifiability():
+#     # Setup
+#     gamma = [gm.CF("Y", "y", ["X"], ["x"])]
+#     delta = [gm.CF("X", "x_prime"), gm.CF("Z", "z", ["D"], ["d"]), gm.CF("D", "d")]
+#     g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
+#     g.vs["name"] = ["X", "W", "Y", "D", "Z"]
+#     g.es["description"] = ["O", "O", "O", "O", "U", "U"]
+#
+#     # Function Results
+#     results = cf_identifiability(g, gamma, delta)
+#
+#     # Expected Results
