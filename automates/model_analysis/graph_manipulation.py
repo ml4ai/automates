@@ -801,6 +801,7 @@ class CF:
     obs_val: str = None
     int_vars: List[str] = field(default_factory=list)
     int_values: List[str] = field(default_factory=list)
+    cond: str = None
 
 
 class IDANotIdentifiable(Exception):

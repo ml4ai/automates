@@ -386,16 +386,51 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
 
 def cf_IDC(g, gamma, delta):
+    for cf in gamma:
+        cf.cond = "gamma"
+    for cf in delta:
+        cf.cond = "delta"
+
     # Line 1
-    if cf_ID(g, delta) == 0:
-        return "Undefined"
+    if cf_ID(g, delta) == 0:  # todo: make sure cf_ID() can return 0
+        raise ValueError("Undefined: delta is inconsistent")
 
     # Line 2
     (g_prime, cf_conj_prime) = gm.make_cg(g, gamma+delta)
 
     # Line 3
     if cf_conj_prime == "Inconsistent":
+        print("Counterfactual is Inconsistent")
         return 0
 
     # Line 4
+    gamma_prime_names = []
+    gamma_prime = []
+    delta_prime = []
+    for cf in cf_conj_prime:
+        if cf.cond == "gamma":
+            gamma_prime_names.append(f"{cf.orig_name}_{cf.int_vars}")
+            gamma_prime.append(cf)
+        else:
+            delta_prime.append(cf)
+
+    for cf in delta_prime:
+        node = f"{cf.orig_name}_{cf.int_vars}"
+        g_prime_y = deepcopy(g_prime)
+        edges = set(g_prime.es.select().indices) - set(g_prime.es.select(_from_in=g.vs.select(name=node).indices).indices)
+        g_prime_y = g_prime_y.subgraph_edges(edges, delete_vertices=False)
+
+        if gm.wrap_d_sep(g_prime_y, [node], gamma_prime_names):
+            gamma_prime_y = []
+            for gamma_cf in gamma_prime:
+                gamma_name = f"{gamma_cf.original_name}_{gamma_cf.int_vars}"
+                if gamma_name in gm.find_related_nodes_of([gamma_name], g_prime, mode="in", order="max"):
+                    new_cf = deepcopy(gamma_cf)
+                    new_cf.int_vars.append(cf.orig_name)
+                    new_cf.int_values.append(cf.obs_val)
+                    gamma_prime_y.append(new_cf)
+            delta_prime.remove(cf)
+            return cf_IDC(g, gamma_prime_y, delta_prime)
+
+
     return None
