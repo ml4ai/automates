@@ -14,6 +14,7 @@ import org.json4s.jackson.JsonMethods._
 import com.github.tomtung.latex2unicode._
 import ujson.False
 
+import scala.collection.mutable
 import scala.util.control._
 import scala.collection.mutable.ArrayBuffer
 
@@ -25,12 +26,15 @@ import scala.collection.mutable.ArrayBuffer
   */
 object Subscripts extends App {
 
+  // todo: separate underscore file for each input file
+  // just throw out everything between begin - end
+  // replace newcommand stuff
 
   val config = ConfigFactory.load()
 
-  val inputDir: String = "/Users/alexeeva/Downloads/2107.14240/just_main"
+  val inputDir: String = "/Users/alexeeva/Desktop/automates-related/arxiv/tex_dir/sample"
 //  val inputDir = "/Users/alexeeva/Desktop/subscripts/texfiles"
-  val outputDir: String = ""
+  val outputDir: String = "/Users/alexeeva/Desktop/automates-related/arxiv/tex_dir/sample/"
   val inputType = config[String]("apps.inputType")
   // if using science parse doc, uncomment next line and...
   //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
@@ -46,6 +50,7 @@ object Subscripts extends App {
   val loop = new Breaks
 
   def isBalanced(string: String, openDelim: String, close_delim: String):Boolean = {
+
     var n_open = 0
     for (ch <- string) {
       if (ch == openDelim.head) {
@@ -62,7 +67,7 @@ object Subscripts extends App {
 //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
 //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
-val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
+val pw = new PrintWriter(new File(outputDir + "subscripts_data_sample.txt" ))
 //  pw.write("MAsha")
   files.foreach { file =>
     println("FILE NAME" + file)
@@ -71,44 +76,65 @@ val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
     // 2. Get the input file contents
     // note: for science parse format, each text is a section
     val texts = dataLoader.loadFile(file)
+
+//    for (t <- texts) {
+//      println("t: " + t)
+//      println("replaced: " +
+//        " " + t.replaceAll("\\\\begin\\{equation\\}(.|\\n)*\\\\end\\{equation\\}","")) //\{equation\}.*\\end\{equation\}
+//    }
     val filteredTexts = new ArrayBuffer[String]()
+    val newCommands =  mutable.Map[String, String]()
     for (t <- texts) {
-      val splitText = t.split("\n")
+      val splitText = t.replaceAll("\\\\begin\\{equation\\}(.|\\n)*?\\\\end\\{equation\\}|%.*?\\n|\\\\label\\{.*?\\}\\}?","").split("\n")
+//        replaceAll("\\\\begin\\{equation\\}(.|\\n)*\\\\end\\{equation\\}","").
+//        replaceAll("%.*?\n","").
+//        replaceAll("\\\\label\\{.*?\\}\\}?", "").
+//        split("\n")
       for (st <- splitText) {
-        if (!(st.startsWith("\\document") || st.startsWith("\\usepackage") || st.startsWith("\\begin") || st.startsWith("\\end") || st.startsWith("\\input") || st.startsWith("\\author") || st.startsWith("\\keywords") ||st.startsWith("\\altauthor") ||  st.startsWith("\\affiliation") || st.startsWith("\\include"))) {
+        if (st.contains("\\newcommand")) {
+          val split = st.split("\\}\\[?.*?\\]?\\{")
+          println("split: " + split.mkString("|||"))
+          newCommands(split.head.replace("\\newcommand{", "")) = split.last.dropRight(1)
+        } else if (!(st.startsWith("\\document") || st.startsWith("\\usepackage") || st.startsWith("\\begin") || st.startsWith("\\end") || st.startsWith("\\input") || st.startsWith("\\author") || st.startsWith("\\keywords") ||st.startsWith("\\altauthor") ||  st.startsWith("\\affiliation") || st.startsWith("\\include"))) {
           filteredTexts.append(st)
         }
       }
     }
 //    for (t <- filteredTexts) println(">> " + t)
 
-    val regex = """\w+\_\{+.{1,20}\}+|\w+\_\w+""".r
+    val regex = """\w+\_\{+.{1,20}\}\}*|\w+\_\w+""".r
     for (t <- filteredTexts) {
-      //      println(">> " + t)
+      println(">> " + t)
       val matches = regex.findAllIn(t).toList
       val matchIndices = regex.findAllMatchIn(t).toList
       val matchesStarts = matchIndices.map(m => (m.start)).toList
       val matchesEnds = matchIndices.map(m => (m.end)).toList
       val lastIndices = new ArrayBuffer[Int]()
       for ((mi, idx) <- matchesStarts.zipWithIndex) {
-        //        println("mi: " + mi + " " + matches(idx))
+        println("mi: " + mi + " " + matches(idx))
         if (!matches(idx).contains("{")) {
           lastIndices.append(matchIndices(idx).end)
         } else {
           loop.breakable {
-            for (i <- 3 to 20) {
+            var lastReasonableEndIndex = 0
+            for (i <- 3 to 40) {
               val possibleMatch = t.slice(mi, mi + i)
+              println("possible match: " + possibleMatch)
               if (possibleMatch.contains("{") && isBalanced(possibleMatch, "{", "}")) {
                 lastIndices.append(mi + i)
+                val idx = mi + i
+                println("appending " + idx)
                 loop.break()
-              }
+              } else {println("not appending")}
             }
           }
         }
       }
 
+
       println("len: " + matchesStarts.length)
-      //      println("last indices: " + lastIndices.length)
+      println("last indices: " + lastIndices.length)
+      println("last indices: " + lastIndices.mkString("||"))
       val textChunks = new ArrayBuffer[String]()
       for ((pos, idx) <- matchesStarts.zipWithIndex) {
         //        println("pos and idx: " + pos + " " + idx)
@@ -155,6 +181,8 @@ val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
               if (i.contains("_") ) {
                 // process subscripts and superscripts
                 val cleanedUp = AlignmentBaseline.replaceWordWithGreek(i.replace("_", " "), AlignmentBaseline.word2greekDict.toMap).replace(",", " , ")
+                println("i: " + i)
+                println("cleanedup: " + cleanedUp)
                 val withSubscr = try {
                   AlignmentBaseline.render(cleanedUp, AlignmentBaseline.pdfalignDir).split(" ")
                 } finally {
@@ -177,7 +205,7 @@ val pw = new PrintWriter(new File("subscripts_data_sample.txt" ))
                   pw.write(toWrite.trim + "\t" + "O" + "\n")
                 } else {
                   if (!i.contains("\\label")) {
-                    //                    println("jjj: " + i)
+                    println("jjj: " + i)
                     val replaceGreek = AlignmentBaseline.replaceWordWithGreek(i, AlignmentBaseline.word2greekDict.toMap)
                     //                    println("repl: " + replaceGreek)
                     val cleanedUp = replaceGreek.replace("\\", "\\\\")
