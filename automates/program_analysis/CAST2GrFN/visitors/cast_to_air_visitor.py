@@ -406,6 +406,7 @@ class CASTToAIRVisitor(CASTVisitor):
             "Add": "+",
             "Sub": "-",
             "Div": "/",
+            "FloorDiv": "//",
             "Gt": ">",
             "Gte": ">=",
             "Lt": "<",
@@ -420,8 +421,8 @@ class CASTToAIRVisitor(CASTVisitor):
             "Not": "not ",
             "Invert": "~",
             "USub": "- ",
-            "And": "&&",
-            "Or": "||",
+            "And": "and ",
+            "Or": "or ",
             "Mod": "%",
         }
         return op_map[op] if op in op_map else None
