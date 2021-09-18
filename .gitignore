@@ -96,3 +96,6 @@ tmp
 
 # Docker build stuff
 .env
+
+# Ignore visualization PDFs in tests/
+tests/data/**/*.pdf
