@@ -1,0 +1,2071 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [],
+                    "name": "sys",
+                    "node_type": "Module",
+                    "source_refs": [
+                        {
+                            "col_end": 10,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 1,
+                            "row_start": 1,
+                            "source_file_name": "basic_operators.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "a",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 5,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "name": "x",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 9,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Add",
+                                    "right": {
+                                        "name": "y",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 13,
+                                                "col_start": 12,
+                                                "node_type": "SourceRef",
+                                                "row_end": 5,
+                                                "row_start": 5,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 13,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 5,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Sub",
+                                "right": {
+                                    "name": "z",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 17,
+                                            "col_start": 16,
+                                            "node_type": "SourceRef",
+                                            "row_end": 5,
+                                            "row_start": 5,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 17,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 17,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 5,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 6,
+                                        "row_start": 6,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "b",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 6,
+                                            "row_start": 6,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "name": "a",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 10,
+                                                "col_start": 9,
+                                                "node_type": "SourceRef",
+                                                "row_end": 6,
+                                                "row_start": 6,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Div",
+                                    "right": {
+                                        "left": {
+                                            "name": "y",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 15,
+                                                    "col_start": 14,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 6,
+                                                    "row_start": 6,
+                                                    "source_file_name": "basic_operators.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "BinaryOp",
+                                        "op": "Mult",
+                                        "right": {
+                                            "node_type": "UnaryOp",
+                                            "op": "USub",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 20,
+                                                    "col_start": 18,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 6,
+                                                    "row_start": 6,
+                                                    "source_file_name": "basic_operators.py"
+                                                }
+                                            ],
+                                            "value": {
+                                                "name": "z",
+                                                "node_type": "Name",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 20,
+                                                        "col_start": 19,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 6,
+                                                        "row_start": 6,
+                                                        "source_file_name": "basic_operators.py"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "source_refs": [
+                                            {
+                                                "col_end": 20,
+                                                "col_start": 14,
+                                                "node_type": "SourceRef",
+                                                "row_end": 6,
+                                                "row_start": 6,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 21,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 6,
+                                            "row_start": 6,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Pow",
+                                "right": {
+                                    "node_type": "Number",
+                                    "number": 2,
+                                    "source_refs": [
+                                        {
+                                            "col_end": 27,
+                                            "col_start": 26,
+                                            "node_type": "SourceRef",
+                                            "row_end": 6,
+                                            "row_start": 6,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 27,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 6,
+                                        "row_start": 6,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 27,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 6,
+                                    "row_start": 6,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 7,
+                                        "row_start": 7,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "c",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 7,
+                                            "row_start": 7,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "b",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 7,
+                                            "row_start": 7,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Mod",
+                                "right": {
+                                    "node_type": "Number",
+                                    "number": 10,
+                                    "source_refs": [
+                                        {
+                                            "col_end": 14,
+                                            "col_start": 12,
+                                            "node_type": "SourceRef",
+                                            "row_end": 7,
+                                            "row_start": 7,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 14,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 7,
+                                        "row_start": 7,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 14,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 7,
+                                    "row_start": 7,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 8,
+                                        "row_start": 8,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "d",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 8,
+                                            "row_start": 8,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "c",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 8,
+                                            "row_start": 8,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "FloorDiv",
+                                "right": {
+                                    "node_type": "Number",
+                                    "number": 2,
+                                    "source_refs": [
+                                        {
+                                            "col_end": 14,
+                                            "col_start": 13,
+                                            "node_type": "SourceRef",
+                                            "row_end": 8,
+                                            "row_start": 8,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 14,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 8,
+                                        "row_start": 8,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 14,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 8,
+                                    "row_start": 8,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 10,
+                                        "row_start": 10,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "c3",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 10,
+                                            "row_start": 10,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "c1",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 11,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 10,
+                                            "row_start": 10,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "And",
+                                "right": {
+                                    "name": "c2",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 18,
+                                            "col_start": 16,
+                                            "node_type": "SourceRef",
+                                            "row_end": 10,
+                                            "row_start": 10,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 18,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 10,
+                                        "row_start": 10,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 18,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 10,
+                                    "row_start": 10,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 11,
+                                        "row_start": 11,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "c4",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 11,
+                                            "row_start": 11,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "c1",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 11,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 11,
+                                            "row_start": 11,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Or",
+                                "right": {
+                                    "node_type": "UnaryOp",
+                                    "op": "Not",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 22,
+                                            "col_start": 16,
+                                            "node_type": "SourceRef",
+                                            "row_end": 11,
+                                            "row_start": 11,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ],
+                                    "value": {
+                                        "name": "c3",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 22,
+                                                "col_start": 20,
+                                                "node_type": "SourceRef",
+                                                "row_end": 11,
+                                                "row_start": 11,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 23,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 11,
+                                        "row_start": 11,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 23,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 11,
+                                    "row_start": 11,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 12,
+                                        "row_start": 12,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "c5",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 12,
+                                            "row_start": 12,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "c2",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 11,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 12,
+                                            "row_start": 12,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "BitXor",
+                                "right": {
+                                    "name": "c4",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 16,
+                                            "col_start": 14,
+                                            "node_type": "SourceRef",
+                                            "row_end": 12,
+                                            "row_start": 12,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 16,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 12,
+                                        "row_start": 12,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 16,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 12,
+                                    "row_start": 12,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 14,
+                                        "row_start": 14,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "e1",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 14,
+                                            "row_start": 14,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "name": "a",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 10,
+                                                "col_start": 9,
+                                                "node_type": "SourceRef",
+                                                "row_end": 14,
+                                                "row_start": 14,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Eq",
+                                    "right": {
+                                        "name": "b",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 15,
+                                                "col_start": 14,
+                                                "node_type": "SourceRef",
+                                                "row_end": 14,
+                                                "row_start": 14,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 15,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 14,
+                                            "row_start": 14,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "And",
+                                "right": {
+                                    "left": {
+                                        "name": "c",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 21,
+                                                "col_start": 20,
+                                                "node_type": "SourceRef",
+                                                "row_end": 14,
+                                                "row_start": 14,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "NotEq",
+                                    "right": {
+                                        "name": "d",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 26,
+                                                "col_start": 25,
+                                                "node_type": "SourceRef",
+                                                "row_end": 14,
+                                                "row_start": 14,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 26,
+                                            "col_start": 20,
+                                            "node_type": "SourceRef",
+                                            "row_end": 14,
+                                            "row_start": 14,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 26,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 14,
+                                        "row_start": 14,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 26,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 14,
+                                    "row_start": 14,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 15,
+                                        "row_start": 15,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "e2",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 15,
+                                            "row_start": 15,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "name": "c",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 10,
+                                                "col_start": 9,
+                                                "node_type": "SourceRef",
+                                                "row_end": 15,
+                                                "row_start": 15,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Gte",
+                                    "right": {
+                                        "name": "d",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 15,
+                                                "col_start": 14,
+                                                "node_type": "SourceRef",
+                                                "row_end": 15,
+                                                "row_start": 15,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 15,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 15,
+                                            "row_start": 15,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Or",
+                                "right": {
+                                    "left": {
+                                        "name": "b",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 20,
+                                                "col_start": 19,
+                                                "node_type": "SourceRef",
+                                                "row_end": 15,
+                                                "row_start": 15,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Gt",
+                                    "right": {
+                                        "name": "a",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 24,
+                                                "col_start": 23,
+                                                "node_type": "SourceRef",
+                                                "row_end": 15,
+                                                "row_start": 15,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 24,
+                                            "col_start": 19,
+                                            "node_type": "SourceRef",
+                                            "row_end": 15,
+                                            "row_start": 15,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 24,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 15,
+                                        "row_start": 15,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 24,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 15,
+                                    "row_start": 15,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 16,
+                                        "row_start": 16,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "e3",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 16,
+                                            "row_start": 16,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "name": "d",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 10,
+                                                "col_start": 9,
+                                                "node_type": "SourceRef",
+                                                "row_end": 16,
+                                                "row_start": 16,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Lte",
+                                    "right": {
+                                        "name": "a",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 15,
+                                                "col_start": 14,
+                                                "node_type": "SourceRef",
+                                                "row_end": 16,
+                                                "row_start": 16,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 15,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 16,
+                                            "row_start": 16,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "And",
+                                "right": {
+                                    "left": {
+                                        "name": "c",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 21,
+                                                "col_start": 20,
+                                                "node_type": "SourceRef",
+                                                "row_end": 16,
+                                                "row_start": 16,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Lt",
+                                    "right": {
+                                        "name": "d",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 25,
+                                                "col_start": 24,
+                                                "node_type": "SourceRef",
+                                                "row_end": 16,
+                                                "row_start": 16,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 25,
+                                            "col_start": 20,
+                                            "node_type": "SourceRef",
+                                            "row_end": 16,
+                                            "row_start": 16,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 25,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 16,
+                                        "row_start": 16,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 25,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 16,
+                                    "row_start": 16,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 6,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 17,
+                                        "row_start": 17,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "e4",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 6,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 17,
+                                            "row_start": 17,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "e1",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 11,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 17,
+                                            "row_start": 17,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Or",
+                                "right": {
+                                    "left": {
+                                        "name": "e3",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 23,
+                                                "col_start": 21,
+                                                "node_type": "SourceRef",
+                                                "row_end": 17,
+                                                "row_start": 17,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Or",
+                                    "right": {
+                                        "name": "e2",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 17,
+                                                "col_start": 15,
+                                                "node_type": "SourceRef",
+                                                "row_end": 17,
+                                                "row_start": 17,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 23,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 17,
+                                            "row_start": 17,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 23,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 17,
+                                        "row_start": 17,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 23,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 17,
+                                    "row_start": 17,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        {
+                            "node_type": "ModelReturn",
+                            "source_refs": [
+                                {
+                                    "col_end": 20,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 19,
+                                    "row_start": 19,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ],
+                            "value": {
+                                "node_type": "Tuple",
+                                "source_refs": [
+                                    {
+                                        "col_end": 20,
+                                        "col_start": 11,
+                                        "node_type": "SourceRef",
+                                        "row_end": 19,
+                                        "row_start": 19,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ],
+                                "values": [
+                                    {
+                                        "name": "d",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 12,
+                                                "col_start": 11,
+                                                "node_type": "SourceRef",
+                                                "row_end": 19,
+                                                "row_start": 19,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "c5",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 16,
+                                                "col_start": 14,
+                                                "node_type": "SourceRef",
+                                                "row_end": 19,
+                                                "row_start": 19,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "e4",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 20,
+                                                "col_start": 18,
+                                                "node_type": "SourceRef",
+                                                "row_end": 19,
+                                                "row_start": 19,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "func_args": [
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 10,
+                                    "col_start": 9,
+                                    "node_type": "SourceRef",
+                                    "row_end": 4,
+                                    "row_start": 4,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 10,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 4,
+                                        "row_start": 4,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 13,
+                                    "col_start": 12,
+                                    "node_type": "SourceRef",
+                                    "row_end": 4,
+                                    "row_start": 4,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "y",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 12,
+                                        "node_type": "SourceRef",
+                                        "row_end": 4,
+                                        "row_start": 4,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 16,
+                                    "col_start": 15,
+                                    "node_type": "SourceRef",
+                                    "row_end": 4,
+                                    "row_start": 4,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "z",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 16,
+                                        "col_start": 15,
+                                        "node_type": "SourceRef",
+                                        "row_end": 4,
+                                        "row_start": 4,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 20,
+                                    "col_start": 18,
+                                    "node_type": "SourceRef",
+                                    "row_end": 4,
+                                    "row_start": 4,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "c1",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 20,
+                                        "col_start": 18,
+                                        "node_type": "SourceRef",
+                                        "row_end": 4,
+                                        "row_start": 4,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 24,
+                                    "col_start": 22,
+                                    "node_type": "SourceRef",
+                                    "row_end": 4,
+                                    "row_start": 4,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "c2",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 24,
+                                        "col_start": 22,
+                                        "node_type": "SourceRef",
+                                        "row_end": 4,
+                                        "row_start": 4,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "main",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 20,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 19,
+                            "row_start": 4,
+                            "source_file_name": "basic_operators.py"
+                        }
+                    ]
+                },
+                {
+                    "expr": {
+                        "arguments": [
+                            {
+                                "arguments": [
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 1,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 21,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 24,
+                                                            "row_start": 24,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 23,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 24,
+                                                        "row_start": 24,
+                                                        "source_file_name": "basic_operators.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 20,
+                                                                "col_start": 12,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 24,
+                                                                "row_start": 24,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 20,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 24,
+                                                            "row_start": 24,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 15,
+                                                                "col_start": 12,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 24,
+                                                                "row_start": 24,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "int",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 24,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 24,
+                                                    "row_start": 24,
+                                                    "source_file_name": "basic_operators.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 24,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 24,
+                                                "row_start": 24,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 2,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 21,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 25,
+                                                            "row_start": 25,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 23,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 25,
+                                                        "row_start": 25,
+                                                        "source_file_name": "basic_operators.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 20,
+                                                                "col_start": 12,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 25,
+                                                                "row_start": 25,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 20,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 25,
+                                                            "row_start": 25,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 15,
+                                                                "col_start": 12,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 25,
+                                                                "row_start": 25,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "int",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 24,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 25,
+                                                    "row_start": 25,
+                                                    "source_file_name": "basic_operators.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 24,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 25,
+                                                "row_start": 25,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 3,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 21,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 26,
+                                                            "row_start": 26,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 23,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 26,
+                                                        "row_start": 26,
+                                                        "source_file_name": "basic_operators.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 20,
+                                                                "col_start": 12,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 26,
+                                                                "row_start": 26,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 20,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 26,
+                                                            "row_start": 26,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 15,
+                                                                "col_start": 12,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 26,
+                                                                "row_start": 26,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "int",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 24,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 26,
+                                                    "row_start": 26,
+                                                    "source_file_name": "basic_operators.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 24,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 26,
+                                                "row_start": 26,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 4,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 23,
+                                                            "col_start": 22,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 27,
+                                                            "row_start": 27,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 24,
+                                                        "col_start": 13,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 27,
+                                                        "row_start": 27,
+                                                        "source_file_name": "basic_operators.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 21,
+                                                                "col_start": 13,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 27,
+                                                                "row_start": 27,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 21,
+                                                            "col_start": 13,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 27,
+                                                            "row_start": 27,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 16,
+                                                                "col_start": 13,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 27,
+                                                                "row_start": 27,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "bool",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 25,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 27,
+                                                    "row_start": 27,
+                                                    "source_file_name": "basic_operators.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 25,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 27,
+                                                "row_start": 27,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 5,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 23,
+                                                            "col_start": 22,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 28,
+                                                            "row_start": 28,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 24,
+                                                        "col_start": 13,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 28,
+                                                        "row_start": 28,
+                                                        "source_file_name": "basic_operators.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 21,
+                                                                "col_start": 13,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 28,
+                                                                "row_start": 28,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 21,
+                                                            "col_start": 13,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 28,
+                                                            "row_start": 28,
+                                                            "source_file_name": "basic_operators.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 16,
+                                                                "col_start": 13,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 28,
+                                                                "row_start": 28,
+                                                                "source_file_name": "basic_operators.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "bool",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 25,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 28,
+                                                    "row_start": 28,
+                                                    "source_file_name": "basic_operators.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 25,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 28,
+                                                "row_start": 28,
+                                                "source_file_name": "basic_operators.py"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "func": {
+                                    "name": "main",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 29,
+                                            "row_start": 23,
+                                            "source_file_name": "basic_operators.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 29,
+                                        "row_start": 23,
+                                        "source_file_name": "basic_operators.py"
+                                    }
+                                ]
+                            }
+                        ],
+                        "func": {
+                            "name": "print",
+                            "node_type": "Name",
+                            "source_refs": [
+                                {
+                                    "col_end": 1,
+                                    "col_start": 0,
+                                    "node_type": "SourceRef",
+                                    "row_end": 30,
+                                    "row_start": 22,
+                                    "source_file_name": "basic_operators.py"
+                                }
+                            ]
+                        },
+                        "node_type": "Call",
+                        "source_refs": [
+                            {
+                                "col_end": 1,
+                                "col_start": 0,
+                                "node_type": "SourceRef",
+                                "row_end": 30,
+                                "row_start": 22,
+                                "source_file_name": "basic_operators.py"
+                            }
+                        ]
+                    },
+                    "node_type": "Expr",
+                    "source_refs": [
+                        {
+                            "col_end": 1,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 30,
+                            "row_start": 22,
+                            "source_file_name": "basic_operators.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "basic_operators",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": [
+                        "import sys\n",
+                        "\n",
+                        "\n",
+                        "def main(x, y, z, c1, c2):\n",
+                        "    a = x + y - z\n",
+                        "    b = (a / (y * -z)) ** 2\n",
+                        "    c = b % 10\n",
+                        "    d = c // 2\n",
+                        "\n",
+                        "    c3 = c1 and c2\n",
+                        "    c4 = c1 or (not c3)\n",
+                        "    c5 = c2 ^ c4\n",
+                        "\n",
+                        "    e1 = a == b and c != d\n",
+                        "    e2 = c >= d or b > a\n",
+                        "    e3 = d <= a and c < d\n",
+                        "    e4 = e1 or e2 or e3\n",
+                        "\n",
+                        "    return d, c5, e4\n",
+                        "\n",
+                        "\n",
+                        "print(\n",
+                        "    main(\n",
+                        "        int(sys.argv[1]),\n",
+                        "        int(sys.argv[2]),\n",
+                        "        int(sys.argv[3]),\n",
+                        "        bool(sys.argv[4]),\n",
+                        "        bool(sys.argv[5]),\n",
+                        "    )\n",
+                        ")\n"
+                    ],
+                    "row_start": 1,
+                    "source_file_name": "basic_operators.py"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,727 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 2,
+                                        "row_start": 2,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "a",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 2,
+                                            "row_start": 2,
+                                            "source_file_name": "nested_simple_ifexpr.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "node_type": "Number",
+                                "number": 0,
+                                "source_refs": [
+                                    {
+                                        "col_end": 9,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 2,
+                                        "row_start": 2,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 9,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 2,
+                                    "row_start": 2,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ]
+                        },
+                        {
+                            "body": [
+                                {
+                                    "body": [
+                                        {
+                                            "left": {
+                                                "node_type": "Var",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 13,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 5,
+                                                        "row_start": 5,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ],
+                                                "type": "float",
+                                                "val": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 13,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 5,
+                                                            "row_start": 5,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Assignment",
+                                            "right": {
+                                                "left": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 17,
+                                                            "col_start": 16,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 5,
+                                                            "row_start": 5,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "BinaryOp",
+                                                "op": "Add",
+                                                "right": {
+                                                    "name": "x",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 21,
+                                                            "col_start": 20,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 5,
+                                                            "row_start": 5,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 21,
+                                                        "col_start": 16,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 5,
+                                                        "row_start": 5,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ]
+                                            },
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 21,
+                                                    "col_start": 12,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 5,
+                                                    "row_start": 5,
+                                                    "source_file_name": "nested_simple_ifexpr.py"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "expr": {
+                                        "name": "c3",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 13,
+                                                "col_start": 11,
+                                                "node_type": "SourceRef",
+                                                "row_end": 4,
+                                                "row_start": 4,
+                                                "source_file_name": "nested_simple_ifexpr.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "ModelIf",
+                                    "orelse": [
+                                        {
+                                            "left": {
+                                                "node_type": "Var",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 13,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 7,
+                                                        "row_start": 7,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ],
+                                                "type": "float",
+                                                "val": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 13,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 7,
+                                                            "row_start": 7,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Assignment",
+                                            "right": {
+                                                "left": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 17,
+                                                            "col_start": 16,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 7,
+                                                            "row_start": 7,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "BinaryOp",
+                                                "op": "Mult",
+                                                "right": {
+                                                    "name": "x",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 21,
+                                                            "col_start": 20,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 7,
+                                                            "row_start": 7,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 21,
+                                                        "col_start": 16,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 7,
+                                                        "row_start": 7,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ]
+                                            },
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 21,
+                                                    "col_start": 12,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 7,
+                                                    "row_start": 7,
+                                                    "source_file_name": "nested_simple_ifexpr.py"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "source_refs": [
+                                        {
+                                            "col_end": 21,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 7,
+                                            "row_start": 4,
+                                            "source_file_name": "nested_simple_ifexpr.py"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "expr": {
+                                "left": {
+                                    "name": "c1",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 7,
+                                            "node_type": "SourceRef",
+                                            "row_end": 3,
+                                            "row_start": 3,
+                                            "source_file_name": "nested_simple_ifexpr.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Lt",
+                                "right": {
+                                    "name": "c2",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 14,
+                                            "col_start": 12,
+                                            "node_type": "SourceRef",
+                                            "row_end": 3,
+                                            "row_start": 3,
+                                            "source_file_name": "nested_simple_ifexpr.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 14,
+                                        "col_start": 7,
+                                        "node_type": "SourceRef",
+                                        "row_end": 3,
+                                        "row_start": 3,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            },
+                            "node_type": "ModelIf",
+                            "orelse": [
+                                {
+                                    "body": [
+                                        {
+                                            "left": {
+                                                "node_type": "Var",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 13,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 10,
+                                                        "row_start": 10,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ],
+                                                "type": "float",
+                                                "val": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 13,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 10,
+                                                            "row_start": 10,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Assignment",
+                                            "right": {
+                                                "left": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 17,
+                                                            "col_start": 16,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 10,
+                                                            "row_start": 10,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "BinaryOp",
+                                                "op": "Add",
+                                                "right": {
+                                                    "name": "y",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 21,
+                                                            "col_start": 20,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 10,
+                                                            "row_start": 10,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 21,
+                                                        "col_start": 16,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 10,
+                                                        "row_start": 10,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ]
+                                            },
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 21,
+                                                    "col_start": 12,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 10,
+                                                    "row_start": 10,
+                                                    "source_file_name": "nested_simple_ifexpr.py"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "expr": {
+                                        "name": "c3",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 13,
+                                                "col_start": 11,
+                                                "node_type": "SourceRef",
+                                                "row_end": 9,
+                                                "row_start": 9,
+                                                "source_file_name": "nested_simple_ifexpr.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "ModelIf",
+                                    "orelse": [
+                                        {
+                                            "left": {
+                                                "node_type": "Var",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 13,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 12,
+                                                        "row_start": 12,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ],
+                                                "type": "float",
+                                                "val": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 13,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 12,
+                                                            "row_start": 12,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Assignment",
+                                            "right": {
+                                                "left": {
+                                                    "name": "a",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 17,
+                                                            "col_start": 16,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 12,
+                                                            "row_start": 12,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "BinaryOp",
+                                                "op": "Mult",
+                                                "right": {
+                                                    "name": "y",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 21,
+                                                            "col_start": 20,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 12,
+                                                            "row_start": 12,
+                                                            "source_file_name": "nested_simple_ifexpr.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 21,
+                                                        "col_start": 16,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 12,
+                                                        "row_start": 12,
+                                                        "source_file_name": "nested_simple_ifexpr.py"
+                                                    }
+                                                ]
+                                            },
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 21,
+                                                    "col_start": 12,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 12,
+                                                    "row_start": 12,
+                                                    "source_file_name": "nested_simple_ifexpr.py"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "source_refs": [
+                                        {
+                                            "col_end": 21,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 12,
+                                            "row_start": 9,
+                                            "source_file_name": "nested_simple_ifexpr.py"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "source_refs": [
+                                {
+                                    "col_end": 21,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 12,
+                                    "row_start": 3,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ]
+                        },
+                        {
+                            "node_type": "ModelReturn",
+                            "source_refs": [
+                                {
+                                    "col_end": 12,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 13,
+                                    "row_start": 13,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ],
+                            "value": {
+                                "name": "a",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 12,
+                                        "col_start": 11,
+                                        "node_type": "SourceRef",
+                                        "row_end": 13,
+                                        "row_start": 13,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "func_args": [
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 10,
+                                    "col_start": 9,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 10,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 13,
+                                    "col_start": 12,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "y",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 12,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 17,
+                                    "col_start": 15,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "c1",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 17,
+                                        "col_start": 15,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 21,
+                                    "col_start": 19,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "c2",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 21,
+                                        "col_start": 19,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 25,
+                                    "col_start": 23,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "nested_simple_ifexpr.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "c3",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 25,
+                                        "col_start": 23,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "nested_simple_ifexpr.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "main",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 12,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 13,
+                            "row_start": 1,
+                            "source_file_name": "nested_simple_ifexpr.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "nested_simple_ifexpr",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": [
+                        "def main(x, y, c1, c2, c3):\n",
+                        "    a = 0\n",
+                        "    if c1 < c2:\n",
+                        "        if c3:\n",
+                        "            a = a + x\n",
+                        "        else:\n",
+                        "            a = a * x\n",
+                        "    else:\n",
+                        "        if c3:\n",
+                        "            a = a + y\n",
+                        "        else:\n",
+                        "            a = a * y\n",
+                        "    return a\n"
+                    ],
+                    "row_start": 1,
+                    "source_file_name": "nested_simple_ifexpr.py"
+                }
+            ]
+        }
+    ]
+}

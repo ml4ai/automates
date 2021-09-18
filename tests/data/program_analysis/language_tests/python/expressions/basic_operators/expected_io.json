@@ -1,0 +1,18 @@
+{
+    "inputs": [
+        [
+            100012,
+            2,
+            11,
+            true,
+            false
+        ]
+    ],
+    "outputs": [
+        [
+            3.0,
+            false,
+            true
+        ]
+    ]
+}

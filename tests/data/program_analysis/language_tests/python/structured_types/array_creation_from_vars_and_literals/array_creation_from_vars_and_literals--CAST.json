@@ -1,0 +1,237 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 2,
+                                        "row_start": 2,
+                                        "source_file_name": "array_creation_from_vars_and_literals.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "a",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 2,
+                                            "row_start": 2,
+                                            "source_file_name": "array_creation_from_vars_and_literals.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "node_type": "List",
+                                "source_refs": [
+                                    {
+                                        "col_end": 22,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 2,
+                                        "row_start": 2,
+                                        "source_file_name": "array_creation_from_vars_and_literals.py"
+                                    }
+                                ],
+                                "values": [
+                                    {
+                                        "name": "x1",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 11,
+                                                "col_start": 9,
+                                                "node_type": "SourceRef",
+                                                "row_end": 2,
+                                                "row_start": 2,
+                                                "source_file_name": "array_creation_from_vars_and_literals.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "x2",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 15,
+                                                "col_start": 13,
+                                                "node_type": "SourceRef",
+                                                "row_end": 2,
+                                                "row_start": 2,
+                                                "source_file_name": "array_creation_from_vars_and_literals.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "node_type": "Number",
+                                        "number": 3,
+                                        "source_refs": [
+                                            {
+                                                "col_end": 18,
+                                                "col_start": 17,
+                                                "node_type": "SourceRef",
+                                                "row_end": 2,
+                                                "row_start": 2,
+                                                "source_file_name": "array_creation_from_vars_and_literals.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "node_type": "Number",
+                                        "number": 4,
+                                        "source_refs": [
+                                            {
+                                                "col_end": 21,
+                                                "col_start": 20,
+                                                "node_type": "SourceRef",
+                                                "row_end": 2,
+                                                "row_start": 2,
+                                                "source_file_name": "array_creation_from_vars_and_literals.py"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 22,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 2,
+                                    "row_start": 2,
+                                    "source_file_name": "array_creation_from_vars_and_literals.py"
+                                }
+                            ]
+                        },
+                        {
+                            "node_type": "ModelReturn",
+                            "source_refs": [
+                                {
+                                    "col_end": 12,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 3,
+                                    "row_start": 3,
+                                    "source_file_name": "array_creation_from_vars_and_literals.py"
+                                }
+                            ],
+                            "value": {
+                                "name": "a",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 12,
+                                        "col_start": 11,
+                                        "node_type": "SourceRef",
+                                        "row_end": 3,
+                                        "row_start": 3,
+                                        "source_file_name": "array_creation_from_vars_and_literals.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "func_args": [
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 11,
+                                    "col_start": 9,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "array_creation_from_vars_and_literals.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x1",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 11,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "array_creation_from_vars_and_literals.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 15,
+                                    "col_start": 13,
+                                    "node_type": "SourceRef",
+                                    "row_end": 1,
+                                    "row_start": 1,
+                                    "source_file_name": "array_creation_from_vars_and_literals.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x2",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 15,
+                                        "col_start": 13,
+                                        "node_type": "SourceRef",
+                                        "row_end": 1,
+                                        "row_start": 1,
+                                        "source_file_name": "array_creation_from_vars_and_literals.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "main",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 12,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 3,
+                            "row_start": 1,
+                            "source_file_name": "array_creation_from_vars_and_literals.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "array_creation_from_vars_and_literals",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": [
+                        "def main(x1, x2):\n",
+                        "    a = [x1, x2, 3, 4]\n",
+                        "    return a\n"
+                    ],
+                    "row_start": 1,
+                    "source_file_name": "array_creation_from_vars_and_literals.py"
+                }
+            ]
+        }
+    ]
+}

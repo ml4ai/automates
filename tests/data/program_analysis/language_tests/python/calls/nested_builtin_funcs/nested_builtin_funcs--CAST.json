@@ -1,0 +1,1681 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "body": [],
+                    "name": "math",
+                    "node_type": "Module",
+                    "source_refs": [
+                        {
+                            "col_end": 11,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 1,
+                            "row_start": 1,
+                            "source_file_name": "nested_builtin_funcs.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [],
+                    "name": "sys",
+                    "node_type": "Module",
+                    "source_refs": [
+                        {
+                            "col_end": 10,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 2,
+                            "row_start": 2,
+                            "source_file_name": "nested_builtin_funcs.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 6,
+                                        "row_start": 6,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "a",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 6,
+                                            "row_start": 6,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "name": "x1",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 24,
+                                                            "col_start": 22,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "func": {
+                                                "attr": {
+                                                    "name": "sqrt",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 21,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "Attribute",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 21,
+                                                        "col_start": 12,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 6,
+                                                        "row_start": 6,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "name": "math",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 16,
+                                                            "col_start": 12,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Call",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 25,
+                                                    "col_start": 12,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 6,
+                                                    "row_start": 6,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "name": "x2",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 38,
+                                                            "col_start": 36,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "func": {
+                                                "attr": {
+                                                    "name": "exp",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 35,
+                                                            "col_start": 27,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "Attribute",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 35,
+                                                        "col_start": 27,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 6,
+                                                        "row_start": 6,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "name": "math",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 31,
+                                                            "col_start": 27,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Call",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 39,
+                                                    "col_start": 27,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 6,
+                                                    "row_start": 6,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "left": {
+                                                        "name": "x1",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 52,
+                                                                "col_start": 50,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 6,
+                                                                "row_start": 6,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "BinaryOp",
+                                                    "op": "Add",
+                                                    "right": {
+                                                        "name": "x2",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 57,
+                                                                "col_start": 55,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 6,
+                                                                "row_start": 6,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 57,
+                                                            "col_start": 50,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "func": {
+                                                "attr": {
+                                                    "name": "sin",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 49,
+                                                            "col_start": 41,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "Attribute",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 49,
+                                                        "col_start": 41,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 6,
+                                                        "row_start": 6,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "name": "math",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 45,
+                                                            "col_start": 41,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 6,
+                                                            "row_start": 6,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Call",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 58,
+                                                    "col_start": 41,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 6,
+                                                    "row_start": 6,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "func": {
+                                        "name": "min",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 59,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 6,
+                                                "row_start": 6,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "Call",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 59,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 6,
+                                            "row_start": 6,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Add",
+                                "right": {
+                                    "node_type": "Number",
+                                    "number": 100,
+                                    "source_refs": [
+                                        {
+                                            "col_end": 65,
+                                            "col_start": 62,
+                                            "node_type": "SourceRef",
+                                            "row_end": 6,
+                                            "row_start": 6,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 65,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 6,
+                                        "row_start": 6,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 65,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 6,
+                                    "row_start": 6,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 7,
+                                        "row_start": 7,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "b",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 7,
+                                            "row_start": 7,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "arguments": [
+                                            {
+                                                "left": {
+                                                    "arguments": [
+                                                        {
+                                                            "arguments": [
+                                                                {
+                                                                    "name": "x4",
+                                                                    "node_type": "Name",
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 34,
+                                                                            "col_start": 32,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 7,
+                                                                            "row_start": 7,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "node_type": "Number",
+                                                                    "number": 10,
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 38,
+                                                                            "col_start": 36,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 7,
+                                                                            "row_start": 7,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ],
+                                                            "func": {
+                                                                "attr": {
+                                                                    "name": "log",
+                                                                    "node_type": "Name",
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 31,
+                                                                            "col_start": 23,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 7,
+                                                                            "row_start": 7,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "node_type": "Attribute",
+                                                                "source_refs": [
+                                                                    {
+                                                                        "col_end": 31,
+                                                                        "col_start": 23,
+                                                                        "node_type": "SourceRef",
+                                                                        "row_end": 7,
+                                                                        "row_start": 7,
+                                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                                    }
+                                                                ],
+                                                                "value": {
+                                                                    "name": "math",
+                                                                    "node_type": "Name",
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 27,
+                                                                            "col_start": 23,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 7,
+                                                                            "row_start": 7,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "node_type": "Call",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 39,
+                                                                    "col_start": 23,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 7,
+                                                                    "row_start": 7,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "func": {
+                                                        "attr": {
+                                                            "name": "ceil",
+                                                            "node_type": "Name",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 22,
+                                                                    "col_start": 13,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 7,
+                                                                    "row_start": 7,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ]
+                                                        },
+                                                        "node_type": "Attribute",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 22,
+                                                                "col_start": 13,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 7,
+                                                                "row_start": 7,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ],
+                                                        "value": {
+                                                            "name": "math",
+                                                            "node_type": "Name",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 17,
+                                                                    "col_start": 13,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 7,
+                                                                    "row_start": 7,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "node_type": "Call",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 40,
+                                                            "col_start": 13,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 7,
+                                                            "row_start": 7,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "BinaryOp",
+                                                "op": "Sub",
+                                                "right": {
+                                                    "arguments": [
+                                                        {
+                                                            "name": "x3",
+                                                            "node_type": "Name",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 49,
+                                                                    "col_start": 47,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 7,
+                                                                    "row_start": 7,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "x1",
+                                                            "node_type": "Name",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 53,
+                                                                    "col_start": 51,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 7,
+                                                                    "row_start": 7,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "x2",
+                                                            "node_type": "Name",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 57,
+                                                                    "col_start": 55,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 7,
+                                                                    "row_start": 7,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "func": {
+                                                        "name": "max",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 58,
+                                                                "col_start": 43,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 7,
+                                                                "row_start": 7,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Call",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 58,
+                                                            "col_start": 43,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 7,
+                                                            "row_start": 7,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 58,
+                                                        "col_start": 13,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 7,
+                                                        "row_start": 7,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "abs",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 59,
+                                                    "col_start": 9,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 7,
+                                                    "row_start": 7,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 59,
+                                                "col_start": 9,
+                                                "node_type": "SourceRef",
+                                                "row_end": 7,
+                                                "row_start": 7,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Add",
+                                    "right": {
+                                        "node_type": "Number",
+                                        "number": 5,
+                                        "source_refs": [
+                                            {
+                                                "col_end": 63,
+                                                "col_start": 62,
+                                                "node_type": "SourceRef",
+                                                "row_end": 7,
+                                                "row_start": 7,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 63,
+                                            "col_start": 9,
+                                            "node_type": "SourceRef",
+                                            "row_end": 7,
+                                            "row_start": 7,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Div",
+                                "right": {
+                                    "node_type": "Number",
+                                    "number": 3,
+                                    "source_refs": [
+                                        {
+                                            "col_end": 68,
+                                            "col_start": 67,
+                                            "node_type": "SourceRef",
+                                            "row_end": 7,
+                                            "row_start": 7,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 68,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 7,
+                                        "row_start": 7,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 68,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 7,
+                                    "row_start": 7,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ]
+                        },
+                        {
+                            "node_type": "ModelReturn",
+                            "source_refs": [
+                                {
+                                    "col_end": 66,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 8,
+                                    "row_start": 8,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ],
+                            "value": {
+                                "left": {
+                                    "node_type": "Number",
+                                    "number": 1,
+                                    "source_refs": [
+                                        {
+                                            "col_end": 12,
+                                            "col_start": 11,
+                                            "node_type": "SourceRef",
+                                            "row_end": 8,
+                                            "row_start": 8,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Add",
+                                "right": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "left": {
+                                                        "arguments": [
+                                                            {
+                                                                "left": {
+                                                                    "name": "a",
+                                                                    "node_type": "Name",
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 41,
+                                                                            "col_start": 40,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 8,
+                                                                            "row_start": 8,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "node_type": "BinaryOp",
+                                                                "op": "Add",
+                                                                "right": {
+                                                                    "name": "b",
+                                                                    "node_type": "Name",
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 45,
+                                                                            "col_start": 44,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 8,
+                                                                            "row_start": 8,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "source_refs": [
+                                                                    {
+                                                                        "col_end": 45,
+                                                                        "col_start": 40,
+                                                                        "node_type": "SourceRef",
+                                                                        "row_end": 8,
+                                                                        "row_start": 8,
+                                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "func": {
+                                                            "attr": {
+                                                                "name": "sin",
+                                                                "node_type": "Name",
+                                                                "source_refs": [
+                                                                    {
+                                                                        "col_end": 39,
+                                                                        "col_start": 31,
+                                                                        "node_type": "SourceRef",
+                                                                        "row_end": 8,
+                                                                        "row_start": 8,
+                                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "node_type": "Attribute",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 39,
+                                                                    "col_start": 31,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 8,
+                                                                    "row_start": 8,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ],
+                                                            "value": {
+                                                                "name": "math",
+                                                                "node_type": "Name",
+                                                                "source_refs": [
+                                                                    {
+                                                                        "col_end": 35,
+                                                                        "col_start": 31,
+                                                                        "node_type": "SourceRef",
+                                                                        "row_end": 8,
+                                                                        "row_start": 8,
+                                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        "node_type": "Call",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 46,
+                                                                "col_start": 31,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 8,
+                                                                "row_start": 8,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "BinaryOp",
+                                                    "op": "Sub",
+                                                    "right": {
+                                                        "arguments": [
+                                                            {
+                                                                "left": {
+                                                                    "name": "a",
+                                                                    "node_type": "Name",
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 59,
+                                                                            "col_start": 58,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 8,
+                                                                            "row_start": 8,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "node_type": "BinaryOp",
+                                                                "op": "Sub",
+                                                                "right": {
+                                                                    "name": "b",
+                                                                    "node_type": "Name",
+                                                                    "source_refs": [
+                                                                        {
+                                                                            "col_end": 63,
+                                                                            "col_start": 62,
+                                                                            "node_type": "SourceRef",
+                                                                            "row_end": 8,
+                                                                            "row_start": 8,
+                                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "source_refs": [
+                                                                    {
+                                                                        "col_end": 63,
+                                                                        "col_start": 58,
+                                                                        "node_type": "SourceRef",
+                                                                        "row_end": 8,
+                                                                        "row_start": 8,
+                                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "func": {
+                                                            "attr": {
+                                                                "name": "cos",
+                                                                "node_type": "Name",
+                                                                "source_refs": [
+                                                                    {
+                                                                        "col_end": 57,
+                                                                        "col_start": 49,
+                                                                        "node_type": "SourceRef",
+                                                                        "row_end": 8,
+                                                                        "row_start": 8,
+                                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "node_type": "Attribute",
+                                                            "source_refs": [
+                                                                {
+                                                                    "col_end": 57,
+                                                                    "col_start": 49,
+                                                                    "node_type": "SourceRef",
+                                                                    "row_end": 8,
+                                                                    "row_start": 8,
+                                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                                }
+                                                            ],
+                                                            "value": {
+                                                                "name": "math",
+                                                                "node_type": "Name",
+                                                                "source_refs": [
+                                                                    {
+                                                                        "col_end": 53,
+                                                                        "col_start": 49,
+                                                                        "node_type": "SourceRef",
+                                                                        "row_end": 8,
+                                                                        "row_start": 8,
+                                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        "node_type": "Call",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 64,
+                                                                "col_start": 49,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 8,
+                                                                "row_start": 8,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 64,
+                                                            "col_start": 31,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 8,
+                                                            "row_start": 8,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "func": {
+                                                "attr": {
+                                                    "name": "tanh",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 30,
+                                                            "col_start": 21,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 8,
+                                                            "row_start": 8,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "node_type": "Attribute",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 30,
+                                                        "col_start": 21,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 8,
+                                                        "row_start": 8,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "name": "math",
+                                                    "node_type": "Name",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 25,
+                                                            "col_start": 21,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 8,
+                                                            "row_start": 8,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "node_type": "Call",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 65,
+                                                    "col_start": 21,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 8,
+                                                    "row_start": 8,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "func": {
+                                        "name": "round",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 66,
+                                                "col_start": 15,
+                                                "node_type": "SourceRef",
+                                                "row_end": 8,
+                                                "row_start": 8,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "Call",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 66,
+                                            "col_start": 15,
+                                            "node_type": "SourceRef",
+                                            "row_end": 8,
+                                            "row_start": 8,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 66,
+                                        "col_start": 11,
+                                        "node_type": "SourceRef",
+                                        "row_end": 8,
+                                        "row_start": 8,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "func_args": [
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 11,
+                                    "col_start": 9,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 5,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x1",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 11,
+                                        "col_start": 9,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 15,
+                                    "col_start": 13,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 5,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x2",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 15,
+                                        "col_start": 13,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 19,
+                                    "col_start": 17,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 5,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x3",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 19,
+                                        "col_start": 17,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 23,
+                                    "col_start": 21,
+                                    "node_type": "SourceRef",
+                                    "row_end": 5,
+                                    "row_start": 5,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "x4",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 23,
+                                        "col_start": 21,
+                                        "node_type": "SourceRef",
+                                        "row_end": 5,
+                                        "row_start": 5,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "main",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 66,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 8,
+                            "row_start": 5,
+                            "source_file_name": "nested_builtin_funcs.py"
+                        }
+                    ]
+                },
+                {
+                    "expr": {
+                        "arguments": [
+                            {
+                                "arguments": [
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 1,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 24,
+                                                            "col_start": 23,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 13,
+                                                            "row_start": 13,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 25,
+                                                        "col_start": 14,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 13,
+                                                        "row_start": 13,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 22,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 13,
+                                                                "row_start": 13,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 14,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 13,
+                                                            "row_start": 13,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 17,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 13,
+                                                                "row_start": 13,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "float",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 26,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 13,
+                                                    "row_start": 13,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 26,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 13,
+                                                "row_start": 13,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 2,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 24,
+                                                            "col_start": 23,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 14,
+                                                            "row_start": 14,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 25,
+                                                        "col_start": 14,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 14,
+                                                        "row_start": 14,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 22,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 14,
+                                                                "row_start": 14,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 14,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 14,
+                                                            "row_start": 14,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 17,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 14,
+                                                                "row_start": 14,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "float",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 26,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 14,
+                                                    "row_start": 14,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 26,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 14,
+                                                "row_start": 14,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 3,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 24,
+                                                            "col_start": 23,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 15,
+                                                            "row_start": 15,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 25,
+                                                        "col_start": 14,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 15,
+                                                        "row_start": 15,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 22,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 15,
+                                                                "row_start": 15,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 14,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 15,
+                                                            "row_start": 15,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 17,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 15,
+                                                                "row_start": 15,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "float",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 26,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 15,
+                                                    "row_start": 15,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 26,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 15,
+                                                "row_start": 15,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "arguments": [
+                                            {
+                                                "node_type": "Subscript",
+                                                "slice": {
+                                                    "node_type": "Number",
+                                                    "number": 4,
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 24,
+                                                            "col_start": 23,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 16,
+                                                            "row_start": 16,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ]
+                                                },
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 25,
+                                                        "col_start": 14,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 16,
+                                                        "row_start": 16,
+                                                        "source_file_name": "nested_builtin_funcs.py"
+                                                    }
+                                                ],
+                                                "value": {
+                                                    "attr": {
+                                                        "name": "argv",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 22,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 16,
+                                                                "row_start": 16,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "node_type": "Attribute",
+                                                    "source_refs": [
+                                                        {
+                                                            "col_end": 22,
+                                                            "col_start": 14,
+                                                            "node_type": "SourceRef",
+                                                            "row_end": 16,
+                                                            "row_start": 16,
+                                                            "source_file_name": "nested_builtin_funcs.py"
+                                                        }
+                                                    ],
+                                                    "value": {
+                                                        "name": "sys",
+                                                        "node_type": "Name",
+                                                        "source_refs": [
+                                                            {
+                                                                "col_end": 17,
+                                                                "col_start": 14,
+                                                                "node_type": "SourceRef",
+                                                                "row_end": 16,
+                                                                "row_start": 16,
+                                                                "source_file_name": "nested_builtin_funcs.py"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "func": {
+                                            "name": "float",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 26,
+                                                    "col_start": 8,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 16,
+                                                    "row_start": 16,
+                                                    "source_file_name": "nested_builtin_funcs.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "Call",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 26,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 16,
+                                                "row_start": 16,
+                                                "source_file_name": "nested_builtin_funcs.py"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "func": {
+                                    "name": "main",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 17,
+                                            "row_start": 12,
+                                            "source_file_name": "nested_builtin_funcs.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "Call",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 17,
+                                        "row_start": 12,
+                                        "source_file_name": "nested_builtin_funcs.py"
+                                    }
+                                ]
+                            }
+                        ],
+                        "func": {
+                            "name": "print",
+                            "node_type": "Name",
+                            "source_refs": [
+                                {
+                                    "col_end": 1,
+                                    "col_start": 0,
+                                    "node_type": "SourceRef",
+                                    "row_end": 18,
+                                    "row_start": 11,
+                                    "source_file_name": "nested_builtin_funcs.py"
+                                }
+                            ]
+                        },
+                        "node_type": "Call",
+                        "source_refs": [
+                            {
+                                "col_end": 1,
+                                "col_start": 0,
+                                "node_type": "SourceRef",
+                                "row_end": 18,
+                                "row_start": 11,
+                                "source_file_name": "nested_builtin_funcs.py"
+                            }
+                        ]
+                    },
+                    "node_type": "Expr",
+                    "source_refs": [
+                        {
+                            "col_end": 1,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 18,
+                            "row_start": 11,
+                            "source_file_name": "nested_builtin_funcs.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "nested_builtin_funcs",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": [
+                        "import math\n",
+                        "import sys\n",
+                        "\n",
+                        "\n",
+                        "def main(x1, x2, x3, x4):\n",
+                        "    a = min(math.sqrt(x1), math.exp(x2), math.sin(x1 + x2)) + 100\n",
+                        "    b = (abs(math.ceil(math.log(x4, 10)) - max(x3, x1, x2)) + 5) / 3\n",
+                        "    return 1 + round(math.tanh(math.sin(a + b) - math.cos(a - b)))\n",
+                        "\n",
+                        "\n",
+                        "print(\n",
+                        "    main(\n",
+                        "        float(sys.argv[1]),\n",
+                        "        float(sys.argv[2]),\n",
+                        "        float(sys.argv[3]),\n",
+                        "        float(sys.argv[4]),\n",
+                        "    )\n",
+                        ")\n"
+                    ],
+                    "row_start": 1,
+                    "source_file_name": "nested_builtin_funcs.py"
+                }
+            ]
+        }
+    ]
+}
