@@ -1,0 +1,15 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+####COMMANDS####
+
+  - name: sample-command
+    label: Command
+    priority: ${priority}
+    type: token
+    example: "git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
+#    action: insert a post-processing action (defined in
+    pattern: |
+      (?<language>[word=/bash|python|git/]) (?<command> [word = /.*\w+.*/ & !tag="-LRB-"]+)
+
