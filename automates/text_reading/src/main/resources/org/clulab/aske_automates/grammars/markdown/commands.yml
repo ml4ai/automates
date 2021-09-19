@@ -9,7 +9,7 @@ rules:
     priority: ${priority}
     type: token
     example: "git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
-#    action: insert a post-processing action (defined in
+#    action: insert a post-processing action (defined in OdinActions)
     pattern: |
       (?<language>[word=/bash|python|git/]) (?<command> [word = /.*\w+.*/ & !tag="-LRB-"]+)
 
