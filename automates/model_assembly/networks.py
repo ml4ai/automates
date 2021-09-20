@@ -45,6 +45,7 @@ from .identifiers import (
     ContainerIdentifier,
     FunctionIdentifier,
     ObjectIdentifier,
+    StmtIdentifier,
     VariableIdentifier,
     TypeIdentifier,
     CAGIdentifier,
@@ -172,7 +173,7 @@ class VariableNode(BaseNode):
         return cls(BaseNode.create_node_id(), idt, [])
 
     @classmethod
-    def from_expr_def(cls, expr_namespace, expr_scope):
+    def from_expr(cls, expr_namespace, expr_scope):
         var_id = VariableIdentifier.from_anonymous(expr_namespace, expr_scope)
         return cls(BaseNode.create_node_id(), var_id, [])
 
@@ -306,6 +307,43 @@ class BaseFuncNode(BaseNode):
         return [get_or_create_var(v_id) for v_id in ids]
 
     @staticmethod
+    def expression_to_expr_nodes(
+        expression: str,
+    ) -> List[ExprAbstractNode]:
+        """Converts a Python expression stored in AIR into a list of ExprNodes that form an ExprTree through child associations.
+
+        Args:
+            expression (str): a Python lambda expression string from AIR
+
+        Returns:
+            List[ExprAbstractNode]: a list of ExprNodes that can be processed into GrFN objects.
+        """
+        visitor = ExpressionVisitor()
+        visitor.visit(ast.parse(expression))
+        return visitor.get_nodes()
+
+    @staticmethod
+    def find_lambda_node(
+        nodes: List[ExprAbstractNode], idt: StmtIdentifier
+    ) -> ExprDefinitionNode:
+        """Returns the ExprDefinition node for the Lambda definition from the provided list of nodes.
+
+        Args:
+            nodes (List[ExprAbstractNode]): the list of nodes derived by the expression visitor when passed a lambda expression string.
+            idt (StmtIdentifier): the identifier of the lambda statement that was used to produce the list of expression nodes.
+
+        Raises:
+            ValueError: shows the identifier of the lambda statement that produced this set of nodes if a lambda node definition was not found.
+
+        Returns:
+            ExprDefinitionNode: the lambda node definition that contains a list of arguments and a return value that is the root of the expression tree.
+        """
+        for n in nodes:
+            if isinstance(n, ExprDefinitionNode) and n.def_type == "LAMBDA":
+                return n
+        raise ValueError(f"No Lambda expression node found for {idt}")
+
+    @staticmethod
     def from_dict(data: dict) -> BaseFuncNode:
         func_type = data["type"]
         if func_type == "literal":
@@ -399,37 +437,32 @@ class LiteralFuncNode(BaseFuncNode):
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ) -> LiteralFuncNode:
+        # Creates an output VariableNode for this LiteralFuncNode
         out_var_ids = BaseFuncNode.add_or_create_vars(stmt.outputs, AIR, VARS)
         literal_out_var_id = out_var_ids[0]
 
-        visitor = ExpressionVisitor()
-        expr_tree = ast.parse(stmt.expression)
-        visitor.visit(expr_tree)
-        nodes = visitor.get_nodes()
-
+        # Converts the expression stored in AIR into useable data that we can
+        # create a LiteralFuncNode from.
+        nodes = BaseFuncNode.expression_to_expr_nodes(stmt.expression)
         uid2node = {n.uid: n for n in nodes}
-        lambda_def = None
-        for node in nodes:
-            if (
-                isinstance(node, ExprDefinitionNode)
-                and node.def_type == "LAMBDA"
-            ):
-                lambda_def = node
-                break
-
+        lambda_def = BaseFuncNode.find_lambda_node(nodes, stmt.identifier)
         (_, return_def) = [uid2node[uid] for uid in lambda_def.children]
-        return_child = [uid2node[uid] for uid in return_def.children][0]
-        if isinstance(return_child, ExprValueNode):
-            new_node = cls.from_value_and_var(return_child, literal_out_var_id)
-            FUNCS[new_node.identifier] = new_node
-            return new_node
-        else:
+        literal_root_def = uid2node[return_def.children[0]]
+
+        # Throw an error if the parsed lambda is not an expected simple value
+        # NOTE: in the future this may be problematic if we have complex structures defined "literals".
+        if not isinstance(literal_root_def, ExprValueNode):
             raise TypeError(
-                f"Unexpected expr node of type {type(return_child)} during literal func node construction from lambda stmt."
+                f"Unexpected expr node of type {type(literal_root_def)} during literal func node construction from lambda stmt."
             )
 
+        # Create the new LiteralFuncNode and add it to our list of FuncNodes
+        new_node = cls.from_expr(literal_root_def, literal_out_var_id)
+        FUNCS[new_node.identifier] = new_node
+        return new_node
+
     @classmethod
-    def from_value_and_var(
+    def from_expr(
         cls, node: ExprValueNode, out_var_id: VariableIdentifier
     ) -> LiteralFuncNode:
         return cls(
@@ -470,7 +503,7 @@ class OperationFuncNode(BaseFuncNode):
         return super().__hash__()
 
     @classmethod
-    def from_expr_def_and_vars(
+    def from_expr(
         cls,
         expr_def: ExprAbstractNode,
         input_var_ids: List[VariableIdentifier],
@@ -597,40 +630,28 @@ class ExpressionFuncNode(StructuredFuncNode):
     @classmethod
     def from_lambda_stmt(
         cls,
-        statement: LambdaStmtDef,
+        stmt: LambdaStmtDef,
         AIR: AutoMATES_IR,
         VARS: Dict[VariableIdentifier, VariableNode],
         FUNCS: Dict[FunctionIdentifier, BaseFuncNode],
     ) -> ExpressionFuncNode:
-        input_ids = BaseFuncNode.add_or_create_vars(
-            statement.inputs, AIR, VARS
-        )
-        output_ids = BaseFuncNode.add_or_create_vars(
-            statement.outputs, AIR, VARS
-        )
-        expr = statement.expression
+        input_ids = BaseFuncNode.add_or_create_vars(stmt.inputs, AIR, VARS)
+        output_ids = BaseFuncNode.add_or_create_vars(stmt.outputs, AIR, VARS)
+
+        expr = stmt.expression
         executable = load_lambda_function(expr)
-
-        visitor = ExpressionVisitor()
-        expr_tree = ast.parse(expr)
-        visitor.visit(expr_tree)
-        nodes = visitor.get_nodes()
-
-        (new_vars, new_funcs, h_edges,) = cls.create_expr_node_hypergraph(
-            nodes, input_ids, output_ids, statement.identifier
+        (new_vars, new_funcs, h_edges) = cls.expression_to_grfn_objects(
+            expr, input_ids, output_ids, stmt.identifier
         )
-
         VARS.update({v.identifier: v for v in new_vars})
         FUNCS.update({f.identifier: f for f in new_funcs})
 
         return cls(
             uid=BaseNode.create_node_id(),
-            identifier=FunctionIdentifier.from_lambda_stmt_id(
-                statement.identifier
-            ),
-            metadata=statement.metadata,
+            identifier=FunctionIdentifier.from_lambda_stmt_id(stmt.identifier),
+            metadata=stmt.metadata,
             type=FunctionType.get_lambda_type(
-                statement.expr_type,
+                stmt.expr_type,
                 len(inspect.signature(executable).parameters),
             ),
             input_ids=input_ids,
@@ -642,138 +663,122 @@ class ExpressionFuncNode(StructuredFuncNode):
         )
 
     @staticmethod
-    def create_expr_node_hypergraph(
-        nodes: List[ExprAbstractNode],
+    def expression_to_grfn_objects(
+        expression: str,
         input_var_ids: List[VariableIdentifier],
         output_var_ids: List[VariableIdentifier],
-        statement_id: LambdaStmtDef,
+        stmt_id: StmtIdentifier,
     ) -> Tuple[List[VariableNode], List[BaseFuncNode], List[HyperEdge]]:
-        # assumes we have a single output
+        """Transforms a lambda expression tree into a tuple of lists of VariableNodes, FuncNodes, and HyperEdges that fill in the expected GrFN structure components for the lambda expression.
+
+        Args:
+            expression (str): a lambda expression string to be converted.
+            input_var_ids (List[VariableIdentifier]): a list of variable identifiers from the parent ExpressionFuncNode.
+            output_var_ids (List[VariableIdentifier]): a list of variable output identifiers from the parent ExpressionFuncNode.
+            stmt_id (LambdaStmtDef): the identifier of the LambdaStmtNode being translated.
+
+        Returns:
+            Tuple[List[VariableNode], List[BaseFuncNode], List[HyperEdge]]: New GrFN objects to be added to VARS, FUNCS, and the new HyperEdges to be added to the parent ExpressionFuncNode.
+        """
+        # Assume we have a single output for the ExpressionFuncNode
         expr_output_var_id = output_var_ids[0]
+
+        # Use these values to construct namespace/scope information for anon
+        # variables created during this function.
         cur_nsp = expr_output_var_id.namespace
-        cur_scp = f"{expr_output_var_id.scope}.{statement_id.name}"
+        cur_scp = f"{expr_output_var_id.scope}.{stmt_id.name}"
 
+        # Create a map of UIDs (used in the expr node child lists) to our nodes
+        # in `nodes`. We will use this to look-up child node definitions
+        # throughout the algorithm.
+        nodes = BaseFuncNode.expression_to_expr_nodes(expression)
         uid2node = {n.uid: n for n in nodes}
-        lambda_def = None
-        for node in nodes:
-            if (
-                isinstance(node, ExprDefinitionNode)
-                and node.def_type == "LAMBDA"
-            ):
-                lambda_def = node
-                break
 
+        # Find the lambda node def because this node allows us to reach our
+        # expression root.
+        lambda_def = BaseFuncNode.find_lambda_node(nodes, stmt_id)
+
+        # Break the lambda node into args and a return. We use the args list to
+        # match variable nodes with the ExpressionFuncNode inputs to allow for
+        # appropriate wiring of inputs in GrFN to the expression tree. We use
+        # the return definition to begin our walk to transform the expression
+        # tree into GrFN FuncNodes ...
+        # NOTE: expect to create `OperationFuncNode`s and `LiteralFuncNode`s.
         (args_def, ret_def) = [uid2node[uid] for uid in lambda_def.children]
-        arg_names = [uid2node[uid].identifier for uid in args_def.children]
+
+        # Create a dict of ExprTree identifier names that reference the
+        # appropriate GrFN input `VariableNode` identifiers. This list must be
+        # made based on the positional encoded information of the two sources
+        # of information.
         arg2var = {
-            aname: ivar for aname, ivar in zip(arg_names, input_var_ids)
+            aname: ivar
+            for aname, ivar in zip(
+                [uid2node[uid].identifier for uid in args_def.children],
+                input_var_ids,
+            )
         }
 
-        new_func_nodes = list()
-        new_var_nodes = list()
-        new_hyper_edges = list()
+        # Create three lists that we can use to collect the new GrFN objects
+        # that will be created during the translation process.
+        N_FUNCS, N_VARS, N_HYP_EDGES = list(), list(), list()
 
         def convert_to_hyperedge(
-            expr_node_def: ExprAbstractNode,
+            node: ExprAbstractNode,
+            known_output_id: VariableIdentifier = None,
         ) -> VariableIdentifier:
-            """
-            Args:
-                node_def (BaseExprNode): The current node to convert to a func node and a hyperedge. Should be added to he hypergraph as a node. Needs to have edges added from all child nodes to this node.
+            """Converts and ExprNode object into a HyperEdge. Along the way FuncNodes and VariableNodes are created when necesssary.
 
-            Raises:
-                TypeError: If some children are not defined ExprNodes
+            Args:
+                node (BaseExprNode): The current node to convert to a func node and a hyperedge. Should be added to he hypergraph as a node. Needs to have edges added from all child nodes to this node.
+                known_output_id (VariableIdentifier): A variable identifier to be used as the output_id for this HyperEdge.
 
             Returns:
-                a Variable node output of the hyper edge for the current expr tree node definition
+                a VariableIdentifier for the output variable node of the hyper edge created for the current expr tree node definition.
             """
-            if isinstance(expr_node_def, ExprValueNode):
-                output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
-                expr_func_node = LiteralFuncNode.from_value_and_var(
-                    expr_node_def, output_var.identifier
-                )
+            # Handle the determination of the output variable identifier. Add
+            # anon `VariableNode`s as needed. If an output identifier is
+            # provided or if this node is an ExprVariableNode then utilize
+            # those identifiers and DO NOT create an anon `VariableNode`.
+            if (
+                isinstance(node, ExprVariableNode)
+                and node.identifier in arg2var
+            ):
+                out_id = arg2var[node.identifier]
+            elif known_output_id is None:
+                out_var = VariableNode.from_expr(cur_nsp, cur_scp)
+                N_VARS.append(out_var)
+                out_id = out_var.identifier
+            else:
+                out_id = known_output_id
 
-                new_hyper_edge = HyperEdge(
-                    expr_func_node.identifier, [], [output_var.identifier]
-                )
-                new_var_nodes.append(output_var)
-                new_func_nodes.append(expr_func_node)
-                new_hyper_edges.append(new_hyper_edge)
-                return output_var.identifier
-            elif isinstance(expr_node_def, ExprVariableNode):
-                if expr_node_def.identifier in arg2var:
-                    return arg2var[expr_node_def.identifier]
-                else:
-                    output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
-                    new_var_nodes.append(output_var)
-                    return output_var.identifier
-            child_defs = [
-                uid2node[child_id] for child_id in expr_node_def.children
-            ]
+            # Create a new `BaseFuncNode` object according to the type of
+            # ExprNode that is being processed by this call. Additionally, add
+            # input `VariableIdentifier`s to input_ids list when appropriate.
+            f_node, input_ids = None, list()
+            if isinstance(node, ExprValueNode):
+                f_node = LiteralFuncNode.from_expr(node, out_id)
+            elif isinstance(node, (ExprOperatorNode, ExprDefinitionNode)):
+                for child_id in node.children:
+                    input_ids.append(convert_to_hyperedge(uid2node[child_id]))
 
-            input_var_ids = list()
-            for child_def in child_defs:
-                if isinstance(child_def, ExprVariableNode):
-                    if child_def.identifier in arg2var:
-                        external_var_id = arg2var[child_def.identifier]
-                        input_var_ids.append(external_var_id)
-                    else:
-                        new_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
-                        new_var_nodes.append(new_var)
-                        input_var_ids.append(new_var.identifier)
-                elif isinstance(child_def, ExprValueNode):
-                    pass  # No function to create with this node type
-                elif isinstance(child_def, ExprOperatorNode) or isinstance(
-                    child_def, ExprDefinitionNode
-                ):
-                    child_out_var_id = convert_to_hyperedge(child_def)
-                    if child_out_var_id is not None:
-                        input_var_ids.append(child_out_var_id)
-                else:
-                    raise TypeError(
-                        f"Unexpected Expr def type: {type(child_def)}"
-                    )
+                f_node = OperationFuncNode.from_expr(node, input_ids, out_id)
 
-            output_var = VariableNode.from_expr_def(cur_nsp, cur_scp)
-            output_var_id = output_var.identifier
-            expr_func_node = OperationFuncNode.from_expr_def_and_vars(
-                expr_node_def, input_var_ids, output_var_id
-            )
-            new_hyper_edge = HyperEdge(
-                expr_func_node.identifier,
-                input_var_ids,
-                [output_var_id],
-            )
-            new_var_nodes.append(output_var)
-            new_func_nodes.append(expr_func_node)
-            new_hyper_edges.append(new_hyper_edge)
+            # If a new FuncNode was created during the above routine, then we
+            # add the FuncNode to our list of new FuncNodes and create a
+            # HyperEdge that will be added to our list of new HyperEdges.
+            if f_node is not None:
+                func_id = f_node.identifier
+                N_FUNCS.append(f_node)
+                N_HYP_EDGES.append(HyperEdge(func_id, input_ids, [out_id]))
 
-            return output_var_id
+            return out_id
 
-        ret_child = [uid2node[uid] for uid in ret_def.children][0]
-        ret_child_input_ids = [
-            convert_to_hyperedge(uid2node[child_id])
-            for child_id in ret_child.children
-        ]
-        if isinstance(ret_child, ExprValueNode):
-            expr_func_node = LiteralFuncNode.from_value_and_var(
-                ret_child, expr_output_var_id
-            )
-        else:
-            expr_func_node = OperationFuncNode.from_expr_def_and_vars(
-                ret_child, ret_child_input_ids, expr_output_var_id
-            )
-        new_hyper_edge = HyperEdge(
-            expr_func_node.identifier,
-            ret_child_input_ids,
-            [expr_output_var_id],
-        )
-        new_func_nodes.append(expr_func_node)
-        new_hyper_edges.append(new_hyper_edge)
-        return (
-            new_var_nodes,
-            new_func_nodes,
-            new_hyper_edges,
-        )
+        # Process from the root of the return ExprNode using
+        # `convert_to_hyperedge` in order to transform the expression tree into
+        # GrFN objects.
+        expr_root = [uid2node[uid] for uid in ret_def.children][0]
+        convert_to_hyperedge(expr_root, known_output_id=expr_output_var_id)
+        return (N_VARS, N_FUNCS, N_HYP_EDGES)
 
 
 @dataclass(frozen=False)
@@ -2396,41 +2401,41 @@ class GroundedFunctionNetwork:
     #     root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
     #     populate_subgraph(root_subgraph, A)
 
-        # TODO this code helps with the layout of the graph. However, it assumes
-        # all var nodes start at -1 and are consecutive. This is currently not
-        # the case, so it creates random hanging var nodes if run. Fix this.
+    # TODO this code helps with the layout of the graph. However, it assumes
+    # all var nodes start at -1 and are consecutive. This is currently not
+    # the case, so it creates random hanging var nodes if run. Fix this.
 
-        # unique_var_names = {
-        #     "::".join(n.name.split("::")[:-1])
-        #     for n in A.nodes()
-        #     if len(n.name.split("::")) > 2
-        # }
-        # for name in unique_var_names:
-        #     max_var_version = max(
-        #         [
-        #             int(n.name.split("::")[-1])
-        #             for n in A.nodes()
-        #             if n.name.startswith(name)
-        #         ]
-        #     )
-        #     min_var_version = min(
-        #         [
-        #             int(n.name.split("::")[-1])
-        #             for n in A.nodes()
-        #             if n.name.startswith(name)
-        #         ]
-        #     )
-        #     for i in range(min_var_version, max_var_version):
-        #         e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
-        #         e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
-        #         e.attr["color"] = "invis"
+    # unique_var_names = {
+    #     "::".join(n.name.split("::")[:-1])
+    #     for n in A.nodes()
+    #     if len(n.name.split("::")) > 2
+    # }
+    # for name in unique_var_names:
+    #     max_var_version = max(
+    #         [
+    #             int(n.name.split("::")[-1])
+    #             for n in A.nodes()
+    #             if n.name.startswith(name)
+    #         ]
+    #     )
+    #     min_var_version = min(
+    #         [
+    #             int(n.name.split("::")[-1])
+    #             for n in A.nodes()
+    #             if n.name.startswith(name)
+    #         ]
+    #     )
+    #     for i in range(min_var_version, max_var_version):
+    #         e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
+    #         e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
+    #         e.attr["color"] = "invis"
 
-        # for agraph_node in [
-        #     a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
-        # ]:
-        #     agraph_node.attr["rank"] = "max"
+    # for agraph_node in [
+    #     a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
+    # ]:
+    #     agraph_node.attr["rank"] = "max"
 
-        # return A
+    # return A
 
     def to_FIB(self, G2):
         """Creates a ForwardInfluenceBlanket object representing the
