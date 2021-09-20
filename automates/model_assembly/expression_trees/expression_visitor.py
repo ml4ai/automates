@@ -478,7 +478,7 @@ class ExpressionVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         new_uid = ExprAbstractNode.create_node_id()
         num_args = len(node.args) + len(node.keywords)
-        node_name = None
+        op_name = None
         if isinstance(node.func, ast.Attribute):
             # num_args += 1
             op_name = node.func.attr
@@ -489,7 +489,7 @@ class ExpressionVisitor(ast.NodeVisitor):
         self.nodes.append(
             ExprOperatorNode(
                 new_uid,
-                f"{node_name}()",
+                f"{op_name}()",
                 self.reverse_uid_list(
                     [self.uid_stack.get() for _ in range(num_args)]
                 ),
