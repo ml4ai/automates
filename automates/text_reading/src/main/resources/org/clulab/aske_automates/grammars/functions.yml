@@ -219,6 +219,17 @@ rules:
       input:Phrase+ = nsubj
       output:Phrase = nmod_to
 
+  - name: sensitive_to
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "simulations are clearly sensitive to the maximum refugee move speed parameter, and in particular move speeds below 100km/day result in significantly higher validation errors"
+    pattern: |
+      trigger = [lemma = "sensitive"] (?= "to")
+      input:Phrase+ = nsubj
+      output:Phrase = nmod_to
+
   - name: function_defined_by
     label: Function
     priority: ${priority}
@@ -342,16 +353,17 @@ rules:
       input:Phrase+ = <acl <nsubj dobj | <amod <nsubj
       output:Phrase = dobj | <amod
 
-  - name: obtained_with
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "For simulations conducted, ET with fm = 0.0 and 1.0 was obtained with the input variables, such as Rn and LAI, parameterized as the same as those of fm = 0.5, which might be imprecise and compromise the results."
-    pattern: |
-      trigger = [word = "obtained"] (?= [word = "with"])
-      input:Identifier+ = nmod_with nmod_such_as
-      output:Phrase = <ccomp nsubj | nsubjpass
+# note: this rule produces too many false positives (i.e., with inputs such as reports/websites/database/equations)
+#  - name: obtained_with
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "For simulations conducted, ET with fm = 0.0 and 1.0 was obtained with the input variables, such as Rn and LAI, parameterized as the same as those of fm = 0.5, which might be imprecise and compromise the results."
+#    pattern: |
+#      trigger = [word = "obtained"] (?= [word = "with"])
+#      input:Identifier+ = nmod_with nmod_such_as
+#      output:Phrase = <ccomp nsubj | nsubjpass
 
   - name: mean_or_average_output
     label: Function
@@ -372,8 +384,8 @@ rules:
     example: "move speeds below 100km/day result in significantly higher validation errors."
     pattern: |
       trigger = [lemma = /result/] (?= "in")
-      input:Phrase+ = nmod_in
-      output:Phrase = nsubj
+      input:Phrase+ = nsubj
+      output:Phrase = nmod_in
 
   # function rules allowing for partial extraction
 
@@ -438,8 +450,9 @@ rules:
     action: ${action}
     example: "The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
     pattern: |
-      trigger = [word = "additional"]|[word = "remaining"] (?= [tag = /JJ/]? [lemma = "parameter"])
-      input:Phrase+ = <amod <nsubj
+      trigger = [word = "additional"] (?= [tag = /JJ/]? [lemma = /parameter|element|input/])|[word = "remaining"] (?= [tag = /JJ/]? [lemma = /parameter|input/])
+      input:Phrase+ = <amod <nsubj [!tag = /JJ/] | <amod dep
+      output:Phrase? = <amod <nsubjpass xcomp dobj
 
 
 #  - name: output_is_calculated

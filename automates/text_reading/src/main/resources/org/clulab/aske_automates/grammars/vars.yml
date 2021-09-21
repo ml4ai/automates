@@ -34,7 +34,7 @@ functionTrigger1: "influence|modify|govern|limit|control|dominate|affect|determi
 
 functionTrigger2: "product|inverse|sum|mean|composite|minimum|maximum|function"
 
-functionTrigger3: "estimate|calculate|compute|determine|predict|obtain|deduce"
+functionTrigger3: "estimate|calculate|compute|determine|^predict|deduce"
 
 functionTrigger4: "^ratio$|fraction"
 
