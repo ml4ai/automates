@@ -45,3 +45,7 @@ functionTrigger6: "lower"
 ### SYNTACTIC PATTERNS USED FOR CAPTURING CONTEXTS ###
 
 PP+NP: "[chunk = /B-PP/] [chunk = /I-NP|B-NP/ & !tag = /-LRB-|-RRB-|WDT/]+"
+
+### AVOIDS LIST FOR MODEL NAMES ###
+
+modelAvoids: "CSV|COVID|SARS|OECD|DOI"
