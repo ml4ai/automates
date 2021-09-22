@@ -4,6 +4,7 @@ Purpose: Process all parquet files in a directory into JSON data.
 import pandas as pd
 import json
 import sys
+import re
 import os
 
 from tqdm import tqdm
@@ -25,14 +26,16 @@ def main():
             num_data_rows = max(
                 [int(k) for k in parquet_data[parquet_data_keys[0]]]
             )
-
+            
             row_order_parquet_data = [dict() for i in range(num_data_rows + 1)]
             for field_key, row_data in parquet_data.items():
                 for row_idx, datum in row_data.items():
                     row_idx_num = int(row_idx)
                     row_order_parquet_data[row_idx_num][field_key] = datum
 
-            if filename == "documents.parquet":
+            main_doc_re = r"documents_[a-zA-Z0-9]*\.parquet"
+            if re.match(main_doc_re, filename) is not None:
+            # if filename == "documents.parquet":
                 # Sorts the content sections by page number and then by
                 # bounding box location. Use x-pos first to account for
                 # multi-column documents and then sort by y-pos.
@@ -110,7 +113,8 @@ def main():
                     )
                     json.dump(pdf_data, open(pdf_json_data_path, "w"))
 
-            if filename != "documents.parquet":
+            # if filename != "documents.parquet":
+            if re.match(main_doc_re, filename) is None:
                 parquet_json_filepath = parquet_filepath.replace(
                     ".parquet", ".json"
                 )
