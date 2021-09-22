@@ -73,7 +73,7 @@ rules:
     pattern: |
       (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [word = /.*/ & tag = "NN" & !entity = "B-GreekLetter"]{1,5}) @variable:Identifier (?! [chunk = I-NP])
       |
-      (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [chunk = "I-NP" & !tag = /JJ|NNS|NNP|-LRB-|CC|CD/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
+      (?<= [word = /[Aa]|[Tt]he|,/])? (?<description> [chunk = "I-NP" & !tag = /NNS|NNP|-LRB-|CC|CD/ & !entity = "B-GreekLetter" & !word="research"]{1,5}) @variable:Identifier
 
   - name: real_appos
     label: Description
@@ -315,18 +315,18 @@ rules:
     label: Description
     priority: ${priority}
     type: token
-    example: ""
+    example: "Susceptible individuals acquire infection with strain 1 at a rate Ic."
     action: ${action}
     pattern: |
       (?<description> @Phrase [tag = /^VB/] [word = /.*/]{,5} "at" "rate") @variable:Identifier
       |
-      (?<description> @Phrase [word = /.*/]{,5} "at" "rate") @variable:Identifier
+      (?<description> @Phrase [word = /.*/]{,5} "at" "a"? "rate") @variable:Identifier
 
   - name: at_rate_with_verb
     label: Description
     priority: ${priority}
     type: token
-    example: ""
+    example: "..., and become ill at rate Jk" # same as rule at_rate, but for cases when the verb (e.g., become) happens to be detached from the subject
     action: ${action}
     pattern: |
       (?<description> [tag = /^VB/] [word = /.*/]{,5} "at" "a"? [word = /\w*/]?  "rate") @variable:Identifier
@@ -349,18 +349,6 @@ rules:
     action: ${action}
     pattern: |
       @variable:Identifier [word = ","] (@description: Phrase ([word = /of|by|as/] [tag = /^(NN|JJ)/]+)?) [word = ","] (?! [word = "and"])
-
-  - name: identifier_def_ideal_table
-    label: Description
-    priority: ${priority}
-    type: dependency
-    example: ""
-    action: ${action}
-    pattern: |
-      trigger = [lemma=/[Pp]opulation/]
-      description:Phrase = nmod_of
-      variable:Identifier = compound
-
 
   - name: descr_is_identifier_equal
     label: Description

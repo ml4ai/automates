@@ -269,7 +269,7 @@ class TestDescriptions extends ExtractionTest {
 
   val t1c = "A convenient soil hydraulic property that will be used in this study is the matric flux potential " +
     "Mh0 (m2 d-1)"
-    failingTest should s"find descriptions from t1c: ${t1c}" taggedAs(Somebody) in {
+    passingTest should s"find descriptions from t1c: ${t1c}" taggedAs(Somebody) in {
       val desired = Seq(
         "Mh0" -> Seq("matric flux potential"),
         "Mh0" -> Seq("convenient soil hydraulic property")
