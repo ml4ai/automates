@@ -37,18 +37,18 @@ object ExtractAndExport extends App {
   val inputDir: String = "/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
   val outputDir: String = "/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
   val inputType = config[String]("apps.inputType")
-  // if using science parse doc, uncomment next line and...
-  //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
-  //..comment out this line:
-  val dataLoader = new CosmosJsonDataLoader
+  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
+//  val dataLoader = new ScienceParsedDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
   val files = FileUtils.findFiles(inputDir, dataLoader.extension)
-  val reader = OdinEngine.fromConfig(config[Config]("TextEngine"))
+  val readerType: String = config[String]("ReaderType")
+  val reader = OdinEngine.fromConfig(config[Config](readerType))
 
   //uncomment these for using the text/comment router
 //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
 //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
+
   files.par.foreach { file =>
     // 1. Open corresponding output file and make all desired exporters
     println(s"Extracting from ${file.getName}")
@@ -132,7 +132,7 @@ object ExtractAndExport extends App {
 
     // 4. Export to all desired formats
     exportAs.foreach { format =>
-        val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + format, s"_mentions.${format}")}")
+        val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + inputType, s"_mentions.${format}")}")
         exporter.export(mentions)
         exporter.close() // close the file when you're done
     }
@@ -183,11 +183,11 @@ case class AutomatesExporter(filename: String) extends Exporter {
 // used to produce tsv files with extracted mentions; add 'tsv' to the list of foramats under apps.exportAs in application.conf; change m.label filtering to whatever type of event you are interested in.
 case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
-    val pw = new PrintWriter(new File(filename.toString().replace(".json", "_mentions.tsv") ))
+    val pw = new PrintWriter(new File(filename.toString()))
     pw.write("filename\tsentence\tmention type\tmention text\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation")) //|| (m.label matches "Context"))
+    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command")) //|| (m.label matches "Context"))
     for (m <- contentMentions) {
-      pw.write(new File(filename).getName() + "\t")
+      pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
       pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())
       for (arg <- m.arguments) {
         if (arg._2.nonEmpty) {

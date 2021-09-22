@@ -40,7 +40,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   // -------------------------------------------------
   logger.info("Initializing the OdinEngine ...")
-  val defaultConfig: Config = ConfigFactory.load()[Config]("TextEngine")
+  val generalConfig: Config = ConfigFactory.load()
+  val readerType: String = generalConfig[String]("ReaderType")
+  val defaultConfig: Config = generalConfig[Config](readerType)
   val config: Config = defaultConfig.withValue("preprocessorType", ConfigValueFactory.fromAnyRef("PassThrough"))
   val generalConfig: Config = ConfigFactory.load("application.conf")
   val ieSystem = OdinEngine.fromConfig(config)
