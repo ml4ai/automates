@@ -44,7 +44,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   val readerType: String = generalConfig[String]("ReaderType")
   val defaultConfig: Config = generalConfig[Config](readerType)
   val config: Config = defaultConfig.withValue("preprocessorType", ConfigValueFactory.fromAnyRef("PassThrough"))
-  val generalConfig: Config = ConfigFactory.load("application.conf")
   val ieSystem = OdinEngine.fromConfig(config)
   var proc = ieSystem.proc
   val serializer = JSONSerializer

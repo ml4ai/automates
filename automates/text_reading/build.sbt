@@ -30,8 +30,8 @@ libraryDependencies ++= {
     "com.typesafe.play" %% "play-json" % "2.7.0",
     "org.json4s" %% "json4s-jackson" % "0.1.0",
     "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
-    "org.apache.commons" % "commons-text" % "1.4",
-    "com.github.blemale" %% "scaffeine" % "4.0.2" % "compile"
+    "org.apache.commons" % "commons-text" % "1.4"
+//    "com.github.blemale" %% "scaffeine" % "4.0.2" % "compile" // can be used in future for in-memory caching of wikidata results
   )
 }
 
