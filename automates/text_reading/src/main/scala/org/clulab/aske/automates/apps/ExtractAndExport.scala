@@ -36,7 +36,7 @@ object ExtractAndExport extends App {
   val outputDir: String = ""
   val inputType = config[String]("apps.inputType")
   // if using science parse doc, uncomment next line and...
-//  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
+  //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
   //..comment out this line:
   val dataLoader = new CosmosJsonDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
@@ -107,6 +107,17 @@ object ExtractAndExport extends App {
       }
     }
 
+    val contextMentions = mentions.filter(_ matches "Context")
+    println("Context setting mentions: ")
+    for (m <- contextMentions) {
+      println("----------------")
+      println(m.text)
+      //      println(m.foundBy)
+      for (arg <- m.arguments) {
+        println(arg._1 + ": " + m.arguments(arg._1).head.text)
+      }
+    }
+
     // 4. Export to all desired formats
     exportAs.foreach { format =>
         val exporter = getExporter(format, s"$outputDir/${file.getName.replace("." + format, s"_mentions.${format}")}")
@@ -166,7 +177,11 @@ case class TSVExporter(filename: String) extends Exporter {
     for (m <- contentMentions) {
       pw.write(new File(filename).getName() + "\t")
       pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())
-      for (arg <- m.arguments) pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+      for (arg <- m.arguments) {
+        if (arg._2.nonEmpty) {
+          pw.write("\t" + arg._1 + ": " + arg._2.head.text.trim())
+        }
+      }
       pw.write("\n")
     }
     pw.close()

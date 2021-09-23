@@ -71,103 +71,84 @@ def ts(nodes, topo_order):  # topo must be a list of names
     return [n for n in topo_order if n in node_set]
 
 
-def ancestors(node, g, topo):
+def to_names(indices, g):
     """
-    Finds all ancestors of a node and orders them
-    :param node: node (indicated by its index)
-    :param g: graph
-    :param topo: topological ordering
-    :return: Ancestors of node in topological ordering topo
+    converts vertex indices indices to vertex names
+    :param indices: list of indices
+    :param g: graph (with named nodes)
+    :return: list of vertex names
     """
-    an_list = g.neighborhood(node, order=g.vcount(), mode="in")
-    an_ind = list(set([a for ans in an_list for a in ans]))
-    an_names = to_names(an_ind, g)
-    an = ts(an_names, topo)
-    return an
+    name_list = g.vs["name"]
+    name_sorted = [name_list[i] for i in indices]
+    return name_sorted
 
 
-def ancestors_unsort(node, g):
+def find_related_nodes_of(nodes, g, mode, order=1,  topo=None, exclude_orig=False):
     """
-    Finds all ancestors of a node without the need for a topological ordering
-    :param node: set of nodes of which to find ancestors
-    :param g: graph
-    :return: Ancestors of nodes
+    Finds all related nodes of a set by "mode" and optionally sorts them in topological order
+    :param nodes: a list of nodes
+    :param g: iGraph graph
+    :param mode:    "in" to return ancestors of nodes,
+                    "out" to return descendants of nodes,
+                    "all" to return all connected nodes
+    :param order:   for int, the maximum number of steps to take from nodes
+                    for "max", will find all
+    :param topo: topological order in which the return should be sorted
+    :param exclude_orig: if True, the nodes in "nodes" will be removed from the return
+    :return: the (optionally ordered) related nodes
     """
-    an_list = g.neighborhood(node, order=g.vcount(), mode="in")
-    an_ind = list(set([a for ans in an_list for a in ans]))
-    an_names = to_names(an_ind, g)
-    return an_names
+    # Check that mode is specified correctly
+    if mode not in ["in", "out", "all"]:
+        raise ValueError('Invalid mode specified, select from: "in", "out", or "all"')
+
+    # Check that order is specified correctly, and compute g.vcount() if necessary
+    if type(order) == int:
+        order_to_pass = order
+    elif order == "max":
+        order_to_pass = g.vcount()
+    else:
+        raise ValueError('Invalid order specified, specify an integer or "max"')
+
+    # Find the correct nodes
+    related_list = g.neighborhood(nodes, order=order_to_pass, mode=mode)
+    related_ind = list(set([node for related_nodes in related_list for node in related_nodes]))
+    related_names = to_names(related_ind, g)
+
+    # Remove the original nodes, if desired
+    if exclude_orig:
+        for node in nodes:
+            related_names.remove(node)
+
+    # Sort nodes into specified topological order, if desired
+    if topo is not None:
+        related_names_sorted = ts(related_names, topo)
+        return related_names_sorted
+    return related_names
 
 
-def parents_unsort(node, g_obs):
-    """
-    Finds the parents (unsorted) of a node
-    :param node: node
-    :param g_obs: graph
-    :return: parents of node
-    """
-    pa_list = g_obs.neighborhood(node, order=1, mode="in")
-    pa_ind = list(set([p for pas in pa_list for p in pas]))
-    pa_names = to_names(pa_ind, g_obs)
-    pa_names.remove(node[0])
-    return pa_names
-
-
-def children_unsort(node, g):
-    """
-    Finds the children (unsorted) of a node
-    :param node: node
-    :param g: graph
-    :return: children of node
-    """
-    ch_list = g.neighborhood(node, order=1, mode="out")
-    ch_ind = list(set([c for chs in ch_list for c in chs]))
-    ch_names = to_names(ch_ind, g)
-    ch_names.remove(node[0])
-    return ch_names
-
-
-def connected_unsort(node, g):
-    """
-    Finds the neighbors (unsorted) of a node
-    :param node: node
-    :param g: graph
-    :return: neighbors of node
-    """
-    con_list = g.neighborhood(node, order=1, mode="all")
-    con_ind = list(set([con for cons in con_list for con in cons]))
-    con_names = to_names(con_ind, g)
-    con_names.remove(node[0])
-    return con_names
-
-
-# def descendents(node, g, topo):
+# # Assume "O" and "U" are specified in "description" attribute
+# def compare_graphs(g1, g2):
 #     """
-#     Finds all descendants of a node and orders them
-#     :param node: node (indicated by its index)
-#     :param g: graph
-#     :param topo: topological ordering
-#     :return: Descendants of node in topological ordering topo
+#     Determines if two graphs are the same (including edge descriptions)
+#     :param g1: First graph
+#     :param g2: Second graph
+#     :return: T/F indicating if G1 is the same as G2
 #     """
-#     des_list = g.neighborhood(node, order=g.vcount(), mode="out")
-#     des_ind = list(set([d for des in des_list for d in des]))
-#     des_names = to_names(des_ind, g)
-#     des = ts(des_names, topo)
-#     return des
-#
-#
-# def connected(node, g, topo):
-#     """
-#     Finds all neighbors of a node and orders them (all connected nodes)
-#     :param node: node (indicated by its index)
-#     :param g: graph
-#     :param topo: topological ordering
-#     :return: Neighbors of node in topological ordering topo
-#     """
-#     con_ind = list(numpy.concatenate(g.neighborhood(node, order=g.vcount(), mode="all")).flat)
-#     con_names = to_names(con_ind, g)
-#     con = ts(con_names, topo)
-#     return con
+#     e1 = numpy.array(g1.get_edgelist())
+#     n1 = numpy.shape(e1)[0]
+#     e2 = numpy.array(g2.get_edgelist())
+#     n2 = numpy.shape(e2)[0]
+#     if n1 != n2:
+#         return False
+#     if "description" in g1.es.attributes():
+#         e1 = numpy.append(e1, numpy.transpose([g1.es["description"]]), axis=1)
+#     else:
+#         e1 = numpy.append(e1, numpy.transpose([numpy.repeat("O", n1)]), axis=1)
+#     if "description" in g2.es.attributes():
+#         e2 = numpy.append(e2, numpy.transpose([g2.es["description"]]), axis=1)
+#     else:
+#         e2 = numpy.append(e2, numpy.transpose([numpy.repeat("O", n2)]), axis=1)
+#     return numpy.array_equal(e1, e2)
 
 
 # Edge Selection Function (for line 3 section of ID)
@@ -288,7 +269,7 @@ def c_components(g, topo):
         for node in g_unobs.vs():
             if node["description"] == "U":
                 unobs_indx = node.index
-                neighbors = connected_unsort([node["name"]], g_unobs)
+                neighbors = find_related_nodes_of([node["name"]], g_unobs, "all", exclude_orig=True)
                 for neighbor in neighbors:
                     neighbor_ind = g_unobs.vs.select(name=neighbor)[0].index
                     unobs_edges_to_add.append((neighbor_ind, unobs_indx))
@@ -340,18 +321,6 @@ def parse_joint(p, v, cond, var, topo):
     return p_new
 
 
-def to_names(indices, g):
-    """
-    converts vertex indices indices to vertex names
-    :param indices: list of indices
-    :param g: graph (with named nodes)
-    :return: list of vertex names
-    """
-    name_list = g.vs["name"]
-    name_sorted = [name_list[i] for i in indices]
-    return name_sorted
-
-
 def wrap_d_sep(g, x, y, z):
     """
     Does some quick checks before testing d-separation
@@ -392,10 +361,12 @@ def d_sep(g, x, y, z):
         n_vis_pa = 0
         n_vis_ch = 0
         if include_pa:
-            visitable_parents = list((set(parents_unsort([el_name], g)) - {el_name}) & set(an_xyz))
+            parents_unsort = find_related_nodes_of([el_name], g, "in")
+            visitable_parents = list((set(parents_unsort) - {el_name}) & set(an_xyz))
             n_vis_pa = len(visitable_parents)
         if include_ch:
-            visitable_children = list((set(children_unsort([el_name], g)) - {el_name}) & set(an_xyz))
+            children_unsort = find_related_nodes_of([el_name], g, "out")
+            visitable_children = list((set(children_unsort) - {el_name}) & set(an_xyz))
             n_vis_ch = len(visitable_children)
         if n_vis_pa + n_vis_ch > 0:
             while n_vis_pa + n_vis_ch + stack_top > stack_size:
@@ -414,8 +385,8 @@ def d_sep(g, x, y, z):
             stack_top = stack_add
         return (stack, stack_names, stack_size, stack_top)
 
-    an_z = ancestors_unsort(z, g)
-    an_xyz = ancestors_unsort(list(set(x) | set(y) | set(z)), g)
+    an_z = find_related_nodes_of(z, g, "in", order="max")
+    an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g,"in", order="max")
     stack_top = len(x)
     stack_size = max(stack_top, 64)
     stack = [False] * stack_size
@@ -574,7 +545,7 @@ def parallel_worlds(g, gamma):
         if node["int_vars"] is not None and len(node["int_vars"]) > 0:
             # print(node["name"], node["int_vars"])
             if node["orig_name"] in node["int_vars"]:
-                for name in ancestors_unsort([node["name"]], p_worlds):
+                for name in find_related_nodes_of([node["name"]], p_worlds, "in", order="max"):
                     # print(name)
                     # print(node["name"])
                     if name != node["name"]:
@@ -597,9 +568,9 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     if (node1["orig_name"] in node1["int_vars"]) and (node2["orig_name"] in node2["int_vars"]):
         if node1["int_values"] != node2["int_values"]:
             return g, "Inconsistent"
-    ch_delete = children_unsort(node2["name"], g)
-    pa_keep = parents_unsort(node1["name"], g)
-    ch_keep = children_unsort(node1["name"], g)
+    ch_delete = find_related_nodes_of(node2["name"], g, "out", exclude_orig=True)
+    pa_keep = find_related_nodes_of(node1["name"], g, "in", exclude_orig=True)
+    ch_keep = find_related_nodes_of(node1["name"], g, "out", exclude_orig=True)
     ch = list(set(ch_delete)-set(ch_keep))
 
     deleted_node_info = {"name": node2["name"][0], "int_vars": node2["int_vars"][0], "obs_val": node2["obs_val"][0],
@@ -629,8 +600,8 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
     return g, gamma
 
 def should_merge(g, node1, node2):
-    pa1 = parents_unsort(node1["name"], g)
-    pa2 = parents_unsort(node2["name"], g)
+    pa1 = find_related_nodes_of(node1["name"], g, "out", exclude_orig=True)
+    pa2 = find_related_nodes_of(node2["name"], g, "out", exclude_orig=True)
     # print("unmatched_parents:", list(set(pa1) ^ set(pa2)))  # todo: testing line
 
     # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and
@@ -700,13 +671,13 @@ def make_cg(g, gamma):
         else:
             nodes_in_gamma_prime.append(event.orig_name)
     # print(nodes_in_gamma_prime)
-    relevant_nodes = ancestors_unsort(nodes_in_gamma_prime, cg)
+    relevant_nodes = find_related_nodes_of(nodes_in_gamma_prime, cg, "in", "max")
     cg = cg.subgraph(relevant_nodes)
 
     # Remove unobserved nodes with only 1 child
     unobserved_nodes = cg.vs.select(description="U")["name"]
     for node in unobserved_nodes:
-        if len(children_unsort([node], cg)) < 2:
+        if len(find_related_nodes_of([node], cg, "out", exclude_orig=True)) < 2:
             cg.delete_vertices(node)
     return cg, gamma_prime
 

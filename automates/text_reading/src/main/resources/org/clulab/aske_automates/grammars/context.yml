@@ -1,0 +1,106 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+# todo: try to simplify & combine rules!!
+rules:
+
+  - name: during_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Previous studies indicated that maize height and LAI would reduce when suffering water deficit during the early growing stage."
+    pattern: |
+      (?<context> [lemma = "during"] [chunk = /B-NP|I-NP/]+)
+
+  - name: when_where_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Under the same mulching fraction (fm = 0.5), αb decreased by 8.5% when fsw decreased from 1.0 to 0.5."
+    pattern: |
+      (?<context> ([chunk = /B-SBAR/ & !word = "that"]|[lemma = /(when|where)/]) [chunk = /I-NP|B-NP/]+ (${PP+NP})* [chunk = /I-VP|B-VP/]+ ([tag = /CC/]? [chunk = /B-ADVP|I-ADVP|B-ADJP|I-ADJP|B-PRT/]+)* [chunk = /I-NP|B-NP/ & !tag = /WDT/]* ((${PP+NP})+ ([tag = /TO/] [chunk = /B-NP|I-NP/]+)?)? ([chunk = /B-VP/] [chunk = /B-PP/]? [chunk = /B-NP|I-NP/]* [chunk = /B-ADJP|I-ADJP/]* [chunk = /B-PP/]? [chunk = /I-NP|B-NP/]*)* ([tag = /CC/] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/] ${PP+NP})? ([word = ","] [tag = /CC/] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* (${PP+NP})?)? ([word = "and"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP|I-VP/]+ [chunk = /B-ADJP|I-ADJP/]+)?)
+      |
+      (?<context> [lemma = /(when|where)/] [tag = /^NN/] [lemma = /<|>|=|≥|≤/] [tag = /CD/] [tag = /NN/]? ([chunk = /B-VP/] [chunk = /B-NP|I-NP/]+)?)
+      |
+      (?<context> [lemma = /when/] [word = "not"]? [chunk = /B-ADJP/])
+      |
+      (?<context> [lemma = "when"] [tag = /VBG/] [chunk = /B-NP|I-NP/]+)
+
+  - name: if_condition
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "C and C* are heat transfer coefficients that depend on the reference height selected for T and u, and, if this height is not low enough, on the stability."
+    pattern: |
+      (?<context> [lemma = "if"] [tag = /DT/]? [tag = /JJ|^NN/]+ ([tag = /IN/] [tag = /DT/]? [tag = /CD|JJ/]? [tag = /^NN/])? [tag = /^VB/] [tag = /RB/]? [tag = /JJ|^VB/]? [tag = /RB/]? ([tag = /IN/] [tag = /DT/]? [tag = /JJ|^NN/]+)* ([tag = /IN/] [tag = /CD/] [tag = /TO/] [tag = /CD/])?)
+      |
+      (?<context> [lemma = "if"] ([word = "and"] [word = "only"] [word = "if"])? [chunk = /B-NP|I-NP/]+ [chunk = /B-ADVP/]? [chunk = /I-VP|B-VP/]+ [chunk = /B-ADJP|B-ADVP/]? [chunk = /B-NP|I-NP/]* (${PP+NP})? ([word = "and"] [tag = /DT/] [entity = /LOCATION/]*)?)
+      |
+      (?<context> [lemma = "if"] ([word = "and"] [word = "only"] [word = "if"])? [chunk = /B-NP|I-NP/]+ [lemma = /<|>|=|≥|≤/] [tag = /CD/])
+
+  - name: preposition_context # note: this rule produces too many false positives. needs to be revised.
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Rn = calculated net radiation at the crop surface (MJ m-2 d-1 for daily time steps or MJ m-2 h-1 for hourly time steps)"
+    pattern: |
+      (?<context> (?<! [lemma = /(depend|stand|base|prompt|result)/]) [tag = /IN/ & !lemma = /^of$|^as$|until|that/] [chunk = /B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/ & !word = /general|particular|fact|example|which|addition/] [chunk = /I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]* ([lemma = /^of$|^to$|^near$/] [chunk = /I-NP|B-NP/]+)* ([tag = /VBG|VBN/] [chunk = /B-NP|I-NP/]*)?)
+
+  - name: that_restriction
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Cn = numerator constant that changes with reference type and calculation time step (K mm s3 Mg-1 d-1 or K mm s3 Mg-1 h-1)"
+    pattern: |
+      (?<context> (?<= [chunk = /B-NP|I-NP/]) [lemma = /that|who/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP|I-ADJP|B-VP|I-VP/ & !word = "when"]* ([chunk = /B-PP/]? [chunk = /I-NP|B-NP/]+ [word = "step"]? [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
+      |
+      (?<context> [lemma = /which/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP|I-ADJP/ & !word = "when"]* ([chunk = /B-PP/]? ([chunk = /I-NP|B-NP/ & !tag = /-LRB-|-RRB-/]|[tag = /^NN/])+ [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
+
+  - name: fronted_adverbials
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "For daily (24-hour) periods, Ra can be estimated from the solar constant, the solar declination, and the day of the year."
+    pattern: |
+      (?<context> [word = /(^[A-Z].*$)/ & chunk = /B-PP/]|[word = /(^[A-Z].*$)/ & chunk = /B-SBAR/] ([tag = VBG])? [chunk = /I-NP|B-NP/ & !word = /(general|example|addition)/]+ (${PP+NP})? ([chunk = /B-SBAR/] [chunk = /B-VP/] [chunk = /B-ADVP/])?) [word = ","]
+
+  - name: provided_condition
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL."
+    pattern: |
+      (?<context> [word = "provided"] [chunk = /I-NP|B-NP/]+ (${PP+NP})? [chunk = /B-VP|I-VP/]+ ([chunk = /B-PRT/] ${PP+NP})?) [word = /\.|\,/]
+
+  - name: date_or_location
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Background Since November 2002 (and perhaps earlier) an outbreak of a very contagious atypical pneumonia (now named Severe Acute Respiratory Syndrome) initiated in the Guangdong Province of China ."
+    pattern: |
+      (?<context> [chunk = /B-PP/] [chunk = /B-NP/]? [entity = "DATE"]+ ([entity = "DURATION"] [entity = "DATE"])? ([tag = /TO/] [entity = "DATE"]+)?)
+      |
+      (?<context> [chunk = /B-PP/] [chunk = /I-NP|B-NP/ & entity = "LOCATION"]+ ([word = "and"] [chunk = /I-NP|B-NP/ & entity = "LOCATION"]+)?)
+
+  - name: after_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "After the latent period ends, the individual enters the class I"
+    pattern: |
+      (?<context> [lemma = /after|until/] [chunk = /I-NP|B-NP/]+ [chunk = /B-ADJP/]? (${PP+NP})* [chunk = /B-VP|I-VP/]* [chunk = /B-ADJP/]? (${PP+NP})*)
+
+  - name: so_long_as
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "As the plant cover increases, the evaporation rate becomes more dependent on the leaf area [Penman et al ., 1967] and the potential evaporation so long as the soil water available to the plant roots is not limited."
+    pattern: |
+      (?<context> [word = "so"] [word = "long"] [word = "as"] [chunk = /I-NP|B-NP/]+ [chunk = /B-ADJP/]? (${PP+NP})* [chunk = /B-VP|I-VP/]* (${PP+NP})*)
+
+  - name: suppose_context
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Suppose we increase the r parameter by 1 % to have r = 9.88588 x 10 - 8 , then R infinity will become 116464."
+    pattern: |
+      (?<context> [lemma = "suppose"] [chunk = /I-NP|B-NP/]+ [chunk = /B-VP|I-VP/]+ [chunk = /I-NP|B-NP/]* (${PP+NP})* ([tag = "TO"] [chunk = /I-VP/] ([chunk = /B-NP|I-NP/]|[word = "-"])*)?)

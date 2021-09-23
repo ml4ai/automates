@@ -395,6 +395,11 @@ object ExtractAndAlign {
     atts.map(att => att.asInstanceOf[AutomatesAttachment]).filter(aa => aa.toUJson("attType").str ==attType).head
   }
 
+  def returnAttachmentOfAGivenTypeOption(atts: Set[Attachment], attType: String): Option[AutomatesAttachment] = {
+    val ofType = atts.map(att => att.asInstanceOf[AutomatesAttachment]).filter(aa => aa.toUJson("attType").str ==attType)
+    ofType.headOption
+  }
+
   def alignElements(
     alignmentHandler: AlignmentHandler,
     allGlobalVars: Seq[GlobalVariable],

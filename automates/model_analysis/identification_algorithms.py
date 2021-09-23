@@ -96,7 +96,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
         tree.call.id_check = True
         tree.root = deepcopy(p)
         return gm.ResultsInternal(p=p, tree=tree)
-    an = gm.ancestors(y, g_obs, topo)
+    an = gm.find_related_nodes_of(y, g_obs, "in", order="max", topo=topo)
 
     # Line 2
     if len(set(v) - set(an)) != 0:
@@ -116,7 +116,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
     # Line 3
     g_xbar_elist = gm.eselect(x, g)
     g_xbar = g.subgraph_edges(g_xbar_elist, delete_vertices=False)
-    an_xbar = gm.ancestors(y, gm.observed_graph(g_xbar), topo)
+    an_xbar = gm.find_related_nodes_of(y, gm.observed_graph(g_xbar), "in", order="max", topo=topo)
     w = gm.ts(list(set(v) - set(x) - set(an_xbar)), topo)
     w_len = len(w)
     if w_len != 0:
@@ -141,7 +141,7 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
             id_check_list.append(deepcopy(nxt.tree.call.id_check))
             tree.children.append(deepcopy(nxt.tree))
         tree.call.id_check = all(id_check_list)
-        return gm.ResultsInternal(p=gm.Probability(sumset=gm.ts(list(set(v) - set(y) - set(x)), topo), product=True, \
+        return gm.ResultsInternal(p=gm.Probability(sumset=gm.ts(list(set(v) - set(y) - set(x)), topo), product=True,
                                                    children=product_list), tree=tree)
     else:
         s_single = s[0]
@@ -174,8 +174,8 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
                 product_list.append(deepcopy(p_prod))
             product_list.reverse()
             if s_single_length > 1:
-                prob_new = gm.Probability(sumset=gm.ts(set(s_single) - set(y), topo), product=True, children= \
-                    product_list)
+                prob_new = gm.Probability(sumset=gm.ts(set(s_single) - set(y), topo), product=True,
+                                          children=product_list)
                 tree.root = prob_new
                 tree.call.id_check = True
                 return gm.ResultsInternal(p=prob_new, tree=tree)

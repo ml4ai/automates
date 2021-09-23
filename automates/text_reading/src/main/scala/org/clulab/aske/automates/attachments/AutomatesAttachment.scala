@@ -1,5 +1,6 @@
 package org.clulab.aske.automates.attachments
 
+import org.clulab.aske.automates.quantities.Interval
 import org.clulab.odin.Attachment
 import play.api.libs.json.{JsValue, Json}
 
@@ -92,6 +93,37 @@ class UnitAttachment(attachedTo: String, attType: String) extends AutomatesAttac
 
     toReturn("attachedTo") = attachedTo
     toReturn("attType") = attType //"UnitAtt"
+    toReturn
+  }
+
+}
+
+class ContextAttachment(attType: String, context: ujson.Value, foundBy: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = ujson.Obj (
+      "contexts" -> contextsToJsonObj(context),
+      "attType" -> attType,
+      "foundBy" -> foundBy
+    )
+
+  def contextsToJsonObj(contexts: ujson.Value): ujson.Value = {
+//    val contextsToJsonObj = contexts.map(seq => ujson.Arr(seq))
+    val contextsToJsonObj = ujson.Value(contexts)
+    contextsToJsonObj
+  }
+}
+
+class FunctionAttachment(attType: String, trigger: String, foundBy: String) extends AutomatesAttachment {
+
+  override def toJson: JsValue = ???
+
+  def toUJson: ujson.Value = {
+    val toReturn = ujson.Obj()
+    toReturn("attType") = attType //"FunctionAtt"
+    toReturn("trigger") = trigger
+    toReturn("foundBy") = foundBy
     toReturn
   }
 

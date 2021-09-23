@@ -44,6 +44,7 @@ from automates.model_assembly.structures import (
     GenericStmt,
     GenericIdentifier,
     GenericDefinition,
+    TypeDefinition,
     VariableDefinition,
 )
 
@@ -95,9 +96,11 @@ class CAST(object):
     """
 
     nodes: typing.List[AstNode]
+    cast_source_language: str
 
-    def __init__(self, nodes: typing.List[AstNode]):
+    def __init__(self, nodes: typing.List[AstNode], cast_source_language: str):
         self.nodes = nodes
+        self.cast_source_language = cast_source_language
 
     def __eq__(self, other):
         return len(self.nodes) == len(other.nodes) and all(
@@ -110,11 +113,11 @@ class CAST(object):
     def to_AGraph(self):
         G = nx.DiGraph()
         for node in self.nodes:
-            print("node",node)
-            print("type",type(node))
+            print("node", node)
+            print("type", type(node))
             for ast_node in ast.walk(node.body):
                 for child_node in ast_node.children:
-                    G.add_edge(ast_node,child_node)
+                    G.add_edge(ast_node, child_node)
         A = nx.nx_agraph.to_agraph(G)
         A.graph_attr.update(
             {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
@@ -122,21 +125,50 @@ class CAST(object):
         A.node_attr.update({"fontname": "Menlo"})
         return A
 
-
-    def to_GrFN(self):
-        c2a_visitor = CASTToAIRVisitor(self.nodes)
+    def to_air_dict(self):
+        c2a_visitor = CASTToAIRVisitor(self.nodes, self.cast_source_language)
         air = c2a_visitor.to_air()
+
+        main_container = [
+            c["name"] for c in air["containers"] if c["name"].endswith("::main")
+        ]
+
+        called_containers = [
+            s["function"]["name"]
+            for c in air["containers"]
+            for s in c["body"]
+            if s["function"]["type"] == "container"
+        ]
+        root_containers = [
+            c["name"] for c in air["containers"] if c["name"] not in called_containers
+        ]
+
+        container_id_to_start_from = None
+        if len(main_container) > 0:
+            container_id_to_start_from = main_container[0]
+        elif len(root_containers) > 0:
+            container_id_to_start_from = root_containers[0]
+        else:
+            # TODO
+            raise Exception("Error: Unable to find root container to build GrFN.")
+
+        air["entrypoint"] = container_id_to_start_from
+
+        return air
+
+    def to_AIR(self):
+        air = self.to_air_dict()
 
         C, V, T, D = dict(), dict(), dict(), dict()
 
         # Create variable definitions
         for var_data in air["variables"]:
-            new_var = GenericDefinition.from_dict(var_data)
+            new_var = VariableDefinition.from_data(var_data)
             V[new_var.identifier] = new_var
 
         # Create type definitions
         for type_data in air["types"]:
-            new_type = GenericDefinition.from_dict(type_data)
+            new_type = TypeDefinition.from_dict(type_data)
             T[new_type.identifier] = new_type
 
         # Create container definitions
@@ -147,22 +179,19 @@ class CAST(object):
                     V[in_var] = VariableDefinition.from_identifier(in_var)
             C[new_container.identifier] = new_container
 
-        grfn = GroundedFunctionNetwork.from_AIR(
-            GenericIdentifier.from_str("@container::initial::@global::main"),
-            C,
-            V,
-            T,
-            [],
-            [],
-            [],
-        )
+        return AutoMATES_IR(GenericIdentifier.from_str(air["entrypoint"]), C, V, T, [], [], [])
+
+    def to_GrFN(self):
+        air = self.to_AIR()
         grfn = GroundedFunctionNetwork.from_AIR(air)
         return grfn
 
     def write_cast_object(self, cast_value):
         if isinstance(cast_value, list):
             return [self.write_cast_object(val) for val in cast_value]
-        elif not isinstance(cast_value, AstNode) and not isinstance(cast_value, SourceRef):
+        elif not isinstance(cast_value, AstNode) and not isinstance(
+            cast_value, SourceRef
+        ):
             return cast_value
 
         return dict(
@@ -199,6 +228,14 @@ class CAST(object):
         elif isinstance(data, (float, int, str, bool)):
             # If we see a primitave type, simply return its value
             return data
+        elif all(k in data for k in ("row_start", "row_end", "col_start", "col_end")):
+            return SourceRef(
+                row_start=data["row_start"],
+                row_end=data["row_end"],
+                col_start=data["col_start"],
+                col_end=data["col_end"],
+                source_file_name=data["source_file_name"],
+            )
 
         if "node_type" in data:
             # Create the object specified by "node_type" object with the values
@@ -218,7 +255,7 @@ class CAST(object):
         )
 
     @classmethod
-    def from_json_data(cls, json_data):
+    def from_json_data(cls, json_data, cast_source_language="unknown"):
         """
         Parses json CAST data object and returns the created CAST object
 
@@ -230,7 +267,7 @@ class CAST(object):
             CAST: The parsed CAST object.
         """
         nodes = cls.parse_cast_json(json_data["nodes"])
-        return cls(nodes)
+        return cls(nodes, cast_source_language)
 
     @classmethod
     def from_json_file(cls, json_filepath):

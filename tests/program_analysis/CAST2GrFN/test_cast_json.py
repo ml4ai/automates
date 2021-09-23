@@ -118,7 +118,7 @@ def cast_with_all_nodes():
 
     m = Module(name="ExampleModule", body=[class_def, func_def])
 
-    return CAST([m])
+    return CAST([m], cast_source_language="")
 
 
 def test_all_nodes_from_json(cast_with_all_nodes_json, cast_with_all_nodes):

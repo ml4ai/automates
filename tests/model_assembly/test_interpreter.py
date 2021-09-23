@@ -59,43 +59,21 @@ def test_pet_files():
     values = {
         "PETASCE_simple::petasce::doy::-1": np.array([20.0], dtype=np.float32),
         "PETASCE_simple::petasce::meevp::-1": np.array(["A"], dtype=np.str),
-        "PETASCE_simple::petasce::msalb::-1": np.array(
-            [0.5], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::srad::-1": np.array(
-            [15.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::tmax::-1": np.array(
-            [10.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::tmin::-1": np.array(
-            [-10.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::xhlai::-1": np.array(
-            [10.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::tdew::-1": np.array(
-            [20.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::windht::-1": np.array(
-            [5.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::windrun::-1": np.array(
-            [450.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::xlat::-1": np.array(
-            [45.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::xelev::-1": np.array(
-            [3000.0], dtype=np.float32
-        ),
-        "PETASCE_simple::petasce::canht::-1": np.array(
-            [2.0], dtype=np.float32
-        ),
+        "PETASCE_simple::petasce::msalb::-1": np.array([0.5], dtype=np.float32),
+        "PETASCE_simple::petasce::srad::-1": np.array([15.0], dtype=np.float32),
+        "PETASCE_simple::petasce::tmax::-1": np.array([10.0], dtype=np.float32),
+        "PETASCE_simple::petasce::tmin::-1": np.array([-10.0], dtype=np.float32),
+        "PETASCE_simple::petasce::xhlai::-1": np.array([10.0], dtype=np.float32),
+        "PETASCE_simple::petasce::tdew::-1": np.array([20.0], dtype=np.float32),
+        "PETASCE_simple::petasce::windht::-1": np.array([5.0], dtype=np.float32),
+        "PETASCE_simple::petasce::windrun::-1": np.array([450.0], dtype=np.float32),
+        "PETASCE_simple::petasce::xlat::-1": np.array([45.0], dtype=np.float32),
+        "PETASCE_simple::petasce::xelev::-1": np.array([3000.0], dtype=np.float32),
+        "PETASCE_simple::petasce::canht::-1": np.array([2.0], dtype=np.float32),
     }
     outputs = G(values)
     res = outputs["eo"][0]
-    assert res == np.float(1.3980657068634232)
+    assert round(res, 6) == np.float(1.398066)
 
     G.to_json_file("tmp/ASCE_GrFN.json")
     G2 = GroundedFunctionNetwork.from_json("tmp/ASCE_GrFN.json")
@@ -107,12 +85,8 @@ def test_pet_files():
 
 
 def test_single_file_analysis():
-    ITP = ImperativeInterpreter.from_src_file(
-        "tests/data/program_analysis/PETPNO.for"
-    )
-    petpno_con_id = GenericIdentifier.from_str(
-        "@container::PETPNO::@global::petpno"
-    )
+    ITP = ImperativeInterpreter.from_src_file("tests/data/program_analysis/PETPNO.for")
+    petpno_con_id = GenericIdentifier.from_str("@container::PETPNO::@global::petpno")
 
     AIR = AutoMATES_IR(
         petpno_con_id,
@@ -139,9 +113,7 @@ def test_file_with_loops():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/SIR-Gillespie-SD.f"
     )
-    con_id = GenericIdentifier.from_str(
-        "@container::SIR-Gillespie-SD::@global::main"
-    )
+    con_id = GenericIdentifier.from_str("@container::SIR-Gillespie-SD::@global::main")
 
     AIR = AutoMATES_IR(
         con_id,
@@ -163,9 +135,7 @@ def test_file_with_loops():
 
 
 def test_petpt():
-    ITP = ImperativeInterpreter.from_src_file(
-        "tests/data/program_analysis/PETPT.for"
-    )
+    ITP = ImperativeInterpreter.from_src_file("tests/data/program_analysis/PETPT.for")
     con_id = GenericIdentifier.from_str("@container::PETPT::@global::petpt")
     AIR = AutoMATES_IR(
         con_id,
@@ -197,9 +167,7 @@ def test_crop_yield_creation():
     ITP = ImperativeInterpreter.from_src_file(
         "tests/data/program_analysis/crop_yield.f"
     )
-    con_id = GenericIdentifier.from_str(
-        "@container::crop_yield::@global::crop_yield"
-    )
+    con_id = GenericIdentifier.from_str("@container::crop_yield::@global::crop_yield")
     AIR = AutoMATES_IR(
         con_id,
         ITP.containers,

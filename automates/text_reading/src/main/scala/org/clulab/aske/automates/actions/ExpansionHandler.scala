@@ -22,7 +22,11 @@ class ExpansionHandler() extends LazyLogging {
     // themselves so that they can be added to the state (which happens when the Seq[Mentions] is returned at the
     // end of the action
     // TODO: alternate method if too long or too many weird characters ([\w.] is normal, else not)
-    val (functions, other) = mentions.partition(_.label == "Function")
+
+    // until there's evidence to the contrary, assume concepts  in parameter settings should expand in the same way as they do in functions
+    // use `contains` and not `=` for param settings to take care of both Parameter Settings and Interval Parameter Settings
+    val (functions, other) = mentions.partition(m => m.label == "Function" || m.label.contains("ParameterSetting"))
+
     val function_res = functions.flatMap(expandArgs(_, state, validArgs, "function"))
     val other_res = other.flatMap(expandArgs(_, state, validArgs, "standard"))
 
@@ -82,10 +86,18 @@ class ExpansionHandler() extends LazyLogging {
     // Make the new arguments
     val newArgs = scala.collection.mutable.HashMap[String, Seq[Mention]]()
     for ((argType, argMentions) <- m.arguments) {
+      val argsToExpand = new ArrayBuffer[Mention]
+      val expandedArgs = new ArrayBuffer[Mention]
       if (validArgs.contains(argType)) {
+        // filter out function args that are identifiers from expanding
+        if (m.label == "Function") {
+          val (expandable, nonExpandable) = argMentions.partition(_.label != "Identifier")
+          argsToExpand ++= expandable
+          // append filtered args to expandedArgs so that we don't lose them
+          expandedArgs ++= nonExpandable
+        } else argsToExpand ++= argMentions
         // Sort, because we want to expand the closest first so they don't get subsumed
-        val sortedClosestFirst = argMentions.sortBy(distToTrigger(trigger, _))
-        val expandedArgs = new ArrayBuffer[Mention]
+        val sortedClosestFirst = argsToExpand.sortBy(distToTrigger(trigger, _))
         // Expand each one, updating the state as we go
         for (argToExpand <- sortedClosestFirst) {
 //          println("arg to expand: " + argToExpand.text + " " + argToExpand.foundBy + " " + argToExpand.labels)
@@ -284,13 +296,16 @@ class ExpansionHandler() extends LazyLogging {
       case _ => ???
     }
 //    println("valid outgoing"+expansionType+" "+validOutgoingSet.mkString("|"))
-    (
-      validOutgoingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
+
+
+      val isValid = validOutgoingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty) &&
         ! invalidOutgoingSet.exists(pattern => pattern.findFirstIn(dep).nonEmpty)
-      ) // || (
+//    println("dep and valid? " + dep + " " + isValid)
+       // || (
 //      // Allow exception to close parens, etc.
 //      dep == "punct" && Seq(")", "]", "}", "-RRB-").contains(token)
 //      )
+    isValid
   }
 
   /** Ensure incoming dependency may be safely traversed */
@@ -347,7 +362,6 @@ class ExpansionHandler() extends LazyLogging {
       (argName, argPathsMap) <- orig.paths
       origPath = argPathsMap(orig.arguments(argName).head)
     } yield (argName, Map(expandedArgs(argName).head -> origPath))
-
     // Make the copy based on the type of the Mention
     val copyFoundBy = if (foundByAffix.nonEmpty) s"${orig.foundBy}_$foundByAffix" else orig.foundBy
 
@@ -461,6 +475,8 @@ object ExpansionHandler {
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
+    "cop".r,
+    "punct".r
     //"^nmod_with$".r,
     //    "^nmod_without$".r,
     //    "^nmod_except$".r
@@ -491,7 +507,7 @@ object ExpansionHandler {
     "nmod_at".r,
     "^nmod_of".r,
     "nmod_under".r,
-    "nmod_in".r//,
+//    "nmod_in".r//,
 //    "dobj".r
   )
 
@@ -499,12 +515,13 @@ object ExpansionHandler {
     "acl:relcl".r,
     "acl_until".r,
     "advcl_to".r,
+    "advcl_if".r,
     "^advcl_because".r,
     "advmod".r,
     "^case".r,
     "^cc$".r,
     "ccomp".r,
-    "compound".r,
+//    "compound".r,
     "^conj".r,
     "cop".r,
     "dep".r, //todo: expansion on dep is freq too broad; check which tests fail if dep is included as invalid outgoing,
@@ -517,14 +534,21 @@ object ExpansionHandler {
     "^nmod_given".r,
     "^nmod_since".r,
     "^nmod_without$".r,
-    "nummod".r,
+    "nmod_in".r,
+//    "nmod_by".r,
+//    "nummod".r,
     "^nsubj".r,
     "^punct".r,
     "^ref$".r,
-    "appos".r
+    "appos".r,
+    "xcomp".r,
+//    "amod".r
   )
 
-  val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex]()
+  val INVALID_INCOMING_FUNCTION = Set[scala.util.matching.Regex](
+    "cop".r,
+    "punct".r
+  )
 
   // regexes describing valid outgoing dependencies
   val VALID_OUTGOING_FUNCTION = Set[scala.util.matching.Regex](
@@ -535,9 +559,10 @@ object ExpansionHandler {
     "acl:relcl".r,
     "^nmod_for".r,
     "nmod_at".r,
-    "^nmod_of".r,
+//    "^nmod_of".r,
     "nmod_under".r,
-    "nmod_in".r
+//    "nmod_in".r
+//    "aux".r
   )
 
   def apply() = new ExpansionHandler()
