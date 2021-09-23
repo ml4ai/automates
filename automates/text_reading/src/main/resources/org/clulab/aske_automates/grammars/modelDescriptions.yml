@@ -178,3 +178,14 @@ rules:
       trigger = [word = "characteristic"]
       model:Model = nmod_of
       modelDescr:Phrase+ = <nsubj ccomp
+
+  - name: modelVersion
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Based on these findings, we chose to use the FabSim3 toolkit, which is an improved version of FabSim."
+    pattern: |
+      trigger = [word = "version"]
+      model:Model = nsubj compound?
+      modelDescr:Model+ = nmod_of
