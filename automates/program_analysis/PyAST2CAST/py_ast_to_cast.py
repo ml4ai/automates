@@ -836,9 +836,13 @@ class PyASTToCAST(ast.NodeVisitor):
                                 funcs.append(n)
                                 break
 
-                    funcs = [self.visit(f) for f in funcs]
+                    #funcs = [self.visit(f) for f in funcs]
+                    visited_funcs = []
+                    for f in funcs:
+                        visited_funcs.extend(self.visit(f))
+                    
                     self.filenames.pop()
-                    return funcs
+                    return visited_funcs
                 else: # Importing the entire file
                     full_file = self.visit(contents)
                     self.filenames.pop()
