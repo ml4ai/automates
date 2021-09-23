@@ -386,7 +386,7 @@ def d_sep(g, x, y, z):
         return (stack, stack_names, stack_size, stack_top)
 
     an_z = find_related_nodes_of(z, g, "in", order="max")
-    an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g,"in", order="max")
+    an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g, "in", order="max")
     stack_top = len(x)
     stack_size = max(stack_top, 64)
     stack = [False] * stack_size
@@ -569,7 +569,6 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
         if node1["int_values"] != node2["int_values"]:
             return g, "Inconsistent"
     ch_delete = find_related_nodes_of(node2["name"], g, "out", exclude_orig=True)
-    pa_keep = find_related_nodes_of(node1["name"], g, "in", exclude_orig=True)
     ch_keep = find_related_nodes_of(node1["name"], g, "out", exclude_orig=True)
     ch = list(set(ch_delete)-set(ch_keep))
 
@@ -599,9 +598,10 @@ def merge_nodes(g, node1, node2, gamma):  # Make sure node1 and node2 are not ju
                         event.int_values = node1["int_values"][0]
     return g, gamma
 
+
 def should_merge(g, node1, node2):
-    pa1 = find_related_nodes_of(node1["name"], g, "out", exclude_orig=True)
-    pa2 = find_related_nodes_of(node2["name"], g, "out", exclude_orig=True)
+    pa1 = find_related_nodes_of(node1["name"], g, "in", exclude_orig=True)
+    pa2 = find_related_nodes_of(node2["name"], g, "in", exclude_orig=True)
     # print("unmatched_parents:", list(set(pa1) ^ set(pa2)))  # todo: testing line
 
     # Lemma 24, Second condition: There is a bijection f from Pa(alpha) to Pa(beta) such that a parent gamma and

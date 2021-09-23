@@ -82,7 +82,7 @@ def test_make_cg():
 
     # Expected Results
     cg_exp = igraph.Graph(edges=[[1, 2], [4, 5], [3, 4], [6, 0], [6, 5], [2, 5]], directed=True)
-    cg_exp.vs["name"] = ['X', 'D', 'Z', 'X_X', 'W_X', 'Y_X', 'U_1']
+    cg_exp.vs["name"] = ['X', 'D', 'Z', 'X_[X]', 'W_[X]', 'Y_[X]', 'U_1']
     cg_exp.es["description"] = ["O", "O", "O", "U", "U", "O"]
     gamma_prime_exp = [gm.CF('Y', 'y', ['X'], ['x']), gm.CF('X', 'x_prime'), gm.CF('Z'), gm.CF('D', 'd')]
 
