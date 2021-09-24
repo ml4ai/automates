@@ -1558,11 +1558,16 @@ class CASTToAIRVisitor(CASTVisitor):
 
         visit_order = call_order.get_function_visit_order(node)
         visit_order_name_to_pos = {name: pos for pos, name in enumerate(visit_order)}
-        pairs = [(visit_order_name_to_pos[n.name], n) for n in non_var_global_nodes]
+        pairs = [
+            (visit_order_name_to_pos[n.name], n)
+            for n in non_var_global_nodes
+            if n.name in visit_order_name_to_pos
+        ]
         pairs.sort(key=lambda p: p[0])
-        self.visit_node_list_and_flatten([p[1] for p in pairs])
-
-        self.visit_node_list_and_flatten(non_var_global_nodes)
+        visit_order = [p[1] for p in pairs] + [
+            n for n in non_var_global_nodes if n.name not in visit_order_name_to_pos
+        ]
+        self.visit_node_list_and_flatten(visit_order)
 
         # If we had global variables, create the global scope that calls out to
         # all root level functions
