@@ -1,5 +1,7 @@
 from automates.program_analysis.CAST2GrFN.model.cast import source_ref
-from automates.program_analysis.CAST2GrFN.model.cast.source_ref import SourceRef
+from automates.program_analysis.CAST2GrFN.model.cast.source_ref import (
+    SourceRef,
+)
 from typing import List, Dict, NoReturn, Set
 from enum import Enum
 from dataclasses import dataclass
@@ -176,7 +178,7 @@ class C2AVariable(object):
         # metadata
         if not has_from_source_metadata:
             self.add_metadata(
-                TypedMetadata.from_data(
+                TypedMetadata.from_dict(
                     {
                         "type": "FROM_SOURCE",
                         "provenance": {
@@ -530,7 +532,8 @@ class C2AAttributeAccessState(object):
 
         return not any(
             [
-                v.identifier_information.name == attr_var.identifier_information.name
+                v.identifier_information.name
+                == attr_var.identifier_information.name
                 for v in vars_to_check
             ]
         )
@@ -538,10 +541,15 @@ class C2AAttributeAccessState(object):
     def build_extract_lambda(self, extract_var, output_variables):
         obj_var_name = extract_var.identifier_information.name
         lambda_dict_keys = [
-            v.identifier_information.name.split("_", 1)[1] for v in output_variables
+            v.identifier_information.name.split("_", 1)[1]
+            for v in output_variables
         ]
         lambda_dict_accesses = ",".join(
-            [f'{obj_var_name}["{v}"]' for v in lambda_dict_keys if obj_var_name != v]
+            [
+                f'{obj_var_name}["{v}"]'
+                for v in lambda_dict_keys
+                if obj_var_name != v
+            ]
         )
         lambda_expr = f"lambda {obj_var_name}: ({lambda_dict_accesses})"
         return lambda_expr
@@ -588,7 +596,10 @@ class C2AAttributeAccessState(object):
             )
 
         for v in pack_lambda.input_variables:
-            if v.identifier_information.name == attr_var.identifier_information.name:
+            if (
+                v.identifier_information.name
+                == attr_var.identifier_information.name
+            ):
                 pack_lambda.input_variables.remove(v)
         pack_lambda.input_variables.append(attr_var)
 
@@ -601,7 +612,10 @@ class C2AAttributeAccessState(object):
         pack_lambda = self.var_to_current_pack_node.get(var)
         # Add the updated version of the var after packing
         new_var = C2AVariable(
-            var.identifier_information, var.version + 1, var.type_name, var.source_ref
+            var.identifier_information,
+            var.version + 1,
+            var.type_name,
+            var.source_ref,
         )
         pack_lambda.output_variables.append(new_var)
 
@@ -727,7 +741,9 @@ class C2AState(object):
         # Subtract one so we look at all scopes except "global"
         i = len(self.scope_stack)
         while i >= 0:
-            res = self.find_highest_version_var_in_scope(var_name, self.scope_stack[:i])
+            res = self.find_highest_version_var_in_scope(
+                var_name, self.scope_stack[:i]
+            )
             if res is not None:
                 return res
             i -= 1
@@ -739,23 +755,30 @@ class C2AState(object):
         Given a variable name, finds the highest version defined
         for that variable given the current scope
         """
-        return self.find_highest_version_var_in_scope(var_name, self.scope_stack)
+        return self.find_highest_version_var_in_scope(
+            var_name, self.scope_stack
+        )
 
     def find_next_var_version(self, var_name):
         """
         Determines the next version of a variable given its name and
         variables in the current scope.
         """
-        current_highest_ver = self.find_highest_version_var_in_current_scope(var_name)
+        current_highest_ver = self.find_highest_version_var_in_current_scope(
+            var_name
+        )
         return (
-            current_highest_ver.version + 1 if current_highest_ver is not None else -1
+            current_highest_ver.version + 1
+            if current_highest_ver is not None
+            else -1
         )
 
     def find_container(self, scope):
         matching = [
             c
             for c in self.containers
-            if c.identifier_information.scope + [c.identifier_information.name] == scope
+            if c.identifier_information.scope + [c.identifier_information.name]
+            == scope
         ]
 
         return matching[0] if matching else None
@@ -830,12 +853,19 @@ class C2AState(object):
 
         for con in container_air:
             hanging_lambda_vars = [
-                v for l in con["body"] if is_hanging_lambda(l, con) for v in l["output"]
+                v
+                for l in con["body"]
+                if is_hanging_lambda(l, con)
+                for v in l["output"]
             ]
             # Trim variables
-            var_air = [v for v in var_air if v["name"] not in hanging_lambda_vars]
+            var_air = [
+                v for v in var_air if v["name"] not in hanging_lambda_vars
+            ]
             if "return_value" in con:
-                hanging_ret_vars = {v for v in con["return_value"] if v in hanging_vars}
+                hanging_ret_vars = {
+                    v for v in con["return_value"] if v in hanging_vars
+                }
                 lambdas_calling = [
                     l
                     for c in container_air
@@ -846,19 +876,33 @@ class C2AState(object):
 
                 if len(lambdas_calling) == 0:
                     con["return_value"] = [
-                        v for v in con["return_value"] if v not in hanging_ret_vars
+                        v
+                        for v in con["return_value"]
+                        if v not in hanging_ret_vars
                     ]
                     all_return_vars.difference_update(hanging_ret_vars)
-                    var_air = [v for v in var_air if v["name"] not in hanging_ret_vars]
+                    var_air = [
+                        v for v in var_air if v["name"] not in hanging_ret_vars
+                    ]
 
             if "arguments" in con:
-                hanging_arg_vars = {v for v in con["arguments"] if v in hanging_vars}
+                hanging_arg_vars = {
+                    v for v in con["arguments"] if v in hanging_vars
+                }
                 con["arguments"] = [
                     v for v in con["arguments"] if v not in hanging_arg_vars
                 ]
                 all_arg_vars.difference_update(hanging_arg_vars)
-                var_air = [v for v in var_air if v["name"] not in hanging_arg_vars]
+                var_air = [
+                    v for v in var_air if v["name"] not in hanging_arg_vars
+                ]
 
-            con["body"] = [l for l in con["body"] if not is_hanging_lambda(l, con)]
+            con["body"] = [
+                l for l in con["body"] if not is_hanging_lambda(l, con)
+            ]
 
-        return {"containers": container_air, "variables": var_air, "types": types_air}
+        return {
+            "containers": container_air,
+            "variables": var_air,
+            "types": types_air,
+        }

@@ -8,6 +8,7 @@ import uuid
 # This block should be right below the uuid
 # import.
 rd = random.Random()
+rd.seed(0)
 uuid.uuid4 = lambda: uuid.UUID(int=rd.getrandbits(128))
 # -------------------------------------------
 

@@ -8,6 +8,7 @@ import json
 from .identifiers import (
     BaseIdentifier,
     AIRIdentifier,
+    StmtIdentifier,
     VariableIdentifier,
     TypeIdentifier,
     ObjectIdentifier,
@@ -29,10 +30,21 @@ class AutoMATES_IR:
     entrypoint: ContainerIdentifier
     containers: Dict[ContainerIdentifier, ContainerDef]
     variables: Dict[VariableIdentifier, VariableDef]
-    type_definitions: Dict[TypeIdentifier, TypeDef]
+    types: Dict[TypeIdentifier, TypeDef]
     objects: Dict[ObjectIdentifier, ObjectDef]
     documentation: Dict[str, dict]
     metadata: List[TypedMetadata]
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, AutoMATES_IR)
+            and self.identifier == other.identifier
+            and self.entrypoint == other.entrypoint
+            and set(self.types.keys()) == set(other.types.keys())
+            and set(self.objects.keys()) == set(other.objects.keys())
+            and set(self.containers.keys()) == set(other.containers.keys())
+            and set(self.variables.keys()) == set(other.variables.keys())
+        )
 
     def to_json(self, filepath: str):
         json_dict = {
@@ -40,9 +52,7 @@ class AutoMATES_IR:
             "entrypoint": str(self.entrypoint),
             "containers": [con.to_dict() for con in self.containers.values()],
             "variables": [var.to_dict() for var in self.variables.values()],
-            "types": [
-                tdef.to_dict() for tdef in self.type_definitions.values()
-            ],
+            "types": [tdef.to_dict() for tdef in self.types.values()],
             "objects": [obj.to_dict() for obj in self.objects.values()],
             "documentation": self.documentation,
             "metadata": [mdef.to_dict() for mdef in self.metadata],
@@ -52,23 +62,14 @@ class AutoMATES_IR:
             json.dump(json_dict, f)
 
     @classmethod
-    def from_air_json(cls, data: dict) -> AutoMATES_IR:
-        C, V, O, D = dict(), dict(), dict(), dict()
+    def from_CAST(cls, data: dict) -> AutoMATES_IR:
+        C, V, O, T = dict(), dict(), dict(), dict()
 
         code_refs = CodeCollectionReference.from_sources(data["sources"])
         code_file_uid = code_refs.files[0].uid
         first_file_name = code_refs.files[0].name
         name_ending_idx = first_file_name.rfind(".")
-        M = [
-            GrFNCreation.from_name(first_file_name[:name_ending_idx]),
-            code_refs,
-        ]
-        if "sources" in data:
-            code_refs = CodeCollectionReference.from_sources(data["sources"])
-            code_file_uid = code_refs.files[0].uid
-            M.append(code_refs)
 
-        T = dict()
         for type_data in data["types"]:
             type_data.update({"file_uid": code_file_uid})
             tdef = TypeDef.from_air_json(type_data)
@@ -85,18 +86,43 @@ class AutoMATES_IR:
             C[new_container.identifier] = new_container
 
         filename = data["sources"][0]
-        idt = AIRIdentifier.from_filename(filename)
         container_name = Path(filename).stem.lower()
-        D.update(
-            {
+
+        return cls(
+            identifier=AIRIdentifier.from_filename(filename),
+            entrypoint=ContainerIdentifier.from_name_str(data["entrypoint"]),
+            containers=C,
+            variables=V,
+            types=T,
+            objects=O,
+            metadata=[
+                code_refs,
+                GrFNCreation.from_name(first_file_name[:name_ending_idx]),
+            ],
+            documentation={
                 (n if not n.startswith("$") else container_name + n): data
                 for n, data in data["source_comments"].items()
-            }
+            },
         )
 
-        e = ContainerIdentifier.from_name_str(data["entrypoint"])
-
-        return cls(idt, e, C, V, T, O, D, M)
+    @classmethod
+    def from_air_json(cls, data: dict) -> AutoMATES_IR:
+        return cls(
+            identifier=AIRIdentifier.from_str(data["identifier"]),
+            entrypoint=ContainerIdentifier.from_name_str(data["entrypoint"]),
+            containers=dict(
+                ContainerDef.from_dict_with_id(d) for d in data["containers"]
+            ),
+            variables=dict(
+                VariableDef.from_dict_with_id(d) for d in data["variables"]
+            ),
+            types=dict(TypeDef.from_dict_with_id(d) for d in data["types"]),
+            objects=dict(
+                ObjectDef.from_dict_with_id(d) for d in data["objects"]
+            ),
+            metadata=[TypedMetadata.from_dict(d) for d in data["metadata"]],
+            documentation=data["documentation"],
+        )
 
 
 # @dataclass(frozen=True)
@@ -183,7 +209,6 @@ class VariableDef(BaseDef):
 
     @classmethod
     def from_air_json(cls, data: dict) -> VariableDef:
-        var_id = VariableIdentifier.from_name_str(data["name"])
         file_ref = data["file_uid"] if "file_uid" in data else ""
         src_ref = data["source_refs"][0] if "source_refs" in data else ""
         code_span_data = {
@@ -191,13 +216,28 @@ class VariableDef(BaseDef):
             "file_uid": file_ref,
             "code_type": "identifier",
         }
-        metadata = [CodeSpanReference.from_air_json(code_span_data)]
         return cls(
-            var_id,
-            metadata,
-            data["domain"]["name"],
-            data["domain_constraint"],
+            identifier=VariableIdentifier.from_name_str(data["name"]),
+            metadata=[CodeSpanReference.from_air_json(code_span_data)],
+            domain_name=data["domain"]["name"],
+            domain_constraint=data["domain_constraint"],
         )
+
+    @classmethod
+    def from_dict(cls, data: dict) -> VariableDef:
+        return cls(
+            identifier=VariableIdentifier.from_str(data["identifier"]),
+            metadata=[TypedMetadata.from_dict(d) for d in data["metadata"]],
+            domain_name=data["domain_name"],
+            domain_constraint=data["domain_constraint"],
+        )
+
+    @classmethod
+    def from_dict_with_id(
+        cls, data: dict
+    ) -> Tuple[VariableIdentifier, VariableDef]:
+        var_def = cls.from_dict(data)
+        return var_def.identifier, var_def
 
     def to_dict(self):
         return dict(
@@ -234,13 +274,21 @@ class TypeFieldDef:
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> TypeFieldDef:
+    def from_dict(cls, data: dict) -> TypeFieldDef:
         return cls(
             data["name"],
             data["type"],
-            [TypedMetadata.from_data(d) for d in data["metadata"]]
+            [TypedMetadata.from_dict(d) for d in data["metadata"]]
             if "metadata" in data
             else [],
+        )
+
+    @classmethod
+    def from_dict(cls, data: dict) -> TypeFieldDef:
+        return cls(
+            name=data["name"],
+            type=data["type"],
+            metadata=[TypedMetadata.from_dict(d) for d in data["metadata"]],
         )
 
     def to_dict(self) -> dict:
@@ -284,12 +332,11 @@ class TypeDef(BaseDef):
 
     @classmethod
     def from_dict(cls, data: dict) -> TypeDef:
-        metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
         return cls(
-            TypeIdentifier.from_str(data["identifier"]),
-            metadata,
-            data["metatype"],
-            [TypeFieldDef.from_data(d) for d in data["fields"]],
+            identifier=TypeIdentifier.from_str(data["identifier"]),
+            metatype=data["metatype"],
+            fields=[TypeFieldDef.from_dict(d) for d in data["fields"]],
+            metadata=[TypedMetadata.from_dict(d) for d in data["metadata"]],
         )
 
     @classmethod
@@ -339,6 +386,13 @@ class ObjectDef(BaseDef):
             ],
         )
 
+    @classmethod
+    def from_dict_with_id(
+        cls, data: dict
+    ) -> Tuple[ObjectIdentifier, ObjectDef]:
+        obj_def = cls.from_dict(data)
+        return obj_def.identifier, obj_def
+
     def to_dict(self) -> dict:
         return dict(
             **(super().to_dict()),
@@ -353,9 +407,10 @@ class ContainerDef(BaseDef):
     return_value: List[VariableIdentifier]
     variables: List[VariableDef]
     statements: List[StmtDef]
+    repeat: bool
 
     @staticmethod
-    def from_air_json(data: dict) -> ContainerDef:
+    def data_from_air(data: dict) -> dict:
         identifier = ContainerIdentifier.from_name_str(data["name"])
         file_reference = data["file_uid"] if "file_uid" in data else ""
         arguments = [
@@ -377,38 +432,39 @@ class ContainerDef(BaseDef):
             for stmt in data["body"]
         ]
 
-        metadata = [
-            CodeSpanReference.from_air_json(
-                {
-                    "source_ref": data["body_source_ref"]
-                    if "body_source_ref" in data
-                    else "",
-                    "file_uid": file_reference,
-                    "code_type": "block",
-                }
-            )
-        ]
-
         variables = arguments + updated + returns
         for stmt in statements:
             variables.extend(stmt.inputs)
             variables.extend(stmt.outputs)
-        variables = list(set(variables))
 
+        return {
+            "identifier": identifier,
+            "arguments": arguments,
+            "updated": updated,
+            "return_value": returns,
+            "variables": list(set(variables)),
+            "statements": statements,
+            "metadata": [
+                CodeSpanReference.from_air_json(
+                    {
+                        "source_ref": data["body_source_ref"]
+                        if "body_source_ref" in data
+                        else "",
+                        "file_uid": file_reference,
+                        "code_type": "block",
+                    }
+                )
+            ],
+        }
+
+    @classmethod
+    def from_air_json(cls, data: dict) -> ContainerDef:
+        identifier = ContainerIdentifier.from_name_str(data["name"])
+        cls_data = cls.data_from_air(data)
         if identifier.name.startswith("LOOP"):
-            con_cls = LoopContainerDef
+            return LoopContainerDef(**cls_data, repeat=True)
         else:
-            con_cls = FuncContainerDef
-
-        return con_cls(
-            identifier,
-            metadata,
-            arguments,
-            updated,
-            returns,
-            variables,
-            statements,
-        )
+            return FuncContainerDef(**cls_data, repeat=False)
 
         # TODO: these should be moved to code role analysis
         # self.code_type = CodeType.UNKNOWN
@@ -438,30 +494,42 @@ class ContainerDef(BaseDef):
             f"\n{base_str}\n",
         )
 
-    # @abstractmethod
-    # def __str__(self):
-    #     args_str = "\n".join([f"\t{arg}" for arg in self.arguments])
-    #     outputs_str = "\n".join(
-    #         [f"\t{var}" for var in self.returns + self.updated]
-    #     )
-    #     return f"Inputs:\n{args_str}\nVariables:\n{outputs_str}"
-
     @staticmethod
-    def from_dict(data: dict):
-        if "type" not in data:
-            con_type = "function"
+    def data_from_dict(data: dict):
+        return {
+            "identifier": ContainerIdentifier.from_str(data["identifier"]),
+            "metadata": [TypedMetadata.from_dict(d) for d in data["metadata"]],
+            "repeat": data["repeat"],
+            "arguments": [
+                VariableIdentifier.from_str(v) for v in data["arguments"]
+            ],
+            "updated": [
+                VariableIdentifier.from_str(v) for v in data["updated"]
+            ],
+            "return_value": [
+                VariableIdentifier.from_str(v) for v in data["return_value"]
+            ],
+            "variables": [
+                VariableIdentifier.from_str(v) for v in data["variables"]
+            ],
+            "statements": [StmtDef.from_dict(d) for d in data["statements"]],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        # TODO: add some way to detect Cond containers
+        cls_data = cls.data_from_dict(data)
+        if "LOOP" in data["identifier"]:
+            return LoopContainerDef(**cls_data)
         else:
-            con_type = data["type"]
-        if con_type == "function":
-            return FuncContainerDef(data)
-        elif con_type == "loop":
-            return LoopContainerDef(data)
-        elif con_type == "if-block":
-            return CondContainerDef(data)
-        elif con_type == "select-block":
-            return CondContainerDef(data)
-        else:
-            raise ValueError(f"Unrecognized container type value: {con_type}")
+            return FuncContainerDef(**cls_data)
+
+    @classmethod
+    def from_dict_with_id(
+        cls, data: dict
+    ) -> Tuple[ContainerIdentifier, ContainerDef]:
+        con_def = cls.from_dict(data)
+        return con_def.identifier, con_def
 
     def to_dict(self) -> dict:
         return dict(
@@ -478,8 +546,6 @@ class ContainerDef(BaseDef):
 
 @dataclass(frozen=True)
 class CondContainerDef(ContainerDef):
-    repeat: bool = False
-
     def __str__(self):
         base_str = super().__str__()
         return f"(COND Con Def)\n{base_str}\n"
@@ -490,8 +556,6 @@ class CondContainerDef(ContainerDef):
 
 @dataclass(frozen=True)
 class FuncContainerDef(ContainerDef):
-    repeat: bool = False
-
     def __str__(self):
         base_str = super().__str__()
         return f"(FUNC Con Def)\n{base_str}\n"
@@ -502,8 +566,6 @@ class FuncContainerDef(ContainerDef):
 
 @dataclass(frozen=True)
 class LoopContainerDef(ContainerDef):
-    repeat: bool = True
-
     def __str__(self):
         base_str = super().__str__()
         return f"(Loop Con Def)\t{self.identifier.con_name}\n{base_str}\n"
@@ -562,6 +624,28 @@ class StmtDef(BaseDef):
         else:
             raise ValueError(f"Unrecognized statement type: {func_type}")
 
+    @classmethod
+    def from_dict(cls, data: dict) -> StmtDef:
+        if "callee_container_id" in data:
+            return CallStmtDef.from_dict(data)
+        elif "expression" in data:
+            return LambdaStmtDef.from_dict(data)
+        else:
+            raise TypeError(
+                f"Provided data dictionary does not match the spec for any known statement type. Keys found: {list(data.keys())}"
+            )
+
+    @staticmethod
+    def get_base_data(data: dict) -> dict:
+        return {
+            "metadata": [TypedMetadata.from_dict(d) for d in data["metadata"]],
+            "container_id": ContainerIdentifier.from_str(data["container_id"]),
+            "inputs": [VariableIdentifier.from_str(v) for v in data["inputs"]],
+            "outputs": [
+                VariableIdentifier.from_str(v) for v in data["outputs"]
+            ],
+        }
+
     def __str__(self):
         base_str = super().__str__()
         con_id = self.container_id
@@ -588,6 +672,16 @@ class CallStmtDef(StmtDef):
         base_str = super().__str__()
         return f"(Call Stmt Def)\n{base_str}\n"
 
+    @classmethod
+    def from_dict(cls, data: dict) -> CallStmtDef:
+        return cls(
+            **(super().get_base_data(data)),
+            identifier=CallStmtIdentifier.from_str(data["identifier"]),
+            callee_container_id=ContainerIdentifier.from_str(
+                data["callee_container_id"]
+            ),
+        )
+
     def to_dict(self) -> dict:
         return dict(
             **(super().to_dict()),
@@ -608,6 +702,15 @@ class LambdaStmtDef(StmtDef):
     def get_type_str(name: str) -> str:
         (_, _, type_str, _, _) = name.split("__")
         return type_str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> CallStmtDef:
+        return cls(
+            **(super().get_base_data(data)),
+            identifier=LambdaStmtIdentifier.from_str(data["identifier"]),
+            expression=data["expression"],
+            expr_type=data["expr_type"],
+        )
 
     def to_dict(self) -> dict:
         return dict(

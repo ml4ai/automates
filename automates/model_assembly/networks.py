@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Iterable, Any, Tuple, Union
+from typing import List, Dict, Iterable, Any, Set, Tuple, Union
 from abc import ABC, abstractmethod, abstractclassmethod
 from dataclasses import dataclass
 from datetime import datetime
@@ -79,17 +79,17 @@ class GrFNExecutionException(Exception):
     pass
 
 
-@dataclass(repr=False, frozen=False)
+@dataclass(repr=False, eq=False)
 class BaseNode(ABC):
     uid: str
     identifier: NamedIdentifier
     metadata: List[TypedMetadata]
 
     def __eq__(self, other):
-        return self.uid == other.uid and self.identifier == other.identifier
+        return self.identifier == other.identifier
 
     def __hash__(self):
-        return hash((self.uid, self.identifier))
+        return hash(self.identifier)
 
     def __repr__(self):
         return self.__str__()
@@ -117,7 +117,7 @@ class BaseNode(ABC):
         }
 
 
-@dataclass(repr=False, frozen=False)
+@dataclass(repr=False, eq=False)
 class VariableNode(BaseNode):
     object_ref: str = None
     value: Any = None
@@ -180,7 +180,7 @@ class VariableNode(BaseNode):
     @classmethod
     def from_dict(cls, data: dict):
         if "metadata" in data:
-            mdata = [TypedMetadata.from_data(m) for m in data["metadata"]]
+            mdata = [TypedMetadata.from_dict(m) for m in data["metadata"]]
         else:
             mdata = list()
 
@@ -275,7 +275,7 @@ class VariableNode(BaseNode):
         self.metadata.append(metadata)
 
 
-@dataclass(frozen=False)
+@dataclass(frozen=False, eq=False)
 class BaseFuncNode(BaseNode):
     type: FunctionType
     input_ids: List[VariableIdentifier]
@@ -286,12 +286,23 @@ class BaseFuncNode(BaseNode):
             isinstance(other, BaseFuncNode)
             and super().__eq__(other)
             and self.type == other.type
-            and self.input_ids == other.input_ids
-            and self.output_ids == other.output_ids
+            and all(
+                [i1 == i2 for i1, i2 in zip(self.input_ids, other.input_ids)]
+            )
+            and all(
+                [i1 == i2 for i1, i2 in zip(self.output_ids, other.output_ids)]
+            )
         )
 
     def __hash__(self):
-        return super().__hash__()
+        return hash(
+            (
+                super().__hash__(),
+                self.type,
+                tuple(self.input_ids),
+                tuple(self.output_ids),
+            )
+        )
 
     @staticmethod
     def add_or_create_vars(
@@ -376,7 +387,7 @@ class BaseFuncNode(BaseNode):
             "uid": data["uid"],
             "identifier": FunctionIdentifier.from_str(data["identifier"]),
             "metadata": [
-                TypedMetadata.from_data(m_def) for m_def in data["metadata"]
+                TypedMetadata.from_dict(m_def) for m_def in data["metadata"]
             ],
             "type": FunctionType.from_str(data["type"]),
             "input_ids": [
@@ -419,15 +430,19 @@ class BaseFuncNode(BaseNode):
         )
 
 
-@dataclass
+@dataclass(repr=False, eq=False)
 class LiteralFuncNode(BaseFuncNode):
     value: Any
 
     def __eq__(self, other: LiteralFuncNode) -> bool:
-        return isinstance(other, LiteralFuncNode) and super().__eq__(other)
+        return (
+            isinstance(other, LiteralFuncNode)
+            and super().__eq__(other)
+            and self.value == other.value
+        )
 
     def __hash__(self):
-        return super().__hash__()
+        return hash((super().__hash__(), self.value))
 
     @classmethod
     def from_lambda_stmt(
@@ -494,7 +509,7 @@ class LiteralFuncNode(BaseFuncNode):
         return dict(**(super().data_to_dict()), **{"value": self.value})
 
 
-@dataclass
+@dataclass(repr=False, eq=False)
 class OperationFuncNode(BaseFuncNode):
     def __eq__(self, other: OperationFuncNode) -> bool:
         return isinstance(other, OperationFuncNode) and super().__eq__(other)
@@ -506,6 +521,8 @@ class OperationFuncNode(BaseFuncNode):
     def from_expr(
         cls,
         expr_def: ExprAbstractNode,
+        namespace: str,
+        scope: str,
         input_var_ids: List[VariableIdentifier],
         output_id: VariableIdentifier,
     ) -> OperationFuncNode:
@@ -519,7 +536,9 @@ class OperationFuncNode(BaseFuncNode):
 
         return cls(
             uid=BaseNode.create_node_id(),
-            identifier=FunctionIdentifier.from_operator_func(operation),
+            identifier=FunctionIdentifier.from_operator_func(
+                namespace, scope, operation
+            ),
             type=FunctionType.OPERATOR,
             metadata=[],
             input_ids=input_var_ids,
@@ -529,10 +548,6 @@ class OperationFuncNode(BaseFuncNode):
     @classmethod
     def from_dict(cls, data: dict) -> OperationFuncNode:
         return cls(**(super().get_base_data(data)))
-
-    # @classmethod
-    # def from_data(cls, data: Dict[str, Any]):
-    #     return cls(*(super().get_base_data(data)), data["identifier"])
 
     def to_dict(self) -> dict:
         return super().data_to_dict()
@@ -547,10 +562,18 @@ class OperationFuncNode(BaseFuncNode):
         return self.identifier.name
 
 
-@dataclass
+@dataclass(repr=False, eq=False)
 class StructuredFuncNode(BaseFuncNode):
     hyper_edges: List[HyperEdge]
     hyper_graph: nx.DiGraph
+
+    def __eq__(self, other):
+        return super().__eq__(other) and set(self.hyper_edges) == set(
+            other.hyper_edges
+        )
+
+    def __hash__(self):
+        return hash((super().__hash__(), set(self.hyper_edges)))
 
     @classmethod
     def get_base_data(cls, data: dict) -> dict:
@@ -593,7 +616,7 @@ class StructuredFuncNode(BaseFuncNode):
         )
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, eq=False)
 class ExpressionFuncNode(StructuredFuncNode):
     expression: str
     executable: callable
@@ -606,11 +629,11 @@ class ExpressionFuncNode(StructuredFuncNode):
         )
 
     def __hash__(self):
-        return super().__hash__()
+        return hash((super().__hash__(), self.expression))
 
     # @classmethod
-    # def from_data(cls, data: Dict[str, Any]):
-    #     base_values = super().from_data(data)
+    # def from_dict(cls, data: Dict[str, Any]):
+    #     base_values = super().from_dict(data)
     #     expr = data["expression"]
     #     return cls(*base_values, expr, load_lambda_function(expr))
 
@@ -761,7 +784,9 @@ class ExpressionFuncNode(StructuredFuncNode):
                 for child_id in node.children:
                     input_ids.append(convert_to_hyperedge(uid2node[child_id]))
 
-                f_node = OperationFuncNode.from_expr(node, input_ids, out_id)
+                f_node = OperationFuncNode.from_expr(
+                    node, cur_nsp, cur_scp, input_ids, out_id
+                )
 
             # If a new FuncNode was created during the above routine, then we
             # add the FuncNode to our list of new FuncNodes and create a
@@ -781,7 +806,7 @@ class ExpressionFuncNode(StructuredFuncNode):
         return (N_VARS, N_FUNCS, N_HYP_EDGES)
 
 
-@dataclass(frozen=False)
+@dataclass(repr=False, eq=False)
 class BaseConFuncNode(StructuredFuncNode):
     def __eq__(self, other: BaseFuncNode):
         return isinstance(other, BaseConFuncNode) and super().__eq__(other)
@@ -872,14 +897,14 @@ class BaseConFuncNode(StructuredFuncNode):
         return cls(**(cls.data_from_container(container, AIR, VARS, FUNCS)))
 
     # @classmethod
-    # def from_data(cls, data: Dict[str, Any]):
-    #     return cls(*(super().from_data(data)), data["identifier"])
+    # def from_dict(cls, data: Dict[str, Any]):
+    #     return cls(*(super().from_dict(data)), data["identifier"])
 
     def to_dict(self) -> dict:
         return super().data_to_dict()
 
 
-@dataclass(frozen=False)
+@dataclass(repr=False, eq=False)
 class CondConFuncNode(BaseConFuncNode):
     decision_func: FunctionIdentifier
 
@@ -891,7 +916,7 @@ class CondConFuncNode(BaseConFuncNode):
         )
 
     def __hash__(self):
-        return super().__hash__()
+        return hash((super().__hash__(), self.decision_func))
 
     @classmethod
     def from_container(
@@ -935,7 +960,7 @@ class CondConFuncNode(BaseConFuncNode):
         return None
 
 
-@dataclass(frozen=False)
+@dataclass(repr=False, eq=False)
 class LoopConFuncNode(BaseConFuncNode):
     exit_var: VariableIdentifier
 
@@ -947,7 +972,7 @@ class LoopConFuncNode(BaseConFuncNode):
         )
 
     def __hash__(self):
-        return super().__hash__()
+        return hash((super().__hash__(), self.exit_var))
 
     @classmethod
     def from_container(
@@ -1062,7 +1087,7 @@ class LoopConFuncNode(BaseConFuncNode):
 #         lambda_fn = load_lambda_function(data["lambda"])
 #         lambda_type = LambdaType.from_str(data["type"])
 #         if "metadata" in data:
-#             metadata = [TypedMetadata.from_data(d) for d in data["metadata"]]
+#             metadata = [TypedMetadata.from_dict(d) for d in data["metadata"]]
 #         else:
 #             metadata = []
 #         return cls(
@@ -1082,7 +1107,7 @@ class LoopConFuncNode(BaseConFuncNode):
 #         }
 
 
-@dataclass
+@dataclass(repr=False, eq=False)
 class HyperEdge:
     func_id: FunctionIdentifier
     input_ids: List[VariableIdentifier]
@@ -1090,7 +1115,8 @@ class HyperEdge:
 
     def __eq__(self, other) -> bool:
         return (
-            self.func_id == other.func_id
+            isinstance(other, HyperEdge)
+            and self.func_id == other.func_id
             and all(
                 [i1 == i2 for i1, i2 in zip(self.input_ids, other.input_ids)]
             )
@@ -1552,7 +1578,7 @@ class HyperEdge:
 #             type_str,
 #             cls.get_border_color(type_str),
 #             subgraph_nodes,
-#             [TypedMetadata.from_data(d) for d in data["metadata"]]
+#             [TypedMetadata.from_dict(d) for d in data["metadata"]]
 #             if "metadata" in data
 #             else [],
 #         )
@@ -1670,7 +1696,7 @@ class HyperEdge:
 
 
 # NOTE: this is the GrFN 3.0 definition
-@dataclass
+@dataclass(repr=False, eq=False)
 class GroundedFunctionNetwork:
     uid: str
     identifier: GrFNIdentifier
@@ -1695,6 +1721,34 @@ class GroundedFunctionNetwork:
         # TODO decide how we detect configurable inputs for execution
         # Configurable inputs are all variables assigned to a literal in the
         # root level subgraph AND input args to the root level subgraph
+
+    def __eq__(self, other) -> bool:
+        return (
+            self.identifier == other.identifier
+            and self.entry_point == other.entry_point
+            and set(self.functions.keys()) == set(other.functions.keys())
+            and set(self.variables.keys()) == set(other.variables.keys())
+            and set(self.objects.keys()) == set(other.objects.keys())
+            and set(self.types.keys()) == set(other.types.keys())
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.identifier,
+                self.entry_point,
+                set(self.functions.keys()),
+                set(self.variables.keys()),
+                set(self.objects.keys()),
+                set(self.types.keys()),
+            )
+        )
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return str(self.identifier)
 
     def __remove_detatched_vars(self):
         del_indices = list()
@@ -1811,33 +1865,11 @@ class GroundedFunctionNetwork:
     #     self.FCG = self.to_FCG()
     #     self.function_sets = self.build_function_sets()
 
-    def __repr__(self):
-        return self.__str__()
-
-    def __eq__(self, other) -> bool:
-        return (
-            self.uid == other.uid
-            and self.identifier == other.identifier
-            and self.entry_point == other.entry_point
-            and set(self.functions) == set(other.functions)
-            and set(self.variables) == set(other.variables)
-            and set(self.objects) == set(other.objects)
-            and set(self.types) == set(other.types)
-        )
-
-    def __str__(self):
-        L_sz = str(len(self.lambdas))
-        V_sz = str(len(self.variables))
-        I_sz = str(len(self.inputs))
-        O_sz = str(len(self.outputs))
-        size_str = f"< |L|: {L_sz}, |V|: {V_sz}, |I|: {I_sz}, |O|: {O_sz} >"
-        return f"{self.label}\n{size_str}"
-
     def __call__(
         self,
         inputs: Dict[str, Any],
         literals: Dict[str, Any] = None,
-        desired_outputs: List[str] = None,
+        desired_outputs: List[VariableIdentifier] = None,
     ) -> Iterable[Any]:
         """Executes the GrFN over a particular set of inputs and returns the
         result.
@@ -1860,14 +1892,14 @@ class GroundedFunctionNetwork:
         """
         self.np_shape = (1,)
         # TODO: update this function to work with new GrFN object
-        full_inputs = {
-            self.input_identifier_map[VariableIdentifier.from_str(n)]: v
-            for n, v in inputs.items()
+        start_func_node = self.functions[self.entry_point]
+        start_func_inputs = start_func_node.input_ids
+        call_inputs = {
+            VariableIdentifier.from_str(v): obj for v, obj in inputs.items()
         }
-
         # Check if vectorized input is given and configure the numpy shape
-        for input_node in [n for n in self.inputs if n in full_inputs]:
-            value = full_inputs[input_node]
+        for input_var_id in [n for n in start_func_inputs if n in call_inputs]:
+            value = call_inputs[input_var_id]
             if isinstance(value, np.ndarray):
                 if self.np_shape != value.shape and self.np_shape != (1,):
                     raise GrFNExecutionException(
@@ -1876,8 +1908,8 @@ class GroundedFunctionNetwork:
                 self.np_shape = value.shape
 
         # Set the values of input var nodes given in the inputs dict
-        for input_node in [n for n in self.inputs if n in full_inputs]:
-            value = full_inputs[input_node]
+        for input_var_id in [n for n in start_func_inputs if n in call_inputs]:
+            value = call_inputs[input_var_id]
             # TODO: need to find a way to incorporate a 32/64 bit check here
             if isinstance(value, (float, np.float64)):
                 value = np.full(self.np_shape, value, dtype=np.float64)
@@ -1886,24 +1918,19 @@ class GroundedFunctionNetwork:
             elif isinstance(value, (dict, list)):
                 value = np.array([value] * self.np_shape[0])
 
-            input_node.input_value = value
+            self.variables[input_var_id].input_value = value
 
         if literals is not None:
-            literal_ids = set(
-                [
-                    VariableIdentifier.from_str(var_id)
-                    for var_id in literals.keys()
-                ]
-            )
             lit_id2val = {
-                lit_id: literals[str(lit_id)] for lit_id in literal_ids
+                VariableIdentifier.from_str(v): obj
+                for v, obj in literals.items()
             }
             literal_overrides = [
                 (var_node, lit_id2val[identifier])
                 for identifier, var_node in self.literal_identifier_map.items()
                 if identifier in literal_ids
             ]
-            for input_node, value in literal_overrides:
+            for input_var_id, value in literal_overrides:
                 # TODO: need to find a way to incorporate a 32/64 bit
                 # check here
                 if isinstance(value, float):
@@ -1916,7 +1943,7 @@ class GroundedFunctionNetwork:
                 elif isinstance(value, np.ndarray):
                     self.np_shape = value.shape
 
-                input_node.input_value = value
+                input_var_id.input_value = value
 
         # Configure the np array shape for all lambda nodes
         for n in self.lambdas:
@@ -2331,230 +2358,128 @@ class GroundedFunctionNetwork:
         N.node_attr.update({"fontname": "Menlo"})
         return N
 
-    # def to_AGraph__old(self):
-    #     """Export to a PyGraphviz AGraph object."""
-    #     var_nodes = [n for n in self.nodes if isinstance(n, VariableNode)]
-    #     input_nodes = []
-    #     for v in var_nodes:
-    #         if self.in_degree(v) == 0 or (
-    #             len(list(self.predecessors(v))) == 1
-    #             and list(self.predecessors(v))[0].func_type
-    #             == LambdaType.LITERAL
+    def to_dotfile(self, filepath: str, expand_expressions: bool = False):
+        A = self.to_AGraph(expand_expressions=expand_expressions)
+        A.write(filepath)
+
+    # def to_FIB(self, G2):
+    #     """Creates a ForwardInfluenceBlanket object representing the
+    #     intersection of this model with the other input model.
+
+    #     Args:
+    #         G1: The GrFN model to use as the basis for this FIB
+    #         G2: The GroundedFunctionNetwork object to compare this model to.
+
+    #     Returns:
+    #         A ForwardInfluenceBlanket object to use for model comparison.
+    #     """
+    #     # TODO: Finish inpsection and testing of this function
+
+    #     if not isinstance(G2, GroundedFunctionNetwork):
+    #         raise TypeError(f"Expected a second GrFN but got: {type(G2)}")
+
+    #     def shortname(var):
+    #         return var[var.find("::") + 2 : var.rfind("_")]
+
+    #     def shortname_vars(graph, shortname):
+    #         return [v for v in graph.nodes() if shortname in v]
+
+    #     g1_var_nodes = {
+    #         shortname(n)
+    #         for (n, d) in self.nodes(data=True)
+    #         if d["type"] == "variable"
+    #     }
+    #     g2_var_nodes = {
+    #         shortname(n)
+    #         for (n, d) in G2.nodes(data=True)
+    #         if d["type"] == "variable"
+    #     }
+
+    #     shared_nodes = {
+    #         full_var
+    #         for shared_var in g1_var_nodes.intersection(g2_var_nodes)
+    #         for full_var in shortname_vars(self, shared_var)
+    #     }
+
+    #     outputs = self.outputs
+    #     inputs = set(self.inputs).intersection(shared_nodes)
+
+    #     # Get all paths from shared inputs to shared outputs
+    #     path_inputs = shared_nodes - set(outputs)
+    #     io_pairs = [(inp, self.output_node) for inp in path_inputs]
+    #     paths = [
+    #         p for (i, o) in io_pairs for p in all_simple_paths(self, i, o)
+    #     ]
+
+    #     # Get all edges needed to blanket the included nodes
+    #     main_nodes = {node for path in paths for node in path}
+    #     main_edges = {
+    #         (n1, n2) for path in paths for n1, n2 in zip(path, path[1:])
+    #     }
+    #     blanket_nodes = set()
+    #     add_nodes, add_edges = list(), list()
+
+    #     def place_var_node(var_node):
+    #         prev_funcs = list(self.predecessors(var_node))
+    #         if (
+    #             len(prev_funcs) > 0
+    #             and self.nodes[prev_funcs[0]]["label"] == "L"
     #         ):
-    #             input_nodes.append(v)
-    #     output_nodes = set([v for v in var_nodes if self.out_degree(v) == 0])
+    #             prev_func = prev_funcs[0]
+    #             add_nodes.extend([var_node, prev_func])
+    #             add_edges.append((prev_func, var_node))
+    #         else:
+    #             blanket_nodes.add(var_node)
 
-    #     A = nx.nx_agraph.to_agraph(self)
-    #     A.graph_attr.update(
-    #         {"dpi": 227, "fontsize": 20, "fontname": "Menlo", "rankdir": "TB"}
-    #     )
-    #     A.node_attr.update({"fontname": "Menlo"})
+    #     for node in main_nodes:
+    #         if self.nodes[node]["type"] == "function":
+    #             for var_node in self.predecessors(node):
+    #                 if var_node not in main_nodes:
+    #                     add_edges.append((var_node, node))
+    #                     if "::IF_" in var_node:
+    #                         if_func = list(self.predecessors(var_node))[0]
+    #                         add_nodes.extend([if_func, var_node])
+    #                         add_edges.append((if_func, var_node))
+    #                         for new_var_node in self.predecessors(if_func):
+    #                             add_edges.append((new_var_node, if_func))
+    #                             place_var_node(new_var_node)
+    #                     else:
+    #                         place_var_node(var_node)
 
-    #     # A.add_subgraph(input_nodes, rank="same")
-    #     # A.add_subgraph(output_nodes, rank="same")
+    #     main_nodes |= set(add_nodes)
+    #     main_edges |= set(add_edges)
+    #     main_nodes = main_nodes - inputs - set(outputs)
 
-    #     def get_subgraph_nodes(subgraph: GrFNSubgraph):
-    #         return subgraph.nodes + [
-    #             node
-    #             for child_graph in self.subgraphs.successors(subgraph)
-    #             for node in get_subgraph_nodes(child_graph)
-    #         ]
+    #     orig_nodes = self.nodes(data=True)
 
-    #     def populate_subgraph(subgraph: GrFNSubgraph, parent: AGraph):
-    #         all_sub_nodes = get_subgraph_nodes(subgraph)
-    #         container_subgraph = parent.add_subgraph(
-    #             all_sub_nodes,
-    #             name=f"cluster_{str(subgraph)}",
-    #             label=subgraph.basename,
-    #             style="bold, rounded",
-    #             rankdir="TB",
-    #             color=subgraph.border_color,
-    #         )
+    #     F = nx.DiGraph()
 
-    #         input_var_nodes = set(input_nodes).intersection(subgraph.nodes)
-    #         # container_subgraph.add_subgraph(list(input_var_nodes), rank="same")
-    #         container_subgraph.add_subgraph(
-    #             [v.uid for v in input_var_nodes], rank="same"
-    #         )
+    #     F.add_nodes_from([(n, d) for n, d in orig_nodes if n in inputs])
+    #     for node in inputs:
+    #         F.nodes[node]["color"] = dodgerblue3
+    #         F.nodes[node]["fontcolor"] = dodgerblue3
+    #         F.nodes[node]["penwidth"] = 3.0
+    #         F.nodes[node]["fontname"] = FONT
 
-    #         for new_subgraph in self.subgraphs.successors(subgraph):
-    #             populate_subgraph(new_subgraph, container_subgraph)
+    #     F.inputs = list(F.inputs)
 
-    #         for _, func_sets in self.function_sets.items():
-    #             for func_set in func_sets:
-    #                 func_set = list(func_set.intersection(set(subgraph.nodes)))
+    #     F.add_nodes_from([(n, d) for n, d in orig_nodes if n in blanket_nodes])
+    #     for node in blanket_nodes:
+    #         F.nodes[node]["fontname"] = FONT
+    #         F.nodes[node]["color"] = forestgreen
+    #         F.nodes[node]["fontcolor"] = forestgreen
 
-    #                 container_subgraph.add_subgraph(
-    #                     func_set,
-    #                 )
-    #                 output_var_nodes = list()
-    #                 for func_node in func_set:
-    #                     succs = list(self.successors(func_node))
-    #                     output_var_nodes.extend(succs)
-    #                 output_var_nodes = set(output_var_nodes) - output_nodes
-    #                 var_nodes = output_var_nodes.intersection(subgraph.nodes)
+    #     F.add_nodes_from([(n, d) for n, d in orig_nodes if n in main_nodes])
+    #     for node in main_nodes:
+    #         F.nodes[node]["fontname"] = FONT
 
-    #                 container_subgraph.add_subgraph(
-    #                     [v.uid for v in var_nodes],
-    #                 )
+    #     for out_var_node in outputs:
+    #         F.add_node(out_var_node, **self.nodes[out_var_node])
+    #         F.nodes[out_var_node]["color"] = dodgerblue3
+    #         F.nodes[out_var_node]["fontcolor"] = dodgerblue3
 
-    #     root_subgraph = [n for n, d in self.subgraphs.in_degree() if d == 0][0]
-    #     populate_subgraph(root_subgraph, A)
-
-    # TODO this code helps with the layout of the graph. However, it assumes
-    # all var nodes start at -1 and are consecutive. This is currently not
-    # the case, so it creates random hanging var nodes if run. Fix this.
-
-    # unique_var_names = {
-    #     "::".join(n.name.split("::")[:-1])
-    #     for n in A.nodes()
-    #     if len(n.name.split("::")) > 2
-    # }
-    # for name in unique_var_names:
-    #     max_var_version = max(
-    #         [
-    #             int(n.name.split("::")[-1])
-    #             for n in A.nodes()
-    #             if n.name.startswith(name)
-    #         ]
-    #     )
-    #     min_var_version = min(
-    #         [
-    #             int(n.name.split("::")[-1])
-    #             for n in A.nodes()
-    #             if n.name.startswith(name)
-    #         ]
-    #     )
-    #     for i in range(min_var_version, max_var_version):
-    #         e = A.add_edge(f"{name}::{i}", f"{name}::{i + 1}")
-    #         e = A.get_edge(f"{name}::{i}", f"{name}::{i + 1}")
-    #         e.attr["color"] = "invis"
-
-    # for agraph_node in [
-    #     a for (a, b) in product(A.nodes(), self.output_names) if a.name == str(b)
-    # ]:
-    #     agraph_node.attr["rank"] = "max"
-
-    # return A
-
-    def to_FIB(self, G2):
-        """Creates a ForwardInfluenceBlanket object representing the
-        intersection of this model with the other input model.
-
-        Args:
-            G1: The GrFN model to use as the basis for this FIB
-            G2: The GroundedFunctionNetwork object to compare this model to.
-
-        Returns:
-            A ForwardInfluenceBlanket object to use for model comparison.
-        """
-        # TODO: Finish inpsection and testing of this function
-
-        if not isinstance(G2, GroundedFunctionNetwork):
-            raise TypeError(f"Expected a second GrFN but got: {type(G2)}")
-
-        def shortname(var):
-            return var[var.find("::") + 2 : var.rfind("_")]
-
-        def shortname_vars(graph, shortname):
-            return [v for v in graph.nodes() if shortname in v]
-
-        g1_var_nodes = {
-            shortname(n)
-            for (n, d) in self.nodes(data=True)
-            if d["type"] == "variable"
-        }
-        g2_var_nodes = {
-            shortname(n)
-            for (n, d) in G2.nodes(data=True)
-            if d["type"] == "variable"
-        }
-
-        shared_nodes = {
-            full_var
-            for shared_var in g1_var_nodes.intersection(g2_var_nodes)
-            for full_var in shortname_vars(self, shared_var)
-        }
-
-        outputs = self.outputs
-        inputs = set(self.inputs).intersection(shared_nodes)
-
-        # Get all paths from shared inputs to shared outputs
-        path_inputs = shared_nodes - set(outputs)
-        io_pairs = [(inp, self.output_node) for inp in path_inputs]
-        paths = [
-            p for (i, o) in io_pairs for p in all_simple_paths(self, i, o)
-        ]
-
-        # Get all edges needed to blanket the included nodes
-        main_nodes = {node for path in paths for node in path}
-        main_edges = {
-            (n1, n2) for path in paths for n1, n2 in zip(path, path[1:])
-        }
-        blanket_nodes = set()
-        add_nodes, add_edges = list(), list()
-
-        def place_var_node(var_node):
-            prev_funcs = list(self.predecessors(var_node))
-            if (
-                len(prev_funcs) > 0
-                and self.nodes[prev_funcs[0]]["label"] == "L"
-            ):
-                prev_func = prev_funcs[0]
-                add_nodes.extend([var_node, prev_func])
-                add_edges.append((prev_func, var_node))
-            else:
-                blanket_nodes.add(var_node)
-
-        for node in main_nodes:
-            if self.nodes[node]["type"] == "function":
-                for var_node in self.predecessors(node):
-                    if var_node not in main_nodes:
-                        add_edges.append((var_node, node))
-                        if "::IF_" in var_node:
-                            if_func = list(self.predecessors(var_node))[0]
-                            add_nodes.extend([if_func, var_node])
-                            add_edges.append((if_func, var_node))
-                            for new_var_node in self.predecessors(if_func):
-                                add_edges.append((new_var_node, if_func))
-                                place_var_node(new_var_node)
-                        else:
-                            place_var_node(var_node)
-
-        main_nodes |= set(add_nodes)
-        main_edges |= set(add_edges)
-        main_nodes = main_nodes - inputs - set(outputs)
-
-        orig_nodes = self.nodes(data=True)
-
-        F = nx.DiGraph()
-
-        F.add_nodes_from([(n, d) for n, d in orig_nodes if n in inputs])
-        for node in inputs:
-            F.nodes[node]["color"] = dodgerblue3
-            F.nodes[node]["fontcolor"] = dodgerblue3
-            F.nodes[node]["penwidth"] = 3.0
-            F.nodes[node]["fontname"] = FONT
-
-        F.inputs = list(F.inputs)
-
-        F.add_nodes_from([(n, d) for n, d in orig_nodes if n in blanket_nodes])
-        for node in blanket_nodes:
-            F.nodes[node]["fontname"] = FONT
-            F.nodes[node]["color"] = forestgreen
-            F.nodes[node]["fontcolor"] = forestgreen
-
-        F.add_nodes_from([(n, d) for n, d in orig_nodes if n in main_nodes])
-        for node in main_nodes:
-            F.nodes[node]["fontname"] = FONT
-
-        for out_var_node in outputs:
-            F.add_node(out_var_node, **self.nodes[out_var_node])
-            F.nodes[out_var_node]["color"] = dodgerblue3
-            F.nodes[out_var_node]["fontcolor"] = dodgerblue3
-
-        F.add_edges_from(main_edges)
-        return F
+    #     F.add_edges_from(main_edges)
+    #     return F
 
     def to_dict(self) -> Dict[str, Any]:
         """Outputs the contents of this GrFN to a dict object.
@@ -2609,8 +2534,8 @@ class GroundedFunctionNetwork:
                 VariableNode.from_dict_with_id(d) for d in data["variables"]
             ),
             objects=dict(),
-            types=list(),
-            metadata=[TypedMetadata.from_data(m) for m in data["metadata"]],
+            types=dict(TypeDef.from_dict_with_id(d) for d in data["types"]),
+            metadata=[TypedMetadata.from_dict(m) for m in data["metadata"]],
         )
 
     @classmethod

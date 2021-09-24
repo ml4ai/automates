@@ -1,14 +1,12 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from automates.model_assembly.expression_trees.expression_visitor import (
-    ExprValueNode,
-)
 from dataclasses import dataclass
 
 
-OPERATION_NUM = -1
-LITERAL_NUM = -1
-ANON_VAR_NUM = -1
+LITERALS = dict()
+ANON_VARS = dict()
+OP_NAMES = dict()
+CONTAINER_IDS = dict()
 
 
 @dataclass(frozen=True)
@@ -39,13 +37,9 @@ class BaseIdentifier(ABC):
     def is_global_scope(self):
         return self.scope == "@global"
 
-    # @abstractmethod
-    # def __hash__(self):
-    #     return NotImplemented
-
     @abstractmethod
     def __str__(self):
-        return NotImplemented
+        return f"{self.namespace}::{self.scope}"
 
 
 @dataclass(frozen=True)
@@ -53,14 +47,16 @@ class NamedIdentifier(BaseIdentifier):
     name: str
 
     @classmethod
-    def from_data(cls, data: dict) -> NamedIdentifier:
+    def from_dict(cls, data: dict) -> NamedIdentifier:
         pass
 
     def __str__(self):
-        return f"{self.namespace}::{self.scope}::{self.name}"
+        return f"{super().__str__()}::{self.name}"
 
-    # def __hash__(self):
-    #     return hash((self.namespace, self.scope, self.name))
+    @staticmethod
+    def from_str(data: str):
+        (_, ns, sc, nm) = data.split("::")
+        return (ns, sc, nm)
 
 
 @dataclass(frozen=True)
@@ -68,14 +64,11 @@ class IndexedIdentifier(NamedIdentifier):
     index: int
 
     @classmethod
-    def from_data(cls, data: dict) -> IndexedIdentifier:
+    def from_dict(cls, data: dict) -> IndexedIdentifier:
         pass
 
     def __str__(self):
         return f"{super().__str__()}::{self.index}"
-
-    # def __hash__(self):
-    #     return hash((super().__hash__(), (self.index,)))
 
     @staticmethod
     def from_str(data: str):
@@ -92,6 +85,10 @@ class AIRIdentifier(NamedIdentifier):
     def from_filename(cls, filename: str):
         return cls("@global", "@global", filename)
 
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
+
 
 @dataclass(frozen=True)
 class CAGIdentifier(NamedIdentifier):
@@ -106,6 +103,10 @@ class CAGIdentifier(NamedIdentifier):
     def from_filename(cls, filename: str):
         return cls("", "", filename)
 
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
+
 
 @dataclass(frozen=True)
 class GrFNIdentifier(NamedIdentifier):
@@ -118,8 +119,7 @@ class GrFNIdentifier(NamedIdentifier):
 
     @classmethod
     def from_str(cls, data: str):
-        (_, ns, sc, nm) = data.split("::")
-        return cls(ns, sc, nm)
+        return cls(*(super().from_str(data)))
 
 
 @dataclass(frozen=True)
@@ -131,6 +131,10 @@ class GroMEtIdentifier(NamedIdentifier):
     def from_grfn_id(cls, grfn_id: GrFNIdentifier):
         return cls(grfn_id.namespace, grfn_id.scope, grfn_id.name)
 
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
+
 
 @dataclass(frozen=True)
 class ContainerIdentifier(NamedIdentifier):
@@ -141,6 +145,10 @@ class ContainerIdentifier(NamedIdentifier):
     def from_name_str(cls, name: str) -> ContainerIdentifier:
         (_, ns, sc, name) = name.split("::")
         return cls(ns, sc, name)
+
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
 
 
 @dataclass(frozen=True)
@@ -167,8 +175,14 @@ class FunctionIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_container_id(cls, con_id: ContainerIdentifier):
-        # FIXME: remove the hardcoded index
-        return cls(con_id.namespace, con_id.scope, con_id.name, 0)
+        global CONTAINER_IDS
+        if con_id in CONTAINER_IDS:
+            CONTAINER_IDS[con_id] += 1
+        else:
+            CONTAINER_IDS[con_id] = 0
+
+        new_idx = CONTAINER_IDS[con_id]
+        return cls(con_id.namespace, con_id.scope, con_id.name, new_idx)
 
     @classmethod
     def from_lambda_stmt_id(cls, stmt_id: LambdaStmtIdentifier):
@@ -178,15 +192,27 @@ class FunctionIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_literal_def(cls, ns: str, sc: str) -> FunctionIdentifier:
-        global LITERAL_NUM
-        LITERAL_NUM += 1
-        return cls(ns, sc, "@literal", LITERAL_NUM)
+        global LITERALS
+        ns_sc = (ns, sc)
+        if ns_sc in LITERALS:
+            LITERALS[ns_sc] += 1
+        else:
+            LITERALS[ns_sc] = 0
+
+        new_idx = LITERALS[ns_sc]
+        return cls(ns, sc, "@literal", new_idx)
 
     @classmethod
-    def from_operator_func(cls, operation: str):
-        global OPERATION_NUM
-        OPERATION_NUM += 1
-        return cls("@builtin", "@global", operation, OPERATION_NUM)
+    def from_operator_func(cls, ns: str, sc: str, operation: str):
+        global OP_NAMES
+        nso = (ns, sc, operation)
+        if nso in OP_NAMES:
+            OP_NAMES[nso] += 1
+        else:
+            OP_NAMES[nso] = 0
+
+        new_idx = OP_NAMES[nso]
+        return cls(ns, sc, operation, new_idx)
 
     @classmethod
     def from_str(cls, data: str):
@@ -230,6 +256,10 @@ class StmtIdentifier(NamedIdentifier):
     def __str__(self):
         return f"Stmt::{super().__str__()}"
 
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
+
 
 @dataclass(frozen=True)
 class CallStmtIdentifier(NamedIdentifier):
@@ -240,6 +270,10 @@ class CallStmtIdentifier(NamedIdentifier):
     def from_air_json(cls, data: dict) -> CallStmtIdentifier:
         (_, ns, sc, con_name) = data["name"].split("::")
         return cls(ns, sc, con_name)
+
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
 
 
 @dataclass(frozen=True)
@@ -252,6 +286,10 @@ class LambdaStmtIdentifier(IndexedIdentifier):
         (ns, sc, exp_type, name, idx) = data["name"].split("__")
         return cls(ns, sc, f"{exp_type}.{name}", int(idx))
 
+    @classmethod
+    def from_str(cls, data: str):
+        return cls(*(super().from_str(data)))
+
 
 @dataclass(frozen=True)
 class VariableIdentifier(IndexedIdentifier):
@@ -260,9 +298,15 @@ class VariableIdentifier(IndexedIdentifier):
 
     @classmethod
     def from_anonymous(cls, namespace: str, scope: str):
-        global ANON_VAR_NUM
-        ANON_VAR_NUM += 1
-        return cls(namespace, scope, "@anonymous", ANON_VAR_NUM)
+        global ANON_VARS
+        ns_sc = (namespace, scope)
+        if ns_sc in ANON_VARS:
+            ANON_VARS[ns_sc] += 1
+        else:
+            ANON_VARS[ns_sc] = 0
+
+        new_idx = ANON_VARS[ns_sc]
+        return cls(namespace, scope, "@anonymous", new_idx)
 
     @classmethod
     def from_str_and_con(cls, data: str, con: ContainerIdentifier):
@@ -270,7 +314,7 @@ class VariableIdentifier(IndexedIdentifier):
         name = ""
         idx = -1
         if len(split) == 3:
-            # Identifier is depricated <var_id type>::<name>::<version> style
+            # Identifier is deprecated <var_id type>::<name>::<version> style
             (_, name, idx) = split
             return cls(con.namespace, con.con_name, name, int(idx))
         elif len(split) == 5:
@@ -300,73 +344,3 @@ class VariableIdentifier(IndexedIdentifier):
     @classmethod
     def from_str(cls, data: str):
         return cls(*(super().from_str(data)))
-
-
-@dataclass(frozen=True)
-class AIRVariableIdentifier(IndexedIdentifier):
-    container: ContainerIdentifier
-
-    # def __hash__(self):
-    #     return hash((super().__hash__(), self.container.__hash__()))
-
-    def __str__(self):
-        return f"Variable::{super().__str__()}\t{ {str(self.container)} }"
-
-    @classmethod
-    def from_air_json(cls, data: dict) -> AIRVariableIdentifier:
-        # Identifier is <var_id type>::<module>::<scope>::<name>::<version>
-        (_, ns, sc, name, idx) = data["name"].split("::")
-        return cls(ns, sc, name, int(idx), data["parent_con"])
-        # if len(split) == 3:
-        #     # Identifier is depricated <var_id type>::<name>::<version> style
-        #     (_, name, idx) = split
-        #     return cls(con.namespace, con.con_name, name, int(idx))
-        # elif len(split) == 5:
-
-        # else:
-        #     raise ValueError(f"Unrecognized variable identifier: {data}")
-
-    @classmethod
-    def from_str(cls, var_id: str):
-        elements = var_id.split("::")
-        if len(elements) == 4:
-            (ns, sc, vn, ix) = elements
-        else:
-            (_, ns, sc, vn, ix) = elements
-        return cls(ns, sc, vn, int(ix))
-
-
-@dataclass(frozen=True)
-class NetworkVariableIdentifier(IndexedIdentifier):
-    function_id: FunctionIdentifier
-
-    # def __hash__(self):
-    #     return hash(super().__hash__(), self.function_id.__hash__())
-
-    def __str__(self):
-        return f"Variable::{super().__str__()}\t{ {str(self.function_id)} }"
-
-    @classmethod
-    def from_str_and_con(cls, data: str, con: ContainerIdentifier):
-        split = data.split("::")
-        name = ""
-        idx = -1
-        if len(split) == 3:
-            # Identifier is depricated <var_id type>::<name>::<version> style
-            (_, name, idx) = split
-            return cls(con.namespace, con.con_name, name, int(idx))
-        elif len(split) == 5:
-            # Identifier is <var_id type>::<module>::<scope>::<name>::<version>
-            (_, ns, sc, name, idx) = split
-            return cls(ns, sc, name, int(idx))
-        else:
-            raise ValueError(f"Unrecognized variable identifier: {data}")
-
-    @classmethod
-    def from_str(cls, var_id: str):
-        elements = var_id.split("::")
-        if len(elements) == 4:
-            (ns, sc, vn, ix) = elements
-        else:
-            (_, ns, sc, vn, ix) = elements
-        return cls(ns, sc, vn, int(ix))

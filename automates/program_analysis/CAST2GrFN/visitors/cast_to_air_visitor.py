@@ -67,7 +67,7 @@ from automates.model_assembly.metadata import TypedMetadata, VariableFromSource
 
 
 def generate_from_source_metadata(from_source: bool, reason: str):
-    return TypedMetadata.from_data(
+    return TypedMetadata.from_dict(
         {
             "type": "FROM_SOURCE",
             "provenance": {
