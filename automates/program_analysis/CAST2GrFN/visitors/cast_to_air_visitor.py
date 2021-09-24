@@ -152,7 +152,9 @@ class CASTToAIRVisitor(CASTVisitor):
                 ),
                 new_ver,
                 assigned_var.type_name,
-                source_ref=source_ref,
+                source_ref=source_ref
+                if node.source_refs is not None and len(node.source_refs) > 0
+                else assigned_var.source_ref,
             )
             output_variables.append(new_var)
             self.state.add_variable(new_var)
@@ -291,7 +293,9 @@ class CASTToAIRVisitor(CASTVisitor):
             # TODO remove result var
             result_var = assign_lambda.output_variables[0]
 
-        return right_res[:-1] + assign_lambda_list
+        full_results = right_res[:-1] + assign_lambda_list
+
+        return full_results
 
     @visit.register
     def _(self, node: Attribute):
@@ -459,7 +463,7 @@ class CASTToAIRVisitor(CASTVisitor):
 
     def check_and_add_container_var(self, v_name, v_type, v_ref):
         """
-        Takes a variabble name and checks if it is defined in the current
+        Takes a variable name and checks if it is defined in the current
         scopes container. If not, it adds it. Returns either the found var
         or the newly created var if not found.
 
@@ -605,6 +609,11 @@ class CASTToAIRVisitor(CASTVisitor):
             )
             input_vars.append(input_var)
 
+            matching_called_func_output_var = [
+                var
+                for var in called_func.output_variables
+                if var.identifier_information.name == v.identifier_information.name
+            ]
             output_var = C2AVariable(
                 C2AIdentifierInformation(
                     input_var.identifier_information.name,
@@ -614,7 +623,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 ),
                 input_var.version + 1,
                 input_var.type_name,
-                input_var.source_ref,
+                matching_called_func_output_var[0].source_ref,
             )
 
             self.state.add_variable(output_var)
