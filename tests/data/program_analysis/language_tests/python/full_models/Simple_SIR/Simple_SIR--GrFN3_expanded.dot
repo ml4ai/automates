@@ -1,0 +1,233 @@
+strict digraph "" {
+	graph [dpi=227,
+		fontname=Menlo,
+		fontsize=20,
+		rankdir=TB
+	];
+	node [fontname=Menlo,
+		label="\N"
+	];
+	subgraph "cluster_Function::Simple_SIR::Simple_SIR::sir::0" {
+		graph [color=forestgreen,
+			label=sir,
+			rankdir=TB,
+			style="bold, rounded"
+		];
+		subgraph "cluster_Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1" {
+			graph [color=pink,
+				label="assign.infected",
+				rankdir=TB,
+				style="bold, rounded"
+			];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::0"	[label=Mult,
+				padding=10,
+				shape=rectangle];
+			"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::2"	[color=crimson,
+				fillcolor=white,
+				fontcolor=black,
+				label="--",
+				padding=15];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::1"	[label=Mult,
+				padding=10,
+				shape=rectangle];
+			"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::1"	[color=crimson,
+				fillcolor=white,
+				fontcolor=black,
+				label="--",
+				padding=15];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::0"	[label=Add,
+				padding=10,
+				shape=rectangle];
+			"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::4"	[color=crimson,
+				fillcolor=white,
+				fontcolor=black,
+				label="--",
+				padding=15];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::1"	[label=Add,
+				padding=10,
+				shape=rectangle];
+			"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::3"	[color=crimson,
+				fillcolor=white,
+				fontcolor=black,
+				label="--",
+				padding=15];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Div::0"	[label=Div,
+				padding=10,
+				shape=rectangle];
+			"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::0"	[color=crimson,
+				fillcolor=white,
+				fontcolor=black,
+				label="--",
+				padding=15];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::2"	[label=Mult,
+				padding=10,
+				shape=rectangle];
+		}
+		subgraph "cluster_Function::Simple_SIR::Simple_SIR.sir::assign.recovered::-1" {
+			graph [color=pink,
+				label="assign.recovered",
+				rankdir=TB,
+				style="bold, rounded"
+			];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::0"	[label=Mult,
+				padding=10,
+				shape=rectangle];
+			"Variable::Simple_SIR::Simple_SIR.sir.assign.recovered::@anonymous::0"	[color=crimson,
+				fillcolor=white,
+				fontcolor=black,
+				label="--",
+				padding=15];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::1"	[label=Mult,
+				padding=10,
+				shape=rectangle];
+		}
+		subgraph "cluster_Function::Simple_SIR::Simple_SIR.sir::assign.S::0" {
+			graph [color=pink,
+				label="assign.S",
+				rankdir=TB,
+				style="bold, rounded"
+			];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.S::Sub::0"	[label=Sub,
+				padding=10,
+				shape=rectangle];
+		}
+		subgraph "cluster_Function::Simple_SIR::Simple_SIR.sir::assign.I::0" {
+			graph [color=pink,
+				label="assign.I",
+				rankdir=TB,
+				style="bold, rounded"
+			];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.I::Add::0"	[label=Add,
+				padding=10,
+				shape=rectangle];
+			"Variable::Simple_SIR::Simple_SIR.sir.assign.I::@anonymous::0"	[color=crimson,
+				fillcolor=white,
+				fontcolor=black,
+				label="--",
+				padding=15];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.I::Sub::0"	[label=Sub,
+				padding=10,
+				shape=rectangle];
+		}
+		subgraph "cluster_Function::Simple_SIR::Simple_SIR.sir::assign.R::0" {
+			graph [color=pink,
+				label="assign.R",
+				rankdir=TB,
+				style="bold, rounded"
+			];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.R::Add::0"	[label=Add,
+				padding=10,
+				shape=rectangle];
+		}
+		subgraph "cluster_Function::Simple_SIR::Simple_SIR.sir::assign.RETURN_VAL::-1" {
+			graph [color=pink,
+				label="assign.RETURN_VAL",
+				rankdir=TB,
+				style="bold, rounded"
+			];
+			"Function::Simple_SIR::Simple_SIR.sir.assign.RETURN_VAL::PACK_TUPLE::0"	[label=PACK_TUPLE,
+				padding=10,
+				shape=rectangle];
+		}
+		"Variable::Simple_SIR::Simple_SIR.sir::beta::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="beta ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::S::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="S ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::I::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="I ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::R::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="R ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::dt::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="dt ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::infected::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="infected ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::gamma::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="gamma ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::recovered::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="recovered ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::S::0"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="S ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::I::0"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="I ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::R::0"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="R ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::RETURN_VAL::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="RETURN VAL",
+			padding=15];
+	}
+	"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::0" -> "Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::2";
+	"Variable::Simple_SIR::Simple_SIR.sir::beta::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::S::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::S::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::S::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.S::Sub::0";
+	"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::2" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::1";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::1" -> "Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::1";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::1";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.I::Add::0";
+	"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Div::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::0" -> "Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::4";
+	"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::4" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::1";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::1" -> "Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::3";
+	"Variable::Simple_SIR::Simple_SIR.sir::R::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Add::1";
+	"Variable::Simple_SIR::Simple_SIR.sir::R::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.R::Add::0";
+	"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::3" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Div::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Div::0" -> "Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::0";
+	"Variable::Simple_SIR::Simple_SIR.sir.assign.infected::@anonymous::0" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::2";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::2" -> "Variable::Simple_SIR::Simple_SIR.sir::infected::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::dt::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.infected::Mult::2";
+	"Variable::Simple_SIR::Simple_SIR.sir::dt::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::1";
+	"Variable::Simple_SIR::Simple_SIR.sir::infected::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.S::Sub::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::infected::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.I::Add::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::0" -> "Variable::Simple_SIR::Simple_SIR.sir.assign.recovered::@anonymous::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::gamma::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::0";
+	"Variable::Simple_SIR::Simple_SIR.sir.assign.recovered::@anonymous::0" -> "Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::1";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.recovered::Mult::1" -> "Variable::Simple_SIR::Simple_SIR.sir::recovered::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::recovered::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.I::Sub::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::recovered::-1" -> "Function::Simple_SIR::Simple_SIR.sir.assign.R::Add::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.S::Sub::0" -> "Variable::Simple_SIR::Simple_SIR.sir::S::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::S::0" -> "Function::Simple_SIR::Simple_SIR.sir.assign.RETURN_VAL::PACK_TUPLE::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.I::Add::0" -> "Variable::Simple_SIR::Simple_SIR.sir.assign.I::@anonymous::0";
+	"Variable::Simple_SIR::Simple_SIR.sir.assign.I::@anonymous::0" -> "Function::Simple_SIR::Simple_SIR.sir.assign.I::Sub::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.I::Sub::0" -> "Variable::Simple_SIR::Simple_SIR.sir::I::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::0" -> "Function::Simple_SIR::Simple_SIR.sir.assign.RETURN_VAL::PACK_TUPLE::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.R::Add::0" -> "Variable::Simple_SIR::Simple_SIR.sir::R::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::R::0" -> "Function::Simple_SIR::Simple_SIR.sir.assign.RETURN_VAL::PACK_TUPLE::0";
+	"Function::Simple_SIR::Simple_SIR.sir.assign.RETURN_VAL::PACK_TUPLE::0" -> "Variable::Simple_SIR::Simple_SIR.sir::RETURN_VAL::-1";
+}

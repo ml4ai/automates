@@ -1,0 +1,32 @@
+strict digraph "" {
+	graph [dpi=227,
+		fontname=Menlo,
+		fontsize=20,
+		rankdir=TB
+	];
+	node [fontname=Menlo,
+		label="\N"
+	];
+	subgraph "cluster_Function::sys::literal_in_stmt::main::0" {
+		graph [color=forestgreen,
+			label=main,
+			rankdir=TB,
+			style="bold, rounded"
+		];
+		"Function::sys::literal_in_stmt.main::assign.x1::-1"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::sys::literal_in_stmt.main::x::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="x ",
+			padding=15];
+		"Variable::sys::literal_in_stmt.main::x1::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="x1 ",
+			padding=15];
+	}
+	"Function::sys::literal_in_stmt.main::assign.x1::-1" -> "Variable::sys::literal_in_stmt.main::x1::-1";
+	"Variable::sys::literal_in_stmt.main::x::-1" -> "Function::sys::literal_in_stmt.main::assign.x1::-1";
+}

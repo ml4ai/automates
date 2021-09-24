@@ -1,0 +1,995 @@
+{
+    "nodes": [
+        {
+            "body": [
+                {
+                    "expr": {
+                        "node_type": "String",
+                        "source_refs": [
+                            {
+                                "col_end": 3,
+                                "col_start": 0,
+                                "node_type": "SourceRef",
+                                "row_end": 29,
+                                "row_start": 1,
+                                "source_file_name": "Simple_SIR.py"
+                            }
+                        ],
+                        "string": "\nDerived from the following:\n\n    ********************************************************************************\n    !     Input Variables:\n    !     S        Amount of susceptible members at the current timestep\n    !     I        Amount of infected members at the current timestep\n    !     R        Amount of recovered members at the current timestep\n    !     beta     Rate of transmission via contact\n    !     gamma    Rate of recovery from infection\n    !     dt       Next inter-event time\n    !\n    !     State Variables:\n    !     infected    Increase in infected at the current timestep\n    !     recovered   Increase in recovered at the current timestep\n    ********************************************************************************\n        subroutine sir(S, I, R, beta, gamma, dt)\n            implicit none\n            double precision S, I, R, beta, gamma, dt\n            double precision infected, recovered\n\n            infected = ((beta*S*I) / (S + I + R)) * dt\n            recovered = (gamma*I) * dt\n\n            S = S - infected\n            I = I + infected - recovered\n            R = R + recovered\n        end subroutine sir\n"
+                    },
+                    "node_type": "Expr",
+                    "source_refs": [
+                        {
+                            "col_end": 3,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 29,
+                            "row_start": 1,
+                            "source_file_name": "Simple_SIR.py"
+                        }
+                    ]
+                },
+                {
+                    "body": [
+                        {
+                            "expr": {
+                                "node_type": "String",
+                                "source_refs": [
+                                    {
+                                        "col_end": 7,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 44,
+                                        "row_start": 32,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ],
+                                "string": "\n    !     Input Variables:\n    !     S        Amount of susceptible members at the current timestep\n    !     I        Amount of infected members at the current timestep\n    !     R        Amount of recovered members at the current timestep\n    !     beta     Rate of transmission via contact\n    !     gamma    Rate of recovery from infection\n    !     dt       Next inter-event time\n    !\n    !     State Variables:\n    !     infected    Increase in infected at the current timestep\n    !     recovered   Increase in recovered at the current timestep\n    "
+                            },
+                            "node_type": "Expr",
+                            "source_refs": [
+                                {
+                                    "col_end": 7,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 44,
+                                    "row_start": 32,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 12,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 46,
+                                        "row_start": 46,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "infected",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 12,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 46,
+                                            "row_start": 46,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "left": {
+                                            "left": {
+                                                "name": "beta",
+                                                "node_type": "Name",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 21,
+                                                        "col_start": 17,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 46,
+                                                        "row_start": 46,
+                                                        "source_file_name": "Simple_SIR.py"
+                                                    }
+                                                ]
+                                            },
+                                            "node_type": "BinaryOp",
+                                            "op": "Mult",
+                                            "right": {
+                                                "name": "S",
+                                                "node_type": "Name",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 25,
+                                                        "col_start": 24,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 46,
+                                                        "row_start": 46,
+                                                        "source_file_name": "Simple_SIR.py"
+                                                    }
+                                                ]
+                                            },
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 25,
+                                                    "col_start": 17,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 46,
+                                                    "row_start": 46,
+                                                    "source_file_name": "Simple_SIR.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "BinaryOp",
+                                        "op": "Mult",
+                                        "right": {
+                                            "name": "I",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 29,
+                                                    "col_start": 28,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 46,
+                                                    "row_start": 46,
+                                                    "source_file_name": "Simple_SIR.py"
+                                                }
+                                            ]
+                                        },
+                                        "source_refs": [
+                                            {
+                                                "col_end": 29,
+                                                "col_start": 17,
+                                                "node_type": "SourceRef",
+                                                "row_end": 46,
+                                                "row_start": 46,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Div",
+                                    "right": {
+                                        "left": {
+                                            "left": {
+                                                "name": "S",
+                                                "node_type": "Name",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 35,
+                                                        "col_start": 34,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 46,
+                                                        "row_start": 46,
+                                                        "source_file_name": "Simple_SIR.py"
+                                                    }
+                                                ]
+                                            },
+                                            "node_type": "BinaryOp",
+                                            "op": "Add",
+                                            "right": {
+                                                "name": "I",
+                                                "node_type": "Name",
+                                                "source_refs": [
+                                                    {
+                                                        "col_end": 39,
+                                                        "col_start": 38,
+                                                        "node_type": "SourceRef",
+                                                        "row_end": 46,
+                                                        "row_start": 46,
+                                                        "source_file_name": "Simple_SIR.py"
+                                                    }
+                                                ]
+                                            },
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 39,
+                                                    "col_start": 34,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 46,
+                                                    "row_start": 46,
+                                                    "source_file_name": "Simple_SIR.py"
+                                                }
+                                            ]
+                                        },
+                                        "node_type": "BinaryOp",
+                                        "op": "Add",
+                                        "right": {
+                                            "name": "R",
+                                            "node_type": "Name",
+                                            "source_refs": [
+                                                {
+                                                    "col_end": 43,
+                                                    "col_start": 42,
+                                                    "node_type": "SourceRef",
+                                                    "row_end": 46,
+                                                    "row_start": 46,
+                                                    "source_file_name": "Simple_SIR.py"
+                                                }
+                                            ]
+                                        },
+                                        "source_refs": [
+                                            {
+                                                "col_end": 43,
+                                                "col_start": 34,
+                                                "node_type": "SourceRef",
+                                                "row_end": 46,
+                                                "row_start": 46,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 44,
+                                            "col_start": 16,
+                                            "node_type": "SourceRef",
+                                            "row_end": 46,
+                                            "row_start": 46,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Mult",
+                                "right": {
+                                    "name": "dt",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 50,
+                                            "col_start": 48,
+                                            "node_type": "SourceRef",
+                                            "row_end": 46,
+                                            "row_start": 46,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 50,
+                                        "col_start": 15,
+                                        "node_type": "SourceRef",
+                                        "row_end": 46,
+                                        "row_start": 46,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 50,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 46,
+                                    "row_start": 46,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 13,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 47,
+                                        "row_start": 47,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "recovered",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 13,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 47,
+                                            "row_start": 47,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "name": "gamma",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 22,
+                                                "col_start": 17,
+                                                "node_type": "SourceRef",
+                                                "row_end": 47,
+                                                "row_start": 47,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Mult",
+                                    "right": {
+                                        "name": "I",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 26,
+                                                "col_start": 25,
+                                                "node_type": "SourceRef",
+                                                "row_end": 47,
+                                                "row_start": 47,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 26,
+                                            "col_start": 17,
+                                            "node_type": "SourceRef",
+                                            "row_end": 47,
+                                            "row_start": 47,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Mult",
+                                "right": {
+                                    "name": "dt",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 32,
+                                            "col_start": 30,
+                                            "node_type": "SourceRef",
+                                            "row_end": 47,
+                                            "row_start": 47,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 32,
+                                        "col_start": 16,
+                                        "node_type": "SourceRef",
+                                        "row_end": 47,
+                                        "row_start": 47,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 32,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 47,
+                                    "row_start": 47,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 49,
+                                        "row_start": 49,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "S",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 49,
+                                            "row_start": 49,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "S",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 49,
+                                            "row_start": 49,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Sub",
+                                "right": {
+                                    "name": "infected",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 20,
+                                            "col_start": 12,
+                                            "node_type": "SourceRef",
+                                            "row_end": 49,
+                                            "row_start": 49,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 20,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 49,
+                                        "row_start": 49,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 20,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 49,
+                                    "row_start": 49,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 50,
+                                        "row_start": 50,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "I",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 50,
+                                            "row_start": 50,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "left": {
+                                        "name": "I",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 9,
+                                                "col_start": 8,
+                                                "node_type": "SourceRef",
+                                                "row_end": 50,
+                                                "row_start": 50,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    "node_type": "BinaryOp",
+                                    "op": "Add",
+                                    "right": {
+                                        "name": "infected",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 20,
+                                                "col_start": 12,
+                                                "node_type": "SourceRef",
+                                                "row_end": 50,
+                                                "row_start": 50,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    "source_refs": [
+                                        {
+                                            "col_end": 20,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 50,
+                                            "row_start": 50,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Sub",
+                                "right": {
+                                    "name": "recovered",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 32,
+                                            "col_start": 23,
+                                            "node_type": "SourceRef",
+                                            "row_end": 50,
+                                            "row_start": 50,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 32,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 50,
+                                        "row_start": 50,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 32,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 50,
+                                    "row_start": 50,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ]
+                        },
+                        {
+                            "left": {
+                                "node_type": "Var",
+                                "source_refs": [
+                                    {
+                                        "col_end": 5,
+                                        "col_start": 4,
+                                        "node_type": "SourceRef",
+                                        "row_end": 51,
+                                        "row_start": 51,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ],
+                                "type": "float",
+                                "val": {
+                                    "name": "R",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 5,
+                                            "col_start": 4,
+                                            "node_type": "SourceRef",
+                                            "row_end": 51,
+                                            "row_start": 51,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            "node_type": "Assignment",
+                            "right": {
+                                "left": {
+                                    "name": "R",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 9,
+                                            "col_start": 8,
+                                            "node_type": "SourceRef",
+                                            "row_end": 51,
+                                            "row_start": 51,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "node_type": "BinaryOp",
+                                "op": "Add",
+                                "right": {
+                                    "name": "recovered",
+                                    "node_type": "Name",
+                                    "source_refs": [
+                                        {
+                                            "col_end": 21,
+                                            "col_start": 12,
+                                            "node_type": "SourceRef",
+                                            "row_end": 51,
+                                            "row_start": 51,
+                                            "source_file_name": "Simple_SIR.py"
+                                        }
+                                    ]
+                                },
+                                "source_refs": [
+                                    {
+                                        "col_end": 21,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 51,
+                                        "row_start": 51,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            },
+                            "source_refs": [
+                                {
+                                    "col_end": 21,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 51,
+                                    "row_start": 51,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ]
+                        },
+                        {
+                            "node_type": "ModelReturn",
+                            "source_refs": [
+                                {
+                                    "col_end": 20,
+                                    "col_start": 4,
+                                    "node_type": "SourceRef",
+                                    "row_end": 53,
+                                    "row_start": 53,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ],
+                            "value": {
+                                "node_type": "Tuple",
+                                "source_refs": [
+                                    {
+                                        "col_end": 20,
+                                        "col_start": 11,
+                                        "node_type": "SourceRef",
+                                        "row_end": 53,
+                                        "row_start": 53,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ],
+                                "values": [
+                                    {
+                                        "name": "S",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 13,
+                                                "col_start": 12,
+                                                "node_type": "SourceRef",
+                                                "row_end": 53,
+                                                "row_start": 53,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "I",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 16,
+                                                "col_start": 15,
+                                                "node_type": "SourceRef",
+                                                "row_end": 53,
+                                                "row_start": 53,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "R",
+                                        "node_type": "Name",
+                                        "source_refs": [
+                                            {
+                                                "col_end": 19,
+                                                "col_start": 18,
+                                                "node_type": "SourceRef",
+                                                "row_end": 53,
+                                                "row_start": 53,
+                                                "source_file_name": "Simple_SIR.py"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "func_args": [
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 16,
+                                    "col_start": 8,
+                                    "node_type": "SourceRef",
+                                    "row_end": 31,
+                                    "row_start": 31,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "S",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 16,
+                                        "col_start": 8,
+                                        "node_type": "SourceRef",
+                                        "row_end": 31,
+                                        "row_start": 31,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 26,
+                                    "col_start": 18,
+                                    "node_type": "SourceRef",
+                                    "row_end": 31,
+                                    "row_start": 31,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "I",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 26,
+                                        "col_start": 18,
+                                        "node_type": "SourceRef",
+                                        "row_end": 31,
+                                        "row_start": 31,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 36,
+                                    "col_start": 28,
+                                    "node_type": "SourceRef",
+                                    "row_end": 31,
+                                    "row_start": 31,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "R",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 36,
+                                        "col_start": 28,
+                                        "node_type": "SourceRef",
+                                        "row_end": 31,
+                                        "row_start": 31,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 49,
+                                    "col_start": 38,
+                                    "node_type": "SourceRef",
+                                    "row_end": 31,
+                                    "row_start": 31,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "beta",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 49,
+                                        "col_start": 38,
+                                        "node_type": "SourceRef",
+                                        "row_end": 31,
+                                        "row_start": 31,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 63,
+                                    "col_start": 51,
+                                    "node_type": "SourceRef",
+                                    "row_end": 31,
+                                    "row_start": 31,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "gamma",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 63,
+                                        "col_start": 51,
+                                        "node_type": "SourceRef",
+                                        "row_end": 31,
+                                        "row_start": 31,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "node_type": "Var",
+                            "source_refs": [
+                                {
+                                    "col_end": 74,
+                                    "col_start": 65,
+                                    "node_type": "SourceRef",
+                                    "row_end": 31,
+                                    "row_start": 31,
+                                    "source_file_name": "Simple_SIR.py"
+                                }
+                            ],
+                            "type": "float",
+                            "val": {
+                                "name": "dt",
+                                "node_type": "Name",
+                                "source_refs": [
+                                    {
+                                        "col_end": 74,
+                                        "col_start": 65,
+                                        "node_type": "SourceRef",
+                                        "row_end": 31,
+                                        "row_start": 31,
+                                        "source_file_name": "Simple_SIR.py"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "sir",
+                    "node_type": "FunctionDef",
+                    "source_refs": [
+                        {
+                            "col_end": 20,
+                            "col_start": 0,
+                            "node_type": "SourceRef",
+                            "row_end": 53,
+                            "row_start": 31,
+                            "source_file_name": "Simple_SIR.py"
+                        }
+                    ]
+                }
+            ],
+            "name": "Simple_SIR",
+            "node_type": "Module",
+            "source_refs": [
+                {
+                    "col_end": null,
+                    "col_start": null,
+                    "node_type": "SourceRef",
+                    "row_end": [
+                        "\"\"\"\n",
+                        "Derived from the following:\n",
+                        "\n",
+                        "    ********************************************************************************\n",
+                        "    !     Input Variables:\n",
+                        "    !     S        Amount of susceptible members at the current timestep\n",
+                        "    !     I        Amount of infected members at the current timestep\n",
+                        "    !     R        Amount of recovered members at the current timestep\n",
+                        "    !     beta     Rate of transmission via contact\n",
+                        "    !     gamma    Rate of recovery from infection\n",
+                        "    !     dt       Next inter-event time\n",
+                        "    !\n",
+                        "    !     State Variables:\n",
+                        "    !     infected    Increase in infected at the current timestep\n",
+                        "    !     recovered   Increase in recovered at the current timestep\n",
+                        "    ********************************************************************************\n",
+                        "        subroutine sir(S, I, R, beta, gamma, dt)\n",
+                        "            implicit none\n",
+                        "            double precision S, I, R, beta, gamma, dt\n",
+                        "            double precision infected, recovered\n",
+                        "\n",
+                        "            infected = ((beta*S*I) / (S + I + R)) * dt\n",
+                        "            recovered = (gamma*I) * dt\n",
+                        "\n",
+                        "            S = S - infected\n",
+                        "            I = I + infected - recovered\n",
+                        "            R = R + recovered\n",
+                        "        end subroutine sir\n",
+                        "\"\"\"\n",
+                        "\n",
+                        "def sir(S: float, I: float, R: float, beta: float, gamma: float, dt: float):\n",
+                        "    \"\"\"\n",
+                        "    !     Input Variables:\n",
+                        "    !     S        Amount of susceptible members at the current timestep\n",
+                        "    !     I        Amount of infected members at the current timestep\n",
+                        "    !     R        Amount of recovered members at the current timestep\n",
+                        "    !     beta     Rate of transmission via contact\n",
+                        "    !     gamma    Rate of recovery from infection\n",
+                        "    !     dt       Next inter-event time\n",
+                        "    !\n",
+                        "    !     State Variables:\n",
+                        "    !     infected    Increase in infected at the current timestep\n",
+                        "    !     recovered   Increase in recovered at the current timestep\n",
+                        "    \"\"\"\n",
+                        "    \n",
+                        "    infected = ((beta * S * I) / (S + I + R)) * dt\n",
+                        "    recovered = (gamma * I) * dt\n",
+                        "\n",
+                        "    S = S - infected\n",
+                        "    I = I + infected - recovered\n",
+                        "    R = R + recovered\n",
+                        "\n",
+                        "    return (S, I, R)\n"
+                    ],
+                    "row_start": 1,
+                    "source_file_name": "Simple_SIR.py"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,119 @@
+strict digraph "" {
+	graph [dpi=227,
+		fontname=Menlo,
+		fontsize=20,
+		rankdir=TB
+	];
+	node [fontname=Menlo,
+		label="\N"
+	];
+	subgraph "cluster_Function::Simple_SIR::Simple_SIR::sir::0" {
+		graph [color=forestgreen,
+			label=sir,
+			rankdir=TB,
+			style="bold, rounded"
+		];
+		"Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::Simple_SIR::Simple_SIR.sir::beta::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="beta ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::S::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="S ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::I::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="I ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::R::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="R ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::dt::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="dt ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::infected::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="infected ",
+			padding=15];
+		"Function::Simple_SIR::Simple_SIR.sir::assign.recovered::-1"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::Simple_SIR::Simple_SIR.sir::gamma::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="gamma ",
+			padding=15];
+		"Variable::Simple_SIR::Simple_SIR.sir::recovered::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="recovered ",
+			padding=15];
+		"Function::Simple_SIR::Simple_SIR.sir::assign.S::0"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::Simple_SIR::Simple_SIR.sir::S::0"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="S ",
+			padding=15];
+		"Function::Simple_SIR::Simple_SIR.sir::assign.I::0"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::Simple_SIR::Simple_SIR.sir::I::0"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="I ",
+			padding=15];
+		"Function::Simple_SIR::Simple_SIR.sir::assign.R::0"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::Simple_SIR::Simple_SIR.sir::R::0"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="R ",
+			padding=15];
+		"Function::Simple_SIR::Simple_SIR.sir::assign.RETURN_VAL::-1"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::Simple_SIR::Simple_SIR.sir::RETURN_VAL::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="RETURN VAL",
+			padding=15];
+	}
+	"Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1" -> "Variable::Simple_SIR::Simple_SIR.sir::infected::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::beta::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::S::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::S::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.S::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.recovered::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.I::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::R::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::R::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.R::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::dt::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.infected::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::dt::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.recovered::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::infected::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.S::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::infected::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.I::0";
+	"Function::Simple_SIR::Simple_SIR.sir::assign.recovered::-1" -> "Variable::Simple_SIR::Simple_SIR.sir::recovered::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::gamma::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.recovered::-1";
+	"Variable::Simple_SIR::Simple_SIR.sir::recovered::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.I::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::recovered::-1" -> "Function::Simple_SIR::Simple_SIR.sir::assign.R::0";
+	"Function::Simple_SIR::Simple_SIR.sir::assign.S::0" -> "Variable::Simple_SIR::Simple_SIR.sir::S::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::S::0" -> "Function::Simple_SIR::Simple_SIR.sir::assign.RETURN_VAL::-1";
+	"Function::Simple_SIR::Simple_SIR.sir::assign.I::0" -> "Variable::Simple_SIR::Simple_SIR.sir::I::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::I::0" -> "Function::Simple_SIR::Simple_SIR.sir::assign.RETURN_VAL::-1";
+	"Function::Simple_SIR::Simple_SIR.sir::assign.R::0" -> "Variable::Simple_SIR::Simple_SIR.sir::R::0";
+	"Variable::Simple_SIR::Simple_SIR.sir::R::0" -> "Function::Simple_SIR::Simple_SIR.sir::assign.RETURN_VAL::-1";
+	"Function::Simple_SIR::Simple_SIR.sir::assign.RETURN_VAL::-1" -> "Variable::Simple_SIR::Simple_SIR.sir::RETURN_VAL::-1";
+}

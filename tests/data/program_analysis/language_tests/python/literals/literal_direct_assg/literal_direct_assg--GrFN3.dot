@@ -1,0 +1,62 @@
+strict digraph "" {
+	graph [dpi=227,
+		fontname=Menlo,
+		fontsize=20,
+		rankdir=TB
+	];
+	node [fontname=Menlo,
+		label="\N"
+	];
+	subgraph "cluster_Function::sys::literal_direct_assg::main::0" {
+		graph [color=forestgreen,
+			label=main,
+			rankdir=TB,
+			style="bold, rounded"
+		];
+		"Function::sys::literal_direct_assg.main::@literal::0"	[label=3,
+			padding=10,
+			shape=rectangle];
+		"Variable::sys::literal_direct_assg.main::a::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="a ",
+			padding=15];
+		"Function::sys::literal_direct_assg.main::@literal::1"	[label=2,
+			padding=10,
+			shape=rectangle];
+		"Variable::sys::literal_direct_assg.main::b::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="b ",
+			padding=15];
+		"Function::sys::literal_direct_assg.main::@literal::2"	[label=1,
+			padding=10,
+			shape=rectangle];
+		"Variable::sys::literal_direct_assg.main::c::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="c ",
+			padding=15];
+		"Function::sys::literal_direct_assg.main::assign.quad_x::-1"	[label=A,
+			padding=10,
+			shape=rectangle];
+		"Variable::sys::literal_direct_assg.main::x::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="x ",
+			padding=15];
+		"Variable::sys::literal_direct_assg.main::quad_x::-1"	[color=crimson,
+			fillcolor=white,
+			fontcolor=black,
+			label="quad x ",
+			padding=15];
+	}
+	"Function::sys::literal_direct_assg.main::@literal::0" -> "Variable::sys::literal_direct_assg.main::a::-1";
+	"Variable::sys::literal_direct_assg.main::a::-1" -> "Function::sys::literal_direct_assg.main::assign.quad_x::-1";
+	"Function::sys::literal_direct_assg.main::@literal::1" -> "Variable::sys::literal_direct_assg.main::b::-1";
+	"Variable::sys::literal_direct_assg.main::b::-1" -> "Function::sys::literal_direct_assg.main::assign.quad_x::-1";
+	"Function::sys::literal_direct_assg.main::@literal::2" -> "Variable::sys::literal_direct_assg.main::c::-1";
+	"Variable::sys::literal_direct_assg.main::c::-1" -> "Function::sys::literal_direct_assg.main::assign.quad_x::-1";
+	"Function::sys::literal_direct_assg.main::assign.quad_x::-1" -> "Variable::sys::literal_direct_assg.main::quad_x::-1";
+	"Variable::sys::literal_direct_assg.main::x::-1" -> "Function::sys::literal_direct_assg.main::assign.quad_x::-1";
+}
