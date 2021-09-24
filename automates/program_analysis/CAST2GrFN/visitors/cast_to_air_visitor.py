@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from datetime import datetime
 
 from .cast_visitor import CASTVisitor
+import automates.program_analysis.CAST2GrFN.visitors.cast_function_call_visitor as call_order
 from automates.program_analysis.CAST2GrFN.model.cast_to_air_model import (
     C2AException,
     C2AState,
@@ -599,6 +600,9 @@ class CASTToAIRVisitor(CASTVisitor):
                     source_refs=arg.source_refs,
                 )
                 assign_res = self.visit(arg_assign)
+                assign_res[-1].output_variables[-1].add_metadata(
+                    generate_from_source_metadata(False, "CONDITION_RESULT")
+                )
                 arg_assign_lambdas.extend(assign_res)
                 input_vars.extend(assign_res[-1].output_variables)
         self.state.set_variable_context(prev_context)
@@ -1614,6 +1618,12 @@ class CASTToAIRVisitor(CASTVisitor):
 
         global_var_results = self.visit_node_list_and_flatten(global_var_nodes)
 
+        visit_order = call_order.get_function_visit_order(node)
+        visit_order_name_to_pos = {name: pos for pos, name in enumerate(visit_order)}
+        pairs = [(visit_order_name_to_pos[n.name], n) for n in non_var_global_nodes]
+        pairs.sort(key=lambda p: p[0])
+        self.visit_node_list_and_flatten([p[1] for p in pairs])
+
         self.visit_node_list_and_flatten(non_var_global_nodes)
 
         # If we had global variables, create the global scope that calls out to
@@ -1780,7 +1790,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 [],
                 C2ALambdaType.UNKNOWN,
                 C2ASourceRef("", None, None, None, None),
-                str(node.string),
+                f'"{str(node.string)}"',
                 node,
             )
         ]

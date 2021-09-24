@@ -1,0 +1,11 @@
+taxonomy: "org/clulab/aske_automates/grammars/taxonomy.yml"
+
+vars: "org/clulab/aske_automates/grammars/triggers.yml"
+
+rules:
+
+  - import: "org/clulab/aske_automates/grammars/markdown/commands.yml"
+    vars:
+      priority: 1
+
+

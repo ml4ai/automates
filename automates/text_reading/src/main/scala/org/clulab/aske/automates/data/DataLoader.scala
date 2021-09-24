@@ -28,9 +28,11 @@ object DataLoader {
   def selectLoader(s: String): DataLoader = {
     s match {
       case "txt" => new PlainTextDataLoader
-      case "json" => new ScienceParsedDataLoader
+      case "json" => new CosmosJsonDataLoader
       case "pdf" => new PDFDataLoader
       case "tokenized_latex" => new TokenizedLatexDataLoader
+      case "md" => new MarkdownTextDataLoader
+
     }
   }
 }
@@ -113,6 +115,17 @@ class PlainTextDataLoader extends DataLoader {
   override val extension: String = "txt"
 }
 
+class MarkdownTextDataLoader extends DataLoader {
+  /**
+    * Loader for markdown files.  Here we will return the content of the file as a Seq[String] (with length 1).
+    * For now not very different than text files (only split on new lines), but probably should be modified more
+    *
+    * @param f the File being loaded
+    * @return string content of file (wrapped in sequence)
+    */
+  def loadFile(f: File): Seq[String] = getTextFromFile(f).split("\n").filter(_.nonEmpty)
+  override val extension: String = "md"
+}
 
 class TokenizedLatexDataLoader extends DataLoader {
   /**
