@@ -1,7 +1,9 @@
 import typing
 from functools import singledispatchmethod
 
-from automates.program_analysis.CAST2GrFN.visitors.cast_visitor import CASTVisitor
+from automates.program_analysis.CAST2GrFN.visitors.cast_visitor import (
+    CASTVisitor,
+)
 
 from automates.program_analysis.CAST2GrFN.model.cast import (
     AstNode,
@@ -34,7 +36,9 @@ from automates.program_analysis.CAST2GrFN.model.cast import (
 
 def flatten(l):
     for el in l:
-        if isinstance(el, typing.Iterable) and not isinstance(el, (str, bytes)):
+        if isinstance(el, typing.Iterable) and not isinstance(
+            el, (str, bytes)
+        ):
             yield from flatten(el)
         else:
             yield el
@@ -43,6 +47,7 @@ def flatten(l):
 def get_function_visit_order(cast):
     visitor = CASTFunctionCallVisitor()
     calls = visitor.visit(cast)
+    print(calls)
 
     roots = list()
     for k in calls.keys():
@@ -56,15 +61,15 @@ def get_function_visit_order(cast):
 
     order = list()
 
-    def get_order(name, calls_list):
-        if name not in calls_list:
+    def get_order(name):
+        if name not in calls:
             return
-        for call in calls_list[name]:
-            get_order(call, calls_list)
+        for call in calls[name]:
+            get_order(call)
         order.append(name)
 
     for root in roots:
-        get_order(root, calls)
+        get_order(root)
 
     return order
 
@@ -145,7 +150,11 @@ class CASTFunctionCallVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: ModelIf):
-        return self.visit(node.expr) + self.visit(node.body) + self.visit(node.orelse)
+        return (
+            self.visit(node.expr)
+            + self.visit(node.body)
+            + self.visit(node.orelse)
+        )
 
     @visit.register
     def _(self, node: ModelReturn):
@@ -153,7 +162,15 @@ class CASTFunctionCallVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Module):
-        return {k: v for k, v in self.visit(node.body)}
+        res = dict()
+        for body_node in node.body:
+            # NOTE: no need to visit nodes where we won't expect to find function definitions in the first place.
+            if isinstance(body_node, (FunctionDef, ClassDef)):
+                vis_res = self.visit(body_node)
+                if len(vis_res) == 2:
+                    (k, v) = vis_res
+                    res[k] = v
+        return res
 
     @visit.register
     def _(self, node: Name):
