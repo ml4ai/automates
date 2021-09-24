@@ -697,6 +697,7 @@ class Probability:
     num: Probability = None
     den: Probability = None
     subscript: list = field(default_factory=list)
+    cf_frac_num: Probability = None
 
 
 @dataclass(unsafe_hash=True)

@@ -348,12 +348,12 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
             # Subscripts should be in ancestors of nodes in c-component
             for orig_var in subscript_orig_vars:
-                if orig_var not in gm.ancestors_unsort(s_el_orig_names, g):
+                if orig_var not in gm.find_related_nodes_of(s_el_orig_names, g, "in", "max"):
                     subscript_orig_vars.remove(orig_var)
 
             # Subscripts should not be redundant (should not be ancestors of one-another)
             for orig_var in subscript_orig_vars:
-                if orig_var in gm.ancestors_unsort(list(set(subscript_orig_vars)-orig_var)):
+                if orig_var in gm.find_related_nodes_of(list(set(subscript_orig_vars)-orig_var), g, "in", "max"):
                     subscript_orig_vars.remove(orig_var)
 
             s_el_info = cg.vs.select(name_in=s_element)
@@ -472,8 +472,6 @@ def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line n
     # Line 5
     tree.call.line = 15
     num = cf_ID(g, cf_conj_prime, topo)
-    den = cf_ID(g, delta, topo)  # todo: unsure about this
     tree.children.append(deepcopy(num.tree))
-    tree.children.append(deepcopy(den.tree))
-    tree.call.id_check = num.tree.call.id_check and den.tree.call.id_check
-    return gm.CfResultsInternal(p=gm.Probability(fraction=True, num=num.p, den=den.p))
+    tree.call.id_check = num.tree.call.id_check
+    return gm.CfResultsInternal(gm.Probability(cf_frac_num=num.p), tree, num.p_int, num.p_message)  # todo: make sure this is handled correctly when reporting output
