@@ -42,6 +42,16 @@ def main(args):
         grfn_file = args.python_filepath.replace(".py", "--GrFN3_expanded.pdf")
         Ae.draw(grfn_file, prog="dot")
 
+    if args.gen_grfn_dotfile:
+        print("Outputting GrFN3 dotfile")
+        grfn_file = args.python_filepath.replace(".py", "--GrFN3.dot")
+        GrFN.to_dotfile(grfn_file)
+
+    if args.gen_full_grfn_dotfile:
+        print("Outputting expanded GrFN3 dotfile")
+        grfn_file = args.python_filepath.replace(".py", "--GrFN3_expanded.dot")
+        GrFN.to_dotfile(grfn_file, expand_expressions=True)
+
     print("Done.")
 
 
@@ -90,7 +100,7 @@ def convert2CAST(args):
 def CAST2AIR(args, CAST):
     print("Translating CAST to AIR")
     air_dict = CAST.to_air_dict()
-    AIR = AutoMATES_IR.from_air_json(air_dict)
+    AIR = AutoMATES_IR.from_CAST(air_dict)
 
     if args.gen_air_json:
         print("Outputting AIR JSON")
@@ -134,6 +144,18 @@ if __name__ == "__main__":
         dest="gen_full_grfn_pdf",
         action="store_true",
         help="Setting this flag will generate an expanded GrFN PDF visualization for the Python input file",
+    )
+    parser.add_argument(
+        "-gd",
+        dest="gen_grfn_dotfile",
+        action="store_true",
+        help="Setting this flag will generate a GrFN PDF dotfile for the Python input file",
+    )
+    parser.add_argument(
+        "-gdf",
+        dest="gen_full_grfn_dotfile",
+        action="store_true",
+        help="Setting this flag will generate an expanded GrFN PDF dotfile for the Python input file",
     )
     parser.add_argument(
         "-gjeq",
