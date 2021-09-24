@@ -199,6 +199,18 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
             p = f"{p}\\left(\\sum_{{{sum_string}}}"
         else:
             p = f"{p}\\sum_{{{sum_string}}}"
+    if prob.cf_p_prime is not None:
+        p_prime = get_expression(prob.cf_frac_num, start_sum=False, single_source=single_source, target_sym=target_sym)
+        delta = ",".join(prob.cf_delta)
+        num = f"P'"
+        den = f"P'({delta})"
+        p = f"{num}/{den}, where P' = {p_prime}"
+        return p
+    if len(prob.subscript) > 0:
+        subscript = ",".join(prob.subscript)
+        variables = ",".join(prob.var)
+        p = f"P_{{{subscript}}}({variables})"
+        return p
     if prob.fraction:
         f_num = get_expression(prob.num, start_sum=False, single_source=single_source, target_sym=target_sym)
         f_den = get_expression(prob.den, start_sum=False, single_source=single_source, target_sym=target_sym)
@@ -697,7 +709,8 @@ class Probability:
     num: Probability = None
     den: Probability = None
     subscript: list = field(default_factory=list)
-    cf_frac_num: Probability = None
+    cf_p_prime: Probability = None
+    cf_delta: list = field(default_factory=list)
 
 
 @dataclass(unsafe_hash=True)

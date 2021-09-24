@@ -472,6 +472,9 @@ def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line n
     # Line 5
     tree.call.line = 15
     num = cf_ID(g, cf_conj_prime, topo)
+    delta_names = []
+    for cf in delta:
+        delta_names.append(f"{cf.original_name}_{cf.int_vars}")
     tree.children.append(deepcopy(num.tree))
     tree.call.id_check = num.tree.call.id_check
-    return gm.CfResultsInternal(gm.Probability(cf_frac_num=num.p), tree, num.p_int, num.p_message)  # todo: make sure this is handled correctly when reporting output
+    return gm.CfResultsInternal(gm.Probability(cf_p_prime=num.p, cf_delta=delta_names), tree, num.p_int, num.p_message)
