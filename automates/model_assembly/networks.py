@@ -2552,7 +2552,7 @@ class GroundedFunctionNetwork:
 
 
 # =============================================================================
-# TODO: @Tito fill in the code here for the new GrFN 2 CAG pipeline
+# TODO: @Alex fill in the code here for the new GrFN3 2 CAG pipeline
 # =============================================================================
 @dataclass
 class CAGContainer:
@@ -2586,7 +2586,7 @@ class CAGContainer:
         else:
             parent_id = None
 
-        # FIXME: @Tito the variables captured during container creation here may have a superset of all the variables you actually want to have appear in the CAG
+        # FIXME: @Alex the variables captured during container creation here may be a superset of all the variables you actually want to have appear in the CAG
         variables = list()
         for edge in func.hyper_edges:
             variables.extend([v.identifier for v in edge.inputs])
@@ -2611,6 +2611,7 @@ class CAGContainer:
         Returns:
             CAGContainer: A CAGContainer with all the data from the data dict arg
         """
+        # TODO: @Alex implement this
         return NotImplemented
 
     def to_dict(self) -> dict:
@@ -2685,7 +2686,7 @@ class CausalAnalysisGraph:
 
         cons = containers_from_hyper_edges(G.functions[G.entry_point])
 
-        # TODO: @Tito implement this
+        # TODO: @Alex implement this
         return cls(
             uid=str(uuid.uuid4()),
             identifier=CAGIdentifier.from_GrFN_id(G.identifier),
@@ -2706,7 +2707,7 @@ class CausalAnalysisGraph:
         Returns:
             CausalAnalysisGraph: A CAG with all data from the JSON file
         """
-        # TODO: @Tito implement this
+        # TODO: @Alex implement this
         data = json.load(open(json_filepath, "r"))
         return NotImplemented
 

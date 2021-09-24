@@ -7,7 +7,10 @@ import argparse
 from automates.program_analysis.PyAST2CAST import py_ast_to_cast
 from automates.program_analysis.CAST2GrFN import cast
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
-from automates.model_assembly.networks import GroundedFunctionNetwork
+from automates.model_assembly.networks import (
+    GroundedFunctionNetwork,
+    CausalAnalysisGraph,
+)
 from automates.model_assembly.air import AutoMATES_IR
 
 
@@ -51,6 +54,18 @@ def main(args):
         print("Outputting expanded GrFN3 dotfile")
         grfn_file = args.python_filepath.replace(".py", "--GrFN3_expanded.dot")
         GrFN.to_dotfile(grfn_file, expand_expressions=True)
+
+    if args.gen_cag_json:
+        print("Outputting CAG JSON")
+        CAG = CausalAnalysisGraph.from_GrFN(GrFN)
+        cag_file = args.python_filepath.replace(".py", "--CAG.json")
+        print("Loading from CAG JSON")
+        CAG.to_json_file(cag_file)
+        if args.cag_json_eq:
+            print("Comparing constructed CAG to JSON loaded CAG")
+            saved_CAG = CausalAnalysisGraph.from_json_file(cag_file)
+            assert CAG == saved_CAG
+            print("CAGs are identical!")
 
     print("Done.")
 
@@ -134,6 +149,12 @@ if __name__ == "__main__":
         help="Setting this flag will generate GrFN JSON for the Python input file",
     )
     parser.add_argument(
+        "-cgj",
+        dest="gen_cag_json",
+        action="store_true",
+        help="Setting this flag will generate CAG JSON for the Python input file",
+    )
+    parser.add_argument(
         "-gp",
         dest="gen_grfn_pdf",
         action="store_true",
@@ -162,6 +183,12 @@ if __name__ == "__main__":
         dest="grfn_json_eq",
         action="store_true",
         help="Setting this flag will check whether the saved and reloaded GrFN from JSON is equivalent to the created GrFN",
+    )
+    parser.add_argument(
+        "-cgjeq",
+        dest="cag_json_eq",
+        action="store_true",
+        help="Setting this flag will check whether the saved and reloaded CAG from JSON is equivalent to the created GrFN",
     )
     parser.add_argument(
         "-astpp",

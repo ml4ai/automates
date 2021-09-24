@@ -8,7 +8,10 @@ from automates.program_analysis.CAST2GrFN import cast
 from automates.program_analysis.CAST2GrFN.cast import CAST
 from automates.program_analysis.CAST2GrFN.model.cast import SourceRef
 from automates.model_assembly.air import AutoMATES_IR
-from automates.model_assembly.networks import GroundedFunctionNetwork
+from automates.model_assembly.networks import (
+    CausalAnalysisGraph,
+    GroundedFunctionNetwork,
+)
 from automates.utils.misc import rd
 
 DATA_DIR = os.path.normpath(
@@ -59,6 +62,10 @@ def AIR2GrFN(air: AutoMATES_IR):
     return G
 
 
+def GrFN2CAG(grfn: GroundedFunctionNetwork):
+    return CausalAnalysisGraph.from_GrFN(grfn)
+
+
 # =============================================================================
 # LITERAL LANGUAGE TEST FIXTURES
 # -----------------------------------------------------------------------------
@@ -85,6 +92,11 @@ def literal_direct_assg_grfn(literal_direct_assg_air):
 
 
 @pytest.fixture
+def literal_direct_assg_cag(literal_direct_assg_grfn):
+    return GrFN2CAG(literal_direct_assg_grfn)
+
+
+@pytest.fixture
 def literal_in_stmt_path():
     return os.path.join(DATA_DIR, "literals", "literal_in_stmt")
 
@@ -102,6 +114,11 @@ def literal_in_stmt_air(literal_in_stmt_cast):
 @pytest.fixture
 def literal_in_stmt_grfn(literal_in_stmt_air):
     return AIR2GrFN(literal_in_stmt_air)
+
+
+@pytest.fixture
+def literal_in_stmt_cag(literal_in_stmt_grfn):
+    return GrFN2CAG(literal_in_stmt_grfn)
 
 
 # =============================================================================
@@ -125,3 +142,8 @@ def Simple_SIR_air(Simple_SIR_cast):
 @pytest.fixture
 def Simple_SIR_grfn(Simple_SIR_air):
     return AIR2GrFN(Simple_SIR_air)
+
+
+@pytest.fixture
+def Simple_SIR_cag(Simple_SIR_grfn):
+    return GrFN2CAG(Simple_SIR_grfn)
