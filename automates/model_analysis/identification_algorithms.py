@@ -353,7 +353,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
             # Subscripts should not be redundant (should not be ancestors of one-another)
             for orig_var in subscript_orig_vars:
-                if orig_var in gm.find_related_nodes_of(list(set(subscript_orig_vars)-orig_var), g, "in", "max"):
+                if orig_var in gm.find_related_nodes_of(list(set(subscript_orig_vars)-set(orig_var)), g, "in", "max"):
                     subscript_orig_vars.remove(orig_var)
 
             s_el_info = cg.vs.select(name_in=s_element)
@@ -389,9 +389,10 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         sub = []
         ev = []
         for node in s_single:
-            for int_val in node["int_values"]:
+            node_info = cg.vs.select(name=node)[0]
+            for int_val in node_info["int_values"]:
                 sub.append(int_val)
-            ev.append(node["obs_val"])
+            ev.append(node_info["obs_val"])
         if len(set(sub)-set(ev)) != 0:
             tree.call.line = 8
             tree.call.id_check = False
@@ -404,9 +405,10 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
             new_x = []
             var = []
             for node in s_single:
-                for int_var in node["int_vars"]:
+                node_info = cg.vs.select(name=node)[0]
+                for int_var in node_info["int_vars"]:
                     new_x.append(int_var)
-                var.append(node["orig_name"])
+                var.append(node_info["orig_name"])
             return gm.CfResultsInternal(gm.Probability(var=var, subscript=new_x), tree)
 
 
