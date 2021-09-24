@@ -3,21 +3,6 @@
         {
             "body": [
                 {
-                    "body": [],
-                    "name": "sys",
-                    "node_type": "Module",
-                    "source_refs": [
-                        {
-                            "col_end": 10,
-                            "col_start": 0,
-                            "node_type": "SourceRef",
-                            "row_end": 1,
-                            "row_start": 1,
-                            "source_file_name": "literal_in_stmt.py"
-                        }
-                    ]
-                },
-                {
                     "body": [
                         {
                             "left": {
@@ -172,174 +157,6 @@
                             "source_file_name": "literal_in_stmt.py"
                         }
                     ]
-                },
-                {
-                    "expr": {
-                        "arguments": [
-                            {
-                                "arguments": [
-                                    {
-                                        "arguments": [
-                                            {
-                                                "node_type": "Subscript",
-                                                "slice": {
-                                                    "node_type": "Number",
-                                                    "number": 1,
-                                                    "source_refs": [
-                                                        {
-                                                            "col_end": 25,
-                                                            "col_start": 24,
-                                                            "node_type": "SourceRef",
-                                                            "row_end": 9,
-                                                            "row_start": 9,
-                                                            "source_file_name": "literal_in_stmt.py"
-                                                        }
-                                                    ]
-                                                },
-                                                "source_refs": [
-                                                    {
-                                                        "col_end": 26,
-                                                        "col_start": 15,
-                                                        "node_type": "SourceRef",
-                                                        "row_end": 9,
-                                                        "row_start": 9,
-                                                        "source_file_name": "literal_in_stmt.py"
-                                                    }
-                                                ],
-                                                "value": {
-                                                    "attr": {
-                                                        "name": "argv",
-                                                        "node_type": "Name",
-                                                        "source_refs": [
-                                                            {
-                                                                "col_end": 23,
-                                                                "col_start": 15,
-                                                                "node_type": "SourceRef",
-                                                                "row_end": 9,
-                                                                "row_start": 9,
-                                                                "source_file_name": "literal_in_stmt.py"
-                                                            }
-                                                        ]
-                                                    },
-                                                    "node_type": "Attribute",
-                                                    "source_refs": [
-                                                        {
-                                                            "col_end": 23,
-                                                            "col_start": 15,
-                                                            "node_type": "SourceRef",
-                                                            "row_end": 9,
-                                                            "row_start": 9,
-                                                            "source_file_name": "literal_in_stmt.py"
-                                                        }
-                                                    ],
-                                                    "value": {
-                                                        "name": "sys",
-                                                        "node_type": "Name",
-                                                        "source_refs": [
-                                                            {
-                                                                "col_end": 18,
-                                                                "col_start": 15,
-                                                                "node_type": "SourceRef",
-                                                                "row_end": 9,
-                                                                "row_start": 9,
-                                                                "source_file_name": "literal_in_stmt.py"
-                                                            }
-                                                        ]
-                                                    }
-                                                }
-                                            }
-                                        ],
-                                        "func": {
-                                            "name": "int",
-                                            "node_type": "Name",
-                                            "source_refs": [
-                                                {
-                                                    "col_end": 27,
-                                                    "col_start": 11,
-                                                    "node_type": "SourceRef",
-                                                    "row_end": 9,
-                                                    "row_start": 9,
-                                                    "source_file_name": "literal_in_stmt.py"
-                                                }
-                                            ]
-                                        },
-                                        "node_type": "Call",
-                                        "source_refs": [
-                                            {
-                                                "col_end": 27,
-                                                "col_start": 11,
-                                                "node_type": "SourceRef",
-                                                "row_end": 9,
-                                                "row_start": 9,
-                                                "source_file_name": "literal_in_stmt.py"
-                                            }
-                                        ]
-                                    }
-                                ],
-                                "func": {
-                                    "name": "main",
-                                    "node_type": "Name",
-                                    "source_refs": [
-                                        {
-                                            "col_end": 28,
-                                            "col_start": 6,
-                                            "node_type": "SourceRef",
-                                            "row_end": 9,
-                                            "row_start": 9,
-                                            "source_file_name": "literal_in_stmt.py"
-                                        }
-                                    ]
-                                },
-                                "node_type": "Call",
-                                "source_refs": [
-                                    {
-                                        "col_end": 28,
-                                        "col_start": 6,
-                                        "node_type": "SourceRef",
-                                        "row_end": 9,
-                                        "row_start": 9,
-                                        "source_file_name": "literal_in_stmt.py"
-                                    }
-                                ]
-                            }
-                        ],
-                        "func": {
-                            "name": "print",
-                            "node_type": "Name",
-                            "source_refs": [
-                                {
-                                    "col_end": 29,
-                                    "col_start": 0,
-                                    "node_type": "SourceRef",
-                                    "row_end": 9,
-                                    "row_start": 9,
-                                    "source_file_name": "literal_in_stmt.py"
-                                }
-                            ]
-                        },
-                        "node_type": "Call",
-                        "source_refs": [
-                            {
-                                "col_end": 29,
-                                "col_start": 0,
-                                "node_type": "SourceRef",
-                                "row_end": 9,
-                                "row_start": 9,
-                                "source_file_name": "literal_in_stmt.py"
-                            }
-                        ]
-                    },
-                    "node_type": "Expr",
-                    "source_refs": [
-                        {
-                            "col_end": 29,
-                            "col_start": 0,
-                            "node_type": "SourceRef",
-                            "row_end": 9,
-                            "row_start": 9,
-                            "source_file_name": "literal_in_stmt.py"
-                        }
-                    ]
                 }
             ],
             "name": "literal_in_stmt",
@@ -350,7 +167,7 @@
                     "col_start": null,
                     "node_type": "SourceRef",
                     "row_end": [
-                        "import sys\n",
+                        "# import sys\n",
                         "\n",
                         "\n",
                         "def main(x):\n",
@@ -358,7 +175,7 @@
                         "    return x1\n",
                         "\n",
                         "\n",
-                        "print(main(int(sys.argv[1])))\n"
+                        "# print(main(int(sys.argv[1])))\n"
                     ],
                     "row_start": 1,
                     "source_file_name": "literal_in_stmt.py"

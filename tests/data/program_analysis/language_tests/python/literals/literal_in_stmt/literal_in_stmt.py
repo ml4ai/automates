@@ -1,4 +1,4 @@
-import sys
+# import sys
 
 
 def main(x):
@@ -6,4 +6,4 @@ def main(x):
     return x1
 
 
-print(main(int(sys.argv[1])))
+# print(main(int(sys.argv[1])))

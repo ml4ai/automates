@@ -7,43 +7,43 @@ strict digraph "" {
 	node [fontname=Menlo,
 		label="\N"
 	];
-	subgraph "cluster_Function::sys::literal_in_stmt::main::0" {
+	subgraph "cluster_Function::literal_in_stmt::literal_in_stmt::main::0" {
 		graph [color=forestgreen,
 			label=main,
 			rankdir=TB,
 			style="bold, rounded"
 		];
-		subgraph "cluster_Function::sys::literal_in_stmt.main::assign.x1::-1" {
+		subgraph "cluster_Function::literal_in_stmt::literal_in_stmt.main::assign.x1::0" {
 			graph [color=pink,
 				label="assign.x1",
 				rankdir=TB,
 				style="bold, rounded"
 			];
-			"Function::sys::literal_in_stmt.main.assign.x1::@literal::0"	[label=1,
+			"Function::literal_in_stmt::literal_in_stmt.main.assign.x1::@literal::0"	[label=1,
 				padding=10,
 				shape=rectangle];
-			"Variable::sys::literal_in_stmt.main.assign.x1::@anonymous::0"	[color=crimson,
+			"Variable::literal_in_stmt::literal_in_stmt.main.assign.x1::@anonymous::0"	[color=crimson,
 				fillcolor=white,
 				fontcolor=black,
 				label="--",
 				padding=15];
-			"Function::sys::literal_in_stmt.main.assign.x1::Add::0"	[label=Add,
+			"Function::literal_in_stmt::literal_in_stmt.main.assign.x1::Add::0"	[label=Add,
 				padding=10,
 				shape=rectangle];
 		}
-		"Variable::sys::literal_in_stmt.main::x::-1"	[color=crimson,
+		"Variable::literal_in_stmt::literal_in_stmt.main::x::-1"	[color=crimson,
 			fillcolor=white,
 			fontcolor=black,
 			label="x ",
 			padding=15];
-		"Variable::sys::literal_in_stmt.main::x1::-1"	[color=crimson,
+		"Variable::literal_in_stmt::literal_in_stmt.main::x1::0"	[color=crimson,
 			fillcolor=white,
 			fontcolor=black,
 			label="x1 ",
 			padding=15];
 	}
-	"Function::sys::literal_in_stmt.main.assign.x1::@literal::0" -> "Variable::sys::literal_in_stmt.main.assign.x1::@anonymous::0";
-	"Variable::sys::literal_in_stmt.main.assign.x1::@anonymous::0" -> "Function::sys::literal_in_stmt.main.assign.x1::Add::0";
-	"Function::sys::literal_in_stmt.main.assign.x1::Add::0" -> "Variable::sys::literal_in_stmt.main::x1::-1";
-	"Variable::sys::literal_in_stmt.main::x::-1" -> "Function::sys::literal_in_stmt.main.assign.x1::Add::0";
+	"Function::literal_in_stmt::literal_in_stmt.main.assign.x1::@literal::0" -> "Variable::literal_in_stmt::literal_in_stmt.main.assign.x1::@anonymous::0";
+	"Variable::literal_in_stmt::literal_in_stmt.main.assign.x1::@anonymous::0" -> "Function::literal_in_stmt::literal_in_stmt.main.assign.x1::Add::0";
+	"Function::literal_in_stmt::literal_in_stmt.main.assign.x1::Add::0" -> "Variable::literal_in_stmt::literal_in_stmt.main::x1::0";
+	"Variable::literal_in_stmt::literal_in_stmt.main::x::-1" -> "Function::literal_in_stmt::literal_in_stmt.main.assign.x1::Add::0";
 }

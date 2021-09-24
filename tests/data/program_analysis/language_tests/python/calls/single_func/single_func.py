@@ -1,4 +1,4 @@
-import sys
+# import sys
 
 
 def main(a, x1, x2):
@@ -11,10 +11,10 @@ def mutate(n, x1, x2):
     return mut_n
 
 
-print(
-    main(
-        int(sys.argv[1]),
-        int(sys.argv[2]),
-        int(sys.argv[3]),
-    )
-)
+# print(
+#     main(
+#         int(sys.argv[1]),
+#         int(sys.argv[2]),
+#         int(sys.argv[3]),
+#     )
+# )
