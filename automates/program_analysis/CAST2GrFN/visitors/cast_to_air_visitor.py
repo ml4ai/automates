@@ -587,7 +587,7 @@ class CASTToAIRVisitor(CASTVisitor):
                 )
                 assign_res = self.visit(arg_assign)
                 assign_res[-1].output_variables[-1].add_metadata(
-                    generate_from_source_metadata(False, "CONDITION_RESULT")
+                    generate_from_source_metadata(False, "LITERAL_FUNCTION_ARG")
                 )
                 arg_assign_lambdas.extend(assign_res)
                 input_vars.extend(assign_res[-1].output_variables)
