@@ -448,7 +448,9 @@ class GCC2CAST:
         for arg in arguments:
             cast_args.append(self.parse_operand(arg))
 
-        cast_call = Call(func=func_name, arguments=cast_args, source_refs=src_ref)
+        cast_call = Call(
+            func=Name(name=func_name), arguments=cast_args, source_refs=src_ref
+        )
         if "lhs" in stmt and stmt["lhs"] is not None:
             return self.parse_lhs(stmt, stmt["lhs"], cast_call)
 
