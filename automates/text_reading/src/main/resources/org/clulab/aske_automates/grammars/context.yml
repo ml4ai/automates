@@ -44,6 +44,9 @@ rules:
     example: "Rn = calculated net radiation at the crop surface (MJ m-2 d-1 for daily time steps or MJ m-2 h-1 for hourly time steps)"
     pattern: |
       (?<context> (?<! [lemma = /(depend|stand|base|prompt|result)/]) [tag = /IN/ & !lemma = /^of$|^as$|until|that/] [chunk = /B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/ & !word = /general|particular|fact|example|which|addition/] [chunk = /I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]* ([lemma = /^of$|^to$|^near$/] [chunk = /I-NP|B-NP/]+)* ([tag = /VBG|VBN/] [chunk = /B-NP|I-NP/]*)?)
+#      |
+#      (?<= (?<! [lemma = /(depend|stand|base|prompt|result)/]) [lemma = /(^for$|^at$|^on$|^with|^in$)/ & tag = "IN"]) (?<context> [chunk = /B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/ & !word = /general|particular|fact|example|which/] [chunk = /I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]* ([chunk = /B-PP/ & !word = /\./] [chunk = /B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/] [chunk = /I-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]*)* [tag = /VBN|VBD/]? ([chunk = /B-PP/ & !word = /\./] [chunk = /I-NP|B-NP/ & !tag = /CC/ & !tag = /-LRB-|-RRB-/]+)* ([chunk = /B-ADVP/]? [chunk = /B-VP/] [chunk = /B-ADVP/]? [chunk = /B-NP|I-NP/]*)?)
+    # note: B-VP needed? it produces some wrong outputs with verbs that are not part of the context
 
   - name: that_restriction
     label: Context
@@ -54,6 +57,19 @@ rules:
       (?<context> (?<= [chunk = /B-NP|I-NP/]) [lemma = /that|who/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP|I-ADJP|B-VP|I-VP/ & !word = "when"]* ([chunk = /B-PP/]? [chunk = /I-NP|B-NP/]+ [word = "step"]? [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
       |
       (?<context> [lemma = /which/] [chunk = /B-VP|I-VP/]+ [chunk = /B-ADVP|B-ADJP|I-ADJP/ & !word = "when"]* ([chunk = /B-PP/]? ([chunk = /I-NP|B-NP/ & !tag = /-LRB-|-RRB-/]|[tag = /^NN/])+ [chunk = /B-ADVP/]?)* ([tag = CC] [chunk = /B-VP|I-VP/]+ [chunk = /B-NP|I-NP/]* [chunk = B-ADVP]? (${PP+NP})?)?)
+#      |
+#      (?<context> (?<= [lemma = "assume"] [lemma = /that/]) [chunk = /B-NP|I-NP/]+ (${PP+NP})? [word = "and"] [chunk = /B-NP|I-NP/]+ (${PP+NP})?)
+    # note: the last [word = "step"] part was added due to the bad parsing.
+
+# note: this rule interferes with preposition_context rule (due to keepLongest) - needs to be fixed
+#  - name: preposition_context_for_conj
+#    label: Context
+#    priority: ${priority}
+#    type: dependency
+#    example: "Simulations of crop development and growth for over 28 crops are possible, including the CERES family of models for maize and sorghum and the CROPGRO family of models for soybean and cotton."
+#    pattern: |
+#      trigger = (?<! [lemma = /(stand|prompt|result)/]) [word = /for|with|in/] (?! [lemma = /fact|example|which/])
+#      context:Phrase = <case conj_and
 
   - name: fronted_adverbials
     label: Context
@@ -104,3 +120,21 @@ rules:
     example: "Suppose we increase the r parameter by 1 % to have r = 9.88588 x 10 - 8 , then R infinity will become 116464."
     pattern: |
       (?<context> [lemma = "suppose"] [chunk = /I-NP|B-NP/]+ [chunk = /B-VP|I-VP/]+ [chunk = /I-NP|B-NP/]* (${PP+NP})* ([tag = "TO"] [chunk = /I-VP/] ([chunk = /B-NP|I-NP/]|[word = "-"])*)?)
+
+  ### Variable Liveness ###
+  - name: case_a
+    label: Context
+    priority: ${priority}
+    type: token
+    example: "Case a First , we assume that IP ( 0 ) = 0.5 million , that is 0.5 mil - lion Hong Kong people are infected by disease B."
+    pattern: |
+      (?<context> [lemma = /case|Case/] [word = /\b[a-z]\b|\b[A-Z]\b|\d/])
+
+  - name: model_name
+    label: Context
+    priority: ${priority}
+    type: dependency
+    example: "We shall apply the SEIRP model to study the outbreak of SARS in Hong Kong."
+    pattern: |
+      trigger = [word = /[Mm]odel/]
+      context: Phrase = compound

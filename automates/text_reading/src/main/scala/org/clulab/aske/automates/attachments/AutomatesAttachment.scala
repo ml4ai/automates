@@ -126,5 +126,4 @@ class FunctionAttachment(attType: String, trigger: String, foundBy: String) exte
     toReturn("foundBy") = foundBy
     toReturn
   }
-
 }
