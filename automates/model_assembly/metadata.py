@@ -416,6 +416,7 @@ class VariableCreationReason(AutoMATESBaseEnum):
     COMPLEX_RETURN_EXPR = auto()
     CONDITION_RESULT = auto()
     LOOP_EXIT_VAR = auto()
+    LITERAL_FUNCTION_ARG = auto()
 
     def __str__(self):
         return str(self.name)

@@ -153,7 +153,7 @@ class CASTFunctionCallVisitor(CASTVisitor):
 
     @visit.register
     def _(self, node: Module):
-        return {k: v for k, v in self.visit(node.body)}
+        return {item[0]: item[1] for item in self.visit(node.body) if len(item) == 2}
 
     @visit.register
     def _(self, node: Name):
