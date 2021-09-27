@@ -262,7 +262,6 @@ class LambdaNode(GenericNode):
                 res = self.function()
             return self.parse_result(values, res)
         except Exception as e:
-            print(f"Exception occured in {self.func_str}")
             raise GrFNExecutionException(e)
 
     def parse_result(self, values, res):
@@ -291,7 +290,6 @@ class LambdaNode(GenericNode):
                 elif isinstance(res, bool):
                     res = np.full(self.np_shape, res, dtype=bool)
                 elif isinstance(res, list):
-                    # res = [np.array(res)] * self.np_shape[0]
                     res = np.array([res] * self.np_shape[0])
                 else:
                     res = np.full(self.np_shape, res)

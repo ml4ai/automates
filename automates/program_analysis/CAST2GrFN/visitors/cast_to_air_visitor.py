@@ -75,7 +75,7 @@ def generate_from_source_metadata(from_source: bool, reason: str):
                 "method": "PROGRAM_ANALYSIS_PIPELINE",
                 "timestamp": datetime.now(),
             },
-            "from_source": from_source,
+            "from_source": str(from_source),
             "creation_reason": reason,
         }
     )
