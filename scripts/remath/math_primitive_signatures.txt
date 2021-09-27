@@ -1,0 +1,15 @@
+## START primitives
+int         add_int_int(int, int);           +
+float       add_int_float(int, float);       +
+float       add_float_int(float, int);       +
+int         sub_int_int(int, int);           -
+float       sub_int_float(int, float);       -
+float       sub_float_int(float, int);       -
+int         mul_int_int(int, int);           *
+float       mul_int_float(int, float);       *
+float       mul_float_int(float, int);       *
+int         div_int_int(int, int);           /
+float       div_int_float(int, float);       /
+float       div_float_int(float, int);       /
+int         mod_int_int(int, int);           %   # can only take int
+## END primitives
