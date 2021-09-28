@@ -34,9 +34,9 @@ object ExtractAndExport extends App {
   val config = ConfigFactory.load()
 
   val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
-  val inputDir: String = "/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
-  val outputDir: String = "/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
-  val inputType = config[String]("apps.inputType")
+  val inputDir: String = config[String]("apps.inputDirectory")//"/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
+  val outputDir: String = config[String]("apps.outputDirectory")//"/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
+  val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
 //  val dataLoader = new ScienceParsedDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")

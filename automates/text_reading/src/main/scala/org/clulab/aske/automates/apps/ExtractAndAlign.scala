@@ -243,8 +243,9 @@ object ExtractAndAlign {
       val glVarID = randomUUID().toString()
       val identifier = gr._1//AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap); for now, don't convert: text vars are already symbols and comments shouldnt be converted except for during alignment
       val identifierComponents = if (identifier.contains("_")) {
-        if (!identifier.split("_").map(_.length).contains(1)) {
-          identifier.split("_").filter(_.length > 1).toSeq
+        val splitIdentifier = identifier.split("_")
+        if (!splitIdentifier.map(_.length).contains(1)) {
+          splitIdentifier.filter(_.length > 1).toSeq
         } else Seq.empty
       } else Seq.empty
 //      println("IDENTIFIER: " + identifier)

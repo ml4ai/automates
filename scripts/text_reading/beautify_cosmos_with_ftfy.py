@@ -1,7 +1,8 @@
 import argparse
-import ftfy
 import json
 import os
+
+import ftfy
 
 parser = argparse.ArgumentParser()
 parser.add_argument("cosmos_dir", help="path to cosmos json file to prettify")
@@ -16,18 +17,18 @@ for input_file in os.listdir(input_dir):
     if input_file.endswith("--COSMOS-data.json"):
         print("using file")
 
-        f = open(os.path.join(input_dir, input_file))
-        loaded_json = json.load(f)
+        with open(os.path.join(input_dir, input_file)) as infile:
+            loaded_json = json.load(infile)
 
-        # updating content with its ftfy-ied version
-        for item in loaded_json:
-            # print("item: ", item)
-            item["content"] = ftfy.fix_text(item["content"])
+            # updating content with its ftfy-ied version
+            for item in loaded_json:
+                # print("item: ", item)
+                item["content"] = ftfy.fix_text(item["content"])
 
 
 
-        # the json file where the output must be stored
-        out_file_path = os.path.join(output_dir, input_file.replace("--COSMOS-data.json", "--pretty--COSMOS-data.json"))
-        print("out file path: " + out_file_path)
-        out_file = open(out_file_path, "w")
-        json.dump(loaded_json, out_file)
+            # the json file where the output must be stored
+            out_file_path = os.path.join(output_dir, input_file.replace("--COSMOS-data.json", "--pretty--COSMOS-data.json"))
+            print("out file path: " + out_file_path)
+            with open(out_file_path, "w") as out_file:
+                json.dump(loaded_json, out_file)

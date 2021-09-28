@@ -148,7 +148,7 @@ def groundTermsToWikidataRanked(variable: String, terms_with_underscores: Seq[St
 
   def editDistanceNormalized(s1: String, s2: String): Double = {
     val maxLength = math.max(s1.length, s2.length)
-    val levenshteinDist = LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
+    val levenshteinDist = editDistance(s1, s2)
     val normalizedDist = (maxLength - levenshteinDist) / maxLength
     normalizedDist
   }

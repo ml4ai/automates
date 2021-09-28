@@ -226,12 +226,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // for each block, we load the text (content) and the location of the text (page_num and block order/index on the page)
     val loader = new CosmosJsonDataLoader
     val textsAndLocations = loader.loadFile(jsonPath)
-    val texts = textsAndLocations.map(_.split("<::>").slice(0,2).mkString("<::>"))
+    val textsAndFilenames = textsAndLocations.map(_.split("<::>").slice(0,2).mkString("<::>"))
     val locations = textsAndLocations.map(_.split("<::>").takeRight(2).mkString("<::>")) //location = pageNum::blockIdx
 
     println("started extracting")
     // extract mentions form each text block
-    val mentions = texts.map(t => ieSystem.extractFromText(t.split("<::>").head, keepText = true, Some(t.split("<::>").last)))
+    val mentions = for (tf <- textsAndFilenames) yield {
+      val Array(text, filename) = tf.split("<::>")
+      ieSystem.extractFromText(text, keepText = true, Some(filename))
+    }
 
     // store location information from cosmos as an attachment for each mention
     val menWInd = mentions.zipWithIndex
