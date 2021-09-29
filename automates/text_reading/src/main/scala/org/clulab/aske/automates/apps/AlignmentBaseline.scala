@@ -541,11 +541,11 @@ object AlignmentBaseline {
   }
 
   def render(formula: String, pdfalignDir: String): String = {
-    println("trying to render")
+//    println("trying to render")
     val command = Seq("python", s"$pdfalignDir/align_latex/normalize.py", "render", formula.trim)
-    println("after creating command")
+//    println("after creating command")
     val process = Process(command, new File(s"$pdfalignDir/align_latex"))
-    println("after process: " + process.!!)
+//    println("after process: " + process.!!)
     process.!!
   }
 
