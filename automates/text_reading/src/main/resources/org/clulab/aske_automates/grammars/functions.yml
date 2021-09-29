@@ -12,9 +12,8 @@ rules:
     example: "Transpiration rate is also influenced by crop characteristics, environmental aspects and cultivation practices."
     pattern: |
       trigger = [lemma = /${functionTrigger1}/]
-      input:Phrase+ = nmod_agent | nmod_because_of? nmod_by | <amod <nsubj
-      output:Phrase = nsubjpass | <acl_as | <amod | <dep nsubj
-#      context:Context? = ${context}
+      input:Phrase+ = nmod_agent nmod_including? | nmod_because_of? nmod_by | <amod <nsubj
+      output:Phrase = nsubjpass | <acl_as | <amod | <dep nsubj | <acl
 
   - name: trigger2_of # product, inverse, sum, mean, composite, minimum, maximum, function is the trigger for this rule
     label: Function
@@ -25,7 +24,7 @@ rules:
     pattern: |
       trigger = [word = /${functionTrigger2}/] (?= "of")
       input:Phrase+ = nmod_of conj_and? | conj_and | nmod_of (nmod_of)? conj_and | appos | nmod_in appos
-      output:Phrase = (csubj|<nmod_to|<dobj)? nsubj | <nmod_as (<acl | nsubjpass | dobj)? | <nsubj ccomp nummod | <dep
+      output:Phrase = (csubj|<nmod_to|<dobj)? (nsubj | nmod_as) [!tag = PRP] | <nmod_as (<acl | nsubjpass | dobj)? | <nsubj ccomp nummod | <dep [!tag = PRP]
 
   - name: trigger3 # estimate, calculate, compute, determine, predict is the trigger for this rule
     label: Function
@@ -67,7 +66,7 @@ rules:
     action: ${action}
     example: "The evaporation from the plant surfaces Ep is predicted by using an empirical relation based on local data..."
     pattern: |
-      trigger = (?<= [lemma = /${functionTrigger5}/] [word = "by"]) [word = /.*/ & tag = /VBG/]
+      trigger = (?<= [lemma = /${functionTrigger5}/] [word = "by"]) [tag = /VBG/]
       input:Phrase+ = dobj | nmod_by
       output:Phrase = <advcl_by nsubjpass | <acl | nsubjpass
 
@@ -117,7 +116,7 @@ rules:
     pattern: |
       trigger = [lemma = "divide"]
       input:Phrase+ = dobj | <acl | nmod_by | nmod_with
-      output:Phrase = nsubjpass | <acl <nmod_as (nmod_since | <acl)
+      output:Phrase = nsubjpass | <acl <nmod_as (nmod_since | <acl) | <acl <nmod_of <nmod_to nsubj | <acl <nmod_to <amod
 
   #double_epidemic
 
@@ -189,9 +188,9 @@ rules:
     action: ${action}
     example: "Transport of N through the soil to deeper layers is based on water flux values obtained from the soil water module."
     pattern: |
-      trigger = (?<=[lemma = "be"]) [lemma = "base"] (?="on")
-      input:Phrase+ = nmod_on
-      output:Phrase = nsubjpass
+      trigger = [word = "based"] (?="on")
+      input:Phrase+ = nmod_on | <case
+      output:Phrase = nsubjpass | <case <nmod_based_on
 
   - name: depend(ent)_on
     label: Function
@@ -215,15 +214,15 @@ rules:
       input:Phrase+ = nsubjpass
       output:Phrase = xcomp dobj
 
-  - name: contribute_to
+  - name: contribute_lead_to
     label: Function
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "Protein and carbohydrate mobilized from vegetative tissue contribute to seed growth while photosynthesis declines."
     pattern: |
-      trigger = [lemma = "contribute"] (?= "to")
-      input:Phrase+ = nsubj
+      trigger = [lemma = /contribute|lead/] (?= "to")
+      input:Phrase+ = nsubj | <conj_and
       output:Phrase = nmod_to
 
   - name: sensitive_to
@@ -233,9 +232,10 @@ rules:
     action: ${action}
     example: "simulations are clearly sensitive to the maximum refugee move speed parameter, and in particular move speeds below 100km/day result in significantly higher validation errors"
     pattern: |
-      trigger = [lemma = "sensitive"] (?= "to")
-      input:Phrase+ = nsubj
+      trigger = [tag = /JJ/]? [lemma = /sensitiv/] (?= "to")
+      input:Phrase+ = <dobj? nsubj
       output:Phrase = nmod_to
+      # note: the trigger was set as /sensitiv/ with the purpose of capturing both "sensitive" and "sensitivity"
 
   - name: function_defined_by
     label: Function
@@ -255,7 +255,7 @@ rules:
     action: ${action}
     example: "The only factors affecting ETo are climatic parameters..."
     pattern: |
-      trigger = (?<! "not") [lemma = /affect|limit|influence/]
+      trigger = (?<! "not") [lemma = /affect|limit|influence|impact|cause/]
       input:Phrase+ = <acl <nsubj | nsubj
       output:Phrase = dobj
 
@@ -356,8 +356,8 @@ rules:
     action: ${action}
     example: "A modified Priestley–Taylor (PT) model was developed, incorporating the effect of leaf area, soil moisture, mulching fraction and leaf senescence on ET."
     pattern: |
-      trigger = [lemma = "effect"]
-      input:Phrase+ = nmod_of
+      trigger = [tag = /JJ/]* [lemma = "effect"]
+      input:Phrase+ = nmod_of | <dobj nsubj
       output:Phrase = nmod_on
 
   - name: factors_controlling_output
@@ -402,7 +402,7 @@ rules:
     example: "move speeds below 100km/day result in significantly higher validation errors."
     pattern: |
       trigger = [lemma = /result/] (?= "in")
-      input:Phrase+ = nsubj
+      input:Phrase+ = nsubj | <acl
       output:Phrase = nmod_in
 
   # function rules allowing for partial extraction
@@ -457,9 +457,9 @@ rules:
     action: ${action}
     example: "the large-scale parameters must include sea-surface temperature and wind, temperature and humidity at the lowest layers of the model, and some measure of stability if this lowest level is more than a few meters above the surface."
     pattern: |
-      trigger = (?<= [lemma = "parameter"] [tag = /MD/]?) [lemma = /include|appear/]
-      input:Phrase+ = dobj | <advcl_so_that conj_and | nmod_in nmod_of (nmod_such_as | conj_and)
-      output:Phrase? = <advcl_so_that nsubjpass
+      trigger = (?<= [lemma = /parameter|cause/] [tag = /MD/]? (${PP+NP})?) [lemma = /include|appear/]
+      input:Phrase+ = dobj (nmod_such_as | conj_and)? | <advcl_so_that conj_and | nmod_in nmod_of (nmod_such_as | conj_and)
+      output:Phrase? = <advcl_so_that nsubjpass | nsubj nmod_of
 
   - name: additional_parameter
     label: Function
@@ -472,39 +472,83 @@ rules:
       input:Phrase+ = <amod <nsubj [!tag = /JJ/] | <amod dep
       output:Phrase? = <amod <nsubjpass xcomp dobj
 
-#  - name: output_is_calculated
+  - name: causal_factor
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Several groups identified sets of other causal factors that lead to forced displacement, including conflicts, ethnic or religious differences, and existential obstacles such as severe ecological decline5,6."
+    pattern: |
+      trigger = (?<= [word = "causal"]) [lemma = /factor/]
+      input:Phrase+ = <nsubj nmod_to (nmod_including | conj_and)
+      output:Phrase? = <nsubj nmod_to
+
+  - name: calculate_using_input
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "We calculate the MASE score using the aforementioned averaged relative difference at each time step, as follows:"
+    pattern: |
+      trigger = [word = "calculate"]
+      input:Phrase+ = xcomp dobj amod?
+      output:Phrase = dobj
+
+  # rules denoting change in status (lost, reduce, increase, etc.) - are these count as function relations??
+
+  - name: increase
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "our error increases if we choose much lower travel limits."
+    pattern: |
+      trigger = [lemma = /increase/]
+      input:Phrase = nsubj
+
+  - name: reduce
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "COVID-19-related lockdowns can impact agriculture directly (mainly through restrictions to farm labour, which is one factor that can reduce yields)"
+    pattern: |
+      trigger = [lemma = /reduce/]
+      input:Phrase = nsubj nsubj | <amod <nmod_in
+      output:Phrase = dobj | <amod
+
+  - name: loss_of
+    label: Function
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "For instance, a 1-in-20-year shortfall means a loss of about 15% of the average maize harvest in Kenya, or around 7% of the average maize harvest in Pakistan."
+    pattern: |
+      trigger = [lemma = /loss/] (?= "of")
+      input:Phrase = <dobj nsubj
+      output:Phrase = nmod_of
+
+#  - name: lost_by # needs to see if this rule is a viable one
 #    label: Function
 #    priority: ${priority}
 #    type: dependency
 #    action: ${action}
-#    example: "The only additional parameter appearing in the suggested formula is the extraterrestrial radiation, RA."
+#    example: "More than 90% of water used in agriculture is lost by soil evaporation and crop transpiration (Rana and Katerji, 2000)."
 #    pattern: |
-#      trigger = [word = "calculated"]
-#      output:Phrase = nsubjpass
-
-  # rules denoting change in status (lost, reduce, increase, etc.) - are these count as function relations??
-
-  - name: lost_by # needs to see if this rule is a viable one
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "More than 90% of water used in agriculture is lost by soil evaporation and crop transpiration (Rana and Katerji, 2000)."
-    pattern: |
-      trigger = (?<= [word = "lost"] [word = "by"]) [word = /.*/]{,2} ([word = "and"] [word = /.*/]{,2})?
-      input:Phrase = <nmod_agent nsubjpass nmod_of
-      output:Phrase = <nmod_agent
-
-  - name: reduce_when # needs to see if this rule is a viable one
-    label: Function
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Previous studies indicated that maize height and LAI would reduce when suffering water deficit during the early growing stage (Allen et al., 1998; Kang et al., 2000)."
-    pattern: |
-      trigger = (?<= [lemma = "reduce"] [word = "when"]) [word = /.*/]+
-      input:Phrase+ = <advcl nsubj
-#      output:Phrase = <advcl aux
+#      trigger = (?<= [word = "lost"] [word = "by"]) [word = /.*/]{,2} ([word = "and"] [word = /.*/]{,2})?
+#      input:Phrase = <nmod_agent nsubjpass nmod_of
+#      output:Phrase = <nmod_agent
+#
+#  - name: reduce_when # needs to see if this rule is a viable one
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Previous studies indicated that maize height and LAI would reduce when suffering water deficit during the early growing stage (Allen et al., 1998; Kang et al., 2000)."
+#    pattern: |
+#      trigger = (?<= [lemma = "reduce"] [word = "when"]) [word = /.*/]+
+#      input:Phrase+ = <advcl nsubj
+##      output:Phrase = <advcl aux
 
   - name: input_lessen # needs to see if this rule is a viable one
     label: Function

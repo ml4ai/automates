@@ -563,7 +563,7 @@ object ExpansionHandler {
     "acl:relcl".r,
     "^nmod_for".r,
     "nmod_at".r,
-//    "^nmod_of".r,
+    "^nmod_of".r,
     "nmod_under".r,
 //    "nmod_in".r
 //    "aux".r
@@ -595,7 +595,7 @@ object ExpansionHandler {
 //    "nmod_in".r,
     //    "nmod_by".r,
     //    "nummod".r,
-    "^nsubj".r,
+//    "^nsubj".r,
     "^punct".r,
     "^ref$".r,
     "appos".r,
@@ -620,6 +620,7 @@ object ExpansionHandler {
     //    "^nmod_of".r,
     "nmod_under".r,
     "nsubj:xsubj".r,
+    "nsubj".r,
   //    "nmod_in".r
   //    "aux".r
   )

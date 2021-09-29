@@ -184,8 +184,8 @@ rules:
     action: modelArguments
     example: ""
     pattern: |
-      trigger = [word = /[Mm]odel$/]
-      variable:Phrase = compound | amod
+      trigger = [word = /[Mm]odel[s]$/] | [word = "modelling"]
+      modelName:Phrase = compound | amod
 
   - name: the/this_model
     label: Model
@@ -201,7 +201,15 @@ rules:
     type: token
     example: ""
     pattern: |
-      [word = /[Oo]ur/] [tag = /JJ/]? [word=/model$/]
+      [word = /[Oo]ur/] [tag = /JJ/]? [word=/model$|simulation|approach/]
+
+  - name: model_compound_token
+    label: Model
+    priority: ${priority1}
+    type: token
+    example: ""
+    pattern: |
+      [chunk = /B-NP|I-NP/ & !tag = /DT/]+ [word=/model$|simulation|approach/ & chunk = /I-NP/]
 
 #  - name: var_greek_and_latin
 #    label: Identifier

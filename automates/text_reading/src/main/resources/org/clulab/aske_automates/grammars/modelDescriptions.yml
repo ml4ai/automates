@@ -3,7 +3,6 @@ vars: org/clulab/aske_automates/grammars/vars.yml
 rules:
 
 ## TODO: coreferencing (the model, our model, this, it...) needs to be addressed.
-## TODO: expansionHandler needs to be adjusted to fit these cases.
 
 # This rule is not complete. Description part needs to be adjusted.
   - name: model_suggests
@@ -46,6 +45,17 @@ rules:
       model:Model = <neg nsubj
       modelDescr:Phrase = <neg
 
+  - name: model_not_adj
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "However, existing early warning models of forced migration focus on understanding the causes9 and are not as successful in predicting refugee movements as in predicting natural disasters10–12."
+    pattern: |
+      trigger = [word = "not"] [word = /as/]? [tag = /JJ/]
+      model:Model = <conj_and
+      modelDescr:Phrase = advcl_in
+
   - name: model_cop
     label: ModelDescr
     priority: ${priority}
@@ -65,8 +75,8 @@ rules:
     example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
     pattern: |
       trigger = [lemma = /predict|understand|investigate|examine/]
-      model:Model = <acl_to <dobj nsubj | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
-      modelDescr:Phrase = dobj
+      model:Model = <acl_to (<dobj nsubj)? | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
+      modelDescr:Phrase = dobj | ccomp
 
     # how do we know if "This" is referencing to a model?
   - name: model_allows_for
@@ -135,6 +145,17 @@ rules:
       model:Model = <acl
       modelDescr:Phrase = nmod_of
 
+  - name: model_applied_to
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Computational models have been widely applied to study migration processes."
+    pattern: |
+      trigger = [lemma = "apply"]
+      model:Model = nsubjpass | dobj
+      modelDescr:Phrase = xcomp | advcl_to
+
   - name: modelPurpose
     label: ModelDescr
     priority: ${priority}
@@ -157,15 +178,15 @@ rules:
       model:Model = nsubjpass
       modelDescr:Phrase+ = nmod_in
 
-  - name: modelOffers
+  - name: modelVerbs
     label: ModelDescr
     priority: ${priority}
     type: dependency
     action: ${action}
     example: "Our model also offers an opportunity to further decompose the different contributions to annual price variability."
     pattern: |
-      trigger = [lemma = /offer|provide/]
-      model:Model = nsubj (compound)?
+      trigger = [lemma = /offer|provide|reproduce/]
+      model:Model = nsubj (compound)? | <xcomp advcl dobj
       modelDescr:Phrase = dobj
 
   - name: modelCharacteristic
@@ -189,3 +210,23 @@ rules:
       trigger = [word = "version"]
       model:Model = nsubj compound?
       modelDescr:Model+ = nmod_of
+
+  - name: modelFocus
+    label: ModelDescr
+    priority: ${priority}
+    type: token
+    action: ${action}
+    example: "However, existing early warning models of forced migration focus on understanding the causes9 and are not as successful in predicting refugee movements as in predicting natural disasters10–12."
+    pattern: |
+      @model:Model (${PP+NP})? (?<trigger> [word = "focus"] [word = "on"]) (?<modelDescr> [tag = /VBG/] [chunk = /B-NP|I-NP/]*)
+
+  - name: apply_model_in_order_to
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "In this paper, we apply a global, annual supply-demand equilibrium model in order to quantify to what degree i) observed annual wheat price fluctuations over the last four decades can be explained by reported variations in production in the presence of dynamic storage; and ii) the remaining unexplained price variations in the last decade can be traced back to reported trade policy responses in the wheat market, as opposed to external drivers."
+    pattern: |
+      trigger = [word = "apply"]
+      model:Model = dobj
+      modelDescr:Phrase = advcl_in_order
