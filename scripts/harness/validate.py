@@ -3,6 +3,7 @@ import json
 import csv
 import random
 import shutil
+import math
 
 from enum import Enum, auto
 from posix import O_APPEND
@@ -27,13 +28,16 @@ def mkdir_p(dir):
         os.mkdir(dir)
 
 
-def report_error(error_type, msg):
-    if error_type == "GCC":
-        return f"{error_type}: {msg}"
-    elif error_type == "CAST":
-        return f"{error_type}: {msg}"
-    elif error_type == "GrFN":
-        return f"{error_type}: {msg}"
+def select_manual_samples(successful, dir):
+
+    num_success = len(successful)
+    manual_samples_indices = random.sample(
+        range(num_success), math.ceil(num_success / 100)
+    )
+    json.dump(
+        {"samplesToManuallyVerify": [successful[i][0] for i in manual_samples_indices]},
+        open(f"{dir}/manualSamples.json", "w"),
+    )
 
 
 def test_execution(grfn):
@@ -155,6 +159,7 @@ def validate_many_single_directory(directory, result_location):
             validate_results.append(validate_example(example_name, [example], dir_name))
 
     write_results_to_csv(validate_results, validate_csv_file_writer)
+    select_manual_samples(validate_results, result_location)
 
 
 def validate_example_per_directory(root_directory, result_location):
@@ -179,3 +184,4 @@ def validate_example_per_directory(root_directory, result_location):
     print(f"Successful examples: {len(successful)}")
 
     write_results_to_csv(validate_results, validate_csv_file_writer)
+    select_manual_samples(successful, result_location)
