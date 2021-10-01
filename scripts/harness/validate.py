@@ -2,6 +2,7 @@ import os
 import json
 import csv
 import random
+import shutil
 
 from enum import Enum, auto
 from posix import O_APPEND
@@ -19,6 +20,11 @@ class ValidationResult(Enum):
     GCC_AST_TO_CAST_ERROR = auto()
     CAST_TO_GRFN_ERROR = auto()
     GRFN_EXECUTION_ERROR = auto()
+
+
+def mkdir_p(dir):
+    if not os.path.exists(dir):
+        os.mkdir(dir)
 
 
 def report_error(error_type, msg):
@@ -42,7 +48,9 @@ def test_execution(grfn):
 def validate_example(example_name, example_files, path):
     example_c_files = [f"{path}/{f}" for f in example_files if f.endswith(".c")]
     try:
-        gcc_ast_files = run_gcc_plugin("c", example_c_files, GCC_PLUGIN_IMAGE_DIR)
+        gcc_ast_files = run_gcc_plugin(
+            "c", example_c_files, GCC_PLUGIN_IMAGE_DIR, compile_binary=True
+        )
     except Exception as e:
         # TODO actually catch exception
         return (
@@ -51,8 +59,16 @@ def validate_example(example_name, example_files, path):
             str(e),
         )
 
+    # Move gcc AST files and binary if compilation works
+    new_gcc_ast_file_paths = list()
+    for gcc_ast_file in gcc_ast_files:
+        new_path = f"{path}/{gcc_ast_file}"
+        shutil.move(gcc_ast_file, new_path)
+    new_gcc_ast_file_paths.append(new_path)
+    shutil.move("./a.out", f"{path}/{example_name}")
+
     try:
-        gcc_asts = [json.load(open(a)) for a in gcc_ast_files]
+        gcc_asts = [json.load(open(a)) for a in new_gcc_ast_file_paths]
     except Exception as e:
         # TODO specify exception
         return (
@@ -71,6 +87,8 @@ def validate_example(example_name, example_files, path):
             str(e),
         )
 
+    json.dump(cast.to_json_object(), open(f"{path}/{example_name}--CAST.json", "w"))
+
     try:
         grfn = cast.to_GrFN()
     except Exception as e:
@@ -80,6 +98,8 @@ def validate_example(example_name, example_files, path):
             ValidationResult.CAST_TO_GRFN_ERROR,
             str(e),
         )
+
+    grfn.to_json_file(f"{path}/{example_name}--GrFN.json")
 
     try:
         test_execution(grfn)
@@ -98,7 +118,7 @@ def open_results_csv_writer(result_location):
         print(
             f'Error: Unable to access results location "{result_location}", stopping '
         )
-        return
+        return None
 
     validate_csv_file_writer = csv.writer(
         validate_csv_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -118,11 +138,21 @@ def write_results_to_csv(validate_results, validate_csv_file_writer):
 def validate_many_single_directory(directory, result_location):
     validate_results = list()
     validate_csv_file_writer = open_results_csv_writer(result_location)
+    if validate_csv_file_writer == None:
+        return
+
+    mkdir_p(f"{result_location}/results/")
 
     example_files = os.listdir(directory)
     for example in example_files:
         if example.endswith(".c"):
-            validate_results.append(validate_example(example, [example], directory))
+            example_name = "".join(example.rsplit(".", 1)[:-1])
+            dir_name = f"{result_location}/results/{example_name}"
+
+            mkdir_p(dir_name)
+            shutil.copy2(f"{directory}/{example}", f"{dir_name}")
+
+            validate_results.append(validate_example(example_name, [example], dir_name))
 
     write_results_to_csv(validate_results, validate_csv_file_writer)
 
@@ -130,6 +160,8 @@ def validate_many_single_directory(directory, result_location):
 def validate_example_per_directory(root_directory, result_location):
     validate_results = list()
     validate_csv_file_writer = open_results_csv_writer(result_location)
+    if validate_csv_file_writer == None:
+        return
 
     directories = os.listdir(root_directory)
     for example_directory_name in directories:

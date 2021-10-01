@@ -4,24 +4,27 @@ import subprocess
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 
 
-def run_gcc(compiler_name, full_plugin_path, input_files):
+def run_gcc(compiler_name, full_plugin_path, input_files, compile_binary, no_optimize):
+    command = [
+        f"{GCC_10_BIN_DIRECTORY}/{compiler_name}",
+        f"-fplugin={full_plugin_path}",
+    ]
+
+    if no_optimize:
+        command.append("-O0")
+
+    if not compile_binary and len(input_files) == 1:
+        command.append("-c")
+
+    command.extend(input_files)
+
+    if not compile_binary:
+        command.extend(["-o", "/dev/null"])
+
     # Runs gcc with the given source file. This should create the file ast.json
     # with the programs ast inside of it.
     results = subprocess.run(
-        [
-            f"{GCC_10_BIN_DIRECTORY}/{compiler_name}",
-            f"-fplugin={full_plugin_path}",
-            "-O0",
-            # Need to use -c if only one file in order to make a .o file
-            "-c" if len(input_files) == 1 else "",
-            # "-x",
-            # "c++",
-        ]
-        + input_files
-        + [
-            "-o",
-            "/dev/null",
-        ],
+        command,
         stdout=subprocess.DEVNULL,
         errors=True,
     )
@@ -46,7 +49,9 @@ def gather_ast_files(input_files):
     return ast_file_names
 
 
-def run_gcc_plugin(language, input_files, plugin_location="./"):
+def run_gcc_plugin(
+    language, input_files, plugin_location="./", compile_binary=False, no_optimize=True
+):
     """
     Runs the GCC ast dump plugin to create an AST file for each individual
     input code file. Then it returns the name of the created AST files.
@@ -85,7 +90,9 @@ def run_gcc_plugin(language, input_files, plugin_location="./"):
         full_plugin_path
     ), f"Error: GCC AST dump plugin does not exist at expected location: {full_plugin_path}"
 
-    results = run_gcc(compiler, full_plugin_path, input_files)
+    results = run_gcc(
+        compiler, full_plugin_path, input_files, compile_binary, no_optimize
+    )
     # Assert return code is 0 which is success
     assert results[
         0
