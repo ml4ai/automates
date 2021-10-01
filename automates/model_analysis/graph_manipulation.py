@@ -333,7 +333,7 @@ def parse_joint(p, v, cond, var, topo):
     return p_new
 
 
-def wrap_d_sep(g, x, y, z):
+def wrap_d_sep(g, x, y, z=None):
     """
     Does some quick checks before testing d-separation
     :param g: Graph
@@ -349,7 +349,7 @@ def wrap_d_sep(g, x, y, z):
     return d_sep(g, x, y, z)
 
 
-def d_sep(g, x, y, z):
+def d_sep(g, x, y, z=None):
     """
     From R package causaleffect:
 
@@ -397,8 +397,13 @@ def d_sep(g, x, y, z):
             stack_top = stack_add
         return (stack, stack_names, stack_size, stack_top)
 
-    an_z = find_related_nodes_of(z, g, "in", order="max")
-    an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g, "in", order="max")
+    if z is not None:
+        an_z = find_related_nodes_of(z, g, "in", order="max")
+        an_xyz = find_related_nodes_of(list(set(x) | set(y) | set(z)), g, "in", order="max")
+    else:
+        an_z = []
+        an_xyz = find_related_nodes_of(list(set(x) | set(y)), g, "in", order="max")
+
     stack_top = len(x)
     stack_size = max(stack_top, 64)
     stack = [False] * stack_size
@@ -682,7 +687,6 @@ def make_cg(g, gamma):
             nodes_in_gamma_prime.append(f"{event.orig_name}_{event.int_vars}")
         else:
             nodes_in_gamma_prime.append(event.orig_name)
-    # print(nodes_in_gamma_prime)
     relevant_nodes = find_related_nodes_of(nodes_in_gamma_prime, cg, "in", "max")
     cg = cg.subgraph(relevant_nodes)
 
