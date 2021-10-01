@@ -1,9 +1,11 @@
 import os
+import sys
 import json
 import csv
 import random
 import shutil
 import math
+import multiprocessing
 
 from enum import Enum, auto
 from posix import O_APPEND
@@ -12,6 +14,25 @@ from automates.program_analysis.GCC2GrFN.gcc_plugin_driver import run_gcc_plugin
 from automates.program_analysis.GCC2GrFN.gcc_ast_to_cast import GCC2CAST
 
 GCC_PLUGIN_IMAGE_DIR = "automates/program_analysis/gcc_plugin/plugin/"
+
+# TODO why does the gcc_ast.jsons still exist in root?
+# TODO capture better messages when gcc compilation fails
+# TODO improve how we attempt to compile?
+
+
+def progress(count, total, status=""):
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = "=" * filled_len + "-" * (bar_len - filled_len)
+
+    sys.stdout.write("[%s] %s%s ...%s\r" % (bar, percents, "%", status))
+    sys.stdout.flush()
+
+
+class ValidationException(Exception):
+    pass
 
 
 class ValidationResult(Enum):
@@ -34,10 +55,12 @@ def select_manual_samples(successful, dir):
     manual_samples_indices = random.sample(
         range(num_success), math.ceil(num_success / 100)
     )
+    manual_samples_file = open(f"{dir}/manualSamples.json", "w")
     json.dump(
         {"samplesToManuallyVerify": [successful[i][0] for i in manual_samples_indices]},
-        open(f"{dir}/manualSamples.json", "w"),
+        manual_samples_file,
     )
+    manual_samples_file.close()
 
 
 def test_execution(grfn):
@@ -46,7 +69,12 @@ def test_execution(grfn):
     inputs = dict()
     for i in grfn_inputs:
         inputs[str(i.identifier)] = random.randint(0, 100)
-    grfn(inputs)
+
+    p = multiprocessing.Process(target=lambda: grfn(inputs))
+    p.start()
+    p.join(10)
+    if p.is_alive():
+        raise ValidationException("GrFN execution exceeded allowed time.")
 
 
 def validate_example(example_name, example_files, path):
@@ -56,6 +84,12 @@ def validate_example(example_name, example_files, path):
             "c", example_c_files, GCC_PLUGIN_IMAGE_DIR, compile_binary=True
         )
     except Exception as e:
+        # Remove generated AST in failed compilation cases
+        for name in example_c_files:
+            gcc_ast_file = f"{''.join(name.rsplit('.', 1)[:-1])}_gcc_ast.json"
+            if os.path.exists(gcc_ast_file):
+                os.remove(gcc_ast_file)
+
         # TODO actually catch exception
         return (
             example_name,
@@ -72,7 +106,9 @@ def validate_example(example_name, example_files, path):
     shutil.move("./a.out", f"{path}/{example_name}")
 
     try:
-        gcc_asts = [json.load(open(a)) for a in new_gcc_ast_file_paths]
+        gcc_ast_files = [open(a) for a in new_gcc_ast_file_paths]
+        gcc_asts = [json.load(f) for f in gcc_ast_files]
+        [f.close() for f in gcc_ast_files]
     except Exception as e:
         # TODO specify exception
         return (
@@ -91,7 +127,9 @@ def validate_example(example_name, example_files, path):
             str(e),
         )
 
-    json.dump(cast.to_json_object(), open(f"{path}/{example_name}--CAST.json", "w"))
+    cast_file = open(f"{path}/{example_name}--CAST.json", "w")
+    json.dump(cast.to_json_object(), cast_file)
+    cast_file.close()
 
     try:
         grfn = cast.to_GrFN()
@@ -148,7 +186,12 @@ def validate_many_single_directory(directory, result_location):
     mkdir_p(f"{result_location}/results/")
 
     example_files = os.listdir(directory)
+    total_count = len(example_files)
+    i = 0
     for example in example_files:
+        progress(i, total_count, status="Processing examples files...")
+        i += 1
+
         if example.endswith(".c"):
             example_name = "".join(example.rsplit(".", 1)[:-1])
             dir_name = f"{result_location}/results/{example_name}"

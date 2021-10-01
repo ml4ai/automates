@@ -4,7 +4,13 @@ import subprocess
 GCC_10_BIN_DIRECTORY = "/usr/local/gcc-10.1.0/bin/"
 
 
-def run_gcc(compiler_name, full_plugin_path, input_files, compile_binary, no_optimize):
+def run_gcc(
+    compiler_name,
+    full_plugin_path,
+    input_files,
+    compile_binary,
+    no_optimize,
+):
     command = [
         f"{GCC_10_BIN_DIRECTORY}/{compiler_name}",
         f"-fplugin={full_plugin_path}",
@@ -25,8 +31,10 @@ def run_gcc(compiler_name, full_plugin_path, input_files, compile_binary, no_opt
     # with the programs ast inside of it.
     results = subprocess.run(
         command,
-        stdout=subprocess.DEVNULL,
         errors=True,
+        # capture_output=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
     if results.returncode == 0:
@@ -50,7 +58,11 @@ def gather_ast_files(input_files):
 
 
 def run_gcc_plugin(
-    language, input_files, plugin_location="./", compile_binary=False, no_optimize=True
+    language,
+    input_files,
+    plugin_location="./",
+    compile_binary=False,
+    no_optimize=True,
 ):
     """
     Runs the GCC ast dump plugin to create an AST file for each individual
@@ -91,7 +103,11 @@ def run_gcc_plugin(
     ), f"Error: GCC AST dump plugin does not exist at expected location: {full_plugin_path}"
 
     results = run_gcc(
-        compiler, full_plugin_path, input_files, compile_binary, no_optimize
+        compiler,
+        full_plugin_path,
+        input_files,
+        compile_binary,
+        no_optimize,
     )
     # Assert return code is 0 which is success
     assert results[
