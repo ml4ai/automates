@@ -40,7 +40,7 @@ functionTrigger4: "^ratio$|fraction"
 
 functionTrigger5: "predict|estimate|calculate|obtain|find|model"
 
-functionTrigger6: "lower"
+functionTrigger6: "affect|limit|influence|impact|cause"
 
 ### SYNTACTIC PATTERNS USED FOR CAPTURING CONTEXTS ###
 

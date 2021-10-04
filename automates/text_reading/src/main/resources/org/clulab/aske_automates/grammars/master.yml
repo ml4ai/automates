@@ -37,6 +37,7 @@ rules:
       priority: 8
       action: unitActionFlow
 
+# note: model rules moved to entities.yml and thus model.yml is disabled here
 #  - import: "org/clulab/aske_automates/grammars/model.yml"
 #    vars:
 #      priority: 9

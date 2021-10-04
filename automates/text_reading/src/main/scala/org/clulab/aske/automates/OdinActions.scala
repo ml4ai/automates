@@ -1096,41 +1096,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     toReturn.filter(_.arguments.nonEmpty) ++ other
   }
 
-//  def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-//    val (functions, other) = mentions.partition(_.label == "Function")
-//    val (complete, fragment) = functions.partition(m => m.arguments("input").nonEmpty && m.arguments("output").nonEmpty)
-//    val toReturn = new ArrayBuffer[Mention]()
-//    for (f <- fragment) {
-//      val newInputs = new ArrayBuffer[Mention]()
-//      val newOutputs = new ArrayBuffer[Mention]()
-//      val prevSentences = functions.filter(_.sentence < f.sentence)
-//      if (prevSentences.nonEmpty) {
-//        val menToAttach = prevSentences.maxBy(_.sentence)
-//        if (f.arguments.contains("input")) {
-//          newInputs ++= menToAttach.arguments.getOrElse("input", Seq()) ++ f.arguments.getOrElse("input", Seq())
-//        }
-//        if (f.arguments.contains("output")) {
-//          newOutputs ++= menToAttach.arguments.getOrElse("output", Seq()) ++ f.arguments.getOrElse("output", Seq())
-//        }
-//        val newArgs = Map("input" -> newInputs, "output" -> newOutputs)
-//        val newFunctions = new CrossSentenceFunctionMention(
-//          f.labels,
-//          Seq(f.tokenInterval, menToAttach.tokenInterval),
-//          Seq(f.asInstanceOf[EventMention].trigger, menToAttach.asInstanceOf[EventMention].trigger),
-//          newArgs,
-//          Map.empty,
-//          f.sentence,
-//          f.document,
-//          f.keep,
-//          Seq(f.foundBy, menToAttach.foundBy),
-//          Set.empty
-//        )
-//        toReturn.append(newFunctions)
-//      } else toReturn.append(f)
-//    }
-//    toReturn ++ other ++ complete
-//  }
-
   def combineFunction(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (functions, other) = mentions.partition(_.label == "Function")
     val (complete, fragment) = functions.partition(m => m.arguments.getOrElse("input", Seq()).nonEmpty && m.arguments.getOrElse("output", Seq()).nonEmpty)
@@ -1203,7 +1168,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       }
     }
     toReturn ++ other
-//    mentions
   }
 
   def filterInputOverlaps(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -1331,52 +1295,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     }
     toReturn.distinct ++ mensNotToAttach
   }
-
-//  def makeNewContextEvents(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
-//    val contextTokInt = new ArrayBuffer[Interval]
-//    val mensSelected = new ArrayBuffer[Mention]
-//    val contextSelected = new ArrayBuffer[Mention]
-//    val toReturn = new ArrayBuffer[Mention]
-//    val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label == "ParamSetting")
-//// note: attachment to description creates too many false positives - needs to be revised to be applied to description mentions.
-////    val (mensToAttach, mensNotToAttach) = mentions.partition(m => m.label == "Function" || m.label.contains("Description") || m.label == "ParamSetting")
-//    val contextMens = mentions.filter(_.label == "Context")
-//    if (mensToAttach.nonEmpty) {
-//      for (m <- mensToAttach) {
-//        val contextSameSntnce = contextMens.filter(c => c.sentence == m.sentence)
-//        if (contextSameSntnce.nonEmpty) {
-//          for (c <- contextSameSntnce) contextTokInt += c.tokenInterval
-//          if (findOverlappingInterval(m.tokenInterval, contextTokInt.toList) != Interval(0,0)) {
-//            mensSelected.append(m)
-//          }
-//          if (mensSelected.nonEmpty) {
-//            for (m <- mensSelected) {
-//              for (c <- contextSameSntnce) {
-//                if (m.sentence == c.sentence && m.tokenInterval.overlaps(c.tokenInterval)) {
-//                  contextSelected.append(c)
-//                }
-//              }
-////              val filteredContext = filterContextSelected(contextSelected, m)
-//              if (contextSelected.nonEmpty) {
-//              val newArgs = Map("event" -> Seq(m), "context" -> keepLongest(contextSelected))
-//              toReturn.append(new RelationMention(
-//                List("ContextEvent", "Event"),
-//                m.tokenInterval,
-//                newArgs,
-//                m.paths, // the paths are off
-//                m.sentence,
-//                m.document,
-//                m.keep,
-//                m.foundBy ++ "++contextAttachment",
-//                Set.empty))
-//              }
-//            }
-//          }
-//        }
-//      }
-//    }
-//    toReturn.distinct
-//  }
 
   def filterContextSelected(contexts: Seq[Mention], mention: Mention): Seq[Mention] = {
     val filteredContext = new ArrayBuffer[Mention]
@@ -1565,11 +1483,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     toReturn
   }
 
-//  def contextActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
-//    val toReturn = processContexts(mentions, state)
-//    toReturn
-//  }
-
   def functionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val filteredMen = filterFunction(mentions, state)
     val filteredOutputs = if (filteredMen.nonEmpty) filterOutputOverlaps(filteredMen, state) else Seq.empty
@@ -1578,7 +1491,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val toReturn = if (filteredArgs.nonEmpty) processFunctions(filteredArgs, state) else Seq.empty
 
     toReturn
-    //    mentions
   }
 
   def looksLikeAUnit(mentions: Seq[Mention], state: State): Seq[Mention] = {

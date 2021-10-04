@@ -273,3 +273,37 @@
 #      trigger = [lemma = "ratio"] (?="of")
 #      input:Phrase+ = nmod_of | (nmod_at)? nmod_to
 #      output:Phrase = <nmod_as <acl nsubj | nsubj acl_to dobj
+
+# note: this rule produces too many false positives (i.e., with inputs such as reports/websites/database/equations)
+#  - name: obtained_with
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "For simulations conducted, ET with fm = 0.0 and 1.0 was obtained with the input variables, such as Rn and LAI, parameterized as the same as those of fm = 0.5, which might be imprecise and compromise the results."
+#    pattern: |
+#      trigger = [word = "obtained"] (?= [word = "with"])
+#      input:Identifier+ = nmod_with nmod_such_as
+#      output:Phrase = <ccomp nsubj | nsubjpass
+
+#  - name: lost_by # needs to see if this rule is a viable one
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "More than 90% of water used in agriculture is lost by soil evaporation and crop transpiration (Rana and Katerji, 2000)."
+#    pattern: |
+#      trigger = (?<= [word = "lost"] [word = "by"]) [word = /.*/]{,2} ([word = "and"] [word = /.*/]{,2})?
+#      input:Phrase = <nmod_agent nsubjpass nmod_of
+#      output:Phrase = <nmod_agent
+
+#  - name: reduce_when # needs to see if this rule is a viable one
+#    label: Function
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Previous studies indicated that maize height and LAI would reduce when suffering water deficit during the early growing stage (Allen et al., 1998; Kang et al., 2000)."
+#    pattern: |
+#      trigger = (?<= [lemma = "reduce"] [word = "when"]) [word = /.*/]+
+#      input:Phrase+ = <advcl nsubj
+##      output:Phrase = <advcl aux

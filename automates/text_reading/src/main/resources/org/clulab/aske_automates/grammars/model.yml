@@ -31,12 +31,3 @@ rules:
     pattern: |
       trigger = [word = /[Mm]odel$/]
       variable:Phrase = compound [word = /[A-Z]*/]
-
-#  - name: full_name_with_parentheses
-#    label: Model
-#    priority: ${priority}
-#    type: token
-#    action: modelArguments
-#    example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
-#    pattern: |
-#      [tag = /DT/] [word = /[A-Z][a-z]+|and/] "(" [word=/[A-Z]{4,}$/ & !entity = /ORGANIZATION/ & !word = "SARS"] ")" [word = "model"]

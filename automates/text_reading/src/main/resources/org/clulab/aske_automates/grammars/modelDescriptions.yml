@@ -4,15 +4,27 @@ rules:
 
 ## TODO: coreferencing (the model, our model, this, it...) needs to be addressed.
 
-# This rule is not complete. Description part needs to be adjusted.
-  - name: model_suggests
+  - name: model_verb1
     label: ModelDescr
     priority: ${priority}
-    type: token
+    type: dependency
     action: ${action}
-    example: "The model also suggests that there might exist a SARS precursor in a large reservoir, prompting for implementation of precautionary measures when the weather cools down."
+    example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
     pattern: |
-      @model:Model [word = "also"]? (?<trigger> [lemma = /suggest/]) [word = /that/] (?<modelDescr> [word = /.*/]+) "."
+      trigger = [lemma = /predict|understand|investigate|examine|suggest/]
+      model:Model = <acl_to (<dobj nsubj)? | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
+      modelDescr:Phrase = dobj | ccomp
+
+  - name: model_verb2
+    label: ModelDescr
+    priority: ${priority}
+    type: dependency
+    action: ${action}
+    example: "Our model also offers an opportunity to further decompose the different contributions to annual price variability."
+    pattern: |
+      trigger = [lemma = /offer|provide|reproduce/]
+      model:Model = nsubj (compound)? | <xcomp advcl dobj
+      modelDescr:Phrase = dobj
 
   - name: model_cannot
     label: ModelDescr
@@ -67,18 +79,7 @@ rules:
       model:Model = <cop nsubj
       modelDescr:Phrase = <cop
 
-  - name: model_predict
-    label: ModelDescr
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "SWAT incorporates a simple empirical model to predict the trophic status of water bodies."
-    pattern: |
-      trigger = [lemma = /predict|understand|investigate|examine/]
-      model:Model = <acl_to (<dobj nsubj)? | nsubj:xsubj (<dobj <xcomp (<acl:relcl | <nsubjpass))? | nsubj (compound)?
-      modelDescr:Phrase = dobj | ccomp
-
-    # how do we know if "This" is referencing to a model?
+    # todo: how do we know if "This" or "It" is referencing to a model?
   - name: model_allows_for
     label: ModelDescr
     priority: ${priority}
@@ -156,7 +157,7 @@ rules:
       model:Model = nsubjpass | dobj
       modelDescr:Phrase = xcomp | advcl_to
 
-  - name: modelPurpose
+  - name: model_purpose
     label: ModelDescr
     priority: ${priority}
     type: dependency
@@ -167,7 +168,7 @@ rules:
       model:Model = nsubjpass | <acl nsubj
       modelDescr:Phrase = xcomp
 
-  - name: modelLanguageInfo
+  - name: model_languageInfo
     label: ModelDescr
     priority: ${priority}
     type: dependency
@@ -178,18 +179,7 @@ rules:
       model:Model = nsubjpass
       modelDescr:Phrase+ = nmod_in
 
-  - name: modelVerbs
-    label: ModelDescr
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Our model also offers an opportunity to further decompose the different contributions to annual price variability."
-    pattern: |
-      trigger = [lemma = /offer|provide|reproduce/]
-      model:Model = nsubj (compound)? | <xcomp advcl dobj
-      modelDescr:Phrase = dobj
-
-  - name: modelCharacteristic
+  - name: model_characteristic
     label: ModelDescr
     priority: ${priority}
     type: dependency
@@ -200,7 +190,7 @@ rules:
       model:Model = nmod_of
       modelDescr:Phrase+ = <nsubj ccomp
 
-  - name: modelVersion
+  - name: model_version
     label: ModelDescr
     priority: ${priority}
     type: dependency
@@ -211,7 +201,7 @@ rules:
       model:Model = nsubj compound?
       modelDescr:Model+ = nmod_of
 
-  - name: modelFocus
+  - name: model_focus
     label: ModelDescr
     priority: ${priority}
     type: token
