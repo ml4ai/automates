@@ -8,10 +8,9 @@ import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRou
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
-import org.clulab.utils.{DisplayUtils, FileUtils, Serializer}
+import org.clulab.utils.{FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
-import org.json4s
 import org.json4s.jackson.JsonMethods._
 
 /**
@@ -33,8 +32,8 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/input_files"
-  val outputDir = "/Users/alicekwak/Desktop/UA_2021_Summer/COSMOS/output_files"
+  val inputDir: String = ""
+  val outputDir: String = ""
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
 //  val dataLoader = new ScienceParsedDataLoader
@@ -44,8 +43,8 @@ object ExtractAndExport extends App {
   val reader = OdinEngine.fromConfig(config[Config](readerType))
 
   //uncomment these for using the text/comment router
-  //  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
-  //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
+//  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine")
+//  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
 
   files.par.foreach { file =>
@@ -58,27 +57,27 @@ object ExtractAndExport extends App {
     // todo: here I am choosing to pass each text/section through separately -- this may result in a difficult coref problem
     val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
     //The version of mention that includes routing between text vs. comment
-    //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
-    //    for (m <- mentions) {
-    //      println("----------------")
-    //      println(m.text)
-    //
-    //      if (m.arguments.nonEmpty) {
-    //        for (arg <- m.arguments) {
-    //          println("arg: " + arg._1 + ": " + m.arguments(arg._1).head.text)
-    //        }
-    //      }
-    //
-    //    }
+//    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
+//    for (m <- mentions) {
+//      println("----------------")
+//      println(m.text)
+//
+//      if (m.arguments.nonEmpty) {
+//        for (arg <- m.arguments) {
+//          println("arg: " + arg._1 + ": " + m.arguments(arg._1).head.text)
+//        }
+//      }
+//
+//    }
     val descrMentions = mentions.filter(_ matches "Description")
 
     println("Description mentions: ")
     for (dm <- descrMentions) {
       println("----------------")
       println(dm.text)
-      //      println(dm.foundBy)
+//      println(dm.foundBy)
       for (arg <- dm.arguments) {
-        println(arg._1 + ": " + dm.arguments(arg._1).head.text)
+        println(arg._1 + ": " + dm.arguments(arg._1).map(_.text).mkString("||"))
       }
       if (dm.attachments.nonEmpty) {
         for (att <- dm.attachments) println("att: " + att.asInstanceOf[AutomatesAttachment].toUJson)
@@ -92,7 +91,7 @@ object ExtractAndExport extends App {
     for (m <- paramSettingMentions) {
       println("----------------")
       println(m.text)
-      //      println(m.foundBy)
+//      println(m.foundBy)
       for (arg <- m.arguments) {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
@@ -102,7 +101,7 @@ object ExtractAndExport extends App {
     for (m <- unitMentions) {
       println("----------------")
       println(m.text)
-      //      println(m.foundBy)
+//      println(m.foundBy)
       for (arg <- m.arguments) {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
@@ -113,7 +112,7 @@ object ExtractAndExport extends App {
     for (m <- contextMentions) {
       println("----------------")
       println(m.text)
-      //      println(m.foundBy)
+//      println(m.foundBy)
       for (arg <- m.arguments) {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
@@ -158,7 +157,7 @@ case class JSONExporter(filename: String) extends Exporter {
 case class AutomatesExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val serialized = ujson.write(AutomatesJSONSerializer.serializeMentions(mentions))
-    //    val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(serialized))
+//    val groundingsJson4s = json4s.jackson.prettyJson(json4s.jackson.parseJson(serialized))
     val file = new File(filename)
     val bw = new BufferedWriter(new FileWriter(file))
     bw.write(serialized)

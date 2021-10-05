@@ -1129,8 +1129,6 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
           menToAttach.attachments
         )
         toReturn.append(newFunctions)
-        println("here!:" + f.sentence + menToAttach.sentence)
-        println("here: " + sentences)
       } else toReturn.append(f)
     }
     toReturn ++ other ++ complete
@@ -1302,14 +1300,14 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val completeFilterContext = new ArrayBuffer[Mention]
     val trigger = if (mention.isInstanceOf[EventMention]) mention.asInstanceOf[EventMention].trigger.tokenInterval else null
     for (c <- contexts) {
-    for (argType <- mention.arguments) {
-      for {
-        arg <- argType._2
-        newMention = mention match {
-          case rm: RelationMention => if (!c.tokenInterval.overlaps(arg.tokenInterval)) contextNumCheck.append(c)
-          case em: EventMention => if (!c.tokenInterval.overlaps(arg.tokenInterval) && !c.tokenInterval.overlaps(trigger)) contextNumCheck.append(c)
-          case _ => ???
-      }
+      for (argType <- mention.arguments) {
+        for {
+          arg <- argType._2
+          newMention = mention match {
+            case rm: RelationMention => if (!c.tokenInterval.overlaps(arg.tokenInterval)) contextNumCheck.append(c)
+            case em: EventMention => if (!c.tokenInterval.overlaps(arg.tokenInterval) && !c.tokenInterval.overlaps(trigger)) contextNumCheck.append(c)
+            case _ => ???
+          }
         } yield contextNumCheck
         if (contextNumCheck.nonEmpty && contextNumCheck.length == argType._2.length) {
           filteredContext.append(c)
