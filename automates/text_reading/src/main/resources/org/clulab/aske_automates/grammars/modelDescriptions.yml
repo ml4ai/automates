@@ -55,7 +55,7 @@ rules:
     pattern: |
       trigger = [word = "not"] (?= [lemma = /hold/])
       model:Model = <neg nsubj
-      modelDescr:Phrase = <neg
+      modelDescr:VerbPhrase = <neg
 
   - name: model_not_adj
     label: ModelDescr
@@ -122,18 +122,19 @@ rules:
     pattern: |
       trigger = [lemma = "can"]
       model:Model = <aux nsubj
-      modelDescr:Phrase+ = <aux
+      modelDescr:VerbPhrase+ = <aux
 
-  - name: model_useful_to
-    label: ModelDescr
-    priority: ${priority}
-    type: dependency
-    action: ${action}
-    example: "Our model would then be useful to enforce proper precautionary measures immediately."
-    pattern: |
-      trigger = [lemma = "useful"] (?= "to")
-      model:Model = nsubj
-      modelDescr:Phrase+ = xcomp
+# note: This rule overlaps with model_cop rule. If it turns out that this rule can be fully incorporated into model_cop rule, we can delete this rule.
+#  - name: model_useful_to
+#    label: ModelDescr
+#    priority: ${priority}
+#    type: dependency
+#    action: ${action}
+#    example: "Our model would then be useful to enforce proper precautionary measures immediately."
+#    pattern: |
+#      trigger = [lemma = "useful"] (?= "to")
+#      model:Model = nsubj
+#      modelDescr:VerbPhrase+ = xcomp
 
   - name: model_consist_of
     label: ModelDescr
@@ -155,7 +156,7 @@ rules:
     pattern: |
       trigger = [lemma = "apply"]
       model:Model = nsubjpass | dobj
-      modelDescr:Phrase = xcomp | advcl_to
+      modelDescr:VerbPhrase = xcomp | advcl_to
 
   - name: model_purpose
     label: ModelDescr
@@ -166,14 +167,14 @@ rules:
     pattern: |
       trigger = [word = /developed|designed/] (?=[word = /^to$|^for$/])
       model:Model = nsubjpass | <acl nsubj
-      modelDescr:Phrase = xcomp
+      modelDescr:VerbPhrase = xcomp
 
   - name: model_languageInfo
     label: ModelDescr
     priority: ${priority}
     type: dependency
     action: ${action}
-    example: "It was developed to predict the impact of land management practices on water, sediment and agricultural chemical yields (e.g., fertilizer and pesticides) in large complex watersheds with varying soils, land uses and management conditions over long periods of time."
+    example: ""
     pattern: |
       trigger = [word = /written|implemented/] (?=[word = /^in$/])
       model:Model = nsubjpass
@@ -188,7 +189,7 @@ rules:
     pattern: |
       trigger = [word = "characteristic"]
       model:Model = nmod_of
-      modelDescr:Phrase+ = <nsubj ccomp
+      modelDescr:VerbPhrase+ = <nsubj ccomp
 
   - name: model_version
     label: ModelDescr
@@ -197,7 +198,7 @@ rules:
     action: ${action}
     example: "Based on these findings, we chose to use the FabSim3 toolkit, which is an improved version of FabSim."
     pattern: |
-      trigger = [word = "version"]
+      trigger = [tag = /JJ|VBN/]? [word = "version"]
       model:Model = nsubj compound?
       modelDescr:Model+ = nmod_of
 
@@ -206,7 +207,7 @@ rules:
     priority: ${priority}
     type: token
     action: ${action}
-    example: "However, existing early warning models of forced migration focus on understanding the causes9 and are not as successful in predicting refugee movements as in predicting natural disasters10–12."
+    example: "However, existing early warning models of forced migration focus on understanding the causes and are not as successful in predicting refugee movements as in predicting natural disasters."
     pattern: |
       @model:Model (${PP+NP})? (?<trigger> [word = "focus"] [word = "on"]) (?<modelDescr> [tag = /VBG/] [chunk = /B-NP|I-NP/]*)
 

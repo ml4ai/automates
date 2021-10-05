@@ -11,6 +11,8 @@ rules:
       # we want any coordinated entities we might encounter to be split
       [tag=CC]
 
+# NOTE: this avoid rule prevented verb phrases that are needed for modelDescrs from being captured, and hence was disabled.
+#       The limitations were incorporated into single_VP rule in entities.yml
 ##   the chunker is wont to gobble up verbs with clear arguments as part of NPs, hence this rule
 #  - name: "verbs-with-args"
 #    label: Avoid

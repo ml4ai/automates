@@ -8,6 +8,7 @@
           - ValueAndUnit
         - Unit:
           - UnitRelation
+  - VerbPhrase
 - Event:
   - ContextEvent
   - Conj

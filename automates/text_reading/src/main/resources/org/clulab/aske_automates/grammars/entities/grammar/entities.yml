@@ -27,8 +27,16 @@ rules:
     priority: 1
     type: token
     pattern: |
-      [chunk='B-VP' & word = /[a-zA-Z]/ & !mention=Avoid]
-#      [chunk=/B-VP|I-VP/ & tag = /VB/ & !mention=Avoid]
+      [chunk=/B-VP|I-VP/ & tag = /VB/ & !outgoing = /^nsubj/]
+      |
+      [tag = /VBN/]
+
+  - name: single_VP_for_modelDescr
+    label: VerbPhrase
+    priority: 1
+    type: token
+    pattern: |
+      [chunk=/B-VP|I-VP/ & tag = /VB/]
 
   - name: single_adjP # note: added due to def test t1k. needs to check if this cause any errors.
     label: Phrase
