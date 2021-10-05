@@ -58,7 +58,10 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0, We therefore assume that S(0) = 6.8 – 0.5 = 6.3 million."
     action: ${paramSetAction}
     pattern: |
-      (@variable:Identifier|@variable:Phrase [!tag="CD"]) (?<trigger> [word="="]) @value:Value
+      @variable:Phrase (?<trigger> [word="="]) @value:Value
+#     (@variable:Identifier | @variable:Phrase [!tag = "CD"]) (?<trigger> [word="="]) @value:Value
+#     note: this rule needs to be fixed ([!tag = "CD"] does not work to limit phrase, but works to capture any word that doesn't have a "CD" tag)
+#     TODO: ask Masha
 #      (@variable:Identifier|@variable:Phrase [!tag=/CD|VBZ/ & !lemma = "be"]) (?<trigger> [word="="]) @value:Value
 
 
