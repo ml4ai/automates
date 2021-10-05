@@ -50,3 +50,5 @@ rules:
     example: "Suppose we increase the r parameter by 1 % to have r = 9.88588 x 10 - 8 , then R infinity will become 116464. If E and T data are unavailable, values of SKc from 0.5 to 0.7 are recommended."
     pattern: |
       @context:Context [word = ","] [word = "then"]? (@event:ParameterSetting|@event:IntervalParameterSetting)
+      |
+      (@event:ParameterSetting|@event:IntervalParameterSetting) [word = ","] @context:Context
