@@ -35,9 +35,9 @@ object Subscripts extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir: String = "/Users/alexeeva/Desktop/automates-related/arxiv/tex_dir/"
+  val inputDir: String = "/Users/alexeeva/Desktop/automates-related/arxiv/tex_dir/anotherSample"
   //  val inputDir = "/Users/alexeeva/Desktop/subscripts/texfiles"
-  val outputDir: String = "/Users/alexeeva/Desktop/automates-related/arxiv/tex_dir/firstPass/"
+  val outputDir: String = "/Users/alexeeva/Desktop/automates-related/arxiv/tex_dir/anotherSample/output"
   val inputType = config[String]("apps.inputType")
   // if using science parse doc, uncomment next line and...
   //  val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == science parse json
@@ -91,7 +91,14 @@ object Subscripts extends App {
     val filteredTexts = new ArrayBuffer[String]()
     val newCommands = mutable.Map[String, String]()
     for (t <- texts) {
-      val splitText = t.replaceAll("\\\\begin\\{equation\\}(.|\\n)*?\\\\end\\{equation\\}|%.*?\\n|\\\\label\\{.*?\\}\\}?", "").split("\n")
+      val splitText = t.replaceAll("\\\\begin\\{equation\\*?\\}(.|\\n)*?\\\\end\\{equation\\*?\\}" +
+        "|" +
+        "%.*?\\n" +
+        "|" +
+        "\\\\cite\\{.*?\\}\\}?" +
+        "|" +
+        "\\\\label\\{.*?\\}\\}?", "")
+        .split("\n\n") // split on two \n\n because it's only that that represents new paragraph
       //        replaceAll("\\\\begin\\{equation\\}(.|\\n)*\\\\end\\{equation\\}","").
       //        replaceAll("%.*?\n","").
       //        replaceAll("\\\\label\\{.*?\\}\\}?", "").
@@ -107,11 +114,25 @@ object Subscripts extends App {
       }
     }
     //    for (t <- filteredTexts) println(">> " + t)
+      val sentences = new ArrayBuffer[String]()
+
+      for (t <- filteredTexts) {
+        val annotated = reader.annotate(t).sentences
+
+              for (s <- annotated) {
+                val sentString = t.slice(s.startOffsets.head, s.endOffsets.last)
+                sentences.append(sentString)
+//                println("sentence: " + s.words.mkString(" "))
+//                println("sent: " + t.slice(s.startOffsets.head, s.endOffsets.last))
+//                print("\n")
+              }
+      }
 
     val regex = """\w+\_\{+.{1,20}\}\}*|\w+\_\w+""".r
-    for (t <- filteredTexts) {
+    for (t <- sentences) {
       // todo: so here first sentence_tokenize and then search for regex in each sent (possible issue---latex sequences being tokenized as separate sentences, but why would they?)
-      //      println(">> " + t)
+            println(">> " + t + "\n")
+
       val matches = regex.findAllIn(t).toList
       val matchIndices = regex.findAllMatchIn(t).toList
       val matchesStarts = matchIndices.map(m => (m.start)).toList
@@ -252,6 +273,8 @@ object Subscripts extends App {
         }
       }
       //println("DONE 2")
+      // write empty line to indicate sentence break
+      pw.write("\n")
     }
     //    println("DONE 1 " + file.getName)
 
