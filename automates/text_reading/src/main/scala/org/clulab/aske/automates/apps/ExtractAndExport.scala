@@ -43,7 +43,7 @@ object ExtractAndExport extends App {
   val reader = OdinEngine.fromConfig(config[Config](readerType))
 
   //uncomment these for using the text/comment router
-//  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine")
+//  val commentReader = OdinEngine.fromConfig(config[Config]("CommentEngine"))
 //  val textRouter = new TextRouter(Map(TextRouter.TEXT_ENGINE -> reader, TextRouter.COMMENT_ENGINE -> commentReader))
   // For each file in the input directory:
 
@@ -97,7 +97,7 @@ object ExtractAndExport extends App {
       }
     }
     val unitMentions = mentions.filter(_ matches "UnitRelation")
-    println("Unit setting mentions: ")
+    println("Unit mentions: ")
     for (m <- unitMentions) {
       println("----------------")
       println(m.text)
@@ -112,7 +112,7 @@ object ExtractAndExport extends App {
     for (m <- contextMentions) {
       println("----------------")
       println(m.text)
-//      println(m.foundBy)
+      //      println(m.foundBy)
       for (arg <- m.arguments) {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
