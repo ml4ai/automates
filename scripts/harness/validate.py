@@ -46,7 +46,7 @@ class ValidationResult(Enum):
 
 def mkdir_p(dir):
     if not os.path.exists(dir):
-        os.mkdir(dir)
+        os.makedirs(dir, exist_ok=True)
 
 
 def select_manual_samples(successful, dir):
@@ -178,12 +178,12 @@ def write_results_to_csv(validate_results, validate_csv_file_writer):
 
 
 def validate_many_single_directory(directory, result_location):
+    mkdir_p(f"{result_location}/results/")
+
     validate_results = list()
     validate_csv_file_writer = open_results_csv_writer(result_location)
     if validate_csv_file_writer == None:
         return
-
-    mkdir_p(f"{result_location}/results/")
 
     example_files = os.listdir(directory)
     total_count = len(example_files)

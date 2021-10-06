@@ -6,7 +6,7 @@ import shutil
 def move_sample_data(temp_dir, results_dir):
 
     if not os.path.exists(results_dir):
-        os.mkdir(results_dir)
+        os.makedirs(results_dir, exist_ok=True)
 
     samples_csv = f"{temp_dir}/validate-results.csv"
     if not os.path.exists(samples_csv):
