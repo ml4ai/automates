@@ -8,6 +8,9 @@
           - ValueAndUnit
         - Unit:
           - UnitRelation
+      - Filename
+      - Language
+  - String
 - Event:
   - ContextEvent
   - Conj
@@ -20,3 +23,4 @@
   - Function
   - Context
   - Command
+  - CommandLineArg

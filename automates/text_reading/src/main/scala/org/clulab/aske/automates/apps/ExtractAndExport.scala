@@ -32,8 +32,8 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir: String = ""
-  val outputDir: String = ""
+  val inputDir: String = "/Users/sarahstueve/Documents/Graduate/FA21/automates_dr/readme"
+  val outputDir: String = "/Users/sarahstueve/Documents/Graduate/FA21/automates_dr/readme/output"
   val inputType = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
 //  val dataLoader = new ScienceParsedDataLoader
