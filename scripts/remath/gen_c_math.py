@@ -133,7 +133,7 @@ def gen_fn_all_literal_args(fn, type_return, type_args) -> str:
             args.append(sample_int())
         else:
             args.append(sample_float())
-    c_fn_string = f"{fn}({', '.join(args)})"
+    c_fn_string = f"{fn}({', '.join(args)});"
     c_fn_line = f"{type_return} {new_var.get_name()} = {c_fn_string}"
     return c_fn_line
 
@@ -199,7 +199,7 @@ def gen_arithmetic_op_primitives_examples():
         lines.append(f'{t} x0 = 1;')
         lines.append(f'{t} x1 = 2;')
         lines.append(f'{t} x2;')
-        lines.append(f'{t} x2 = x0 + x1;')
+        lines.append(f'x2 = x0 + x1;')
         prog_string = gen_c_main(lines)
         with open(filepath, 'w') as fout:
             fout.write(prog_string)
