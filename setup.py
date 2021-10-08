@@ -80,6 +80,8 @@ setup(
         "webcolors",
         "lxml",
         "Pillow",
+        "ftfy",
+        "fastparquet"
     ],
     extras_require=EXTRAS_REQUIRE,
     python_requires=">=3.8",

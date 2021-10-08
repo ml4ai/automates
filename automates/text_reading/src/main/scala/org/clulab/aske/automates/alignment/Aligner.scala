@@ -129,12 +129,13 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   def getRelevantTextFromGlobalVar(glv: GlobalVariable): String = {
     // ["variable", "description"]
     val relText = relevantArgs match {
-      case x if x.contains("variable") & x.contains("description")=>  AlignmentBaseline.replaceWordWithGreek(glv.identifier, AlignmentBaseline.word2greekDict.toMap) + " " + glv.textFromAllDescrs.mkString(" ")
+      case x if x.contains("variable") & x.contains("description")=>
+        AlignmentBaseline.replaceWordWithGreek(glv.identifier, AlignmentBaseline.word2greekDict.toMap) + " " + glv.textFromAllDescrs.mkString(" ")
       case x if x.contains("variable") => AlignmentBaseline.replaceWordWithGreek(glv.identifier, AlignmentBaseline.word2greekDict.toMap)
       case x if x.contains("description") => glv.textFromAllDescrs.mkString(" ")
       case _ => ???
     }
-    relText
+    relText.split(" ").filter(tok => !stopWords.contains(tok.toLowerCase)).mkString(" ")
   }
 
   def alignMentionsAndGlobalVars(srcMentions: Seq[Mention], glVars: Seq[GlobalVariable]): Seq[Alignment] = {
@@ -144,7 +145,7 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
   def alignGlobalCommentVarAndGlobalVars(commentGlVar: Seq[GlobalVariable], glVars: Seq[GlobalVariable]): Seq[Alignment] = {
     // todo: since we base this on text of multiple descriptions, we can try to add some sort of weight for words that occur multiple times
     // todo: text of conj descrs should be returned based on char offset attachement
-    alignTexts(commentGlVar.map(getRelevantTextFromGlobalVar(_).toLowerCase()), glVars.map(getRelevantTextFromGlobalVar(_).toLowerCase()), useBigrams = true)
+    alignTexts(commentGlVar.map(getRelevantTextFromGlobalVar(_).toLowerCase()), glVars.map(getRelevantTextFromGlobalVar(_).toLowerCase()), useBigrams=false)
   }
 
   def alignTexts(srcTexts: Seq[String], dstTexts: Seq[String], useBigrams: Boolean): Seq[Alignment] = {
@@ -152,10 +153,16 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
     // keep for debugging align scores
 //    for ((src, i) <- srcTexts.zipWithIndex) {
 //      for ((dst, j) <- dstTexts.zipWithIndex) {
-//        println("++++")
-//        println(src.mkString(""))
-//        println(dst.mkString(""))
-//        println("-> score: " + 1 * compare(src, dst, useBigrams))// + (1.0 / (editDistance(src, dst) + 1.0)))
+////        println("++++")
+////        println(src.mkString(""))
+////        println(dst.mkString(""))
+//        val embScore = compare(src, dst, false)// + (1.0 / (editDistance(src, dst) + 1.0)))
+////        println("-> emb score: " + embScore)
+//        val distScore = (10.0 / (editDistance(src, dst) + 1.0))
+////        println("matches normalized: " + numberOfExactMatchNormalized)
+//        val overallScore = embScore + distScore
+////        println("-> edit dist score: " + distScore)
+////        println("-> overall: " + overallScore )
 //      }
 //    }
 
@@ -163,10 +170,29 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
     val exhaustiveScores = for {
       (src, i) <- srcTexts.zipWithIndex
       (dst, j) <- dstTexts.zipWithIndex
-      score = compare(src, dst, useBigrams)// + (1.0 / (editDistance(src, dst) + 1.0))
+      score = compare(src, dst, useBigrams=false) //+ (1.0 / (editDistance(src, dst) + 1.0))
     } yield Alignment(i, j, score)
     // redundant but good for debugging
     exhaustiveScores
+  }
+
+  def numberOfExactMatchNormalized(src: Seq[String], dst: Seq[String]): Double = {
+// normalized by len of longest string?
+    var matches = 0
+    for (s <- src) {
+      if (dst.contains(s)) {
+        matches += 1
+      }
+    }
+    // tunable multiplier
+    1.5 * matches.toDouble/math.max(src.length, dst.length)
+  }
+
+  def editDistanceNormalized(s1: String, s2: String): Double = {
+    val maxLength = math.max(s1.length, s2.length)
+    val levenshteinDist = LevenshteinDistance.getDefaultInstance().apply(s1, s2).toDouble
+    val normalizedDist = (maxLength - levenshteinDist) / maxLength
+    normalizedDist
   }
 
   def editDistance(s1: String, s2: String): Double = {
@@ -191,7 +217,8 @@ class PairwiseW2VAligner(val w2v: Word2Vec, val relevantArgs: Set[String]) exten
       dstTokens
     }
 
-    w2v.avgSimilarity(srcTextsToCompare, dstTextsToCompare) + w2v.maxSimilarity(srcTextsToCompare, dstTextsToCompare)
+
+    w2v.avgSimilarity(srcTextsToCompare, dstTextsToCompare) + w2v.maxSimilarity(srcTextsToCompare, dstTextsToCompare)  + numberOfExactMatchNormalized(srcTextsToCompare, dstTextsToCompare)
   }
 
 
@@ -246,7 +273,7 @@ object Aligner {
       (srcIdx, aa) <- grouped
       _ = debugPrint(debug, srcIdx, alignments)
       scoreMax = aa.map(_.score).max // if i do weights for some of the links, then when getting top k, divide sort by score by score max and remap alignments to updated scores
-      topK = aa.sortBy(-_.score).slice(0,k).filter(_.score > scoreThreshold)//.map(a => Alignment(a.src, a.dst, a.score/scoreMax)) //filter out those with the score below the threshold; threshold is 0 by default
+      topK = aa.sortBy(-_.score).slice(0,k).filter(_.score >= scoreThreshold)//.map(a => Alignment(a.src, a.dst, a.score/scoreMax)) //filter out those with the score below the threshold; threshold is 0 by default
       if topK.nonEmpty
     } yield topK
   }
