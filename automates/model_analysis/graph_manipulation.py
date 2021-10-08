@@ -309,9 +309,10 @@ def c_components(g, topo):
                     component.remove(node)
 
                 # Removes nodes fixed by intervention from c_components
-                if node_info["int_vars"] is not None:
-                    if node_info["orig_name"] in node_info["int_vars"]:
-                        component.remove(node)
+                if "int_vars" in g.vertex_attributes():
+                    if node_info["int_vars"] is not None:
+                        if node_info["orig_name"] in node_info["int_vars"]:
+                            component.remove(node)
             if len(component) == 0:
                 cc_sorted.remove(component)
     return cc_sorted

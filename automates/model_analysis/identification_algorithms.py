@@ -81,6 +81,9 @@ def compute_ID(y, x, p, g, g_obs, v, topo, tree):
     :return: P(y | do(x)) if y is identifiable or failure.
                 Note that the output needs to be read by get_expression
     """
+    if "description" in g.vertex_attributes():
+        v = gm.ts(set(v) - set(g.vs.select(description="U")["name"]), topo)
+
     tree = gm.TreeNode()
     if (len(p.var) == 0) and (not (p.product or p.fraction)):
         p = gm.Probability(var=v)
