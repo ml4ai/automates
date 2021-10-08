@@ -342,6 +342,60 @@ def test_basic_function_def_and_assignment(
     assert generated_grfn == basic_function_def_and_assignment_grfn
 
 
+def test_early_return_from_conditional():
+
+    func_body = [
+        Assignment(
+            left=Var(val=Name(name="x")),
+            right=Number(number=0.0),
+        ),
+        ModelIf(
+            expr=BinaryOp(
+                op=BinaryOperator.GT, left=Name(name="x"), right=Number(number=1)
+            ),
+            body=[
+                Assignment(
+                    left="x",
+                    right=BinaryOp(
+                        op=BinaryOperator.ADD,
+                        left=Name(name="x"),
+                        right=Number(number=1),
+                    ),
+                ),
+                ModelReturn(value=Name(name="x")),
+            ],
+        ),
+        ModelReturn(value=Name(name="x")),
+    ]
+
+    early_return_func = FunctionDef(
+        name=Name(name="early_return_func"), body=func_body, args=[]
+    )
+    early_return_module = Module(
+        name=Name(name="early_return_module"), body=[early_return_func]
+    )
+
+    cast = CAST([early_return_module])
+    grfn = cast.to_GrFN()
+    grfn()
+
+
+def test_early_return_from_nested_conditional():
+    pass
+
+
+def test_multiple_early_return_from_same_conditional():
+    pass
+
+
+def test_multiple_early_return_from_different_conditional():
+    pass
+
+
+def test_early_return_from_loop():
+    pass
+
+
 @pytest.mark.skip(reason="Need to implement test.")
 def test_cast_with_all_nodes(cast_with_all_nodes_grfn, cast_with_all_nodes):
     pass
