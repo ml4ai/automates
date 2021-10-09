@@ -77,6 +77,14 @@ object TestUtils {
       testBinaryEvent(mentions, FUNCTION_LABEL, FUNCTION_OUTPUT_ARG, FUNCTION_INPUT_ARG, desired)
     }
 
+    def testModelDescrsEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, MODEL_DESCRIPTION_LABEL, MODEL_NAME_ARG, MODEL_DESCRIPTION_ARG, desired)
+    }
+
+    def testModelLimitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, MODEL_LIMITATION_LABEL, MODEL_NAME_ARG, MODEL_DESCRIPTION_ARG, desired)
+    }
+
     def testUnitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testBinaryEvent(mentions, UNIT_LABEL, VARIABLE_ARG, UNIT_ARG, desired)
     }
