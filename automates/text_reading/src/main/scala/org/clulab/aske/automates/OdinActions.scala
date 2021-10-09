@@ -1379,6 +1379,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (v.words.length > 3 && v.words.tail.intersect(compoundIdentifierComponents).nonEmpty) return true
       if (v.words.length < 3 && v.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))) return true
       if (v.entities.get.exists(_ == "B-unit")) return false
+      if (allCaps(v.words.mkString("").replace(" ", ""))) return true
       // account for all caps variables, e.g., EORATIO
       if (v.words.length == 1 && allCaps(v.words.head)) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
@@ -1463,6 +1464,10 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     } yield m
   }
 
+  def compoundIdentifierActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = looksLikeAnIdentifier(mentions, state)
+    toReturn
+  }
 
   def descriptionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = descrIsNotVar(looksLikeAnIdentifier(mentions, state), state)
@@ -1524,6 +1529,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
     val singleCapitalWord = """^[A-Z]+$""".r
+
     for {
       m <- mentions
       descrText = m match {
@@ -1533,10 +1539,12 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         case _ => ???
       }
 
-      if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
+      if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.75
+      if (descrText.words.exists(_.length > 1))
       // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
-      if (m.tags.get.exists(t => t.startsWith("N") || t == "VBN") || m.words.exists(w => capitalized(w)))
+      if (descrText.tags.get.exists(t => t.startsWith("N") || t == "VBN") || descrText.words.exists(w => capitalized(w)))
       if singleCapitalWord.findFirstIn(descrText.text).isEmpty
+      if !descrText.text.startsWith(")")
 
     } yield m
   }

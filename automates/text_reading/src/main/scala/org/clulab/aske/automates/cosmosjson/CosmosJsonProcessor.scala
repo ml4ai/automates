@@ -32,15 +32,23 @@ object CosmosJsonProcessor {
     CosmosDocument(cosmosObjects)
   }
 
+  // for handling bad OCR
+  def addSpaces(string: String): String = {
+    val newString = string.replaceAll(" (where|by|and|if|of)", " $1 ").replaceAll("  ", " ")
+    newString
+
+  }
+
   def mkCosmosObject(json: ujson.Js, blockIdx: Int): CosmosObject = {
     val pdfName = json.obj.get("pdf_name").map(_.str)
-    val content = org.apache.commons.text.StringEscapeUtils.unescapeJava(json("content").str)
+    val content = addSpaces(org.apache.commons.text.StringEscapeUtils.unescapeJava(json("content").str))
     val pageNum = json("page_num").num.toInt
     val cls = json("postprocess_cls").str
+    val detectCls = json("detect_cls").str
     val postprocessScore = json("postprocess_score").num
     val detect_cls = json("detect_cls").str
 
-    CosmosObject(pdfName, Some(pageNum), Some(blockIdx), Some(content), Some(cls), Some(postprocessScore), Some(detect_cls)) //todo: add bounding box?
+    CosmosObject(pdfName, Some(pageNum), Some(blockIdx), Some(content), Some(cls), Some(detectCls), Some(postprocessScore)) //todo: add bounding box?
   }
 
 

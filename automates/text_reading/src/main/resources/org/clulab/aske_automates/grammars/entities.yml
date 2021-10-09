@@ -96,9 +96,9 @@ rules:
     label: Identifier
     priority: ${priority1}
     type: token
-    example: "a per-capita rate γ"
+    example: "population c."
     pattern: |
-      [word=/[A-Za-z]\./ & !word=/al.|i.e|etc.|ETC.|e.g/ & !entity = /PERSON/] (?![word=/^[a-z]/])
+      [word=/[A-Za-z]\./ & !word=/al.|i.e|etc.|ETC.|e.g|^http/ & !entity = /PERSON/] (?![word=/^[a-z]/])
       # exclude "al." as in "et al." and i.e as in i.e., <example>
 
   - name: compound_identifier
@@ -127,7 +127,7 @@ rules:
     action: looksLikeAnIdentifier
     example: "R(t)"
     pattern: |
-      @Identifier "("? @Identifier ")"?
+      @Identifier "("? @Identifier ")"? @Identifier?
 
   - name: three_capital_letters
     label: Model

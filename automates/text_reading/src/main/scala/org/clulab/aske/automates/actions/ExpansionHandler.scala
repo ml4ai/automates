@@ -539,6 +539,7 @@ object ExpansionHandler {
     "^nmod_since".r,
     "^nmod_without$".r,
     "nmod_in".r,
+//    "nmod_of".r,
 //    "nmod_by".r,
 //    "nummod".r,
     "^nsubj".r,
