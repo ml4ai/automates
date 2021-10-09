@@ -12,7 +12,7 @@ rules:
     pattern: |
       trigger = [lemma="be"]
       variable:Identifier{2,} = <cop /nsubj|det/ [!entity = /NUMBER|B-unit/ & !word = "=" & !word = ","]
-      description: Phrase = <cop nmod_of? nmod_in? conj_and? [!tag = "VBZ"]
+      description: Phrase = <cop nmod_of? nmod_in? conj_and?
       # note: ask Masha
 
 

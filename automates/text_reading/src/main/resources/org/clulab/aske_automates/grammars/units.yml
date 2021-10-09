@@ -86,6 +86,8 @@ rules:
     example: "The unit we use is MJ/kg."
     pattern: |
       [chunk = /B-NP|I-NP/ & !tag = "CD" & !tag = "-LRB-" & !word = ","]* [word = "/"]? [entity = /(?i)unit/] [word = "/"]? [chunk = /I-NP/ & !tag = "-RRB-"]*
+      |
+      [entity = /B-unit/] [word = "/"] [chunk = /B-NP|I-NP/ & entity = /DURATION/]
       #a unit is a concept that overlaps with a unit (excludes parentheses, which means this pattern does not work for `[%/(dS m-1)]` )
       #the !tag="CD" part helps ensure the value is not included in the unit
       #note: excluded the tag "CC" from the first phrase of words.

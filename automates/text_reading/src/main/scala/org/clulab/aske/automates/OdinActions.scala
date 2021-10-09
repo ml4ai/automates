@@ -1528,6 +1528,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val singleCapitalWord = """^[A-Z]+$""".r
     for {
       m <- mentions
+      if m.arguments.contains("description")
       descrText = m match {
         case tb: TextBoundMention => m
         case rm: RelationMention => m.arguments.getOrElse("description", Seq()).head
