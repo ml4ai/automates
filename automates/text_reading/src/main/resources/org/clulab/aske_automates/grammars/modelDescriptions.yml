@@ -27,7 +27,7 @@ rules:
       modelDescr:Phrase = dobj
 
   - name: model_cannot
-    label: ModelDescr
+    label: ModelLimitation
     priority: ${priority}
     type: token
     action: ${action}
@@ -36,7 +36,7 @@ rules:
       @model:Model (?<trigger> [word = "cannot"]) (?<modelDescr> [chunk = /B-VP/] (${PP+NP} [tag = /VBN/] ${PP+NP} [word = "where"] [chunk = /B-NP|I-NP/]+ [chunk = /B-VP/|word = "spread"])?)
 
   - name: model_limitation
-    label: ModelDescr
+    label: ModelLimitation
     priority: ${priority}
     type: dependency
     action: ${action}
@@ -47,18 +47,18 @@ rules:
       modelDescr:Phrase = <nsubj
 
   - name: model_not_verb
-    label: ModelDescr
+    label: ModelLimitation
     priority: ${priority}
     type: dependency
     action: ${action}
-    example: "The major limitation of MWSWAT was its reduced capability in larger water-sheds."
+    example: ""
     pattern: |
       trigger = [word = "not"] (?= [lemma = /hold/])
       model:Model = <neg nsubj
       modelDescr:VerbPhrase = <neg
 
   - name: model_not_adj
-    label: ModelDescr
+    label: ModelLimitation
     priority: ${priority}
     type: dependency
     action: ${action}

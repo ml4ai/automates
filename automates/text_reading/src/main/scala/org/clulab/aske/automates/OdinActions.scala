@@ -382,7 +382,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         origModel.document,
         origModel.keep,
         "resolving_coref",
-        Set.empty
+        origModel.attachments
       )
       val newArgs = mutable.Map[String, Seq[Mention]]()
       for (arg <- origModel.arguments){
