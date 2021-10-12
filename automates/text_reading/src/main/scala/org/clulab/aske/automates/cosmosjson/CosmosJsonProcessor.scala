@@ -15,11 +15,23 @@ object CosmosJsonProcessor {
     mkDocument(json)
   }
 
+  def endsWithBlockEndPunkt(string: String): Boolean = {
+//    println("Str: " + string)
+//    var bool = false
+    val blockEndPunkt = Seq(".", ":")
+    for (bep <- blockEndPunkt) {
+      if (string.endsWith(bep)) return true
+    }
+//    println("Bool: " + bool)
+//    bool
+    false
+  }
+
   def combineBlocks(cosmosObjects: Seq[CosmosObject] ): Seq[CosmosObject] = {
     val newBlocks = new ArrayBuffer[CosmosObject]()
     val (onlyBodyTextBlocks, otherBlocks) = cosmosObjects.filter(_.content.get.nonEmpty).partition(_.detectCls.get == "Body Text")
 //    for (obtb <- onlyBodyTextBlocks) println("obtb: " + obtb)
-    val blockEndPunkt = Seq(".", ":")
+
     for ((block, idx) <- onlyBodyTextBlocks.zipWithIndex) {
 //      println("Block: " + block)
       if (idx == 0) {
@@ -32,7 +44,7 @@ object CosmosJsonProcessor {
         val previousBlock = newBlocks.last
 //        println("->" + previousBlock.content.get)
 //        println(">>" + block.content.get)
-        if (!previousBlock.content.get.endsWith(blockEndPunkt) && block.content.get.head.isLower) {
+        if (!endsWithBlockEndPunkt(previousBlock.content.get) && !block.content.get.head.isUpper) {
         // then combine
         // need to skip the next combined then
         //
