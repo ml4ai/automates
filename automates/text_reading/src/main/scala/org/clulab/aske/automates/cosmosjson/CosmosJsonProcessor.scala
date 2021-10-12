@@ -16,46 +16,24 @@ object CosmosJsonProcessor {
   }
 
   def endsWithBlockEndPunkt(string: String): Boolean = {
-//    println("Str: " + string)
-//    var bool = false
     val blockEndPunkt = Seq(".", ":")
     for (bep <- blockEndPunkt) {
       if (string.endsWith(bep)) return true
     }
-//    println("Bool: " + bool)
-//    bool
     false
   }
 
   def combineBlocks(cosmosObjects: Seq[CosmosObject] ): Seq[CosmosObject] = {
     val newBlocks = new ArrayBuffer[CosmosObject]()
     val (onlyBodyTextBlocks, otherBlocks) = cosmosObjects.filter(_.content.get.nonEmpty).partition(_.detectCls.get == "Body Text")
-//    for (obtb <- onlyBodyTextBlocks) println("obtb: " + obtb)
-
     for ((block, idx) <- onlyBodyTextBlocks.zipWithIndex) {
-//      println("Block: " + block)
       if (idx == 0) {
         newBlocks.append(block)
       }
-      //else if (idx == onlyBodyTextBlocks.length - 1) {
-        //newBlocks.append(block)
-      //}
     else {
         val previousBlock = newBlocks.last
-//        println("->" + previousBlock.content.get)
-//        println(">>" + block.content.get)
         if (!endsWithBlockEndPunkt(previousBlock.content.get) && !block.content.get.head.isUpper) {
         // then combine
-        // need to skip the next combined then
-        //
-        //        pdfName: Option[String],
-        //        pageNum: Option[Seq[Int]],
-        //        blockIdx: Option[Seq[Int]],
-        //        content: Option[String],
-        //        cls: Option[String], //postprocess_cls (class)
-        //        detectCls: Option[String],
-        //        postprocessScore: Option[Double]
-
         val newBlock = CosmosObject(
           block.pdfName,
           Some(previousBlock.pageNum.get ++ block.pageNum.get),
@@ -69,8 +47,8 @@ object CosmosJsonProcessor {
         newBlocks.append(newBlock)
       } else {
         newBlocks.append(block)
+        }
       }
-    }
     }
     newBlocks ++ otherBlocks
   }
