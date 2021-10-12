@@ -1,13 +1,15 @@
 package org.clulab.aske.automates.apps
 
+import ai.lum.common.ConfigFactory
+
 import java.io.{File, PrintWriter}
 import java.util.UUID
 import org.clulab.utils.TextUtils._
 import ai.lum.common.ConfigUtils._
 import ai.lum.common.FileUtils._
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import org.clulab.aske.automates.data.{DataLoader, TextRouter, TokenizedLatexDataLoader}
-import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler, VariableEditDistanceAligner}
+import org.clulab.aske.automates.alignment.{Aligner, Alignment, AlignmentHandler}
 import org.clulab.aske.automates.grfn.GrFNParser.mkHypothesis
 import org.clulab.aske.automates.OdinEngine
 import org.clulab.aske.automates.apps.AlignmentBaseline.{greek2wordDict, word2greekDict}
@@ -16,19 +18,25 @@ import org.clulab.odin.{Attachment, Mention}
 import org.clulab.utils.{AlignmentJsonUtils, FileUtils}
 import org.slf4j.LoggerFactory
 import ujson.{Obj, Value}
-import org.clulab.grounding.sparqlResult
+import org.clulab.grounding.{SVOGrounder, SeqOfWikiGroundings, WikiGrounding, WikidataGrounder, sparqlResult, sparqlWikiResult}
 import org.clulab.odin.serialization.json.JSONSerializer
 
 import java.util.UUID.randomUUID
 import org.clulab.utils.AlignmentJsonUtils.{GlobalEquationVariable, GlobalSrcVariable, GlobalVariable, getGlobalEqVars, getGlobalSrcVars, getSrcLinkElements, mkGlobalEqVarLinkElement, mkGlobalSrcVarLinkElement, mkGlobalVarLinkElement}
 import org.clulab.aske.automates.attachments.AutomatesAttachment
+import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.grounding.SVOGrounder.getTerms
+import upickle.default.write
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
-case class AlignmentArguments(json: Value, identifierNames: Option[Seq[String]], identifierShortNames: Option[Seq[String]], commentDescriptionMentions: Option[Seq[Mention]], descriptionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], intervalParameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]])
+case class AlignmentArguments(json: Value, identifierNames: Option[Seq[String]], identifierShortNames: Option[Seq[String]], commentDescriptionMentions: Option[Seq[Mention]], descriptionMentions: Option[Seq[Mention]], parameterSettingMentions: Option[Seq[Mention]], intervalParameterSettingMentions: Option[Seq[Mention]], unitMentions: Option[Seq[Mention]], equationChunksAndSource: Option[Seq[(String, String)]], svoGroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]], wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]])
 
 object ExtractAndAlign {
+
+
   // Link element types
   val COMMENT = "comment"
   val GLOBAL_COMMENT = "gl_comm"
@@ -64,12 +72,12 @@ object ExtractAndAlign {
 
   // These are temporary thresholds - to be set
   val allLinkTypes = ujson.Obj("direct" -> ujson.Obj(
-    GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> 0.5,
-    GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> 0.5,
-    GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> 0.5,
-    GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> 0.5,
-    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER -> 0.5,
-    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> 0.5,
+    GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER -> 1.0,
+    GLOBAL_VAR_TO_UNIT_VIA_CONCEPT -> 1.8,
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER -> 1.0,
+    GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT -> 1.8,
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER -> 1.0,
+    GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT -> 1.8,
     EQN_TO_GLOBAL_VAR -> 0.5,
     COMMENT_TO_GLOBAL_VAR -> 0.5),
     "indirect" -> ujson.Obj(
@@ -117,8 +125,13 @@ object ExtractAndAlign {
   val logger = LoggerFactory.getLogger(this.getClass())
 
 
-  val config = ConfigFactory.load()
+  val config: Config = ConfigFactory.load()
   val pdfAlignDir: String = config[String]("apps.pdfalignDir")
+  val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
+  val vectors: String = config[String]("alignment.w2vPath")
+  val w2v = new Word2Vec(vectors, None)
+
+  def parseDouble(s: String): Option[Double] = Try { s.toDouble }.toOption
 
   def groundMentions(
                       grfn: Value,
@@ -131,7 +144,10 @@ object ExtractAndAlign {
                       commentDescriptionMentions: Option[Seq[Mention]],
                       equationChunksAndSource: Option[Seq[(String, String)]],
                       SVOgroundings: Option[ArrayBuffer[(String, Seq[sparqlResult])]],
+                      wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]],
                       groundToSVO: Boolean,
+                      groundToWiki: Boolean,
+                      saveWikiGroundings: Boolean,
                       maxSVOgroundingsPerVar: Int,
                       alignmentHandler: AlignmentHandler,
                       numAlignments: Option[Int],
@@ -144,16 +160,27 @@ object ExtractAndAlign {
 
     // get all global variables before aligning
     val allGlobalVars = if (descriptionMentions.nonEmpty) {
-      getGlobalVars(descriptionMentions.get)
+      getGlobalVars(descriptionMentions.get, wikigroundings, groundToWiki)
     } else Seq.empty
+
+    if (saveWikiGroundings) {
+      val groundings = SeqOfWikiGroundings(allGlobalVars.map(gv => WikiGrounding(gv.identifier, gv.groundings.getOrElse(Seq.empty))))
+      val asString = write(groundings, indent = 4)
+      val exporter = JSONDocExporter()
+      val fileName = if (descriptionMentions.isDefined && descriptionMentions.get.nonEmpty) descriptionMentions.get.head.document.id.getOrElse("unknown_document") else "unknown_document"
+      exporter.export(asString, fileName.replace(".json", "").concat("-wikidata-groundings"))
+    }
+
+
 
     // keep for debugging align
 //    for (g <- allGlobalVars) println("gv: " + g.identifier + "\n------\n" + g.textFromAllDescrs.mkString("\n") +
 //      "\n=========\n")
 
 
+    // todo: have a separate method for gl comment vars with no grounding and no location on the page
     val allCommentGlobalVars = if (commentDescriptionMentions.nonEmpty) {
-      getGlobalVars(commentDescriptionMentions.get)
+      getGlobalVars(commentDescriptionMentions.get, wikigroundings, false)
     } else Seq.empty
 
     // keep for debugging align
@@ -194,16 +221,6 @@ object ExtractAndAlign {
     linkElements(EQUATION) = eqLinkElements.map(_.toString())
     linkElements(GLOBAL_EQ_VAR) = globalEqVariables.map(glv => mkGlobalEqVarLinkElement(glv))
 
-
-    // fixme: rethink svo grounding
-//    linkElements(TEXT_VAR) =  if (groundToSVO) {
-//      // update if svo groundings have been previously extracted or set to none to be extracted during rehydrateLinkElement
-//      if (alignments.contains("GLOBAL_VAR_TO_SVO")) {
-//        updateTextVarsWithSVO(linkElements(TEXT_VAR), SVOgroundings, alignments(GLOBAL_VAR_TO_SVO))
-//      } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
-//
-//    } else linkElements(TEXT_VAR).map(tvle => updateTextVariable(tvle, "None"))
-
     for (le <- linkElements.keys) {
       outputJson(le) = linkElements(le).map{element => rehydrateLinkElement(element, groundToSVO, maxSVOgroundingsPerVar, false)}
     }
@@ -218,24 +235,42 @@ object ExtractAndAlign {
     } else outputJson
   }
 
-  def getGlobalVars(descrMentions: Seq[Mention]): Seq[GlobalVariable] = {
+  def getGlobalVars(descrMentions: Seq[Mention], wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]], groundToWiki: Boolean): Seq[GlobalVariable] = {
 
     val groupedVars = descrMentions.groupBy(_.arguments("variable").head.text.replace(".", ""))
     val allGlobalVars = new ArrayBuffer[GlobalVariable]()
     for (gr <- groupedVars) {
       val glVarID = randomUUID().toString()
       val identifier = gr._1//AlignmentBaseline.replaceWordWithGreek(gr._1, AlignmentBaseline.word2greekDict.toMap); for now, don't convert: text vars are already symbols and comments shouldnt be converted except for during alignment
+      val identifierComponents = if (identifier.contains("_")) {
+        val splitIdentifier = identifier.split("_")
+        if (!splitIdentifier.map(_.length).contains(1)) {
+          splitIdentifier.filter(_.length > 1).toSeq
+        } else Seq.empty
+      } else Seq.empty
+//      println("IDENTIFIER: " + identifier)
+
       val textVarObjs = gr._2.map(m => mentionToIDedObjString(m, TEXT_VAR))
-      val textFromAllDescrs = gr._2.map(m => m.arguments("description").head.text).distinct
-      val glVar = new GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs)
+      val textFromAllDescrs = gr._2.map(m => getMentionText(m.arguments("description").head)).distinct ++ identifierComponents
+      val terms = gr._2.flatMap(g => getTerms(g)).distinct
+      val groundings = if (groundToWiki) {
+        // if there are no existing wikigroundings, ground
+        if (!wikigroundings.isDefined || wikigroundings.get.isEmpty) {
+          WikidataGrounder.groundTermsToWikidataRanked(identifier, terms.flatten, textFromAllDescrs, w2v, numOfWikiGroundings)
+        } else {
+          // if there are previously extracted groundings, find grounding for the identifier
+          if (wikigroundings.get.contains(identifier)) {
+            Some(wikigroundings.get(identifier))
+          } else {
+            None
+          }
+        }
+      } else None
+      val glVar = GlobalVariable(glVarID, identifier, textVarObjs, textFromAllDescrs, groundings)
       allGlobalVars.append(glVar)
-
     }
-
     allGlobalVars
   }
-
-
 
   def updateTextVariable(textVarLinkElementString: String, update: String): String = {
     textVarLinkElementString + "::" + update
@@ -434,13 +469,13 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_UNIT_VIA_IDENTIFIER).num)
       }
       // link the params attached to a concept ('time' in 'time is measured in days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_UNIT_VIA_CONCEPT).num)
       }
     }
 
@@ -463,14 +498,14 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_PARAM_SETTING_VIA_IDENTIFIER).num)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = false)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_PARAM_SETTING_VIA_CONCEPT).num)
       }
 
     }
@@ -485,14 +520,14 @@ object ExtractAndAlign {
       if (throughVar.nonEmpty) {
         val varNameAlignments = alignmentHandler.editDistance.alignTexts(allGlobalVars.map(_.identifier).map(_.toLowerCase), throughVar.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()))
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_IDENTIFIER).num)
       }
 
       // link the params attached to a concept ('time' in 'time is set to 5 days') to the description of the description mention ('time' in 't is time'); note: the name of the argument of interest is "variable"
       if (throughConcept.nonEmpty) {
         val varNameAlignments = alignmentHandler.w2v.alignTexts(allGlobalVars.map(_.textFromAllDescrs.mkString(" ")).map(_.toLowerCase), throughConcept.map(Aligner.getRelevantText(_, Set("variable"))).map(_.toLowerCase()), useBigrams = true)
         // group by src idx, and keep only top k (src, dst, score) for each src idx, here k = 1
-        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, 1)
+        alignments(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT) = Aligner.topKBySrc(varNameAlignments, numAlignments.get, allLinkTypes("direct").obj(GLOBAL_VAR_TO_INT_PARAM_SETTING_VIA_CONCEPT).num)
       }
 
     }
@@ -604,9 +639,12 @@ object ExtractAndAlign {
     }
     if (menArgs.exists(arg => arg._1 == "valueMost")) {
       val valMostMen = menArgs("valueMost").head
-      toReturn("upper_bound") = valMostMen.text.toDouble
+      if (parseDouble(valMostMen.text).isDefined) {
+        toReturn("upper_bound") =  valMostMen.text.toDouble
+      } else {
+        toReturn("upper_bound") =  valMostMen.text
+      }
       spans.append(makeLocationObj(valMostMen, Some(page), Some(block)))
-
     }
     toReturn("spans") = spans
     toReturn
@@ -1050,14 +1088,19 @@ object ExtractAndAlign {
 
   def main(args: Array[String]): Unit = {
     val toAlign = Seq("Comment", "Text", "Equation")
-    val groundToSVO = true //load from config
-    val maxSVOgroundingsPerVar = 5 //load from config
+
     val config: Config = ConfigFactory.load()
     val numAlignments = config[Int]("apps.numAlignments") // for all but srcCode to comment, which we set to top 1
     val scoreThreshold = config[Double]("apps.commentTextAlignmentScoreThreshold")
     val loadMentions = config[Boolean]("apps.loadMentions")
     val appendToGrFN = config[Boolean]("apps.appendToGrFN")
     val serializerName = config[String]("apps.serializerName")
+    val groundToSVO = config[Boolean]("apps.groundToSVO")
+    val maxSVOgroundingsPerVar = config[Int]("apps.maxSVOgroundingsPerVar")
+    val groundToWiki = config[Boolean]("apps.groundToWiki")
+    val numOfWikiGroundings = config[Int]("apps.numOfWikiGroundings")
+    val saveWikiGroundings = config[Boolean]("apps.saveWikiGroundingsDefault")
+    val pathToWikiGroundings = config[String]("apps.pathToWikiGroundings")
 
     // =============================================
     //                 DATA LOADING
@@ -1111,6 +1154,20 @@ object ExtractAndAlign {
 
     logger.info(s"Extracted ${textDescriptionMentions.length} descriptions from text")
 
+    // load wikigroundings if available
+    val wikigroundings = if (groundToWiki) {
+      if (new File(pathToWikiGroundings.toString).canRead) {
+        val groundingsAsUjson = ujson.read(new File(pathToWikiGroundings.toString))
+        val groundingMap = mutable.Map[String, Seq[sparqlWikiResult]]()
+        for (item <- groundingsAsUjson("wikiGroundings").arr) {
+          val identString = item.obj("variable").str
+          val groundings = item.obj("groundings").arr.map(gr => new sparqlWikiResult(gr("searchTerm").str, gr("conceptID").str, gr("conceptLabel").str, Some(gr("conceptDescription").arr.map(_.str).mkString(" ")), Some(gr("alternativeLabel").arr.map(_.str).mkString(" ")), Some(gr("subClassOf").arr.map(_.str).mkString(" ")), Some(gr("score").arr.head.num), gr("source").str)).toSeq
+          groundingMap(identString) = groundings
+        }
+        Some(groundingMap.toMap)
+      } else None
+
+    } else None
     // Load equations and "extract" variables/chunks (using heuristics)
     val equationFile: String = config[String]("apps.predictedEquations")
     val equationChunksAndSource = Some(loadEquations(equationFile))
@@ -1130,7 +1187,10 @@ object ExtractAndAlign {
       Some(commentDescriptionMentions),
       equationChunksAndSource,
       None, //not passing svo groundings from grfn
+      wikigroundings: Option[Map[String, Seq[sparqlWikiResult]]],
       groundToSVO: Boolean,
+      groundToWiki: Boolean,
+      saveWikiGroundings: Boolean,
       maxSVOgroundingsPerVar: Int,
       alignmentHandler,
       Some(numAlignments),

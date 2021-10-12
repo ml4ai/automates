@@ -12,6 +12,7 @@ case class CosmosObject(
                        blockIdx: Option[Int],
                        content: Option[String],
                        cls: Option[String], //postprocess_cls (class)
+                       detectCls: Option[String],
                        postprocessScore: Option[Double]
                        )
 case class Author(
