@@ -29,6 +29,7 @@ object SVOGrounding {
 }
 
 case class SeqOfGroundings(groundings: Seq[SVOGrounding])
+
 object SeqOfGroundings {
   implicit val rw: ReadWriter[SeqOfGroundings] = macroRW
 }
