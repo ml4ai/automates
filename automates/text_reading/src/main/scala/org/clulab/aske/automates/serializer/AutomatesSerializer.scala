@@ -322,7 +322,7 @@ object AutomatesJSONSerializer {
 
     val sentencesAsUJson = document.sentences.map(s => toUJson(s)).toList
     ujson.Obj(
-      "id" -> document.id.get,
+      "id" -> document.id.getOrElse("unknownDocument"),
       "text" -> document.text.get,
       "sentences" -> sentencesAsUJson
     )
@@ -428,7 +428,7 @@ object AutomatesJSONSerializer {
 
     def toUJson: ujson.Value = {
       ujson.Obj(
-        "type" -> "CrossSentenceEventMention",
+        "type" -> "CrossSentenceMention",
         "id" -> EventMentionOps(cm).id,
         "text" -> cm.text,
         "labels" -> cm.labels,
