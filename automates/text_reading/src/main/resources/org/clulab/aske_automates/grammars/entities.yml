@@ -76,14 +76,6 @@ rules:
     pattern: |
       (?<=product of|values for) @variable:Phrase and @variable:Phrase
 
-  - name: model
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    pattern: |
-      [word=/^DSSAT|^CSM|^CHIRPS/]
-
   - name: identifier_greek
     label: Identifier
     priority: ${priority1}
@@ -128,94 +120,6 @@ rules:
     example: "R(t)"
     pattern: |
       @Identifier "("? @Identifier ")"? @Identifier?
-
-  - name: three_capital_letters
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: "DSSAT-CSM employs the following formula for calculation of E0 (potential crop ET):"
-    pattern: |
-      [word=/[A-Z]{3,}$/ & !entity = /LOCATION/ & !word = /${modelAvoids}/] ([tag= /CD/]|[word = /[Vv]\d\.\d/])? #note: got rid of organization from the entity to avoid, because it filtered out some correct model names too
-      |
-      [word=/[A-Z]{3,}\d+/]
-      |
-      [word=/[A-Z]{3,}$/] [word = "-"] [word=/[A-Z]+/] ([tag= /CD/])?
-
-  - name: capital_plus_lower_letter
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: "In both works, FabSim is recognised as a toolkit that helps to curate and simplify simulation research at the simulation deployment, execution and optimisation stage."
-    pattern: |
-      [word=/([A-Z][a-z]+){2,}/]
-
-  - name: full_name_with_parentheses
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: "The Soil and Water Assessment Tool (SWAT) model is a robust watershed modeling tool."
-    pattern: |
-      [tag = /DT/] ("so" "called")? [word = /[A-Z][a-z]+|and|-/ & !entity = /ORGANIZATION|LOCATION/]+ "(" [word=/[A-Z]{3,}$/ & !entity = /ORGANIZATION|LOCATION/ & !word = /${modelAvoids}/] ")" [word = "model"]?
-
-  - name: simple/standard_model
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: "This new model will be called SEIRP model (E stands for the Exposed class while P stands for protection) which can be considered as a variant of the standard SIR."
-    pattern: |
-      [word = /simple|standard/] [word = /[A-Z]{3,}/]
-
-  # moved below two rules from model.yml file.
-  - name: capital_model
-    label: Model
-    priority: ${priority1}
-    type: token
-    action: modelArguments
-    example: ""
-    pattern: |
-      [word=/[A-Z]+/] (?=[word=/[Mm]odel$/])
-
-  - name: model_compound
-    label: Model
-    priority: ${priority1}
-    type: dependency
-    action: modelArguments
-    example: ""
-    pattern: |
-      trigger = [word = /[Mm]odel[s]$/] | [word = "modelling"]
-      modelName:Phrase = compound | amod
-
-  - name: the/this_model
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: ""
-    pattern: |
-      [word = /[Tt]he/] [tag = /JJ/]? [word=/model$/]
-
-  - name: our_model
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: ""
-    pattern: |
-      [word = /[Oo]ur/] [tag = /JJ/]? [word=/model$|simulation|approach/]
-
-  - name: model_compound_token
-    label: Model
-    priority: ${priority1}
-    type: token
-    example: ""
-    pattern: |
-      [chunk = /B-NP|I-NP/ & !tag = /DT|-LRB-/]+ [word=/[Mm]odel$|simulation|approach/ & chunk = /I-NP/]
-
-#  - name: model_lexicon
-#    label: Model
-#    priority: ${priority1}
-#    type: token
-#    example: "Food Shocks Cascade"
-#    pattern: |
-#      [entity = /B-Model|I-Model/]+
 
 #  - name: var_greek_and_latin
 #    label: Identifier

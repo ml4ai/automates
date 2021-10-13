@@ -22,13 +22,12 @@ class TestModelDescrs extends ExtractionTest{
     testModelDescrsEvent(mentions, desired)
   }
 
-  val t3a = "we show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
-  failingTest should s"extract descriptions from t3a: ${t3a}" taggedAs(Somebody) in {
+  val t3a = "We show first that the standard Susceptible-Infected-Removed (SIR) model cannot account for the patterns observed in various regions where the disease spread."
+  passingTest should s"extract descriptions from t3a: ${t3a}" taggedAs(Somebody) in {
     val desired = Seq(
       "the standard Susceptible-Infected-Removed (SIR) model" -> Seq("account for the patterns observed in various regions where the disease spread")
     )
     val mentions = extractMentions(t3a)
     testModelLimitEvent(mentions, desired) // note: when the label for mention is "ModelLimitation", the test should be "testModelLimitEvent" instead of "testModelDescrsEvent"
-    // TODO: it says that "List() did not contain element", even though the extraction is correct. need to discuss this with Masha.
   }
 }

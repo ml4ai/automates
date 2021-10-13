@@ -21,7 +21,7 @@ class CrossSentenceEventMention(
                                  foundBy: String,
                                  attachments: Set[Attachment]
                                ) extends EventMention(labels,  tokenInterval, trigger, arguments, Map.empty, trigger.sentence, document, keep, foundBy, attachments)
-//
+
 //  def this(
 //            labels: Seq[String],
 //            trigger: TextBoundMention,
@@ -101,5 +101,6 @@ class CrossSentenceEventMention(
 //    tokenInterval
 //  }
 //}
+
 
 

@@ -2,8 +2,7 @@
   - Phrase:
       - Identifier:
         - VariableGazetteer
-      - Model:
-        - ModelLimitation
+      - Model
       - Measurement:
         - Value:
           - ValueAndUnit
@@ -17,7 +16,8 @@
   - Description:
     - ConjDescription
     - ConjDescriptionType2
-  - ModelDescr
+  - ModelDescr:
+    - ModelLimitation
   - ParameterSetting
   - IntervalParameterSetting
   - Function

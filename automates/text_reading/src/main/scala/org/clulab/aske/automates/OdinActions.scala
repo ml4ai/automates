@@ -1,6 +1,7 @@
 package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
+import edu.stanford.nlp.dcoref.Dictionaries.MentionType
 import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.odin.{Mention, _}
 import org.clulab.odin.impl.Taxonomy
@@ -363,18 +364,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def resolveModelCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (models, nonModels) = mentions.partition(m => m.label == "ModelDescr")
-//    println(models.head.arguments.head._1)
-    val (theModel, modelNames) = models.partition(m => m.arguments.contains("model") && m.arguments("model").head.foundBy == "the/this_model")
+    val (theModel, modelNames) = models.partition(m => m.arguments.contains("model") && m.arguments("model").head.foundBy == "the/this_model" || m.arguments.contains("model") && m.arguments("model").head.foundBy == "model_pronouns")
     val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m))
-    (resolved ++ modelNames ++ nonModels).distinct
-//    mentions
+    val resolved_filtered = resolved.filter(m => m.arguments("model").head.foundBy != "model_pronouns")
+        (resolved_filtered ++ modelNames ++ nonModels).distinct
   }
 
   def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Mention = {
     val previousModelInterval = returnPreviousModelInt(mentions, origModel)
     val previousModelSntnce = returnPreviousModelSntnce(mentions, origModel)
 
-    if (previousModelInterval.nonEmpty){
+    if (previousModelInterval != Interval(0,0)) {
       val newModelArg = new TextBoundMention(
         origModel.arguments("model").head.labels,
         previousModelInterval,
@@ -385,7 +385,7 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         origModel.attachments
       )
       val newArgs = mutable.Map[String, Seq[Mention]]()
-      for (arg <- origModel.arguments){
+      for (arg <- origModel.arguments) {
         if (arg._1 == "model") {
           newArgs += (arg._1 -> Seq(newModelArg))
         } else {
@@ -398,17 +398,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def returnPreviousModelInt(mentions: Seq[Mention], origModel: Mention): Interval = {
     val (models, nonModels) = mentions.partition(m => m.label == "Model")
-    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
     val previousModels = modelNames.filter(_.sentence < origModel.sentence)
     if (previousModels.nonEmpty) {
       val selectedModel = previousModels.maxBy(_.sentence)
       selectedModel.tokenInterval
-    } else origModel.arguments("model").head.tokenInterval
+    } else Interval(0,0)
   }
 
   def returnPreviousModelSntnce(mentions: Seq[Mention], origModel: Mention): Int = {
     val (models, nonModels) = mentions.partition(m => m.label == "Model")
-    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
     val previousModels = modelNames.filter(_.sentence < origModel.sentence)
     if (previousModels.nonEmpty) {
       val selectedModel = previousModels.maxBy(_.sentence)

@@ -8,6 +8,7 @@ import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, Interval}
 import org.clulab.odin.serialization.json._
 import org.clulab.serialization.json.{DirectedGraphOps, EdgeOps, GraphMapOps}
+import org.clulab.aske.automates.mentions.CrossSentenceEventMention
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -34,6 +35,7 @@ object AutomatesJSONSerializer {
     val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
     val labels = mentionComponents("labels").arr.map(_.str).toArray
     val sentence = mentionComponents("sentence").num.toInt
+    val crossSentence = Seq(sentence)
     val docHash = mentionComponents("document").str.toInt
     val document = docMap(docHash.toString)
     val keep = mentionComponents("keep").bool
@@ -95,6 +97,21 @@ object AutomatesJSONSerializer {
           getArgs(mentionComponents("arguments")),
           toPaths(mentionComponents, docMap),
           sentence,
+          document,
+          keep,
+          foundBy,
+          attachments = attAsSet
+        )
+      }
+
+      case "CrossSentenceMention" => {
+        new CrossSentenceEventMention(
+          labels,
+          tokenInterval,
+          toMention(mentionComponents("trigger"), docMap).asInstanceOf[TextBoundMention],
+          getArgs(mentionComponents("arguments")),
+          toPaths(mentionComponents, docMap),
+          crossSentence,
           document,
           keep,
           foundBy,
@@ -241,6 +258,7 @@ object AutomatesJSONSerializer {
       case tb: TextBoundMention => AutomatesTextBoundMentionOps(tb).toUJson//toUJson(tb)
       case rm: RelationMention => AutomatesRelationMentionOps(rm).toUJson
       case em: EventMention => AutomatesEventMentionOps(em).toUJson
+      case cm: CrossSentenceEventMention => AutomatesCrossSentenceEventMentionOps(cm).toUJson
       case _ => ???
     }
   }
@@ -402,6 +420,29 @@ object AutomatesJSONSerializer {
         "keep" -> em.keep,
         "foundBy" -> em.foundBy,
         "attachments" -> AutomatesJSONSerializer.toUJson(em.attachments)
+      )
+    }
+  }
+
+  implicit class AutomatesCrossSentenceEventMentionOps(cm: CrossSentenceEventMention) extends EventMentionOps(cm: EventMention) {
+
+    def toUJson: ujson.Value = {
+      ujson.Obj(
+        "type" -> "CrossSentenceEventMention",
+        "id" -> EventMentionOps(cm).id,
+        "text" -> cm.text,
+        "labels" -> cm.labels,
+        "trigger" -> AutomatesTextBoundMentionOps(cm.trigger).toUJson,
+        "arguments" -> argsToUJson(cm.arguments),
+        "paths" -> AutomatesJSONSerializer.pathsAsUJson(cm.paths),
+        "tokenInterval" -> Map("start" -> cm.tokenInterval.start, "end" -> cm.tokenInterval.end),
+        "characterStartOffset" -> cm.startOffset,
+        "characterEndOffset" -> cm.endOffset,
+        "sentence" -> Seq(cm.sentence),
+        "document" -> cm.document.equivalenceHash.toString,
+        "keep" -> cm.keep,
+        "foundBy" -> cm.foundBy,
+        "attachments" -> AutomatesJSONSerializer.toUJson(cm.attachments)
       )
     }
   }
