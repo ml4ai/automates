@@ -520,8 +520,14 @@ class GCC2CAST:
             # this second condition. Otherwise, we only have one condition and
             # the "false block" is the normal block of code following the if,
             # so do not evaluate it here.
+            # In the case that a block has a break in it, the first check won't work
+            # because the break changes the exit target of the block it's in, so we do 
+            # additional checks to see where the break takes us 
             if true_exit_target == false_exit_target:
                 false_res = self.parse_basic_block(false_block)
+            elif true_exit_target != false_exit_target and true_exit_target > true_block["edges"][0]["source"]:
+                false_res = self.parse_basic_block(false_block)
+            
 
             self.current_basic_block = temp
             return [ModelIf(expr=condition_expr, body=true_res, orelse=false_res)]

@@ -1,0 +1,793 @@
+{
+  "mainInputFilename": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+  "functions": [
+    {
+      "id": 4294965006,
+      "name": "main",
+      "mangledName": "main",
+      "weak": false,
+      "inline": false,
+      "public": true,
+      "decl_line_start": 1,
+      "decl_col_start": 5,
+      "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+      "line_start": 2,
+      "line_end": 23,
+      "variableDeclarations": [
+        {
+          "name": "j",
+          "id": 4294965001,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "i",
+          "id": 4294965002,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "y",
+          "id": 4294965003,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "name": "x",
+          "id": 4294965004,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        },
+        {
+          "id": 4294964990,
+          "static": false,
+          "type": {
+            "type": "integer_type",
+            "size": 32,
+            "unsigned": false
+          }
+        }
+      ],
+      "basicBlocks": [
+        {
+          "index": 0,
+          "statements": [
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 0,
+              "target": 2
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 3,
+              "col_start": 9,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965004,
+                "name": "x",
+                "line_start": 3,
+                "col_start": 9,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 4,
+              "col_start": 9,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965003,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 5,
+              "col_start": 14,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965002,
+                "name": "i",
+                "line_start": 5,
+                "col_start": 14,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 2,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 5,
+              "col_start": 23,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965002,
+                  "name": "i",
+                  "line_start": 5,
+                  "col_start": 14,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ],
+              "trueLabel": 11,
+              "falseLabel": 4
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 3,
+              "target": 11
+            },
+            {
+              "flags": 512,
+              "source": 3,
+              "target": 4
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 7,
+              "col_start": 18,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965001,
+                "name": "j",
+                "line_start": 7,
+                "col_start": 18,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 4,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "statements": [
+            {
+              "type": "conditional",
+              "line_start": 7,
+              "col_start": 27,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "gt_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965001,
+                  "name": "j",
+                  "line_start": 7,
+                  "col_start": 18,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ],
+              "trueLabel": 10,
+              "falseLabel": 6
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 5,
+              "target": 10
+            },
+            {
+              "flags": 512,
+              "source": 5,
+              "target": 6
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 9,
+              "col_start": 15,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965003,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965003,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "conditional",
+              "line_start": 11,
+              "col_start": 13,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "eq_expr",
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965003,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 2
+                }
+              ],
+              "trueLabel": 7,
+              "falseLabel": 8
+            }
+          ],
+          "edges": [
+            {
+              "flags": 256,
+              "source": 6,
+              "target": 7
+            },
+            {
+              "flags": 512,
+              "source": 6,
+              "target": 8
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 13,
+              "col_start": 19,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965004,
+                "name": "x",
+                "line_start": 3,
+                "col_start": 9,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965004,
+                  "name": "x",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": -1
+                }
+              ]
+            },
+            {
+              "type": "predict",
+              "line_start": 11,
+              "col_start": 13,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "hassub": 0,
+              "name": "continue"
+            },
+            {
+              "type": "goto",
+              "target": 9
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 7,
+              "target": 9
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 17,
+              "col_start": 19,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965003,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 5
+                }
+              ]
+            },
+            {
+              "type": "assign",
+              "line_start": 19,
+              "col_start": 15,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "minus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965003,
+                "name": "y",
+                "line_start": 4,
+                "col_start": 9,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965003,
+                  "name": "y",
+                  "line_start": 4,
+                  "col_start": 9,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965004,
+                  "name": "x",
+                  "line_start": 3,
+                  "col_start": 9,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 8,
+              "target": 9
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 7,
+              "col_start": 9,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965001,
+                "name": "j",
+                "line_start": 7,
+                "col_start": 18,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965001,
+                  "name": "j",
+                  "line_start": 7,
+                  "col_start": 18,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 5
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 9,
+              "target": 5
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 5,
+              "col_start": 5,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "plus_expr",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294965002,
+                "name": "i",
+                "line_start": 5,
+                "col_start": 14,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "var_decl",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "id": 4294965002,
+                  "name": "i",
+                  "line_start": 5,
+                  "col_start": 14,
+                  "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+                },
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "type": "goto",
+              "target": 3
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 10,
+              "target": 3
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "statements": [
+            {
+              "type": "assign",
+              "line_start": 22,
+              "col_start": 12,
+              "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c",
+              "operator": "integer_cst",
+              "lhs": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964990,
+                "line_start": 22,
+                "col_start": 12,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              },
+              "operands": [
+                {
+                  "code": "integer_cst",
+                  "type": {
+                    "type": "integer_type",
+                    "size": 32,
+                    "unsigned": false
+                  },
+                  "value": 1
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "flags": 1,
+              "source": 11,
+              "target": 12
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "statements": [
+            {
+              "type": "return",
+              "line_start": 0,
+              "col_start": 0,
+              "value": {
+                "code": "var_decl",
+                "type": {
+                  "type": "integer_type",
+                  "size": 32,
+                  "unsigned": false
+                },
+                "id": 4294964990,
+                "line_start": 22,
+                "col_start": 12,
+                "file": "../../../../tests/data/program_analysis/language_tests/c/control_flow_interruption/complex_continue_1.c"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "flags": 0,
+              "source": 12,
+              "target": 1
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "statements": [
+          ],
+          "edges": [
+          ]
+        }
+      ],
+      "returnType": {
+        "type": "integer_type",
+        "size": 32,
+        "unsigned": false
+      }
+    }
+  ],
+  "aliases": [
+  ],
+  "globalVariables": [
+  ],
+  "recordTypes": [
+  ]
+}
