@@ -91,7 +91,7 @@ def main(src_root_dir='', dst_root_dir='', test_p=True):
                                    dst_root_dir=dst_root_dir,
                                    ext='.c',
                                    command=[gcc_path, '-O0'],
-                                   binary_postfix='_' + pname,
+                                   binary_postfix='__' + pname + '__' + gcc_version,
                                    test_p=test_p)
     for e in errors:
         print(f'ERROR: {e}')
