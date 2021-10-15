@@ -218,9 +218,9 @@ rules:
     type: token
     example: "https://github.com/djgroen/FabFlee/tree/master/conflict_data/SSudan"
     pattern: |
-      (?<repository> [word = /^http[s]\:\/\//])
+      [word = /^http[s]\:\/\//]
       |
-      (?<website> [word = /[a-z]+\.[a-z]+\.[a-z]{3}/])
+      [word = /[a-z]+\.[a-z]+\.[a-z]{3}/]
 
   - name: model_input_file
     label: ModelComponent
@@ -228,7 +228,7 @@ rules:
     type: token
     example: "Three formats of csv files, namely locations.csv, routes.csv and closures.csv, are integrated with FLEE’s input interface."
     pattern: |
-        (?<input_file> [word = /.*\.[a-z]{3}/])
+      [word = /.*\.[a-z]{3}/]
 
   - name: model_command
     label: ModelComponent
@@ -236,9 +236,9 @@ rules:
     type: token
     example: "As a start, we load a base conflict data which includes csv files and the source data of a conflict scenario using load_conflict command."
     pattern: |
-      (?<command> [word = /[a-z]+\_[a-z]+/]) [word = "command"]
+      [word = /[a-z]+\_[a-z]+/] (?= [word = "command"])
       |
-      (?<command> [word = /^[a-z]+\_?[a-z]*/] [word = ":"] ([word = /^[a-z]+\d?\_?[a-z]*/] [word = ","]?)+ ([word = "="] [word = /[a-z]+/])? ([word = ","] [word = /[a-z]+/] [word = "="] [word = /([A-Z][a-z]+)+|(\d+\-?)+/])?)
+      ([word = /^[a-z]+\_?[a-z]*/] [word = ":"] ([word = /^[a-z]+\d?\_?[a-z]*/] [word = ","]?)+ ([word = "="] [word = /[a-z]+/])? ([word = ","] [word = /[a-z]+/] [word = "="] [word = /([A-Z][a-z]+)+|(\d+\-?)+/])?)
 
   - name: model_function
     label: ModelComponent
@@ -246,15 +246,7 @@ rules:
     type: token
     example: "Similarly, we can conduct sensitivity analysis for each instantiated model by running test_sensitivity function (see Table 5 for more details)."
     pattern: |
-      (?<function> [word = /[a-z]+\_[a-z]+/]) [word = "function"]
-
-  - name: model_parameter
-    label: ModelComponent
-    priority: ${priority1}
-    type: token
-    example: "The attractiveness value of the destinations equals 0.25 for conflict zones, 1.0 for other locations in the country of conflict, and 2.0 for locations abroad."
-    pattern: |
-      (?<parameter> [entity = "Value"])
+      [word = /[a-z]+\_[a-z]+/] (?= [word = "function"])
 
 #  - name: var_greek_and_latin
 #    label: Identifier

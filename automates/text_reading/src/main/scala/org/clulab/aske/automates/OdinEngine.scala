@@ -81,6 +81,7 @@ class OdinEngine(
 
     // Run the main extraction engine, pre-populated with the initial state
     val events =  engine.extractFrom(doc, initialState).toVector
+    val newModelParams = loadableAttributes.actions.paramSettingVarToModelParam(events)
     val modelCorefResolve = loadableAttributes.actions.resolveModelCoref(events)
 
     // process context attachments to the initially extracted mentions
@@ -96,7 +97,7 @@ class OdinEngine(
     val untangled = loadableAttributes.actions.untangleConj(descriptionMentions)
     val combining = loadableAttributes.actions.combineFunction(functionMentions)
 
-    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining) ++ untangled ++ modelDescrs)).toVector
+    loadableAttributes.actions.replaceWithLongerIdentifier((loadableAttributes.actions.keepLongest(other ++ combining ++ newModelParams) ++ untangled ++ modelDescrs)).toVector
   }
 
   def extractFromText(text: String, keepText: Boolean = false, filename: Option[String]): Seq[Mention] = {

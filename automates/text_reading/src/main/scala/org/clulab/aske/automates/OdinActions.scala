@@ -1555,6 +1555,29 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       case em: EventMention => em.copy(labels = taxonomy.hypernymsFor(label))
     }
   }
+
+  def paramSettingVarToModelParam(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
+    val paramSettingMens = mentions.filter(m => m.labels.contains("ParameterSetting"))
+    val modelParams = new ArrayBuffer[Mention]
+    for (p <- paramSettingMens) {
+      val paramSettingVars = p.arguments.filter(m => m._1 == "variable")
+      for (vars <- paramSettingVars.values) {
+        val variable = vars.head
+        val newArgs = Map("modelParameter" -> Seq(variable))
+        val newLabels = List("ModelComponent", "Model", "Phrase", "Entity").toSeq
+        val modelParam = new TextBoundMention(
+          newLabels,
+          variable.tokenInterval,
+          variable.sentence,
+          variable.document,
+          variable.keep,
+          "paramSettingVarToModelParam",
+          variable.attachments)
+        modelParams.append(modelParam)
+      }
+    }
+    modelParams
+  }
 }
 
 object OdinActions {
