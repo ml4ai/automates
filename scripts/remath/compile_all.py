@@ -58,7 +58,8 @@ def get_gcc_version(gcc_path):
         version_str = version_str[clang_idx:version_str.find(')', clang_idx)]
         print('CLANG:', version_str)
     else:
-        print(f"other: {version_str}")
+        version_str = 'gcc-' + version_str.split('\n')[0].split(' ')[2]
+        print(f"GCC: {version_str}")
     return version_str
 
 
