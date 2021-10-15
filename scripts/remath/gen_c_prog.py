@@ -11,6 +11,11 @@ TYPES = \
      'NON_FLOAT': ('int', 'long', 'long long')}
 
 
+TYPE_STRING_FORMAT = \
+    {'int': 'd', 'long': 'd', 'long long': 'd',
+     'float': 'g', 'double': 'g', 'long double': 'g'}
+
+
 BIN_OPERATORS = \
     (('+', 'ANY', 'ANY', 'ANY'),
      ('-', 'ANY', 'ANY', 'ANY'),
@@ -21,7 +26,7 @@ BIN_OPERATORS = \
      ('&', 'NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'),  # bitwise AND
      ('|', 'NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'),  # bitwise inclusive OR
      ('^', 'NON_FLOAT', 'NON_FLOAT', 'NON_FLOAT'),  # bitwise exclusive OR
-     ('<<'))
+     )
 
 
 def gen_prog() -> str:

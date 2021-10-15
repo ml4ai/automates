@@ -15,6 +15,10 @@ RANGE_DOUBLE = (2.22507E-308, 1.79769E+308)  # (2.3E-308, 1.7E+308)
 RANGE_LONG_DOUBLE = (3.4E-4932, 1.1E+4932)
 RANGES = (RANGE_INT, RANGE_LONG, RANGE_LONG_LONG, RANGE_FLOAT, RANGE_DOUBLE, RANGE_LONG_DOUBLE)
 
+TYPE_STRING_FORMAT = \
+    {'int': 'd', 'long': 'd', 'long long': 'd',
+     'float': 'g', 'double': 'g', 'long double': 'g'}
+
 
 # -----------------------------------------------------------------------------
 # Sample primitive C value
@@ -170,10 +174,10 @@ def gen_prog_fn_batch(root_dir, fn_list, fns_by_name, literals_only_p):
         type_args = fn_types[1:]
         if literals_only_p:
             fn_line = gen_fn_all_literal_args(fn, type_return, type_args)
-            prog_string = gen_c_main([fn_line], includes=['#include <math.h>'])
+            prog_string = gen_c_main([fn_line], includes=('#include <math.h>',))
         else:
             fn_lines = gen_fn_all_var_args(fn, type_return, type_args)
-            prog_string = gen_c_main(fn_lines, includes=['#include <math.h>'])
+            prog_string = gen_c_main(fn_lines, includes=('#include <math.h>',))
 
         filename = f'{fn}.c'
         filepath = os.path.join(root_dir, filename)
@@ -200,7 +204,9 @@ def gen_arithmetic_op_primitives_examples():
         lines.append(f'{t} x1 = 2;')
         lines.append(f'{t} x2;')
         lines.append(f'x2 = x0 + x1;')
-        prog_string = gen_c_main(lines)
+        format_str = TYPE_STRING_FORMAT[t]
+        lines.append(f'printf("Answer: %{format_str}\\n", x2);')
+        prog_string = gen_c_main(lines, includes=('#include <stdio.h>',))
         with open(filepath, 'w') as fout:
             fout.write(prog_string)
 
