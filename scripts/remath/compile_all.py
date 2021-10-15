@@ -36,7 +36,7 @@ def compile_source_in_dir(src_root_dir='', dst_root_dir=None, ext='c', command=N
 
 
 def config_requirement_message():
-    print("To us this script you must first create a file 'config.json'")
+    print("To use this script you must first create a file 'config.json'")
     print("with the following contents -- replace <path_to_gcc> with the")
     print("appropriate absolute path within a string:")
     print("{")
