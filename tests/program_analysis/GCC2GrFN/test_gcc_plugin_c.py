@@ -174,6 +174,7 @@ def test_all_unary_ops():
         f"{test_dir}/{test_name}--GrFN.json"
     )
     grfn = cast.to_GrFN()
+
     assert expected_grfn == grfn
 
     inputs = {}
