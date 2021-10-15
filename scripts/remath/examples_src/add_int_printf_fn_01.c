@@ -7,7 +7,7 @@ int add2(int x0, int x1) {
 
 int main() {
     int x2;
-    x2 = add2(1, 2);
+    x2 = add2(8, 9);
     printf("Answer: %d\n", x2);
     return 0;
 }

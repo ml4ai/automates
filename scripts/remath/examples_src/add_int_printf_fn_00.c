@@ -6,6 +6,6 @@ int add2(int x0, int x1) {
 }
 
 int main() {
-    printf("Answer: %d\n", add2(1, 2));
+    printf("Answer: %d\n", add2(8, 9));
     return 0;
 }
