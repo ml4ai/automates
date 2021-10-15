@@ -3,16 +3,15 @@ import platform
 import subprocess
 import pathlib
 import json
+import argparse
 
 
-def compile_source_in_dir(src_root_dir='', dst_root_dir=None, ext='c', command=None, binary_postfix=None, test_p=True):
-    if test_p:
-        print('Running in TEST mode')
+def compile_source_in_dir(src_root_dir='', dst_root_dir=None, ext='c', command=None, binary_postfix=None, execute_p=False):
+    if execute_p:
+        # create destination root directory if does not already exist
+        pathlib.Path(dst_root_dir).mkdir(parents=True, exist_ok=True)
 
     errors = list()
-
-    # create destination root directory if does not already exist
-    pathlib.Path(dst_root_dir).mkdir(parents=True, exist_ok=True)
 
     # iterate through the src_root_dir
     for subdir, dirs, files in os.walk(src_root_dir):
@@ -26,7 +25,7 @@ def compile_source_in_dir(src_root_dir='', dst_root_dir=None, ext='c', command=N
                 if binary_postfix is not None:
                     output_filepath += binary_postfix
                 command_list = command + [src_filepath, '-o', output_filepath]
-                if test_p:
+                if not execute_p:
                     print(command_list)
                 else:
                     print(f'Executing {command_list}')
@@ -63,7 +62,26 @@ def get_gcc_version(gcc_path):
     return version_str
 
 
-def main(src_root_dir='', dst_root_dir='', test_p=True):
+def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--execute',
+                        help='execute script (as opposed to running in test mosde)',
+                        action='store_true', default=False)
+    parser.add_argument('-s', '--src_root_dir',
+                        help='specify the source root directory',
+                        type=str,
+                        default='examples_src')
+    parser.add_argument('-d', '--dst_root_dir',
+                        help='specify the destination root directory',
+                        type=str,
+                        default='examples_bin')
+    args = parser.parse_args()
+    if args.execute:
+        print(f'EXECUTE! {args.src_root_dir} {args.dst_root_dir}')
+    else:
+        print(f'Running in TEST mode {args.src_root_dir} {args.dst_root_dir}')
+
     # verify config.json exists
     if not os.path.isfile('config.json'):
         config_requirement_message()
@@ -85,17 +103,17 @@ def main(src_root_dir='', dst_root_dir='', test_p=True):
     # get platform name
     pname = platform.platform()
     pname_base = pname.split('-')[0]
-    dst_root_dir = os.path.join(dst_root_dir, pname_base)
+    dst_root_dir = os.path.join(args.dst_root_dir, pname_base)
 
-    errors = compile_source_in_dir(src_root_dir=src_root_dir,
+    errors = compile_source_in_dir(src_root_dir=args.src_root_dir,
                                    dst_root_dir=dst_root_dir,
                                    ext='.c',
                                    command=[gcc_path, '-O0'],
                                    binary_postfix='__' + pname + '__' + gcc_version,
-                                   test_p=test_p)
+                                   execute_p=args.execute)
     for e in errors:
         print(f'ERROR: {e}')
 
 
 if __name__ == '__main__':
-    main(src_root_dir='examples_src', dst_root_dir='examples_dst', test_p=True)
+    main()
