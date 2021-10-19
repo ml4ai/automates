@@ -1122,6 +1122,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
           menToAttach.asInstanceOf[EventMention].trigger,
           newArgs,
           menToAttach.paths, // path is off
+          menToAttach.sentence,
           sentences,
           menToAttach.document,
           menToAttach.keep,

@@ -1,39 +1,33 @@
 package org.clulab.aske.automates.mentions
 
 import org.clulab.odin
-import org.clulab.odin._
+import org.clulab.odin.{Mention, _}
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 
 //same as EventMention but with a different foundBy, no paths, sentence == the sent of the trigger, and a different text method
-//todo: place elsewhere
-//todo: change tokenInterval to something informed and usable
-//TODO: These will be serialized as EventMentions, and then won't be deserialized properly to this subclass.
-class CrossSentenceEventMention(
-                                 labels: Seq[String],
-                                 tokenInterval: Interval,
-                                 trigger: TextBoundMention,
-                                 arguments: Map[String, Seq[Mention]],
-                                 paths: Map[String, Map[Mention, SynPath]],
-                                 sentence: Seq[Int],
-                                 document: Document,
-                                 keep: Boolean,
-                                 foundBy: String,
-                                 attachments: Set[Attachment]
-                               ) extends EventMention(labels,  tokenInterval, trigger, arguments, Map.empty, trigger.sentence, document, keep, foundBy, attachments)
 
-//  def this(
-//            labels: Seq[String],
-//            trigger: TextBoundMention,
-//            arguments: Map[String, Seq[Mention]],
-//            paths: Map[String, Map[Mention, SynPath]],
-//            sentence: Seq[Int],
-//            document: Document,
-//            keep: Boolean,
-//            foundBy: String,
-//            attachments: Set[Attachment] = Set.empty
-//          ) = this(labels,  CrossSentenceEventMention.calcTokenInterval(sentence, trigger, arguments, document.sentences(sentence).startOffsets.length),
-//    trigger, arguments, Map.empty, trigger.sentence, document, keep, foundBy, attachments)
+//trait CrossSentenceTrait extends Equals with Ordered[Mention] with Serializable {
+//  def sentences: Seq[Int]
+//}
+
+class CrossSentenceEventMention(
+                                 val labels: Seq[String],
+                                 val tokenInterval: Interval,
+                                 val trigger: TextBoundMention,
+                                 val arguments: Map[String, Seq[Mention]],
+                                 val paths: Map[String, Map[Mention, SynPath]],
+                                 val sentence: Int,
+                                 val sentences: Seq[Int],
+                                 val document: Document,
+                                 val keep: Boolean,
+                                 val foundBy: String,
+                                 val attachments: Set[Attachment]
+                               ) extends Mention
+
+object CrossSentenceEventMention
+
+
 //
 //  //the text method is overridden bc the EventMention text method does not work with cross sentence mentions
 //
