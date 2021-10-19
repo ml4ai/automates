@@ -47,10 +47,21 @@ class LinkNode(ABC):
                     for comm_var in grounding_information["comment"]
                     if comm_var_uid == comm_var["uid"]
                 ][0]
+
+                content = comm_var_data["content"]
+                if "arguments" in comm_var_data:
+                    description_arguments = [
+                        arg
+                        for arg in comm_var_data["arguments"]
+                        if "name" in arg and arg["name"] == "description"
+                    ]
+                    if len(description_arguments) > 0:
+                        content = description_arguments[0]["text"]
+
                 comm_vars.append(
                     CommSpanNode(
                         comm_var_data["uid"],
-                        comm_var_data["content"],
+                        content,
                         comm_var_data["source"],
                     )
                 )
@@ -93,12 +104,21 @@ class LinkNode(ABC):
                     for text_var in grounding_information["text_var"]
                     if text_var_uid == text_var["uid"]
                 ][0]
-                # TODO I dont think TR produces this data anymore, do we need it?
-                # query_string = ";".join(text_var_data["svo_query_terms"])
+
+                content = text_var_data["content"]
+                if "arguments" in text_var_data:
+                    description_arguments = [
+                        arg
+                        for arg in text_var_data["arguments"]
+                        if "name" in arg and arg["name"] == "description"
+                    ]
+                    if len(description_arguments) > 0:
+                        content = description_arguments[0]["text"]
+
                 text_vars.append(
                     TextVarNode(
                         text_var_data["source"],
-                        text_var_data["content"],
+                        content,
                         TextExtraction(
                             text_var_data["spans"]["page"],
                             text_var_data["spans"]["block"],
@@ -111,8 +131,6 @@ class LinkNode(ABC):
                 )
 
             return GVarNode(data["uid"], data["content"], tuple(text_vars))
-        # elif element_type == "text_span":
-        #     return TextSpanNode(data["source"], data["content"])
         elif (
             element_type == "parameter_setting_via_idfr"
             or element_type == "int_param_setting_via_idfr"
@@ -247,7 +265,7 @@ class GCodeVarNode(LinkNode):
 
     def get_table_rows(self, L: DiGraph) -> list:
         comm_span_nodes = [
-            n for n in L.predecessors(self) if isinstance(n, CommSpanNode)
+            n for n in L.predecessors(self) if isinstance(n, GCommSpanNode)
         ]
 
         rows = list()
@@ -268,8 +286,6 @@ class GCodeVarNode(LinkNode):
 
 @dataclass(repr=False, frozen=True)
 class TextVarNode(LinkNode):
-    # TODO Do we need svo query information?
-    # svo_query_str: str
     text_extraction: TextExtraction
 
     def get_docname(self) -> str:
@@ -277,9 +293,6 @@ class TextVarNode(LinkNode):
         doc_data = path_pieces[-1]
         (docname, _) = doc_data.split(".pdf_")
         return docname
-
-    # def get_svo_terms(self):
-    #     return self.svo_query_str.split(";")
 
     def get_table_rows(self, L: DiGraph) -> list:
         # NOTE: nothing to do for now
@@ -297,7 +310,7 @@ class GVarNode(LinkNode):
         text_vars = [t_var for t_var in self.text_vars]
         txt = [n.content for n in text_vars]
 
-        eqn_span_nodes = [n for n in L.predecessors(self) if isinstance(n, EqnVarNode)]
+        eqn_span_nodes = [n for n in L.predecessors(self) if isinstance(n, GEqnVarNode)]
 
         rows = list()
         for eqn_span in eqn_span_nodes:
@@ -375,50 +388,16 @@ class GCommSpanNode(LinkNode):
     def get_table_rows(self, L: DiGraph) -> list:
         gvar_nodes = [n for n in L.predecessors(self) if isinstance(n, GVarNode)]
 
+        comment_spans = [s.content.replace("\n", " ") for s in self.source]
+
         rows = list()
         for gvar_node in gvar_nodes:
             w_ct = L.edges[gvar_node, self]["weight"]
             for r in gvar_node.get_table_rows(L):
-                r.update({"comm": str(self).replace("\n", " "), "ct_score": w_ct})
+                r.update({"comm": comment_spans, "ct_score": w_ct})
                 rows.append(r)
 
         return rows
-
-
-# @dataclass(repr=False, frozen=True)
-# class TextSpanNode(LinkNode):
-#     def __repr__(self):
-#         return self.__str__()
-
-#     def __str__(self):
-#         tokens = self.content.strip().split()
-#         if len(tokens) <= 4:
-#             return " ".join(tokens)
-
-#         new_content = ""
-#         while len(tokens) > 4:
-#             new_content += "\n" + " ".join(tokens[:4])
-#             tokens = tokens[4:]
-#         new_content += "\n" + " ".join(tokens)
-#         return new_content
-
-#     def __data_from_source(self) -> tuple:
-#         path_pieces = self.source.split("/")
-#         doc_data = path_pieces[-1]
-#         return tuple(doc_data.split(".pdf_"))
-
-#     def get_docname(self) -> str:
-#         (docname, _) = self.__data_from_source()
-#         return docname
-
-#     def get_sentence_id(self) -> str:
-#         (_, data) = self.__data_from_source()
-#         (sent_num, span_start, span_stop) = re.findall(r"[0-9]+", data)
-#         return
-
-#     def get_table_rows(self, L: DiGraph) -> list:
-#         # NOTE I dont believe text spans have any direct links besides gvars
-#         return None
 
 
 @dataclass(repr=False, frozen=True)
@@ -516,8 +495,6 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
 
         if isinstance(n2, GCommSpanNode):
             G.add_edge(n1, n2, weight=score)
-        # elif isinstance(n2, GVarNode):
-        #    G.add_edge(n2, n1, weight=score)
         else:
             report_bad_link(n1, n2)
 
@@ -621,7 +598,7 @@ def build_link_graph(grounding_information: dict) -> DiGraph:
 
 
 def extract_link_tables(L: DiGraph) -> dict:
-    var_nodes = [n for n in L.nodes if isinstance(n, CodeVarNode)]
+    var_nodes = [n for n in L.nodes if isinstance(n, GCodeVarNode)]
 
     tables = dict()
     for var_node in var_nodes:
