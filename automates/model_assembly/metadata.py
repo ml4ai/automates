@@ -2,12 +2,14 @@ from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod
 from copy import deepcopy
 from enum import Enum, auto, unique
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import List, Union, Type, Dict
 from time import time
 
 from ..utils.misc import uuid
+
+from automates.program_analysis.CAST2GrFN.model.cast.boolean import Boolean
 
 CategoricalTypes = Union[bool, str, int]
 NumericalTypes = Union[int, float]
@@ -19,7 +21,7 @@ class MissingEnumError(Exception):
 
 class AutoMATESBaseEnum(Enum):
     def __str__(self):
-        return str(self.name).lower()
+        return self.name.lower()
 
     @abstractclassmethod
     def from_str(cls, child_cls: Type, data: str):
@@ -36,10 +38,13 @@ class MetadataType(AutoMATESBaseEnum):
     NONE = auto()
     GRFN_CREATION = auto()
     EQUATION_EXTRACTION = auto()
-    TEXT_EXTRACTION = auto()
+    TEXT_DEFINITION = auto()
     CODE_SPAN_REFERENCE = auto()
     CODE_COLLECTION_REFERENCE = auto()
     DOMAIN = auto()
+    PARAMETER_SETTING = auto()
+    EQUATION_PARAMETER = auto()
+    TEXT_UNIT = auto()
     FROM_SOURCE = auto()
 
     @classmethod
@@ -48,14 +53,22 @@ class MetadataType(AutoMATESBaseEnum):
 
     @classmethod
     def get_metadata_class(cls, mtype: MetadataType) -> TypedMetadata:
-        if mtype == cls.GRFN_CREATION:
+        if mtype == MetadataType.GRFN_CREATION:
             return GrFNCreation
-        elif mtype == cls.CODE_SPAN_REFERENCE:
+        elif mtype == MetadataType.CODE_SPAN_REFERENCE:
             return CodeSpanReference
-        elif mtype == cls.CODE_COLLECTION_REFERENCE:
+        elif mtype == MetadataType.CODE_COLLECTION_REFERENCE:
             return CodeCollectionReference
-        elif mtype == cls.DOMAIN:
+        elif mtype == MetadataType.DOMAIN:
             return Domain
+        elif mtype == MetadataType.TEXT_DEFINITION:
+            return VariableTextDefinition
+        elif mtype == MetadataType.PARAMETER_SETTING:
+            return VariableTextParameter
+        elif mtype == MetadataType.EQUATION_PARAMETER:
+            return VariableEquationParameter
+        elif mtype == MetadataType.TEXT_UNIT:
+            return VariableTextUnit
         elif mtype == cls.FROM_SOURCE:
             return VariableFromSource
         else:
@@ -141,34 +154,72 @@ class LambdaType(AutoMATESBaseEnum):
     PACK = auto()
     OPERATOR = auto()
 
-    def __str__(self):
-        return str(self.name)
+    def shortname(self):
+        return self.__str__()[0]
+
+    @classmethod
+    def get_lambda_type(cls, type_str: str, num_inputs: int):
+        expected_val = cls.from_str(type_str)
+        if num_inputs == 0 and expected_val == cls.ASSIGN:
+            return cls.LITERAL
+        else:
+            return expected_val
+
+    @classmethod
+    def from_str(cls, data: str):
+        return super().from_str(cls, data)
+
+
+@unique
+class FunctionType(AutoMATESBaseEnum):
+    ASSIGN = auto()
+    LITERAL = auto()
+    CONDITION = auto()
+    DECISION = auto()
+    INTERFACE = auto()
+    EXTRACT = auto()
+    PACK = auto()
+    OPERATOR = auto()
+    CONDITIONAL = auto()
+    CONTAINER = auto()
+    ITERABLE = auto()
 
     def shortname(self):
         return self.__str__()[0]
 
     @classmethod
     def get_lambda_type(cls, type_str: str, num_inputs: int):
-        if type_str == "assign":
-            if num_inputs == 0:
-                return cls.LITERAL
-            return cls.ASSIGN
-        elif type_str == "condition":
-            return cls.CONDITION
-        elif type_str == "decision":
-            return cls.DECISION
-        elif type_str == "interface":
-            return cls.INTERFACE
-        elif type_str == "pack":
-            return cls.PACK
-        elif type_str == "extract":
-            return cls.EXTRACT
+        expected_val = cls.from_str(type_str)
+        if num_inputs == 0 and expected_val == cls.ASSIGN:
+            return cls.LITERAL
         else:
-            raise ValueError(f"Unrecognized lambda type name: {type_str}")
+            return expected_val
+
+    @classmethod
+    def from_con(cls, con_cls_name: str) -> FunctionType:
+        if con_cls_name == "FuncContainerDef":
+            return cls.CONTAINER
+        elif con_cls_name == "CondContainerDef":
+            return cls.CONDITIONAL
+        elif con_cls_name == "LoopContainerDef":
+            return cls.ITERABLE
+        else:
+            raise ValueError(f"Unexpected Container type: {con_cls_name}")
 
     @classmethod
     def from_str(cls, data: str):
         return super().from_str(cls, data)
+
+    @classmethod
+    def is_expression_type(cls, type_str: str) -> Boolean:
+        return cls.from_str(type_str) in [
+            cls.ASSIGN,
+            cls.DECISION,
+            cls.CONDITION,
+            cls.INTERFACE,
+            cls.EXTRACT,
+            cls.PACK,
+        ]
 
 
 @unique
@@ -248,7 +299,7 @@ class ProvenanceData(BaseMetadata):
         return datetime.fromtimestamp(time())
 
     @classmethod
-    def from_data(cls, data: dict) -> ProvenanceData:
+    def from_dict(cls, data: dict) -> ProvenanceData:
         return cls(MetadataMethod.from_str(data["method"]), data["timestamp"])
 
     def to_dict(self):
@@ -261,19 +312,26 @@ class TypedMetadata(BaseMetadata):
     provenance: ProvenanceData
 
     @abstractclassmethod
-    def from_data(cls, data):
+    def from_dict(cls, data):
         data = deepcopy(data)
         mtype = MetadataType.from_str(data["type"])
-        provenance = ProvenanceData.from_data(data["provenance"])
+        provenance = ProvenanceData.from_dict(data["provenance"])
         ChildMetadataClass = MetadataType.get_metadata_class(mtype)
         data.update({"type": mtype, "provenance": provenance})
-        return ChildMetadataClass.from_data(data)
+        return ChildMetadataClass.from_dict(data)
 
     def to_dict(self):
-        return {
-            "type": str(self.type),
-            "provenance": self.provenance.to_dict(),
-        }
+        def as_dict_enum_factory(data):
+            def convert_value(obj):
+                if isinstance(obj, Enum):
+                    return obj.name
+                elif isinstance(obj, datetime):
+                    return str(obj)
+                return obj
+
+            return dict((k, convert_value(v)) for k, v in data)
+
+        return asdict(self, dict_factory=as_dict_enum_factory)
 
 
 @dataclass
@@ -296,7 +354,7 @@ class CodeSpan(BaseMetadata):
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> CodeSpan:
+    def from_dict(cls, data: dict) -> CodeSpan:
         return cls(**data)
 
     def to_dict(self):
@@ -322,7 +380,7 @@ class CodeFileReference(BaseMetadata):
         return cls(str(uuid.uuid4()), filename, dirpath)
 
     @classmethod
-    def from_data(cls, data: dict) -> CodeFileReference:
+    def from_dict(cls, data: dict) -> CodeFileReference:
         return cls(**data)
 
     def to_dict(self):
@@ -337,7 +395,7 @@ class DomainInterval(BaseMetadata):
     u_inclusive: bool
 
     @classmethod
-    def from_data(cls, data: dict) -> DomainInterval:
+    def from_dict(cls, data: dict) -> DomainInterval:
         return cls(**data)
 
     def to_dict(self):
@@ -355,7 +413,7 @@ class DomainSet(BaseMetadata):
     predicate: str
 
     @classmethod
-    def from_data(cls, data: dict) -> DomainSet:
+    def from_dict(cls, data: dict) -> DomainSet:
         return cls(SuperSet.from_str(data["superset"]), data["predicate"])
 
     def to_dict(self):
@@ -372,7 +430,7 @@ class CodeSpanReference(TypedMetadata):
     code_span: CodeSpan
 
     @classmethod
-    def from_air_data(cls, data: dict) -> CodeSpanReference:
+    def from_air_json(cls, data: dict) -> CodeSpanReference:
         return cls(
             MetadataType.CODE_SPAN_REFERENCE,
             ProvenanceData(
@@ -385,13 +443,13 @@ class CodeSpanReference(TypedMetadata):
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> CodeSpanReference:
+    def from_dict(cls, data: dict) -> CodeSpanReference:
         return cls(
             data["type"],
             data["provenance"],
             CodeSpanType.from_str(data["code_type"]),
             data["code_file_reference_uid"],
-            CodeSpan.from_data(data["code_span"]),
+            CodeSpan.from_dict(data["code_span"]),
         )
 
     def to_dict(self):
@@ -416,7 +474,6 @@ class VariableCreationReason(AutoMATESBaseEnum):
     COMPLEX_RETURN_EXPR = auto()
     CONDITION_RESULT = auto()
     LOOP_EXIT_VAR = auto()
-    LITERAL_FUNCTION_ARG = auto()
 
     def __str__(self):
         return str(self.name)
@@ -445,11 +502,11 @@ class VariableFromSource(TypedMetadata):
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> VariableFromSource:
+    def from_dict(cls, data: dict) -> VariableFromSource:
         return cls(
             data["type"],
             data["provenance"],
-            data["from_source"] or data["from_source"] == "True",
+            bool(data["from_source"]),
             VariableCreationReason.from_str(data["creation_reason"]),
         )
 
@@ -481,13 +538,138 @@ class GrFNCreation(TypedMetadata):
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> GrFNCreation:
+    def from_dict(cls, data: dict) -> GrFNCreation:
         return cls(**data)
 
     def to_dict(self):
         data = super().to_dict()
         data.update({"name": self.name})
         return data
+
+
+@dataclass
+class EquationExtraction(BaseMetadata):
+    source_type: str
+    document_reference_uid: str
+    equation_number: int
+
+    @classmethod
+    def from_dict(cls, data: dict) -> EquationExtraction:
+        return cls("equation_document_source", "", data["equation_number"])
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class TextSpan(BaseMetadata):
+    char_begin: int
+    char_end: int
+
+    @classmethod
+    def from_dict(cls, data: dict) -> TextSpan:
+        return cls(data["char_begin"], data["char_end"])
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class TextSpanRef(BaseMetadata):
+    page: int
+    block: int
+    span: TextSpan
+
+    @classmethod
+    def from_dict(cls, data: dict) -> TextSpanRef:
+        return cls(None, None, TextSpan.from_dict(data["span"]))
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class TextExtraction(BaseMetadata):
+    source_type: str
+    document_reference_uid: str
+    text_spans: List[TextSpanRef]
+
+    @classmethod
+    def from_dict(cls, data: dict) -> TextExtraction:
+        return cls(
+            "text_document_source",
+            "",
+            [TextSpanRef.from_dict(span) for span in data["text_spans"]],
+        )
+
+    def to_dict(self) -> str:
+        return NotImplemented
+
+
+@dataclass
+class VariableEquationParameter(TypedMetadata):
+    equation_extraction: EquationExtraction
+    variable_identifier: str
+    value: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> VariableEquationParameter:
+        return cls(
+            data["type"],
+            data["provenance"],
+            EquationExtraction.from_dict(data["equation_extraction"]),
+            data["variable_identifier"],
+            data["value"],
+        )
+
+
+@dataclass
+class VariableTextDefinition(TypedMetadata):
+    text_extraction: TextExtraction
+    variable_identifier: str
+    variable_definition: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> VariableTextDefinition:
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_dict(data["text_extraction"]),
+            data["variable_identifier"],
+            data["variable_definition"],
+        )
+
+
+@dataclass
+class VariableTextParameter(TypedMetadata):
+    text_extraction: TextExtraction
+    variable_identifier: str
+    value: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> VariableTextParameter:
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_dict(data["text_extraction"]),
+            data["variable_identifier"],
+            data["value"],
+        )
+
+
+@dataclass
+class VariableTextUnit(TypedMetadata):
+    text_extraction: TextExtraction
+    unit: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> VariableTextUnit:
+        return cls(
+            data["type"],
+            data["provenance"],
+            TextExtraction.from_dict(data["unit_extraction"]),
+            data["unit"],
+        )
 
 
 @dataclass
@@ -508,12 +690,12 @@ class CodeCollectionReference(TypedMetadata):
         )
 
     @classmethod
-    def from_data(cls, data: dict) -> CodeCollectionReference:
+    def from_dict(cls, data: dict) -> CodeCollectionReference:
         return cls(
             data["type"],
             data["provenance"],
             data["global_reference_uid"],
-            [CodeFileReference.from_data(d) for d in data["files"]],
+            [CodeFileReference.from_dict(d) for d in data["files"]],
         )
 
     def to_dict(self):
@@ -544,12 +726,12 @@ class Domain(TypedMetadata):
     elements: List[DomainElement]
 
     @classmethod
-    def from_data(cls, data: dict) -> Domain:
+    def from_dict(cls, data: dict) -> Domain:
         mtype = MeasurementType.from_str(data["measurement_scale"])
         if MeasurementType.isa_categorical(mtype):
-            els = [DomainSet.from_data(dom_el) for dom_el in data["elements"]]
+            els = [DomainSet.from_dict(dom_el) for dom_el in data["elements"]]
         elif MeasurementType.isa_numerical(mtype):
-            els = [DomainInterval.from_data(dom_el) for dom_el in data["elements"]]
+            els = [DomainInterval.from_dict(dom_el) for dom_el in data["elements"]]
         else:
             els = []
         return cls(

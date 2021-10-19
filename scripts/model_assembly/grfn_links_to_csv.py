@@ -30,22 +30,17 @@ def main():
     outpath = filepath.replace("-alignment.json", "-link-tables.csv")
     with open(outpath, "w", newline="") as csvfile:
         link_writer = csv.writer(csvfile, dialect="excel")
-
         for var_name, var_data in tables.items():
-            (_, sub_name_str, basename_str, idx_str) = var_name.split("\n")
-            (_, sub_name) = sub_name_str.split(": ")
-            (_, basename) = basename_str.split(": ")
-            (_, idx) = idx_str.split(": ")
-            short_varname = "::".join([sub_name, basename, idx])
+            short_varname = var_name
             link_writer.writerow([short_varname])
             link_writer.writerow(
                 [
                     "Link Score",
-                    "Var-Comm Score",
-                    "Comm-Text Score",
-                    "Text-Eqn Score",
+                    "GlobalCodeVar-GlobalComm Score",
+                    "GlobalComm-GlobalVar Score",
+                    "GlobalVar-GlobalEqn Score",
                     "Comment Span",
-                    "Text Mention",
+                    "Text Mention(s) List",
                     "Equation Symbol",
                 ]
             )
@@ -56,10 +51,10 @@ def main():
                         link_data["link_score"],
                         link_data["vc_score"],
                         link_data["ct_score"],
-                        link_data["te_score"],
+                        link_data["te_score"] if "te_score" in link_data else None,
                         link_data["comm"],
                         link_data["txt"],
-                        link_data["eqn"],
+                        link_data["eqn"] if "eqn" in link_data else None,
                     ]
                 )
             link_writer.writerow([])
