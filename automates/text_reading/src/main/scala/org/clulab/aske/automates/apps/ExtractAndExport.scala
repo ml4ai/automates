@@ -1,16 +1,17 @@
 package org.clulab.aske.automates.apps
 
 import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
-
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.aske.automates.data.{CosmosJsonDataLoader, DataLoader, TextRouter}
 import org.clulab.aske.automates.OdinEngine
+import org.clulab.aske.automates.apps.ExtractAndAlign.getGlobalVars
 import org.clulab.aske.automates.attachments.AutomatesAttachment
 import org.clulab.aske.automates.serializer.AutomatesJSONSerializer
 import org.clulab.utils.{FileUtils, Serializer}
 import org.clulab.odin.Mention
 import org.clulab.odin.serialization.json.JSONSerializer
+import org.clulab.utils.AlignmentJsonUtils.GlobalVariable
 import org.json4s.jackson.JsonMethods._
 
 /**
@@ -32,9 +33,10 @@ object ExtractAndExport extends App {
 
   val config = ConfigFactory.load()
 
-  val inputDir: String = "/Users/sarahstueve/Documents/Graduate/FA21/automates_dr/readme"
-  val outputDir: String = "/Users/sarahstueve/Documents/Graduate/FA21/automates_dr/readme/output"
-  val inputType = config[String]("apps.inputType")
+  val numOfWikiGroundings: Int = config[Int]("apps.numOfWikiGroundings")
+  val inputDir: String = config[String]("apps.inputDirectory")//"/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
+  val outputDir: String = config[String]("apps.outputDirectory")//"/Users/alexeeva/Desktop/automates-related/SuperMaaS-sept2021/cosmos-jsons-beautified"
+  val inputType: String = config[String]("apps.inputType")
   val dataLoader = DataLoader.selectLoader(inputType) // pdf, txt or json are supported, and we assume json == cosmos json; to use science parse. comment out this line and uncomment the next one
 //  val dataLoader = new ScienceParsedDataLoader
   val exportAs: List[String] = config[List[String]]("apps.exportAs")
@@ -55,7 +57,7 @@ object ExtractAndExport extends App {
     val texts = dataLoader.loadFile(file)
     // 3. Extract causal mentions from the texts
     // todo: here I am choosing to pass each text/section through separately -- this may result in a difficult coref problem
-    val mentions = texts.flatMap(reader.extractFromText(_, filename = Some(file.getName)))
+    val mentions = texts.flatMap(t => reader.extractFromText(t.split("<::>").head, filename = Some(file.getName)))
     //The version of mention that includes routing between text vs. comment
 //    val mentions = texts.flatMap(text => textRouter.route(text).extractFromText(text, filename = Some(file.getName))).seq
 //    for (m <- mentions) {
@@ -70,6 +72,15 @@ object ExtractAndExport extends App {
 //
 //    }
     val descrMentions = mentions.filter(_ matches "Description")
+
+    val exportGlobalVars = false
+    if (exportGlobalVars) {
+      val exporter = GlobalVarTSVExporter(file.getAbsolutePath, numOfWikiGroundings)
+      val globalVars = getGlobalVars(descrMentions, None, true)
+
+      exporter.export(globalVars)
+    }
+
 
     println("Description mentions: ")
     for (dm <- descrMentions) {
@@ -106,6 +117,7 @@ object ExtractAndExport extends App {
         println(arg._1 + ": " + m.arguments(arg._1).head.text)
       }
     }
+
 
     val contextMentions = mentions.filter(_ matches "Context")
     println("Context setting mentions: ")
@@ -188,6 +200,32 @@ case class TSVExporter(filename: String) extends Exporter {
   }
 
   override def close(): Unit = ()
+}
+
+case class GlobalVarTSVExporter(filename: String, numOfWikiGroundings: Int){
+  def export(glvars: Seq[GlobalVariable]): Unit = {
+    val pw = new PrintWriter(new File(filename.toString().replace(".json", "_descr_mentions_with_wiki_groundings.tsv") ))
+    pw.write("variable\tdescriptions")
+    for (i <- 0 to numOfWikiGroundings) {
+      pw.write("\tgrounding\tsubclassOf")
+    }
+    pw.write("\n")
+
+    for (m <- glvars) {
+      pw.write(m.identifier + "\t" + m.textFromAllDescrs.mkString("::"))
+      if (m.groundings.isDefined && m.groundings.get.nonEmpty) {
+        for (g <- m.groundings.get) {
+          pw.write("\t" + g.conceptID + "::" + g.conceptLabel)
+          pw.write("\t" + g.subClassOf.getOrElse("No subclass"))
+        }
+      }
+      pw.write("\n")
+
+    }
+    pw.close()
+  }
+
+  def close(): Unit = ()
 }
 
 // Helper Class to facilitate serializing the mentions

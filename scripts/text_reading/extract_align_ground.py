@@ -67,6 +67,21 @@ def call_groundMentionsToSVO(mentions_name, out_name):
     json_dict = res.json()
     json.dump(json_dict, open(f"{out_name}.json", "w"))
 
+def call_groundMentionsToWikidata(mentions_name, out_name):
+    mentions_path = f"{mentions_name}"
+
+    if not os.path.isfile(mentions_path):
+        raise RuntimeError(f"Mentions file not found: {mentions_name}")
+
+    res = requests.post(
+        f"{webservice}/groundMentionsToWikidata",
+        headers={"Content-type": "application/json"},
+        json={"mentions": mentions_path},
+    )
+
+    print(f"HTTP {res} for /groundMentionsToWikidata on {mentions_name}")
+    json_dict = res.json()
+    json.dump(json_dict, open(f"{out_name}", "w"))
 
 if __name__ == "__main__":
     call_pdf_to_mentions(

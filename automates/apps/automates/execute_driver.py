@@ -13,7 +13,10 @@ def parse_execution_inputs(inputs):
 
 
 def parse_execution_results(results):
-    return [{"variable_name": k, "results": v.tolist()} for k, v in results.items()]
+    return [
+        {"variable_name": k, "results": v if isinstance(v, list) else v.tolist()}
+        for k, v in results.items()
+    ]
 
 
 def gather_additional_outputs(outputs, GrFN):
