@@ -12,6 +12,10 @@ rules:
       [chunk='B-NP' & !mention=Avoid & !entity=NUMBER & !word = /\(|\)|,|=|\[|\]/]+
       |
       [tag = "NNP" & entity = LOCATION]+
+      |
+      [chunk = 'B-INTJ']
+      |
+      [chunk = 'I-INTJ' & tag = /FW|^N/]
       # note: last rule added to deal with the cases like "Hong Kong"
       #todo: can we add parens in avoid without making it invisible in rules?
 
@@ -27,7 +31,17 @@ rules:
     priority: 1
     type: token
     pattern: |
-      [chunk=/B-VP|I-VP/ & tag = /VB/ & !mention=Avoid]
+      [chunk=/B-VP|I-VP/ & tag = /VB/ & !outgoing = /^nsubj/]
+      |
+      [tag = /VBN/]
+    # note: for some cases verbs function as nouns (i.e., gerunds) & this also takes care of wrongly parsed chunks.
+
+  - name: single_VP_for_modelDescr
+    label: VerbPhrase
+    priority: 1
+    type: token
+    pattern: |
+      [chunk=/B-VP|I-VP/ & tag = /VB/]
 
   - name: single_adjP # note: added due to def test t1k. needs to check if this cause any errors.
     label: Phrase

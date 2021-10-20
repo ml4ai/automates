@@ -1,6 +1,7 @@
 package org.clulab.aske.automates
 
 import com.typesafe.scalalogging.LazyLogging
+import edu.stanford.nlp.dcoref.Dictionaries.MentionType
 import org.clulab.aske.automates.actions.ExpansionHandler
 import org.clulab.odin.{Mention, _}
 import org.clulab.odin.impl.Taxonomy
@@ -363,18 +364,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def resolveModelCoref(mentions: Seq[Mention], state: State = new State()): Seq[Mention] = {
     val (models, nonModels) = mentions.partition(m => m.label == "ModelDescr")
-//    println(models.head.arguments.head._1)
-    val (theModel, modelNames) = models.partition(m => m.arguments.contains("model") && m.arguments("model").head.foundBy == "the/this_model")
+    val (theModel, modelNames) = models.partition(m => m.arguments.contains("model") && m.arguments("model").head.foundBy == "the/this_model" || m.arguments.contains("model") && m.arguments("model").head.foundBy == "model_pronouns")
     val resolved: Seq[Mention] = theModel.map(m => replaceTheModel(mentions, m))
-    (resolved ++ modelNames ++ nonModels).distinct
-//    mentions
+    val resolved_filtered = resolved.filter(m => m.arguments("model").head.foundBy != "model_pronouns")
+        (resolved_filtered ++ modelNames ++ nonModels).distinct
   }
 
   def replaceTheModel(mentions: Seq[Mention], origModel: Mention): Mention = {
     val previousModelInterval = returnPreviousModelInt(mentions, origModel)
     val previousModelSntnce = returnPreviousModelSntnce(mentions, origModel)
 
-    if (previousModelInterval.nonEmpty){
+    if (previousModelInterval != Interval(0,0)) {
       val newModelArg = new TextBoundMention(
         origModel.arguments("model").head.labels,
         previousModelInterval,
@@ -382,10 +382,10 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
         origModel.document,
         origModel.keep,
         "resolving_coref",
-        Set.empty
+        origModel.attachments
       )
       val newArgs = mutable.Map[String, Seq[Mention]]()
-      for (arg <- origModel.arguments){
+      for (arg <- origModel.arguments) {
         if (arg._1 == "model") {
           newArgs += (arg._1 -> Seq(newModelArg))
         } else {
@@ -398,17 +398,17 @@ class OdinActions(val taxonomy: Taxonomy, expansionHandler: Option[ExpansionHand
 
   def returnPreviousModelInt(mentions: Seq[Mention], origModel: Mention): Interval = {
     val (models, nonModels) = mentions.partition(m => m.label == "Model")
-    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
     val previousModels = modelNames.filter(_.sentence < origModel.sentence)
     if (previousModels.nonEmpty) {
       val selectedModel = previousModels.maxBy(_.sentence)
       selectedModel.tokenInterval
-    } else origModel.arguments("model").head.tokenInterval
+    } else Interval(0,0)
   }
 
   def returnPreviousModelSntnce(mentions: Seq[Mention], origModel: Mention): Int = {
     val (models, nonModels) = mentions.partition(m => m.label == "Model")
-    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model")
+    val (theModels, modelNames) = models.partition(m => m.foundBy == "the/this_model" || m.foundBy == "our_model" || m.foundBy == "model_pronouns")
     val previousModels = modelNames.filter(_.sentence < origModel.sentence)
     if (previousModels.nonEmpty) {
       val selectedModel = previousModels.maxBy(_.sentence)
@@ -1122,15 +1122,15 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
           menToAttach.asInstanceOf[EventMention].trigger,
           newArgs,
           menToAttach.paths, // path is off
-          sentences,
+          menToAttach.sentence,
+          f.sentence,
+//          Seq(menToAttach.sentence, f.sentence),
           menToAttach.document,
           menToAttach.keep,
           menToAttach.foundBy,
           menToAttach.attachments
         )
         toReturn.append(newFunctions)
-        println("here!:" + f.sentence + menToAttach.sentence)
-        println("here: " + sentences)
       } else toReturn.append(f)
     }
     toReturn ++ other ++ complete
@@ -1302,14 +1302,14 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     val completeFilterContext = new ArrayBuffer[Mention]
     val trigger = if (mention.isInstanceOf[EventMention]) mention.asInstanceOf[EventMention].trigger.tokenInterval else null
     for (c <- contexts) {
-    for (argType <- mention.arguments) {
-      for {
-        arg <- argType._2
-        newMention = mention match {
-          case rm: RelationMention => if (!c.tokenInterval.overlaps(arg.tokenInterval)) contextNumCheck.append(c)
-          case em: EventMention => if (!c.tokenInterval.overlaps(arg.tokenInterval) && !c.tokenInterval.overlaps(trigger)) contextNumCheck.append(c)
-          case _ => ???
-      }
+      for (argType <- mention.arguments) {
+        for {
+          arg <- argType._2
+          newMention = mention match {
+            case rm: RelationMention => if (!c.tokenInterval.overlaps(arg.tokenInterval)) contextNumCheck.append(c)
+            case em: EventMention => if (!c.tokenInterval.overlaps(arg.tokenInterval) && !c.tokenInterval.overlaps(trigger)) contextNumCheck.append(c)
+            case _ => ???
+          }
         } yield contextNumCheck
         if (contextNumCheck.nonEmpty && contextNumCheck.length == argType._2.length) {
           filteredContext.append(c)
@@ -1381,6 +1381,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
       if (v.words.length > 3 && v.words.tail.intersect(compoundIdentifierComponents).nonEmpty) return true
       if (v.words.length < 3 && v.entities.exists(ent => ent.exists(_ == "B-GreekLetter"))) return true
       if (v.entities.get.exists(_ == "B-unit")) return false
+      if (allCaps(v.words.mkString("").replace(" ", ""))) return true
       // account for all caps variables, e.g., EORATIO
       if (v.words.length == 1 && allCaps(v.words.head)) return true
       if (v.words.length == 1 && !(v.words.head.count(_.isLetter) > 0)) return false
@@ -1465,6 +1466,10 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
     } yield m
   }
 
+  def compoundIdentifierActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val toReturn = looksLikeAnIdentifier(mentions, state)
+    toReturn
+  }
 
   def descriptionActionFlow(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val toReturn = descrIsNotVar(looksLikeAnIdentifier(mentions, state), state)
@@ -1526,6 +1531,7 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
   def looksLikeADescr(mentions: Seq[Mention], state: State): Seq[Mention] = {
     val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
     val singleCapitalWord = """^[A-Z]+$""".r
+
     for {
       m <- mentions
       if m.arguments.contains("description")
@@ -1536,10 +1542,12 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
         case _ => ???
       }
 
-      if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.60
+      if descrText.text.filter(c => valid contains c).length.toFloat / descrText.text.length > 0.75
+      if (descrText.words.exists(_.length > 1))
       // make sure there's at least one noun or participle/gerund; there may be more nominal pos that will need to be included - revisit: excluded descr like "Susceptible (S)"
-      if (m.tags.get.exists(t => t.startsWith("N") || t == "VBN") || m.words.exists(w => capitalized(w)))
+      if (descrText.tags.get.exists(t => t.startsWith("N") || t == "VBN") || descrText.words.exists(w => capitalized(w)))
       if singleCapitalWord.findFirstIn(descrText.text).isEmpty
+      if !descrText.text.startsWith(")")
 
     } yield m
   }

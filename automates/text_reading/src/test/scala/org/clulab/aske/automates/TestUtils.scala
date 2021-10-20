@@ -6,7 +6,7 @@ import org.clulab.odin.Mention
 import org.scalatest._
 import org.clulab.aske.automates.OdinEngine._
 import org.clulab.aske.automates.apps.{AlignmentBaseline, ExtractAndAlign}
-import org.clulab.aske.automates.apps.ExtractAndAlign.{allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
+import org.clulab.aske.automates.apps.ExtractAndAlign.{GLOBAL_VAR_TO_UNIT_VIA_CONCEPT, allLinkTypes, whereIsGlobalVar, whereIsNotGlobalVar}
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
 import org.clulab.utils.TextUtils
@@ -75,6 +75,14 @@ object TestUtils {
 
     def testFunctionEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
       testBinaryEvent(mentions, FUNCTION_LABEL, FUNCTION_OUTPUT_ARG, FUNCTION_INPUT_ARG, desired)
+    }
+
+    def testModelDescrsEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, MODEL_DESCRIPTION_LABEL, MODEL_NAME_ARG, MODEL_DESCRIPTION_ARG, desired)
+    }
+
+    def testModelLimitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
+      testBinaryEvent(mentions, MODEL_LIMITATION_LABEL, MODEL_NAME_ARG, MODEL_DESCRIPTION_ARG, desired)
     }
 
     def testUnitEvent(mentions: Seq[Mention], desired: Seq[(String, Seq[String])]): Unit = {
@@ -301,15 +309,17 @@ object TestUtils {
     }
     def topDirectLinkTest(idf: String, desired: String, directLinks: Map[String, Seq[Value]],
                           linkType: String, status: String): Unit = {
+
       val threshold = allLinkTypes("direct").obj(linkType).num
       if (status == "passing") {
         it should f"have a correct $linkType link for global var ${idf}" in {
           val topScoredLink = directLinks(linkType).sortBy(_.obj("score").num).reverse.head
           // which element in this link type we want to check
           val whichLink = whereIsNotGlobalVar(linkType)
+
           // element 1 of this link (eq gl var) should be E
           desired.split("::") should contain (topScoredLink(whichLink).str.split("::").last)
-          topScoredLink("score").num > threshold shouldBe true
+          topScoredLink("score").num >= threshold shouldBe true
         }
       } else {
         val failingMessage = if (status=="failingNegative") {

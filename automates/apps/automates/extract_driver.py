@@ -1,4 +1,5 @@
 import json
+import os
 
 from automates.model_assembly.networks import GroundedFunctionNetwork
 from automates.model_assembly.expression_trees.expression_walker import (
@@ -71,9 +72,15 @@ def extract_expr_trees(GrFN):
 
 def extract_model_dynamics_from_grfn(GrFN):
     potential_dynamics_grfns = extract_model_dynamics(GrFN)
+
+    updated_grfns = list()
+    for g in potential_dynamics_grfns:
+        grfn_dict = g.to_dict()
+        updated_grfns.append(GroundedFunctionNetwork.from_dict(grfn_dict))
+
     return [
         {"model": json.loads(g.to_json()), "variable_io": extract_io_from_grfn(g)}
-        for g in potential_dynamics_grfns
+        for g in updated_grfns
     ]
 
 

@@ -61,14 +61,14 @@ class ScienceParsedDataLoader extends DataLoader {
 class CosmosJsonDataLoader extends DataLoader {
   /**
     * Loader for documents which have been converted by UW Cosmos from pdf to parquet file and by ... to json. Each file contains a json representation of pdf blocks (sorted in increasing order of page and order of block on the page).
-    * Here we will return a sequence of strings; each string includes the content of the block, the page num, and index/order of the block on the page, "::"-separated.
+    * Here we will return a sequence of strings; each string includes the content of the block, the page num, and index/order of the block on the page, "<::>"-separated.
     *
     * @param f the File being loaded
     * @return string content of each section in the parsed pdf paper (as determined by science parse)
     */
   def loadFile(f: File): Seq[String] = {
     val cosmosDoc = CosmosJsonProcessor.mkDocument(f)
-    cosmosDoc.cosmosOjects.filter(c => c.cls.getOrElse("") == "Body Text" && c.detect_cls.getOrElse("") != "Section Header").map(co => co.content.get + "::" + co.pageNum.get + "::" + co.blockIdx.get)
+    cosmosDoc.cosmosOjects.filter(section => (section.cls.getOrElse("") != "Figure" && section.cls.getOrElse("") != "Table" ) && section.cls.getOrElse("") != "Reference text"  && section.cls.getOrElse("") != "Page Footer" && section.detectCls.getOrElse("") != "Equation" && section.detectCls.getOrElse("") != "Section Header").map(co => co.content.get + "<::>" + co.pdfName.getOrElse("unknown_doc") + "<::>" + co.pageNum.get + "<::>" + co.blockIdx.get) // for some papers, also  && section.cls.getOrElse("") != "Equation" and && section.cls.getOrElse("") != "Section Header"
   }
   override val extension: String = "json"
 }
