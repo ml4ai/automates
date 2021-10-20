@@ -1123,7 +1123,8 @@ a method for handling `ConjDescription`s - descriptions that were found with a s
           newArgs,
           menToAttach.paths, // path is off
           menToAttach.sentence,
-          sentences,
+          f.sentence,
+//          Seq(menToAttach.sentence, f.sentence),
           menToAttach.document,
           menToAttach.keep,
           menToAttach.foundBy,

@@ -38,14 +38,14 @@ object AutomatesJSONSerializer {
     val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
     val labels = mentionComponents("labels").arr.map(_.str).toArray
     val sentence = mentionComponents("sentence").num.toInt
-    val crossSentence = Seq(sentence)
+    val secondSentence = mentionComponents("sentence").num.toInt // todo: how to change this into "secondSentence"?
+//    val sentences = Seq(sentence, secondSentence)
     val docHash = mentionComponents("document").str.toInt
     val document = docMap(docHash.toString)
     val keep = mentionComponents("keep").bool
     val foundBy = mentionComponents("foundBy").str
     val menType = mentionComponents("type").str
     val attachments = new ArrayBuffer[Attachment]
-
 
     if (mentionComponents.obj.contains("attachments")) {
       val attObjArray = mentionComponents("attachments").arr
@@ -115,7 +115,8 @@ object AutomatesJSONSerializer {
           getArgs(mentionComponents("arguments")),
           toPaths(mentionComponents, docMap),
           sentence,
-          crossSentence,
+          secondSentence,
+//          sentences,
           document,
           keep,
           foundBy,
@@ -467,8 +468,8 @@ object AutomatesJSONSerializer {
       val h3 = mix(h2, cm.tokenInterval.end)
       // sentence index
       val h4 = mix(h3, cm.sentence)
-      // sentences
-      val h5 = mix(h4, cm.sentences.hashCode)
+      // 2nd sentence index
+      val h5 = mix(h4, cm.secondSentence)
       // document.equivalenceHash
       val h6 = mix(h5, cm.document.equivalenceHash)
       // args
@@ -517,7 +518,9 @@ object AutomatesJSONSerializer {
         "tokenInterval" -> Map("start" -> cm.tokenInterval.start, "end" -> cm.tokenInterval.end),
         "characterStartOffset" -> cm.startOffset,
         "characterEndOffset" -> cm.endOffset,
-        "sentences" -> Seq(cm.sentence),
+        "sentence" -> cm.sentence,
+        "secondSentence" -> cm.secondSentence,
+//        "sentences" -> Seq(cm.sentence),
         "document" -> cm.document.equivalenceHash.toString,
         "keep" -> cm.keep,
         "foundBy" -> cm.foundBy,
