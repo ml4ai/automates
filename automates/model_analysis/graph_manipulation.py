@@ -567,7 +567,8 @@ def parallel_worlds(g, gamma):
                     unobs_edges_to_add.append((new_vert_indx, vert.index))
     p_worlds.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
 
-    # Removes ancestors of variables set by intervention
+    # Removes edges from ancestors of variables set by intervention
+    print(p_worlds)
     nodes_to_remove = []
     for node in p_worlds.vs():
         if node["int_vars"] is not None and len(node["int_vars"]) > 0:

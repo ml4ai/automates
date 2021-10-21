@@ -292,7 +292,6 @@ def cf_identifiability(g, gamma, delta=None, steps=False, stop_on_noid=True):
 
 
 def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
-    print(gamma)
     if (len(p.var) == 0) and (not (p.product or p.fraction)):
         p = gm.Probability(var=v)
     tree.call = gm.CfCall(gamma=gamma, p=p, g=g, line=0, v=v, id_check=False)
@@ -322,6 +321,8 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
     # Line 4
     (cg, gamma_prime) = gm.make_cg(g, gamma)
+    print(cg)
+    print(gamma_prime)
 
     # Line 5
     if gamma_prime == "Inconsistent":
@@ -334,7 +335,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     cg_topo_ind = cg_obs.topological_sorting()
     cg_topo = gm.to_names(cg_topo_ind, cg_obs)
     s = gm.c_components(cg, cg_topo)
-    print(s)
+    print("c_components:", s)
     cg_obs_nodes = [node for component in s for node in component]
     if len(s) > 1:
         tree.call.line = 6
@@ -351,16 +352,6 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
             for var in subscript_variables:
                 subscript_orig_vars.append(cg.vs.select(name=var)[0]["orig_name"])
 
-            # Subscripts should be in ancestors of nodes in c-component
-            for orig_var in subscript_orig_vars:
-                if orig_var not in gm.find_related_nodes_of(s_el_orig_names, g, "in", "max"):
-                    subscript_orig_vars.remove(orig_var)
-
-            # Subscripts should not be redundant (should not be ancestors of one-another)
-            for orig_var in subscript_orig_vars:
-                if orig_var in gm.find_related_nodes_of(list(set(subscript_orig_vars)-set(orig_var)), g, "in", "max"):
-                    subscript_orig_vars.remove(orig_var)
-
             s_el_info = cg.vs.select(name_in=s_element)
             nxt_gamma = []
             for node in s_el_info:
@@ -368,9 +359,13 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                 int_values = node["int_values"]
                 for subscript in subscript_orig_vars:
                     if subscript not in int_vars:
-                        int_vars.append(subscript)  # todo: unsure about this
-                        int_values.append(None)  # todo: unsure about this
+                        int_vars.append(subscript)
+                        int_values.append(None)  # todo: maybe placeholder?
                 nxt_gamma.append(gm.CF(node["orig_name"], node["obs_val"], int_vars, int_values))
+            nxt_gamma = gm.simplify_cf(nxt_gamma, g)
+            print("---------------------------------")
+            print("Starting Subgraph")
+            print("---------------------------------")
             nxt = cf_ID(g, nxt_gamma, v)
             product_list.append(deepcopy(nxt.p))
             id_check_list.append(deepcopy(nxt.tree.call.id_check))
@@ -378,11 +373,10 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         tree.call.id_check = all(id_check_list)
 
         # Outer sum
-        obs_nodes = cg.vs.select(description=None)["name"]
         nodes_to_remove = []
         for event in gamma_prime:
             nodes_to_remove.append(f"{event.orig_name}_{event.int_vars}")
-        summation_set = list(set(obs_nodes)-set(nodes_to_remove))
+        summation_set = list(set(cg_obs_nodes)-set(nodes_to_remove))
         return gm.CfResultsInternal(p=gm.Probability(sumset=summation_set, product=True, children=product_list),
                                     tree=tree)
 

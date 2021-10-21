@@ -49,15 +49,25 @@ import igraph
 
 
 # Setup
-gamma = [gm.CF("Y", "y", ["X"], ["x"])]
-delta = [gm.CF("X", "x_prime"), gm.CF("Z", "z", ["D"], ["d"]), gm.CF("D", "d")]
+# gamma = [gm.CF("Y", "y", ["X"], ["x"])]
+# delta = [gm.CF("X", "x_prime"), gm.CF("Z", "z", ["D"], ["d"]), gm.CF("D", "d")]
+# g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
+# g.vs["name"] = ["X", "W", "Y", "D", "Z"]
+# g.es["description"] = ["O", "O", "O", "O", "U", "U"]
+#
+# # Function Results
+# results = ia.cf_identifiability(g, gamma, delta)
+#
+# # Expected Results
+# exp_result = "P'/P'(x_prime), where P' = \\sum_{W}P_{Z, W}(y, x_prime)P_{X}(w)"
+
+# Fix make_cg
+gamma = [gm.CF(orig_name='X', obs_val='x_prime', int_vars=[], int_values=[], cond=None),
+         gm.CF(orig_name='Y', obs_val='y', int_vars=['Z', 'W'], int_values=[None, None], cond=None)]
 g = igraph.Graph(edges=[[0, 1], [1, 2], [3, 4], [4, 2], [0, 2], [2, 0]], directed=True)
 g.vs["name"] = ["X", "W", "Y", "D", "Z"]
 g.es["description"] = ["O", "O", "O", "O", "U", "U"]
+(cg, gamma_prime) = gm.make_cg(g, gamma)
+print(cg.vs["name"])
 
-# Function Results
-results = ia.cf_identifiability(g, gamma, delta)
-
-# Expected Results
-exp_result = "P'/P'(x_prime), where P' = \\sum_{W}P_{Z, W}(y, x_prime)P_{X}(w)"
 
