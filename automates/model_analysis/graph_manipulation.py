@@ -300,22 +300,26 @@ def c_components(g, topo):
     (cc_sorted, _) = list(map(list, zip(*sorted(zip(cc, cc_rank), key=lambda ab: ab[1], reverse=True))))
 
     if "description" in g.vertex_attributes():
+        cc_simplified = []
         for component in cc_sorted:
+            component_simplified = copy.deepcopy(component)
             for node in component:
                 node_info = g.vs.select(name=node)[0]
 
                 # Removes unobserved nodes from c_components
                 if node_info["description"] == "U":
-                    component.remove(node)
+                    component_simplified.remove(node)
 
                 # Removes nodes fixed by intervention from c_components
                 if "int_vars" in g.vertex_attributes():
                     if node_info["int_vars"] is not None:
                         if node_info["orig_name"] in node_info["int_vars"]:
-                            component.remove(node)
-            if len(component) == 0:
-                cc_sorted.remove(component)
-    return cc_sorted
+                            component_simplified.remove(node)
+            cc_simplified.append(component_simplified)
+        cc_sorted = cc_simplified
+
+    cc_final = [cc for cc in cc_sorted if cc != []]
+    return cc_final
 
 
 

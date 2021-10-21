@@ -292,6 +292,7 @@ def cf_identifiability(g, gamma, delta=None, steps=False, stop_on_noid=True):
 
 
 def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
+    print(gamma)
     if (len(p.var) == 0) and (not (p.product or p.fraction)):
         p = gm.Probability(var=v)
     tree.call = gm.CfCall(gamma=gamma, p=p, g=g, line=0, v=v, id_check=False)
@@ -333,8 +334,7 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     cg_topo_ind = cg_obs.topological_sorting()
     cg_topo = gm.to_names(cg_topo_ind, cg_obs)
     s = gm.c_components(cg, cg_topo)
-    # print(cg)
-    # print(s)
+    print(s)
     cg_obs_nodes = [node for component in s for node in component]
     if len(s) > 1:
         tree.call.line = 6
@@ -471,15 +471,13 @@ def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line n
                 if gamma_name in gm.find_related_nodes_of([gamma_name], g_prime, mode="in", order="max"):
                     new_cf = deepcopy(gamma_cf)
                     new_cf.int_vars.append(cf.orig_name)
-                    new_cf.int_values.append(cf.obs_val)
+                    new_cf.int_values.append(cf.obs_val)  # todo: maybe change to a placeholder?
                     gamma_prime_y.append(new_cf)
             delta_prime.remove(cf)
 
             tree.call.line = 14
             gamma_prime_y = gm.simplify_cf(gamma_prime_y, g)
             delta_prime = gm.simplify_cf(delta_prime, g)
-            print("gamma", gamma_prime_y)
-            print("delta", delta_prime)
             nxt = cf_IDC(g, gamma_prime_y, delta_prime)
             tree.children.append(deepcopy(nxt.tree))
             tree.call.id_check = nxt.tree.call.id_check
@@ -488,6 +486,11 @@ def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line n
 
     # Line 5
     tree.call.line = 15
+    print()
+    print("*********************************")
+    print("Starting Num")
+    print("*********************************")
+    print()
     num = cf_ID(g, cf_conj_prime, topo)
     delta_names = []
     for cf in delta:
