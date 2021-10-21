@@ -705,6 +705,29 @@ def make_cg(g, gamma):
     return cg, gamma_prime
 
 
+def simplify_cf(cf, g):
+    """
+    Simplifies counterfactual statement based on original graph g
+    :param cf: counterfactual conjunction (list)
+    :param g: original graph (no interventions)
+    :return: equivalent counterfactual statement with at most the same number interventions
+    """
+    g_obs = observed_graph(g)
+    for statement in cf:
+        for index, intervention in enumerate(statement.int_vars):
+
+            # Interventions should not be ancestors of another intervention
+            comparison_set = list(set(statement.int_vars) - set(intervention))
+            if intervention in find_related_nodes_of(comparison_set, g_obs, "in", "max"):
+                statement.int_vars.remove(statement.int_vars[index])
+                statement.int_values.remove(statement.int_values[index])
+
+            # Interventions should be ancestors of the vertex
+            if intervention not in find_related_nodes_of([statement.orig_name], g_obs, "in", "max"):
+                statement.int_vars.remove(statement.int_vars[index])
+                statement.int_values.remove(statement.int_values[index])
+    return cf
+
 @dataclass(unsafe_hash=True)
 class Probability:
     var: list = field(default_factory=list)
