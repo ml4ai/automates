@@ -441,7 +441,13 @@ def d_sep(g, x, y, z=None):
                 visited_names[0:visited_size_old] = copy.deepcopy(visited_names_old)
             visited[visited_top - 1] = el
             visited_names[visited_top - 1] = el_name
-            el_name_in_z = el_name in z
+
+            # Fix argument of type 'NoneType' is not iterable
+            if z is not None:
+                el_name_in_z = el_name in z
+            else:
+                el_name_in_z = False
+
             if el and (not el_name_in_z):
                 (stack, stack_names, stack_size, stack_top) = d_sep_helper(include_pa=True, include_ch=True,
                                                                            el_name=el_name, an_xyz=an_xyz, stack=stack,

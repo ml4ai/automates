@@ -333,6 +333,8 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     cg_topo_ind = cg_obs.topological_sorting()
     cg_topo = gm.to_names(cg_topo_ind, cg_obs)
     s = gm.c_components(cg, cg_topo)
+    print(cg)
+    print(s)
     cg_obs_nodes = [node for component in s for node in component]
     if len(s) > 1:
         tree.call.line = 6
@@ -452,7 +454,13 @@ def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line n
             delta_prime.append(cf)
 
     for cf in delta_prime:
-        node = f"{cf.orig_name}_{cf.int_vars}"
+
+        # To handle X_[] error
+        if len(cf.int_vars) > 0:
+            node = f"{cf.orig_name}_{cf.int_vars}"
+        else:
+            node = cf.orig_name
+
         g_prime_y = deepcopy(g_prime)
         edges = set(g_prime.es.select().indices) - set(g_prime.es.select(_from_in=g.vs.select(name=node).indices).indices)
         g_prime_y = g_prime_y.subgraph_edges(edges, delete_vertices=False)
