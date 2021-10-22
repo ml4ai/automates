@@ -521,11 +521,12 @@ class GCC2CAST:
             # the "false block" is the normal block of code following the if,
             # so do not evaluate it here.
             # In the case that a block has a break in it, the first check won't work
-            # because the break changes the exit target of the block it's in, so we do 
-            # additional checks to see where the break takes us 
+            # because the break changes the exit target of the block it's in, so we check
+            # to see if the current block will break out the loop by seeing if the target is further 
+            # down
             if true_exit_target == false_exit_target:
                 false_res = self.parse_basic_block(false_block)
-            elif true_exit_target != false_exit_target and true_exit_target > true_block["edges"][0]["source"]:
+            elif true_exit_target > true_block["edges"][0]["source"]:
                 false_res = self.parse_basic_block(false_block)
             
 
@@ -537,8 +538,22 @@ class GCC2CAST:
             return [ModelContinue()]
         if "early return" in stmt["name"]:
             curr_b = self.current_basic_block
-            ret_val = curr_b["statements"][0]["operands"][0]
-            val = self.parse_operand(ret_val)
+
+            # Fetch all the statements in this node except
+            # for the early return predict and the goto that follows it
+            all_stmts = curr_b["statements"][0:-2]
+
+            # Use the line number information to get only the 
+            # statements involved in the return computation
+            return_pieces = [curr for curr in all_stmts if curr["line_start"] == stmt["line_start"]]
+
+            # Parse all the SSA statements involved in the return expression (could be 1 or more than 1)
+            for piece in return_pieces:
+                self.parse_statement(piece,return_pieces)
+            
+            # The last thing in piece contains the full return expression
+            val = self.variables_ids_to_expression[piece["lhs"]["id"]]
+            
             return [ModelReturn(value=val)]
         else:
             return []
@@ -551,14 +566,12 @@ class GCC2CAST:
             curr = self.loop_exits[loop_indices[0]]
             target = stmt["target"]
 
-            for loop_index in self.loop_exits:
-                loop_block = self.loop_exits[loop_index]
+            for loop_index, loop_block in self.loop_exits.items():
                 if target >= loop_block[0] and target <= loop_block[1]:
                     if loop_block[0] > curr[0] and loop_block[0] < curr[1]:
                         curr = loop_block
-
-            if target == curr[1]:
-                return [ModelBreak()]
+                        if target == curr[1]:
+                            return [ModelBreak()]
 
         return []
 
