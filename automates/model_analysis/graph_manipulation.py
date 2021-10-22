@@ -567,19 +567,14 @@ def parallel_worlds(g, gamma):
                     unobs_edges_to_add.append((new_vert_indx, vert.index))
     p_worlds.add_edges(unobs_edges_to_add, attributes={"description": ["U"] * len(unobs_edges_to_add)})
 
-    # Removes edges from ancestors of variables set by intervention
-    print(p_worlds)
-    nodes_to_remove = []
+    # Removes incoming arrows to variables set by intervention
+    int_nodes = []
     for node in p_worlds.vs():
         if node["int_vars"] is not None and len(node["int_vars"]) > 0:
-            # print(node["name"], node["int_vars"])
             if node["orig_name"] in node["int_vars"]:
-                for name in find_related_nodes_of([node["name"]], p_worlds, "in", order="max"):
-                    # print(name)
-                    # print(node["name"])
-                    if name != node["name"]:
-                        nodes_to_remove.append(name)
-    p_worlds.delete_vertices(nodes_to_remove)
+                int_nodes.append(node["name"])
+    edges_to_keep = eselect(int_nodes, p_worlds)
+    p_worlds = p_worlds.subgraph_edges(edges_to_keep)
     return p_worlds
 
 
