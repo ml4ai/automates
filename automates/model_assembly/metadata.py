@@ -60,8 +60,7 @@ class MetadataType(AutoMATESBaseEnum):
             return VariableFromSource
         else:
             raise MissingEnumError(
-                "Unhandled MetadataType to TypedMetadata conversion "
-                + f"for: {mtype}"
+                "Unhandled MetadataType to TypedMetadata conversion " + f"for: {mtype}"
             )
 
 
@@ -123,20 +122,12 @@ class MeasurementType(AutoMATESBaseEnum):
     @classmethod
     def isa_categorical(cls, item: MeasurementType) -> bool:
         return any(
-            [
-                item == x
-                for x in range(cls.CATEGORICAL.value, cls.NUMERICAL.value)
-            ]
+            [item == x for x in range(cls.CATEGORICAL.value, cls.NUMERICAL.value)]
         )
 
     @classmethod
     def isa_numerical(cls, item: MeasurementType) -> bool:
-        return any(
-            [
-                item == x
-                for x in range(cls.NUMERICAL.value, cls.RATIO.value + 1)
-            ]
-        )
+        return any([item == x for x in range(cls.NUMERICAL.value, cls.RATIO.value + 1)])
 
 
 @unique
@@ -414,6 +405,7 @@ class CodeSpanReference(TypedMetadata):
         )
         return data
 
+
 @unique
 class VariableCreationReason(AutoMATESBaseEnum):
     UNKNOWN = auto()
@@ -424,6 +416,7 @@ class VariableCreationReason(AutoMATESBaseEnum):
     COMPLEX_RETURN_EXPR = auto()
     CONDITION_RESULT = auto()
     LOOP_EXIT_VAR = auto()
+    LITERAL_FUNCTION_ARG = auto()
 
     def __str__(self):
         return str(self.name)
@@ -431,6 +424,7 @@ class VariableCreationReason(AutoMATESBaseEnum):
     @classmethod
     def from_str(cls, data: str):
         return super().from_str(cls, data)
+
 
 @dataclass
 class VariableFromSource(TypedMetadata):
@@ -455,7 +449,7 @@ class VariableFromSource(TypedMetadata):
         return cls(
             data["type"],
             data["provenance"],
-            bool(data["from_source"]),
+            data["from_source"] or data["from_source"] == "True",
             VariableCreationReason.from_str(data["creation_reason"]),
         )
 
@@ -468,6 +462,7 @@ class VariableFromSource(TypedMetadata):
             }
         )
         return data
+
 
 @dataclass
 class GrFNCreation(TypedMetadata):
@@ -554,9 +549,7 @@ class Domain(TypedMetadata):
         if MeasurementType.isa_categorical(mtype):
             els = [DomainSet.from_data(dom_el) for dom_el in data["elements"]]
         elif MeasurementType.isa_numerical(mtype):
-            els = [
-                DomainInterval.from_data(dom_el) for dom_el in data["elements"]
-            ]
+            els = [DomainInterval.from_data(dom_el) for dom_el in data["elements"]]
         else:
             els = []
         return cls(

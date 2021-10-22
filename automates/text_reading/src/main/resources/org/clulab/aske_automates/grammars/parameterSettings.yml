@@ -46,8 +46,8 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0"
     action: ${paramSetAction}
     pattern: |
-      trigger = [lemma='=']
-      variable:Identifier = <amod
+      trigger = [lemma="="]
+      variable:Identifier = <amod | nsubj [!tag="CD"]
       value:Value = dep
 
 
@@ -58,7 +58,9 @@ rules:
     example: "EORATIO is defined as the maximum Kcs at LAI = 6.0, We therefore assume that S(0) = 6.8 – 0.5 = 6.3 million."
     action: ${paramSetAction}
     pattern: |
-      (@variable:Identifier|@variable:Phrase [!tag="CD"]) (?<trigger> [word="="]) @value:Value
+      @variable:Identifier (?<trigger> [word="="]) @value:Value
+      |
+      (@variable:Phrase [!tag="CD"]) (?<trigger> [word="="]) @value:Value
 #      (@variable:Identifier|@variable:Phrase [!tag=/CD|VBZ/ & !lemma = "be"]) (?<trigger> [word="="]) @value:Value
 
 
@@ -229,7 +231,7 @@ rules:
     action: ${paramSetAction}
     example: "With an RMSE of 22.8%, drastic discrepancies were found in the comparison of Ref-ET ETo and ETpm from DSSAT-CSM version 4.5 for Arizona conditions."
     pattern: |
-      /(?i)with/ (an|a|the) @variable:Identifier of @value:Value
+      /(?i)with/? (an|a|the) @variable:Identifier of @value:Value
 
   - name: var-noun_of2
     label: ParameterSetting
@@ -324,7 +326,7 @@ rules:
     example: "At planting time, the model takes a soil sample and applies up to 15 kg/ha of N fertilizer if needed."
     action: ${paramSetAction}
     pattern: |
-      @value:Value [word=/\w*/]{,4} of @variable:Phrase
+      @value:Value [word=/\w*/]{,4} of (variable:Phrase [!tag = "CD"])
 
   - name: value_of
     label: ParameterSetting
