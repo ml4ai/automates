@@ -321,8 +321,6 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
 
     # Line 4
     (cg, gamma_prime) = gm.make_cg(g, gamma)
-    print(cg)
-    print(gamma_prime)
 
     # Line 5
     if gamma_prime == "Inconsistent":
@@ -335,7 +333,6 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
     cg_topo_ind = cg_obs.topological_sorting()
     cg_topo = gm.to_names(cg_topo_ind, cg_obs)
     s = gm.c_components(cg, cg_topo)
-    print("c_components:", s)
     cg_obs_nodes = [node for component in s for node in component]
     if len(s) > 1:
         tree.call.line = 6
@@ -385,30 +382,50 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
         s_single = s[0]
 
         # Line 8
-        sub = []
-        ev = []
+        subscript_variables = []
         for node in s_single:
             node_info = cg.vs.select(name=node)[0]
-            for int_val in node_info["int_values"]:
-                sub.append(int_val)
-            ev.append(node_info["obs_val"])
-        if len(set(sub)-set(ev)) != 0:
-            tree.call.line = 8
-            tree.call.id_check = False
-            return gm.CfResultsInternal(tree=tree, p_message="counterfactual contains an inconsistent value assignment")
+            for int_var in node_info["int_vars"]:
+                subscript_variables.append(int_var)
+
+        subscript_values = [[]]*len(subscript_variables)
+        obs_values = [[]]*len(subscript_variables)
+        for node in s_single:
+            node_info = cg.vs.select(name=node)[0]
+
+            for index, int_var in enumerate(node_info["int_vars"]):
+                position = subscript_variables.index(int_var)
+                subscript_values[position].append(node_info["int_values"][index])
+
+            if node_info["orig_name"] in subscript_variables:
+                position = subscript_variables.index(node_info["orig_name"])
+                obs_values.append[position].append(node_info["obs_val"])
+
+        for index, int_var in enumerate(subscript_variables):
+            if len(set(subscript_values[index])) > 1:
+                tree.call.line = 8
+                tree.call.id_check = False
+                return gm.CfResultsInternal(tree=tree,
+                                            p_message="counterfactual contains an inconsistent value assignment")
+
+            if (len(set(obs_values[index])) > 1) or (len(obs_values[index]) > 0
+                                                     and obs_values[index][0] != subscript_values[index][0]):
+                tree.call.line = 8
+                tree.call.id_check = False
+                return gm.CfResultsInternal(tree=tree,
+                                            p_message="counterfactual contains an inconsistent value assignment")
 
         # Line 9
-        else:
-            tree.call.line = 9
-            tree.call.id_check = True
-            new_x = []
-            var = []
-            for node in s_single:
-                node_info = cg.vs.select(name=node)[0]
-                for int_var in node_info["int_vars"]:
-                    new_x.append(int_var)
-                var.append(node_info["orig_name"])
-            return gm.CfResultsInternal(gm.Probability(var=var, subscript=new_x), tree)
+        tree.call.line = 9
+        tree.call.id_check = True
+        new_x = []
+        var = []
+        for node in s_single:
+            node_info = cg.vs.select(name=node)[0]
+            for int_var in node_info["int_vars"]:
+                new_x.append(int_var)
+            var.append(node_info["obs_val"])
+        return gm.CfResultsInternal(gm.Probability(var=var, subscript=list(set(new_x))), tree)
 
 
 def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line numbers have 10 added
@@ -488,7 +505,7 @@ def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line n
     num = cf_ID(g, cf_conj_prime, topo)
     delta_names = []
     for cf in delta:
-        delta_names.append(f"{cf.original_name}_{cf.int_vars}")
+        delta_names.append(f"{cf.orig_name}_{cf.int_vars}")
     tree.children.append(deepcopy(num.tree))
     tree.call.id_check = num.tree.call.id_check
     return gm.CfResultsInternal(gm.Probability(cf_p_prime=num.p, cf_delta=delta_names), tree, num.p_int, num.p_message)
