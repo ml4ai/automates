@@ -424,7 +424,10 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
             node_info = cg.vs.select(name=node)[0]
             for int_var in node_info["int_vars"]:
                 new_x.append(int_var)
-            var.append(node_info["obs_val"])
+            if node_info["obs_val"] is not None:
+                var.append(node_info["obs_val"])
+            else:
+                var.append(node_info["orig_name"])
         return gm.CfResultsInternal(gm.Probability(var=var, subscript=list(set(new_x))), tree)
 
 
