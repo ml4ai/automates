@@ -200,7 +200,7 @@ def get_expression(prob, start_sum=False, single_source=False, target_sym="^*(")
         else:
             p = f"{p}\\sum_{{{sum_string}}}"
     if prob.cf_p_prime is not None:
-        p_prime = get_expression(prob.cf_frac_num, start_sum=False, single_source=single_source, target_sym=target_sym)
+        p_prime = get_expression(prob.cf_p_prime, start_sum=False, single_source=single_source, target_sym=target_sym)
         delta = ",".join(prob.cf_delta)
         num = f"P'"
         den = f"P'({delta})"

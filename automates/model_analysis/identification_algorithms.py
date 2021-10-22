@@ -360,9 +360,6 @@ def cf_ID(g, gamma, v, p=gm.Probability(), tree=gm.CfTreeNode()):
                         int_values.append(None)  # todo: maybe placeholder?
                 nxt_gamma.append(gm.CF(node["orig_name"], node["obs_val"], int_vars, int_values))
             nxt_gamma = gm.simplify_cf(nxt_gamma, g)
-            print("---------------------------------")
-            print("Starting Subgraph")
-            print("---------------------------------")
             nxt = cf_ID(g, nxt_gamma, v)
             product_list.append(deepcopy(nxt.p))
             id_check_list.append(deepcopy(nxt.tree.call.id_check))
@@ -500,15 +497,16 @@ def cf_IDC(g, gamma, delta, tree=gm.CfTreeNode()):  # todo: document that line n
 
     # Line 5
     tree.call.line = 15
-    print()
-    print("*********************************")
-    print("Starting Num")
-    print("*********************************")
-    print()
     num = cf_ID(g, cf_conj_prime, topo)
     delta_names = []
     for cf in delta:
-        delta_names.append(f"{cf.orig_name}_{cf.int_vars}")
+        name = cf.orig_name
+        if cf.obs_val is not None:
+            name = cf.obs_val
+        if len(cf.int_vars) > 0:
+            delta_names.append(f"{name}_{cf.int_vars}")
+        else:
+            delta_names.append(name)
     tree.children.append(deepcopy(num.tree))
     tree.call.id_check = num.tree.call.id_check
     return gm.CfResultsInternal(gm.Probability(cf_p_prime=num.p, cf_delta=delta_names), tree, num.p_int, num.p_message)

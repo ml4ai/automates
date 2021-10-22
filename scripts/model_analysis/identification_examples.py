@@ -57,6 +57,7 @@ g.es["description"] = ["O", "O", "O", "O", "U", "U"]
 
 # Function Results
 results = ia.cf_identifiability(g, gamma, delta)
+print(results)
 
 # Expected Results
 exp_result = "P'/P'(x_prime), where P' = \\sum_{W}P_{Z, W}(y, x_prime)P_{X}(w)"
