@@ -15,6 +15,7 @@ def run_ghidra(ghidra_root='', binary_root_dir='', binary_file='', working_root_
 
     original_working_dir = os.getcwd()
     os.chdir(working_root_dir)
+    print(f'Working directory: {os.getcwd()}')
 
     # the project name is required but this will be deleted after processing,
     # so not super important
@@ -90,7 +91,7 @@ def main():
     parser.add_argument('-s', '--script_file',
                         help='specify specific Ghidra plugin script to run',
                         type=str,
-                        default='DumpInstructions_single_fn.py')
+                        default='DumpInstructionsByFunction.py')
     parser.add_argument('-B', '--binary_root_dir',
                         help='specify the binaries root directory (relative to working directory root)',
                         type=str,
