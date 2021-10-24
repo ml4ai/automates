@@ -6,32 +6,59 @@ import json
 import argparse
 
 
-def compile_source_in_dir(src_root_dir='', dst_root_dir=None, ext='c', command=None, binary_postfix=None, execute_p=False):
+def compile_source_in_dir(src_root_dir='', dst_root_dir=None, src_file=None,
+                          ext='c',
+                          command=None,
+                          binary_postfix=None, execute_p=False):
+
+    def get_output_filepath(_src_filepath):
+        _output_filepath = _src_filepath
+        if dst_root_dir:
+            _output_filepath = os.path.join(dst_root_dir, os.path.basename(_src_filepath))
+        _output_filepath = os.path.splitext(_output_filepath)[0]
+        if binary_postfix is not None:
+            _output_filepath += binary_postfix
+        return _output_filepath
+
     if execute_p:
         # create destination root directory if does not already exist
         pathlib.Path(dst_root_dir).mkdir(parents=True, exist_ok=True)
 
     errors = list()
 
-    # iterate through the src_root_dir
-    for subdir, dirs, files in os.walk(src_root_dir):
-        for file in files:
-            src_filepath = subdir + os.sep + file
-            if src_filepath.endswith(ext):
-                output_filepath = src_filepath
-                if dst_root_dir:
-                    output_filepath = os.path.join(dst_root_dir, os.path.basename(src_filepath))
-                output_filepath = os.path.splitext(output_filepath)[0]
-                if binary_postfix is not None:
-                    output_filepath += binary_postfix
-                command_list = command + [src_filepath, '-o', output_filepath]
-                if not execute_p:
-                    print(command_list)
-                else:
-                    print(f'Executing {command_list}')
-                    result = subprocess.run(command_list, stdout=subprocess.PIPE)
-                    if result.returncode != 0:
-                        errors.append(result)
+    if src_file:
+        print(f'Running SINGLE src_file {src_file}')
+        src_filepath = os.path.join(src_root_dir, src_file)
+        output_filepath = get_output_filepath(src_filepath)
+        command_list = command + [src_filepath, '-o', output_filepath]
+        if not execute_p:
+            print(command_list)
+        else:
+            print(f'Executing {command_list}')
+            result = subprocess.run(command_list, stdout=subprocess.PIPE)
+            if result.returncode != 0:
+                errors.append(result)
+    else:
+        print(f'Running BATCH mode')
+        # iterate through the src_root_dir
+        for subdir, dirs, files in os.walk(src_root_dir):
+            for file in files:
+                src_filepath = subdir + os.sep + file
+                if src_filepath.endswith(ext):
+                    output_filepath = get_output_filepath(src_filepath)
+                    # if dst_root_dir:
+                    #     output_filepath = os.path.join(dst_root_dir, os.path.basename(src_filepath))
+                    # output_filepath = os.path.splitext(output_filepath)[0]
+                    # if binary_postfix is not None:
+                    #     output_filepath += binary_postfix
+                    command_list = command + [src_filepath, '-o', output_filepath]
+                    if not execute_p:
+                        print(command_list)
+                    else:
+                        print(f'Executing {command_list}')
+                        result = subprocess.run(command_list, stdout=subprocess.PIPE)
+                        if result.returncode != 0:
+                            errors.append(result)
     return errors
 
 
@@ -66,7 +93,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--execute',
-                        help='execute script (as opposed to running in test mosde)',
+                        help='execute script (as opposed to running in test mode)',
                         action='store_true', default=False)
     parser.add_argument('-s', '--src_root_dir',
                         help='specify the source root directory',
@@ -76,6 +103,10 @@ def main():
                         help='specify the destination root directory',
                         type=str,
                         default='examples_bin')
+    parser.add_argument('-f', '--src_file',
+                        help='specify a specific source file to compile (won\'t run in batch mode)',
+                        type=str,
+                        default=None)
     args = parser.parse_args()
     if args.execute:
         print(f'EXECUTE! {args.src_root_dir} {args.dst_root_dir}')
@@ -106,6 +137,7 @@ def main():
     dst_root_dir = os.path.join(args.dst_root_dir, pname_base)
 
     errors = compile_source_in_dir(src_root_dir=args.src_root_dir,
+                                   src_file=args.src_file,
                                    dst_root_dir=dst_root_dir,
                                    ext='.c',
                                    command=[gcc_path, '-O0'],
