@@ -1,10 +1,15 @@
 import os
 # from pathlib import Path
-# from collections import namedtuple
 import random
 from typing import Set, List, Dict, Tuple
 from dataclasses import dataclass
-# import numpy
+
+"""
+ASSUMPTIONS:
+(1) Not using 'long double' type for now
+    Doing so leads to binary handling of long double data that Ghidra 
+      does not appear to be able to recover 
+"""
 
 
 # random.seed(a=6)
@@ -43,8 +48,8 @@ class VarGen:
 #           ground_type is 'float' b/c 'float' index 3 > 'long' index 1
 MAP_TYPECAT_TO_TYPE = \
     {'ANY': ('int', 'long', 'long long',
-             'float', 'double', 'long double'),
-     'REAL_FLOATING': ('float', 'double', 'long double'),
+             'float', 'double'),  # 'long double'
+     'REAL_FLOATING': ('float', 'double'),  # 'long double'
      'NON_FLOAT': ('int', 'long', 'long long'),
      'INT': ('int',)}
 TYPES = MAP_TYPECAT_TO_TYPE['ANY']
@@ -57,7 +62,8 @@ def sample_literal(t):
     elif t in MAP_TYPECAT_TO_TYPE['NON_FLOAT']:
         return random.randint(-100, 100)
     else:
-        raise Exception(f"ERROR: Unsupported type '{t}'")
+        raise Exception(f"ERROR sample_literal():\n"
+                        f"Unsupported type '{t}'")
 
 
 TYPE_PRIORITY = \
@@ -68,7 +74,8 @@ TYPE_PRIORITY = \
 
 def get_type_priority(t):
     if t not in TYPE_PRIORITY:
-        raise Exception(f'ERROR: type {t} is not handled\n{TYPE_PRIORITY}')
+        raise Exception(f'ERROR get_type_priority():\n'
+                        f'type {t} is not handled\n{TYPE_PRIORITY}')
     else:
         return TYPE_PRIORITY[t]
 
@@ -434,10 +441,12 @@ class ExprTreeSample:
 
     def assign_value(self, index, value):
         if index not in sorted(list(self.unassigned_indices)):
-            raise Exception(f'ERROR: Attempting to assign value {value} to index {index} '
+            raise Exception(f'ERROR ExprTreeSample.assign_value():\n'
+                            f'Attempting to assign value {value} to index {index} '
                             f'not in unassigned:\n{self.unassigned_indices}')
         elif index in self.value_assignments:
-            raise Exception(f'ERROR: Attempting to assign value {value} to index {index} '
+            raise Exception(f'ERROR ExprTreeSampleassign_value():\n'
+                            f'Attempting to assign value {value} to index {index} '
                             f'already assigned to {self.value_assignments[index]}')
         else:
             self.value_assignments[index] = value
