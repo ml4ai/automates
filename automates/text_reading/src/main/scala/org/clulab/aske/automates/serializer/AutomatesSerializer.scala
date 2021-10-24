@@ -27,9 +27,19 @@ object AutomatesJSONSerializer {
 
     val docMap = mkDocumentMap(menUJson("documents"))
     val mentionsUJson = menUJson("mentions")
-    val toReturn = mentionsUJson.arr.map(item => toMention(item, docMap)).toSeq
-    toReturn
+    val toReturn = new ArrayBuffer[Mention]
 
+    for (a <- mentionsUJson.arr) {
+      if (a.obj.contains("additionalSentence")) {
+        val return_1 = mentionsUJson.arr.map(item => toCrossSentenceMention(item, docMap)).toSeq
+        toReturn ++ return_1
+      } else {
+        val return_2 = mentionsUJson.arr.map(item => toMention(item, docMap)).toSeq
+        toReturn ++ return_2
+      }
+    }
+
+    toReturn
   }
 
 
@@ -38,8 +48,6 @@ object AutomatesJSONSerializer {
     val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
     val labels = mentionComponents("labels").arr.map(_.str).toArray
     val sentence = mentionComponents("sentence").num.toInt
-    val secondSentence = mentionComponents("sentence").num.toInt // todo: how to change this into "secondSentence"?
-//    val sentences = Seq(sentence, secondSentence)
     val docHash = mentionComponents("document").str.toInt
     val document = docMap(docHash.toString)
     val keep = mentionComponents("keep").bool
@@ -106,24 +114,59 @@ object AutomatesJSONSerializer {
           attachments = attAsSet
         )
       }
+    }
+  }
 
+  def toCrossSentenceMention(mentionComponents: ujson.Value, docMap: Map[String, Document]): Mention = {
+    val tokIntObj = mentionComponents("tokenInterval").obj
+    val tokenInterval = Interval(tokIntObj("start").num.toInt, tokIntObj("end").num.toInt)
+    val labels = mentionComponents("labels").arr.map(_.str).toArray
+    val sentence = mentionComponents("sentence").num.toInt
+    val additionalSentence = mentionComponents("additionalSentence").num.toInt
+    //    val sentences = Seq(sentence, secondSentence)
+    val docHash = mentionComponents("document").str.toInt
+    val document = docMap(docHash.toString)
+    val keep = mentionComponents("keep").bool
+    val foundBy = mentionComponents("foundBy").str
+    val menType = mentionComponents("type").str
+    val attachments = new ArrayBuffer[Attachment]
+
+    if (mentionComponents.obj.contains("attachments")) {
+      val attObjArray = mentionComponents("attachments").arr
+      for (ao <- attObjArray) {
+        val att = toAttachment(ao)
+        attachments.append(att)
+      }
+    }
+
+
+    val attAsSet = attachments.toSet
+
+    def getArgs(argObj: ujson.Value): Map[String, Seq[Mention]] = {
+      val args = for  {
+        (k,v) <- argObj.obj
+        seqOfArgMentions = v.arr.map(toCrossSentenceMention(_, docMap))
+
+      } yield k -> seqOfArgMentions
+      args.toMap
+    }
+
+    menType match {
       case "CrossSentenceEventMention" => {
         new CrossSentenceEventMention(
           labels,
           tokenInterval,
-          toMention(mentionComponents("trigger"), docMap).asInstanceOf[TextBoundMention],
+          toCrossSentenceMention(mentionComponents("trigger"), docMap).asInstanceOf[TextBoundMention],
           getArgs(mentionComponents("arguments")),
-          toPaths(mentionComponents, docMap),
+          Map.empty[String, Map[Mention, odin.SynPath]],
           sentence,
-          secondSentence,
-//          sentences,
+          additionalSentence,
           document,
           keep,
           foundBy,
           attachments = attAsSet
         )
       }
-
     }
   }
 
@@ -469,7 +512,7 @@ object AutomatesJSONSerializer {
       // sentence index
       val h4 = mix(h3, cm.sentence)
       // 2nd sentence index
-      val h5 = mix(h4, cm.secondSentence)
+      val h5 = mix(h4, cm.additionalSentence)
       // document.equivalenceHash
       val h6 = mix(h5, cm.document.equivalenceHash)
       // args
@@ -519,7 +562,7 @@ object AutomatesJSONSerializer {
         "characterStartOffset" -> cm.startOffset,
         "characterEndOffset" -> cm.endOffset,
         "sentence" -> cm.sentence,
-        "secondSentence" -> cm.secondSentence,
+        "additionalSentence" -> cm.additionalSentence,
 //        "sentences" -> Seq(cm.sentence),
         "document" -> cm.document.equivalenceHash.toString,
         "keep" -> cm.keep,
