@@ -31,6 +31,7 @@ object AutomatesJSONSerializer {
 
     for (a <- mentionsUJson.arr) {
       if (a.obj.contains("additionalSentence")) {
+        println("### CrossSentenceMention!! ###")
         val return_1 = mentionsUJson.arr.map(item => toCrossSentenceMention(item, docMap)).toSeq
         toReturn ++ return_1
       } else {
@@ -145,7 +146,7 @@ object AutomatesJSONSerializer {
     def getArgs(argObj: ujson.Value): Map[String, Seq[Mention]] = {
       val args = for  {
         (k,v) <- argObj.obj
-        seqOfArgMentions = v.arr.map(toCrossSentenceMention(_, docMap))
+        seqOfArgMentions = v.arr.map(toMention(_, docMap))
 
       } yield k -> seqOfArgMentions
       args.toMap

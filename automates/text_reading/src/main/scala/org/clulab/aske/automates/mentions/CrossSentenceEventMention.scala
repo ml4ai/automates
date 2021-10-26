@@ -19,7 +19,6 @@ class CrossSentenceEventMention(
                                  val paths: Map[String, Map[Mention, SynPath]],
                                  val sentence: Int,
                                  val additionalSentence: Int,
-//                                 val sentences: Seq[Int],
                                  val document: Document,
                                  val keep: Boolean,
                                  val foundBy: String,

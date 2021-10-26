@@ -441,7 +441,7 @@ class ExpansionHandler() extends LazyLogging {
 }
 
 object ExpansionHandler {
-  val MAX_HOPS_EXPANDING = 0
+  val MAX_HOPS_EXPANDING = 5
   val MAX_HOP_LENGTH = 16 //max length of hop (in tokens); helps with bad parses
   val AVOID_LABEL = "Avoid-Strict"
 
