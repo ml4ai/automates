@@ -5,10 +5,17 @@ from typing import Set, List, Dict, Tuple
 from dataclasses import dataclass
 
 """
-ASSUMPTIONS:
+ASSUMPTIONS / OBSERVATIONS:
 (1) Not using 'long double' type for now
     Doing so leads to binary handling of long double data that Ghidra 
       does not appear to be able to recover 
+(2) GCC DOES indeed pre-compute values when (primitive?) operators only
+    involve literal values.
+    GCC appears to NOT do this when at least one of the literal values
+    is passed via a variable.
+    For this reason, will introduce at least one literal-assigned variable
+    for any operator (that is not otherwise fn of 
+        See: expr_00.c
 """
 
 
@@ -376,8 +383,9 @@ def sample_expr_seq():
 
     expr_seq.backward_propagate_ground_type_choices()
 
-    # create literal variables for some unassigned indices
-    # reuse some literal variables
+    # TODO: create literal variables for at least one of any binary fn that has unassigned values
+    # TODO: reuse some literal variables
+
     # finally, inline assign literals to all remaining unassigned indices
     expr_seq.assign_literals()
 
@@ -540,6 +548,7 @@ class ExprTreeSample:
         print(f'value_assignments:  {self.value_assignments}')
 
 
+"""
 def test_expr_tree_sample_1():
     num_ops = 5  # TODO: make this a random variable
     expr = ExprTreeSample(num_ops=num_ops)
@@ -561,6 +570,7 @@ def test_expr_tree_sample_1():
     print('-- 3')
     expr.add_op_at(index=1, op='op4', return_type='op4.long', arg_types=('op4.int1', 'op4.long2'), verbose_p=True)
     expr.print()
+"""
 
 
 def sample_expr_tree(num_ops):
