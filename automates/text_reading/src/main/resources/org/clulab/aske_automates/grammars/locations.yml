@@ -1,0 +1,11 @@
+vars: org/clulab/aske_automates/grammars/vars.yml
+
+rules:
+
+  - name: entity-location
+    label: Location
+    priority: ${priority}
+    type: token
+    example: "to a value of 200 mm 2 per plant"
+    pattern: |
+      [entity = "LOCATION"]

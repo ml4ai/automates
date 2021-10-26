@@ -2,6 +2,8 @@
   - Phrase:
       - Identifier:
         - VariableGazetteer
+      - Location
+      - Date
       - Model
       - Measurement:
         - Value:

@@ -41,6 +41,11 @@ rules:
     vars:
       priority: 9
 
+
+  - import: "org/clulab/aske_automates/grammars/locations.yml"
+    vars:
+      priority: 9
+
   - import: "org/clulab/aske_automates/grammars/context.yml"
     vars:
       priority: 4
@@ -53,6 +58,8 @@ rules:
   - import: "org/clulab/aske_automates/grammars/contextualizedEvents.yml"
     vars:
       priority: 10
+
+
 
 #  - import: "org/clulab/aske_automates/grammars/template.yml"
 #    vars:

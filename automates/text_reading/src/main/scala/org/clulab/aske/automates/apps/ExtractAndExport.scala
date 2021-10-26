@@ -187,7 +187,7 @@ case class TSVExporter(filename: String) extends Exporter {
   override def export(mentions: Seq[Mention]): Unit = {
     val pw = new PrintWriter(new File(filename.toString()))
     pw.write("filename\tsentence\tmention type\tmention text\targs in all next columns\n")
-    val contentMentions = mentions.filter(m => (m.label matches "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command")) //|| (m.label matches "Context"))
+    val contentMentions = mentions.filter(m => (m.label contains "Description") || (m.label matches "ParameterSetting") || (m.label matches "IntervalParameterSetting") || (m.label matches "UnitRelation") || (m.label matches "Command")) //|| (m.label matches "Context"))
     for (m <- contentMentions) {
       pw.write(contentMentions.head.document.id.getOrElse("unk_file") + "\t")
       pw.write(m.sentenceObj.words.mkString(" ") + "\t" + m.label + "\t" + m.text.trim())

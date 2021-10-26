@@ -10,7 +10,7 @@ rules:
     example: ""
     action: looksLikeAnIdentifier
     pattern: |
-      (?<! equation) [mention=Phrase]
+      (?<! equation) [mention=Phrase & !entity=DATE]
 
 #  - name: var-noun_of
 #    label: Identifier
