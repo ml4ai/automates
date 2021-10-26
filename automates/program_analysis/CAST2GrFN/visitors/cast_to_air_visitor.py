@@ -517,8 +517,10 @@ class CASTToAIRVisitor(CASTVisitor):
 
             called_func_name = parse_attr(node.func)
 
-        # Skip printf calls for now
-        if called_func_name == "printf" or called_func_name == "print":
+        # TODO Handle scanf calls as input??
+        # Skip printf and scanf calls for now
+        funcs_to_skip = {"printf", "print", "scanf"}
+        if called_func_name in funcs_to_skip:
             return []
         # TODO throw error if not found
         # TODO also what happens if func is defined after call
