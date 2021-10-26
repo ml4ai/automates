@@ -220,7 +220,7 @@ object AutomatesJSONSerializer {
     val attType = json("attType").str
     val foundBy = json("foundBy").str
     val toReturn = attType match {
-      case "MentionLocation" => new MentionLocationAttachment(json("pageNum").num.toInt, json("blockIdx").num.toInt, attType)
+      case "MentionLocation" => new MentionLocationAttachment(json("pageNum").arr.map(_.num.toInt), json("blockIdx").arr.map(_.num.toInt), attType)
       case "DiscontinuousCharOffset" => new DiscontinuousCharOffsetAttachment(json("charOffsets").arr.map(v => (v.arr.head.num.toInt, v.arr.last.num.toInt)), attType)
       case "ParamSetAtt" => new ParamSetAttachment(json("attachedTo").str, attType)
       case "ParamSettingIntervalAtt" => {
