@@ -20,14 +20,22 @@ rules:
     example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
     pattern: |
       [word = /.*\.[a-zA-Z]{2,}/]
-  
-  - name: arg-rule
+    
+  - name: parameter-rule
     label: CommandLineArg
     priority: 1
     type: token
+    example: "--crop"
+    pattern: |
+      (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]/])
+
+  - name: arg-rule
+    label: CommandLineArg
+    priority: 2
+    type: token
     example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
     pattern: |
-      (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]/]) (?<=[tag = /" | POS/])? (?<argument>[word = /[a-zA-Z'"]+/]+)
+      @parameter:CommandLineArg (?<=[tag = /" | POS/])? (?<argument>[word = /[a-zA-Z0-9'"]+/]+)
 
 
   # - name: language
