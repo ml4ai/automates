@@ -75,12 +75,11 @@ def config_requirement_message():
 
 
 def main():
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--execute',
-                        help='execute script (as opposed to running in test mosde)',
+                        help='execute script (as opposed to running in test mode)',
                         action='store_true', default=False)
-    parser.add_argument('-w', '--working_root_dir',
+    parser.add_argument('-W', '--working_root_dir',
                         help='specify the working directory root',
                         type=str,
                         default='examples_ghidra_instructions')
@@ -98,7 +97,7 @@ def main():
                         default='')
     parser.add_argument('-b', '--binary_file',
                         help='Optionally specify a specific file to process; '
-                             'if left unspecified, then processes whole directory',
+                             'if left unspecified, then processes whole binary_root_dir directory',
                         type=str,
                         default='')
     args = parser.parse_args()
@@ -137,5 +136,5 @@ def main():
 
 if __name__ == '__main__':
     # python batch_ghidra_program_plugin.py -B ../examples_bin/Linux -b add_int_printf_03__Linux-5.11.0-37-generic-x86_64-with-glibc2.31__gcc-10.1.0
-    # python batch_ghidra_program_plugin.py -s EnumerateFunctions.py -w examples_ghidra_functions -B ../examples_bin/Darwin -e
+    # python batch_ghidra_program_plugin.py -s EnumerateFunctions.py -W examples_ghidra_functions -B ../examples_bin/Darwin -e
     main()
