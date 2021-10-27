@@ -3,10 +3,28 @@ import struct
 from collections import OrderedDict
 
 
+# TODO: create batch processing mode
+
 """
 Assumptions
 (1) function names: common fns like printf are first-order tokens
     TODO: this will have to be generalized
+
+References:
+() Using python struct for decoding hex representations of values
+    (particularly to float)
+    - https://stackoverflow.com/questions/1592158/convert-hex-to-float
+    - https://docs.python.org/3/library/struct.html
+    - Interesting point about a hex value possibly containing two float reps
+      https://stackoverflow.com/questions/44052818/how-to-convert-hex-to-ieee-floating-point-python
+() IEEE-754 hex to decimal floating point converter: 
+    https://babbage.cs.qc.cuny.edu/ieee-754.old/64bit.html
+() Another hex to decimal (non-float) converter: 
+    https://www.rapidtables.com/convert/number/hex-to-decimal.html
+() Reference info for different instructions
+    https://www.felixcloutier.com/x86/movsd
+    https://www.felixcloutier.com/x86/fld
+    https://www.felixcloutier.com/x86/cvtsi2sd
 """
 
 
@@ -15,26 +33,6 @@ EXAMPLE_INSTRUCTIONS_FILE = \
     'types_without_long_double__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
 # 'types__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
 # 'expr_00__Linux-5.11.0-38-generic-x86_64-with-glibc2.31__gcc-10.1.0-instructions.txt'
-
-
-class bidict(dict):
-    def __init__(self, *args, **kwargs):
-        super(bidict, self).__init__(*args, **kwargs)
-        self.inverse = {}
-        for key, value in self.items():
-            self.inverse.setdefault(value,[]).append(key)
-
-    def __setitem__(self, key, value):
-        if key in self:
-            self.inverse[self[key]].remove(key)
-        super(bidict, self).__setitem__(key, value)
-        self.inverse.setdefault(value,[]).append(key)
-
-    def __delitem__(self, key):
-        self.inverse.setdefault(self[key],[]).remove(key)
-        if self[key] in self.inverse and not self.inverse[self[key]]:
-            del self.inverse[self[key]]
-        super(bidict, self).__delitem__(key)
 
 
 class BiMap:
@@ -148,31 +146,31 @@ class Function:
     def tokenize(self):
         for addr in self.address_seq:
             tokens = list()
-            elements, notes = self.address_blocks[addr]
-            if notes:
-                notes = parse_notes(notes)
+            elements, metadata = self.address_blocks[addr]
+            if metadata:
+                metadata = parse_metadata(metadata)
             ptr_size = None   # if this gets set, then use any values in place of ptr in tokens
             called_fn = None  # store whether a CALL with address/value has been interpreted
             for elm in elements:
                 # Values
                 if elm.startswith('0x') or elm.startswith('-0x'):
-                    if notes:
+                    if metadata:
                         if 'CALL' in tokens:
-                            # have already found a call, so notes likely holds fn name
-                            fn_name = parse_fn_name_from_parsed_notes(notes)
+                            # have already found a call, so metadata likely holds fn name
+                            fn_name = parse_fn_name_from_parsed_metadata(metadata)
                             called_fn = fn_name
                             tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=fn_name))
                         else:
-                            # Has notes, address appears to reference a known value
+                            # Has metadata, address appears to reference a known value
                             # Use values a metadata
                             # e.g., string as argument to printf
 
                             # attempt to parse string
-                            parsed_string = parse_string_value_from_parsed_notes(notes)
+                            parsed_string = parse_string_value_from_parsed_metadata(metadata)
                             if parsed_string is not None:
                                 tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=parsed_string))
                             else:
-                                tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=notes))
+                                tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=metadata))
                     else:
                         value = parse_hex_value(elm, size=ptr_size)
                         if ptr_size:
@@ -182,15 +180,15 @@ class Function:
                 # Address ptr
                 elif ' ptr ' in elm:
                     ptr_size = elm.split(' ')[0]
-                    if notes:
+                    if metadata:
                         if 'CALL' in tokens:
-                            # have already found a call, so notes likely holds fn name
-                            fn_name = parse_fn_name_from_parsed_notes(notes)
+                            # have already found a call, so metadata likely holds fn name
+                            fn_name = parse_fn_name_from_parsed_metadata(metadata)
                             called_fn = fn_name
                             tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=fn_name))
                         else:
                             # no CALL, so check if note contain hex value: e.g.,
-                            value = parse_hex_value_from_parsed_notes(notes, ptr_size)
+                            value = parse_hex_value_from_parsed_metadata(metadata, ptr_size)
                             tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=value))
                     else:
                         tokens.append(self.instr_set.token_map_address.get_token(elm))
@@ -200,8 +198,8 @@ class Function:
 
             # handle clase where a CALL was observed but no address/value was interpreted as fn_name
             # This happens, e.g., in _init : CALL RAX >>> array(java.lang.String, [u'undefined __gmon_start__()'])
-            if 'CALL' in tokens and called_fn is None and notes:
-                fn_name = parse_fn_name_from_parsed_notes(notes)
+            if 'CALL' in tokens and called_fn is None and metadata:
+                fn_name = parse_fn_name_from_parsed_metadata(metadata)
                 print(f'WARNING: fn={self.name}, address={addr}, CALL to {fn_name} with no explicit token')
 
             self.tokens[addr] = tokens
@@ -214,42 +212,42 @@ class Function:
         return token_seq
 
 
-def parse_notes(notes: str):
-    if notes.startswith('array'):
-        parsed_notes = [':array']
-        t, rest = notes[6:-1].split(',', maxsplit=1)
-        parsed_notes.append(t)
+def parse_metadata(metadata: str):
+    if metadata.startswith('array'):
+        parsed_metadata = [':array']
+        t, rest = metadata[6:-1].split(',', maxsplit=1)
+        parsed_metadata.append(t)
 
         elms = parse_unicode_string_list(rest.strip(' []'))
         for elm in elms:
-            parsed_notes.append(elm)
+            parsed_metadata.append(elm)
 
         # for elm in elms:
         #     if elm.startswith("u'"):
         #         elm = elm[2:-1]
-        #     parsed_notes.append(elm)
+        #     parsed_metadata.append(elm)
 
-        return parsed_notes
+        return parsed_metadata
     else:
-        return [':unparsed', notes]
+        return [':unparsed', metadata]
 
 
-def test_parse_notes():
-    print('TEST test_parse_notes()')
+def test_parse_metadata():
+    print('TEST test_parse_metadata()')
     t1 = "array(java.lang.String, [u'= 00405010', u'= ??'])"
-    print(parse_notes(t1))
+    print(parse_metadata(t1))
     t2 = "array(java.lang.String, [u'undefined __libc_start_main()'])"
-    print(parse_notes(t2))
+    print(parse_metadata(t2))
     t3 = "array(java.lang.String, [u'= \"Answer: %g\\n\"'])"
-    print(parse_notes(t3))
+    print(parse_metadata(t3))
     t4 = "array(java.lang.String, [u'int printf(char * __format, ...)'])"
-    print(parse_notes(t4))
+    print(parse_metadata(t4))
     t5 = "something else"
-    print(parse_notes(t5))
+    print(parse_metadata(t5))
     t6 = "array(java.lang.String, [u'= 40E75C29h'])"
-    print(parse_notes(t6))
+    print(parse_metadata(t6))
     t7 = "array(java.lang.String, [u'= C056133333333333h'])"
-    print(parse_notes(t7))
+    print(parse_metadata(t7))
 
 
 def parse_unicode_string_list(ustr):
@@ -266,45 +264,47 @@ def parse_unicode_string_list(ustr):
     return chunks
 
 
-def parse_fn_name_from_parsed_notes(parsed_notes: List):
-    if parsed_notes[0] == ':array' and len(parsed_notes) == 3:
-        target_string = parsed_notes[2]
+def parse_fn_name_from_parsed_metadata(parsed_metadata: List):
+    if parsed_metadata[0] == ':array' and len(parsed_metadata) == 3:
+        target_string = parsed_metadata[2]
         if '(' in target_string:
             fn_name = target_string.split('(')[0].split(' ')[-1]
             return ':fn_name', fn_name
         else:
-            raise Exception(f"ERROR get_fn_name_from_parsed_notes()\n"
+            raise Exception(f"ERROR parse_fn_name_from_parsed_metadata()\n"
                             f"target_string does not appear to contain a function signature"
                             f"target_string: {target_string}"
-                            f"parsed_notes: {parsed_notes}")
+                            f"parsed_metadata: {parsed_metadata}")
     else:
-        raise Exception(f"ERROR get_fn_name_from_parsed_notes()\n"
-                        f"parsed_notes is not an array of length 3:\n"
-                        f"parsed_notes: {parsed_notes}")
+        raise Exception(f"ERROR parse_fn_name_from_parsed_metadata()\n"
+                        f"parsed_metadata is not an array of length 3:\n"
+                        f"parsed_metadata: {parsed_metadata}")
 
 
-def test_get_fn_name_from_parsed_notes():
-    print('TEST test_get_fn_name_from_parsed_notes()')
+"""
+def test_parse_fn_name_from_parsed_metadata():
+    print('TEST parse_fn_name_from_parsed_metadata()')
     t1 = [':array', 'java.lang.String', 'undefined __libc_start_main()']
-    print(parse_fn_name_from_parsed_notes(t1))
+    print(parse_fn_name_from_parsed_metadata(t1))
     t2 = [':array', 'java.lang.String', 'int printf(char * __format, ...)']
-    print(parse_fn_name_from_parsed_notes(t2))
+    print(parse_fn_name_from_parsed_metadata(t2))
     t3 = [':array', 'java.lang.String', 'printf(char * __format, ...)']
-    print(parse_fn_name_from_parsed_notes(t3))
+    print(parse_fn_name_from_parsed_metadata(t3))
+"""
 
 
-def parse_hex_value_from_parsed_notes(notes, size: str):
-    # print(f'parse_hex_value_from_parsed_notes(): {notes}')
-    if len(notes) == 3 and notes[2].startswith('= ') and notes[2][-1] == 'h':
-        hex_str = notes[2][2:-1]
+def parse_hex_value_from_parsed_metadata(metadata, size: str):
+    # print(f'parse_hex_value_from_parsed_metadata(): {metadata}')
+    if len(metadata) == 3 and metadata[2].startswith('= ') and metadata[2][-1] == 'h':
+        hex_str = metadata[2][2:-1]
         return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size), size
     else:
         return None
 
 
-def parse_string_value_from_parsed_notes(notes):
-    if len(notes) == 3 and notes[0] == ':array' and notes[1] == 'java.lang.String':
-        return ':string', notes[2]
+def parse_string_value_from_parsed_metadata(metadata):
+    if len(metadata) == 3 and metadata[0] == ':array' and metadata[1] == 'java.lang.String':
+        return ':string', metadata[2]
     else:
         return None
 
@@ -430,8 +430,29 @@ def unpack():
 
 
 if __name__ == '__main__':
-    # test_parse_notes()
-    # test_get_fn_name_from_parsed_notes()
+    # test_parse_metadata()
+    # test_get_fn_name_from_parsed_metadata()
     main()
     # print('------')
     # unpack()
+
+
+# Kinda cool, but didn't end up using:
+# class bidict(dict):
+#     def __init__(self, *args, **kwargs):
+#         super(bidict, self).__init__(*args, **kwargs)
+#         self.inverse = {}
+#         for key, value in self.items():
+#             self.inverse.setdefault(value,[]).append(key)
+#
+#     def __setitem__(self, key, value):
+#         if key in self:
+#             self.inverse[self[key]].remove(key)
+#         super(bidict, self).__setitem__(key, value)
+#         self.inverse.setdefault(value,[]).append(key)
+#
+#     def __delitem__(self, key):
+#         self.inverse.setdefault(self[key],[]).remove(key)
+#         if self[key] in self.inverse and not self.inverse[self[key]]:
+#             del self.inverse[self[key]]
+#         super(bidict, self).__delitem__(key)
