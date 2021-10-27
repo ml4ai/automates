@@ -1,6 +1,11 @@
 from typing import Dict, List, Tuple, Any, Set
 import struct
-from collections import OrderedDict
+from collections import OrderedDict, Counter
+import pathlib
+import os
+import sys
+import argparse
+import uuid
 
 
 # TODO: create batch processing mode
@@ -81,6 +86,89 @@ class GenSym:
         return gensym
 
 
+def parse_unicode_string_list(ustr):
+    chunks = list()
+    in_str = False
+    str_start = None
+    for i in range(1, len(ustr)):
+        if ustr[i-1] == 'u' and ustr[i] == '\'' and not in_str:
+            in_str = True
+            str_start = i + 1
+        elif ustr[i-1] != '\\' and ustr[i] == '\'' and in_str:
+            in_str = False
+            chunks.append(ustr[str_start: i])
+    return chunks
+
+
+def parse_fn_name_from_parsed_metadata(parsed_metadata: List):
+    if parsed_metadata[0] == ':array' and len(parsed_metadata) == 3:
+        target_string = parsed_metadata[2]
+        if '(' in target_string:
+            fn_name = target_string.split('(')[0].split(' ')[-1]
+            return ':fn_name', fn_name
+        else:
+            raise Exception(f"ERROR parse_fn_name_from_parsed_metadata()\n"
+                            f"target_string does not appear to contain a function signature"
+                            f"target_string: {target_string}"
+                            f"parsed_metadata: {parsed_metadata}")
+    else:
+        raise Exception(f"ERROR parse_fn_name_from_parsed_metadata()\n"
+                        f"parsed_metadata is not an array of length 3:\n"
+                        f"parsed_metadata: {parsed_metadata}")
+
+
+def parse_hex_value_from_parsed_metadata(metadata, size: str):
+    # print(f'parse_hex_value_from_parsed_metadata(): {metadata}')
+    if len(metadata) == 3 and metadata[2].startswith('= ') and metadata[2][-1] == 'h':
+        hex_str = metadata[2][2:-1]
+        return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size), size
+    else:
+        return None
+
+
+def parse_string_value_from_parsed_metadata(metadata):
+    if len(metadata) == 3 and metadata[0] == ':array' and metadata[1] == 'java.lang.String':
+        return ':string', metadata[2]
+    else:
+        return None
+
+
+def parse_hex_float_value(hex, size):
+    if size == 'dword':
+        return struct.unpack('!f', bytes.fromhex(hex))[0]
+    elif size == 'qword':
+        return struct.unpack('!d', bytes.fromhex(hex))[0]
+    else:
+        raise Exception(f'ERROR parse_hex_float_value(): Unhandled size {size}')
+
+
+def parse_hex_value(value, size=None):
+    if size:
+        return ':interpreted_hex', value, int(value, 16), size
+    else:
+        return ':raw_hex', value
+
+
+def parse_metadata(metadata: str):
+    if metadata.startswith('array'):
+        parsed_metadata = [':array']
+        t, rest = metadata[6:-1].split(',', maxsplit=1)
+        parsed_metadata.append(t)
+
+        elms = parse_unicode_string_list(rest.strip(' []'))
+        for elm in elms:
+            parsed_metadata.append(elm)
+
+        # for elm in elms:
+        #     if elm.startswith("u'"):
+        #         elm = elm[2:-1]
+        #     parsed_metadata.append(elm)
+
+        return parsed_metadata
+    else:
+        return [':unparsed', metadata]
+
+
 class Function:
     def __init__(self, lines: List[str], instr_set: "InstructionSet"):
         self.instr_set = instr_set
@@ -95,6 +183,11 @@ class Function:
         self.parse_from_lines(lines)
 
     def print_address_blocks(self, substitute_interpreted_values_p=False):
+        print(f'START Address Blocks for function: {self.name} @ {self.address}')
+        if substitute_interpreted_values_p:
+            print(f'### <Address> : <Tokens_(with-interpreted-values)> : ([<Ghidra_Interpretation>], <Metadata>)')
+        else:
+            print(f'### <Address> : <Tokens> : ([<Ghidra_Interpretation>], <Metadata>)')
         for addr, rest in self.address_blocks.items():
             if addr in self.tokens:
                 if substitute_interpreted_values_p:
@@ -106,6 +199,7 @@ class Function:
                     print(f'{addr} : {self.tokens[addr]} : {rest}')
             else:
                 print(f'{addr} : {rest}')
+        print(f'END Address Blocks for function {self.name} @ {self.address}')
 
     def parse_from_lines(self, lines):
         for line in lines:
@@ -159,7 +253,10 @@ class Function:
                             # have already found a call, so metadata likely holds fn name
                             fn_name = parse_fn_name_from_parsed_metadata(metadata)
                             called_fn = fn_name
-                            tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=fn_name))
+                            # tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=fn_name))
+
+                            # TODO: For now, using the fn_name directly as a token. Will need to generalize...
+                            tokens.append(fn_name[1])
                         else:
                             # Has metadata, address appears to reference a known value
                             # Use values a metadata
@@ -185,7 +282,10 @@ class Function:
                             # have already found a call, so metadata likely holds fn name
                             fn_name = parse_fn_name_from_parsed_metadata(metadata)
                             called_fn = fn_name
-                            tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=fn_name))
+                            # tokens.append(self.instr_set.token_map_val.get_token(elm, metadata=fn_name))
+
+                            # TODO: For now, using the fn_name directly as a token. Will need to generalize...
+                            tokens.append(fn_name[1])
                         else:
                             # no CALL, so check if note contain hex value: e.g.,
                             value = parse_hex_value_from_parsed_metadata(metadata, ptr_size)
@@ -203,126 +303,17 @@ class Function:
                 print(f'WARNING: fn={self.name}, address={addr}, CALL to {fn_name} with no explicit token')
 
             self.tokens[addr] = tokens
+
+            # TODO: for now, adding the sequence to the instr_set. May need to revisit this when handling multiple fns
+            self.instr_set.token_seq += tokens
+
             self.instr_set.unique_tokens |= set(tokens)
 
-    def to_tokens(self):
+    def get_tokens(self):
         token_seq = list()
         for _, block in self.tokens.items():
             token_seq += block
         return token_seq
-
-
-def parse_metadata(metadata: str):
-    if metadata.startswith('array'):
-        parsed_metadata = [':array']
-        t, rest = metadata[6:-1].split(',', maxsplit=1)
-        parsed_metadata.append(t)
-
-        elms = parse_unicode_string_list(rest.strip(' []'))
-        for elm in elms:
-            parsed_metadata.append(elm)
-
-        # for elm in elms:
-        #     if elm.startswith("u'"):
-        #         elm = elm[2:-1]
-        #     parsed_metadata.append(elm)
-
-        return parsed_metadata
-    else:
-        return [':unparsed', metadata]
-
-
-def test_parse_metadata():
-    print('TEST test_parse_metadata()')
-    t1 = "array(java.lang.String, [u'= 00405010', u'= ??'])"
-    print(parse_metadata(t1))
-    t2 = "array(java.lang.String, [u'undefined __libc_start_main()'])"
-    print(parse_metadata(t2))
-    t3 = "array(java.lang.String, [u'= \"Answer: %g\\n\"'])"
-    print(parse_metadata(t3))
-    t4 = "array(java.lang.String, [u'int printf(char * __format, ...)'])"
-    print(parse_metadata(t4))
-    t5 = "something else"
-    print(parse_metadata(t5))
-    t6 = "array(java.lang.String, [u'= 40E75C29h'])"
-    print(parse_metadata(t6))
-    t7 = "array(java.lang.String, [u'= C056133333333333h'])"
-    print(parse_metadata(t7))
-
-
-def parse_unicode_string_list(ustr):
-    chunks = list()
-    in_str = False
-    str_start = None
-    for i in range(1, len(ustr)):
-        if ustr[i-1] == 'u' and ustr[i] == '\'' and not in_str:
-            in_str = True
-            str_start = i + 1
-        elif ustr[i-1] != '\\' and ustr[i] == '\'' and in_str:
-            in_str = False
-            chunks.append(ustr[str_start: i])
-    return chunks
-
-
-def parse_fn_name_from_parsed_metadata(parsed_metadata: List):
-    if parsed_metadata[0] == ':array' and len(parsed_metadata) == 3:
-        target_string = parsed_metadata[2]
-        if '(' in target_string:
-            fn_name = target_string.split('(')[0].split(' ')[-1]
-            return ':fn_name', fn_name
-        else:
-            raise Exception(f"ERROR parse_fn_name_from_parsed_metadata()\n"
-                            f"target_string does not appear to contain a function signature"
-                            f"target_string: {target_string}"
-                            f"parsed_metadata: {parsed_metadata}")
-    else:
-        raise Exception(f"ERROR parse_fn_name_from_parsed_metadata()\n"
-                        f"parsed_metadata is not an array of length 3:\n"
-                        f"parsed_metadata: {parsed_metadata}")
-
-
-"""
-def test_parse_fn_name_from_parsed_metadata():
-    print('TEST parse_fn_name_from_parsed_metadata()')
-    t1 = [':array', 'java.lang.String', 'undefined __libc_start_main()']
-    print(parse_fn_name_from_parsed_metadata(t1))
-    t2 = [':array', 'java.lang.String', 'int printf(char * __format, ...)']
-    print(parse_fn_name_from_parsed_metadata(t2))
-    t3 = [':array', 'java.lang.String', 'printf(char * __format, ...)']
-    print(parse_fn_name_from_parsed_metadata(t3))
-"""
-
-
-def parse_hex_value_from_parsed_metadata(metadata, size: str):
-    # print(f'parse_hex_value_from_parsed_metadata(): {metadata}')
-    if len(metadata) == 3 and metadata[2].startswith('= ') and metadata[2][-1] == 'h':
-        hex_str = metadata[2][2:-1]
-        return ':interpreted_hex_float', hex_str, parse_hex_float_value(hex_str, size), size
-    else:
-        return None
-
-
-def parse_string_value_from_parsed_metadata(metadata):
-    if len(metadata) == 3 and metadata[0] == ':array' and metadata[1] == 'java.lang.String':
-        return ':string', metadata[2]
-    else:
-        return None
-
-
-def parse_hex_float_value(hex, size):
-    if size == 'dword':
-        return struct.unpack('!f', bytes.fromhex(hex))[0]
-    elif size == 'qword':
-        return struct.unpack('!d', bytes.fromhex(hex))[0]
-    else:
-        raise Exception(f'ERROR parse_hex_float_value(): Unhandled size {size}')
-
-
-def parse_hex_value(value, size=None):
-    if size:
-        return ':interpreted_hex', value, int(value, 16), size
-    else:
-        return ':raw_hex', value
 
 
 class InstructionSet:
@@ -330,10 +321,15 @@ class InstructionSet:
         self.token_map_address: BiMap = BiMap('_a')
         self.token_map_val: BiMap = BiMap('_v')
         self.token_map_val_other: BiMap = BiMap('_o')
+        self.token_seq: List[str] = list()  # TODO currently being set by Function.tokenize()
         self.unique_tokens: Set[str] = set()
 
         self.fn_by_address: Dict[str, Function] = dict()
         self.fn_address_by_name: Dict[str, str] = dict()
+
+    def print_token_seq(self):
+        tokens_str = f'{self.token_seq}'
+        print(f"{tokens_str[1:-1]}")
 
     def get_non_generated_tokens(self):
         return self.unique_tokens \
@@ -341,7 +337,7 @@ class InstructionSet:
                - self.token_map_val.get_all_tokens() \
                - self.token_map_val_other.get_all_tokens()
 
-    def print_tokens(self):
+    def print_token_maps(self):
         token_address_size = len(self.token_map_address.get_all_tokens())
         print(f'START token_map_address {token_address_size}')
         self.token_map_address.print()
@@ -354,10 +350,16 @@ class InstructionSet:
         print(f'START token_map_val_other {token_val_other_size}')
         self.token_map_val_other.print()
         print('END token_map_val_other')
+        print('START token_stats')
+        print(f'Token Sequence Length [{len(self.token_seq)}]')
+        token_dist = Counter(self.token_seq)
+        print(f'Token Distribution [{len(token_dist)}]: {token_dist}')
+        # The following is redundant given the token_dist: the keys of token_dist *are* the unique tokens
+        # print(f'Unique Tokens [{len(self.unique_tokens)}]: {self.unique_tokens}')
         print(f'Total Generated Tokens [{token_address_size + token_val_size + token_val_other_size}]')
         non_gen_tokens = self.get_non_generated_tokens()
         print(f'Non-generated Tokens [{len(non_gen_tokens)}]: {non_gen_tokens}')
-        print(f'Unique Tokens [{len(self.unique_tokens)}]: {self.unique_tokens}')
+        print('END token_stats')
 
     def get_token_or_interpreted_value(self, token: str):
         # TODO: this is very hacky...
@@ -387,7 +389,7 @@ class InstructionSet:
 
 
 def extract_instructions(filepath):
-    inst_set = InstructionSet()
+    instruction_set = InstructionSet()
     lines = list()
     in_fn_p = False
     with open(filepath, 'r') as f:
@@ -399,24 +401,170 @@ def extract_instructions(filepath):
                 in_fn_p = True
                 lines.append(line)
             elif line.startswith('>>> FUNCTION_END'):
-                inst_set.add_fn(Function(lines, inst_set))
+                instruction_set.add_fn(Function(lines, instruction_set))
                 in_fn_p = False
                 lines = list()
             elif in_fn_p:
                 lines.append(line)
-    return inst_set
+    return instruction_set
+
+
+class TokenSet:
+    def __init__(self):
+        self.token_seqs: List[str] = list()
+        self.token_address: Set[str] = set()
+        self.token_val: Set[str] = set()
+        self.token_val_other: Set[str] = set()
+
+    def add(self, inst_set: InstructionSet):  # add(self, token_seq, token_address, token_val, token_val_other):
+        self.token_seqs += inst_set.token_seq
+        self.token_address |= inst_set.token_map_address.get_all_tokens()
+        self.token_val |= inst_set.token_map_val.get_all_tokens()
+        self.token_val_other |= inst_set.token_map_val_other.get_all_tokens()
+
+    def get_non_generated_tokens(self):
+        return set(self.token_seqs) \
+               - self.token_address \
+               - self.token_val \
+               - self.token_val_other
+
+    def print(self):
+        token_dist = Counter(self.token_seqs)
+        print(f'Token Distribution [{len(token_dist)}]: {token_dist}')
+        token_address_size = len(self.token_address)
+        token_val_size = len(self.token_val)
+        token_val_other_size = len(self.token_val_other)
+        non_gen_tokens = self.get_non_generated_tokens()
+        print(f'Non-generated Tokens [{len(non_gen_tokens)}]: {non_gen_tokens}')
+        print(f'Total Generated Tokens [{token_address_size + token_val_size + token_val_other_size}]')
+        print(f'Token Address [{token_address_size}]: {self.token_address}')
+        print(f'Token val [{token_val_size}]: {self.token_val}')
+        print(f'Token val_other [{token_val_other_size}]: {self.token_val_other}')
 
 
 def main():
-    inst_set = extract_instructions(EXAMPLE_INSTRUCTIONS_FILE)
-    main_fn = inst_set.get_fn_by_name('main')
-    main_fn.tokenize()
-    main_fn.print_address_blocks(substitute_interpreted_values_p=True)
-    inst_set.print_tokens()
-    tokens = main_fn.to_tokens()
-    print(f'Tokens Sequence [{len(tokens)}]: {tokens}')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--execute',
+                        help='execute script (as opposed to running in test mode)',
+                        action='store_true', default=False)
+    parser.add_argument('-I', '--instructions_root_dir',
+                        help='specify the instructions root directory; required',
+                        type=str,
+                        default='examples_ghidra_instructions/gcc')
+    parser.add_argument('-i', '--instructions_file',
+                        help='Optionally specify a specific Ghidra instructions file to process; '
+                             'if left unspecified, then process whole instructions_root_dir directory',
+                        type=str,
+                        default='')
+    parser.add_argument('-D', '--dst_dir',
+                        help='directory where extracted token files will be saved',
+                        type=str,
+                        default='examples_tokenized')
+
+    args = parser.parse_args()
+
+    if not args.execute:
+        print(f'Running in TEST mode: {args.instructions_root_dir} {args.dst_dir}')
+    else:
+        print(f'EXECUTE! {args.instructions_root_dir} {args.dst_dir}')
+
+        # create destination root directory if does not already exist
+        pathlib.Path(args.dst_dir).mkdir(parents=True, exist_ok=True)
+
+    token_set = TokenSet()
+
+    def process_file(_src_filepath, _dst_filepath, num=0):
+
+        if not args.execute:
+            print(f'{num} [TEST] tokenize {_src_filepath} -> {_dst_filepath}')
+        else:
+            print(f'{num} [EXECUTE] tokenize {_src_filepath} -> {_dst_filepath}')
+
+            inst_set = extract_instructions(_src_filepath)
+            main_fn = inst_set.get_fn_by_name('main')
+            main_fn.tokenize()
+
+            token_set.add(inst_set)
+
+            original_stdout = sys.stdout
+            with open(_dst_filepath, 'w') as fout:
+                sys.stdout = fout
+                inst_set.print_token_seq()
+                inst_set.print_token_maps()
+                main_fn.print_address_blocks(substitute_interpreted_values_p=True)
+                sys.stdout = original_stdout
+
+    def get_dst_filepath(_src_filepath):
+        _dst_filepath = os.path.join(args.dst_dir, os.path.basename(_src_filepath))
+        return os.path.splitext(_dst_filepath)[0] + '__tokens.txt'
+
+    if args.instructions_file != '':
+        src_filepath = os.path.join(args.instructions_root_dir, args.instructions_file)
+        if not os.path.isfile(src_filepath):
+            raise Exception(f'ERROR: File not found: {src_filepath}')
+
+        process_file(src_filepath, get_dst_filepath(src_filepath))
+
+    else:
+        i = 0
+        for subdir, dirs, files in os.walk(args.instructions_root_dir):
+            for file in files:
+                src_filepath = subdir + os.sep + file
+                if src_filepath.endswith('-instructions.txt'):
+                    dst_filepath = get_dst_filepath(src_filepath)
+
+                    process_file(src_filepath, dst_filepath, num=i)
+                    i += 1
+
+    token_set_summary_filepath = os.path.join(args.dst_dir, 'tokens_summary.txt')
+    if pathlib.Path(token_set_summary_filepath).is_file():
+        token_set_summary_filepath += str(uuid.uuid4())
+    original_stdout = sys.stdout
+    with open(token_set_summary_filepath, 'w') as fout:
+        sys.stdout = fout
+        token_set.print()
+        sys.stdout = original_stdout
 
 
+if __name__ == '__main__':
+    # test_parse_metadata()
+    # test_get_fn_name_from_parsed_metadata()
+    main()
+
+
+# Tests -- TODO: ceate actual unit tests...
+
+"""
+def test_parse_metadata():
+    print('TEST test_parse_metadata()')
+    t1 = "array(java.lang.String, [u'= 00405010', u'= ??'])"
+    print(parse_metadata(t1))
+    t2 = "array(java.lang.String, [u'undefined __libc_start_main()'])"
+    print(parse_metadata(t2))
+    t3 = "array(java.lang.String, [u'= \"Answer: %g\\n\"'])"
+    print(parse_metadata(t3))
+    t4 = "array(java.lang.String, [u'int printf(char * __format, ...)'])"
+    print(parse_metadata(t4))
+    t5 = "something else"
+    print(parse_metadata(t5))
+    t6 = "array(java.lang.String, [u'= 40E75C29h'])"
+    print(parse_metadata(t6))
+    t7 = "array(java.lang.String, [u'= C056133333333333h'])"
+    print(parse_metadata(t7))
+"""
+
+"""
+def test_parse_fn_name_from_parsed_metadata():
+    print('TEST parse_fn_name_from_parsed_metadata()')
+    t1 = [':array', 'java.lang.String', 'undefined __libc_start_main()']
+    print(parse_fn_name_from_parsed_metadata(t1))
+    t2 = [':array', 'java.lang.String', 'int printf(char * __format, ...)']
+    print(parse_fn_name_from_parsed_metadata(t2))
+    t3 = [':array', 'java.lang.String', 'printf(char * __format, ...)']
+    print(parse_fn_name_from_parsed_metadata(t3))
+"""
+
+"""
 def unpack():
     print(int('7', 16))    # 7   : dword = int
     print(int('62', 16))   # 98  : qword = long
@@ -427,14 +575,7 @@ def unpack():
 
     # -88.3 : qword = double
     print(struct.unpack('!d', bytes.fromhex('C056133333333333')))
-
-
-if __name__ == '__main__':
-    # test_parse_metadata()
-    # test_get_fn_name_from_parsed_metadata()
-    main()
-    # print('------')
-    # unpack()
+"""
 
 
 # Kinda cool, but didn't end up using:
