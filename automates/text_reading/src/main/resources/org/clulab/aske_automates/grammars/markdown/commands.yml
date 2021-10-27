@@ -4,12 +4,84 @@ rules:
 
 ####COMMANDS####
 
-  - name: sample-command
-    label: Command
-    priority: ${priority}
-    type: token
-    example: "git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
-#    action: insert a post-processing action (defined in OdinActions)
-    pattern: |
-      (?<language>[word=/bash|python|git/]) (?<command> [word = /.*\w+.*/ & !tag="-LRB-"]+)
+#   - name: sample-command
+#     label: Command
+#     priority: ${priority}
+#     type: token
+#     example: "git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
+# #    action: insert a post-processing action (defined in OdinActions)
+#     pattern: |
+#       (?<language>[word=/bash|python|git/]) (?<command> [word = /.*\w+.*/ & !tag="-LRB-"]+)
 
+  - name: filename-rule
+    label: Filename
+    priority: 1
+    type: token
+    example: "https://gitlab.pik-potsdam.de/twist/twist-global-model.git"
+    pattern: |
+      [word = /.*\.[a-zA-Z]{2,}/]
+    
+  - name: parameter-rule
+    label: CommandLineArg
+    priority: 1
+    type: token
+    example: "--crop"
+    pattern: |
+      (?<=[word="-"]{2}) (?<parameter>[word = /[a-zA-Z_]/])
+
+  - name: arg-rule
+    label: CommandLineArg
+    priority: 2
+    type: token
+    example: "./run_TWIST.py --crop Wheat --include_prodDecline True --include_importStrat False --exportRestr_countries 'none'"
+    pattern: |
+      @parameter:CommandLineArg (?<=[tag = /" | POS/])? (?<argument>[word = /[a-zA-Z0-9'"]+/]+)
+
+
+  # - name: language
+  #   label: Language
+  #   priority: 2
+  #   type: token
+  #   example: "```git clone https://gitlab.pik-potsdam.de/twist/twist-global-model.git```"
+  #   pattern: |
+# (?<=[tag = /``/ | word = /\. | \//]+) (?<command>[word = /[a-zA-Z]+/]) (?<argument>[word = /[a-zA-Z]+/]+)? @filename:Filename 
+      
+# @argument:CommandLineArg*
+
+  - name: string-rule
+    label: String
+    priority: 2
+    type: token
+    example: "'RUS,UKR'"
+    pattern: |
+      [word = /'/] [word = /[a-zA-Z,]+/ & !tag = 'CC']+ [word = /'/]
+  
+  - name: value-rule
+    label: Value
+    priority: 2
+    type: token
+    example: "0"
+    pattern: |
+      [tag = 'CD'] 
+
+  - name: list-rule1
+    label: Context
+    priority: 3
+    type: dependency
+    example: "- Wheat: 'RUS', 'UKR', 'KAZ', 'RUS,UKR' or 'RUS,UKR,KAZ'"
+    pattern: |
+      trigger = [word = ":"]
+      parameter:Phrase = <punct
+      value:String+ = <punct dep 
+  
+  - name: list-rule2
+    label: Context
+    priority: 3
+    type: dependency
+    example: "- --crop: Wheat, Rice or Corn"
+    pattern: |
+      trigger = [word = ":"]
+      parameter:Phrase = <punct
+      value:Phrase+ = <punct dep 
+
+      
