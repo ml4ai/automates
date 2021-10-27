@@ -555,15 +555,15 @@ object ExtractAndAlign {
   }
 
 
-  def makeLocationObj(mention: Mention, givenPage: Option[Int], givenBlock: Option[Int]): ujson.Obj = {
+  def makeLocationObj(mention: Mention, givenPage: Option[Seq[Int]], givenBlock: Option[Seq[Int]]): ujson.Obj = {
       val (page, block) = if (givenPage.isEmpty & givenBlock.isEmpty) {
         if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
           val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head
-          val page = menAttAsJson("pageNum").num.toInt
-          val block = menAttAsJson("blockIdx").num.toInt
+          val page = menAttAsJson("pageNum").arr.map(_.num.toInt)
+          val block = menAttAsJson("blockIdx").arr.map(_.num.toInt)
           (page, block)
         } else {
-          (-1000, -1000)
+          (Seq(-1000), Seq(-1000))
         }
       } else (givenPage.get, givenBlock.get)
 
@@ -609,7 +609,7 @@ object ExtractAndAlign {
   }
 
 
-  def makeArgObject(mention: Mention, page: Int, block: Int, argType: String): ujson.Obj = {
+  def makeArgObject(mention: Mention, page: Seq[Int], block: Seq[Int], argType: String): ujson.Obj = {
     ujson.Obj(
       "name" -> argType,
       "text" -> getMentionText(mention),
@@ -617,7 +617,7 @@ object ExtractAndAlign {
     )
   }
 
-  def makeIntParamSettingObj(mention: Mention, paramSetAttJson: Value, page: Int, block: Int): ujson.Obj = {
+  def makeIntParamSettingObj(mention: Mention, paramSetAttJson: Value, page: Seq[Int], block: Seq[Int]): ujson.Obj = {
     val lowerBound = paramSetAttJson("inclusiveLower")
     val upperBound = paramSetAttJson("inclusiveUpper")
     val toReturn = ujson.Obj(
@@ -655,11 +655,11 @@ object ExtractAndAlign {
 
     val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
       val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-      val page = menAttAsJson("pageNum").num.toInt
-      val block = menAttAsJson("blockIdx").num.toInt
+      val page = menAttAsJson("pageNum").arr.map(_.num.toInt)
+      val block = menAttAsJson("blockIdx").arr.map(_.num.toInt)
       (page, block)
     } else {
-      (-1000, -1000)
+      (Seq(-1000), Seq(-1000))
     }
 
 
@@ -686,11 +686,11 @@ object ExtractAndAlign {
 
     val (page, block) = if (mention.attachments.exists(_.asInstanceOf[AutomatesAttachment].toUJson.obj("attType").str == "MentionLocation")) {
       val menAttAsJson = mention.attachments.map(_.asInstanceOf[AutomatesAttachment].toUJson.obj).filter(_ ("attType").str == "MentionLocation").head //head.asInstanceOf[MentionLocationAttachment].toUJson.obj
-      val page = menAttAsJson("pageNum").num.toInt
-      val block = menAttAsJson("blockIdx").num.toInt
+      val page = menAttAsJson("pageNum").arr.map(_.num.toInt).toArray
+      val block = menAttAsJson("blockIdx").arr.map(_.num.toInt).toArray
       (page, block)
     } else {
-      (-1000, -1000)
+      (Array(-1000), Array(-1000))
     }
 
     val attTo = mention.label match {
