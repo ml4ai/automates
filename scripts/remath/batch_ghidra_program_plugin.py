@@ -59,7 +59,6 @@ def run_ghidra(ghidra_root='', binary_root_dir='', binary_file='', working_root_
                 end_time = timeit.default_timer()
                 times.append(end_time - start_time)
 
-
     os.chdir(original_working_dir)
 
     return errors, times

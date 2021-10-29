@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import json
 import os
+import shutil
 from pathlib import Path
 import uuid
 import platform
@@ -18,7 +19,8 @@ class Config:
     gcc: str = ''
     gcc_plugin_filepath: str = ''
     ghidra_root: str = ''
-    ghidra_script_filepath: str = ''
+    ghidra_script_root: str = ''
+    ghidra_script_filename: str = ''
 
     stage_root_name: str = ''
     stage_root: str = ''
@@ -55,7 +57,8 @@ def missing_config_message():
     print("  \"gcc\": \"<str> path to gcc\"")
     print("  \"gcc\": \"<str> path to gcc plugin\"")
     print("  \"ghidra_root\": \"<str> root directory path of ghidra\"")
-    print("  \"ghidra_script_filepath\": \"<str> path to ghidra plugin script\""
+    print("  \"ghidra_script_root\": \"<str> root directory path of ghidra plugin scripts\"")
+    print("  \"ghidra_script_filename\": \"<str> filename of ghidra plugin script\""
           "  # e.g., ..../DumpInstructionsByFunction.py")
 
     print("  \"stage_root\": \"<str> name of directory root for staging"
@@ -127,10 +130,14 @@ def load_config():
             missing_fields.append('ghidra_root')
         else:
             config.ghidra_root = cdata['ghidra_root']
-        if 'ghidra_script_filepath' not in cdata:
-            missing_fields.append('ghidra_script_filepath')
+        if 'ghidra_script_root' not in cdata:
+            missing_fields.append('ghidra_script_root')
         else:
-            config.ghidra_root = cdata['ghidra_script_filepath']
+            config.ghidra_script_root = cdata['ghidra_script_root']
+        if 'ghidra_script_filename' not in cdata:
+            missing_fields.append('ghidra_script_filename')
+        else:
+            config.ghidra_script_filename = cdata['ghidra_script_filename']
 
         if 'stage_root_name' not in cdata:
             missing_fields.append('stage_root_name')
@@ -199,7 +206,9 @@ def try_compile(config: Config, src_filepath: str):
 
     dst_filepath = os.path.splitext(src_filepath)[0] + binary_postfix
 
-    command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}', '-C', '-x', 'c', '-O0', src_filepath, '-o', dst_filepath]
+    # print('try_compile() cwd:', os.getcwd())
+
+    command_list = [config.gcc, f'-fplugin={config.gcc_plugin_filepath}', '-C', '-x', 'c++', '-O0', src_filepath, '-o', dst_filepath]
     print(command_list)
 
     result = subprocess.run(command_list, stdout=subprocess.PIPE)
@@ -211,39 +220,85 @@ def try_execute(bin_filepath: str):
     pass
 
 
+def log_failure(filename_c:str, reason: str):
+    with open('failures.log', 'a') as logfile:
+        logfile.write(f'{filename_c}: {reason}\n')
+
+
 def try_generate(config: Config, i: int, sig_digits: int):
     num_str = f'{i}'.zfill(sig_digits)
-    filename_base = f'{config.base_name}{num_str}'
+    filename_base = f'{config.base_name}_{num_str}'
+    filename_c = filename_base + '.c'
+
     attempt = 0
     keep_going = True
     success = False
 
+    ghidra_command = os.path.join(config.ghidra_root, 'support/analyzeHeadless')
+    ghidra_project_name = 'temp_ghidra_project'
+    ghidra_project_dir = '.'
+
     while keep_going:
+
+        # stop if have exceeded total_attempts
+        if attempt >= config.total_attempts:
+            break
 
         attempt += 1
 
         temp_uuid = str(uuid.uuid4())
-        filename_base_uuid = f'{filename_base}.{temp_uuid}'
+        filename_base_uuid = f'{filename_base}_{temp_uuid}'
         filename_uuid_c = filename_base_uuid + '.c'
-        filepath_uuid_c = os.path.join(config.stage_root, filename_uuid_c)
 
         # generate candidate source code
-        gen_c_prog.gen_prog(filepath_uuid_c)
+        gen_c_prog.gen_prog(filename_c)  # filepath_uuid_c)
 
         # compile candidate
-        result, bin_filepath = try_compile(config=config, src_filepath=filepath_uuid_c)
+        result, bin_filepath = try_compile(config=config, src_filepath=filename_c)  # filepath_uuid_c)
 
-        if result != 0:
-            success = False
+        if result.returncode != 0:
+            print(f'FAILURE - COMPILE - {result.returncode}')
+            log_failure(filename_c, f'compilation return {result}')
+            subprocess.call(['cp ' + filename_c + ' ' + filename_uuid_c])
+            continue
 
-        if attempt >= config.total_attempts:
-            keep_going = False
+        # execute_candidate
+        result = subprocess.run([f'./{bin_filepath}'], stdout=subprocess.PIPE)
+
+        if result.returncode != 0:
+            print(f'FAILURE - EXECUTE - {result.returncode}')
+            log_failure(filename_c, f'execution return {result.returncode}')
+            subprocess.call(['cp ' + filename_c + ' ' + filename_uuid_c])
+            continue
+
+        # run Ghidra
+        command_list = \
+            [ghidra_command, ghidra_project_dir, ghidra_project_name,
+             '-import', bin_filepath,
+             '-scriptPath', config.ghidra_script_root,
+             '-postScript', config.ghidra_script_filename,
+             '-deleteProject']
+        result = subprocess.run(command_list, stdout=subprocess.PIPE)
+
+        if result.returncode != 0:
+            print(f'FAILURE - GHIDRA - {result.returncode}')
+            log_failure(filename_c, f'ghidra return {result.returncode}')
+            subprocess.call(['cp ' + filename_c + ' ' + filename_uuid_c])
+            continue
+
+        # tokenize CAST
+
+        # tokenize instructions
+
+        # if get this far, then success!
+        success = True
+        keep_going = False  # could also just break...
 
     if success:
         # copy files to respective locations
-        pass
+        print('Success')
     else:
-        raise Exception(f"ERROR try_generate(): failed to generate a viable program after {attempt + 1} tries.")
+        raise Exception(f"ERROR try_generate(): failed to generate a viable program after {attempt} tries.")
 
 
 def main():
@@ -258,8 +313,11 @@ def main():
                  config.corpus_output_tokens_root):
         Path(path).mkdir(parents=True, exist_ok=False)
 
+    original_working_dir = os.getcwd()
+    os.chdir(config.stage_root)
     for i in range(config.num_samples):
         try_generate(config=config, i=i, sig_digits=len(str(config.num_samples)))
+    os.chdir(original_working_dir)
 
 
 # -----------------------------------------------------------------------------
